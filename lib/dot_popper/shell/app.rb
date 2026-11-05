@@ -41,7 +41,7 @@ module DotPopper
         @renderer = Renderer.new(@show, @pen, pile: @pile, sparks: @sparks, bloom: @bloom)
         @renderer.prepare
         @input = Presentation::InputRouter.new
-        @gamepads = Gamepads.new(enabled: !DotSize.touch?(os))
+        @gamepads = Gamepads.new
         @buttons = Presentation::GamepadButtons.new
         @trigger = Presentation::Trigger.released
         @cursor = Presentation::GamepadCursor.centered(@show.layout.whole, look: Look::GAMEPAD,

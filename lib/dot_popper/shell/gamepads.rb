@@ -11,8 +11,10 @@ module DotPopper
     # asked for every frame: the list changes only when a controller comes
     # or goes, and asking for it each frame made fresh wrappers that Lota
     # trunk could hand out after freeing (on iOS, where SDL presents the
-    # accelerometer as a joystick, that crashed the game). Phones and
-    # tablets take no controllers at all, so they never touch a joystick.
+    # accelerometer as a joystick, that crashed the game). Only a joystick
+    # that is a gamepad is kept, so an iPad's accelerometer never is, and
+    # an Xbox or PlayStation controller paired with the iPad plays as it
+    # does on a computer.
     class Gamepads
       def initialize(enabled: true)
         @enabled = enabled
