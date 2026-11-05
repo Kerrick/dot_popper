@@ -7,13 +7,22 @@ module DotPopper
   # gives) with whether the round met it. It listens to a Game (Game#subscribe) and appends
   # through a store that answers +read+ and +write(text)+, as BestScore
   # does, so it never touches a file system itself.
+  #
+  # A log whose first line names other columns, because it was written
+  # by an older version, is kept whole in a store of its own, named
+  # rounds-<when>.csv and made by +archive+, and a new log starts under
+  # the current header.
   class PlaytestLog
     COLUMNS = %w[time seed score duration pops slips softened mean_wait longest_wait goal goal_met].freeze
 
-    def initialize(store, clock: -> { Time.now }, today: -> { clock.call.to_date })
+    HEADER = COLUMNS.join(",")
+
+    def initialize(store, clock: -> { Time.now }, today: -> { clock.call.to_date },
+                   archive: ->(_name) { BestScore::Memory.new })
       @store = store
       @clock = clock
       @today = today
+      @archive = archive
       @recorder = RoundStats::Recorder.new
     end
 
@@ -33,10 +42,23 @@ module DotPopper
     def seconds(value) = format("%.2f", value)
 
     def append(line)
-      before = @store.read.to_s
-      before = "#{COLUMNS.join(",")}\n" if before.empty?
+      before = current
       before += "\n" unless before.end_with?("\n")
       @store.write("#{before}#{line}\n")
+    end
+
+    # The log so far, under the current header: as it was, or new, after
+    # setting aside an older log or starting the first.
+    def current
+      before = @store.read.to_s
+      return before if before.lines.first&.chomp == HEADER
+
+      set_aside(before) unless before.strip.empty?
+      "#{HEADER}\n"
+    end
+
+    def set_aside(old)
+      @archive.call("rounds-#{@clock.call.strftime("%Y%m%d-%H%M%S")}.csv").write(old)
     end
   end
 end

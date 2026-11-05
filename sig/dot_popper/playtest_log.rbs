@@ -2,6 +2,10 @@ module DotPopper
   class PlaytestLog
     COLUMNS: Array[String]
 
+    HEADER: String
+
+    @archive: ^(String name) -> BestScore::_Store
+
     @store: BestScore::_Store
 
     @clock: ^() -> Time
@@ -10,7 +14,8 @@ module DotPopper
 
     @recorder: RoundStats::Recorder
 
-    def initialize: (BestScore::_Store store, ?clock: ^() -> Time, ?today: ^() -> Date) -> void
+    def initialize: (BestScore::_Store store, ?clock: ^() -> Time, ?today: ^() -> Date,
+                     ?archive: ^(String name) -> BestScore::_Store) -> void
 
     def call: (event event) -> void
 
@@ -21,5 +26,9 @@ module DotPopper
     def seconds: (Float value) -> String
 
     def append: (String line) -> void
+
+    def current: () -> String
+
+    def set_aside: (String old) -> void
   end
 end

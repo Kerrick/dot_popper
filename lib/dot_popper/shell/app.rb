@@ -31,7 +31,8 @@ module DotPopper
                                        tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt")),
                                        haptics: Haptics.for(os), clipboard: Clipboard.new,
                                        lifetime: Lifetime.new(SaveFile.new(name: "lifetime.txt"), today:))
-        @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:))
+        @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
+                                        archive: ->(name) { SaveFile.new(name:) }))
         puts "Dot Popper: each round is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"
         @pile = Pile.new(flag?("DOT_POPPER_CALM") ? Look::CALM_PILE : Look::PILE)
         @game.subscribe(@pile)

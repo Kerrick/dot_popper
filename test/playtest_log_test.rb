@@ -27,6 +27,32 @@ class PlaytestLogTest < Minitest::Test
     assert_equal [DotPopper::DailyGoal.for(Date.new(2026, 11, 5)).to_s, "false"], [goal, met]
   end
 
+  def test_a_log_with_other_columns_is_set_aside_and_a_new_one_begins
+    old = "time,mode,seed,score\n2026-11-04T20:00:00Z,daily,7,12\n"
+    store = DotPopper::BestScore::Memory.new(old)
+    archives = {}
+    game = DotPopper::Game.new(field, random: Random.new(9))
+    game.subscribe(DotPopper::PlaytestLog.new(store, clock: -> { Time.utc(2026, 11, 5, 9, 30, 15) },
+                                              archive: ->(name) { archives[name] = DotPopper::BestScore::Memory.new }))
+    @game = game
+    play_round(pops: 1)
+    play_round(pops: 1)
+
+    assert_equal ["rounds-20261105-093015.csv"], archives.keys
+    assert_equal old, archives.values.first.read
+    lines = store.read.lines(chomp: true)
+    assert_equal DotPopper::PlaytestLog::HEADER, lines.first
+    assert_equal 3, lines.size, "the new log keeps its own rounds"
+  end
+
+  def test_a_log_under_the_current_header_is_only_added_to
+    @store.write("#{DotPopper::PlaytestLog::HEADER}\nan,earlier,round\n")
+    play_round(pops: 0)
+
+    assert_equal "an,earlier,round", @store.read.lines(chomp: true)[1]
+    assert_equal 3, @store.read.lines.size
+  end
+
   def test_a_round_still_in_play_is_not_logged
     @game.press(0, 0)
 

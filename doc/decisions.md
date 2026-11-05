@@ -202,6 +202,8 @@ Under the final score, one quiet line gives three numbers: how many dots were po
 
 **Why:** A recorded seed makes any interesting round in a playtest replayable.
 
+When the columns change between versions (the `mode` column went with the daily challenge, and `goal` and `goal_met` arrived with the daily goal), a log whose first line doesn't match the current columns is saved whole as `rounds-<date>-<time>.csv`, and a new `rounds.csv` starts under the current header. Lota's save folder can't rename a file, so "saving whole" means writing a copy and then starting the log afresh. A CSV whose rows disagree with its header would mislead anyone comparing playtests, and keeping the old file loses nothing.
+
 **Limitation:** Lota's save folder can't append to a file, so the log is rewritten whole each time. That is fine for the few hundred lines a playtest produces.
 
 **To reverse:** Stop subscribing the `PlaytestLog` to the game in `Shell::App#load`.

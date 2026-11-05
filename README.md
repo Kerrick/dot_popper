@@ -148,7 +148,7 @@ Each finished round adds a line to `rounds.csv` in the game's save folder, so pl
 
 The same folder also holds the game's other saved state: the best score (`best_score.txt`), whether sound is on, whether the first-mistake hint has been shown, and the lifetime stats (`lifetime.txt`), which add up every round played on this device. `lifetime.txt` is plain `key=value` lines; a damaged line is ignored, and a missing file starts the stats from nothing.
 
-The first line of `rounds.csv` names the columns:
+The first line of `rounds.csv` names the columns. When a new version of the game changes the columns, it doesn't mix old and new lines in one file: it saves the old log whole as `rounds-<date>-<time>.csv` (for example `rounds-20261105-093015.csv`) and starts a new `rounds.csv`. The columns are:
 
 | Column | What it holds |
 | --- | --- |
