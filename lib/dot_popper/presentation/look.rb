@@ -1,0 +1,179 @@
+# frozen_string_literal: true
+
+module DotPopper
+  module Presentation
+    # Every presentation setting in one place, as Rules holds every rule:
+    # colors, words, type, sizes, timings, easing, and how strong each
+    # effect is. Sizes and distances are in radii (R) unless they say
+    # otherwise, so the look scales with the dot; durations are seconds.
+    module Look
+      hex = Color.method(:hex)
+
+      PALETTE = Palette.new(
+        ink_top: hex["#1d1a4a"], ink_bottom: hex["#0c0b22"], ink_glow: hex["#2b2766"], ink_edge: hex["#05040f"],
+        fresh_light: hex["#fff0bf"], fresh_body: hex["#ffbf52"], fresh_deep: hex["#f07c34"],
+        fresh_bounce: hex["#ffd98c"], gloss: hex["#ffffff"], halo: hex["#ffb347"],
+        popped_top: hex["#4a4570"], popped_bottom: hex["#37335a"], popped_rim: hex["#8f88bd"],
+        popped_crater: hex["#29263f"], popped_lip: hex["#6b6596"],
+        shadow: hex["#04030d"], alarm: hex["#ff4f9a"],
+        cream: hex["#fff4de"], soft: hex["#b9b3e0"], gain: hex["#7df0c6"], urgent: hex["#ff6a8d"],
+        pill: hex["#0c0b22", 0.62], pill_edge: hex["#ffffff", 0.1],
+        confetti: [hex["#ffbf52"], hex["#ff8fb8"], hex["#7df0c6"], hex["#b9a6ff"], hex["#fff4de"]].freeze
+      )
+
+      WORDS = Words.new(
+        title: "Dot Popper", play: "Tap anywhere to play", continue: "Tap to continue", time_up: "Time!",
+        new_best: "New best!", best: "Best", score: "SCORE", time: "TIME"
+      )
+
+      # The rounded face, Fredoka (SIL Open Font License; assets/fonts).
+      # Sizes are graphics units at a layout scale of 1. A size that
+      # animates steps through whole sizes rather than scaling glyphs.
+      class Type < Data.define(:bold, :semibold, :title, :heading, :final_score, :hud_number, :hud_label,
+                               :prompt, :legend, :best, :floater, :new_best); end
+
+      TYPE = Type.new(
+        bold: "assets/fonts/Fredoka-Bold.ttf", semibold: "assets/fonts/Fredoka-SemiBold.ttf",
+        title: 108, heading: 64, final_score: 136, hud_number: 40, hud_label: 13,
+        prompt: 26, legend: 24, best: 26, floater: 30, new_best: 34
+      )
+
+      # The desktop window opens at 24 × 16 radii (1200 × 800 units when
+      # R is 50), at most 90% of the desktop. R is a fixed physical size,
+      # so how crowded the field gets, which is the game's tension, follows
+      # the field's size in radii; 24 × 16 is about a tablet's. Phones and
+      # tablets play fullscreen.
+      WINDOW = WindowLook.new(width: 24, height: 16, most: 0.9)
+
+      LAYOUT = LayoutLook.new(margin: 16, button: 52, reference: 760.0)
+
+      # How a dot is drawn by the dot shader (assets/shaders/dot.glsl):
+      # +extent+ is the drawn square's half side, room for the halo and
+      # shadow around the disc of radius 1; +shadow_offset+ how far down a
+      # dot's shadow falls on the dots beneath it; +legend+ the size of the
+      # title's example dots.
+      class DotLook < Data.define(:extent, :shadow_offset, :shadow_alpha, :halo_alpha, :legend); end
+
+      DOT = DotLook.new(extent: 1.6, shadow_offset: 0.11, shadow_alpha: 0.55, halo_alpha: 0.34, legend: 0.34)
+
+      MOTION = DotMotion.new(
+        spawn: Tween.new(from: 0.15, to: 1.0, duration: 0.42, ease: :out_back),
+        pop_stretch: Tween.new(from: 1.3, to: 1.0, duration: 0.6, ease: :out_elastic),
+        pop_cover: Tween.new(from: 1.0, to: 0.0, duration: 0.14, ease: :out_quad),
+        wobble: Wobble.new(amplitude: 0.13, duration: 0.38, frequency: 11.0),
+        breathe: Breathe.new(amplitude: 0.022, period: 1.7)
+      )
+
+      # A pop: droplets, a ring, and the new dot's ripple.
+      POP_BURST = Burst.new(count: 14, speed: 2.2..5.2, life: 0.25..0.42, size: 0.05..0.11, drag: 3.5,
+                            gravity: 3.0, alpha: 0.8)
+      SHOCKWAVE = RingLook.new(
+        radius: Tween.new(from: 1.0, to: 1.9, duration: 0.36, ease: :out_cubic),
+        width: Tween.new(from: 0.14, to: 0.0, duration: 0.36, ease: :out_quad),
+        alpha: Tween.new(from: 0.55, to: 0.0, duration: 0.36, ease: :out_quad), color: PALETTE.cream
+      )
+      SPAWN_RIPPLE = RingLook.new(
+        radius: Tween.new(from: 0.3, to: 1.45, duration: 0.55, ease: :out_cubic),
+        width: Tween.new(from: 0.09, to: 0.0, duration: 0.55, ease: :linear),
+        alpha: Tween.new(from: 0.5, to: 0.0, duration: 0.55, ease: :in_out_sine), color: PALETTE.halo
+      )
+      # A tap on empty space: only a whisper that the tap was heard.
+      TOUCH_RIPPLE = RingLook.new(
+        radius: Tween.new(from: 0.12, to: 0.5, duration: 0.25, ease: :out_cubic),
+        width: Tween.new(from: 0.05, to: 0.0, duration: 0.25, ease: :linear),
+        alpha: Tween.new(from: 0.3, to: 0.0, duration: 0.25, ease: :out_quad), color: PALETTE.soft
+      )
+
+      # A wrong tap: the dot shudders and its rim flashes, the screen
+      # shakes a little, and the edges glow.
+      ALARM_RING = RingLook.new(
+        radius: Tween.new(from: 1.0, to: 1.3, duration: 0.3, ease: :out_cubic),
+        width: Tween.new(from: 0.14, to: 0.0, duration: 0.3, ease: :out_quad),
+        alpha: Tween.new(from: 0.85, to: 0.0, duration: 0.3, ease: :out_quad), color: PALETTE.alarm
+      )
+      PENALTY_SHAKE = ShakeLook.new(amplitude: 0.12, duration: 0.22, frequency: 24.0)
+      PENALTY_FLASH = FlashLook.new(color: PALETTE.alarm, alpha: 0.6, duration: 0.42)
+      # The clock's last seconds give each tick a faint glow too.
+      TICK_FLASH = FlashLook.new(color: PALETTE.urgent, alpha: 0.16, duration: 0.3)
+
+      # Floating numbers; +spread+ sets the two of a tap apart, across.
+      GAIN_FLOAT = FloaterLook.new(rise: 1.0, life: 0.65)
+      LOSS_FLOAT = FloaterLook.new(rise: 0.7, life: 0.75)
+      FLOAT_SPREAD = 0.42
+
+      HUD = HudLook.new(
+        bump: Tween.new(from: 1.3, to: 1.0, duration: 0.32, ease: :out_back),
+        pulse: Tween.new(from: 1.4, to: 1.0, duration: 0.55, ease: :out_elastic),
+        urgent_below: 3
+      )
+
+      # The title: its drifting dots, and the prompt's breath.
+      class TitleLook < Data.define(:dots, :drift, :dim, :breath, :intro); end
+      TITLE = TitleLook.new(dots: 7, drift: 0.35, dim: 0.5, breath: 2.4,
+                            intro: Tween.new(from: 0.0, to: 1.0, duration: 0.5, ease: :out_cubic))
+
+      # Game over: how the round dims, how the score counts up, and the
+      # celebration of a new best. Its sparkles may outlive a pop's
+      # droplets, because no round is in play behind them.
+      class FinaleLook < Data.define(:dim, :arrive, :tally, :prompt, :sparkles, :sparkle_life); end
+      FINALE = FinaleLook.new(
+        dim: Tween.new(from: 0.0, to: 0.62, duration: 0.5, ease: :out_cubic),
+        arrive: Tween.new(from: 0.0, to: 1.0, duration: 0.45, ease: :out_back),
+        tally: Tween.new(from: 0.0, to: 1.0, duration: 0.8, ease: :out_cubic),
+        prompt: Tween.new(from: 0.0, to: 1.0, duration: 0.35, ease: :out_cubic),
+        sparkles: Burst.new(count: 60, speed: 2.0..7.0, life: 0.8..1.4, size: 0.06..0.14, drag: 1.6,
+                            gravity: 4.0, alpha: 0.9),
+        sparkle_life: 1.4
+      )
+
+      # Sound: the pop climbs a little with the score, up to a cap.
+      class SoundLook < Data.define(:pop_climb, :pop_highest, :tick_climb, :volume); end
+      SOUND = SoundLook.new(pop_climb: 0.02, pop_highest: 1.4, tick_climb: 0.12, volume: 0.8)
+
+      PATCHES = {
+        # A bubbly "bloop": a sine that swoops up, with a soft click.
+        pop: Patch.new(notes: [
+          Note.new(wave: :sine, from: 360, to: 980, length: 0.12, volume: 1.0),
+          Note.new(wave: :sine, from: 720, to: 1960, length: 0.07, volume: 0.25),
+          Note.new(wave: :noise, from: 1, length: 0.012, attack: 0.001, volume: 0.25)
+        ]),
+        # A low, dull "bonk", falling.
+        bonk: Patch.new(notes: [
+          Note.new(wave: :triangle, from: 210, to: 92, length: 0.26, volume: 1.0),
+          Note.new(wave: :square, from: 105, to: 70, length: 0.16, volume: 0.35),
+          Note.new(wave: :noise, from: 1, length: 0.03, attack: 0.001, volume: 0.4)
+        ]),
+        # A woodblock tick for the last seconds.
+        tick: Patch.new(notes: [
+          Note.new(wave: :sine, from: 1760, to: 1500, length: 0.05, attack: 0.001, volume: 1.0),
+          Note.new(wave: :triangle, from: 880, length: 0.03, attack: 0.001, volume: 0.4)
+        ]),
+        # Three notes up: off you go.
+        start: Patch.new(notes: [
+          Note.new(wave: :triangle, from: 523.25, start: 0.0, length: 0.12, volume: 0.8),
+          Note.new(wave: :triangle, from: 659.25, start: 0.07, length: 0.12, volume: 0.8),
+          Note.new(wave: :triangle, from: 783.99, start: 0.14, length: 0.22, volume: 0.9),
+          Note.new(wave: :sine, from: 1567.98, start: 0.14, length: 0.2, volume: 0.2)
+        ]),
+        # Three notes down: time's up.
+        game_over: Patch.new(notes: [
+          Note.new(wave: :triangle, from: 587.33, start: 0.0, length: 0.16, volume: 0.8),
+          Note.new(wave: :triangle, from: 440.0, start: 0.13, length: 0.18, volume: 0.8),
+          Note.new(wave: :triangle, from: 349.23, start: 0.28, length: 0.4, volume: 0.9)
+        ]),
+        # A bright arpeggio with a bell's shimmer.
+        new_best: Patch.new(notes: [523.25, 659.25, 783.99, 1046.5].each_with_index.flat_map do |hz, i|
+          [Note.new(wave: :sine, from: hz, start: i * 0.08, length: 0.4, volume: 0.8),
+           Note.new(wave: :sine, from: hz * 2, start: i * 0.08, length: 0.25, volume: 0.25)]
+        end + [Note.new(wave: :sine, from: 2093, start: 0.34, length: 0.5, volume: 0.3)])
+      }.freeze
+
+      # The autoplay bot, for development (main.rb): how long it waits on
+      # each screen, how long it thinks before each tap (which grows with
+      # the score, so a round ends), and how often it taps a popped dot.
+      class AutopilotLook < Data.define(:title_wait, :finale_wait, :think, :tiring, :mistakes); end
+      AUTOPILOT = AutopilotLook.new(title_wait: 1.6, finale_wait: 1.8, think: 0.22..0.45, tiring: 0.045,
+                                    mistakes: 0.14)
+    end
+  end
+end
