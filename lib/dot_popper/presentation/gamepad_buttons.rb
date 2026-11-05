@@ -9,13 +9,13 @@ module DotPopper
     # [:press] a press at the cursor, as a click there (A, and the right
     #   trigger through Trigger)
     # [:start] start a round from the title, or continue after one (Start)
-    # [:daily] play the Daily from the title, or share a Daily's result (Y)
+    # [:share] copy the result on Game Over (Y)
     # [:mute] sound on or off (Back, Select, or Share)
     #
     # The d-pad has no intent of its own: it moves the cursor, as the left
     # stick does (GamepadCursor).
     class GamepadButtons < Data.define(:intents)
-      STANDARD = { a: :press, start: :start, y: :daily, back: :mute }.freeze
+      STANDARD = { a: :press, start: :start, y: :share, back: :mute }.freeze
 
       def initialize(intents: STANDARD) = super
 

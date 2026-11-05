@@ -24,23 +24,26 @@ class AutopilotTest < Minitest::Test
     assert_includes events, DotPopper::Events::Popped
   end
 
-  def test_with_the_show_it_plays_the_daily_every_other_round_and_shares_it
+  def test_with_the_show_it_copies_every_other_result
     game = DotPopper::Game.new(field, random: Random.new(4))
     clipboard = MemoryClipboard.new
-    show = Show.new(game:, layout: layout, sounds: FakeSounds.new, radius: R, clipboard:, today: -> { Date.new(2026, 11, 5) })
+    show = Show.new(game:, layout: layout, sounds: FakeSounds.new, radius: R, clipboard:)
     pilot = Autopilot.new(Look::AUTOPILOT, random: Random.new(5))
-    modes = []
-    game.subscribe { modes << it.mode.name if it.is_a?(DotPopper::Events::RoundStarted) }
+    copies = []
+    rounds = 0
+    game.subscribe { rounds += 1 if it.is_a?(DotPopper::Events::RoundStarted) }
     12_000.times do
       x, y = pilot.update(1 / 60.0, game, show)
       show.tap(x, y) if x
       game.update(1 / 60.0)
       show.update(1 / 60.0)
-      break if modes.size >= 3
+      copies << clipboard.text if game.state.is_a?(DotPopper::Game::Title) && copies.size < rounds
+      break if rounds >= 3
     end
 
-    assert_equal %i[free daily free], modes
-    assert_match(/\ADot Popper, today's challenge/, clipboard.text)
+    assert_equal 3, rounds
+    assert_nil copies[0]
+    assert_match(/\ADot Popper: \d+ points?/, copies[1])
   end
 
   def test_it_taps_only_a_fresh_dot_it_can_see

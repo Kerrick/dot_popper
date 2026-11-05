@@ -8,8 +8,7 @@ module DotPopper
     # with no name the game made up for itself. +covered+ is the first-run
     # hint, a sentence a line.
     class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time, :covered,
-                              :daily, :share, :copied, :new_daily_best, :daily_best)
-      MONTHS = %w[Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec].freeze
+                              :share, :copied)
       MINUS = "−" # a true minus sign, as wide as the plus
 
       # +1, −2, or 0 for a number of points.
@@ -58,16 +57,13 @@ module DotPopper
         parts.join(", ")
       end
 
-      # The heading over a daily round's result: "Today's challenge, Nov 5".
-      def daily_label(date) = "Today's challenge, #{MONTHS[date.month - 1]} #{date.day}"
-
-      # "Your best today: 27".
-      def daily_best_line(best) = "#{daily_best}: #{best}"
-
-      # What "Copy my result" puts on the clipboard: the day, the score, and
-      # how it was made, with nothing that gives the day's dots away.
-      def share_text(date, score, stats)
-        "Dot Popper, today's challenge (#{date.iso8601}): #{Words.count(score, "point")}\n" \
+      # What "Copy my result" puts on the clipboard: the score, whether it
+      # set or tied the player's +best+, and what the round was made of.
+      #
+      #   Dot Popper: 25 points, a new best!
+      #   🟡 27 pops · ⚫ 1 wrong tap · ⏱ 38 seconds
+      def share_text(score, stats, best:, new_best:)
+        "Dot Popper: #{Words.count(score, "point")}#{best_note(score, best, new_best)}\n" \
           "🟡 #{Words.count(stats.pops, "pop")} · ⚫ #{Words.count(stats.slips, "wrong tap")} · " \
           "⏱ #{Words.count(stats.duration.round, "second")}"
       end
@@ -77,6 +73,15 @@ module DotPopper
 
       # A signed change with its unit: "+1 point", "−2 seconds".
       def self.change(number, noun) = "#{signed(number)} #{noun}#{"s" unless number.abs == 1}"
+
+      private
+
+      def best_note(score, best, new_best)
+        if new_best then ", a new best!"
+        elsif score == best && best.positive? then ", tying my best!"
+        else ""
+        end
+      end
     end
   end
 end

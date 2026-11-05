@@ -26,8 +26,7 @@ module DotPopper
         new_best: "New best!", best: "Your best", score: "SCORE", time: "TIME",
         covered: ["Popped dots stay on top, and new dots appear under them.",
                   "Wait for the bright dot to slide out, then tap it."].freeze,
-        daily: "Play today's challenge", share: "Copy my result", copied: "Copied! Paste it anywhere.",
-        new_daily_best: "Your best today!", daily_best: "Your best today"
+        share: "Copy my result", copied: "Copied! Paste it anywhere."
       )
 
       # The first-run hint, under the HUD.

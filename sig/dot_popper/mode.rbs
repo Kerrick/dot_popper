@@ -6,17 +6,9 @@ module DotPopper
 
     attr_reader seed: Integer
 
-    attr_reader date: Date?
-
-    def self.new: (name: Symbol, seed: Integer, date: Date?) -> instance
+    def self.new: (name: Symbol, seed: Integer) -> instance
 
     def self.free: (Random random) -> Mode
-
-    def self.daily: (Date date) -> Mode
-
-    def self.seed_for: (Date date) -> Integer
-
-    def daily?: () -> bool
 
     def random: () -> Random
   end

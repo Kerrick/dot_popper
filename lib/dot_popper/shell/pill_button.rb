@@ -3,8 +3,8 @@
 module DotPopper
   module Shell
     # A button drawn as a pill with its word in it, on whole device
-    # pixels: the title's Daily and Game Over's Share. Its word shrinks,
-    # by whole sizes, to fit.
+    # pixels: Game Over's "Copy my result". Its word shrinks, by whole
+    # sizes, to fit.
     class PillButton < Data.define(:pen)
       G = ::Lota::Graphics
 

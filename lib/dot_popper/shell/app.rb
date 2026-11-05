@@ -24,8 +24,7 @@ module DotPopper
         puts "Dot Popper: a dot's radius is #{@dot_size.reason}"
         @touch ? fill_screen : open_window
         random = seed ? Random.new(seed) : Random.new
-        @game = Game.new(field, best: BestScore.new(SaveFile.new(name: "best_score.txt")), random:,
-                         daily_best: DailyBest.new(SaveFile.new(name: "daily_best.txt")))
+        @game = Game.new(field, best: BestScore.new(SaveFile.new(name: "best_score.txt")), random:)
         @speaker = Speaker.new(Look::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Look::SOUND.volume)
         @show = Presentation::Show.new(game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"),
@@ -88,7 +87,7 @@ module DotPopper
         case @buttons.intent(button)
         in :press then gamepad_tap
         in :start then @show.start
-        in :daily then @show.daily
+        in :share then @show.share
         in :mute then @speaker.toggle_mute
         in nil then nil
         end

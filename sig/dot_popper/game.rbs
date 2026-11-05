@@ -10,23 +10,19 @@ module DotPopper
 
     attr_reader best: BestScore
 
-    attr_reader daily_best: DailyBest
-
     attr_reader field: Field
 
     @random: Random
 
     @listeners: Array[_Listener]
 
-    def initialize: (Field field, ?best: BestScore, ?random: Random, ?daily_best: DailyBest) -> void
+    def initialize: (Field field, ?best: BestScore, ?random: Random) -> void
 
     def subscribe: (?_Listener? listener) ?{ (event event) -> void } -> self
 
     def press: (number x, number y) -> self
 
     def update: (number seconds) -> self
-
-    def choose: (Mode mode) -> self
 
     def round: () -> Round?
 
@@ -51,8 +47,6 @@ module DotPopper
 
       def press: (Game game, number x, number y) -> Playing
 
-      def choose: (Game game, Mode mode) -> Playing
-
       def update: (Game game, number seconds) -> Title
     end
 
@@ -66,8 +60,6 @@ module DotPopper
       def press: (Game game, number x, number y) -> (Playing | GameOver)
 
       def update: (Game game, number seconds) -> (Playing | GameOver)
-
-      def choose: (Game game, Mode mode) -> Playing
 
       private
 
@@ -92,8 +84,6 @@ module DotPopper
       def ready?: () -> bool
 
       def press: (Game game, number x, number y) -> (GameOver | Title)
-
-      def choose: (Game game, Mode mode) -> GameOver
 
       def update: (Game game, number seconds) -> GameOver
     end

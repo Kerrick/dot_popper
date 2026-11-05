@@ -15,8 +15,7 @@ module DotPopper
       attr_reader :game, :effects, :animations, :hud, :hint, :attract, :layout, :marquee, :finale, :sounds, :now, :look
 
       def initialize(game:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false,
-                     tutor: Tutor.new(BestScore::Memory.new), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
-                     today: -> { Date.today })
+                     tutor: Tutor.new(BestScore::Memory.new), haptics: NoHaptics.new, clipboard: MemoryClipboard.new)
         @game = game
         @layout = layout
         @sounds = sounds
@@ -33,7 +32,6 @@ module DotPopper
         @finale = nil
         @tutor = tutor
         @clipboard = clipboard
-        @today = today
         @hint = nil
         @penalized_at = -Float::INFINITY
         @recorder = RoundStats::Recorder.new
@@ -51,17 +49,13 @@ module DotPopper
       def playing? = game.state.is_a?(Game::Playing)
       def finished? = game.state.is_a?(Game::GameOver)
 
-      # Today's local date: whose Daily the title offers.
-      def today = @today.call
-
-      # A tap anywhere. On the title, the mute and Daily buttons take
-      # their own taps, as Share does after a daily round; every other
-      # tap goes to the game at once. A tap on one of the title's fresh
-      # dots also pops it, as the round starts.
+      # A tap anywhere. On the title, the mute button takes its own taps,
+      # as "Copy my result" does on Game Over; every other tap goes to the
+      # game at once. A tap on one of the title's fresh dots also pops it,
+      # as the round starts.
       def tap(x, y)
         if title? && layout.mute_button.contains?(x, y) then sounds.toggle_mute
-        elsif title? && daily_reach.contains?(x, y) then play_daily
-        elsif finished? && shareable? && share_reach.contains?(x, y) then share
+        elsif finished? && share_reach.contains?(x, y) then share
         else
           scenery = attract.dots.top_at(x, y) if title?
           game.press(x, y)
@@ -77,16 +71,17 @@ module DotPopper
         game.press(layout.center_x, layout.center_y) unless playing?
       end
 
-      # A gamepad's Y: the Daily button's press on the title, and Share's
-      # after a daily round. Anywhere else it does nothing.
-      def daily
-        if title? then play_daily
-        elsif finished? && shareable? then share
-        end
+      # A gamepad's Y, or a tap on "Copy my result": on Game Over, copies
+      # the round's result to share. Anywhere else it does nothing.
+      def share
+        return unless finished? && finale
+
+        @clipboard.copy(words.share_text(finale.score, finale.stats, best: finale.best, new_best: finale.new_best?))
+        @finale = finale.copy(now)
+        sounds.play(:tick)
       end
 
-      # Where a tap reaches each button: never less than a dot's width.
-      def daily_reach = layout.daily_button(2 * @radius).reach(2 * @radius)
+      # Where a tap reaches "Copy my result": never less than a dot's width.
       def share_reach = layout.share_button.reach(2 * @radius)
 
       def resize(layout, field)
@@ -158,8 +153,7 @@ module DotPopper
 
       def round_ended(event)
         @finale = Finale.new(look: look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now,
-                             stats:, mode: event.mode, daily_best: event.daily_best,
-                             new_daily_best: event.new_daily_best)
+                             stats:)
         sounds.play(event.new_best ? :new_best : :game_over)
       end
 
@@ -175,15 +169,6 @@ module DotPopper
         effects.burst(x, y, look::POP_BURST, palette.confetti)
         effects.ring(dot.x, dot.y, look::SHOCKWAVE)
         sounds.play(:pop, pan: pan(x))
-      end
-
-      def play_daily = game.choose(Mode.daily(today))
-      def shareable? = finale&.daily?
-
-      def share
-        @clipboard.copy(words.share_text(finale.date, finale.score, finale.stats))
-        @finale = finale.copy(now)
-        sounds.play(:tick)
       end
 
       # One floater to the left and one to the right of the tap; with only

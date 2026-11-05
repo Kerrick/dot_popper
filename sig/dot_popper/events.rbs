@@ -62,13 +62,7 @@ module DotPopper
 
       attr_reader mode: Mode
 
-      attr_reader daily_best: Integer?
-
-      attr_reader new_daily_best: bool
-
-      def self.new: (round: Round, best: Integer, new_best: bool, mode: Mode, ?daily_best: Integer?, ?new_daily_best: bool) -> instance
-
-      def initialize: (round: Round, best: Integer, new_best: bool, mode: Mode, ?daily_best: Integer?, ?new_daily_best: bool) -> void
+      def self.new: (round: Round, best: Integer, new_best: bool, mode: Mode) -> instance
 
       def score: () -> Integer
     end

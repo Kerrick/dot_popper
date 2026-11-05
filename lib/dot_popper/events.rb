@@ -25,11 +25,8 @@ module DotPopper
 
     # A round's clock reached zero; +best+ is the device's best score
     # after this round, +new_best+ whether this round set it, and +mode+
-    # how the round was started. A daily round also has that day's
-    # +daily_best+ after it, and +new_daily_best+ whether it set it.
-    class RoundEnded < Data.define(:round, :best, :new_best, :mode, :daily_best, :new_daily_best)
-      def initialize(round:, best:, new_best:, mode:, daily_best: nil, new_daily_best: false) = super
-
+    # how the round was started.
+    class RoundEnded < Data.define(:round, :best, :new_best, :mode)
       def score = round.score
     end
 

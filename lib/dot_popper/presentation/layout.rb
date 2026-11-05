@@ -65,26 +65,15 @@ module DotPopper
         Rect.new(x: safe.right - margin - size, y: safe.bottom - margin - size, width: size, height: size)
       end
 
-      # The title's Daily button, in the safe area's bottom left corner,
-      # placed so its hit area, at least +least+ across and down, is
-      # inside the safe area too.
-      def daily_button(least)
-        height = button_size
-        width = height * 4.6
-        middle = safe.bottom - margin - ([height, least].max / 2.0)
-        left = safe.x + margin + (([width, least].max - width) / 2.0)
-        Rect.new(x: left, y: middle - (height / 2.0), width:, height:)
-      end
-
-      # Game Over's Share button, under the round's summary.
+      # Game Over's "Copy my result" button, under the round's summary.
       def share_button
         height = button_size
         width = height * 4.6
         Rect.new(x: center_x - (width / 2.0), y: center_y + (safe.height * 0.3) - (height / 2.0), width:, height:)
       end
 
-      # Where Game Over's prompt goes: lower when a Share button is up.
-      def continue_y(share) = center_y + (safe.height * (share ? 0.41 : 0.28))
+      # Where Game Over's prompt goes: under the share button.
+      def continue_y = center_y + (safe.height * 0.41)
 
       private
 

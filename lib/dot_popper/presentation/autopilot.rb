@@ -6,8 +6,9 @@ module DotPopper
     # the title to a round, taps fresh dots where they show, sometimes taps
     # a popped one by mistake, slows as its score grows so the round ends,
     # and taps through game over back to the title. Given the Show, it
-    # plays every other round as the Daily, and shares each daily result.
-    # It sees only what a player sees: the dots and the screen.
+    # starts a round by popping one of the title's dots, and copies every
+    # other result. It sees only what a player sees: the dots and the
+    # screen.
     class Autopilot
       # Where it looks for an uncovered part of the fresh dot: its centre,
       # then points around it, in radii.
@@ -19,7 +20,7 @@ module DotPopper
         @state = nil
         @waited = 0.0
         @cooldown = 0.0
-        @titles = 0
+        @finales = 0
         @shared = false
       end
 
@@ -39,7 +40,7 @@ module DotPopper
       def notice(state)
         return if state.class == @state
 
-        @titles += 1 if state.is_a?(Game::Title)
+        @finales += 1 if state.is_a?(Game::GameOver)
         @shared = false
         @state = state.class
         @waited = 0.0
@@ -55,20 +56,20 @@ module DotPopper
 
       def center(field) = [field.width / 2.0, field.height * 0.62]
 
-      # The Daily every other time; otherwise a tap on one of the title's
-      # fresh dots, which pops it as the round starts, or the middle.
+      # A tap on one of the title's fresh dots, which pops it as the round
+      # starts, or the middle.
       def start(game, show)
         return center(game.field) unless show
-        return middle(show.daily_reach) if @titles.even?
 
         dots = show.attract.dots
         toy = dots.find { it.fresh? && dots.top_at(it.x, it.y) == it }
         toy ? [toy.x, toy.y] : center(game.field)
       end
 
-      # Shares a daily result first, then goes on once the game will hear.
+      # Copies every other result first, then goes on once the game will
+      # hear.
       def finish(game, show)
-        if show&.finale&.daily? && !@shared && @waited >= @look.finale_wait / 2
+        if show && @finales.even? && !@shared && @waited >= @look.finale_wait / 2
           @shared = true
           return middle(show.share_reach)
         end

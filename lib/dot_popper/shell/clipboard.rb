@@ -2,7 +2,7 @@
 
 module DotPopper
   module Shell
-    # The system's clipboard, for Share. A clipboard that will not take
+    # The system's clipboard, for "Copy my result". A clipboard that will not take
     # the text loses it, never the game.
     class Clipboard < Data.define
       def copy(text)

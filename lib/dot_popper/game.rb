@@ -8,13 +8,11 @@ module DotPopper
   # rounds, keeps the best score, and tells its listeners every event, in
   # order.
   class Game
-    attr_reader :state, :best, :daily_best, :field
+    attr_reader :state, :best, :field
 
-    def initialize(field, best: BestScore.new(BestScore::Memory.new), random: Random.new,
-                   daily_best: DailyBest.new(BestScore::Memory.new))
+    def initialize(field, best: BestScore.new(BestScore::Memory.new), random: Random.new)
       @field = field
       @best = best
-      @daily_best = daily_best
       @random = random
       @listeners = []
       @state = show_title
@@ -28,11 +26,6 @@ module DotPopper
 
     def press(x, y) = advance(state.press(self, x, y))
     def update(seconds) = advance(state.update(self, seconds))
-
-    # Starts a round in +mode+, such as the Daily, if the title is up; on
-    # any other screen it does nothing. A press still starts the usual
-    # round.
-    def choose(mode) = advance(state.choose(self, mode))
 
     # The round in play or just finished, or nil on the title.
     def round = state.round
@@ -67,10 +60,7 @@ module DotPopper
 
     def finish(round, mode)
       new_best = best.record(round.score)
-      date = mode.date
-      new_daily_best = date ? daily_best.record(date, round.score) : false
-      announce(Events::RoundEnded.new(round:, best: best.value, new_best:, mode:,
-                                      daily_best: date && daily_best.value(date), new_daily_best:))
+      announce(Events::RoundEnded.new(round:, best: best.value, new_best:, mode:))
       GameOver.new(round:, new_best:, mode:)
     end
 
@@ -85,7 +75,6 @@ module DotPopper
     class Title < Data.define
       def round = nil
       def press(game, _x, _y) = game.start_round
-      def choose(game, mode) = game.start_round(mode)
       def update(_game, _seconds) = self
     end
 
@@ -102,8 +91,6 @@ module DotPopper
         settle(game)
       end
 
-      def choose(_game, _mode) = self
-
       private
 
       def settle(game) = round.over? ? game.finish(round, mode) : self
@@ -119,7 +106,6 @@ module DotPopper
       def ready? = shown >= Rules::GAME_OVER_GRACE
 
       def press(game, _x, _y) = ready? ? game.show_title : self
-      def choose(_game, _mode) = self
       def update(_game, seconds) = with(shown: shown + seconds)
     end
   end

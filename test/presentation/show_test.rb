@@ -5,14 +5,12 @@ require_relative "presentation_helper"
 class ShowTest < Minitest::Test
   include PresentationTest
 
-  DAY = Date.new(2026, 11, 5)
-
   def setup
     @sounds = FakeSounds.new
     @game = DotPopper::Game.new(field, random: Random.new(2))
     @clipboard = MemoryClipboard.new
     @show = Show.new(game: @game, layout: layout, sounds: @sounds, radius: R, random: Random.new(3),
-                     clipboard: @clipboard, today: -> { DAY })
+                     clipboard: @clipboard)
   end
 
   def test_a_tap_on_a_title_dot_pops_it_and_still_starts_the_round
@@ -25,29 +23,20 @@ class ShowTest < Minitest::Test
     assert_equal 1, @show.effects.rings.size
   end
 
-  def test_the_daily_button_starts_todays_daily
-    x, y = middle(@show.daily_reach)
-    @show.tap(x, y)
-
-    assert @show.playing?
-    assert_equal DotPopper::Mode.daily(DAY), @game.state.mode
-  end
-
-  def test_after_a_daily_share_copies_the_result_and_does_not_continue
-    @show.tap(*middle(@show.daily_reach))
-    start_and_pop(started: true)
+  def test_on_game_over_copy_my_result_copies_it_and_does_not_continue
+    start_and_pop
     @game.update(20)
+    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
     @show.update(0.1)
     @show.tap(*middle(@show.share_reach))
 
     assert @show.finished?
-    assert_equal "Dot Popper, today's challenge (2026-11-05): 1 point\n🟡 1 pop · ⚫ 0 wrong taps · ⏱ 11 seconds", @clipboard.text
+    assert_equal "Dot Popper: 1 point, a new best!\n🟡 1 pop · ⚫ 0 wrong taps · ⏱ 11 seconds", @clipboard.text
     assert @show.finale.copied?(@show.now)
-    assert_equal "Today's challenge, Nov 5", @show.words.daily_label(@show.finale.date)
   end
 
-  def test_after_a_daily_a_tap_elsewhere_continues_once_the_grace_is_over
-    @show.tap(*middle(@show.daily_reach))
+  def test_a_tap_elsewhere_on_game_over_continues_once_the_grace_is_over
+    @show.tap(10, 10)
     @game.update(20)
     @show.update(0.1)
     @show.tap(10, 10)
@@ -59,13 +48,10 @@ class ShowTest < Minitest::Test
     assert_nil @clipboard.text
   end
 
-  def test_after_a_free_round_there_is_no_share_button
-    @show.tap(10, 10)
-    @game.update(20)
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+  def test_the_share_buttons_place_on_the_title_is_an_ordinary_tap
     @show.tap(*middle(@show.share_reach))
 
-    assert @show.title?
+    assert @show.playing?
     assert_nil @clipboard.text
   end
 
@@ -106,27 +92,20 @@ class ShowTest < Minitest::Test
     assert @show.title?
   end
 
-  def test_a_gamepads_y_plays_the_daily_and_then_shares_it
-    @show.daily
-    assert_equal DotPopper::Mode.daily(DAY), @game.state.mode
+  def test_a_gamepads_y_copies_the_result_on_game_over_and_nothing_else
+    @show.share
+    assert @show.title?, "Y does nothing on the title"
 
-    @show.daily
+    @show.start
+    @show.share
     assert @show.playing?, "Y does nothing in a round"
+    assert_nil @clipboard.text
+
     @game.update(20)
     @show.update(0.1)
-    @show.daily
+    @show.share
     assert @show.finished?
-    assert_match(/\ADot Popper, today's challenge \(2026-11-05\)/, @clipboard.text)
-  end
-
-  def test_y_after_a_free_round_does_nothing
-    @show.start
-    @game.update(20)
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
-    @show.daily
-
-    assert @show.finished?
-    assert_nil @clipboard.text
+    assert_match(/\ADot Popper: 0 points\n/, @clipboard.text)
   end
 
   def test_any_other_tap_reaches_the_game_at_once

@@ -25,7 +25,19 @@ class WordsTest < Minitest::Test
 
   def test_the_best_score_is_named
     assert_equal "Your best: 12", Look::WORDS.best_line(12)
-    assert_equal "Your best today: 9", Look::WORDS.daily_best_line(9)
+  end
+
+  # The result to share names a new best or a tie, and otherwise only
+  # the score.
+  def test_the_shared_result_says_the_score_and_what_the_round_was
+    stats = DotPopper::RoundStats.start.with(pops: 27, slips: 1, duration: 38.2)
+
+    assert_equal "Dot Popper: 25 points, a new best!\n🟡 27 pops · ⚫ 1 wrong tap · ⏱ 38 seconds",
+                 Look::WORDS.share_text(25, stats, best: 25, new_best: true)
+    assert_equal "Dot Popper: 25 points, tying my best!\n🟡 27 pops · ⚫ 1 wrong tap · ⏱ 38 seconds",
+                 Look::WORDS.share_text(25, stats, best: 25, new_best: false)
+    assert_match(/\ADot Popper: 1 point\n/, Look::WORDS.share_text(1, stats, best: 25, new_best: false))
+    assert_match(/\ADot Popper: 0 points\n/, Look::WORDS.share_text(0, stats, best: 0, new_best: false))
   end
 
   # The title teaches the scoring in words a first-time player can act on,

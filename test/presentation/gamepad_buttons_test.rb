@@ -8,7 +8,7 @@ class GamepadButtonsTest < Minitest::Test
   def setup = @buttons = GamepadButtons.new
 
   def test_each_button_asks_for_its_intent
-    assert_equal({ a: :press, start: :start, y: :daily, back: :mute },
+    assert_equal({ a: :press, start: :start, y: :share, back: :mute },
                  %i[a start y back].to_h { [it, @buttons.intent(it)] })
     assert_equal :press, @buttons.intent("a")
   end

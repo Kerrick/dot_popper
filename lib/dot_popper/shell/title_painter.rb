@@ -3,8 +3,7 @@
 module DotPopper
   module Shell
     # The title screen: the name, a legend that teaches the rule with one
-    # dot of each kind, the best score, the prompt, and the Daily and mute
-    # buttons.
+    # dot of each kind, the best score, the prompt, and the mute button.
     class TitlePainter < Data.define(:pen, :dots)
       G = ::Lota::Graphics
 
@@ -28,14 +27,9 @@ module DotPopper
         pen.text(show.words.play, prompt, layout.center_x, center + (height * 0.27), pen.palette.cream,
                   intro * marquee.prompt(now))
         MuteButton.new(pen:).draw(layout.mute_button, show.sounds.muted?)
-        daily_button(show, layout, intro)
       end
 
       private
-
-      def daily_button(show, layout, alpha)
-        PillButton.new(pen:).draw(layout.daily_button(2 * show.game.field.radius), show.words.daily, alpha:)
-      end
 
       # The title's size, shrunk if the name would not fit across.
       def fit(size, text, layout)
