@@ -25,8 +25,9 @@ module DotPopper
         heading = pen.fonts.bold(layout.scaled(type.heading))
         heading_y = center - (height * (0.27 - (finale.lesson ? pen.look::LESSON.room : 0.0)))
         summary = pen.fonts.semibold(layout.scaled(type.summary))
-        backing(show, layout, heading_y - (heading.height * 0.4), [heading.width(words.time_up),
-                                                                   summary.width(words.summary(finale.stats))], shown)
+        backing_top = finale.lesson ? below + (layout.margin * 0.5) : heading_y - (heading.height * 0.4)
+        backing(show, layout, backing_top, [heading.width(words.time_up), summary.width(words.summary(finale.stats)),
+                                            lesson_width(finale.lesson, layout)], shown)
         pen.text(words.time_up, heading, layout.center_x, heading_y - ((1 - arrival) * 30), palette.soft, shown)
         lesson(finale.lesson, layout, below, heading_y - (layout.scaled(type.heading) * 0.36), shown) if finale.lesson
         score = pen.fonts.bold(layout.scaled(type.final_score))
@@ -64,17 +65,33 @@ module DotPopper
       end
 
       # The stacking rule, a sentence a line (each broken evenly if it
-      # would not fit across), centred between +top+ and +bottom+.
+      # would not fit across), centred between +top+ and +bottom+, in the
+      # hint's size and bold, since it is the one thing on this screen the
+      # player has not seen before.
       def lesson(sentences, layout, top, bottom, alpha)
-        font = pen.fonts.semibold(layout.scaled(pen.look::TYPE.summary))
-        room = layout.safe.width - (layout.margin * 3)
-        lines = sentences.flat_map { |sentence| Presentation::Words.balance(sentence, room) { font.width(it) } }
-        step = font.height * 0.98
+        font = lesson_font(layout)
+        lines = lesson_lines(sentences, layout)
+        step = font.height * 1.05
         top = ((top + bottom) / 2.0) - (step * lines.size / 2.0)
         lines.each_with_index do |line, i|
           pen.text(line, font, layout.center_x, top + (step * (i + 0.5)), pen.palette.cream,
                    alpha * pen.look::LESSON.alpha)
         end
+      end
+
+      def lesson_font(layout) = pen.fonts.bold(layout.scaled(pen.look::TYPE.hint))
+
+      def lesson_lines(sentences, layout)
+        font = lesson_font(layout)
+        room = layout.safe.width - (layout.margin * 3)
+        sentences.flat_map { |sentence| Presentation::Words.balance(sentence, room) { font.width(it) } }
+      end
+
+      def lesson_width(sentences, layout)
+        return 0 unless sentences
+
+        font = lesson_font(layout)
+        lesson_lines(sentences, layout).map { font.width(it) }.max.to_f
       end
 
       # The lifetime record the round set, if any, once the score has

@@ -66,7 +66,7 @@ module DotPopper
 
       # The stacking rule, taught on the first two Game Overs after a wrong
       # tap that had the bright dot hidden under the popped one.
-      LESSON = LessonLook.new(times: 2, alpha: 0.95, room: 0.035)
+      LESSON = LessonLook.new(times: 2, alpha: 1.0, room: 0.065)
 
       # The rounded face, Fredoka (SIL Open Font License; assets/fonts).
       # Sizes are graphics units at a layout scale of 1. A size that
