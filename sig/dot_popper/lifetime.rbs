@@ -1,0 +1,15 @@
+module DotPopper
+  class Lifetime
+    attr_reader stats: LifetimeStats
+
+    @store: BestScore::_Store
+
+    @today: ^() -> Date
+
+    def initialize: (BestScore::_Store store, ?today: ^() -> Date) -> void
+
+    def record: (RoundStats round) -> Array[LifetimeStats::Record]
+
+    def today: () -> Date
+  end
+end

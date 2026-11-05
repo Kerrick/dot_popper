@@ -35,6 +35,15 @@ class ShowTest < Minitest::Test
     assert @show.finale.copied?(@show.now)
   end
 
+  def test_each_finished_round_is_added_to_the_lifetime_stats
+    start_and_pop
+    @game.update(20)
+
+    assert_equal 1, @show.lifetime.stats.rounds
+    assert_equal 1, @show.lifetime.stats.pops
+    assert_equal [1], @show.lifetime.stats.recent
+  end
+
   def test_a_tap_elsewhere_on_game_over_continues_once_the_grace_is_over
     @show.tap(10, 10)
     @game.update(20)

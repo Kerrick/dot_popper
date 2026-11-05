@@ -29,7 +29,8 @@ module DotPopper
         @show = Presentation::Show.new(game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"),
                                        tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt")),
-                                       haptics: Haptics.for(os), clipboard: Clipboard.new)
+                                       haptics: Haptics.for(os), clipboard: Clipboard.new,
+                                       lifetime: Lifetime.new(SaveFile.new(name: "lifetime.txt")))
         @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG)))
         puts "Dot Popper: each round is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"
         @pile = Pile.new(flag?("DOT_POPPER_CALM") ? Look::CALM_PILE : Look::PILE)

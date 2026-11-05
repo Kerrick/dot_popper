@@ -3,6 +3,8 @@
 # The rules of Dot Popper: dots, scoring, the clock, and the flow from
 # title to game over. Nothing here draws, plays sounds, or reads input, so
 # all of it runs, and is tested, without a window.
+require "date"
+
 module DotPopper
 end
 
@@ -16,5 +18,7 @@ require_relative "dot_popper/stack"
 require_relative "dot_popper/round"
 require_relative "dot_popper/best_score"
 require_relative "dot_popper/round_stats"
+require_relative "dot_popper/lifetime_stats"
+require_relative "dot_popper/lifetime"
 require_relative "dot_popper/playtest_log"
 require_relative "dot_popper/game"

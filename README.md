@@ -133,7 +133,7 @@ Each finished round adds a line to `rounds.csv` in the game's save folder, so pl
 - Under `bundle exec lota run` on a Mac: `~/Library/Application Support/Lota/dot_popper/`
 - In a packaged build: a `dot_popper` folder in the system's application-data folder, such as `%APPDATA%\dot_popper` on Windows (see [PACKAGING.md](PACKAGING.md))
 
-The same folder also holds the game's other saved state: the best score, whether sound is on, and whether the first-mistake hint has been shown.
+The same folder also holds the game's other saved state: the best score (`best_score.txt`), whether sound is on, whether the first-mistake hint has been shown, and the lifetime stats (`lifetime.txt`), which add up every round played on this device. `lifetime.txt` is plain `key=value` lines; a damaged line is ignored, and a missing file starts the stats from nothing.
 
 The first line of `rounds.csv` names the columns:
 

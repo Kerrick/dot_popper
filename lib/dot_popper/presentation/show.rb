@@ -10,13 +10,17 @@ module DotPopper
     # itself.
     #
     # +sounds+ answers play(name, pitch:, pan:), muted?, and toggle_mute;
-    # +haptics+ answers buzz(seconds).
+    # +haptics+ answers buzz(seconds). +lifetime+ (Lifetime) adds up every
+    # round the device has played.
     class Show
-      attr_reader :game, :effects, :animations, :hud, :hint, :attract, :layout, :marquee, :finale, :sounds, :now, :look
+      attr_reader :game, :effects, :animations, :hud, :hint, :attract, :layout, :marquee, :finale, :sounds, :now, :look,
+                  :lifetime
 
       def initialize(game:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false,
-                     tutor: Tutor.new(BestScore::Memory.new), haptics: NoHaptics.new, clipboard: MemoryClipboard.new)
+                     tutor: Tutor.new(BestScore::Memory.new), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
+                     lifetime: Lifetime.new(BestScore::Memory.new))
         @game = game
+        @lifetime = lifetime
         @layout = layout
         @sounds = sounds
         @haptics = haptics
@@ -152,6 +156,7 @@ module DotPopper
       end
 
       def round_ended(event)
+        lifetime.record(stats)
         @finale = Finale.new(look: look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now,
                              stats:)
         sounds.play(event.new_best ? :new_best : :game_over)

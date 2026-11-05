@@ -12,17 +12,33 @@ module DotPopper
 
     attr_reader duration: Float
 
+    attr_reader score: Integer
+
+    attr_reader run: Integer
+
+    attr_reader longest_run: Integer
+
     def self.start: () -> RoundStats
 
-    def self.new: (pops: Integer, slips: Integer, softened: Integer, waits: Array[Float], fresh_since: number, duration: number) -> instance
+    def self.new: (pops: Integer, slips: Integer, softened: Integer, waits: Array[Float], fresh_since: number, duration: number, ?score: Integer, ?run: Integer, ?longest_run: Integer) -> instance
 
-    def initialize: (pops: Integer, slips: Integer, softened: Integer, waits: Array[Float], fresh_since: number, duration: number) -> void
+    def initialize: (pops: Integer, slips: Integer, softened: Integer, waits: Array[Float], fresh_since: number, duration: number, ?score: Integer, ?run: Integer, ?longest_run: Integer) -> void
 
     def record: (event event, at: Float) -> RoundStats
 
     def longest_wait: () -> Float
 
+    def fastest_pop: () -> Float?
+
     def mean_wait: () -> Float
+
+    def pops_within: (number seconds) -> Integer
+
+    private
+
+    def popped: (Events::Popped event, Float at) -> RoundStats
+
+    public
 
     class Recorder
       attr_reader stats: RoundStats

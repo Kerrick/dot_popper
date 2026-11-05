@@ -61,7 +61,39 @@ class RoundStatsTest < Minitest::Test
     assert_in_delta 0.0, RoundStats.start.mean_wait
   end
 
+  def test_it_keeps_the_score_and_the_longest_run_of_pops_without_a_wrong_tap
+    3.times { pop! }
+    slip!
+    pop!
+
+    stats = @recorder.stats
+    assert_equal 2, stats.score # 4 pops, and a wrong tap at 3 that cost 2
+    assert_equal 1, stats.run
+    assert_equal 3, stats.longest_run
+  end
+
+  def test_it_knows_the_fastest_pop_and_the_pops_in_the_first_seconds
+    @game.update(2.0)
+    pop!
+    @game.update(0.5)
+    pop!
+    @game.update(8.0)
+    pop!
+
+    stats = @recorder.stats
+    assert_in_delta 0.5, stats.fastest_pop
+    assert_equal 2, stats.pops_within(10)
+    assert_equal 3, stats.pops_within(10.5)
+    assert_nil RoundStats.start.fastest_pop
+  end
+
   private
+
+  def slip!
+    popped = @game.round.dots.find(&:popped?)
+    clear_around!(@game.round, popped)
+    @game.press(popped.x, popped.y)
+  end
 
   def pop!
     fresh = @game.round.dots.find(&:fresh?)

@@ -206,6 +206,14 @@ Under the final score, one quiet line gives three numbers: how many dots were po
 
 **To reverse:** Stop subscribing the `PlaytestLog` to the game in `Shell::App#load`.
 
+### Lifetime stats are kept beside the best score, not in place of it
+
+After every round, `Lifetime` adds the round's numbers to totals and bests that cover every round played on the device, and saves them in `lifetime.txt` in the save folder. The totals are rounds, pops, wrong taps, seconds played, and the number of different days played. The bests are the longest round, the most pops in a row without a wrong tap, the fastest pop (the shortest time a fresh dot was on screen before it was popped), and the longest wait that still ended in a pop. The file also keeps the last 20 scores. The numbers come from `RoundStats`, which now also counts the round's score and its runs of pops without a wrong tap. The best score stays in `best_score.txt`, where it has always been, because the rules read it to decide "New best!", and one number should have one home.
+
+**Why:** A player who comes back wants to see that they are improving, and a single best score hides most of that. The file is plain `key=value` lines, read leniently: a line that can't be read keeps its starting value, so a damaged or missing file costs some numbers, never the game.
+
+**To reverse:** Remove `lifetime:` from the `Show` in `Shell::App#load`; the Show then keeps the stats only in memory. Deleting `lifetime.txt` starts them from nothing.
+
 ### Cut: the daily challenge
 
 For a while the title screen had a second button, "Play today's challenge". Its round's seed came from the local date, so everyone who played on the same day got the same sequence of new dots: the same starting places, directions, and speeds. The game kept the day's best score, and afterwards a button copied the day's result to share. The idea was Wordle's: one puzzle a day, the same for everyone, so that players have something to compare and a reason to come back.

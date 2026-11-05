@@ -1,0 +1,85 @@
+module DotPopper
+  class LifetimeStats < ::Data
+    RECENT: Integer
+
+    COUNTS: Array[Symbol]
+
+    TIMES: Array[Symbol]
+
+    DAY: Regexp
+
+    attr_reader rounds: Integer
+
+    attr_reader pops: Integer
+
+    attr_reader slips: Integer
+
+    attr_reader seconds: Float
+
+    attr_reader days: Integer
+
+    attr_reader last_day: String?
+
+    attr_reader longest_round: Float
+
+    attr_reader longest_run: Integer
+
+    attr_reader fastest_pop: Float?
+
+    attr_reader longest_wait: Float
+
+    attr_reader recent: Array[Integer]
+
+    def self.new: (?rounds: Integer, ?pops: Integer, ?slips: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
+                   ?longest_round: number, ?longest_run: Integer, ?fastest_pop: number?, ?longest_wait: number,
+                   ?recent: Array[Integer]) -> instance
+
+    def initialize: (?rounds: Integer, ?pops: Integer, ?slips: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
+                     ?longest_round: number, ?longest_run: Integer, ?fastest_pop: number?, ?longest_wait: number,
+                     ?recent: Array[Integer]) -> void
+
+    def self.parse: (String? text) -> LifetimeStats
+
+    def add: (RoundStats stats, day: String) -> LifetimeStats
+
+    def records_set_by: (RoundStats stats) -> Array[Record]
+
+    def to_text: () -> String
+
+    private
+
+    def beats?: (number value, number best, Integer digits) -> bool
+
+    def faster: (Float? pop) -> Record?
+
+    class Record < ::Data
+      ORDER: Array[Symbol]
+
+      attr_reader kind: Symbol
+
+      attr_reader value: number
+
+      def self.new: (kind: Symbol, value: number) -> instance
+    end
+
+    class Pairs < ::Data
+      attr_reader values: Hash[String, String]
+
+      def self.new: (values: Hash[String, String]) -> instance
+
+      def self.parse: (String? text) -> Pairs
+
+      def count: (Symbol key) -> Integer
+
+      def time: (Symbol key) -> Float?
+
+      def counts: (Symbol key) -> Array[Integer]
+
+      def day: (Symbol key) -> String?
+
+      private
+
+      def natural: (String? text) -> Integer?
+    end
+  end
+end
