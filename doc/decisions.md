@@ -258,11 +258,11 @@ The title screen has seven dots drifting behind its text. The brief proposed mak
 
 ## Controllers
 
-### Gamepad support is written now, and switches on with Lota 0.1.3
+### Gamepad support was written before Lota could report controllers
 
-Lota's development branch binds `Lota::Joystick` and LÖVE's gamepad callbacks, but the game is locked to Lota 0.1.2, which has neither, and Lota 0.1.3 hasn't been released. So `main.rb` defines `gamepadpressed`, `gamepadaxis`, `joystickadded`, and `joystickremoved`, which Lota 0.1.2 never calls. `Shell::Gamepads` keeps the controllers that `joystickadded` hands it and reads only those. It never asks Lota for the list of joysticks each frame: doing so on Lota's development branch created new joystick objects that could be freed while still in use, and on iOS, where SDL presents the accelerometer as a joystick, that crashed the game. For a while phones and tablets took no controllers at all, but now that the game no longer asks for the list, and Lota has fixed the cause, a controller paired with an iPad is accepted too. `Shell::Gamepads` keeps only joysticks that are gamepads, so an iPad's accelerometer, which SDL also presents as a joystick, is never one.
+When gamepad support was written, Lota's development branch bound `Lota::Joystick` and LÖVE's gamepad callbacks, but the game was locked to Lota 0.1.2, which had neither. So `main.rb` defines `gamepadpressed`, `gamepadaxis`, `joystickadded`, and `joystickremoved`, which Lota 0.1.2 never called. The game now uses Lota 0.1.3, which calls them, so controllers work. `Shell::Gamepads` keeps the controllers that `joystickadded` hands it and reads only those. It never asks Lota for the list of joysticks each frame: doing so on Lota's development branch created new joystick objects that could be freed while still in use, and on iOS, where SDL presents the accelerometer as a joystick, that crashed the game. For a while phones and tablets took no controllers at all, but now that the game no longer asks for the list, and Lota has fixed the cause, a controller paired with an iPad is accepted too. `Shell::Gamepads` keeps only joysticks that are gamepads, so an iPad's accelerometer, which SDL also presents as a joystick, is never one.
 
-**Why:** Writing the support now means that moving the Gemfile to Lota 0.1.3 is the whole upgrade.
+**Why:** Writing the support early meant that moving the Gemfile to Lota 0.1.3 was the whole upgrade, and it was.
 
 **Not yet checked:** Nothing has run with a real controller, nor with the virtual joystick in Lota's development build, because the test build available that night predated the joystick bindings.
 

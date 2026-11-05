@@ -2,7 +2,7 @@
 
 This page describes the game's side of an iOS or iPadOS build: what the app needs, what the game does differently there, and how to tell a good run from a bad one.
 
-The app itself isn't built in this repository. It is built with Lota's experimental iOS engine, which exists only on Lota's development branches, and with Fledge's `fledge build ios` command, which generates an Xcode project. The repository's `Gemfile` stays on Lota 0.1.2, so the desktop builds and CI are unaffected.
+The app itself isn't built in this repository. It is built with Lota's experimental iOS engine, which first shipped, marked experimental, in Lota 0.1.3, and with Fledge's `fledge build ios` command, which generates an Xcode project. The desktop builds and CI don't use it.
 
 ## Where things stand
 
@@ -22,7 +22,7 @@ The bundle identifier is `com.kerricklong.DotPopper`, set in `fledge.yml`.
 
 | Setting | Value | Why |
 | --- | --- | --- |
-| Lota | A development build with the iOS engine (trunk at `04d5b11` or later; the kit used `experiment/ipad-kit` at `f5c6093`), not 0.1.2 | Only Lota's development branches build for iOS and call `Lota.touchpressed` |
+| Lota | 0.1.3 or newer, built with its experimental iOS engine (the first kit used Lota's `experiment/ipad-kit` branch at `f5c6093`) | Earlier Lota releases neither build for iOS nor call `Lota.touchpressed` for a touchscreen |
 | `t.highdpi` | `true`, already set in `conf.rb` | Without it, LÖVE, and so Lota, draws at 1× on a Retina iPad, and everything looks blurry |
 | Orientations | All four on iPad (`UISupportedInterfaceOrientations~ipad`); portrait and both landscapes on iPhone | The field is the whole window and rebuilds itself whenever the window changes size. Because `conf.rb` makes the window resizable, SDL allows every orientation that Info.plist allows |
 | Multitasking | Leave `UIRequiresFullScreen` unset | Split View and Stage Manager resize the window, which the game handles exactly as it handles a rotation |

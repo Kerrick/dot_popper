@@ -39,7 +39,7 @@ On a phone or tablet the game always fills the screen and never quits itself, so
 
 ### Playing with a controller
 
-The game has gamepad support written and tested, but it can't be used yet. It needs Lota 0.1.3, which hasn't been released; this version of Dot Popper uses Lota 0.1.2, which doesn't report controllers to the game at all. Once the game moves to Lota 0.1.3, a controller will work like this:
+Any controller your computer or iPad recognizes as a gamepad works, such as an Xbox or PlayStation controller. This needs Lota 0.1.3 or newer, which the game now uses; nobody has yet tried it with a real controller, so please report how it feels.
 
 - The left stick or the d-pad moves a cursor around the screen.
 - **A** (cross on a PlayStation controller) or the right trigger presses wherever the cursor is, exactly as a click there would.
@@ -47,7 +47,7 @@ The game has gamepad support written and tested, but it can't be used yet. It ne
 - **Y** (triangle) copies your result on the Game Over screen.
 - **Back** turns sound on or off.
 
-The cursor appears when you use the controller and hides when you move the mouse or touch the screen. An iPad build, which runs on Lota's development engine rather than 0.1.2, should accept a controller paired with the iPad in the same way, but nobody has tried one yet, and the current iPad kit was built before this was turned on.
+The cursor appears when you use the controller and hides when you move the mouse or touch the screen. On an iPad, a controller paired in the iPad's Bluetooth settings works the same way, from the first iPad build made after controllers were turned on there.
 
 ### Reduced motion
 
@@ -76,7 +76,7 @@ bundle exec lota run
 
 ### On an iPad
 
-An iPad version is in progress. It uses Lota's experimental iOS engine, which isn't part of Lota 0.1.2. The game has run in iPad Simulators but not yet on a real iPad. [doc/ios.md](doc/ios.md) describes what the game needs from an iOS build and how to tell whether a run went well.
+An iPad version is in progress. It uses Lota's experimental iOS engine, which first shipped in Lota 0.1.3. The game has run in iPad Simulators but not yet on a real iPad. [doc/ios.md](doc/ios.md) describes what the game needs from an iOS build and how to tell whether a run went well.
 
 ## How the dot's size is chosen
 

@@ -67,7 +67,7 @@ A fused game saves its files in a folder named after the game alone, as shipped 
 
 ### Fledge itself
 
-Fledge is in the `Gemfile`'s `development` group, so it isn't packaged into the app. It is pinned to the trunk commit `007b5514e4630ca02a67aabb5b8b701e66c919cd` rather than to its `v0.4.0` release. The reason is that v0.4.0 refuses Lota's Windows gem, because that gem uses four Windows system libraries (`avrt`, `dwmapi`, `imm32`, and `setupapi`) that v0.4.0 doesn't expect, and the trunk commit accepts them. Once a Fledge release includes that fix, the pin can move to it.
+Fledge is in the `Gemfile`'s `development` group, so it isn't packaged into the app. It is pinned to its `v0.5.0` release. Earlier releases refuse Lota's Windows gem, because that gem uses four Windows system libraries (`avrt`, `dwmapi`, `imm32`, and `setupapi`) that they don't expect; v0.5.0 is the first release that accepts them. Until v0.5.0 existed, the pin was a trunk commit with that fix.
 
 ### Lota's gems
 
@@ -123,7 +123,7 @@ The [Package workflow](.github/workflows/package.yml) runs on every push to `tru
 These have been verified on CI's runners and on the maintainer's Mac:
 
 - `fledge build` writes the Windows `.zip` and `-setup.exe` on `windows-latest`, and the macOS `.app`, `.tar.gz`, and `.dmg` on Apple silicon.
-- With no Ruby on `PATH`, the packaged program starts, loads Lota 0.1.2 and its native library, loads the game's `conf.rb` and `main.rb` and everything they require, and exits cleanly. On Windows this holds both for the unpacked `.zip` and after a silent install. The installer also makes a Start menu shortcut and uninstalls cleanly.
+- With no Ruby on `PATH`, the packaged program starts, loads Lota and its native library, loads the game's `conf.rb` and `main.rb` and everything they require, and exits cleanly. On Windows this holds both for the unpacked `.zip` and after a silent install. The installer also makes a Start menu shortcut and uninstalls cleanly.
 - A Windows build of v0.4.0 made with `lota fuse` (see the last section) ran a 45-second autoplay session on one of Lota's CI runners. The runner had no graphics card, so it drew with Mesa's software OpenGL (llvmpipe). The bot went from the title screen through a full round, with pops, particles, and the clock, and the game quit on its own with status 0 and no errors. The icon showed in the title bar and the taskbar, and the game saved into `%APPDATA%\dot_popper`.
 
 These have not been verified:
