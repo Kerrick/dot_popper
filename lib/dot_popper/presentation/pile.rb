@@ -30,13 +30,18 @@ module DotPopper
 
     # The walls the pile falls between: the window's floor and its two
     # sides, which rise as far again above the window, so the top is open
-    # and a dot thrown upward comes back down. Each is a segment, as
-    # [x1, y1, x2, y2] in graphics units.
-    class PileWalls < Data.define(:width, :height)
+    # and a dot thrown upward comes back down. While the pile is tilted
+    # (Tilt) it may fall any way, so a +lid+ along the window's top keeps
+    # it on the screen. Each is a segment, as [x1, y1, x2, y2] in graphics
+    # units.
+    class PileWalls < Data.define(:width, :height, :lid)
+      def initialize(width:, height:, lid: false) = super
+
       def segments
-        [[0.0, -height.to_f, 0.0, height.to_f],
-         [0.0, height.to_f, width.to_f, height.to_f],
-         [width.to_f, height.to_f, width.to_f, -height.to_f]]
+        sides = [[0.0, -height.to_f, 0.0, height.to_f],
+                 [0.0, height.to_f, width.to_f, height.to_f],
+                 [width.to_f, height.to_f, width.to_f, -height.to_f]]
+        lid ? sides + [[0.0, 0.0, width.to_f, 0.0]] : sides
       end
     end
   end

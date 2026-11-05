@@ -193,6 +193,19 @@ module DotPopper
                           fling: 1.0, longest_step: 1 / 30.0)
       CALM_PILE = PILE.with(gravity: 8.0, restitution: 0.0, friction: 0.8, damping: 2.5, fling: 0.25)
 
+      # Playing with the pile (Presentation::Tilt): tilting a tablet, or
+      # pushing a gamepad's right stick, turns its gravity, and a shake
+      # throws the dots up. The filter's fifth of a second keeps a hand's
+      # tremor out of the dots without lagging a turn; a jolt of over 1.2 g
+      # is a shake, past the bump of setting a tablet down. A calm pile
+      # turns slowly and never throws.
+      TILT = TiltLook.new(smoothing: 0.2, wake: 0.05, shake: 1.2, settle: 0.3, cooldown: 0.6, kick: 8.0,
+                          most_kick: 14.0, shakes: true, fling: Throw.new(spread: 1.0, least: 0.5), dead_zone: 0.2,
+                          hint_rounds: 3, hint_at: 0.465, hint_alpha: 0.7,
+                          tilt_hint: "Tilt your %s to roll the dots.",
+                          stick_hint: "Push the right stick to roll the dots.")
+      CALM_TILT = TILT.with(smoothing: 0.8, shakes: false)
+
       # Sound: the pop climbs a little with the score, up to a cap. A pop
       # or a wrong tap is heard where it is across the screen, leaning at
       # most 60% to a side.
