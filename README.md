@@ -15,6 +15,7 @@ Dot Popper is written in Ruby on [Lota](https://github.com/setdef/Lota), which r
 | Play today's Daily | **Daily** on the title screen. Everyone gets the same dots that day; the game keeps your best for the day |
 | Share a Daily result | **Share** after a Daily copies a short, spoiler-free result to the clipboard |
 | Sound on or off | The speaker on the title screen, or **M** |
+| Play with a controller | Needs Lota 0.1.3 or newer; on Lota 0.1.2, which this version uses, a controller does nothing yet. The left stick or d-pad moves a cursor, and **A** (cross on a PlayStation controller) or the right trigger presses there, just as a click would. **Start** starts a round and continues after one, **Y** (triangle) plays the Daily or shares its result, and **Back** turns sound on or off. The cursor hides when you use the mouse or touch the screen |
 | Fullscreen | **F11**, or **Alt+Enter** (**Cmd+Enter** on a Mac) |
 | Quit | **Escape**, or close the window |
 

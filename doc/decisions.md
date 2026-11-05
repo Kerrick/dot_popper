@@ -189,6 +189,49 @@ the player understanding what just happened to them.
   nothing, and its ring follows no dot of the round. The Daily button and
   the mute button still take their own taps.
 
+## Controllers
+
+- **Gamepad play is written now and switches on with Lota 0.1.3.** Lota's
+  trunk binds `Lota::Joystick` and LÖVE's gamepad callbacks, but the game is
+  locked to the released 0.1.2, which has neither. So `main.rb` defines
+  `gamepadpressed`, `gamepadaxis`, and `joystickremoved`, which 0.1.2 never
+  calls, and `Shell::Gamepads` reads sticks only `if defined?(::Lota::Joystick)`,
+  so on 0.1.2 every stick is at rest. Moving the Gemfile to 0.1.3 is the whole
+  upgrade. Nothing has run with a real controller, nor with Lota trunk's SDL
+  virtual joystick, whose test build here predates the joystick bindings.
+- **A controller aims a cursor and presses where it is, as a click does.** A
+  is a press at the cursor through `InputRouter#gamepad_pressed` and
+  `Show#tap`, on the frame the button goes down, so the mute, Daily, and Share
+  buttons, the title's toy pop, and which dot a press reaches all work exactly
+  as for a mouse. The right trigger is a second A: it presses once when pulled
+  past half way and again only after it is let back below 0.3, so a trigger
+  resting near the line cannot press twice.
+- **No aim assist.** A "magnetic" cursor that drifts toward the nearest dot
+  would choose which dot a press reaches, and the game is about choosing that
+  yourself, too soon or not: pulled toward the fresh dot it would take the
+  stacking risk away, and pulled toward any dot it would cause slips the
+  player never aimed at. The cursor goes only where the stick sends it.
+- **The cursor is fast at full tilt and fine at a small one.** A radial dead
+  zone of 0.2 (worn sticks drift up to about 0.15), then the push squared, at
+  16 R/s at full tilt (`GAMEPAD` in `look.rb`): it crosses the 24 R window in
+  1.5 s, close to three times the fastest dot, and half a tilt moves it a
+  quarter as fast, for aiming. A diagonal d-pad moves it no faster than a
+  straight one. The stick is read each frame rather than from axis events, so
+  a focus change cannot leave it stuck pushed; several gamepads add up.
+- **The cursor shows only for a controller.** Any gamepad button or a push
+  past the dead zone shows it; a mouse movement, click, or touch hides it,
+  and while hidden it waits where the mouse is, so a player who picks the pad
+  up starts from there. Pressing A while it is hidden still presses where it
+  waits: holding back a press to show the cursor first would be a press the
+  game ignored. The reticle is a thin cream ring with four ticks and a centre
+  pip, each on a dark edge, open in the middle so it never hides the dot it is
+  over, drawn over everything on whole device pixels.
+- **Start and Y are shortcuts for screens, never for play.** Start presses on
+  the title (the usual round, without popping a title dot) and on Game Over
+  (continue, after the same grace), and does nothing in a round, since only a
+  press at a place may touch the score. Y is the Daily button on the title and
+  Share after a Daily, and nothing elsewhere. Back toggles sound, as **M** does.
+
 ## Code
 
 - **The rules core is type-checked by Steep, strictly.** `sig/dot_popper/`
