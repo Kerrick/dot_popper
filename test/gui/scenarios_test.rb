@@ -52,6 +52,11 @@ class GuiScenariosTest < Minitest::Test
     assert_includes output, "the fake drag throws a dot"
   end
 
+  def test_the_mouse_over_a_button_lights_it_and_shows_the_hand
+    play("hover", "the mouse over Your records hovers it", "the pointer is the pointing hand",
+         "moving away clears the hover and the hand", "a finger over it leaves no hover")
+  end
+
   def test_the_words_follow_the_input
     play("words", "makes it Tap", "makes it Click", "makes it Press A")
   end

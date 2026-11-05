@@ -89,6 +89,7 @@ module DotPopper
         end
         @game.update(seconds)
         @show.update(seconds)
+        point_the_mouse
         @tilting.update(seconds)
         fake_drag
         @dragging.move(:gamepad, @cursor.x, @cursor.y) if @pad_held.any?
@@ -102,13 +103,17 @@ module DotPopper
 
       def mouse_pressed(x, y, button, istouch)
         @cursor = @cursor.hide(x, y)
-        press(:mouse, heard(@input.mouse_pressed(x, y, button, istouch)))
+        tap = heard(@input.mouse_pressed(x, y, button, istouch))
+        @show.pointer_at(tap.x, tap.y) if tap
+        press(:mouse, tap)
       end
 
       # A motion counts as using the mouse only once it has gone far
-      # enough (MouseTravel); a drag follows it either way.
+      # enough (MouseTravel); a drag follows it either way, and so does
+      # what the mouse is over, for its hover.
       def mouse_moved(x, y, istouch)
         point = @input.mouse_moved(x, y, istouch) or return
+        @show.pointer_at(point.x, point.y)
         @travel = (@travel || Presentation::MouseTravel.start).moved(x, y)
         if @travel.deliberate?
           @cursor = @cursor.hide(x, y)
@@ -147,7 +152,18 @@ module DotPopper
 
         @dragging.drop
         @show.let_go_of_everything
+        @show.pointer_gone
       end
+
+      # The mouse left the window, or came back into it. Once it has
+      # left, it is over no button; back in, its next motion says where.
+      def mouse_focus(focused)
+        @show.pointer_gone unless focused
+      end
+
+      # Whether the mouse pointer is the system's pointing hand, as it is
+      # while the mouse is over a button.
+      def pointing_hand? = @hand == true
 
       # A gamepad button went down (Lota 0.1.3 and newer). Any button shows
       # the cursor; GamepadButtons says what each one asks for.
@@ -255,6 +271,25 @@ module DotPopper
         @travel = Presentation::MouseTravel.start
         @cursor = @cursor.show
         @show.input = Presentation::InputKind::GAMEPAD
+      end
+
+      # The system's pointing hand while the mouse is over a button, and
+      # its arrow otherwise; only the mouse hovers (Show#hovered). The
+      # pointer changes only as that does.
+      def point_the_mouse
+        hand = !@show.hovered.nil?
+        return if hand == (@hand || false)
+
+        @hand = hand
+        ::Lota::Mouse.cursor = hand ? hand_cursor : nil
+      end
+
+      # The pointing hand, once fetched; nil where the system has no
+      # pointer to change, as on a touchscreen.
+      def hand_cursor
+        return unless ::Lota::Mouse.cursor_supported?
+
+        @hand_cursor ||= ::Lota::Mouse.system_cursor(:hand)
       end
 
       def starting_input

@@ -708,3 +708,11 @@ The iOS project is built from a clone of Lota at its `v0.1.3` tag, as a path gem
 **Why:** No released Lota builds for Android. Lota 0.1.3's README says phones and tablets are planned, and its CHANGELOG mentions only iOS. Fledge's `fledge build android` would write a Gradle project with no Lota engine to put in it.
 
 **To reverse:** Add a kit once a Lota release documents an Android build.
+
+### A mouse lights up the button under it
+
+Every button the mouse is over (the title's "Your records", Dot size segments and speaker, Game Over's "Copy my result", and the Records screen's "Clear my records…" and Undo) brightens its backing and outline over an eighth of a second, and the pointer becomes the system's pointing hand. Both follow the same reaches the Show takes taps from (`Show#controls`), and only while the last press was the mouse's: a finger or a gamepad never hovers.
+
+**Why:** The macOS playtest found no sign of what could be clicked. A mouse user reads affordances from hover (Tidwell); a touch player has no hover to read, and a lit button under a resting pointer would mislead a gamepad player. One list of reaches for taps and hover means a button never lights where a click would miss it.
+
+**To reverse:** Drop `Show#hovered` and `App#point_the_mouse`, and the painters' `hover:` arguments.

@@ -4,19 +4,22 @@ module DotPopper
   module Shell
     # A button drawn as a pill with its word in it, on whole device
     # pixels: Game Over's "Copy my result". Its word shrinks, by whole
-    # sizes, to fit.
+    # sizes, to fit. +hover+, from 0 to 1, is how lit the mouse over it
+    # has made it (Presentation::Hover): its backing and outline brighten.
     class PillButton < Data.define(:pen)
       G = ::Lota::Graphics
 
-      def draw(rect, text, alpha: 1.0, color: pen.palette.cream)
+      def draw(rect, text, alpha: 1.0, color: pen.palette.cream, hover: 0.0)
         return if alpha <= 0.0
 
         pixels = pen.pixels
+        lit = pen.look::HOVER
         x, y, width, height = [rect.x, rect.y, rect.width, rect.height].map { pixels.snap(it) }
         corner = height / 2.0
-        pen.color(pen.palette.pill, pen.palette.pill.a * alpha)
+        fill = pen.palette.pill.mix(lit.fill, hover)
+        pen.color(fill, fill.a * alpha)
         G.rectangle(:fill, x, y, width, height, corner, corner, 48)
-        pen.color(pen.palette.soft, 0.55 * alpha)
+        pen.color(pen.palette.soft.mix(lit.edge, hover), (0.55 + (0.45 * hover)) * alpha)
         G.line_width = pixels.line_width(1)
         inset = pixels.line_at(x) - x
         G.rectangle(:line, x + inset, y + inset, width - (2 * inset), height - (2 * inset), corner, corner, 48)

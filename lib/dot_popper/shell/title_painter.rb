@@ -29,10 +29,11 @@ module DotPopper
         prompt = pen.fonts.bold(plan.size(:prompt))
         pen.text(words.play, prompt, layout.center_x, plan[:prompt].center_y, pen.palette.cream,
                  intro * marquee.prompt(now))
-        MuteButton.new(pen:).draw(plan.mute_button, show.sounds.muted?)
+        hover = show.hover
+        MuteButton.new(pen:).draw(plan.mute_button, show.sounds.muted?, hover: hover.level(:mute))
         return unless show.records_offered?
 
-        PillButton.new(pen:).draw(plan.records_button, words.records, alpha: intro)
+        PillButton.new(pen:).draw(plan.records_button, words.records, alpha: intro, hover: hover.level(:records))
         sizing_choice(show, plan.sizing_control, intro) if show.sizing_offered?
       end
 
@@ -44,7 +45,7 @@ module DotPopper
         preview = show.sizing_preview
         height = control.options.first.height
         choices = Presentation::Show::SIZINGS.map do
-          [show.words.sizing(it, preview), it == show.game.sizing, preview.icon(it, height)]
+          [show.words.sizing(it, preview), it == show.game.sizing, preview.icon(it, height), show.hover.level(it)]
         end
         SegmentedPainter.new(pen:, dots:).draw(control, show.words.sizing_label, choices, alpha:)
       end

@@ -97,6 +97,13 @@ module DotPopper
       # it, for a moment.
       RECORDS_CLEAR = ClearLook.new(hold: 2.0, undo: 10.0, hint: 2.5)
 
+      # A button the mouse is over brightens, its backing to the night's
+      # glow and its outline to cream, in an eighth of a second, quick
+      # enough to answer the hand and soft enough not to flicker as the
+      # pointer crosses an edge. Only the mouse hovers: a finger or a
+      # gamepad never does.
+      HOVER = HoverLook.new(seconds: 0.12, fill: hex["#2b2766", 0.9], edge: hex["#fff4de"])
+
       # The stacking rule, taught on the first two Game Overs after a wrong
       # tap that had the bright dot hidden under the popped one.
       LESSON = LessonLook.new(times: 2, alpha: 1.0)

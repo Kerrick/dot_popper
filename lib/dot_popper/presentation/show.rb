@@ -61,6 +61,8 @@ module DotPopper
         @keeper = keeper
         @clearing = HoldToConfirm.idle(look::RECORDS_CLEAR.hold)
         @undo = nil
+        @pointer = nil
+        @hover = Hover.none
         game.subscribe(@recorder)
         game.subscribe(self)
       end
@@ -120,31 +122,68 @@ module DotPopper
       def finished? = game.state.is_a?(Game::GameOver)
 
       # A tap anywhere, by +by+ (a finger's id, :mouse, or :gamepad), which
-      # #let_go names when it lets go. On the title, the mute button, "Your
-      # records", and the dot-size choice take their own taps, as "Copy my
-      # result" does on Game Over. On the Records screen, a press on "Clear
-      # my records…" starts holding it, and one on Undo undoes, and a tap
-      # anywhere else goes back. Every other tap goes to the game at once.
-      # A tap on one of the title's fresh dots also pops it, as the round
-      # starts.
+      # #let_go names when it lets go. A tap on one of the screen's buttons
+      # (#controls) presses it: on the title, the mute button, "Your
+      # records", and the dot-size choice; "Copy my result" on Game Over;
+      # and on the Records screen, Undo, or "Clear my records…", which a
+      # press starts holding. On the Records screen a tap anywhere else
+      # goes back. Every other tap goes to the game at once. A tap on one
+      # of the title's fresh dots also pops it, as the round starts.
       def tap(x, y, by: :tap)
-        if records? then records_tap(x, y, by)
-        elsif title? && layout.mute_button.contains?(x, y) then sounds.toggle_mute
-        elsif title? && records_offered? && records_reach.contains?(x, y) then open_records
-        elsif title? && sizing_offered? && (sizing = sizing_at(x, y)) then choose_sizing(sizing)
-        elsif finished? && share_reach&.contains?(x, y) then share
-        else
+        case control_at(x, y)&.name
+        in :mute then sounds.toggle_mute
+        in :records then open_records
+        in DotSizing => sizing then choose_sizing(sizing)
+        in :share then share
+        in :undo then undo
+        in :clear then hold_clear(by)
+        in nil if records? then close_records
+        in nil
           scenery = attract.dots.top_at(x, y) if title?
           game.press(x, y)
           toy_pop(scenery, x, y) if scenery&.fresh?
         end
       end
 
+      # The buttons this screen offers, each where a press reaches it
+      # (Control), in the order a press looks for them. Taps and the
+      # mouse's hover both go by these.
+      def controls
+        if records?
+          [(Control.new(name: :undo, reach: undo_reach) if undo_offer),
+           (Control.new(name: :clear, reach: clear_reach) if clear_offered?)].compact
+        elsif title? then title_controls
+        elsif finished? && (reach = share_reach) then [Control.new(name: :share, reach:)]
+        else []
+        end
+      end
+
+      # The button a press at +x+, +y+ reaches (Control), or nil.
+      def control_at(x, y) = controls.find { it.reach.contains?(x, y) }
+
+      # The mouse moved to +x+, +y+, without a button held or with one.
+      def pointer_at(x, y) = @pointer = [x, y]
+
+      # The mouse left the window, or the window lost focus.
+      def pointer_gone = @pointer = nil
+
+      # The name of the button the mouse is over (as Control names it), or
+      # nil. Only a mouse hovers: while the last press was a finger's or a
+      # gamepad's, no button is.
+      def hovered
+        return unless @pointer && input == InputKind::MOUSE
+
+        control_at(*@pointer)&.name
+      end
+
+      # How lit each button is by the mouse over it (Hover).
+      def hover = @hover
+
       # Whether a press at +x+, +y+ waits to be let go before it counts: on
       # Game Over, anywhere but "Copy my result", since it may become a
       # drag of the pile (PileGrabs). Everywhere else a press counts the
       # moment it goes down.
-      def waits_for_release?(x, y) = finished? && !share_reach&.contains?(x, y)
+      def waits_for_release?(x, y) = finished? && control_at(x, y).nil?
 
       # A gamepad's Start: on the title it starts the usual round, and
       # after one it continues, as a tap on empty space would, grace and
@@ -278,6 +317,7 @@ module DotPopper
         @now += seconds
         clear_records if clearing.done?(now)
         @undo = nil unless @undo&.open?(now)
+        @hover = hover.at(hovered).update(seconds, look::HOVER)
         effects.update(seconds)
         @attract = attract.update(seconds) if title?
         @hud = hud.read(game.round, now) { tick(it) if playing? } if game.round
@@ -298,11 +338,11 @@ module DotPopper
 
       private
 
-      def records_tap(x, y, by)
-        if undo_offer && undo_reach.contains?(x, y) then undo
-        elsif clear_offered? && clear_reach.contains?(x, y) then hold_clear(by)
-        else close_records
-        end
+      def title_controls
+        buttons = [Control.new(name: :mute, reach: layout.mute_button)]
+        buttons << Control.new(name: :records, reach: records_reach) if records_offered?
+        buttons.concat(sizing_reaches.map { |sizing, reach| Control.new(name: sizing, reach:) }) if sizing_offered?
+        buttons
       end
 
       def hold_clear(by)
@@ -339,9 +379,6 @@ module DotPopper
         RecordsSheet.build(lifetime.stats, best: game.best.of(size_class), words:, streak: lifetime.streak,
                            size_class:, field: game.field, sizing: game.sizing)
       end
-
-      # The dot-size choice whose segment a tap at +x+, +y+ reaches, or nil.
-      def sizing_at(x, y) = sizing_reaches.find { |_, reach| reach.contains?(x, y) }&.first
 
       # Where the HUD's pill ends, at the safe area's top.
       def hud_bottom

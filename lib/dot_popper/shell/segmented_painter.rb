@@ -7,12 +7,13 @@ module DotPopper
     # at the size its option gives, then its option's name, and the chosen
     # one is filled, so the choices, what each does, and which is chosen
     # all show at a glance. The label sits to the left on the segments'
-    # row, or above them when it has a row of its own.
+    # row, or above them when it has a row of its own. A segment the
+    # mouse is over brightens and is outlined (Presentation::Hover).
     class SegmentedPainter < Data.define(:pen, :dots)
       G = ::Lota::Graphics
 
-      # +choices+ are [name, chosen?, icon radius] triples, one for each
-      # of the +control+'s options.
+      # +choices+ are [name, chosen?, icon radius, hover] quadruples, one
+      # for each of the +control+'s options; +hover+ runs from 0 to 1.
       def draw(control, label, choices, alpha: 1.0)
         return if alpha <= 0.0
 
@@ -22,8 +23,8 @@ module DotPopper
         font = fit(choices.map(&:first), room, frame.height)
         label(label, font, control, alpha)
         backing(frame, alpha)
-        control.options.zip(choices).each do |option, (name, chosen, icon)|
-          segment(snapped(option), name, chosen, icon, font, alpha)
+        control.options.zip(choices).each do |option, (name, chosen, icon, hover)|
+          segment(snapped(option), name, chosen, icon, font, alpha, hover)
         end
       end
 
@@ -52,14 +53,15 @@ module DotPopper
       # The chosen segment is a lighter pill inside the frame, with its
       # name in ink; the other's name is cream on the frame's dark. The
       # icon and the name are centred together.
-      def segment(rect, name, chosen, icon, font, alpha)
+      def segment(rect, name, chosen, icon, font, alpha, hover)
         palette = pen.palette
+        inner = snapped(rect.inset(pen.pixels.snap(rect.height * 0.08)))
+        corner = inner.height / 2.0
         if chosen
-          inner = snapped(rect.inset(pen.pixels.snap(rect.height * 0.08)))
-          corner = inner.height / 2.0
-          pen.color(palette.cream, 0.92 * alpha)
+          pen.color(palette.cream, (0.92 + (0.08 * hover)) * alpha)
           G.rectangle(:fill, inner.x, inner.y, inner.width, inner.height, corner, corner, 48)
         end
+        lit(inner, corner, chosen, hover * alpha) if hover.positive?
         pixels = pen.pixels
         radius = pixels.whole(icon)
         gap = gap(rect.height)
@@ -67,6 +69,21 @@ module DotPopper
         dots.icon(pixels.snap(left + radius), pixels.snap(rect.center_y), radius, fresh: true, opacity: alpha)
         pen.text(name, font, left + (radius * 2) + gap + (font.width(name) / 2.0), rect.center_y,
                  chosen ? palette.ink_bottom : palette.cream, alpha)
+      end
+
+      # The mouse over a segment: the other choice's segment takes the
+      # night's glow, and either is outlined.
+      def lit(inner, corner, chosen, amount)
+        look = pen.look::HOVER
+        unless chosen
+          pen.color(look.fill, look.fill.a * amount)
+          G.rectangle(:fill, inner.x, inner.y, inner.width, inner.height, corner, corner, 48)
+        end
+        pen.color(look.edge, 0.8 * amount)
+        G.line_width = pen.pixels.line_width(1)
+        inset = pen.pixels.line_at(inner.x) - inner.x
+        G.rectangle(:line, inner.x + inset, inner.y + inset, inner.width - (2 * inset), inner.height - (2 * inset),
+                    corner, corner, 48)
       end
 
       # The space between a segment's icon and its name.

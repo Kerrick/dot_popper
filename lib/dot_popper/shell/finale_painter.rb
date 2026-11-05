@@ -35,7 +35,7 @@ module DotPopper
         if (button = plan.share_button)
           copied = finale.copied?(now)
           PillButton.new(pen:).draw(button, copied ? words.copied : words.share, alpha: shown,
-                                    color: copied ? palette.gain : palette.cream)
+                                    color: copied ? palette.gain : palette.cream, hover: show.hover.level(:share))
         end
         pen.text(words.continue, pen.fonts.bold(plan.size(:continue)), layout.center_x, plan[:continue].center_y,
                  palette.cream, finale.prompt(now))

@@ -90,6 +90,7 @@ def Lota.touchreleased(id, x, y, _dx, _dy, _pressure, devicetype, mouse)
 end
 
 def Lota.focus(focused) = @app&.focus(focused)
+def Lota.mousefocus(focused) = @app&.mouse_focus(focused)
 
 def Lota.keypressed(key) = @app.key_pressed(key)
 def Lota.resize(_width, _height) = @app&.resize

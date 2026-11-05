@@ -3,23 +3,33 @@
 module DotPopper
   module Shell
     # The speaker in the title's corner: sound waves when sound is on, a
-    # cross when it is off. A tap on it toggles sound (Show#tap).
+    # cross when it is off. A tap on it toggles sound (Show#tap). With the
+    # mouse over it, +hover+ of the way (Presentation::Hover), its disc
+    # brightens, an outline rings it, and the speaker lightens.
     class MuteButton < Data.define(:pen)
       G = ::Lota::Graphics
 
-      def draw(rect, muted)
+      def draw(rect, muted, hover: 0.0)
         pixels = pen.pixels
+        lit = pen.look::HOVER
         size = rect.width
         x = pixels.snap(rect.center_x)
         y = pixels.snap(rect.center_y)
-        pen.color(pen.palette.pill)
+        pen.color(pen.palette.pill.mix(lit.fill, hover))
         G.circle(:fill, x, y, size / 2.0, 48)
-        pen.color(pen.palette.soft)
+        ring(x, y, size, hover) if hover.positive?
+        pen.color(pen.palette.soft.mix(lit.edge, hover * 0.6))
         speaker(x, y, size)
         muted ? cross(x, y, size) : waves(x, y, size)
       end
 
       private
+
+      def ring(x, y, size, hover)
+        pen.color(pen.look::HOVER.edge, 0.8 * hover)
+        G.line_width = pen.pixels.line_width(1)
+        G.circle(:line, x, y, (size / 2.0) - (pen.pixels.line_width(1) / 2.0), 48)
+      end
 
       def speaker(x, y, size)
         u = size / 100.0

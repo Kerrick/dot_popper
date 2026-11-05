@@ -95,7 +95,9 @@ module DotPopper
       def clear(show, layout)
         rect = layout.clear_records_button
         held = show.clearing.held?
-        PillButton.new(pen:).draw(rect, show.words.clear, alpha: held ? 1.0 : 0.8, color: pen.palette.soft)
+        hover = show.hover.level(:clear)
+        PillButton.new(pen:).draw(rect, show.words.clear, alpha: held ? 1.0 : 0.8 + (0.2 * hover),
+                                                          color: pen.palette.soft, hover:)
         return unless held
 
         fill(rect, show.clearing.progress(show.now))
@@ -117,7 +119,7 @@ module DotPopper
       # empties as the time to undo runs out.
       def undo(show, offer, layout)
         rect = layout.undo_button
-        PillButton.new(pen:).draw(rect, show.words.undo)
+        PillButton.new(pen:).draw(rect, show.words.undo, hover: show.hover.level(:undo))
         font = pen.fonts.semibold(Presentation::Pixels.font_size(rect.height * 0.4))
         text = show.words.cleared
         pen.text(text, font, rect.x - layout.margin - (font.width(text) / 2.0), rect.center_y, pen.palette.soft)
