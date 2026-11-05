@@ -4,7 +4,7 @@ Dots bounce around the screen. Tap a fresh dot to pop it, earn a point, and buy 
 
 The catch is the stacking order. Popped dots stay on screen and stay on top, and each new fresh dot appears *underneath* all of them. As the round goes on, the popped dots crowd the top layer, and you have to wait for the fresh one to slide out from under them. Tap too soon and you hit a popped dot instead.
 
-Dot Popper is written in Ruby on [Lota](https://github.com/setdef/Lota), which runs Ruby games on a modified build of LÖVE's 2D engine.
+Dot Popper is written in Ruby on [Lota](https://github.com/setdef/Lota), which runs Ruby games on a modified build of LÖVE's 2D engine. [Why Ruby](doc/why_ruby.md) sets this game's Ruby beside the Lua a LÖVE game would use, and says where Lua is still the better choice.
 
 ## Playing
 
@@ -68,7 +68,7 @@ bundle exec rake test
 
 `bundle exec rake` runs the tests and then [Steep](https://github.com/soutaro/steep), which checks the rules against their RBS signatures in `sig/`.
 
-The tests need no window. The rules (dots, scoring, the clock, which dot a tap reaches, and the flow from title to game over) live in `lib/dot_popper` and know nothing of Lota. The presentation's own logic, such as easing, effects, input routing, layout, and pixel snapping, lives in `lib/dot_popper/presentation` and is tested the same way. Only `lib/dot_popper/shell` and `main.rb` talk to Lota.
+The tests need no window. The rules (dots, scoring, the clock, which dot a tap reaches, and the flow from title to game over) live in `lib/dot_popper` and know nothing of Lota. The presentation's own logic, such as easing, effects, input routing, layout, and pixel snapping, lives in `lib/dot_popper/presentation` and is tested the same way. Only `lib/dot_popper/shell` and `main.rb` talk to Lota. `test/rules_fuzz_test.rb` plays thousands of seeded random rounds and checks the rules' invariants after every step; set `RULES_FUZZ_SEED` to replay a failure.
 
 `script/simulate.rb` plays the real rules with a model player at several screen sizes, each in its own Ractor. It's a design tool, not a test, and [doc/decisions.md](doc/decisions.md) explains what it found.
 

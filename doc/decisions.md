@@ -249,3 +249,8 @@ the player understanding what just happened to them.
   touches the score or the clock. It needs no gem, runs in under a second,
   names its seed on failure, and replays one with `RULES_FUZZ_SEED`.
   Reversing `Stack#top_at` or `Stack#slide_under` makes it fail at once.
+- **`doc/why_ruby.md` argues for Ruby with this game's code and gives Lua its
+  due.** Each claim sits beside the code that shows it and the idiomatic LÖVE
+  Lua it replaces. The numbers in it were measured that night on this Mac:
+  thirty dots moved 100,000 times took 4.4 s in Ruby (3.4 s with YJIT), 0.58 s
+  in Lua 5.4, and 0.012 s in LuaJIT, with identical final positions.
