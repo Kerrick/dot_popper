@@ -33,7 +33,8 @@ module DotPopper
         @game.subscribe(@pile)
         @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
         @sparks = Sparks.new(Look, radius: @dot_size.radius)
-        @renderer = Renderer.new(@show, @pen, pile: @pile, sparks: @sparks)
+        @bloom = Bloom.new(@pen, Look::BLOOM)
+        @renderer = Renderer.new(@show, @pen, pile: @pile, sparks: @sparks, bloom: @bloom)
         @renderer.prepare
         @input = Presentation::InputRouter.new
         @autopilot = Presentation::Autopilot.new(Look::AUTOPILOT) if flag?("DOT_POPPER_AUTOPLAY")
@@ -81,6 +82,7 @@ module DotPopper
 
         @pen.refresh
         @sparks.refresh
+        @bloom.refresh
         @game.field = field
         @show.resize(layout, @game.field)
         @pile.refit(@game.field)

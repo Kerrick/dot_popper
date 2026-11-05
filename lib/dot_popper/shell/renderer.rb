@@ -4,15 +4,17 @@ module DotPopper
   module Shell
     # Draws a frame of the Show, straight to the window at its own
     # resolution: the night behind, the edge glow, the dots (tumbling
-    # into the Pile after time's up), the effects over them, and the
-    # screen's words and HUD on top. Only the HUD shakes.
+    # into the Pile after time's up) over the Bloom's glow, the effects
+    # over them, and the screen's words and HUD on top. Only the HUD
+    # shakes.
     class Renderer
       G = ::Lota::Graphics
 
-      def initialize(show, pen, pile:, sparks:)
+      def initialize(show, pen, pile:, sparks:, bloom:)
         @show = show
         @pen = pen
         @pile = pile
+        @bloom = bloom
         @dots = DotPainter.new(pen:)
         @effects = EffectsPainter.new(pen:, sparks:)
         @hud = HudPainter.new(pen:)
@@ -32,12 +34,12 @@ module DotPopper
           @title.draw(@show, layout)
         else
           @effects.flash(@show.effects, width, height)
+          glow
           field
-          unless @show.playing?
-            veil(width, height, @show.finale&.dim(@show.now).to_f)
-            @effects.draw(@show.effects, layout, dots)
-            @finale.draw(@show, layout)
-          end
+          veil(width, height, @show.finale&.dim(@show.now).to_f) unless @show.playing?
+          @effects.scene(@show.effects, dots)
+          @effects.words(@show.effects, layout)
+          @finale.draw(@show, layout) unless @show.playing?
           hud(layout)
         end
       end
@@ -49,7 +51,17 @@ module DotPopper
       def field
         round = @show.game.round or return
         @dots.draw(dots, @show.animations, @show.now, round.field.radius)
-        @effects.draw(@show.effects, @show.layout, dots) if @show.playing?
+      end
+
+      # The fresh dots' and droplets' light, on the night under every dot,
+      # so it never washes out a dot or hints at a fresh dot that is
+      # covered.
+      def glow
+        round = @show.game.round or return
+        @bloom.glow do
+          @dots.glow(dots, @show.animations, @show.now, round.field.radius)
+          @effects.droplets
+        end
       end
 
       # The round's dots where they are drawn: where the rules put them, or

@@ -21,6 +21,18 @@ module DotPopper
         paint { stack.bottom_up.each { |dot| one(dot.x, dot.y, radius, animations.pose(dot, now), opacity) } }
       end
 
+      # What of the dots glows, for Bloom: the fresh dots alone. The glow
+      # is drawn under every dot, so the dots above a fresh one hide its
+      # light as they hide it.
+      def glow(stack, animations, now, radius)
+        paint do
+          stack.bottom_up.each do |dot|
+            pose = animations.pose(dot, now)
+            one(dot.x, dot.y, radius, pose, pose.freshness) if pose.freshness.positive?
+          end
+        end
+      end
+
       # One dot that is not in play, such as the title's examples.
       def icon(x, y, radius, fresh:, opacity: 1.0)
         paint { one(x, y, radius, fresh ? FRESH : Presentation::Pose::STILL, opacity) }

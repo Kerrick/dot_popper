@@ -126,6 +126,11 @@ module DotPopper
       TITLE = TitleLook.new(dots: 7, drift: 0.35, dim: 0.72, breath: 2.4,
                             intro: Tween.new(from: 0.0, to: 1.0, duration: 0.5, ease: :out_cubic))
 
+      # The glow fresh dots and droplets cast on the night under the dots
+      # (Shell::Bloom), blurred at half the screen's resolution. A
+      # strength of 0 turns it off.
+      BLOOM = BloomLook.new(strength: 0.7, sigma: 3.0, passes: 2, resolution: 0.5)
+
       # Game over: how the round dims, how the score counts up, and the
       # celebration of a new best. Its sparkles may outlive a pop's
       # droplets, because no round is in play behind them.

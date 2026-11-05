@@ -109,6 +109,16 @@ columns against each other, not as predictions of a person's score.
   There is no spawn sound to pan, and none was added, since that would change
   the game's sound design. The panning was checked by logging each voice's
   position; nobody has listened to it in the hidden session.
+- **Fresh dots and droplets cast a soft glow, under the dots.** `Shell::Bloom`
+  draws the fresh dots and droplets into a canvas at `pixel_dimensions`, blurs
+  it twice each way at half resolution with a five-read separable Gaussian
+  (`assets/shaders/blur.glsl`, weights from `Presentation::BlurKernel`), and adds
+  it to the night *before* the dots are drawn. Added on top, it washed the
+  fresh dot out to yellow and lost its gloss; underneath, every dot stays
+  exactly as sharp as before, and the popped dots above a fresh one hide its
+  light just as they hide the dot, so the glow never hints at a covered dot.
+  No text goes near a canvas. It is off without shaders, a canvas, or with
+  `BLOOM.strength` 0, and costs well under a millisecond a frame in autoplay.
 
 ## Game design
 

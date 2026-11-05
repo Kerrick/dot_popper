@@ -9,12 +9,18 @@ module DotPopper
       G = ::Lota::Graphics
       EDGE_BANDS = 8 # strips of the edge glow, without its shader
 
-      def draw(effects, layout, dots)
+      # The rings, the reveals of a hidden fresh dot, and the droplets.
+      def scene(effects, dots)
         rings(effects.rings, effects.now, dots)
         reveals(effects.reveals, effects.now, dots)
-        pen.adding { sparks.draw } # droplets only ever brighten
-        floaters(effects.floaters, effects.now, layout)
+        droplets
       end
+
+      # The floating numbers, over everything, glow included.
+      def words(effects, layout) = floaters(effects.floaters, effects.now, layout)
+
+      # Additive, so droplets only ever brighten.
+      def droplets = pen.adding { sparks.draw }
 
       # The glow at the screen's edges, over everything in the field.
       def flash(effects, width, height)

@@ -39,7 +39,7 @@ To play without Ruby, download a build instead. Every push to `trunk` builds a W
 | `DOT_POPPER_SHOTS=0.5,3,6.5` | Saves screenshots at these game-time seconds as `shot-N.png` in the save folder, and prints each path |
 | `DOT_POPPER_QUIT_AFTER=20` | Quits after this many seconds of game time |
 | `DOT_POPPER_SEED=42` | Makes the dots' randomness repeatable |
-| `DOT_POPPER_NO_SHADERS=1` | Draws without shaders, as the game does on its own when a shader fails to compile |
+| `DOT_POPPER_NO_SHADERS=1` | Draws without shaders, and so without the fresh dots' glow, as the game does on its own when a shader fails to compile |
 
 ## Playtest log
 

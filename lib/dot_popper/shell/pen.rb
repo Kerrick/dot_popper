@@ -11,7 +11,7 @@ module DotPopper
     # and the painters draw that part with plain shapes instead.
     class Pen
       G = ::Lota::Graphics
-      SHADERS = %i[dot edge backdrop].freeze
+      SHADERS = %i[dot edge backdrop blur].freeze
 
       attr_reader :fonts, :look, :pixels
 
