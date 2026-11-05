@@ -1,0 +1,410 @@
+# Builds Dot Popper's playtest kits (PACKAGING.md, "Playtest kits"): one
+# kit in, one results file out, per device.
+#
+# - Windows: the game fused by `lota fuse` with Lota 0.1.3's release gem,
+#   and playtest.ps1, which asks the hand checks one at a time and writes
+#   one dot-popper-results.txt. The job then runs the kit as a player
+#   would, unzipped with download marks, answers fed on standard input,
+#   with Mesa's software OpenGL beside the game, since runners have no
+#   GPU, and checks the results file.
+# - iPad (experimental): the Xcode project `fledge build ios` (Fledge
+#   0.5.0) writes, with Lota 0.1.3's experimental iOS engine built from a
+#   clone of Lota at its v0.1.3 tag, and ipad-results.txt to fill in. A
+#   second, fresh runner builds that project for the Simulator and,
+#   unsigned, for devices, and runs the autoplay check of doc/ios.md.
+#
+# Lota documents no Android build, so there is no Android kit. A v* tag
+# attaches the kits to the tag's GitHub Release.
+
+name: Kits
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kits-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  LOTA_VERSION: "0.1.3"
+  FLEDGE_TAG: v0.5.0
+  IDENTIFIER: com.kerricklong.DotPopper
+
+jobs:
+  windows:
+    name: Windows kit
+    runs-on: windows-2025
+    timeout-minutes: 45
+    env:
+      PLATFORM: x64-mingw-ucrt
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: .ruby-version
+          windows-toolchain: none
+
+      - name: Name the build
+        run: |
+          version=$(ruby -ryaml -e 'print YAML.load_file("fledge.yml").fetch("version")')
+          echo "APP_VERSION=$version" >> "$GITHUB_ENV"
+          {
+            echo "Dot Popper $GITHUB_REF_NAME, commit $GITHUB_SHA, version $version"
+            echo "Fused by lota fuse (Lota $LOTA_VERSION's release gem for $PLATFORM, Fledge $FLEDGE_TAG)"
+            echo "Built $(date -u +%Y-%m-%d) by $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          } > "$RUNNER_TEMP/build.txt"
+          cat "$RUNNER_TEMP/build.txt"
+
+      - name: Render playtest.ps1 and README.txt from playtest/
+        run: |
+          mkdir -p "$RUNNER_TEMP/rendered"
+          ruby script/playtest_kit.rb windows "$RUNNER_TEMP/rendered/playtest.ps1" "$RUNNER_TEMP/build.txt"
+          ruby script/playtest_kit.rb text playtest/README-windows.txt "$RUNNER_TEMP/rendered/README.txt" "$RUNNER_TEMP/build.txt" --crlf
+
+      - name: Parse playtest.ps1 in Windows PowerShell 5.1 and PowerShell 7
+        shell: pwsh
+        run: |
+          $path = Join-Path $env:RUNNER_TEMP 'rendered\playtest.ps1'
+          $bad = 0
+          foreach ($exe in 'powershell.exe', 'pwsh') {
+            $command = "`$e = `$null; [void][Management.Automation.Language.Parser]::ParseFile('$path', [ref]`$null, [ref]`$e); `$e | ForEach-Object { `$_.ToString() }; exit @(`$e).Count"
+            & $exe -NoProfile -NonInteractive -Command $command
+            Write-Host "$exe finds $LASTEXITCODE parse errors"
+            if ($LASTEXITCODE -ne 0) { $bad++ }
+          }
+          exit $bad
+
+      - name: Check Lota's gem against its release, and install it
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gem_file="vendor/cache/lota-$LOTA_VERSION-$PLATFORM.gem"
+          gh release download "v$LOTA_VERSION" -R setdef/Lota -p SHA256SUMS -D "$RUNNER_TEMP/lota-release"
+          expected=$(grep " lota-$LOTA_VERSION-$PLATFORM.gem\$" "$RUNNER_TEMP/lota-release/SHA256SUMS" | cut -d' ' -f1)
+          actual=$(sha256sum "$gem_file" | cut -d' ' -f1)
+          echo "release: $expected"; echo "vendor/cache: $actual"
+          [ -n "$expected" ] && [ "$expected" = "$actual" ]
+          gem install --local "$gem_file"
+          ruby -S lota --version
+
+      - name: lota fuse
+        run: |
+          ruby -S lota fuse . --identifier "$IDENTIFIER" --app-version "$APP_VERSION" --icon icons/icon --out "$RUNNER_TEMP/fuse"
+          ls -la "$RUNNER_TEMP/fuse"
+
+      - name: Assemble and zip the kit
+        shell: pwsh
+        run: |
+          $kit = Join-Path $env:RUNNER_TEMP 'kit\dot-popper-windows-kit'
+          New-Item -ItemType Directory -Force $kit | Out-Null
+          $zip = Get-ChildItem -LiteralPath "$env:RUNNER_TEMP/fuse" -Filter 'Dot Popper-*.zip' | Select-Object -First 1
+          $unpacked = Join-Path $env:RUNNER_TEMP 'unpacked'
+          Expand-Archive -LiteralPath $zip.FullName -DestinationPath $unpacked
+          $game = Get-ChildItem -LiteralPath $unpacked -Recurse -File -Filter 'Dot Popper.exe' | Select-Object -First 1
+          Move-Item -LiteralPath $game.DirectoryName -Destination (Join-Path $kit 'Dot Popper')
+          Copy-Item -LiteralPath (Join-Path $env:RUNNER_TEMP 'rendered\playtest.ps1'), (Join-Path $env:RUNNER_TEMP 'rendered\README.txt') -Destination $kit
+          Get-ChildItem -LiteralPath $kit | ForEach-Object { Write-Host $_.Name }
+          $out = Join-Path $env:RUNNER_TEMP 'out'
+          New-Item -ItemType Directory -Force $out | Out-Null
+          Compress-Archive -LiteralPath $kit -DestinationPath (Join-Path $out 'dot-popper-windows-kit.zip')
+          Get-ChildItem $out | ForEach-Object { Write-Host "$($_.Name) $($_.Length) bytes" }
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dot-popper-windows-kit
+          path: ${{ runner.temp }}/out/dot-popper-windows-kit.zip
+          if-no-files-found: error
+          compression-level: 0
+
+      # As a player would: Extract All in Downloads, under a folder with a
+      # space, every file marked as downloaded from the internet.
+      - name: Unzip the kit as a player would
+        shell: pwsh
+        run: |
+          $place = Join-Path $env:USERPROFILE 'Downloads\dot popper kit test'
+          New-Item -ItemType Directory -Force $place | Out-Null
+          $zip = Join-Path $place 'dot-popper-windows-kit.zip'
+          Copy-Item -LiteralPath (Join-Path $env:RUNNER_TEMP 'out\dot-popper-windows-kit.zip') -Destination $zip
+          $mark = "[ZoneTransfer]`r`nZoneId=3`r`nHostUrl=https://github.com/"
+          Expand-Archive -LiteralPath $zip -DestinationPath $place
+          $kit = Join-Path $place 'dot-popper-windows-kit'
+          Get-ChildItem -LiteralPath $kit -Recurse -File | ForEach-Object { Set-Content -LiteralPath $_.FullName -Stream Zone.Identifier -Value $mark }
+          "KIT=$kit" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      # CI only: the runner has no GPU, so Mesa's llvmpipe goes beside the
+      # game in this copy, where SDL finds its opengl32.dll first.
+      - name: Put Mesa's software OpenGL beside the game
+        shell: pwsh
+        run: |
+          C:\msys64\usr\bin\pacman.exe -S --noconfirm --needed mingw-w64-ucrt-x86_64-mesa | Out-Host
+          $game = Join-Path $env:KIT 'Dot Popper'
+          $bin = 'C:\msys64\ucrt64\bin'
+          foreach ($pattern in 'opengl32.dll', 'libgallium_wgl.dll', 'libffi-*.dll', 'libgcc_s_seh-1.dll', 'libiconv-2.dll', 'libintl-8.dll',
+              'libLLVM*.dll', 'libSPIRV-Tools*.dll', 'libstdc++-6.dll', 'libsystre-0.dll', 'libtre-5.dll', 'libwinpthread-1.dll',
+              'libxml2*.dll', 'libzstd.dll', 'zlib1.dll') {
+            Get-ChildItem -LiteralPath $bin -Filter $pattern | Copy-Item -Destination $game
+          }
+
+      - name: Run playtest.ps1 in Windows PowerShell 5.1, answers on standard input
+        shell: cmd
+        env:
+          DOT_POPPER_AUTOPLAY: "1"
+          DOT_POPPER_SEED: "7"
+          DOT_POPPER_QUIT_AFTER: "40"
+          ALSOFT_DRIVERS: "null"
+          GALLIUM_DRIVER: llvmpipe
+        run: |
+          ruby .github\windows_kit_check.rb answers "%RUNNER_TEMP%\answers.txt"
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%KIT%\playtest.ps1" -NoPause < "%RUNNER_TEMP%\answers.txt"
+          echo playtest.ps1 exit status %errorlevel%
+
+      - name: Show and check dot-popper-results.txt
+        run: |
+          results="$KIT/dot-popper-results.txt"
+          cat "$results"
+          ruby .github/windows_kit_check.rb results "$results"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: dot-popper-windows-kit-ci-results
+          path: ${{ env.KIT }}/dot-popper-results*.txt
+          if-no-files-found: warn
+
+  ipad:
+    name: iPad kit (experimental)
+    runs-on: macos-15
+    timeout-minutes: 100
+    env:
+      APP_NAME: DotPopper
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: .ruby-version
+
+      - name: Select the newest Xcode, and install XcodeGen and Ninja
+        run: |
+          xcode=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$xcode"
+          xcodebuild -version
+          brew install xcodegen ninja
+          cmake --version
+          xcodegen --version
+
+      # Lota's documented iOS path (CHANGELOG 0.1.3, "Experimental"): its
+      # source, LÖVE's and love-apple-dependencies' with it, from the tag.
+      - name: Clone Lota at v${{ env.LOTA_VERSION }}, with LÖVE's sources
+        run: |
+          lota=$RUNNER_TEMP/lota
+          git clone --quiet --depth 1 --branch "v$LOTA_VERSION" https://github.com/setdef/Lota.git "$lota"
+          git -C "$lota" submodule update --init --depth 1 vendor/love vendor/love-apple-dependencies
+          echo "LOTA_SOURCE=$lota" >> "$GITHUB_ENV"
+          echo "Lota v$LOTA_VERSION is $(git -C "$lota" rev-parse HEAD)"
+
+      - name: Build SDL3 for iOS with Lota's rake ios:sdl3
+        working-directory: ${{ env.LOTA_SOURCE }}
+        run: |
+          bundle install
+          bundle exec rake ios:sdl3
+          echo "RICE_DIR=$(bundle exec ruby -e 'print Gem.loaded_specs.fetch("rice").full_gem_path')" >> "$GITHUB_ENV"
+
+      # The desktop's precompiled Lota gems and lockfile give way to the
+      # clone, as a path gem whose extension fledge build ios compiles for
+      # each slice; fledge.yml gains the iOS host in ios/host.
+      - name: Lay out the game for fledge build ios
+        run: |
+          game=$RUNNER_TEMP/game
+          mkdir -p "$game"
+          git archive HEAD | tar -x -C "$game"
+          rm -rf "$game/vendor/cache" "$game/Gemfile.lock" "$game/mise.toml" "$game/.ruby-version"
+          cat > "$game/Gemfile" <<EOF
+          # frozen_string_literal: true
+
+          # Written by kits.yml for fledge build ios.
+          source "https://rubygems.org"
+
+          gem "lota", path: "$LOTA_SOURCE"
+          gem "fledge", git: "https://github.com/setdef/Fledge", tag: "$FLEDGE_TAG", group: :development
+          EOF
+          ruby -ryaml -e '
+            config = YAML.load_file("fledge.yml")
+            config.delete("installers")
+            config["name"] = ENV.fetch("APP_NAME")
+            config["ios"] = { "host" => "ios/host" }
+            File.write(ARGV[0], "# Written by kits.yml for fledge build ios, from fledge.yml.\n" + YAML.dump(config))
+          ' "$game/fledge.yml"
+          cat "$game/Gemfile" "$game/fledge.yml"
+          version=$(ruby -ryaml -e 'print YAML.load_file("fledge.yml").fetch("version")')
+          echo "APP_VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: fledge build ios
+        working-directory: ${{ runner.temp }}/game
+        env:
+          BUNDLE_GEMFILE: ${{ runner.temp }}/game/Gemfile
+          BUNDLE_PATH: ${{ runner.temp }}/app-bundle
+          XDG_CACHE_HOME: ${{ runner.temp }}/cache
+        run: |
+          bundle config set --local build.lota \
+            "--with-lota-source=$LOTA_SOURCE --with-lota-sdl3=$LOTA_SOURCE/tmp/ios/sdl3 --with-rice-dir=$RICE_DIR"
+          bundle lock --add-platform ruby
+          bundle install
+          bundle exec fledge --version
+          time bundle exec fledge build ios
+          ls -la "dist/$APP_NAME-ios"
+
+      - name: Check the project stands on its own, and assemble the kit
+        run: |
+          project=$RUNNER_TEMP/game/dist/$APP_NAME-ios
+          if grep -rIl -e "$RUNNER_TEMP" -e "$GITHUB_WORKSPACE" -e /Users/runner \
+              "$project/project.yml" "$project/$APP_NAME.xcodeproj" "$project/Host" "$project/fledge/fledge.cfg"; then
+            echo "::error::the project names a path on this runner"; exit 1
+          fi
+          grep -q AVAudioSessionCategoryAmbient "$project/Host/main.m"
+          grep -q SDL_ACCELEROMETER_AS_JOYSTICK "$project/Host/main.m"
+          echo "symbolic links: $(find "$project" -type l | wc -l)"
+          {
+            echo "Dot Popper $GITHUB_REF_NAME, commit $GITHUB_SHA, version $APP_VERSION"
+            echo "Built by fledge build ios (Fledge $FLEDGE_TAG) with Lota $LOTA_VERSION's experimental iOS engine, from Lota's tag v$LOTA_VERSION ($(git -C "$LOTA_SOURCE" rev-parse --short HEAD))"
+            echo "Built $(date -u +%Y-%m-%d) with $(xcodebuild -version | tr '\n' ' ')on $(sw_vers -productName) $(sw_vers -productVersion)"
+            echo "Workflow run $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          } > "$RUNNER_TEMP/build.txt"
+          kit=$RUNNER_TEMP/kit/dot-popper-ipad-kit
+          mkdir -p "$kit"
+          mv "$project" "$kit/"
+          cp "$RUNNER_TEMP/build.txt" "$kit/BUILD-INFO.txt"
+          echo "XcodeGen $(xcodegen --version)" >> "$kit/BUILD-INFO.txt"
+          ruby script/playtest_kit.rb text playtest/README-ipad.txt "$kit/README.txt" "$RUNNER_TEMP/build.txt"
+          ruby script/playtest_kit.rb ipad "$kit/ipad-results.txt" "$RUNNER_TEMP/build.txt"
+          cat "$kit/BUILD-INFO.txt" "$kit/ipad-results.txt"
+          mkdir -p "$RUNNER_TEMP/out"
+          (cd "$RUNNER_TEMP/kit" && zip -qry "$RUNNER_TEMP/out/dot-popper-ipad-kit.zip" dot-popper-ipad-kit)
+          ls -la "$RUNNER_TEMP/out"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dot-popper-ipad-kit
+          path: ${{ runner.temp }}/out/dot-popper-ipad-kit.zip
+          if-no-files-found: error
+          compression-level: 0
+
+  ipad-simulator:
+    name: iPad kit in the Simulator
+    needs: ipad
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      APP_NAME: DotPopper
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dot-popper-ipad-kit
+          path: ${{ runner.temp }}/download
+
+      - name: Select the newest Xcode
+        run: |
+          xcode=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$xcode"
+          xcodebuild -version
+
+      # On a runner with no Lota, Fledge, or bundle, as the maintainer's
+      # Mac has none.
+      - name: Unpack the kit and build it for the Simulator and, unsigned, for devices
+        run: |
+          ditto -x -k "$RUNNER_TEMP/download/dot-popper-ipad-kit.zip" "$RUNNER_TEMP/unpacked"
+          cd "$RUNNER_TEMP/unpacked/dot-popper-ipad-kit/$APP_NAME-ios"
+          mkdir -p "$RUNNER_TEMP/simulator"
+          for sdk in iphonesimulator iphoneos; do
+            log=$RUNNER_TEMP/simulator/xcodebuild-$sdk.log
+            xcodebuild -project "$APP_NAME.xcodeproj" -scheme "$APP_NAME" -configuration Debug -sdk "$sdk" \
+              -derivedDataPath "$RUNNER_TEMP/derived" build CODE_SIGNING_ALLOWED=NO > "$log" 2>&1 \
+              || { tail -80 "$log"; exit 1; }
+            grep -E "BUILD" "$log" | tail -2
+          done
+
+      # doc/ios.md, "Checking a run in the Simulator".
+      - name: Run the autoplay check in an iPad Simulator
+        run: |
+          app=$RUNNER_TEMP/derived/Build/Products/Debug-iphonesimulator/$APP_NAME.app
+          out=$RUNNER_TEMP/simulator
+          runtime=$(xcrun simctl list runtimes -j | ruby -rjson -e 'puts JSON.parse($stdin.read)["runtimes"].select { |r| r["platform"] == "iOS" && r["isAvailable"] }.max_by { |r| Gem::Version.new(r["version"]) }["identifier"]')
+          device=$(xcrun simctl list devicetypes -j | ruby -rjson -e 'puts JSON.parse($stdin.read)["devicetypes"].map { |d| d["name"] }.grep(/\AiPad Pro 13-inch/).last')
+          echo "runtime $runtime, device $device"
+          udid=$(xcrun simctl create dot-popper-kit "$device" "$runtime")
+          xcrun simctl bootstatus "$udid" -b > /dev/null
+          xcrun simctl install "$udid" "$app"
+          since=$(date "+%Y-%m-%d %H:%M:%S")
+          SIMCTL_CHILD_DOT_POPPER_AUTOPLAY=1 SIMCTL_CHILD_DOT_POPPER_SEED=7 SIMCTL_CHILD_ALSOFT_DRIVERS=null \
+          SIMCTL_CHILD_DOT_POPPER_QUIT_AFTER=45 SIMCTL_CHILD_DOT_POPPER_SHOTS=3,12,25,38 \
+            xcrun simctl launch "$udid" "$IDENTIFIER"
+          sleep 75
+          xcrun simctl spawn "$udid" log show --start "$since" --info --style compact \
+            --predicate "subsystem == \"$IDENTIFIER\"" > "$out/app.log" 2>&1 || true
+          cat "$out/app.log"
+          data=$(xcrun simctl get_app_container "$udid" "$IDENTIFIER" data)
+          cp "$data/Library/Application Support/dot_popper/"* "$out/" 2>/dev/null || true
+          ls -la "$out"
+          grep -q "a dot's radius is 50 points" "$out/app.log"
+          [ "$(grep -c 'Dot Popper: screenshot' "$out/app.log")" -ge 4 ]
+          grep -q "exited with status 0" "$out/app.log"
+          if grep -E "drawing without|playing without|could not (save|read)|using Lota's own font" "$out/app.log"; then
+            echo "::warning::the game reported a problem in the Simulator (above)"
+          fi
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: dot-popper-ipad-simulator-check
+          path: ${{ runner.temp }}/simulator
+          if-no-files-found: warn
+
+  release:
+    name: Attach the kits to the release
+    needs: [windows, ipad, ipad-simulator]
+    # The Windows kit must have passed; the iPad kit joins it when it built.
+    if: ${{ always() && startsWith(github.ref, 'refs/tags/v') && needs.windows.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: dot-popper-*-kit
+          path: kits
+          merge-multiple: true
+
+      - name: Attach the kits to the tag's release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IPAD: ${{ needs.ipad.result }}
+          SIMULATOR: ${{ needs.ipad-simulator.result }}
+        run: |
+          ls -la kits
+          tag="$GITHUB_REF_NAME"
+          # The Package workflow may be making the same release at once.
+          for attempt in 1 2 3 4 5; do
+            if gh release view "$tag" -R "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+              gh release upload "$tag" -R "$GITHUB_REPOSITORY" --clobber kits/*.zip && exit 0
+            elif gh release create "$tag" -R "$GITHUB_REPOSITORY" --title "Dot Popper $tag" --prerelease \
+                --notes "Built by the Package and Kits workflows from $GITHUB_SHA. See PACKAGING.md." kits/*.zip; then
+              exit 0
+            fi
+            sleep $((attempt * 10))
+          done
+          exit 1
