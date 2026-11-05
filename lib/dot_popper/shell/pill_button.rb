@@ -24,6 +24,15 @@ module DotPopper
         pen.text(text, font, x + (width / 2.0), y + (height / 2.0), color, alpha)
       end
 
+      # Only the words of a pill already drawn, on top of whatever has
+      # since been drawn over it, in the same place and size.
+      def label(rect, text, alpha: 1.0, color: pen.palette.cream)
+        pixels = pen.pixels
+        x, y, width, height = [rect.x, rect.y, rect.width, rect.height].map { pixels.snap(it) }
+        font = fit(text, width - (height * 0.6), height)
+        pen.text(text, font, x + (width / 2.0), y + (height / 2.0), color, alpha)
+      end
+
       private
 
       def fit(text, room, height)

@@ -89,16 +89,28 @@ module DotPopper
         end
       end
 
-      # "Clear my records…", quiet in soft type, and while held, a bar
-      # under it that fills in the alarm's pink as the hold goes on.
+      # "Clear my records…", quiet in soft type. While it's held, the button
+      # itself fills from the left in the alarm's pink, so how far along
+      # the hold is can't be missed, and its words are drawn again on top.
       def clear(show, layout)
         rect = layout.clear_records_button
         held = show.clearing.held?
         PillButton.new(pen:).draw(rect, show.words.clear, alpha: held ? 1.0 : 0.8, color: pen.palette.soft)
         return unless held
 
-        bar(rect, 1.0, pen.palette.soft, 0.25)
-        bar(rect, show.clearing.progress(show.now), pen.palette.alarm, 1.0)
+        fill(rect, show.clearing.progress(show.now))
+        PillButton.new(pen:).label(rect, show.words.clear, color: pen.palette.cream)
+      end
+
+      # The pill's left +amount+, filled, its ends rounded as the pill's are.
+      def fill(rect, amount)
+        return if amount <= 0.0
+
+        pixels = pen.pixels
+        width = pixels.snap(rect.width * amount.clamp(0.0, 1.0))
+        corner = [rect.height, width].min / 2.0
+        pen.color(pen.palette.alarm, 0.55)
+        G.rectangle(:fill, pixels.snap(rect.x), pixels.snap(rect.y), width, pixels.snap(rect.height), corner, corner, 48)
       end
 
       # "Records cleared." beside Undo, and under Undo, a faint bar that
