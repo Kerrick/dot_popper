@@ -52,7 +52,7 @@ The title's dots change size as soon as you switch, and the game remembers your 
 | Toggle fullscreen (desktop only) | | **F11**, or **Alt+Enter** (**Cmd+Enter** on a Mac) |
 | Quit (desktop only) | Close the window | **Escape**, except on the Records screen |
 
-On a phone or tablet the game always fills the screen and never quits itself, so only **M**, and **Escape** on the Records screen, do anything on an attached keyboard.
+On a phone or tablet the game always fills the screen, and only **M**, and **Escape** on the Records screen, do anything on an attached keyboard. On Android, the Back button or gesture leaves the Records screen, leaves the app from the title screen, and does nothing during a round or at Game Over, so a stray swipe from the screen's edge never ends a round.
 
 ### Playing with a controller
 

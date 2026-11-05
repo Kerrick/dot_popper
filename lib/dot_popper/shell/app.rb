@@ -21,6 +21,7 @@ module DotPopper
         os = ::Lota::System.os
         @dot_size = DotSize.for(os)
         @touch = DotSize.touch?(os)
+        @android = os == "Android"
         puts "Dot Popper: a dot's radius is #{@dot_size.reason}"
         @touch ? fill_screen : open_window
         random = seed ? Random.new(seed) : Random.new
@@ -135,6 +136,10 @@ module DotPopper
         return @speaker.toggle_mute if key == :m
         # Escape leaves the Records screen first, on any device.
         return if key == :escape && @show.back
+        # Android's Back arrives as Escape. On the title it leaves the app,
+        # as Back on an app's first screen does; anywhere else it does
+        # nothing, so a stray edge swipe never throws a round away.
+        return ::Lota::Event.quit if key == :escape && @android && @show.title?
         # A tablet's keyboard neither quits the app nor takes it out of
         # fullscreen: iOS apps are left by the system, never by the app.
         return if @touch
