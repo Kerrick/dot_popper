@@ -41,8 +41,7 @@ module DotPopper
     # and the next round starts on the new field.
     def field=(field)
       @field = field
-      playing = state
-      playing.round.field = field if playing.is_a?(Playing)
+      state.round.field = field if state.is_a?(Playing)
     end
 
     # Tells every listener of +event+; nil is nothing to tell.

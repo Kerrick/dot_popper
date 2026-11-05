@@ -221,6 +221,18 @@ the player understanding what just happened to them.
   With a million slots in each of the three smallest size pools (about
   250 MB), the same run makes about 25, and 60 rounds per device took 28.9 s
   one after another and 14.5 s in Ractors (2.0×), on a Mac whose ten cores
-  were mostly busy with other work. The script re-runs itself with those
+  were mostly busy with other work; other runs that night ranged from 1.2×
+  to 2.2× as that work came and went. The script re-runs itself with those
   `RUBY_GC_HEAP_*_INIT_SLOTS` settings. The rest of the ceiling is the 6K
   device, whose rounds alone are nearly a third of the simulated time.
+- **The typed core keeps `if` and `is_a?` where pattern matching would
+  read a little better.** `Round#tap_at` reads well as `case dots.top_at(x,
+  y) in nil ... in Dot(popped: false) ...`, but Steep 2.1 does not check
+  `case`/`in` at all: it reports it as unsupported, at a level that is
+  silent by default, and types everything inside as untyped. A deliberate
+  type error inside such a branch passed. So the Steepfile makes that an
+  error, and the core's dispatch stays in forms Steep narrows (`if
+  state.is_a?(Playing)` narrows `state.round`). Pattern matching is used
+  where nothing is typed: the fuzz test matches on each tap's event, and
+  `script/simulate.rb` dispatches on it and reports each round as a `Data`
+  value instead of a hash.

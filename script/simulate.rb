@@ -50,6 +50,12 @@ module Simulation
     Device.new("32\" 6K fullscreen", 60.2, 33.8, :mouse)
   ].freeze
 
+  # How one round went. +covered+ counts the fresh dots that spawned
+  # under a popped one.
+  Result = Data.define(:score, :seconds, :penalties, :dots, :covered) do
+    def endless? = seconds > GIVE_UP
+  end
+
   class Player
     def initialize(device, random)
       @device = device
@@ -68,8 +74,7 @@ module Simulation
       until round.over? || t > GIVE_UP
         fresh = round.dots.find(&:fresh?)
         covered_spawns += 1 if covered?(round, fresh)
-        busy = REACTION
-        busy, t = wait(round, busy, t)
+        t = wait(round, REACTION, t)
         loop do
           break if round.over?
 
@@ -80,19 +85,21 @@ module Simulation
             next
           end
           travel = fitts(fresh)
-          _, t = wait(round, travel, t)
+          t = wait(round, travel, t)
           break if round.over?
 
           fresh = round.dots.find(&:fresh?)
           aim = [fresh.x, fresh.y]
           event = round.tap_at(*aim)
           @hand = aim
-          penalties += 1 if event.is_a?(DotPopper::Events::Penalized)
-          break if event.is_a?(DotPopper::Events::Popped)
+          case event
+          in DotPopper::Events::Popped then break
+          in DotPopper::Events::Penalized then penalties += 1
+          in DotPopper::Events::Missed | nil then next
+          end
         end
       end
-      { score: round.score, seconds: t, endless: t > GIVE_UP, penalties:, dots: round.dots.size,
-        covered: covered_spawns }
+      Result.new(score: round.score, seconds: t, penalties:, dots: round.dots.size, covered: covered_spawns)
     end
 
     private
@@ -100,7 +107,7 @@ module Simulation
     def wait(round, seconds, t)
       steps = (seconds / STEP).ceil
       steps.times { round.update(STEP) unless round.over? }
-      [0, t + (steps * STEP)]
+      t + (steps * STEP)
     end
 
     def covered?(round, fresh) = !round.dots.top_at(fresh.x, fresh.y).fresh?
@@ -146,11 +153,11 @@ module Simulation
   def self.report(rounds, all_results)
     puts format("%-26s %6s %6s %6s %6s %7s %6s", "device", "area", "score", "p90", "secs", "endless", "pen")
     DEVICES.zip(all_results).each do |device, results|
-      scores = results.map { it[:score] }.sort
+      scores = results.map(&:score).sort
       puts format("%-26s %6.0f %6.1f %6d %6.1f %6.0f%% %6.1f",
                   device.name, device.width_r * device.height_r, scores.sum.fdiv(rounds), scores[(rounds * 0.9).floor],
-                  results.sum { it[:seconds] } / rounds, 100.0 * results.count { it[:endless] } / rounds,
-                  results.sum { it[:penalties] }.fdiv(rounds))
+                  results.sum(&:seconds) / rounds, 100.0 * results.count(&:endless?) / rounds,
+                  results.sum(&:penalties).fdiv(rounds))
     end
   end
 end
