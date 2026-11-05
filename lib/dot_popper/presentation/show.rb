@@ -11,9 +11,10 @@ module DotPopper
     #
     # +sounds+ answers play(name, pitch:, pan:), muted?, and toggle_mute.
     class Show
-      attr_reader :game, :effects, :animations, :hud, :attract, :layout, :marquee, :finale, :sounds, :now, :look
+      attr_reader :game, :effects, :animations, :hud, :hint, :attract, :layout, :marquee, :finale, :sounds, :now, :look
 
-      def initialize(game:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false)
+      def initialize(game:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false,
+                     tutor: Tutor.new(BestScore::Memory.new))
         @game = game
         @layout = layout
         @sounds = sounds
@@ -27,6 +28,8 @@ module DotPopper
         @now = 0.0
         @marquee = Marquee.new(look: look::TITLE, best: game.best.value, at: @now)
         @finale = nil
+        @tutor = tutor
+        @hint = nil
         @penalized_at = -Float::INFINITY
         game.subscribe(self)
       end
@@ -58,6 +61,7 @@ module DotPopper
         effects.update(seconds)
         @attract = attract.update(seconds) if title?
         @hud = hud.read(game.round, now) { tick(it) if playing? } if game.round
+        @hint = nil unless hint&.alive?(now) && playing?
         follow_finale if finished?
       end
 
@@ -102,6 +106,7 @@ module DotPopper
         effects.ring(event.dot.x, event.dot.y, look::ALARM_RING, follow: event.dot.id)
         hidden = game.round.dots.fresh_beneath(event.dot, event.x, event.y)
         effects.reveal(hidden, look::REVEAL) if hidden
+        @hint = @tutor.slipped(words.covered, look::HINT, now) || hint
         effects.kick(look::PENALTY_SHAKE)
         effects.light(look::PENALTY_FLASH)
         # The floor can keep the score from falling; say only what was lost.

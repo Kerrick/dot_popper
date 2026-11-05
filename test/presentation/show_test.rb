@@ -84,6 +84,19 @@ class ShowTest < Minitest::Test
     assert_empty @show.effects.reveals
   end
 
+  def test_the_first_wrong_tap_ever_explains_the_stack_and_later_ones_do_not
+    start_and_pop
+    popped = @game.round.dots.first
+    clear_around!(@game.round, popped)
+    @show.tap(popped.x, popped.y)
+
+    assert_equal Look::WORDS.covered, @show.hint.lines
+    @show.update(Look::HINT.life)
+    assert_nil @show.hint
+    @show.tap(popped.x, popped.y)
+    assert_nil @show.hint
+  end
+
   def test_a_wrong_tap_with_the_fresh_dot_elsewhere_reveals_nothing
     start_and_pop
     popped = @game.round.dots.first

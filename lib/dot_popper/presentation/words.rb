@@ -3,7 +3,8 @@
 module DotPopper
   module Presentation
     # Every word the game shows, and the way it writes numbers.
-    class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time)
+    # +covered+ is the first-run hint, a sentence a line.
+    class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time, :covered)
       MINUS = "−" # a true minus sign, as wide as the plus
 
       # +1, −2, or 0 for a number of points.

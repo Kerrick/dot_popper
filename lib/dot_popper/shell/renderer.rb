@@ -16,6 +16,7 @@ module DotPopper
         @dots = DotPainter.new(pen:)
         @effects = EffectsPainter.new(pen:, sparks:)
         @hud = HudPainter.new(pen:)
+        @hint = HintPainter.new(pen:)
         @title = TitlePainter.new(pen:, dots: @dots)
         @finale = FinalePainter.new(pen:)
         @at_rest = Presentation::DotAnimations.new(pen.look::MOTION)
@@ -61,10 +62,11 @@ module DotPopper
       # tap is judged where a dot really is.
       def hud(layout)
         pixels = @pen.pixels
-        G.push do
+        pill = G.push do
           G.translate(pixels.snap(@show.effects.shake_x), pixels.snap(@show.effects.shake_y))
           @hud.draw(@show.hud, layout)
         end
+        @hint.draw(@show.hint, @show.now, layout, pill.bottom) if @show.hint
       end
 
       public

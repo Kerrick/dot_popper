@@ -23,19 +23,23 @@ module DotPopper
 
       WORDS = Words.new(
         title: "Dot Popper", play: "Tap anywhere to play", continue: "Tap to continue", time_up: "Time!",
-        new_best: "New best!", best: "Best", score: "SCORE", time: "TIME"
+        new_best: "New best!", best: "Best", score: "SCORE", time: "TIME",
+        covered: ["Popped dots sit on top.", "Wait for the bright one to slide out."].freeze
       )
+
+      # The first-run hint, under the HUD.
+      HINT = HintLook.new(fade_in: 0.2, fade_out: 0.5, life: 2.6)
 
       # The rounded face, Fredoka (SIL Open Font License; assets/fonts).
       # Sizes are graphics units at a layout scale of 1. A size that
       # animates steps through whole sizes rather than scaling glyphs.
       class Type < Data.define(:bold, :semibold, :title, :heading, :final_score, :hud_number, :hud_label,
-                               :prompt, :legend, :best, :floater, :new_best); end
+                               :prompt, :legend, :best, :floater, :new_best, :hint); end
 
       TYPE = Type.new(
         bold: "assets/fonts/Fredoka-Bold.ttf", semibold: "assets/fonts/Fredoka-SemiBold.ttf",
         title: 108, heading: 64, final_score: 136, hud_number: 40, hud_label: 13,
-        prompt: 26, legend: 24, best: 26, floater: 34, new_best: 34
+        prompt: 26, legend: 24, best: 26, floater: 34, new_best: 34, hint: 21
       )
 
       # The desktop window opens at 24 × 16 radii (1200 × 800 units when

@@ -24,7 +24,8 @@ module DotPopper
         @game = Game.new(field, best: BestScore.new(SaveFile.new(name: "best_score.txt")), random:)
         @speaker = Speaker.new(Look::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Look::SOUND.volume)
         @show = Presentation::Show.new(game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,
-                                       random:, calm: flag?("DOT_POPPER_CALM"))
+                                       random:, calm: flag?("DOT_POPPER_CALM"),
+                                       tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt")))
         @pile = Pile.new(flag?("DOT_POPPER_CALM") ? Look::CALM_PILE : Look::PILE)
         @game.subscribe(@pile)
         @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))

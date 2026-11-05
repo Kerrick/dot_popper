@@ -22,6 +22,7 @@ module DotPopper
           readout(readout, pill.x + (cell * (i + 0.5)), pill.y + (pad * 0.55), number, label, layout)
         end
         divider(pill.x + cell, pill.y + (pad * 0.7), pill.bottom - (pad * 0.7))
+        pill
       end
 
       # Makes every size a bump or an urgent pulse passes through, an

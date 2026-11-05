@@ -26,6 +26,8 @@ class WordsTest < Minitest::Test
   def test_the_copy_is_short
     words = Look::WORDS
     assert_equal "Best 12", words.best_line(12)
-    words.to_h.each_value { |text| assert_operator text.split.size, :<=, 4, text }
+    labels = words.to_h.except(:covered)
+    labels.each_value { |text| assert_operator text.split.size, :<=, 4, text }
+    words.covered.each { |sentence| assert_operator sentence.split.size, :<=, 8, sentence }
   end
 end

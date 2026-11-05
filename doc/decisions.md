@@ -123,6 +123,12 @@ the player understanding what just happened to them.
   teaches the core rule at the moment it bit. It is an outline, never a fill,
   so it cannot pass for an uncovered fresh dot and invite a second wrong tap.
   `Stack#fresh_beneath` answers the question; it decides nothing.
+- **The first wrong tap ever explains the rule, once.** "Popped dots sit on
+  top. Wait for the bright one to slide out." shows under the HUD for 2.6 s,
+  and `taught.txt` in the save folder keeps it from showing again. The title's
+  legend already teaches the scoring, so this line teaches only the stacking,
+  at the one moment the player needs it. It is not a button, and the round goes
+  on under it; on a narrow screen the two sentences stack.
 
 ## Code
 

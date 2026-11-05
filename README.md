@@ -16,7 +16,7 @@ Dot Popper is written in Ruby on [Lota](https://github.com/setdef/Lota), which r
 | Fullscreen | **F11**, or **Alt+Enter** (**Cmd+Enter** on a Mac) |
 | Quit | **Escape**, or close the window |
 
-A fresh dot is bright and glossy. A popped dot is a muted, matte disc with a dark crater in its centre. The two differ in lightness and shape as well as colour, so they read apart in greyscale and for colour-blind players. The game keeps your best score, and whether sound is on, on the device. When time is up, the dots tumble into a pile behind your score. Set `DOT_POPPER_CALM=1` to turn off the screen shake and let the pile settle softly.
+A fresh dot is bright and glossy. A popped dot is a muted, matte disc with a dark crater in its centre. The two differ in lightness and shape as well as colour, so they read apart in greyscale and for colour-blind players. The first time you tap a popped dot, a one-line hint under the score explains why, and never again. The game keeps your best score, whether sound is on, and whether you've seen that hint, on the device. When time is up, the dots tumble into a pile behind your score. Set `DOT_POPPER_CALM=1` to turn off the screen shake and let the pile settle softly.
 
 ## Installing and running
 
