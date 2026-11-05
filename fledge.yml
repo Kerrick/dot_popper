@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/setdef/Fledge/007b5514e4630ca02a67aabb5b8b701e66c919cd/lib/fledge/config.schema.json
+
+# How `bundle exec fledge build` packages Dot Popper (PACKAGING.md). The
+# program is bin/dot_popper, which starts the game in this folder as a
+# fused Lota game; main.rb here is the game's own, which only defines
+# Lota's callbacks, so it is not the program to build.
+name: Dot Popper
+version: "0.1.0"
+publisher: Kerrick Long
+copyright: © 2026 Kerrick Long
+installers: [dmg, nsis]
+programs:
+  - path: bin/dot_popper
+    kind: windowed
+    identifier: com.kerricklong.DotPopper
+    icon: icons/icon

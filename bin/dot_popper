@@ -1,0 +1,42 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# The program Fledge ships (fledge.yml): it starts Dot Popper as a fused
+# Lota game, as a game shipped to players is, from the folder above this
+# one, which holds conf.rb and main.rb. `lota run` from the repository's
+# root starts the same game unfused, for development, and never runs this.
+#
+# Fused, the game saves under its identity alone in the system's
+# application data folder, where LÖVE's fused games save, and not in a
+# "Lota" folder there (Lota::Boot's fused: argument).
+#
+# DOT_POPPER_SMOKE, when it names a file, makes this a check that the app
+# is whole, for CI runners, which have no GPU: it loads Lota, checks that
+# the game's files shipped, writes what it found to that file, and exits
+# with 0, or 1 if something is missing, without opening a window.
+
+game = File.expand_path("..", __dir__)
+
+smoke = ENV.fetch("DOT_POPPER_SMOKE", "")
+unless smoke.empty?
+  lines = ["ruby #{RUBY_VERSION} #{RUBY_PLATFORM}", "program #{$PROGRAM_NAME}"]
+  status = 0
+  begin
+    require "lota"
+    lines << "lota #{Lota::VERSION}"
+  rescue LoadError => e
+    lines << "require lota failed: #{e.class}: #{e.message}"
+    status = 1
+  end
+  %w[conf.rb main.rb].each do |file|
+    found = File.file?(File.join(game, file))
+    lines << "#{file} #{found ? "present" : "MISSING"}"
+    status = 1 unless found
+  end
+  lines << "status #{status}"
+  File.write(smoke, lines.join("\n") + "\n")
+  exit(status)
+end
+
+require "lota"
+exit(Lota::Boot.new(game, ARGV, fused: true).call)
