@@ -506,3 +506,11 @@ Three changes. At its faintest, "Tap anywhere to play" now breathes down to 80% 
 **Why:** At half opacity the prompt nearly disappeared over a passing dot, at the moment a new player looks for what to do. The legend teaches the scoring, but on a wide window it was small next to the name. The drifting dots are scenery and shouldn't compete with the words.
 
 **To reverse:** Set `Look::TITLE.faintest` to 0.5, `dim` to 0.72, and `TYPE.legend` to 24, and remove the `backing` call from `TitlePainter#draw`.
+
+### The HUD is lighter, and a wrong tap's edge glow is softer
+
+The HUD's pill is a little smaller, with 35-unit numbers (down from 40) and less padding, and only 40% opaque (down from 62%). A dot that drifts under it stays visible. Its numbers and labels are drawn with the same soft dark outline as the floating numbers, so they stay crisp over a bright dot. A wrong tap's edge glow peaks at 42% (down from 60%), reaches in a tenth of the screen's shorter side (down from 16%), and fades in 0.32 seconds (down from 0.42). `FlashLook` now carries the band's width, so each glow sets its own.
+
+**Why:** The HUD sits over the field, and the field is what the player is watching. An opaque pill hid dots that a tap could still reach. The edge glow tinted dots near the edges pink for almost half a second, which made it harder to tell which ones were fresh just when the player was trying to recover from a mistake.
+
+**To reverse:** Restore `Look::HUD.backing` to 0.62 and `TYPE.hud_number` to 40, draw the readouts with `pen.text`, and set `PENALTY_FLASH` back to `alpha: 0.6, duration: 0.42, band: 0.16`.

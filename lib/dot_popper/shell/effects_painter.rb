@@ -27,7 +27,7 @@ module DotPopper
         alpha = effects.flash_alpha
         return if alpha <= 0.0
 
-        band = [width, height].min * 0.16
+        band = [width, height].min * effects.flash.band
         return flat_flash(effects.flash.color, alpha, width, height, band) unless pen.shader?(:edge)
 
         pen.shading(:edge) do |shader|

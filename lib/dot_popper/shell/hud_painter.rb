@@ -2,8 +2,8 @@
 
 module DotPopper
   module Shell
-    # The score and the time left, in a translucent pill at the top of the
-    # safe area, over every dot. A number that changes bumps by drawing in
+    # The score and the time left, in a see-through pill at the top of the
+    # safe area, over every dot, outlined so they stay crisp over one. A number that changes bumps by drawing in
     # a bigger font for a moment; glyphs are never stretched.
     class HudPainter < Data.define(:pen)
       G = ::Lota::Graphics
@@ -48,7 +48,7 @@ module DotPopper
         [pen.fonts.bold(layout.scaled(type.hud_number)), pen.fonts.semibold(layout.scaled(type.hud_label))]
       end
 
-      def padding(number) = number.height * 0.32
+      def padding(number) = number.height * 0.28
 
       # Each readout's half of the pill: room for its widest text.
       def cell(readouts, number, label)
@@ -59,7 +59,7 @@ module DotPopper
       def pill(rect)
         pixels = pen.pixels
         corner = rect.height / 2.0
-        pen.color(pen.palette.pill)
+        pen.color(pen.palette.pill, pen.look::HUD.backing)
         G.rectangle(:fill, rect.x, rect.y, rect.width, rect.height, corner, corner, 48)
         pen.color(pen.palette.pill_edge)
         G.line_width = pixels.line_width(1)
@@ -79,11 +79,11 @@ module DotPopper
 
       def readout(readout, x, top, number, label, layout)
         palette = pen.palette
-        pen.text(readout.label, label, x, top + (label.height / 2.0), palette.soft)
+        pen.outlined(readout.label, label, x, top + (label.height / 2.0), palette.soft)
         center = top + label.height + (number.height * 0.42)
         size = Presentation::Pixels.font_size(layout.scaled(pen.look::TYPE.hud_number) * readout.scale, step: BUMP_STEP)
         color = palette.cream.mix(palette.urgent, readout.urgency)
-        pen.text(readout.text, pen.fonts.bold(size), x, center, color)
+        pen.outlined(readout.text, pen.fonts.bold(size), x, center, color)
       end
     end
   end

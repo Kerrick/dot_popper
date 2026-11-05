@@ -17,6 +17,20 @@ class LookTest < Minitest::Test
     assert_operator Look::PENALTY_SHAKE.duration, :<=, 0.25
   end
 
+  # A wrong tap's edge glow tints a dot near an edge only for a moment.
+  def test_the_penalty_glow_is_soft_narrow_and_quick
+    flash = Look::PENALTY_FLASH
+
+    assert_operator flash.alpha, :<=, 0.45
+    assert_operator flash.band, :<=, 0.12
+    assert_operator flash.duration, :<=, 0.35
+  end
+
+  # A dot under the HUD still shows through its pill.
+  def test_the_hud_is_see_through
+    assert_operator Look::HUD.backing, :<=, 0.5
+  end
+
   def test_floaters_fade_fast
     [Look::GAIN_FLOAT, Look::LOSS_FLOAT].each { assert_operator it.life, :<=, 0.8 }
   end

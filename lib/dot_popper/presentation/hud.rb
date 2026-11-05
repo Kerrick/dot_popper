@@ -5,7 +5,8 @@ module DotPopper
     # How the score and the clock react: +bump+ is a number's scale just
     # after it changes; from +urgent_below+ whole seconds left the clock
     # hurries, and +pulse+ is its scale on each second from then.
-    class HudLook < Data.define(:bump, :pulse, :urgent_below); end
+    # +backing+ is the pill's opacity.
+    class HudLook < Data.define(:backing, :bump, :pulse, :urgent_below); end
 
     # One number in the HUD as it should be drawn: its small label, its
     # text, its scale (drawn by choosing a bigger font, never by

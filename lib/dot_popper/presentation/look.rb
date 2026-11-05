@@ -76,7 +76,7 @@ module DotPopper
 
       TYPE = Type.new(
         bold: "assets/fonts/Fredoka-Bold.ttf", semibold: "assets/fonts/Fredoka-SemiBold.ttf",
-        title: 108, heading: 64, final_score: 136, hud_number: 40, hud_label: 13,
+        title: 108, heading: 64, final_score: 136, hud_number: 35, hud_label: 12,
         prompt: 26, legend: 29, best: 26, floater: 34, new_best: 34, hint: 21, summary: 20
       )
 
@@ -144,16 +144,21 @@ module DotPopper
         width: 0.075, dashes: 12, color: PALETTE.fresh_light
       )
       PENALTY_SHAKE = ShakeLook.new(amplitude: 0.12, duration: 0.22, frequency: 24.0)
-      PENALTY_FLASH = FlashLook.new(color: PALETTE.alarm, alpha: 0.6, duration: 0.42)
+      # The glow is narrow and quick, so a dot near an edge is tinted only
+      # for a moment.
+      PENALTY_FLASH = FlashLook.new(color: PALETTE.alarm, alpha: 0.42, duration: 0.32, band: 0.1)
       # The clock's last seconds give each tick a faint glow too.
-      TICK_FLASH = FlashLook.new(color: PALETTE.urgent, alpha: 0.16, duration: 0.3)
+      TICK_FLASH = FlashLook.new(color: PALETTE.urgent, alpha: 0.16, duration: 0.3, band: 0.12)
 
       # Floating numbers; +spread+ sets the two of a tap apart, across.
       GAIN_FLOAT = FloaterLook.new(rise: 1.0, life: 0.65)
       LOSS_FLOAT = FloaterLook.new(rise: 0.7, life: 0.75)
       FLOAT_SPREAD = 0.62
 
+      # The HUD's pill is mostly see-through, so a dot under it still
+      # shows; its numbers are outlined, so they stay crisp over one.
       HUD = HudLook.new(
+        backing: 0.4,
         bump: Tween.new(from: 1.3, to: 1.0, duration: 0.32, ease: :out_back),
         pulse: Tween.new(from: 1.4, to: 1.0, duration: 0.55, ease: :out_elastic),
         urgent_below: 3
