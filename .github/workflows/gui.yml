@@ -1,0 +1,59 @@
+# Plays the game end to end in real windows (bundle exec rake test:gui,
+# test/gui): each scenario boots it through Lota, plays a scripted
+# session through Lota's callbacks, and quits. The runner has no display
+# or GPU, so the windows open on a virtual X display (Xvfb), under
+# Openbox for the fullscreen switch, and draw with Mesa's software
+# OpenGL (llvmpipe), as Lota's own Linux CI runs its windowed tests.
+# Sound goes to OpenAL Soft's null driver.
+
+name: GUI
+
+on:
+  push:
+    branches: [trunk]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gui-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  BUNDLE_FROZEN: "true"
+  ALSOFT_DRIVERS: "null"
+  LIBGL_ALWAYS_SOFTWARE: "1"
+
+jobs:
+  gui:
+    name: rake test:gui
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # A display server and OpenGL, not their development files, as
+      # Lota's Linux delivery job installs them.
+      - name: Install a virtual display and Mesa
+        run: |
+          sudo apt-get update
+          sudo apt-get install --assume-yes xvfb openbox x11-utils libgl1 libegl1 libgl1-mesa-dri
+
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      # The window opens at 1200 by 800 on a 1280 by 1024 screen. Openbox
+      # starts first, and the tests once it has taken the screen, so the
+      # game's window has a manager to go fullscreen with.
+      - name: bundle exec rake test:gui
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" bash script/with-openbox.sh bundle exec rake test:gui
