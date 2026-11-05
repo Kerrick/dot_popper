@@ -598,3 +598,51 @@ The title and Game Over no longer put each line at its own fraction of the scree
 **Why:** The unit suite never runs the shell that talks to Lota. A resize called a method that was never defined, reached `trunk`, and was caught only when someone ran the game in a window by hand. The Prism check in `test/shell/defined_calls_test.rb` now catches that kind of mistake. But only a running game catches a wrong argument to Lota, a callback that is never wired up, or a screen that fails to draw. There was no good reason to avoid windows: Xvfb gives CI a screen, and the hidden session gives the maintainer's Mac one. The maintainer asked that the suite be fast and reliable above all. Driving the clock instead of following real time keeps it deterministic, and each session finishes in a few seconds. Deckbuilder's `rake test:gui` also starts its real game as a separate process with settings in its environment. This suite does the same, but checks behaviour, not stills.
 
 **To reverse:** Delete `test/gui/`, the `test:gui` task and its exclusion from `rake test` in the `Rakefile`, the last line of `main.rb`, `App`'s readers, `.github/workflows/gui.yml` and `script/with-openbox.sh`.
+
+## Playtest kits
+
+### Dot Popper builds its own apps and kits, with `lota fuse`
+
+Every desktop app is built one way: `lota fuse`, with Lota 0.1.3's release gem for the platform from `vendor/cache`, checked against the release's `SHA256SUMS`, on that platform's own runner. The Package workflow builds the apps on every push to `trunk`, now for Linux x86_64 on `ubuntu-24.04` too, and the Kits workflow builds a playtest kit per device on `v*` tags and by hand. Neither runs `fledge build` for a desktop app any more.
+
+**Why:** Lota's maintainer stopped building Dot Popper's kits, and the maintainer asked that Dot Popper build its own artifacts with Lota, using only released tools. `lota fuse` is Lota's documented way to share a game, and it did everything the Fledge build did, so there was no reason to keep a second way.
+
+**To reverse:** Put `bundle exec fledge build` back in place of `.github/actions/fuse` in package.yml; `bin/dot_popper` and `fledge.yml`'s `programs:` entry are still there for it.
+
+### One kit in, one results file out
+
+Each kit is one archive, and the player returns one file. On Windows and Linux, a script (`playtest.ps1`, `playtest.sh`) asks the checks one at a time while the game runs and writes everything, system facts, answers, the game's output, and its saved files, into `dot-popper-results.txt` beside itself. The macOS and iPad kits carry a sheet to fill in, since a script can't start the iOS app, and the macOS README covers the frame-rate output and the save folder by hand.
+
+**Why:** It is the maintainer's rule for kits: he reads one kit and sends back one file, never coordinating between them. A script on the desktops records what he would otherwise have to copy out by hand, such as the GPU driver and the frame rate.
+
+**To reverse:** Ship the sheets alone; `script/playtest_kit.rb sheet` renders one for any device once `ResultsSheet::DEVICES` names it.
+
+### The questions live in `playtest/checks.yml`
+
+Every check's words are in one file, and a test checks that each one has wording and an answer on every system, and that each phrase a check quotes is one the game shows. The desktop list is shared by Windows, macOS, and Linux, with wording that differs only where the keys or tools do.
+
+**Why:** Questions copied into four scripts and sheets would drift apart, and a question that names a button by a word the game no longer uses ("wrong tap" for "mistake") confuses the player it is meant to help.
+
+**To reverse:** Write the questions into each template directly, and drop the test.
+
+### The mute check restarts the game itself
+
+Check 2 asks the player to mute and quit; the Windows and Linux scripts wait for the game to close and start it again before asking whether the mute held. When the game closes unexpectedly before a check, the script notes it and starts it again.
+
+**Why:** The question is whether the mute survives a restart, and a script that starts the game anyway can make the restart a single step for the player. Each start is a separate session in the results, with its own output.
+
+**To reverse:** Set `restart: false` on check 2 and tell the player to start the game again in its `try`.
+
+### The iPad and iPhone kit follows Lota's one documented iOS line
+
+The iOS project is built from a clone of Lota at its `v0.1.3` tag, as a path gem, with SDL3 from Lota's `rake ios:sdl3`, under Fledge's `fledge build ios`, with Dot Popper's own SDL host in `ios/host`. Nothing comes from Lota's experiment branches. The project targets iPhone and iPad.
+
+**Why:** Lota's maintainer allowed only released tools. Lota 0.1.3's CHANGELOG documents this path as experimental, and it is the only iOS path any release documents. The source gem Lota's CHANGELOG mentions isn't attached to the release, and a path gem of the tag is the same source.
+
+**To reverse:** Drop the `ipad` and `ipad-simulator` jobs from kits.yml.
+
+### No Android kit
+
+**Why:** No released Lota builds for Android. Lota 0.1.3's README says phones and tablets are planned, and its CHANGELOG mentions only iOS. Fledge's `fledge build android` would write a Gradle project with no Lota engine to put in it.
+
+**To reverse:** Add a kit once a Lota release documents an Android build.

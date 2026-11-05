@@ -6,9 +6,9 @@ The app itself isn't built in this repository. It is built with Lota's experimen
 
 ## Where things stand
 
-- **A kit exists.** A Lota agent built an Xcode project for Dot Popper v0.5.1, called the iPad kit, with Lota's "iPad kit" workflow. It is in the maintainer's `~/Downloads/dot-popper-ipad/`, together with a `README.txt` that walks through signing the app with a free Apple ID and installing it on an iPad.
-- **It has run in the Simulator.** On Lota's CI, the kit built with Xcode 26.3 and ran in iOS 26.2 Simulators of an iPad Pro 13-inch, an iPad (A16), and an iPad mini. The autoplay bot played to the end and the app exited with status 0. All four shaders, the fonts, the particles, the physics heap at Game Over, and the save folder worked. A separate UI test tapped the screen and rotated the Simulator from portrait to landscape and back; the taps started rounds, and the layout rebuilt itself for each orientation. Screenshots are in `~/Downloads/dot-popper-ipad/screenshots/`.
-- **It hasn't run on a real iPad.** The device build compiled and linked without signing, but nobody has yet signed it, installed it, or played it on hardware. See "What is still unverified" at the end.
+- **Dot Popper builds its own kit.** The [Kits workflow](../.github/workflows/kits.yml) builds `dot-popper-ipad-kit.zip` on every `v*` tag and by hand, from Lota's `v0.1.3` tag and Fledge's release, with the host in `ios/host` (PACKAGING.md, "The iPad and iPhone kit"). The project targets iPhone and iPad. Earlier kits, built by a Lota agent from Lota's experiment branches, are retired.
+- **It runs in the Simulator.** A fresh runner builds the kit's project for the Simulator and, unsigned, for devices, and the autoplay bot plays it to the end in an iPad Pro 13-inch Simulator with exit status 0, with all four shaders, the fonts, the pile at Game Over, and the save folder working.
+- **It hasn't run on a real iPad or iPhone.** Nobody has yet signed it, installed it, or played it on hardware. See "What is still unverified" at the end.
 
 ## The program
 
@@ -22,7 +22,7 @@ The bundle identifier is `com.kerricklong.DotPopper`, set in `fledge.yml`.
 
 | Setting | Value | Why |
 | --- | --- | --- |
-| Lota | 0.1.3 or newer, built with its experimental iOS engine (the first kit used Lota's `experiment/ipad-kit` branch at `f5c6093`) | Earlier Lota releases neither build for iOS nor call `Lota.touchpressed` for a touchscreen |
+| Lota | 0.1.3, built with its experimental iOS engine from a clone of its `v0.1.3` tag | Earlier Lota releases neither build for iOS nor call `Lota.touchpressed` for a touchscreen |
 | `t.highdpi` | `true`, already set in `conf.rb` | Without it, LÖVE, and so Lota, draws at 1× on a Retina iPad, and everything looks blurry |
 | Orientations | All four on iPad (`UISupportedInterfaceOrientations~ipad`); portrait and both landscapes on iPhone | The field is the whole window and rebuilds itself whenever the window changes size. Because `conf.rb` makes the window resizable, SDL allows every orientation that Info.plist allows |
 | Multitasking | Leave `UIRequiresFullScreen` unset | Split View and Stage Manager resize the window, which the game handles exactly as it handles a rotation |
@@ -59,7 +59,7 @@ A finger on the screen reaches the game as a `touchpressed` call with the device
 
 The keyboard does less on iOS. **M** still turns sound on or off. **Escape** does nothing, because iOS apps are closed by the system, never by the app itself. **F11** and **Alt+Enter** do nothing either, since the app is always fullscreen.
 
-A game controller paired with the iPad should play as it does on a computer, though nobody has tried one yet. SDL presents an iPad's accelerometer as a joystick too, but `Shell::Gamepads` keeps only joysticks that are gamepads, so the accelerometer is never one. An earlier version of the game asked Lota for the list of joysticks every frame, and on iOS that crashed the game in the Simulator; the game no longer asks, and Lota's development branch has fixed the cause. Dot Popper v0.5.1, the version in the current kit, still ignored controllers on a tablet, and the kit's host program also turns off SDL's accelerometer joystick (`SDL_ACCELEROMETER_AS_JOYSTICK=0` in `Host/main.m`), so a controller does nothing in that build.
+A game controller paired with the iPad should play as it does on a computer, though nobody has tried one yet. SDL presents an iPad's accelerometer as a joystick too, but `Shell::Gamepads` keeps only joysticks that are gamepads, so the accelerometer is never one. An earlier version of the game asked Lota for the list of joysticks every frame, and on iOS that crashed the game in the Simulator; the game no longer asks, and Lota's development branch has fixed the cause. The kit's host program, `ios/host/Host/main.m`, also turns off SDL's accelerometer joystick (`SDL_ACCELEROMETER_AS_JOYSTICK=0`), so the accelerometer is never even offered as one; a paired controller still is.
 
 ### Sound
 
@@ -176,7 +176,7 @@ Scores will differ from a Mac's even with the same seed, because a different fie
 
 ## On a real iPad
 
-The kit's `README.txt` in `~/Downloads/dot-popper-ipad/` gives the full steps: checking and unpacking the kit, signing it in Xcode with a free Apple ID's Personal Team, turning on Developer Mode on the iPad, checking the scheme, and running. Those steps follow section 3 of Fledge's `doc/contributors/device-test.md`, using the project `fledge build ios` writes for this game in place of Fledge's sample `SdlPhone-ios`. A free Apple ID's signing profile lasts 7 days, after which the app must be run from Xcode again. As above, keep `OS_ACTIVITY_DT_MODE` out of the scheme (step 4).
+The kit's `README.txt` gives the full steps: checking and unpacking the kit, signing it in Xcode with a free Apple ID's Personal Team, turning on Developer Mode on the iPad, checking the scheme, and running. Those steps follow section 3 of Fledge's `doc/contributors/device-test.md`, using the project `fledge build ios` writes for this game in place of Fledge's sample `SdlPhone-ios`. A free Apple ID's signing profile lasts 7 days, after which the app must be run from Xcode again. As above, keep `OS_ACTIVITY_DT_MODE` out of the scheme (step 4).
 
 ## What is still unverified
 

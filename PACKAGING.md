@@ -1,6 +1,6 @@
 # Packaging Dot Popper
 
-Most players don't have Ruby installed, so Dot Popper also ships as a self-contained app. [Fledge](https://github.com/setdef/Fledge) builds it. Fledge copies the game, the gems it uses, and a copy of Ruby built to run from any folder into one directory, and then packs that directory into an archive and an installer.
+Most players don't have Ruby installed, so Dot Popper also ships as a self-contained app. Lota's `lota fuse` command builds it, as LÖVE "fuses" a game into a program of its own. `lota fuse` writes a small project around the game and hands it to [Fledge](https://github.com/setdef/Fledge), which copies the game, Lota, and a copy of Ruby built to run from any folder into one directory, and then packs that directory into an archive and an installer. Every desktop app is built this one way, each on its own platform, since Fledge builds only for the computer it runs on.
 
 Each platform's build produces two files:
 
@@ -8,20 +8,23 @@ Each platform's build produces two files:
 | --- | --- |
 | Windows x64 | `Dot Popper-x64-mingw-ucrt.zip`, which holds `Dot Popper.exe`; and `Dot Popper-x64-mingw-ucrt-setup.exe`, an installer that doesn't need administrator rights |
 | macOS on Apple silicon | `Dot Popper-arm64-darwin.dmg`; and `Dot Popper-arm64-darwin.tar.gz`, which holds `Dot Popper.app` |
+| Linux x86_64, glibc 2.39 or newer (Ubuntu 24.04, Pop!_OS 24.04, Debian 13, Fedora 40) | a `.tar.gz` holding a `Dot Popper` folder with the program `Dot Popper` and a desktop entry; and an AppImage |
+
+For playtesting, each device also has a **playtest kit**, which holds the app and a way to send back one file of results. See [Playtest kits](#playtest-kits).
 
 ## Getting a build
 
 ### From a release
 
-Releases v0.1.0 through v0.5.2 are on the [Releases page](https://github.com/Kerrick/dot_popper/releases), each with its Windows and macOS builds. GitHub marks them as prereleases, and it replaces the space in each file's name with a dot, so the Windows installer appears there as `Dot.Popper-x64-mingw-ucrt-setup.exe`.
+Releases are on the [Releases page](https://github.com/Kerrick/dot_popper/releases), each with its apps and, from v0.8.2-rc.1 on, its playtest kits. GitHub marks them as prereleases, and it replaces the space in each file's name with a dot, so the Windows installer appears there as `Dot.Popper-x64-mingw-ucrt-setup.exe`.
 
 ### From any push to `trunk`
 
-The [Package workflow](.github/workflows/package.yml) builds both platforms on every push to `trunk`, so a build of the latest code is usually available:
+The [Package workflow](.github/workflows/package.yml) builds all three platforms on every push to `trunk`, so a build of the latest code is usually available:
 
 1. Sign in to GitHub. Downloads from workflow runs require it.
 2. Open the [Package workflow's runs](https://github.com/Kerrick/dot_popper/actions/workflows/package.yml) and choose a run with a green check mark.
-3. At the bottom of the run's page, under Artifacts, download `dot-popper-windows-x64` or `dot-popper-macos-arm64`. Each one is a `.zip` holding that platform's two files.
+3. At the bottom of the run's page, under Artifacts, download `dot-popper-windows-x64`, `dot-popper-macos-arm64`, or `dot-popper-linux-x86_64`. Each one is a `.zip` holding that platform's two files.
 
 GitHub deletes artifacts after its retention period, which is 90 days by default.
 
@@ -35,43 +38,54 @@ To uninstall, use Settings > Apps, or run `uninstall.exe` in the folder the game
 
 ### Installing on macOS
 
-Open the `.dmg` and copy `Dot Popper.app` to Applications, or anywhere you like. The app isn't notarized by Apple, so the first time, right-click it and choose **Open**, then confirm.
+Open the `.dmg` and copy `Dot Popper.app` to Applications, or anywhere you like. The app isn't notarized by Apple, so macOS stops it the first time. On macOS 14 or older, right-click it, choose **Open**, then confirm. On macOS 15 or newer, try to open it, then choose **Open Anyway** in System Settings > Privacy & Security.
+
+### Installing on Linux
+
+Unpack the `.tar.gz` anywhere and run `Dot Popper` in the folder it makes, or make the AppImage executable (`chmod +x`) and run it. Both need glibc 2.39 or newer, which Fledge's Linux runtime is built against.
 
 ### Where a packaged build saves its files
 
-A packaged build saves the best score, the sound setting, and the playtest log in a `dot_popper` folder in the system's application-data folder: `%APPDATA%\dot_popper` on Windows, and `~/Library/Application Support/dot_popper` on macOS. The game prints the playtest log's full path when it starts. This is a different folder from the one `bundle exec lota run` uses, so a packaged build and a development run keep separate scores.
+A packaged build saves the best score, the sound setting, and the playtest log in a `dot_popper` folder in the system's application-data folder: `%APPDATA%\dot_popper` on Windows, `~/Library/Application Support/dot_popper` on macOS, and `~/.local/share/dot_popper` (or `$XDG_DATA_HOME/dot_popper`) on Linux. The game prints the playtest log's full path when it starts. This is a different folder from the one `bundle exec lota run` uses, so a packaged build and a development run keep separate scores.
 
 ## Cutting a release
 
 1. Set `version:` in `fledge.yml` to the new version.
 2. Commit, and push the commit to `trunk`.
-3. Tag the commit and push the tag. For example, for version 0.6.0:
+3. Tag the commit and push the tag. For example, for version 0.9.0:
 
    ```console
-   $ git tag v0.6.0 && git push origin v0.6.0
+   $ git tag v0.9.0 && git push origin v0.9.0
    ```
 
-Pushing a tag that starts with `v0.` makes the Package workflow attach both builds to a new prerelease for that tag.
+Pushing a tag that starts with `v0.` makes the Package workflow attach the apps, and the Kits workflow the playtest kits, to a new prerelease for that tag. A tag with a suffix, such as `v0.8.2-rc.1`, works the same way, which is how to try a release's kits before the release itself.
 
 ## How the build is put together
 
-### The launcher, `bin/dot_popper`
+### `lota fuse`
 
-The program Fledge packages is `bin/dot_popper`, not `main.rb`. The game's `main.rb` only defines the callbacks Lota calls, so running it directly would define them and then exit. The launcher instead starts the repository's folder as a *fused* Lota game, with `Lota::Boot.new(folder, ARGV, fused: true).call`. "Fused" is LÖVE's term for a game shipped as a standalone app.
+CI runs, on each platform's runner (`.github/actions/fuse`):
 
-A fused game saves its files in a folder named after the game alone, as shipped LÖVE games do. A development run under `lota run` saves into a `Lota` folder instead. Running `bundle exec lota run` from the repository's root works as before and never uses the launcher.
+```console
+$ gem install --local vendor/cache/lota-0.1.3-PLATFORM.gem
+$ lota fuse . --identifier com.kerricklong.DotPopper --app-version VERSION --icon icons/icon --out DIR
+```
 
-### The settings, `fledge.yml`
+The first line installs Lota's release gem for the platform from `vendor/cache`, after checking its SHA-256 against the `SHA256SUMS` of [Lota's v0.1.3 release](https://github.com/setdef/Lota/releases/tag/v0.1.3). `lota fuse` ships that very gem file in the app. `VERSION` is `fledge.yml`'s `version:`.
 
-`fledge.yml` lists the launcher under `programs`, so a plain `fledge build` packages it rather than `main.rb`. The file also sets the app's name, its identifier (`com.kerricklong.DotPopper`), its version, the publisher, the icon, and the installers to build (`dmg` for macOS and `nsis` for Windows).
+`lota fuse` reads the game's name ("Dot Popper", from `conf.rb`'s `t.window.title`) and its save folder's name (`t.identity`, `dot_popper`) without opening a window. It copies the game into `DIR/fuse-project/game/dot_popper`, leaving out `.git`, `.bundle`, and `vendor/cache`, and writes a Gemfile that asks for Lota 0.1.3 and Fledge v0.5.0, a `fledge.yml`, and an entry script that starts the game fused. It then runs `fledge build` in that project. The game's own Gemfile doesn't reach the app, so `lota fuse` warns that only Lota's gem ships, which is all the game needs.
 
-### Fledge itself
+"Fused" is LÖVE's term for a game shipped as a standalone app. A fused game saves its files in a folder named after the game alone, as shipped LÖVE games do, where a development run under `lota run` saves into a `Lota` folder.
 
-Fledge is in the `Gemfile`'s `development` group, so it isn't packaged into the app. It is pinned to its `v0.5.0` release. Earlier releases refuse Lota's Windows gem, because that gem uses four Windows system libraries (`avrt`, `dwmapi`, `imm32`, and `setupapi`) that they don't expect; v0.5.0 is the first release that accepts them. Until v0.5.0 existed, the pin was a trunk commit with that fix.
+`lota fuse` needs the network, since Bundler fetches Fledge from GitHub and Fledge downloads its runtime the first time, and Git. On Windows, the app opens no console, so what the game prints goes nowhere, unless whatever starts it captures its output, as the Windows kit's `playtest.ps1` does. Ruby's YJIT isn't in RubyInstaller's Ruby, so the Windows app runs without it; elsewhere `lota fuse` turns it on.
+
+### The launcher, `bin/dot_popper`, and `fledge.yml`
+
+`bin/dot_popper` and the `programs:` entry in `fledge.yml` are what Fledge built from directly before `lota fuse` was released. The desktop builds no longer use them. The iOS build still does (see [The iPad and iPhone kit](#the-ipad-and-iphone-kit)), because `lota fuse` doesn't build for phones: Fledge's `fledge build ios` packages `bin/dot_popper`, which starts the game folder fused with `Lota::Boot.new(folder, ARGV, fused: true).call`. Its `DOT_POPPER_SMOKE` check mode, and `script/smoke-windows.ps1`, which ran it on a Windows build, belong to that older path. `fledge.yml` also holds the version every build takes.
 
 ### Lota's gems
 
-Lota isn't on RubyGems.org, so its gems come from `vendor/cache`, and `Gemfile.lock` records the SHA-256 checksum of each platform's gem. Fledge refuses a lockfile in which any checksum is empty. When you update Lota, write each platform's checksum into the `CHECKSUMS` section of `Gemfile.lock` by hand, as Fledge's README explains under "A gem that only `vendor/cache` holds".
+Lota isn't on RubyGems.org, so its gems come from `vendor/cache`, and `Gemfile.lock` records the SHA-256 checksum of each platform's gem. When you update Lota, write each platform's checksum into the `CHECKSUMS` section of `Gemfile.lock` by hand, as Fledge's README explains under "A gem that only `vendor/cache` holds", and change `LOTA_VERSION` in both workflows.
 
 ### The icon
 
@@ -79,63 +93,106 @@ Lota isn't on RubyGems.org, so its gems come from `vendor/cache`, and `Gemfile.l
 
 ### What goes into the app
 
-Everything in the repository is copied into the app's `app/` folder, except `.git`, `.bundle`, `vendor/cache`, and `dist/`. That includes `test/` and the Markdown files, which are harmless there.
+Everything in the repository is copied into the app's `game/dot_popper` folder, except `.git`, `.bundle`, and `vendor/cache`. That includes `test/`, `playtest/`, `ios/`, and the Markdown files, which are harmless there.
 
 ## Building on your own computer
 
-You need Ruby 4.0.9, the version in `.ruby-version`. Each platform can build only its own app, so build the macOS app on a Mac and the Windows app on Windows.
+You need Ruby 4.0.9, the version in `.ruby-version`, and Git. Each platform can build only its own app, so build the macOS app on a Mac, the Windows app on Windows, and the Linux app on Linux.
 
 ```console
-$ bundle install
-$ bundle exec fledge build
+$ gem install --local vendor/cache/lota-0.1.3-arm64-darwin.gem
+$ lota fuse . --identifier com.kerricklong.DotPopper --app-version 0.8.1 --icon icons/icon
 dist/Dot Popper-arm64-darwin.tar.gz
 dist/Dot Popper-arm64-darwin.dmg
+Built the app for arm64-darwin only. Run lota fuse on each platform you ship for.
 ```
 
-The first build downloads Fledge's Ruby runtime for your platform, which takes about a minute. The `dist/` folder is ignored by git.
-
-On Windows, the same two commands, run with Ruby 4.0.9 from RubyInstaller, write the `.zip` and the `-setup.exe`. Fledge's runtime includes NSIS and rcedit, the tools that make the installer and set the program's icon, so you don't need to install anything else.
-
-### Checking a build without opening a window
-
-CI's runners have no graphics card, so CI can't start the game. Instead, the launcher has a check mode. When the environment variable `DOT_POPPER_SMOKE` names a file, the launcher loads Lota, then the game's `conf.rb` and `main.rb`, and calls `Lota.conf`. Loading those files requires every file they depend on, so a file that didn't make it into the app fails at this step. The launcher writes what it found to the named file and exits with status 0, or with status 1 if anything is missing. It never opens a window or starts the engine.
-
-To run the check on a macOS build with an empty environment, so that no Ruby on your computer can help it along:
-
-```console
-$ env -i HOME="$HOME" PATH=/usr/bin:/bin DOT_POPPER_SMOKE=/tmp/smoke.txt \
-    "dist/Dot Popper-arm64-darwin/Dot Popper.app/Contents/MacOS/Dot Popper"; cat /tmp/smoke.txt
-```
-
-On Windows, `script/smoke-windows.ps1 -Dist dist -Results smoke` runs the same check twice with no Ruby on `PATH`: first on the unpacked `.zip`, then on a silently installed copy, which it uninstalls afterwards.
+Use the gem for your platform: `x64-mingw-ucrt` on Windows with RubyInstaller's Ruby, `x86_64-linux-gnu` on Linux. The first build downloads Fledge's Ruby runtime for your platform, which takes about a minute. The `dist/` folder is ignored by git.
 
 ## What CI checks
 
-The [Package workflow](.github/workflows/package.yml) runs on every push to `trunk`, on every tag that starts with `v0.`, and when started by hand from GitHub's Actions page. It has four jobs:
+The [Package workflow](.github/workflows/package.yml) runs on every push to `trunk`, on every tag that starts with `v0.`, and when started by hand from GitHub's Actions page. It has five jobs:
 
 - **Test**, on Ubuntu, runs `bundle exec rake test`.
-- **Windows x64**, on `windows-latest`, runs `bundle exec fledge build`, then `script/smoke-windows.ps1`, and uploads the `dot-popper-windows-x64` artifact. The artifact is uploaded even when the check fails, so there is always a build to inspect, but only a build from a green run is known to work.
-- **macOS arm64**, on `macos-15`, runs `bundle exec fledge build`, runs the check on the `.app` with an empty environment, and uploads the `dot-popper-macos-arm64` artifact.
-- **Release** runs only for a `v0.` tag. It attaches the builds to a GitHub prerelease for the tag. It requires the Windows job to have passed; the macOS build is included if it built. Nothing is published to RubyGems.
+- **Windows x64**, on `windows-latest`; **macOS arm64**, on `macos-15`; and **Linux x86_64**, on `ubuntu-24.04` (its glibc is 2.39, Fledge's Linux floor), each run `lota fuse`, unpack the app under a folder with a space in its name, play it with the autoplay bot for 20 seconds with no Ruby on its `PATH` and an all but empty environment, and upload the `dot-popper-windows-x64`, `dot-popper-macos-arm64`, or `dot-popper-linux-x86_64` artifact. GitHub's Windows and Linux runners have no graphics card, so the game draws there with Mesa's software OpenGL (llvmpipe): on Windows, Mesa's `opengl32.dll` from the runner's MSYS2 goes beside the program, and on Linux it draws on Xvfb. The run must exit with status 0 and print its frame rate.
+- **Release** runs only for a `v0.` tag. It attaches the apps to a GitHub prerelease for the tag. It requires the Windows job to have passed. Nothing is published to RubyGems.
+
+The [Kits workflow](.github/workflows/kits.yml), on `v*` tags and by hand, builds the playtest kits and attaches them to the tag's release too. It is described below.
+
+## Playtest kits
+
+The maintainer's rule for kits is **one kit in, one results file out, per device**. He opens one kit on a device, plays, and sends back one file, with nothing to coordinate between kits. The [Kits workflow](.github/workflows/kits.yml) builds them:
+
+| Kit | Holds | Results file |
+| --- | --- | --- |
+| `dot-popper-windows-kit.zip` | The fused game in `Dot Popper/`, `playtest.ps1`, and `README.txt` | `dot-popper-results.txt`, which `playtest.ps1` writes beside itself |
+| `dot-popper-macos-kit.zip` | `Dot Popper.app`, `README.txt`, and `macos-results.txt` | `macos-results.txt`, filled in by hand |
+| `dot-popper-linux-kit.tar.gz` | The fused game in `Dot Popper/`, `playtest.sh`, and `README.txt` | `dot-popper-results.txt`, which `playtest.sh` writes beside itself |
+| `dot-popper-ipad-kit.zip` (experimental) | The Xcode project in `DotPopper-ios/`, `README.txt`, `BUILD-INFO.txt`, and `ipad-results.txt` | `ipad-results.txt`, filled in by hand, one copy per iPad or iPhone |
+
+There is no Android kit. Lota 0.1.3 documents no Android build: its README says phones and tablets are planned, and its CHANGELOG's only phone entry is the experimental iOS one. Fledge can write a Gradle project, but there is no Lota engine for Android to put in it.
+
+### The questions, `playtest/checks.yml`
+
+Every question a kit asks lives in [`playtest/checks.yml`](playtest/checks.yml), in the game's own words: a `desktop` list for Windows, macOS, and Linux, whose wording differs by system only where the keys or tools do (F11 or Command+Enter, Notepad or TextEdit), and an `ipad` list. `script/playtest_kit.rb` renders them into each kit: into `playtest.ps1` from `playtest/playtest.ps1`, into `playtest.sh` from `playtest/playtest.sh`, and into `macos-results.txt` and `ipad-results.txt`. `test/playtest_kit_test.rb` checks that every check has wording and an answer on every system, and that each phrase a check quotes, such as "Copy my result" or "Smaller, more room", is one the game still shows. To read what a kit will ask, render it yourself:
+
+```console
+$ ruby script/playtest_kit.rb sheet ipad /tmp/ipad-results.txt
+$ ruby script/playtest_kit.rb windows /tmp/playtest.ps1
+```
+
+The desktop list is the maintainer's 18 checks: sound and mute first (the mute check has the script quit and restart the game, to see that the mute is remembered), then edges, fullscreen, resizing, stereo panning, the bright dot's edge, the Dot size choice, Copy my result, Your records, sharp text, the Game Over pile, and overall feel; then, only for a player with a controller, 14 to 18: the cursor's smoothness and top speed, A, Start, X and B, and the pile with A and the right stick. The iPad list is his 13.
+
+### The Windows kit
+
+The player unzips the kit, right-clicks `playtest.ps1`, and chooses **Run with PowerShell**, which runs it with this process's execution policy bypassed. The script:
+
+1. records this computer's Windows build, graphics card and driver, each display's size, refresh rate, and scale, sound devices, and controllers (XInput slots and Plug and Play devices);
+2. asks whether a controller is connected, then starts the game with `DOT_POPPER_PERF=1`, its standard output and standard error captured;
+3. asks the checks one at a time while the game runs, each with what to try, an answer (y / n / skip, a rating, or pasted text), and an optional note, and for check 2 waits for the player to quit and starts the game again;
+4. asks the player to quit, then adds each session's output and the text files of `%APPDATA%\dot_popper` (`rounds.csv`, `lifetime.txt`, `best_score.txt`, and the rest);
+5. tells the player, in plain words, where `dot-popper-results.txt` is and to send it back, and opens File Explorer on it.
+
+The results file is written again after every answer, so a crash leaves what was recorded so far. A second run keeps the first one's file under another name. The script removes the download mark from the kit's files, so the game starts without a warning, changes no setting, and needs no administrator. It runs in Windows PowerShell 5.1 and PowerShell 7, and is kept in ASCII, since 5.1 reads a file without a byte order mark as ANSI. If the game freezes, Enter in the script's window closes it.
+
+CI parses the rendered script in both PowerShells, then runs the kit as the maintainer would: unzipped into `Downloads` under a folder with a space, every file marked as downloaded, through `powershell.exe` with answers on standard input, and with Mesa beside the game in that copy only. `.github/kit_check.rb` writes the answers from `checks.yml` and then checks the results file: every check answered with its note, the pasted text, the restart for check 2, the system facts, the game's frame-rate lines, an exit status of 0, and the save folder.
+
+### The Linux kit
+
+`playtest.sh` works as `playtest.ps1` does, with the same checks. The player runs `./playtest.sh` in a terminal in the kit's folder. It records the distribution, kernel, desktop and session type (Wayland or X11), graphics card, OpenGL renderer and driver (with `glxinfo`, when `mesa-utils` is installed), displays and refresh rates (`xrandr`), GNOME's scale, the sound server, and controllers, and collects `~/.local/share/dot_popper`. CI runs it under Xvfb with Mesa, answers on standard input, and checks its results file as it checks Windows'. The kit is a `.tar.gz`, which keeps the program's executable bit.
+
+### The macOS kit
+
+The macOS kit holds the app, a README that explains opening an app that isn't notarized (right-click and Open on macOS 14 or older, Open Anyway in Privacy & Security on 15 or newer), and `macos-results.txt`, the desktop checks with a blank after each, to fill in. The README also shows how to record the frame rate from Terminal with `DOT_POPPER_PERF=1`, and where the save folder is. CI plays the app by itself for 30 seconds on `macos-15` before packing it.
+
+### The iPad and iPhone kit
+
+This kit is **experimental**. Lota 0.1.3 builds for iOS only as an experiment, documented by one line of its CHANGELOG: under Fledge's `fledge build ios`, Lota's source builds LÖVE's engine and Lota's extension as static archives for the device and the Simulator, from a clone of Lota named with `--with-lota-source`, with SDL3 built by `rake ios:sdl3` and Rice. The Kits workflow follows that line exactly, with nothing from Lota's experiment branches:
+
+1. clone Lota at its `v0.1.3` tag, with the `vendor/love` and `vendor/love-apple-dependencies` submodules;
+2. in the clone, `bundle install` and `bundle exec rake ios:sdl3`;
+3. copy the game, give it a Gemfile with `gem "lota", path: <the clone>` and Fledge v0.5.1, and a `fledge.yml` with `ios: host: ios/host`;
+4. `bundle config set --local build.lota "--with-lota-source=... --with-lota-sdl3=.../tmp/ios/sdl3 --with-rice-dir=..."`, `bundle lock --add-platform ruby`, `bundle install`, and `bundle exec fledge build ios`.
+
+`ios/host` holds the host program, `Info.plist`, and `project.yml` that `fledge build ios` lays over its own. They are Fledge's `examples/sdl_phone` host, since SDL3 starts the app itself, plus what [doc/ios.md](doc/ios.md) asks: `Host/main.m` sets the audio session to Ambient before `SDL_RunApp`, and sets `SDL_ACCELEROMETER_AS_JOYSTICK=0`; the status bar is hidden; every orientation is allowed on iPad; and the shared scheme sets no environment. The project targets iPhone and iPad (`TARGETED_DEVICE_FAMILY` 1,2) on iOS 15 and later, arm64 only, so the same kit installs on an iPhone 12 mini or 13 mini as on an iPad.
+
+The kit's README gives the free-Apple-ID steps: unzip with Finder (which keeps the frameworks' symbolic links), sign with a Personal Team, turn on Developer Mode, keep `OS_ACTIVITY_DT_MODE` out of the scheme, run, and trust the developer on the device. A free Personal Team signs for 7 days at a time and for 3 apps per device.
+
+A second, fresh `macos-15` runner, with no Lota, Fledge, or bundle, unzips the kit, builds it with `xcodebuild` for the Simulator and, unsigned, for devices, installs it in an iPad Pro 13-inch Simulator, and runs the autoplay check from doc/ios.md: the log must say the dot's radius is 50 points, take four screenshots, and end with exit status 0. Its screenshots, log, and save folder are the `ci-results-ipad-simulator` artifact.
 
 ## What has been verified, and what hasn't
 
-These have been verified on CI's runners and on the maintainer's Mac:
+These have been verified on CI's runners:
 
-- `fledge build` writes the Windows `.zip` and `-setup.exe` on `windows-latest`, and the macOS `.app`, `.tar.gz`, and `.dmg` on Apple silicon.
-- With no Ruby on `PATH`, the packaged program starts, loads Lota and its native library, loads the game's `conf.rb` and `main.rb` and everything they require, and exits cleanly. On Windows this holds both for the unpacked `.zip` and after a silent install. The installer also makes a Start menu shortcut and uninstalls cleanly.
-- A Windows build of v0.4.0 made with `lota fuse` (see the last section) ran a 45-second autoplay session on one of Lota's CI runners. The runner had no graphics card, so it drew with Mesa's software OpenGL (llvmpipe). The bot went from the title screen through a full round, with pops, particles, and the clock, and the game quit on its own with status 0 and no errors. The icon showed in the title bar and the taskbar, and the game saved into `%APPDATA%\dot_popper`.
+- `lota fuse` builds the Windows, macOS, and Linux apps from Lota 0.1.3's release gems, and each app plays itself with no Ruby on its `PATH` (Windows and Linux with Mesa's software OpenGL).
+- The Windows kit's `playtest.ps1`, run from a downloaded, unzipped kit in Windows PowerShell 5.1 with answers on standard input, asks every check, restarts the game for check 2, captures the game's frame-rate output, collects `%APPDATA%\dot_popper`, and writes one complete `dot-popper-results.txt`. The Linux kit's `playtest.sh` does the same under Xvfb.
+- The iPad kit is built from Lota's v0.1.3 tag and Fledge's release, builds on a fresh Mac for the Simulator and, unsigned, for devices, and plays itself to the end in an iPad Simulator.
 
 These have not been verified:
 
-- **Playing on a real Windows PC.** Nobody has yet played the game on Windows with a real graphics card and driver, with real sound output, or with touch. The physics heap at the end of a round hasn't been seen on real Windows hardware either.
-- **Restarting.** `lota run` restarts a game that calls `Lota::Event.restart`, but the fused launcher doesn't, because Lota's restart support is internal to `lota run`. In the packaged app, a restart quits instead.
+- **Any kit on the maintainer's own devices**: real graphics cards and drivers, real sound, display scales above 100%, controllers, and the hand checks themselves, which only a person can answer.
+- **The iPad and iPhone build on hardware.** Nobody has signed, installed, or played it on a device. See doc/ios.md, "What is still unverified".
+- **Restarting.** `lota run` restarts a game that calls `Lota::Event.restart`, but a fused game quits instead.
 - **Signing.** The builds are unsigned, so SmartScreen and Gatekeeper warn about them, and the `.dmg` isn't notarized.
 - **A computer with no usable graphics driver.** Fledge's own testing found that Lota then shows an error message box that begins with a Ruby backtrace, which a player would find confusing.
 - **License notices.** The notices for Lota's bundled libraries, in the app's `notices/` folder, haven't been reviewed.
-
-## When `lota fuse` is released
-
-Lota is adding a `lota fuse` command that wraps Fledge, and it hasn't been released yet. A Windows build of Dot Popper v0.4.0 made with it, on Lota's CI, is in the maintainer's `~/Downloads/dot-popper-windows-x64/`, with a `README.txt` giving its checksums and test results.
-
-Once `lota fuse` is released, it should replace three things here: the launcher `bin/dot_popper`, the `programs:` entry in `fledge.yml`, and the Fledge pin in the `Gemfile`. The workflow would then run `bundle exec lota fuse` instead of `bundle exec fledge build`.

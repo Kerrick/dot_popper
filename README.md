@@ -87,7 +87,7 @@ Setting the environment variable `DOT_POPPER_CALM=1` before starting the game tu
 
 ### Without Ruby
 
-Most players will want a packaged build, which needs no Ruby. Every tagged release from v0.1.0 to v0.5.2 is on the [Releases page](https://github.com/Kerrick/dot_popper/releases), with a Windows installer, a Windows `.zip`, and a macOS `.dmg`. The [Package workflow](https://github.com/Kerrick/dot_popper/actions/workflows/package.yml) also builds the same files on every push to `trunk`. [PACKAGING.md](PACKAGING.md) explains how the builds are made, how to install them, and how to build one yourself.
+Most players will want a packaged build, which needs no Ruby. Tagged releases are on the [Releases page](https://github.com/Kerrick/dot_popper/releases), with a Windows installer and `.zip`, a macOS `.dmg`, and a Linux `.tar.gz` and AppImage, each built by Lota's `lota fuse`, and, from v0.8.2-rc.1 on, a playtest kit for each device. The [Package workflow](https://github.com/Kerrick/dot_popper/actions/workflows/package.yml) also builds the apps on every push to `trunk`. [PACKAGING.md](PACKAGING.md) explains how the builds and kits are made, how to install them, and how to build one yourself.
 
 ### From source
 
@@ -106,7 +106,7 @@ bundle exec lota run
 
 ### On an iPad
 
-An iPad version is in progress. It uses Lota's experimental iOS engine, which first shipped in Lota 0.1.3. The game has run in iPad Simulators but not yet on a real iPad. [doc/ios.md](doc/ios.md) describes what the game needs from an iOS build and how to tell whether a run went well.
+An iPad and iPhone version is in progress. It uses Lota's experimental iOS engine, which first shipped in Lota 0.1.3, and the Kits workflow builds it into an Xcode project to sign and install with a free Apple ID (PACKAGING.md, "The iPad and iPhone kit"). The game has run in iPad Simulators but not yet on a real device. [doc/ios.md](doc/ios.md) describes what the game needs from an iOS build and how to tell whether a run went well.
 
 ## How the dot's size is chosen
 
