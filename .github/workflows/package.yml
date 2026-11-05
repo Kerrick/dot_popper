@@ -1,0 +1,136 @@
+# Builds Dot Popper into apps people without Ruby can run, with Fledge
+# (PACKAGING.md): on Windows x64 a .zip and an NSIS -setup.exe, on macOS
+# arm64 an .app in a .tar.gz and a .dmg. Each build is checked without a
+# window, since runners have no GPU or audio. A v0.* tag also attaches
+# them to a GitHub Release.
+
+name: Package
+
+on:
+  push:
+    branches: [trunk]
+    tags: ["v0.*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: package-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  BUNDLE_FROZEN: "true"
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: .ruby-version
+      - name: bundle exec rake test, once there is a Rakefile
+        run: |
+          if [ ! -f Rakefile ]; then
+            echo "::notice::No Rakefile yet, so there are no tests to run."
+            exit 0
+          fi
+          bundle install
+          bundle exec rake test
+
+  windows:
+    name: Windows x64
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: .ruby-version
+      - run: bundle install
+      - run: bundle exec fledge --version
+      - name: fledge build
+        run: bundle exec fledge build
+      - run: ls -la dist
+      - name: Check the build with no Ruby on PATH, unpacked and installed
+        shell: pwsh
+        run: pwsh -NoProfile -File script/smoke-windows.ps1 -Dist dist -Results "$env:RUNNER_TEMP/smoke"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dot-popper-windows-x64
+          path: |
+            dist/*.zip
+            dist/*-setup.exe
+          if-no-files-found: error
+
+  macos:
+    name: macOS arm64
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: .ruby-version
+      - run: bundle install
+      - name: fledge build
+        run: bundle exec fledge build
+      - run: ls -la dist
+      - name: Check the build with no Ruby on PATH
+        run: |
+          mkdir -p "$RUNNER_TEMP/unpacked"
+          tar -xzf dist/*-arm64-darwin.tar.gz -C "$RUNNER_TEMP/unpacked"
+          program=$(find "$RUNNER_TEMP/unpacked" -path '*.app/Contents/MacOS/Dot Popper' -type f | head -1)
+          report="$RUNNER_TEMP/smoke.txt"
+          env -i HOME="$HOME" PATH=/usr/bin:/bin DOT_POPPER_SMOKE="$report" "$program"
+          cat "$report"
+          grep -q 'status 0' "$report"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dot-popper-macos-arm64
+          path: |
+            dist/*.dmg
+            dist/*.tar.gz
+          if-no-files-found: error
+
+  release:
+    name: Release
+    needs: [windows, macos]
+    # The Windows build is the one that must ship; macOS joins it when it
+    # built.
+    if: ${{ always() && startsWith(github.ref, 'refs/tags/v0.') && needs.windows.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: dot-popper-*
+          path: artifacts
+          merge-multiple: true
+      - name: Attach the builds to the tag's release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -la artifacts
+          tag="$GITHUB_REF_NAME"
+          if gh release view "$tag" -R "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$tag" -R "$GITHUB_REPOSITORY" --clobber artifacts/*
+          else
+            gh release create "$tag" -R "$GITHUB_REPOSITORY" --title "Dot Popper $tag" \
+              --notes "Built by the Package workflow from $GITHUB_SHA. See PACKAGING.md." --prerelease artifacts/*
+          fi
