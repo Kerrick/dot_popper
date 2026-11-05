@@ -3,78 +3,120 @@
 module DotPopper
   # Every round this device has played, added up: the totals (rounds,
   # pops, wrong taps, seconds, and the distinct days played, counted by
-  # +last_day+), the bests a round can set (its length, the most pops in
-  # a row without a wrong tap, the fastest pop, and the longest wait that
-  # still ended in a pop), the last RECENT scores, oldest first, and the
-  # daily goal's GoalStreak. Days are ISO 8601 dates ("2026-11-05"), local
-  # to the player. The best score stays with BestScore. It saves as lines
-  # of +key=value+, and reads back whatever it can of a damaged file.
-  class LifetimeStats < Data.define(:rounds, :pops, :slips, :seconds, :days, :last_day, :longest_round, :longest_run,
-                                    :fastest_pop, :longest_wait, :recent, :streak)
+  # +last_day+), the last RECENT scores, oldest first, and the daily
+  # goal's GoalStreak, across every screen; and for each SizeClass, the
+  # Bests a round on such a screen can set. Days are ISO 8601 dates
+  # ("2026-11-05"), local to the player. The best score stays with
+  # BestScore. It saves as lines of +key=value+, a class's bests under
+  # its name ("medium.longest_run=18"), and reads back whatever it can of
+  # a damaged file.
+  class LifetimeStats < Data.define(:rounds, :pops, :slips, :seconds, :days, :last_day, :recent, :streak, :bests)
     RECENT = 20
     DAY = /\A\d{4}-\d{2}-\d{2}\z/
 
-    def initialize(rounds: 0, pops: 0, slips: 0, seconds: 0.0, days: 0, last_day: nil, longest_round: 0.0,
-                   longest_run: 0, fastest_pop: nil, longest_wait: 0.0, recent: [], streak: GoalStreak.new)
-      super(rounds:, pops:, slips:, seconds: seconds.to_f, days:, last_day:, longest_round: longest_round.to_f,
-            longest_run:, fastest_pop: fastest_pop&.to_f, longest_wait: longest_wait.to_f, recent: recent.dup.freeze,
-            streak:)
+    def initialize(rounds: 0, pops: 0, slips: 0, seconds: 0.0, days: 0, last_day: nil, recent: [],
+                   streak: GoalStreak.new, bests: {})
+      super(rounds:, pops:, slips:, seconds: seconds.to_f, days:, last_day:, recent: recent.dup.freeze, streak:,
+            bests: bests.dup.freeze)
     end
 
     # The stats read from +text+ as #to_text wrote it. A missing, unknown,
-    # or unreadable value keeps its starting value.
-    def self.parse(text)
+    # or unreadable value keeps its starting value. A file written before
+    # bests were kept by class has them unnamed; they go to +legacy+, the
+    # class of the screen the game opens on (see .old?).
+    def self.parse(text, legacy: SizeClass::MEDIUM)
       pairs = Pairs.parse(text)
+      bests = SizeClass::ALL.to_h { [it, Bests.parse(pairs.within(it.name))] }
+      bests[legacy] = Bests.parse(pairs) if old?(text)
       new(rounds: pairs.count(:rounds), pops: pairs.count(:pops), slips: pairs.count(:slips),
           seconds: pairs.time(:seconds) || 0.0, days: pairs.count(:days), last_day: pairs.day(:last_day),
-          longest_round: pairs.time(:longest_round) || 0.0, longest_run: pairs.count(:longest_run),
-          fastest_pop: pairs.time(:fastest_pop), longest_wait: pairs.time(:longest_wait) || 0.0,
           recent: pairs.counts(:recent).last(RECENT),
           streak: GoalStreak.new(current: pairs.count(:goal_streak), longest: pairs.count(:longest_goal_streak),
-                                 last_met: pairs.day(:goal_met_on)))
+                                 last_met: pairs.day(:goal_met_on)),
+          bests: bests.reject { |_, each| each.rounds.zero? })
     end
 
-    # The stats after one more round, played on +day+.
-    def add(stats, day:)
+    # Whether +text+ keeps its bests unnamed, as files did before they
+    # were kept by class.
+    def self.old?(text) = Pairs.parse(text).values.key?("longest_round")
+
+    # The bests on screens of +size_class+, or none yet.
+    def bests_in(size_class) = bests.fetch(size_class) { Bests.new }
+
+    # The stats after one more round, played on +day+ on a screen of
+    # +size_class+.
+    def add(stats, day:, size_class:)
       with(rounds: rounds + 1, pops: pops + stats.pops, slips: slips + stats.slips, seconds: seconds + stats.duration,
-           days: day == last_day ? days : days + 1, last_day: day,
-           longest_round: [longest_round, stats.duration].max, longest_run: [longest_run, stats.longest_run].max,
-           fastest_pop: [fastest_pop, stats.fastest_pop].compact.min,
-           longest_wait: [longest_wait, stats.longest_wait].max, recent: (recent + [stats.score]).last(RECENT))
+           days: day == last_day ? days : days + 1, last_day: day, recent: (recent + [stats.score]).last(RECENT),
+           bests: bests.merge(size_class => bests_in(size_class).add(stats)))
     end
 
-    # The records a round with +stats+ would set, most impressive first
-    # (Record::ORDER). A first round sets none, since it has nothing to
-    # beat, and neither does a round that only equals a best as the game
-    # shows it: whole seconds for a round, tenths for a pop's wait.
-    def records_set_by(stats)
-      return [] if rounds.zero?
-
-      [
-        (Record.new(kind: :longest_run, value: stats.longest_run) if beats?(stats.longest_run, longest_run, 0)),
-        (Record.new(kind: :longest_round, value: stats.duration) if beats?(stats.duration, longest_round, 0)),
-        (Record.new(kind: :longest_wait, value: stats.longest_wait) if beats?(stats.longest_wait, longest_wait, 1)),
-        faster(stats.fastest_pop)
-      ].compact
-    end
+    # The records a round with +stats+ on a screen of +size_class+ would
+    # set, most impressive first (Record::ORDER); see Bests#records_set_by.
+    def records_set_by(stats, size_class) = bests_in(size_class).records_set_by(stats)
 
     def to_text
-      [["rounds", rounds], ["pops", pops], ["slips", slips], ["seconds", seconds], ["days", days],
-       ["last_day", last_day], ["longest_round", longest_round], ["longest_run", longest_run],
-       ["fastest_pop", fastest_pop], ["longest_wait", longest_wait], ["recent", recent.join(",")],
-       ["goal_streak", streak.current], ["longest_goal_streak", streak.longest], ["goal_met_on", streak.last_met]]
-        .reject { |_, value| value.nil? }.map { |key, value| "#{key}=#{value}\n" }.join
+      totals = [["rounds", rounds], ["pops", pops], ["slips", slips], ["seconds", seconds], ["days", days],
+                ["last_day", last_day], ["recent", recent.join(",")], ["goal_streak", streak.current],
+                ["longest_goal_streak", streak.longest], ["goal_met_on", streak.last_met]]
+      named = bests.flat_map { |size_class, each| each.pairs.map { |key, value| ["#{size_class.name}.#{key}", value] } }
+      (totals + named).reject { |_, value| value.nil? }.map { |key, value| "#{key}=#{value}\n" }.join
     end
 
-    private
+    # The bests a round can set on one class of screen: its length, the
+    # most pops in a row without a wrong tap, the fastest pop, and the
+    # longest wait that still ended in a pop, with how many +rounds+ have
+    # been played on such screens.
+    class Bests < Data.define(:rounds, :longest_round, :longest_run, :fastest_pop, :longest_wait)
+      def initialize(rounds: 0, longest_round: 0.0, longest_run: 0, fastest_pop: nil, longest_wait: 0.0)
+        super(rounds:, longest_round: longest_round.to_f, longest_run:, fastest_pop: fastest_pop&.to_f,
+              longest_wait: longest_wait.to_f)
+      end
 
-    # Whether +value+ beats a +best+ that is more than nothing, once both
-    # are rounded to +digits+ after the point.
-    def beats?(value, best, digits) = best.positive? && value.round(digits) > best.round(digits)
+      def self.parse(pairs)
+        new(rounds: pairs.count(:rounds), longest_round: pairs.time(:longest_round) || 0.0,
+            longest_run: pairs.count(:longest_run), fastest_pop: pairs.time(:fastest_pop),
+            longest_wait: pairs.time(:longest_wait) || 0.0)
+      end
 
-    def faster(pop)
-      best = fastest_pop
-      Record.new(kind: :fastest_pop, value: pop) if pop && best && pop.round(1) < best.round(1)
+      def add(stats)
+        with(rounds: rounds + 1, longest_round: [longest_round, stats.duration].max,
+             longest_run: [longest_run, stats.longest_run].max,
+             fastest_pop: [fastest_pop, stats.fastest_pop].compact.min,
+             longest_wait: [longest_wait, stats.longest_wait].max)
+      end
+
+      # The records a round with +stats+ would set. A first round sets
+      # none, since it has nothing to beat, and neither does a round that
+      # only equals a best as the game shows it: whole seconds for a
+      # round, tenths for a pop's wait.
+      def records_set_by(stats)
+        return [] if rounds.zero?
+
+        [
+          (Record.new(kind: :longest_run, value: stats.longest_run) if beats?(stats.longest_run, longest_run, 0)),
+          (Record.new(kind: :longest_round, value: stats.duration) if beats?(stats.duration, longest_round, 0)),
+          (Record.new(kind: :longest_wait, value: stats.longest_wait) if beats?(stats.longest_wait, longest_wait, 1)),
+          faster(stats.fastest_pop)
+        ].compact
+      end
+
+      # The bests as +key=value+ pairs, for LifetimeStats#to_text.
+      def pairs
+        [["rounds", rounds], ["longest_round", longest_round], ["longest_run", longest_run],
+         ["fastest_pop", fastest_pop], ["longest_wait", longest_wait]]
+      end
+
+      private
+
+      # Whether +value+ beats a +best+ that is more than nothing, once both
+      # are rounded to +digits+ after the point.
+      def beats?(value, best, digits) = best.positive? && value.round(digits) > best.round(digits)
+
+      def faster(pop)
+        best = fastest_pop
+        Record.new(kind: :fastest_pop, value: pop) if pop && best && pop.round(1) < best.round(1)
+      end
     end
 
     # A best a round beat: +kind+ names the stat, +value+ is the round's.
@@ -109,6 +151,13 @@ module DotPopper
       def day(key)
         value = values[key.to_s].to_s
         value if DAY.match?(value)
+      end
+
+      # The pairs under +prefix+ ("medium.rounds"), named without it.
+      def within(prefix)
+        named = "#{prefix}."
+        Pairs.new(values: values.filter_map { |key, value| [key.delete_prefix(named), value] if key.start_with?(named) }
+                                .to_h)
       end
 
       private

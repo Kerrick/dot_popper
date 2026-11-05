@@ -33,5 +33,18 @@ module DotPopper
     # How long Game Over ignores presses, so a tap meant for a dot in the
     # round's last moment does not dismiss the final score unseen.
     GAME_OVER_GRACE = 0.9
+
+    # Records are kept by the field's size in square radii (SizeClass),
+    # because a smaller field crowds sooner, and crowding is the game's
+    # difficulty. With R fixed, the simulation (doc/decisions.md) has an
+    # upright iPhone at 134 R², an 11-inch iPad and the 24 × 16 R desktop
+    # window at about 384, a 13-inch iPad Pro at 566, and big monitors
+    # fullscreen at 1,475 to 2,035. A field under SMALL_FIELD_BELOW is
+    # phone-sized; one of LARGE_FIELD_FROM or more is a large monitor's;
+    # tablets and the desktop window fall between. The cut-offs sit in
+    # the wide gaps between those devices, so a window resized a little
+    # stays in its class.
+    SMALL_FIELD_BELOW = 250
+    LARGE_FIELD_FROM = 700
   end
 end

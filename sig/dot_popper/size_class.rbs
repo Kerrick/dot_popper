@@ -1,0 +1,23 @@
+module DotPopper
+  class SizeClass < ::Data
+    attr_reader name: String
+
+    def self.new: (name: String) -> instance
+
+    def initialize: (name: String) -> void
+
+    SMALL: SizeClass
+
+    MEDIUM: SizeClass
+
+    LARGE: SizeClass
+
+    ALL: Array[SizeClass]
+
+    def self.of: (Field field) -> SizeClass
+
+    def self.named: (String name) -> SizeClass?
+
+    def to_s: () -> String
+  end
+end

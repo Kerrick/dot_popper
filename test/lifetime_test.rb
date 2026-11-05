@@ -5,6 +5,7 @@ require "test_helper"
 class LifetimeTest < Minitest::Test
   Lifetime = DotPopper::Lifetime
   RoundStats = DotPopper::RoundStats
+  MEDIUM = DotPopper::SizeClass::MEDIUM
 
   def setup
     @store = DotPopper::BestScore::Memory.new
@@ -12,7 +13,7 @@ class LifetimeTest < Minitest::Test
   end
 
   def test_a_round_is_added_and_saved_on_todays_date
-    @lifetime.record(RoundStats.start.with(score: 4, pops: 4, duration: 14.0))
+    @lifetime.record(RoundStats.start.with(score: 4, pops: 4, duration: 14.0), MEDIUM)
 
     saved = Lifetime.new(@store).stats
     assert_equal 1, saved.rounds
@@ -21,10 +22,10 @@ class LifetimeTest < Minitest::Test
   end
 
   def test_it_returns_the_records_a_round_set
-    @lifetime.record(RoundStats.start.with(longest_run: 3, duration: 10.0))
+    @lifetime.record(RoundStats.start.with(longest_run: 3, duration: 10.0), MEDIUM)
 
     assert_equal %i[longest_run longest_round],
-                 @lifetime.record(RoundStats.start.with(longest_run: 5, duration: 20.0)).records.map(&:kind)
+                 @lifetime.record(RoundStats.start.with(longest_run: 5, duration: 20.0), MEDIUM).records.map(&:kind)
   end
 
   # 2026-11-03's goal is to score 25 points in one round.
@@ -33,11 +34,11 @@ class LifetimeTest < Minitest::Test
     lifetime = Lifetime.new(@store, today: -> { day })
     assert_equal :score, lifetime.goal.kind
 
-    refute lifetime.record(RoundStats.start.with(score: 24)).goal_met
+    refute lifetime.record(RoundStats.start.with(score: 24), MEDIUM).goal_met
     refute lifetime.goal_done?
-    assert lifetime.record(RoundStats.start.with(score: 25)).goal_met
+    assert lifetime.record(RoundStats.start.with(score: 25), MEDIUM).goal_met
     assert lifetime.goal_done?
-    refute lifetime.record(RoundStats.start.with(score: 30)).goal_met, "it is met only once a day"
+    refute lifetime.record(RoundStats.start.with(score: 30), MEDIUM).goal_met, "it is met only once a day"
     assert_equal 1, lifetime.streak
     assert_equal 1, Lifetime.new(@store, today: -> { day }).streak, "the streak is saved"
   end
@@ -45,12 +46,22 @@ class LifetimeTest < Minitest::Test
   def test_the_streak_counts_days_in_a_row_and_a_missed_day_starts_it_again
     days = { Date.new(2026, 11, 3) => :score, Date.new(2026, 11, 8) => :score, Date.new(2026, 11, 12) => :score }
     days.each_key do |day|
-      Lifetime.new(@store, today: -> { day }).record(RoundStats.start.with(score: 25))
+      Lifetime.new(@store, today: -> { day }).record(RoundStats.start.with(score: 25), MEDIUM)
     end
     later = Lifetime.new(@store, today: -> { Date.new(2026, 11, 13) })
 
     assert_equal 1, later.streak
     assert_equal 1, later.stats.streak.longest
+  end
+
+  def test_an_older_file_is_given_to_this_screens_class_and_saved_again_at_once
+    store = DotPopper::BestScore::Memory.new("rounds=3\nlongest_round=20.0\nlongest_run=5\n")
+    small = DotPopper::SizeClass::SMALL
+    lifetime = Lifetime.new(store, legacy: small)
+
+    assert_equal 5, lifetime.stats.bests_in(small).longest_run
+    assert_includes store.read, "small.longest_run=5\n"
+    assert_equal 5, Lifetime.new(store, legacy: MEDIUM).stats.bests_in(small).longest_run
   end
 
   def test_a_store_holding_nonsense_starts_from_nothing

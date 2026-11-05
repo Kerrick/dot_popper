@@ -5,8 +5,9 @@ module DotPopper
   # again. Each state is a value that answers +press+ and +update+ with
   # the state that follows it, so each transition reads in one place.
   # The Game is the shell around them: it holds the current state, makes
-  # rounds, keeps the best score, and tells its listeners every event, in
-  # order.
+  # rounds, keeps the best scores, and tells its listeners every event, in
+  # order. A round's records count among those of its SizeClass, the
+  # class of the field it started on.
   class Game
     LARGEST_SEED = 2_147_483_648 # 2**31
 
@@ -32,6 +33,9 @@ module DotPopper
     # The round in play or just finished, or nil on the title.
     def round = state.round
 
+    # The class of screen a round started now would count among.
+    def size_class = SizeClass.of(field)
+
     # The window changed size. A round in play keeps its dots on screen,
     # and the next round starts on the new field.
     def field=(field)
@@ -48,7 +52,7 @@ module DotPopper
     # The transitions, each with the event that says it happened.
 
     def show_title
-      announce(Events::TitleShown.new(best: best.value))
+      announce(Events::TitleShown.new(best: best.of(size_class)))
       Title.new
     end
 
@@ -60,12 +64,14 @@ module DotPopper
     def start_round(seed = @random.rand(LARGEST_SEED))
       round = Round.new(field, random: Random.new(seed))
       announce(Events::RoundStarted.new(round:, seed:))
-      Playing.new(round:, seed:)
+      Playing.new(round:, seed:, size_class:)
     end
 
-    def finish(round, seed)
-      new_best = best.record(round.score)
-      announce(Events::RoundEnded.new(round:, best: best.value, new_best:, seed:))
+    # The round's score counts among the bests of +size_class+, the class
+    # it started in, even if the window changed size meanwhile.
+    def finish(round, seed, size_class)
+      new_best = best.record(round.score, size_class)
+      announce(Events::RoundEnded.new(round:, best: best.of(size_class), new_best:, seed:, size_class:))
       GameOver.new(round:, new_best:)
     end
 
@@ -85,7 +91,7 @@ module DotPopper
 
     # A round in progress. It ends the moment the clock reaches zero,
     # whether time ran out or a penalty took the last of it.
-    class Playing < Data.define(:round, :seed)
+    class Playing < Data.define(:round, :seed, :size_class)
       def press(game, x, y)
         game.announce(round.tap_at(x, y))
         settle(game)
@@ -98,7 +104,7 @@ module DotPopper
 
       private
 
-      def settle(game) = round.over? ? game.finish(round, seed) : self
+      def settle(game) = round.over? ? game.finish(round, seed, size_class) : self
     end
 
     # The round is over and its score is shown. Presses are ignored for a

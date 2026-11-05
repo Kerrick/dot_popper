@@ -6,12 +6,18 @@ class RecordsTest < Minitest::Test
   include PresentationTest
 
   def stats
-    DotPopper::LifetimeStats.new(rounds: 42, pops: 812, slips: 61, seconds: 1890.0, days: 5, longest_round: 47.6,
-                                 longest_run: 18, fastest_pop: 0.34, longest_wait: 6.2, recent: [3, 9, 27, 12],
-                                 streak: DotPopper::GoalStreak.new(current: 3, longest: 7, last_met: "2026-11-04"))
+    bests = DotPopper::LifetimeStats::Bests.new(rounds: 40, longest_round: 47.6, longest_run: 18, fastest_pop: 0.34,
+                                                longest_wait: 6.2)
+    phone = DotPopper::LifetimeStats::Bests.new(rounds: 2, longest_round: 12.0, longest_run: 3)
+    DotPopper::LifetimeStats.new(rounds: 42, pops: 812, slips: 61, seconds: 1890.0, days: 5, recent: [3, 9, 27, 12],
+                                 streak: DotPopper::GoalStreak.new(current: 3, longest: 7, last_met: "2026-11-04"),
+                                 bests: { MEDIUM => bests, DotPopper::SizeClass::SMALL => phone })
   end
 
-  def sheet = RecordsSheet.build(stats, best: 27, words: Look::WORDS, streak: 3)
+  MEDIUM = DotPopper::SizeClass::MEDIUM
+
+  def sheet = RecordsSheet.build(stats, best: 27, words: Look::WORDS, streak: 3, size_class: MEDIUM,
+                                        field: DotPopper::Field.new(1200, 800, R))
 
   def test_the_sheet_shows_the_daily_goals_streaks
     assert_equal [["Days in a row you've met it", "3 days"], ["Most days in a row", "7 days"]],
@@ -21,7 +27,7 @@ class RecordsTest < Minitest::Test
   def test_the_sheet_lists_the_bests_and_the_totals_in_plain_words
     rows = sheet.bests.rows.to_h { [it.label, it.value] }
 
-    assert_equal "Your bests", sheet.bests.title
+    assert_equal "Your bests on screens this size", sheet.bests.title
     assert_equal({ "Best score" => "27", "Longest round" => "48 seconds",
                    "Most pops in a row without a wrong tap" => "18", "Fastest pop" => "0.3 seconds",
                    "Longest wait that ended in a pop" => "6.2 seconds" }, rows)
@@ -29,6 +35,16 @@ class RecordsTest < Minitest::Test
                   ["Days played", "5"]], sheet.totals.rows.map { [it.label, it.value] }
     assert_equal [3, 9, 27, 12], sheet.scores
     refute sheet.empty
+  end
+
+  def test_the_bests_are_this_screens_and_the_totals_every_screens
+    phone = RecordsSheet.build(stats, best: 6, words: Look::WORDS, size_class: DotPopper::SizeClass::SMALL,
+                                      field: DotPopper::Field.new(395, 850, R))
+
+    assert_equal ["6", "12 seconds", "3", "None yet"], phone.bests.rows.first(4).map(&:value)
+    assert_equal "42", phone.totals.rows.first.value
+    assert_equal ["This screen is about 4 dots wide and 9 dots tall."], phone.notes
+    assert_equal ["This screen is about 12 dots wide and 8 dots tall."], sheet.notes
   end
 
   def test_with_no_rounds_the_sheet_is_empty_and_says_none_yet
@@ -72,7 +88,9 @@ class RecordsTest < Minitest::Test
   def test_everything_fits_between_the_heading_and_the_prompt
     [[1200, 800], [400, 850], [400, 320], [800, 600], [2560, 1440]].each do |width, height|
       plan = RecordsLayout.new(layout: layout(width, height), sheet:, look: Look::RECORDS)
+      assert_operator plan.note_y(0), :>, plan.heading_y, "#{width}x#{height}"
       plan.placements.each do |placed|
+        assert_operator placed.y, :>, plan.note_y(0), "#{width}x#{height}"
         assert_operator placed.x, :>=, 0, "#{width}x#{height}"
         assert_operator placed.right, :<=, width, "#{width}x#{height}"
         assert_operator placed.y, :>, plan.heading_y, "#{width}x#{height}"
@@ -86,6 +104,7 @@ class RecordsTest < Minitest::Test
   def test_the_chart_leads_when_there_are_scores
     plan = RecordsLayout.new(layout: layout(400, 850), sheet:, look: Look::RECORDS)
 
-    assert_equal ["Your last 4 rounds", :chart, "Your bests"], plan.placements.first(3).map(&:item)
+    assert_equal ["Your last 4 rounds", :chart, "Your bests on screens this size"],
+                 plan.placements.first(3).map(&:item)
   end
 end

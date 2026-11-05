@@ -97,12 +97,26 @@ class GameTest < Minitest::Test
     assert_equal 10.0, @game.round.countdown.remaining
   end
 
+  # 800 by 600 is 16 by 12 radii, a phone-sized field, and 1200 by 800 a
+  # tablet-sized one.
+  def test_a_round_counts_among_the_bests_of_the_screen_it_started_on
+    assert_equal DotPopper::SizeClass::SMALL, @game.size_class
+    play_to_score(2)
+    @game.field = field(1200, 800)
+    @game.update(20)
+
+    assert_equal DotPopper::SizeClass::SMALL, @heard.last.size_class
+    assert_equal 2, @game.best.of(DotPopper::SizeClass::SMALL)
+    assert_equal 0, @game.best.of(DotPopper::SizeClass::MEDIUM)
+    assert_equal DotPopper::SizeClass::MEDIUM, @game.size_class, "the next round counts with the new size"
+  end
+
   def test_the_best_score_is_kept_and_a_new_best_is_announced
     play_to_score(2)
     @game.update(20)
 
-    assert_equal 2, @game.best.value
-    assert_equal "2", @store.read
+    assert_equal 2, @game.best.of(DotPopper::SizeClass::SMALL)
+    assert_equal "small=2\n", @store.read
     assert @heard.last.new_best
 
     @game.update(1)

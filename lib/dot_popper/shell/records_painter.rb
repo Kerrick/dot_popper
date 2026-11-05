@@ -3,9 +3,9 @@
 module DotPopper
   module Shell
     # The Records screen, over the title's dimmed dots: the heading, the
-    # chart of the last scores, the bests and totals as rows with their
-    # labels on the left and their numbers lined up on the right, and the
-    # prompt to go back. Presentation::RecordsLayout decides where each
+    # notes on the screen's size under it, the chart of the last scores,
+    # the bests and totals as rows with their labels on the left and
+    # their numbers lined up on the right, and the prompt to go back. Presentation::RecordsLayout decides where each
     # goes; this only draws, on whole device pixels.
     class RecordsPainter < Data.define(:pen)
       G = ::Lota::Graphics
@@ -15,7 +15,11 @@ module DotPopper
         words = show.words
         palette = pen.palette
         plan = Presentation::RecordsLayout.new(layout:, sheet:, look: pen.look::RECORDS)
+        notes = note_lines(sheet, plan, layout)
+        plan = plan.with(note_lines: notes.size)
         pen.text(words.records, pen.fonts.bold(plan.heading_size), layout.center_x, plan.heading_y, palette.cream)
+        font = pen.fonts.semibold(plan.note_size)
+        notes.each_with_index { |line, i| pen.text(line, font, layout.center_x, plan.note_y(i), palette.soft) }
         pen.text(words.go_back, pen.fonts.bold(plan.prompt_size), layout.center_x, plan.prompt_y, palette.cream,
                  show.marquee.prompt(show.now))
         return nothing_yet(words, layout, plan) if sheet.empty
@@ -25,6 +29,13 @@ module DotPopper
       end
 
       private
+
+      # The sheet's notes, each broken into even lines that fit across.
+      def note_lines(sheet, plan, layout)
+        font = pen.fonts.semibold(plan.note_size)
+        room = layout.safe.width - (layout.margin * 2)
+        sheet.notes.flat_map { |note| Presentation::Words.balance(note, room) { font.width(it) } }
+      end
 
       def nothing_yet(words, layout, plan)
         pen.text(words.no_rounds, pen.fonts.semibold(plan.text_size), layout.center_x, layout.center_y, pen.palette.soft)

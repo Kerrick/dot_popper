@@ -6,13 +6,29 @@ module DotPopper
       def write: (String text) -> void
     end
 
-    attr_reader value: Integer
-
     @store: _Store
 
-    def initialize: (_Store store) -> void
+    @values: Hash[SizeClass, Integer]
 
-    def record: (Integer score) -> bool
+    def initialize: (_Store store, ?legacy: SizeClass) -> void
+
+    def of: (SizeClass size_class) -> Integer
+
+    def record: (Integer score, SizeClass size_class) -> bool
+
+    private
+
+    def save: () -> void
+
+    module Best
+      OLD: Regexp
+
+      def self.parse: (String text, legacy: SizeClass) -> Hash[SizeClass, Integer]
+
+      def self.old?: (String text) -> bool
+
+      def self.to_text: (Hash[SizeClass, Integer] values) -> String
+    end
 
     class Memory
       @text: String?

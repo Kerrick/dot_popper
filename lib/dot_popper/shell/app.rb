@@ -24,13 +24,16 @@ module DotPopper
         puts "Dot Popper: a dot's radius is #{@dot_size.reason}"
         @touch ? fill_screen : open_window
         random = seed ? Random.new(seed) : Random.new
-        @game = Game.new(field, best: BestScore.new(SaveFile.new(name: "best_score.txt")), random:)
+        # Bests saved before they were kept by size of screen go to this
+        # screen's class.
+        legacy = SizeClass.of(field)
+        @game = Game.new(field, best: BestScore.new(SaveFile.new(name: "best_score.txt"), legacy:), random:)
         @speaker = Speaker.new(Look::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Look::SOUND.volume)
         @show = Presentation::Show.new(game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"),
                                        tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt")),
                                        haptics: Haptics.for(os), clipboard: Clipboard.new,
-                                       lifetime: Lifetime.new(SaveFile.new(name: "lifetime.txt"), today:))
+                                       lifetime: Lifetime.new(SaveFile.new(name: "lifetime.txt"), today:, legacy:))
         @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
                                         archive: ->(name) { SaveFile.new(name:) }))
         puts "Dot Popper: each round is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"

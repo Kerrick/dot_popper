@@ -23,14 +23,16 @@ module DotPopper
     # A round began, its dots drawn from +seed+.
     class RoundStarted < Data.define(:round, :seed); end
 
-    # A round's clock reached zero; +best+ is the device's best score
-    # after this round, +new_best+ whether this round set it, and +seed+
-    # the one its dots were drawn from.
-    class RoundEnded < Data.define(:round, :best, :new_best, :seed)
+    # A round's clock reached zero; +best+ is the device's best score on
+    # screens of +size_class+ (SizeClass) after this round, +new_best+
+    # whether this round set it, and +seed+ the one its dots were drawn
+    # from.
+    class RoundEnded < Data.define(:round, :best, :new_best, :seed, :size_class)
       def score = round.score
     end
 
-    # The title screen came up.
+    # The title screen came up; +best+ is the best score on screens like
+    # this one.
     class TitleShown < Data.define(:best); end
   end
 end

@@ -19,5 +19,9 @@ module DotPopper
     LONGEST_FRAME: Float
 
     GAME_OVER_GRACE: Float
+
+    SMALL_FIELD_BELOW: Integer
+
+    LARGE_FIELD_FROM: Integer
   end
 end

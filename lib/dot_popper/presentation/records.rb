@@ -11,17 +11,20 @@ module DotPopper
     # What the Records screen says, worked out from LifetimeStats and the
     # best score: the player's bests, their totals, the daily goal's
     # streaks (+streak+ is the current one, as it stands today), and the
-    # last few scores for the chart. With no round played yet, +empty+ is
-    # true and there is nothing to list.
-    class RecordsSheet < Data.define(:bests, :totals, :goal, :scores, :empty)
-      def self.build(stats, best:, words:, streak: 0)
+    # last few scores for the chart. The bests, and +best+, are those of
+    # screens of +size_class+, the screen's now, and +notes+ say how big
+    # +field+, the screen, is. With no round played yet, +empty+ is true
+    # and there is nothing to list.
+    class RecordsSheet < Data.define(:bests, :totals, :goal, :scores, :empty, :notes)
+      def self.build(stats, best:, words:, streak: 0, size_class: SizeClass::MEDIUM, field: nil)
         labels = words.labels
+        mine = stats.bests_in(size_class)
         bests = RecordSection.new(title: labels[:bests], rows: [
           RecordRow.new(label: labels[:best_score], value: best.to_s),
-          RecordRow.new(label: labels[:longest_round], value: Words.count(stats.longest_round.round, "second")),
-          RecordRow.new(label: labels[:longest_run], value: stats.longest_run.to_s),
-          RecordRow.new(label: labels[:fastest_pop], value: words.seconds_or_none(stats.fastest_pop)),
-          RecordRow.new(label: labels[:longest_wait], value: words.seconds_or_none(stats.longest_wait))
+          RecordRow.new(label: labels[:longest_round], value: Words.count(mine.longest_round.round, "second")),
+          RecordRow.new(label: labels[:longest_run], value: mine.longest_run.to_s),
+          RecordRow.new(label: labels[:fastest_pop], value: words.seconds_or_none(mine.fastest_pop)),
+          RecordRow.new(label: labels[:longest_wait], value: words.seconds_or_none(mine.longest_wait))
         ])
         totals = RecordSection.new(title: labels[:totals], rows: [
           RecordRow.new(label: labels[:rounds], value: stats.rounds.to_s),
@@ -34,7 +37,8 @@ module DotPopper
           RecordRow.new(label: labels[:streak], value: Words.count(streak, "day")),
           RecordRow.new(label: labels[:longest_streak], value: Words.count(stats.streak.longest, "day"))
         ])
-        new(bests:, totals:, goal:, scores: stats.recent, empty: stats.rounds.zero?)
+        new(bests:, totals:, goal:, scores: stats.recent, empty: stats.rounds.zero?,
+            notes: field ? [words.screen_here(field)] : [])
       end
     end
 
@@ -82,12 +86,19 @@ module DotPopper
     # chart and the sections. A wide screen puts the bests and the daily
     # goal on the left and the chart and totals on the right; a narrow one
     # stacks them. Rows shrink, never below a readable size,
-    # to fit a short screen.
-    class RecordsLayout < Data.define(:layout, :sheet, :look)
+    # to fit a short screen. Under the heading go the sheet's notes, in
+    # +note_lines+ lines once the shell has wrapped them to fit across.
+    class RecordsLayout < Data.define(:layout, :sheet, :look, :note_lines)
       SMALLEST_TEXT = 11
+
+      def initialize(layout:, sheet:, look:, note_lines: sheet.notes.size) = super
 
       def heading_size = layout.scaled(look.heading)
       def heading_y = layout.top + (heading_size * 0.6)
+
+      # The notes' type size, and where the middle of their line +i+ goes.
+      def note_size = [layout.scaled(look.text * 0.9), SMALLEST_TEXT].max
+      def note_y(i) = heading_y + (heading_size * 0.75) + (note_size * 1.3 * (i + 0.5))
       def prompt_size = layout.scaled(Look::TYPE.prompt)
       def prompt_y = layout.safe.bottom - layout.margin - (prompt_size * 0.6)
 
@@ -121,12 +132,18 @@ module DotPopper
       # The body starts under the heading, lowered by a third of the room
       # its tallest column leaves, so it sits a little above the middle.
       def body_top
-        top = heading_y + (heading_size * 0.8)
+        top = heading_bottom
         top + [(room - (columns.map { lines(it) }.max * row)) / 3.0, 0.0].max
       end
 
       def body_bottom = prompt_y - (prompt_size * 1.1)
-      def room = body_bottom - heading_y - (heading_size * 0.8)
+      def room = body_bottom - heading_bottom
+
+      # Where the heading and its notes end.
+      def heading_bottom
+        notes = note_lines.positive? ? (note_size * 1.3 * note_lines) + (note_size * 0.5) : 0.0
+        heading_y + (heading_size * 0.8) + notes
+      end
 
       # How many rows a column's parts take, a section's title and the
       # space after it included.

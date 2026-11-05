@@ -31,7 +31,8 @@ class ShowTest < Minitest::Test
     @show.tap(*middle(@show.share_reach))
 
     assert @show.finished?
-    assert_equal "Dot Popper: 1 point, a new best!\n🟡 1 pop · ⚫ 0 wrong taps · ⏱ 11 seconds", @clipboard.text
+    assert_equal "Dot Popper: 1 point, a new best!\n🟡 1 pop · ⚫ 0 wrong taps · ⏱ 11 seconds\n" \
+                 "Played on a screen about 8 dots wide and 6 dots tall.", @clipboard.text
     assert @show.finale.copied?(@show.now)
   end
 

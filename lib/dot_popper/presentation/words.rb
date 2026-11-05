@@ -8,10 +8,11 @@ module DotPopper
     # with no name the game made up for itself. +covered+ is the first-run
     # hint, a sentence a line. +labels+ name the Records screen's sections
     # and rows, by what they count. +goals+ say each kind of DailyGoal as
-    # the end of "Today's goal: ...", with %d for its target.
+    # the end of "Today's goal: ...", with %d for its target. +screen_size+
+    # says how big a screen is, in dots, with %d for its width and height.
     class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time, :covered,
                               :share, :copied, :records, :go_back, :no_rounds, :labels, :goals, :goal_done,
-                              :goal_met)
+                              :goal_met, :screen_size)
       MINUS = "−" # a true minus sign, as wide as the plus
 
       # +1, −2, or 0 for a number of points.
@@ -76,16 +77,34 @@ module DotPopper
 
       # What "Copy my result" puts on the clipboard: the score, whether it
       # set or tied the player's +best+, the lifetime +record+ it set, if
-      # any, and what the round was made of.
+      # any, what the round was made of, and the +screen+ it was played on
+      # (#played_on), since a score depends on that.
       #
       #   Dot Popper: 25 points, a new best!
       #   New record: 18 pops in a row without a wrong tap
       #   🟡 27 pops · ⚫ 1 wrong tap · ⏱ 38 seconds
-      def share_text(score, stats, best:, new_best:, record: nil)
+      #   Played on a screen about 12 dots wide and 8 dots tall.
+      def share_text(score, stats, best:, new_best:, record: nil, screen: nil)
         ["Dot Popper: #{Words.count(score, "point")}#{best_note(score, best, new_best)}",
          (self.record(record) if record),
          "🟡 #{Words.count(stats.pops, "pop")} · ⚫ #{Words.count(stats.slips, "wrong tap")} · " \
-         "⏱ #{Words.count(stats.duration.round, "second")}"].compact.join("\n")
+         "⏱ #{Words.count(stats.duration.round, "second")}",
+         screen].compact.join("\n")
+      end
+
+      # How big +field+ is, counted in dots side by side, for the Records
+      # screen: "This screen is about 12 dots wide and 8 dots tall."
+      def screen_here(field) = format(screen_size.fetch(:here), *Words.dots_across(field))
+
+      # The same for a shared result: "Played on a screen about 12 dots
+      # wide and 8 dots tall."
+      def played_on(field) = format(screen_size.fetch(:played), *Words.dots_across(field))
+
+      # How many dots fit across +field+ and down it, side by side, to the
+      # nearest whole dot, and never none.
+      def self.dots_across(field)
+        across = 2 * field.radius
+        [field.width, field.height].map { [(it / across).round, 1].max }
       end
 
       # Seconds to one decimal place: "0.4".

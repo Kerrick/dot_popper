@@ -16,39 +16,61 @@ module DotPopper
 
     attr_reader last_day: String?
 
-    attr_reader longest_round: Float
-
-    attr_reader longest_run: Integer
-
-    attr_reader fastest_pop: Float?
-
-    attr_reader longest_wait: Float
-
     attr_reader recent: Array[Integer]
 
     attr_reader streak: GoalStreak
 
+    attr_reader bests: Hash[SizeClass, Bests]
+
     def self.new: (?rounds: Integer, ?pops: Integer, ?slips: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
-                   ?longest_round: number, ?longest_run: Integer, ?fastest_pop: number?, ?longest_wait: number,
-                   ?recent: Array[Integer], ?streak: GoalStreak) -> instance
+                   ?recent: Array[Integer], ?streak: GoalStreak, ?bests: Hash[SizeClass, Bests]) -> instance
 
     def initialize: (?rounds: Integer, ?pops: Integer, ?slips: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
-                     ?longest_round: number, ?longest_run: Integer, ?fastest_pop: number?, ?longest_wait: number,
-                     ?recent: Array[Integer], ?streak: GoalStreak) -> void
+                     ?recent: Array[Integer], ?streak: GoalStreak, ?bests: Hash[SizeClass, Bests]) -> void
 
-    def self.parse: (String? text) -> LifetimeStats
+    def self.parse: (String? text, ?legacy: SizeClass) -> LifetimeStats
 
-    def add: (RoundStats stats, day: String) -> LifetimeStats
+    def self.old?: (String? text) -> bool
 
-    def records_set_by: (RoundStats stats) -> Array[Record]
+    def bests_in: (SizeClass size_class) -> Bests
+
+    def add: (RoundStats stats, day: String, size_class: SizeClass) -> LifetimeStats
+
+    def records_set_by: (RoundStats stats, SizeClass size_class) -> Array[Record]
 
     def to_text: () -> String
 
-    private
+    class Bests < ::Data
+      attr_reader rounds: Integer
 
-    def beats?: (number value, number best, Integer digits) -> bool
+      attr_reader longest_round: Float
 
-    def faster: (Float? pop) -> Record?
+      attr_reader longest_run: Integer
+
+      attr_reader fastest_pop: Float?
+
+      attr_reader longest_wait: Float
+
+      def self.new: (?rounds: Integer, ?longest_round: number, ?longest_run: Integer, ?fastest_pop: number?,
+                     ?longest_wait: number) -> instance
+
+      def initialize: (?rounds: Integer, ?longest_round: number, ?longest_run: Integer, ?fastest_pop: number?,
+                       ?longest_wait: number) -> void
+
+      def self.parse: (Pairs pairs) -> Bests
+
+      def add: (RoundStats stats) -> Bests
+
+      def records_set_by: (RoundStats stats) -> Array[Record]
+
+      def pairs: () -> Array[[String, number?]]
+
+      private
+
+      def beats?: (number value, number best, Integer digits) -> bool
+
+      def faster: (Float? pop) -> Record?
+    end
 
     class Record < ::Data
       ORDER: Array[Symbol]
@@ -74,6 +96,8 @@ module DotPopper
       def counts: (Symbol key) -> Array[Integer]
 
       def day: (Symbol key) -> String?
+
+      def within: (String prefix) -> Pairs
 
       private
 

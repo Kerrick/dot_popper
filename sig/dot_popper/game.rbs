@@ -28,6 +28,8 @@ module DotPopper
 
     def round: () -> Round?
 
+    def size_class: () -> SizeClass
+
     def field=: (Field field) -> void
 
     def announce: [E < event] (E? event) -> E?
@@ -36,7 +38,7 @@ module DotPopper
 
     def start_round: (?Integer seed) -> Playing
 
-    def finish: (Round round, Integer seed) -> GameOver
+    def finish: (Round round, Integer seed, SizeClass size_class) -> GameOver
 
     private
 
@@ -57,7 +59,9 @@ module DotPopper
 
       attr_reader seed: Integer
 
-      def self.new: (round: Round, seed: Integer) -> instance
+      attr_reader size_class: SizeClass
+
+      def self.new: (round: Round, seed: Integer, size_class: SizeClass) -> instance
 
       def press: (Game game, number x, number y) -> (Playing | GameOver)
 

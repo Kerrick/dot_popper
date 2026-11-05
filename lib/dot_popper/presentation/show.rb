@@ -32,7 +32,7 @@ module DotPopper
         @hud = Hud.blank(look::HUD, look::WORDS)
         @attract = Attract.spawn(game.field, look::TITLE)
         @now = 0.0
-        @marquee = Marquee.new(look: look::TITLE, best: game.best.value, at: @now)
+        @marquee = Marquee.new(look: look::TITLE, best: game.best.of(game.size_class), at: @now)
         @finale = nil
         @tutor = tutor
         @clipboard = clipboard
@@ -109,7 +109,9 @@ module DotPopper
       def open_records
         return unless title?
 
-        @records = RecordsSheet.build(lifetime.stats, best: game.best.value, words:, streak: lifetime.streak)
+        size_class = game.size_class
+        @records = RecordsSheet.build(lifetime.stats, best: game.best.of(size_class), words:, streak: lifetime.streak,
+                                      size_class:, field: game.field)
         sounds.play(:tick)
       end
 
@@ -124,7 +126,7 @@ module DotPopper
         return unless finished? && finale
 
         @clipboard.copy(words.share_text(finale.score, finale.stats, best: finale.best, new_best: finale.new_best?,
-                                         record: finale.record))
+                                         record: finale.record, screen: finale.screen))
         @finale = finale.copy(now)
         sounds.play(:tick)
       end
@@ -207,9 +209,10 @@ module DotPopper
       end
 
       def round_ended(event)
-        result = lifetime.record(stats)
+        result = lifetime.record(stats, event.size_class)
         @finale = Finale.new(look: look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now,
-                             stats:, record: result.records.first, goal_met: result.goal_met)
+                             stats:, record: result.records.first, goal_met: result.goal_met,
+                             screen: words.played_on(event.round.field))
         sounds.play(event.new_best ? :new_best : :game_over)
       end
 

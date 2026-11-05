@@ -49,6 +49,20 @@ class WordsTest < Minitest::Test
                  Look::WORDS.share_text(25, stats, best: 25, new_best: true, record:)
   end
 
+  # A score depends on how crowded the screen gets, so the shared result
+  # says how big the screen was, counted in dots side by side.
+  def test_the_shared_result_can_say_the_screen_it_was_played_on
+    stats = DotPopper::RoundStats.start.with(pops: 27, slips: 1, duration: 38.2)
+    screen = Look::WORDS.played_on(DotPopper::Field.new(1200, 800, 50))
+
+    assert_equal "Played on a screen about 12 dots wide and 8 dots tall.", screen
+    assert_equal "Dot Popper: 25 points\n🟡 27 pops · ⚫ 1 wrong tap · ⏱ 38 seconds\n#{screen}",
+                 Look::WORDS.share_text(25, stats, best: 30, new_best: false, screen:)
+    assert_equal "This screen is about 4 dots wide and 9 dots tall.",
+                 Look::WORDS.screen_here(DotPopper::Field.new(395, 850, 50))
+    assert_equal [1, 1], Words.dots_across(DotPopper::Field.new(40, 20, 50)), "never no dots at all"
+  end
+
   def test_each_record_reads_as_a_sentence
     record = ->(kind, value) { Look::WORDS.record(DotPopper::LifetimeStats::Record.new(kind:, value:)) }
 

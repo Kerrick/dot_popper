@@ -11,6 +11,7 @@ end
 require_relative "dot_popper/rules"
 require_relative "dot_popper/events"
 require_relative "dot_popper/field"
+require_relative "dot_popper/size_class"
 require_relative "dot_popper/dot_size"
 require_relative "dot_popper/dot"
 require_relative "dot_popper/countdown"
