@@ -65,6 +65,7 @@ module DotPopper
         @shots = Presentation::ShotSchedule.parse(@env["DOT_POPPER_SHOTS"])
         @quit_after = Float(@env.fetch("DOT_POPPER_QUIT_AFTER", ""), exception: false)
         @frames = Presentation::FrameMeter.start(5) if flag?("DOT_POPPER_PERF")
+        @game.subscribe { happened(it.class.name.split("::").last) } if @frames
       end
 
       def update(seconds)
@@ -184,6 +185,7 @@ module DotPopper
       def resize
         return unless @show
 
+        happened("a resize")
         @pen.refresh
         @sparks.refresh
         @bloom.refresh
@@ -245,6 +247,7 @@ module DotPopper
 
       def toggle_fullscreen
         fullscreen, = ::Lota::Window.fullscreen
+        happened("a fullscreen switch")
         ::Lota::Window.set_fullscreen(!fullscreen, :desktop)
       end
 
@@ -310,12 +313,37 @@ module DotPopper
 
       # With DOT_POPPER_PERF=1, prints how smoothly the game ran every five
       # seconds, from each frame's real time.
+      # With DOT_POPPER_PERF=1, prints how smoothly the game ran every five
+      # seconds, and every frame slow enough to notice with what was going
+      # on, from each frame's real time.
       def measure(seconds)
         return unless @frames
 
+        gcs = [GC.stat(:major_gc_count), GC.stat(:minor_gc_count)]
+        if @gcs && Presentation::SlowFrame.slow?(seconds)
+          puts "Dot Popper: #{slow_frame(seconds, gcs).report}"
+        end
+        @gcs = gcs
         @frames, report = @frames.record(seconds)
         puts "Dot Popper: #{report}" if report
       end
+
+      def slow_frame(seconds, gcs)
+        recent, at = @recent
+        Presentation::SlowFrame.new(seconds:, screen: screen_name, recent:, since: at && (@elapsed - at),
+                                    major_gcs: gcs[0] - @gcs[0], minor_gcs: gcs[1] - @gcs[1])
+      end
+
+      def screen_name
+        if @show.records? then "Your records"
+        elsif @show.playing? then "a round"
+        elsif @show.finished? then "Game Over"
+        else "the title"
+        end
+      end
+
+      # Notes the latest thing to happen, for a slow frame's report.
+      def happened(what) = @recent = [what, @elapsed] if @frames
 
       def screenshot(number)
         name = "shot-#{number}.png"
