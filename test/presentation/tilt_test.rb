@@ -310,6 +310,15 @@ class TiltTest < Minitest::Test
     assert_nil store.text
   end
 
+  def test_with_a_pointer_the_hint_says_to_drag_and_to_tilt_where_both_work
+    assert_equal "Drag the dots to play with them.",
+                 TiltHint.new(Store.new, Look::TILT).offer(gamepad: false, accelerometer: false, device: "device",
+                                                           pointer: true)
+    assert_equal "Drag the dots, or tilt your iPad to roll them.",
+                 TiltHint.new(Store.new, Look::TILT).offer(gamepad: false, accelerometer: true, device: "iPad",
+                                                           pointer: true)
+  end
+
   def test_the_device_is_named_on_ios_and_generic_elsewhere
     assert_equal "iPad", TiltHint.device("iOS", 1024, 768)
     assert_equal "iPhone", TiltHint.device("iOS", 393, 852)

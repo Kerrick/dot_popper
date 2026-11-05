@@ -13,7 +13,8 @@
 # title, B (or Start) leaves it, either shoulder button switches the
 # dot size on the title, and Back toggles sound. On Game Over the right
 # stick, or tilting a tablet, rolls the pile of dots about, and a shake
-# throws them.
+# throws them; a mouse or a finger drags a dot about and throws it, and a
+# click or tap that drags nothing goes back to the title as it is let go.
 #
 # Development settings, read from the environment:
 #
@@ -39,6 +40,11 @@
 #                               this x,y, in g, in the device's portrait
 #                               axes, so the game-over pile rolls as on a
 #                               tilted tablet: 0.6,0 rolls it to the left.
+#   DOT_POPPER_FAKE_DRAG=0.5,0.9,0.3,0.3
+#                               on each Game Over, takes the dot nearest the
+#                               first point (fractions of the window's
+#                               width and height), drags it to the second
+#                               over a second, and throws it there.
 #   DOT_POPPER_CALM=1           turns off the screen shake, and lets the
 #                               game-over pile settle softly and turn
 #                               slowly when tilted, never thrown by a
@@ -55,11 +61,22 @@ end
 def Lota.update(dt) = @app.update(dt)
 def Lota.draw = @app.draw
 def Lota.mousepressed(x, y, button, istouch) = @app.mouse_pressed(x, y, button, istouch)
-def Lota.mousemoved(x, y, _dx, _dy, _istouch) = @app&.mouse_moved(x, y)
+def Lota.mousemoved(x, y, _dx, _dy, istouch) = @app&.mouse_moved(x, y, istouch)
+def Lota.mousereleased(x, y, button, istouch, _presses) = @app&.mouse_released(x, y, button, istouch)
 
 def Lota.touchpressed(id, x, y, _dx, _dy, _pressure, devicetype, mouse)
   @app.touch_pressed(id, x, y, devicetype, mouse)
 end
+
+def Lota.touchmoved(id, x, y, _dx, _dy, _pressure, devicetype, mouse)
+  @app&.touch_moved(id, x, y, devicetype, mouse)
+end
+
+def Lota.touchreleased(id, x, y, _dx, _dy, _pressure, devicetype, mouse)
+  @app&.touch_released(id, x, y, devicetype, mouse)
+end
+
+def Lota.focus(focused) = @app&.focus(focused)
 
 def Lota.keypressed(key) = @app.key_pressed(key)
 def Lota.resize(_width, _height) = @app&.resize

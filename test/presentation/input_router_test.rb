@@ -39,6 +39,16 @@ class InputRouterTest < Minitest::Test
     assert_nil @router.touch_pressed(1, nil, 6, :touchscreen, false)
   end
 
+  def test_moves_and_releases_are_sorted_as_presses_are
+    assert_equal Tap.new(x: 3.0, y: 4.0, touch: false), @router.mouse_moved(3, 4, false)
+    assert_nil @router.mouse_moved(3, 4, true)
+    assert_equal Tap.new(x: 3.0, y: 4.0, touch: false), @router.mouse_released(3, 4, 1, false)
+    assert_nil @router.mouse_released(3, 4, 1, true)
+    assert_equal Tap.new(x: 5.0, y: 6.0, touch: true), @router.touch_moved(1, 5, 6, :touchscreen, false)
+    assert_equal Tap.new(x: 5.0, y: 6.0, touch: true), @router.touch_released(1, 5, 6, :touchscreen, false)
+    assert_nil @router.touch_released(1, 0.5, 0.5, :touchpad, false)
+  end
+
   def test_a_gamepad_press_is_a_click_at_the_cursor
     cursor = GamepadCursor.centered(layout.whole, look: Look::GAMEPAD, radius: R).at(120, 80)
 

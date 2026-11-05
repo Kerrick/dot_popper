@@ -13,7 +13,9 @@ module DotPopper
     # same order, so popped dots still cover fresh ones.
     #
     # Tilting (Shell::Tilting) may turn its gravity, wake its sleeping
-    # balls, and throw them; once it does, a lid closes the window's top.
+    # balls, and throw them, and Dragging (Shell::Dragging) may steer a
+    # ball under a pointer; once either does, a lid closes the window's
+    # top.
     class Pile
       P = ::Lota::Physics
 
@@ -57,6 +59,37 @@ module DotPopper
           kx, ky = yield(@radius)
           body.linear_velocity = [vx + kx, vy + ky]
         end
+      end
+
+      # The radius of the pile's dots, or nil with no pile.
+      def radius = (@radius if @world)
+
+      # The topmost ball at +x+, +y+, as its dot's id and its middle, or
+      # nil.
+      def ball_at(x, y)
+        dot = stack&.top_at(x, y) or return
+        [dot.id, [dot.x, dot.y]]
+      end
+
+      # The middle of the ball for dot +id+, or nil.
+      def center(id) = @balls&.[](id)&.position
+
+      # Sets the ball for dot +id+ going at +velocity+, [x, y] in graphics
+      # units a second, under a lid. A held ball is a bullet, so Box2D
+      # checks every step that it has not passed through a wall or a dot.
+      def steer(id, velocity)
+        body = @balls&.[](id) or return
+        close_lid
+        body.bullet = true
+        body.linear_velocity = velocity
+      end
+
+      # Lets the ball for dot +id+ go at +velocity+, or at the speed it has
+      # with nil.
+      def let_go(id, velocity)
+        body = @balls&.[](id) or return
+        body.bullet = false
+        body.linear_velocity = velocity if velocity
       end
 
       # The round's stack, every dot moved to its ball; nil with no pile.

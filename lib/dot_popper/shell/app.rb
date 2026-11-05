@@ -48,6 +48,9 @@ module DotPopper
         @gamepads = Gamepads.new
         @tilting = tilting(os)
         @game.subscribe(@tilting)
+        @dragging = Dragging.new(pile: @pile, show: @show, look: flag?("DOT_POPPER_CALM") ? Look::CALM_GRAB : Look::GRAB)
+        @game.subscribe(@dragging)
+        @fake_drag = Presentation::FakeDrag.parse(@env["DOT_POPPER_FAKE_DRAG"])
         @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
         @sparks = Sparks.new(Look)
         @bloom = Bloom.new(@pen, Look::BLOOM)
@@ -75,6 +78,8 @@ module DotPopper
         @game.update(seconds)
         @show.update(seconds)
         @tilting.update(seconds)
+        fake_drag
+        @dragging.update(seconds)
         @pile.update(seconds)
         @sparks.update(seconds, @show.effects)
         development(seconds)
@@ -84,16 +89,39 @@ module DotPopper
 
       def mouse_pressed(x, y, button, istouch)
         @cursor = @cursor.hide(x, y)
-        tap = @input.mouse_pressed(x, y, button, istouch)
-        tap(tap.x, tap.y) if tap
+        press(:mouse, @input.mouse_pressed(x, y, button, istouch))
       end
 
-      def mouse_moved(x, y) = @cursor = @cursor.hide(x, y)
+      def mouse_moved(x, y, istouch)
+        @cursor = @cursor.hide(x, y)
+        point = @input.mouse_moved(x, y, istouch)
+        @dragging.move(:mouse, point.x, point.y) if point
+      end
+
+      def mouse_released(x, y, button, istouch)
+        point = @input.mouse_released(x, y, button, istouch)
+        @dragging.release(:mouse, point.x, point.y) if point
+      end
 
       def touch_pressed(id, x, y, devicetype, mouse)
         @cursor = @cursor.hide
-        tap = @input.touch_pressed(id, x, y, devicetype, mouse)
-        tap(tap.x, tap.y) if tap
+        press(id, @input.touch_pressed(id, x, y, devicetype, mouse))
+      end
+
+      def touch_moved(id, x, y, devicetype, mouse)
+        point = @input.touch_moved(id, x, y, devicetype, mouse)
+        @dragging.move(id, point.x, point.y) if point
+      end
+
+      def touch_released(id, x, y, devicetype, mouse)
+        point = @input.touch_released(id, x, y, devicetype, mouse)
+        @dragging.release(id, point.x, point.y) if point
+      end
+
+      # The window lost focus or got it back. A finger or button let go
+      # meanwhile is never heard, so the pile's dots are let go now.
+      def focus(focused)
+        @dragging.drop unless focused
       end
 
       # A gamepad button went down (Lota 0.1.3 and newer). Any button shows
@@ -172,6 +200,32 @@ module DotPopper
 
       def tap(x, y) = @show.tap(x, y)
 
+      # A mouse button or finger went down, as +tap+ (or nil for none). It
+      # counts at once, unless the Show waits for its release, on Game
+      # Over, where it may become a drag.
+      def press(key, tap)
+        return unless tap
+        return tap(tap.x, tap.y) unless @show.waits_for_release?(tap.x, tap.y)
+
+        @dragging.press(key, tap.x, tap.y)
+      end
+
+      # DOT_POPPER_FAKE_DRAG's drag, a step each frame once Game Over has
+      # been shown long enough.
+      def fake_drag
+        return unless @fake_drag && @show.finished?
+
+        width, height = ::Lota::Graphics.dimensions
+        @fake_drag.step(@show.finale.at, @show.now, width, height) do |action, x, y|
+          x, y = nearest_ball(x, y) if action == :press
+          unless action == :move
+            puts "Dot Popper: the fake drag #{action == :press ? "takes" : "throws"} a dot at #{x.round}, #{y.round}, " \
+                 "#{@elapsed.round(1)} seconds in"
+          end
+          @dragging.public_send(action, :fake, x, y)
+        end
+      end
+
       def gamepad_tap
         tap = @input.gamepad_pressed(@cursor)
         tap(tap.x, tap.y)
@@ -224,7 +278,8 @@ module DotPopper
 
       # Playing with the game-over pile: by the accelerometer, or
       # DOT_POPPER_FAKE_TILT's steady reading in its place, and by any
-      # gamepad's right stick.
+      # gamepad's right stick. Every device it runs on has a pointer to
+      # drag the dots with, a mouse or a touchscreen, for the hint.
       def tilting(os)
         fake = Presentation::Reading.parse(@env["DOT_POPPER_FAKE_TILT"])
         width, height = ::Lota::Graphics.dimensions
@@ -232,7 +287,14 @@ module DotPopper
                     accelerometer: fake ? FakeAccelerometer.new(steady: fake) : Accelerometer.new,
                     look: flag?("DOT_POPPER_CALM") ? Look::CALM_TILT : Look::TILT,
                     hint: Presentation::TiltHint.new(SaveFile.new(name: "tilt_hint.txt"), Look::TILT),
-                    device: Presentation::TiltHint.device(os, width, height), turns: @touch)
+                    device: Presentation::TiltHint.device(os, width, height), turns: @touch, pointer: true)
+      end
+
+      # The middle of the pile's ball nearest +x+, +y+, or that point with
+      # no pile.
+      def nearest_ball(x, y)
+        dot = @pile.stack&.dots&.min_by { Math.hypot(it.x - x, it.y - y) }
+        dot ? [dot.x, dot.y] : [x, y]
       end
 
       def flag?(name) = @env[name] == "1"

@@ -223,8 +223,19 @@ module DotPopper
                           most_kick: 14.0, shakes: true, fling: Throw.new(spread: 1.0, least: 0.5), dead_zone: 0.2,
                           hint_rounds: 3, hint_at: 0.465, hint_alpha: 0.7,
                           tilt_hint: "Tilt your %s to roll the dots.",
-                          stick_hint: "Push the right stick to roll the dots.")
+                          stick_hint: "Push the right stick to roll the dots.",
+                          drag_hint: "Drag the dots to play with them.",
+                          drag_tilt_hint: "Drag the dots, or tilt your %s to roll them.")
       CALM_TILT = TILT.with(smoothing: 0.8, shakes: false)
+
+      # Dragging the pile (Presentation::PileGrabs): a press on a dot that
+      # wanders a quarter of a radius, about a finger's wobble, or stays
+      # down for 0.15 s holds it; a quicker, stiller press is a click. A
+      # held dot catches up with the pointer in a few frames, and is
+      # thrown at the pointer's speed over its last tenth of a second,
+      # which a calm pile caps low, so a flick only nudges it.
+      GRAB = GrabLook.new(slop: 0.25, hold: 0.15, follow: 0.05, fastest: 60.0, fling: 40.0, window: 0.1)
+      CALM_GRAB = GRAB.with(follow: 0.12, fastest: 20.0, fling: 6.0)
 
       # Sound: the pop climbs a little with the score, up to a cap. A pop
       # or a wrong tap is heard where it is across the screen, leaning at

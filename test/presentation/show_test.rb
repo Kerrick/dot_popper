@@ -93,6 +93,18 @@ class ShowTest < Minitest::Test
     assert_nil @clipboard.text
   end
 
+  # Game Over's presses wait for their release, since each may become a
+  # drag of the pile; a round's and the buttons' never do.
+  def test_only_game_over_waits_for_a_press_to_be_let_go
+    refute @show.waits_for_release?(10, 10)
+    @show.tap(10, 10)
+    refute @show.waits_for_release?(10, 10)
+    @game.update(20)
+
+    assert @show.waits_for_release?(10, 10)
+    refute @show.waits_for_release?(*middle(@show.share_reach))
+  end
+
   def test_the_share_buttons_place_on_the_title_is_an_ordinary_tap
     @show.tap(*middle(@show.share_reach))
 

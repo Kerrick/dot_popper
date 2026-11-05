@@ -19,7 +19,8 @@ module DotPopper
       # The light line Game Over shows, saying how to play, or nil.
       attr_reader :hint
 
-      def initialize(pile:, gamepads:, accelerometer:, look:, hint:, device:, turns:, random: Random.new)
+      def initialize(pile:, gamepads:, accelerometer:, look:, hint:, device:, turns:, pointer: false,
+                     random: Random.new)
         @pile = pile
         @gamepads = gamepads
         @accelerometer = accelerometer
@@ -27,6 +28,7 @@ module DotPopper
         @hints = hint
         @device = device
         @turns = turns
+        @pointer = pointer
         @random = random
         @tilt = @hint = nil
       end
@@ -58,7 +60,8 @@ module DotPopper
         @accelerometer.start if @accelerometer.present?
         sources = [(@accelerometer.source if @accelerometer.present?), (STICK if @gamepads.any?)].compact
         puts "Dot Popper: tilt from #{sources.empty? ? "none" : sources.join(" and ")}"
-        @hint = @hints.offer(gamepad: @gamepads.any?, accelerometer: @accelerometer.present?, device: @device)
+        @hint = @hints.offer(gamepad: @gamepads.any?, accelerometer: @accelerometer.present?, device: @device,
+                               pointer: @pointer)
       end
 
       def end_pile

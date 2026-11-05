@@ -16,11 +16,13 @@ module DotPopper
     # +cooldown+ seconds, each ball as +fling+ (a Throw) says. A calm
     # pile (+shakes+ false) never throws a ball. A stick inside +dead_zone+ is at rest. The hint shows on the
     # first +hint_rounds+ Game Overs, +hint_at+ of the safe area's height
-    # below its middle, at +hint_alpha+ of the prompt's: +tilt_hint+ with
-    # an accelerometer, %s naming the device, or +stick_hint+ with a
-    # gamepad.
+    # below its middle, at +hint_alpha+ of the prompt's: +stick_hint+ with
+    # a gamepad, +drag_tilt_hint+ with a pointer and an accelerometer,
+    # +drag_hint+ with a pointer alone, or +tilt_hint+ with an
+    # accelerometer alone, %s naming the device.
     class TiltLook < Data.define(:smoothing, :wake, :shake, :settle, :cooldown, :kick, :most_kick, :shakes,
-                                 :fling, :dead_zone, :hint_rounds, :hint_at, :hint_alpha, :tilt_hint, :stick_hint)
+                                 :fling, :dead_zone, :hint_rounds, :hint_at, :hint_alpha, :tilt_hint, :stick_hint,
+                                 :drag_hint, :drag_tilt_hint)
       # The speed, in radii a second, a jolt of +jolt+ g throws a ball.
       def kick_for(jolt) = ((jolt - shake) * kick).clamp(0.0, most_kick)
     end
@@ -214,8 +216,10 @@ module DotPopper
     end
 
     # The light line on Game Over that says the pile can be played with,
-    # on its first few showings ever: how to tilt, with an accelerometer,
-    # or how to push, with a gamepad. It remembers how many times it has
+    # on its first few showings ever, one way for the device in hand: how
+    # to push, with a gamepad, since a player holding one is not touching
+    # the screen; how to drag and tilt, on a tablet or phone; how to drag,
+    # with a mouse or a touchscreen alone; or how to tilt. It remembers how many times it has
     # shown through a store that answers +read+ and +write(text)+, as the
     # Tutor's does.
     class TiltHint
@@ -229,11 +233,14 @@ module DotPopper
 
       # The line for a Game Over with these ways to tilt, counting it as
       # shown, or nil once it has shown enough, or with no way to tilt.
-      # +device+ names the thing to tilt: "iPad", say.
-      def offer(gamepad:, accelerometer:, device:)
+      # +device+ names the thing to tilt: "iPad", say. +pointer+ says
+      # whether a mouse or a finger can drag the dots.
+      def offer(gamepad:, accelerometer:, device:, pointer: false)
         return if @shown >= @look.hint_rounds
 
         line = if gamepad then @look.stick_hint
+               elsif pointer && accelerometer then format(@look.drag_tilt_hint, device)
+               elsif pointer then @look.drag_hint
                elsif accelerometer then format(@look.tilt_hint, device)
                end
         return unless line

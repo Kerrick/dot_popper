@@ -101,6 +101,12 @@ module DotPopper
         end
       end
 
+      # Whether a press at +x+, +y+ waits to be let go before it counts: on
+      # Game Over, anywhere but "Copy my result", since it may become a
+      # drag of the pile (PileGrabs). Everywhere else a press counts the
+      # moment it goes down.
+      def waits_for_release?(x, y) = finished? && !share_reach.contains?(x, y)
+
       # A gamepad's Start: on the title it starts the usual round, and
       # after one it continues, as a tap on empty space would, grace and
       # all; where it presses does not matter on either screen. In a round
