@@ -11,9 +11,16 @@
 # taking Fitts's law time to get there. While the fresh dot is covered it
 # waits, and with a small chance per attempt it taps anyway and hits a
 # popped dot on top. Simulated at 30 updates a second.
+#
+# Each device plays in its own Ractor, in parallel, and then again one
+# after another, to show the two give the same rounds and how much
+# sooner the Ractors finish.
 
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "dot_popper"
+require "etc"
+
+Warning[:experimental] = false # Ractors still warn that their API may change.
 
 module Simulation
   STEP = 1.0 / 30
@@ -95,11 +102,41 @@ module Simulation
     end
   end
 
+  # One device's rounds, from its own seeded Random. The same seed gives
+  # the same rounds whether they run here or in a Ractor.
+  def self.play(device, rounds)
+    random = Random.new(2026)
+    Array.new(rounds) { Player.new(device, random).play }
+  end
+
+  # Every device in its own Ractor. A Ractor shares nothing mutable, so
+  # each makes its own Random, Round, and Player; what it reads from
+  # outside (DEVICES, the rule numbers) is deeply frozen, and what it
+  # returns is copied back.
+  def self.play_in_parallel(rounds)
+    DEVICES.map { |device| Ractor.new(device, rounds) { |each, count| Simulation.play(each, count) } }.map(&:value)
+  end
+
+  def self.play_serially(rounds) = DEVICES.map { play(it, rounds) }
+
   def self.run(rounds)
+    serial, serial_seconds = timed { play_serially(rounds) }
+    parallel, parallel_seconds = timed { play_in_parallel(rounds) }
+    abort "The Ractors' rounds differ from the serial ones." unless parallel == serial
+
+    report(rounds, parallel)
+    puts format("\n%d devices: %.2f s one after another, %.2f s in Ractors, %.1fx as fast (%d cores)",
+                DEVICES.size, serial_seconds, parallel_seconds, serial_seconds / parallel_seconds, Etc.nprocessors)
+  end
+
+  def self.timed
+    started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    [yield, Process.clock_gettime(Process::CLOCK_MONOTONIC) - started]
+  end
+
+  def self.report(rounds, all_results)
     puts format("%-26s %6s %6s %6s %6s %7s %6s", "device", "area", "score", "p90", "secs", "endless", "pen")
-    DEVICES.each do |device|
-      random = Random.new(2026)
-      results = Array.new(rounds) { Player.new(device, random).play }
+    DEVICES.zip(all_results).each do |device, results|
       scores = results.map { it[:score] }.sort
       puts format("%-26s %6.0f %6.1f %6d %6.1f %6.0f%% %6.1f",
                   device.name, device.width_r * device.height_r, scores.sum.fdiv(rounds), scores[(rounds * 0.9).floor],

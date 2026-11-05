@@ -8,6 +8,8 @@ module DotPopper
 
     def self.new: (radius: Integer, reason: String) -> instance
 
+    def initialize: (radius: Integer, reason: String) -> void
+
     def self.for: (String os) -> DotSize
 
     def self.touch?: (String os) -> bool

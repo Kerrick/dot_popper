@@ -16,6 +16,10 @@ module DotPopper
   class DotSize < Data.define(:radius, :reason)
     TOUCH_SYSTEMS = %w[iOS Android].freeze
 
+    # The reason is frozen, as every part of a value is, so a DotSize can
+    # be shared between Ractors.
+    def initialize(radius:, reason:) = super(radius:, reason: -reason)
+
     # +os+ is what Lota::System.os answers, such as "OS X", "Windows",
     # "Linux", "iOS", or "Android".
     def self.for(os)

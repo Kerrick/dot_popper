@@ -153,3 +153,16 @@ the player understanding what just happened to them.
   instead of failing on the next event. RBS's core signatures leave out
   `Data#initialize`, so `sig/core/data.rbs` declares it, which lets a
   value's own `initialize` call `super` with keywords.
+- **`script/simulate.rb` plays each device in its own Ractor.** The rules'
+  values (fields, dots, stacks, clocks, and the tap events) are deeply
+  frozen, so a Ractor can read the device list and the rule numbers without
+  a copy; each Ractor makes its own `Random`, seeded as the serial run was,
+  so its rounds are the same ones, and the script checks that they are.
+  `DotSize` was the one value that was not shareable, because its reason
+  was a string built at run time; it is now frozen, and a test keeps every
+  value shareable. On the night it was written, with the Mac's ten cores
+  mostly busy with other work, 60 rounds per device took 154 s one after
+  another and 126 s in Ractors (1.2×). The ceiling is low for two reasons:
+  the 6K device's rounds alone are nearly a third of the simulated time, and every step of
+  a round allocates new values, and Ruby 4.0's garbage collector still
+  stops every Ractor to collect.
