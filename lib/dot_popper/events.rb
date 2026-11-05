@@ -8,17 +8,28 @@ module DotPopper
   module Events
     # A fresh dot was tapped and popped; +spawned+ is the dot that took
     # its place underneath.
-    Popped = Data.define(:dot, :x, :y, :points, :seconds, :spawned)
+    class Popped < Data.define(:dot, :x, :y, :points, :seconds, :spawned); end
 
     # A popped dot was tapped. +points+ is what the score actually lost,
     # which is less than the penalty when the score was near zero.
-    Penalized = Data.define(:dot, :x, :y, :points, :seconds)
+    class Penalized < Data.define(:dot, :x, :y, :points, :seconds)
+      # Whether the score floor kept part of the penalty from landing.
+      def softened? = points > -Rules::PENALTY_POINTS
+    end
 
     # A tap hit no dot.
-    Missed = Data.define(:x, :y)
+    class Missed < Data.define(:x, :y); end
 
-    RoundStarted = Data.define(:round)
-    RoundEnded = Data.define(:round, :best, :new_best)
-    TitleShown = Data.define(:best)
+    # A round began.
+    class RoundStarted < Data.define(:round); end
+
+    # A round's clock reached zero; +best+ is the device's best score
+    # after this round, and +new_best+ whether this round set it.
+    class RoundEnded < Data.define(:round, :best, :new_best)
+      def score = round.score
+    end
+
+    # The title screen came up.
+    class TitleShown < Data.define(:best); end
   end
 end

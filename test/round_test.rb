@@ -55,6 +55,7 @@ class RoundTest < Minitest::Test
     assert_equal 0, round.score
     assert_equal(-1, first.points)
     assert_equal 0, second.points
+    assert first.softened?
     assert_in_delta 6.0, round.countdown.remaining, 1e-9, "time is still lost"
   end
 
