@@ -34,7 +34,7 @@ On a phone or tablet the game always fills the screen and never quits itself, so
 
 ### Playing with a controller
 
-The game has gamepad support written and tested, but it can't be used yet. It needs Lota 0.1.3, which hasn't been released; this version of Dot Popper uses Lota 0.1.2, which doesn't report controllers to the game at all. Once the game moves to Lota 0.1.3, a controller will work like this on a desktop:
+The game has gamepad support written and tested, but it can't be used yet. It needs Lota 0.1.3, which hasn't been released; this version of Dot Popper uses Lota 0.1.2, which doesn't report controllers to the game at all. Once the game moves to Lota 0.1.3, a controller will work like this:
 
 - The left stick or the d-pad moves a cursor around the screen.
 - **A** (cross on a PlayStation controller) or the right trigger presses wherever the cursor is, exactly as a click there would.
@@ -42,7 +42,7 @@ The game has gamepad support written and tested, but it can't be used yet. It ne
 - **Y** (triangle) plays the Daily from the title screen, and shares its result afterwards.
 - **Back** turns sound on or off.
 
-The cursor appears when you use the controller and hides when you move the mouse or touch the screen. Phones and tablets ignore controllers.
+The cursor appears when you use the controller and hides when you move the mouse or touch the screen. An iPad build, which runs on Lota's development engine rather than 0.1.2, should accept a controller paired with the iPad in the same way, but nobody has tried one yet, and the current iPad kit was built before this was turned on.
 
 ### Reduced motion
 

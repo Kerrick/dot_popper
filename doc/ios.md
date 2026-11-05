@@ -57,7 +57,7 @@ A finger on the screen reaches the game as a `touchpressed` call with the device
 
 The keyboard does less on iOS. **M** still turns sound on or off. **Escape** does nothing, because iOS apps are closed by the system, never by the app itself. **F11** and **Alt+Enter** do nothing either, since the app is always fullscreen.
 
-Game controllers are ignored on a phone or tablet: `Shell::Gamepads` takes none there. An earlier version asked Lota for the list of joysticks every frame, and on iOS, where SDL presents the accelerometer as a joystick, that crashed the game in the Simulator. As a further safeguard, the kit's host program turns off SDL's accelerometer joystick (`SDL_ACCELEROMETER_AS_JOYSTICK=0` in `Host/main.m`).
+A game controller paired with the iPad should play as it does on a computer, though nobody has tried one yet. SDL presents an iPad's accelerometer as a joystick too, but `Shell::Gamepads` keeps only joysticks that are gamepads, so the accelerometer is never one. An earlier version of the game asked Lota for the list of joysticks every frame, and on iOS that crashed the game in the Simulator; the game no longer asks, and Lota's development branch has fixed the cause. Dot Popper v0.5.1, the version in the current kit, still ignored controllers on a tablet, and the kit's host program also turns off SDL's accelerometer joystick (`SDL_ACCELEROMETER_AS_JOYSTICK=0` in `Host/main.m`), so a controller does nothing in that build.
 
 ### Sound
 
