@@ -5,10 +5,58 @@ require_relative "presentation_helper"
 class ShowTest < Minitest::Test
   include PresentationTest
 
+  DAY = Date.new(2026, 11, 5)
+
   def setup
     @sounds = FakeSounds.new
     @game = DotPopper::Game.new(field, random: Random.new(2))
-    @show = Show.new(game: @game, layout: layout, sounds: @sounds, radius: R, random: Random.new(3))
+    @clipboard = MemoryClipboard.new
+    @show = Show.new(game: @game, layout: layout, sounds: @sounds, radius: R, random: Random.new(3),
+                     clipboard: @clipboard, today: -> { DAY })
+  end
+
+  def test_the_daily_button_starts_todays_daily
+    x, y = middle(@show.daily_reach)
+    @show.tap(x, y)
+
+    assert @show.playing?
+    assert_equal DotPopper::Mode.daily(DAY), @game.state.mode
+  end
+
+  def test_after_a_daily_share_copies_the_result_and_does_not_continue
+    @show.tap(*middle(@show.daily_reach))
+    start_and_pop(started: true)
+    @game.update(20)
+    @show.update(0.1)
+    @show.tap(*middle(@show.share_reach))
+
+    assert @show.finished?
+    assert_equal "Dot Popper Daily · 2026-11-05 · 1 point\n🟡 1 pop · ⚫ 0 slips · ⏱ 11 s", @clipboard.text
+    assert @show.finale.copied?(@show.now)
+    assert_equal "Daily · Nov 5", @show.words.daily_label(@show.finale.date)
+  end
+
+  def test_after_a_daily_a_tap_elsewhere_continues_once_the_grace_is_over
+    @show.tap(*middle(@show.daily_reach))
+    @game.update(20)
+    @show.update(0.1)
+    @show.tap(10, 10)
+    assert @show.finished?, "the grace still holds"
+
+    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @show.tap(10, 10)
+    assert @show.title?
+    assert_nil @clipboard.text
+  end
+
+  def test_after_a_free_round_there_is_no_share_button
+    @show.tap(10, 10)
+    @game.update(20)
+    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @show.tap(*middle(@show.share_reach))
+
+    assert @show.title?
+    assert_nil @clipboard.text
   end
 
   def test_the_mute_button_takes_its_own_tap_on_the_title
@@ -157,6 +205,8 @@ class ShowTest < Minitest::Test
   end
 
   private
+
+  def middle(rect) = [rect.center_x, rect.center_y]
 
   def put!(id, x, y)
     round = @game.round

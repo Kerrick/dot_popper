@@ -12,6 +12,8 @@ Dot Popper is written in Ruby on [Lota](https://github.com/setdef/Lota), which r
 | --- | --- |
 | Pop a dot | Tap it, or click it with any mouse button. A press counts on the way down. |
 | Start, continue | Tap anywhere |
+| Play today's Daily | **Daily** on the title screen. Everyone gets the same dots that day; the game keeps your best for the day |
+| Share a Daily result | **Share** after a Daily copies a short, spoiler-free result to the clipboard |
 | Sound on or off | The speaker on the title screen, or **M** |
 | Fullscreen | **F11**, or **Alt+Enter** (**Cmd+Enter** on a Mac) |
 | Quit | **Escape**, or close the window |
@@ -35,7 +37,7 @@ To play without Ruby, download a build instead. Every push to `trunk` builds a W
 
 | Variable | Effect |
 | --- | --- |
-| `DOT_POPPER_AUTOPLAY=1` | A bot plays: it mostly taps fresh dots and sometimes a popped one, so penalties show |
+| `DOT_POPPER_AUTOPLAY=1` | A bot plays: it mostly taps fresh dots and sometimes, impatiently, the popped dot over one, so penalties show. Every other round it plays the Daily and shares the result |
 | `DOT_POPPER_SHOTS=0.5,3,6.5` | Saves screenshots at these game-time seconds as `shot-N.png` in the save folder, and prints each path |
 | `DOT_POPPER_QUIT_AFTER=20` | Quits after this many seconds of game time |
 | `DOT_POPPER_SEED=42` | Makes the dots' randomness repeatable |

@@ -22,12 +22,13 @@ module DotPopper
         puts "Dot Popper: a dot's radius is #{@dot_size.reason}"
         open_window unless DotSize.touch?(os)
         random = seed ? Random.new(seed) : Random.new
-        @game = Game.new(field, best: BestScore.new(SaveFile.new(name: "best_score.txt")), random:)
+        @game = Game.new(field, best: BestScore.new(SaveFile.new(name: "best_score.txt")), random:,
+                         daily_best: DailyBest.new(SaveFile.new(name: "daily_best.txt")))
         @speaker = Speaker.new(Look::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Look::SOUND.volume)
         @show = Presentation::Show.new(game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"),
                                        tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt")),
-                                       haptics: Haptics.for(os))
+                                       haptics: Haptics.for(os), clipboard: Clipboard.new)
         @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG)))
         puts "Dot Popper: each round is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"
         @pile = Pile.new(flag?("DOT_POPPER_CALM") ? Look::CALM_PILE : Look::PILE)
@@ -46,7 +47,7 @@ module DotPopper
       def update(seconds)
         seconds = seconds.clamp(0.0, Rules::LONGEST_FRAME)
         if @autopilot
-          x, y = @autopilot.update(seconds, @game)
+          x, y = @autopilot.update(seconds, @game, @show)
           tap(x, y) if x
         end
         @game.update(seconds)

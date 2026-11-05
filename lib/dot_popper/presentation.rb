@@ -14,7 +14,7 @@ module DotPopper
 end
 
 %w[
-  reveal tutor
+  reveal tutor clipboard
   color ease tween pixels palette words layout particles rings floaters shake edge_flash effects
   dot_animations hud synth stereo haptics input_router attract marquee finale pile bloom autopilot shot_schedule look show
 ].each { require_relative "presentation/#{it}" }

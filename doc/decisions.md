@@ -159,6 +159,22 @@ the player understanding what just happened to them.
   dots come next. `rounds.csv` gets one line per finished round (README lists
   the columns); it is rewritten whole on each append, as Lota's save folder
   offers no append, which is fine for the few hundred lines a playtest makes.
+- **A Daily: one shared round a day.** The title keeps "Tap anywhere to play"
+  as the default and adds a small **Daily · Nov 5** pill in the bottom left,
+  across from the mute button, whose hit area is at least 2 R each way and
+  inside the safe area. Its round's seed is FNV-1a of the local date's
+  YYYYMMDD digits (`Mode.seed_for`; String#hash differs between processes),
+  and dots draw randoms only when they spawn, so the same day and the same
+  taps give everyone the same dots; a test pins today's seed so it can never
+  drift. The local date is used, not UTC, so the Daily turns over at the
+  player's midnight, as Wordle's does. `DailyBest` keeps only today's best
+  (`daily_best.txt`); a daily round also counts toward the all-time best,
+  since it is the same game. After a daily round the heading names the day,
+  the best line is the day's, and **Share** copies two lines, the date and
+  score, then pops, slips and the round's length, with nothing that gives the
+  day's dots away. A press on Share only shares; anywhere else continues as
+  before, after the same grace. The share line includes the score, which the
+  brief's example left out, because the score is the number players compare.
 
 ## Code
 

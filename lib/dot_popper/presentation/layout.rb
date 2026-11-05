@@ -13,6 +13,14 @@ module DotPopper
 
       # The rectangle grown by +amount+ on every side, or shrunk when negative.
       def inset(amount) = Rect.new(x: x + amount, y: y + amount, width: width - (2 * amount), height: height - (2 * amount))
+
+      # The rectangle grown about its centre to at least +least+ across and
+      # down, as a button's hit area around its drawn shape.
+      def reach(least)
+        wide = [width, least].max
+        tall = [height, least].max
+        Rect.new(x: center_x - (wide / 2.0), y: center_y - (tall / 2.0), width: wide, height: tall)
+      end
     end
 
     # The window's first size on a desktop: a reference play area measured
@@ -50,9 +58,35 @@ module DotPopper
       # The mute toggle, in the safe area's bottom right corner. It is
       # never smaller than a fingertip (44 units).
       def mute_button
-        size = [look.button * ui, 44.0].max
+        size = button_size
         Rect.new(x: safe.right - margin - size, y: safe.bottom - margin - size, width: size, height: size)
       end
+
+      # The title's Daily button, in the safe area's bottom left corner,
+      # placed so its hit area, at least +least+ across and down, is
+      # inside the safe area too.
+      def daily_button(least)
+        height = button_size
+        width = height * 2.9
+        middle = safe.bottom - margin - ([height, least].max / 2.0)
+        left = safe.x + margin + (([width, least].max - width) / 2.0)
+        Rect.new(x: left, y: middle - (height / 2.0), width:, height:)
+      end
+
+      # Game Over's Share button, under the round's summary.
+      def share_button
+        height = button_size
+        width = height * 3.2
+        Rect.new(x: center_x - (width / 2.0), y: center_y + (safe.height * 0.3) - (height / 2.0), width:, height:)
+      end
+
+      # Where Game Over's prompt goes: lower when a Share button is up.
+      def continue_y(share) = center_y + (safe.height * (share ? 0.41 : 0.28))
+
+      private
+
+      # Never smaller than a fingertip (44 units).
+      def button_size = [look.button * ui, 44.0].max
     end
   end
 end

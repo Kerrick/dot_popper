@@ -40,4 +40,20 @@ class LayoutTest < Minitest::Test
     refute rect.contains?(41, 30)
     assert_equal 12, rect.inset(2).x
   end
+
+  def test_the_daily_button_reaches_a_dot_wide_inside_the_safe_area_on_any_screen
+    [[400, 850], [850, 400], [1200, 800]].each do |width, height|
+      screen = layout(width, height)
+      reach = screen.daily_button(2 * R).reach(2 * R)
+
+      assert_operator reach.height, :>=, 2 * R
+      assert_operator reach.width, :>=, 2 * R
+      assert reach.x >= screen.safe.x && reach.bottom <= screen.safe.bottom, [width, height].inspect
+      assert_operator reach.right, :<, screen.mute_button.x, "clear of the mute button"
+    end
+  end
+
+  def test_the_prompt_makes_room_for_share
+    assert_operator layout.continue_y(true), :>, layout.share_button.reach(2 * R).bottom
+  end
 end

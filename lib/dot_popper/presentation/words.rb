@@ -4,7 +4,9 @@ module DotPopper
   module Presentation
     # Every word the game shows, and the way it writes numbers.
     # +covered+ is the first-run hint, a sentence a line.
-    class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time, :covered)
+    class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time, :covered,
+                              :daily, :share, :copied, :new_daily_best, :daily_best)
+      MONTHS = %w[Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec].freeze
       MINUS = "−" # a true minus sign, as wide as the plus
 
       # +1, −2, or 0 for a number of points.
@@ -39,6 +41,19 @@ module DotPopper
         parts = [Words.count(stats.pops, "pop"), Words.count(stats.slips, "slip")]
         parts << "longest wait #{format("%.1f", stats.longest_wait)} s" if stats.pops.positive?
         parts.join(" · ")
+      end
+
+      # "Daily · Nov 5".
+      def daily_label(date) = "#{daily} · #{MONTHS[date.month - 1]} #{date.day}"
+
+      # "Today's best 27".
+      def daily_best_line(best) = "#{daily_best} #{best}"
+
+      # What Share copies: the day, the score, and how it was made, with
+      # nothing that gives the day's dots away.
+      def share_text(date, score, stats)
+        "Dot Popper Daily · #{date.iso8601} · #{Words.count(score, "point")}\n" \
+          "🟡 #{Words.count(stats.pops, "pop")} · ⚫ #{Words.count(stats.slips, "slip")} · ⏱ #{stats.duration.round} s"
       end
 
       # "1 pop", "2 pops".

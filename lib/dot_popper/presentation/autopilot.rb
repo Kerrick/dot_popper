@@ -5,8 +5,9 @@ module DotPopper
     # A player for development runs (DOT_POPPER_AUTOPLAY): it goes from
     # the title to a round, taps fresh dots where they show, sometimes taps
     # a popped one by mistake, slows as its score grows so the round ends,
-    # and taps through game over back to the title. It sees only what a
-    # player sees: the dots and the screen.
+    # and taps through game over back to the title. Given the Show, it
+    # plays every other round as the Daily, and shares each daily result.
+    # It sees only what a player sees: the dots and the screen.
     class Autopilot
       # Where it looks for an uncovered part of the fresh dot: its centre,
       # then points around it, in radii.
@@ -18,15 +19,17 @@ module DotPopper
         @state = nil
         @waited = 0.0
         @cooldown = 0.0
+        @titles = 0
+        @shared = false
       end
 
       # Where to press this frame, as [x, y], or nil.
-      def update(seconds, game)
+      def update(seconds, game, show = nil)
         notice(game.state)
         @waited += seconds
         case game.state
-        when Game::Title then press_once(@look.title_wait) { center(game.field) }
-        when Game::GameOver then press_once(@look.finale_wait) { center(game.field) } if game.state.ready?
+        when Game::Title then press_once(@look.title_wait) { start(game, show) }
+        when Game::GameOver then finish(game, show)
         when Game::Playing then play(seconds, game.round)
         end
       end
@@ -36,6 +39,8 @@ module DotPopper
       def notice(state)
         return if state.class == @state
 
+        @titles += 1 if state.is_a?(Game::Title)
+        @shared = false
         @state = state.class
         @waited = 0.0
         @cooldown = 0.4
@@ -49,6 +54,21 @@ module DotPopper
       end
 
       def center(field) = [field.width / 2.0, field.height * 0.62]
+
+      def start(game, show)
+        show && @titles.even? ? middle(show.daily_reach) : center(game.field)
+      end
+
+      # Shares a daily result first, then goes on once the game will hear.
+      def finish(game, show)
+        if show&.finale&.daily? && !@shared && @waited >= @look.finale_wait / 2
+          @shared = true
+          return middle(show.share_reach)
+        end
+        press_once(@look.finale_wait) { center(game.field) } if game.state.ready?
+      end
+
+      def middle(rect) = [rect.center_x, rect.center_y]
 
       def play(seconds, round)
         @cooldown -= seconds

@@ -15,7 +15,8 @@ module DotPopper
       attr_reader :game, :effects, :animations, :hud, :hint, :attract, :layout, :marquee, :finale, :sounds, :now, :look
 
       def initialize(game:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false,
-                     tutor: Tutor.new(BestScore::Memory.new), haptics: NoHaptics.new)
+                     tutor: Tutor.new(BestScore::Memory.new), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
+                     today: -> { Date.today })
         @game = game
         @layout = layout
         @sounds = sounds
@@ -31,6 +32,8 @@ module DotPopper
         @marquee = Marquee.new(look: look::TITLE, best: game.best.value, at: @now)
         @finale = nil
         @tutor = tutor
+        @clipboard = clipboard
+        @today = today
         @hint = nil
         @penalized_at = -Float::INFINITY
         @recorder = RoundStats::Recorder.new
@@ -48,15 +51,23 @@ module DotPopper
       def playing? = game.state.is_a?(Game::Playing)
       def finished? = game.state.is_a?(Game::GameOver)
 
-      # A tap anywhere. On the title, the mute button takes its own taps;
-      # every other tap goes to the game at once.
+      # Today's local date: whose Daily the title offers.
+      def today = @today.call
+
+      # A tap anywhere. On the title, the mute and Daily buttons take
+      # their own taps, as Share does after a daily round; every other
+      # tap goes to the game at once.
       def tap(x, y)
-        if title? && layout.mute_button.contains?(x, y)
-          sounds.toggle_mute
-        else
-          game.press(x, y)
+        if title? && layout.mute_button.contains?(x, y) then sounds.toggle_mute
+        elsif title? && daily_reach.contains?(x, y) then game.choose(Mode.daily(today))
+        elsif finished? && finale&.daily? && share_reach.contains?(x, y) then share
+        else game.press(x, y)
         end
       end
+
+      # Where a tap reaches each button: never less than a dot's width.
+      def daily_reach = layout.daily_button(2 * @radius).reach(2 * @radius)
+      def share_reach = layout.share_button.reach(2 * @radius)
 
       def resize(layout, field)
         @layout = layout
@@ -127,7 +138,8 @@ module DotPopper
 
       def round_ended(event)
         @finale = Finale.new(look: look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now,
-                             stats: stats)
+                             stats:, mode: event.mode, daily_best: event.daily_best,
+                             new_daily_best: event.new_daily_best)
         sounds.play(event.new_best ? :new_best : :game_over)
       end
 
@@ -135,6 +147,12 @@ module DotPopper
         effects.clear
         @finale = nil
         @marquee = Marquee.new(look: look::TITLE, best: event.best, at: now)
+      end
+
+      def share
+        @clipboard.copy(words.share_text(finale.date, finale.score, finale.stats))
+        @finale = finale.copy(now)
+        sounds.play(:tick)
       end
 
       # One floater to the left and one to the right of the tap; with only
