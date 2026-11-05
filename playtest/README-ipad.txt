@@ -12,8 +12,8 @@ of this playtest.
 What is in the kit
 ------------------
 
-- DotPopper-ios/: the Xcode project that `fledge build ios` (Fledge 0.5.0)
-  generated, with Lota 0.1.3's iOS engine and SDL3 compiled into
+- DotPopper-ios/: the Xcode project that `fledge build ios` (the Fledge version
+  BUILD-INFO.txt names) generated, with Lota 0.1.3's iOS engine and SDL3 compiled into
   FledgeExtensions.xcframework, the Ruby runtime in FledgeRuby.xcframework,
   and the game in fledge/app. It opens in Xcode as it is.
 - ipad-results.txt: the questions. Fill it in as you play and send it
@@ -68,8 +68,8 @@ iPad (Apple, "Choosing a membership").
 
 Product > Scheme > Edit Scheme, then Run > Arguments. Under Environment
 Variables there should be no OS_ACTIVITY_DT_MODE, with any value. If Xcode
-added it, select it and press the minus button. (Fledge 0.5.0's runtime
-copes with it, but the game's log lines then reach only Xcode's console.)
+added it, select it and press the minus button. (Fledge 0.5.0 and later
+cope with it, but the game's log lines then reach only Xcode's console.)
 Leave DOT_POPPER_AUTOPLAY out too: it makes a bot play.
 
 5. Run
