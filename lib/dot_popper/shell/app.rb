@@ -30,8 +30,8 @@ module DotPopper
                                        random:, calm: flag?("DOT_POPPER_CALM"),
                                        tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt")),
                                        haptics: Haptics.for(os), clipboard: Clipboard.new,
-                                       lifetime: Lifetime.new(SaveFile.new(name: "lifetime.txt")))
-        @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG)))
+                                       lifetime: Lifetime.new(SaveFile.new(name: "lifetime.txt"), today:))
+        @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:))
         puts "Dot Popper: each round is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"
         @pile = Pile.new(flag?("DOT_POPPER_CALM") ? Look::CALM_PILE : Look::PILE)
         @game.subscribe(@pile)
@@ -185,6 +185,15 @@ module DotPopper
       def window_size
         width, height = @env.fetch("DOT_POPPER_WINDOW", "").split("x", 2).map { Integer(it, exception: false) }
         [[width, SMALLEST_WINDOW[0]].max, [height, SMALLEST_WINDOW[1]].max] if width && height
+      end
+
+      # The player's local date, or DOT_POPPER_TODAY's, to try another
+      # day's goal or a streak.
+      def today
+        pretend = Date.iso8601(@env.fetch("DOT_POPPER_TODAY", ""))
+        -> { pretend }
+      rescue Date::Error
+        -> { Date.today }
       end
 
       def flag?(name) = @env[name] == "1"

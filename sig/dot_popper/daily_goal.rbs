@@ -1,0 +1,21 @@
+module DotPopper
+  class DailyGoal < ::Data
+    LIST: Array[DailyGoal]
+
+    QUICK_START_SECONDS: Integer
+
+    attr_reader kind: Symbol
+
+    attr_reader target: Integer
+
+    def self.new: (kind: Symbol, target: Integer) -> instance
+
+    def self.for: (Date date) -> DailyGoal
+
+    def self.fnv: (String text) -> Integer
+
+    def met?: (RoundStats stats) -> bool
+
+    def to_s: () -> String
+  end
+end

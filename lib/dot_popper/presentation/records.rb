@@ -9,11 +9,12 @@ module DotPopper
     class RecordSection < Data.define(:title, :rows); end
 
     # What the Records screen says, worked out from LifetimeStats and the
-    # best score: the player's bests, their totals, and the last few
-    # scores for the chart. With no round played yet, +empty+ is true and
-    # there is nothing to list.
-    class RecordsSheet < Data.define(:bests, :totals, :scores, :empty)
-      def self.build(stats, best:, words:)
+    # best score: the player's bests, their totals, the daily goal's
+    # streaks (+streak+ is the current one, as it stands today), and the
+    # last few scores for the chart. With no round played yet, +empty+ is
+    # true and there is nothing to list.
+    class RecordsSheet < Data.define(:bests, :totals, :goal, :scores, :empty)
+      def self.build(stats, best:, words:, streak: 0)
         labels = words.labels
         bests = RecordSection.new(title: labels[:bests], rows: [
           RecordRow.new(label: labels[:best_score], value: best.to_s),
@@ -29,7 +30,11 @@ module DotPopper
           RecordRow.new(label: labels[:seconds], value: Words.duration(stats.seconds)),
           RecordRow.new(label: labels[:days], value: stats.days.to_s)
         ])
-        new(bests:, totals:, scores: stats.recent, empty: stats.rounds.zero?)
+        goal = RecordSection.new(title: labels[:goal], rows: [
+          RecordRow.new(label: labels[:streak], value: Words.count(streak, "day")),
+          RecordRow.new(label: labels[:longest_streak], value: Words.count(stats.streak.longest, "day"))
+        ])
+        new(bests:, totals:, goal:, scores: stats.recent, empty: stats.rounds.zero?)
       end
     end
 
@@ -74,8 +79,9 @@ module DotPopper
 
     # The Records screen laid out in the safe area: the heading at the
     # top, the prompt to go back at the bottom, and between them the
-    # chart and the sections. A wide screen puts the bests on the left
-    # and the chart and totals on the right; a narrow one stacks them. Rows shrink, never below a readable size,
+    # chart and the sections. A wide screen puts the bests and the daily
+    # goal on the left and the chart and totals on the right; a narrow one
+    # stacks them. Rows shrink, never below a readable size,
     # to fit a short screen.
     class RecordsLayout < Data.define(:layout, :sheet, :look)
       SMALLEST_TEXT = 11
@@ -102,7 +108,7 @@ module DotPopper
 
       def columns
         chart = sheet.scores.empty? ? [] : [:chart]
-        wide? ? [[sheet.bests], chart + [sheet.totals]] : [chart + [sheet.bests, sheet.totals]]
+        wide? ? [[sheet.bests, sheet.goal], chart + [sheet.totals]] : [chart + [sheet.bests, sheet.totals, sheet.goal]]
       end
 
       def gap = layout.scaled(look.gap)

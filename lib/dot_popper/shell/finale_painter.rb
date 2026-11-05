@@ -4,8 +4,9 @@ module DotPopper
   module Shell
     # Game over, over the finished round: "Time!", the score counting up,
     # a new best or how far short of the best it fell, a quiet line of the
-    # round's facts, a lifetime record it set, "Copy my result", and, once
-    # a tap will be heard, the prompt to go on.
+    # round's facts, a lifetime record it set, "You met today's goal!" if
+    # it did, "Copy my result", and, once a tap will be heard, the prompt
+    # to go on.
     class FinalePainter < Data.define(:pen)
       def draw(show, layout)
         finale = show.finale or return
@@ -27,6 +28,7 @@ module DotPopper
         pen.text(words.summary(finale.stats), summary, layout.center_x, center + (height * 0.19), palette.soft,
                  shown * 0.8)
         record(finale, words, layout, center + (height * 0.235), now)
+        goal_met(finale, words, layout, now)
         copied = finale.copied?(now)
         PillButton.new(pen:).draw(layout.share_button, copied ? words.copied : words.share, alpha: shown,
                                   color: copied ? palette.gain : palette.cream)
@@ -43,8 +45,17 @@ module DotPopper
         return unless finale.record && finale.counted?(now)
 
         font = pen.fonts.semibold(layout.scaled(pen.look::TYPE.summary))
-        alpha = finale.look.prompt.at(now - finale.at - finale.look.tally.duration)
-        pen.text(words.record(finale.record), font, layout.center_x, y, pen.palette.gain, alpha)
+        pen.text(words.record(finale.record), font, layout.center_x, y, pen.palette.gain, finale.afterword(now))
+      end
+
+      # "You met today's goal!", with a check, between "Time's up!" and the
+      # score, once the score has counted up; the Show bursts twinkles
+      # there as it appears.
+      def goal_met(finale, words, layout, now)
+        return unless finale.goal_met && finale.counted?(now)
+
+        font = pen.fonts.bold(layout.scaled(pen.look::TYPE.best))
+        Check.new(pen:).labelled(words.goal_met, font, layout.center_x, layout.finale_goal_y, finale.afterword(now))
       end
 
       def best_line(finale, words, layout, y, now, alpha)

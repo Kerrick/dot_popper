@@ -59,6 +59,25 @@ class ShowTest < Minitest::Test
     assert_equal 2, @show.finale.record.value
   end
 
+  # 2026-11-01's goal is to pop 10 bright dots in the first 10 seconds.
+  def test_the_round_that_meets_todays_goal_celebrates_it_once_the_score_has_counted
+    lifetime = DotPopper::Lifetime.new(DotPopper::BestScore::Memory.new, today: -> { Date.new(2026, 11, 1) })
+    show = Show.new(game: @game, layout:, sounds: @sounds, radius: R, random: Random.new(3), lifetime:)
+    show.tap(10, 10)
+    10.times do
+      fresh = @game.round.dots.find(&:fresh?)
+      clear_around!(@game.round, fresh)
+      show.tap(fresh.x, fresh.y)
+    end
+    @game.update(30)
+
+    assert show.finale.goal_met
+    refute show.finale.goal_due?(show.now), "not before the score has counted"
+    show.update(Look::FINALE.tally.duration)
+    assert show.finale.goal_celebrated
+    assert lifetime.goal_done?
+  end
+
   def test_a_tap_elsewhere_on_game_over_continues_once_the_grace_is_over
     @show.tap(10, 10)
     @game.update(20)

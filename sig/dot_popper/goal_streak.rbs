@@ -1,0 +1,19 @@
+module DotPopper
+  class GoalStreak < ::Data
+    attr_reader current: Integer
+
+    attr_reader longest: Integer
+
+    attr_reader last_met: String?
+
+    def self.new: (?current: Integer, ?longest: Integer, ?last_met: String?) -> instance
+
+    def initialize: (?current: Integer, ?longest: Integer, ?last_met: String?) -> void
+
+    def meet: (Date day) -> GoalStreak
+
+    def done_on?: (Date day) -> bool
+
+    def current_on: (Date day) -> Integer
+  end
+end

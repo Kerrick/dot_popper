@@ -87,6 +87,35 @@ class WordsTest < Minitest::Test
     assert_equal "Your last round", Words.last_rounds(1)
   end
 
+  def test_every_goal_reads_as_a_whole_sentence
+    DotPopper::DailyGoal::LIST.each do |goal|
+      line = Look::WORDS.goal(goal)
+      assert_match(/\AToday's goal: [a-z].*[a-z]\.\z/, line)
+      assert_includes line, goal.target.to_s
+    end
+    assert_equal "Today's goal: pop 15 bright dots in a row without tapping a popped one.",
+                 Look::WORDS.goal(DotPopper::DailyGoal.new(kind: :clean_run, target: 15))
+    assert_equal "You've met the daily goal 3 days in a row.", Look::WORDS.streak(3)
+  end
+
+  def test_wrapping_breaks_between_words_to_fit
+    width = ->(text) { text.size }
+
+    assert_equal ["Today's goal: pop", "15 bright dots"], Words.wrap("Today's goal: pop 15 bright dots", 17, &width)
+    assert_equal ["short"], Words.wrap("short", 17, &width)
+    assert_equal %w[unbreakably long], Words.wrap("unbreakably long", 5, &width)
+  end
+
+  def test_balancing_evens_out_the_lines_so_no_word_is_left_alone
+    width = ->(text) { text.size }
+    text = "Today's goal: keep one round going for 40 seconds."
+
+    assert_equal "seconds.", Words.wrap(text, 42, &width).last
+    balanced = Words.balance(text, 42, &width)
+    assert_equal 2, balanced.size
+    assert_operator balanced.map(&:size).minmax.then { |least, most| most - least }, :<=, 8
+  end
+
   def test_how_far_short_of_the_best
     assert_equal "3 points short of your best of 27", Look::WORDS.short_of_best(24, 27)
     assert_equal "1 point short of your best of 27", Look::WORDS.short_of_best(26, 27)

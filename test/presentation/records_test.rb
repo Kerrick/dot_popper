@@ -7,10 +7,16 @@ class RecordsTest < Minitest::Test
 
   def stats
     DotPopper::LifetimeStats.new(rounds: 42, pops: 812, slips: 61, seconds: 1890.0, days: 5, longest_round: 47.6,
-                                 longest_run: 18, fastest_pop: 0.34, longest_wait: 6.2, recent: [3, 9, 27, 12])
+                                 longest_run: 18, fastest_pop: 0.34, longest_wait: 6.2, recent: [3, 9, 27, 12],
+                                 streak: DotPopper::GoalStreak.new(current: 3, longest: 7, last_met: "2026-11-04"))
   end
 
-  def sheet = RecordsSheet.build(stats, best: 27, words: Look::WORDS)
+  def sheet = RecordsSheet.build(stats, best: 27, words: Look::WORDS, streak: 3)
+
+  def test_the_sheet_shows_the_daily_goals_streaks
+    assert_equal [["Days in a row you've met it", "3 days"], ["Most days in a row", "7 days"]],
+                 sheet.goal.rows.map { [it.label, it.value] }
+  end
 
   def test_the_sheet_lists_the_bests_and_the_totals_in_plain_words
     rows = sheet.bests.rows.to_h { [it.label, it.value] }

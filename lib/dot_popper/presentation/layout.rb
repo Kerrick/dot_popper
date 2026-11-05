@@ -79,6 +79,10 @@ module DotPopper
         Rect.new(x: center_x - (width / 2.0), y: center_y + (safe.height * 0.3) - (height / 2.0), width:, height:)
       end
 
+      # Where Game Over's "You met today's goal!" goes: between "Time's up!"
+      # and the score.
+      def finale_goal_y = center_y - (safe.height * 0.185)
+
       # Where Game Over's prompt goes: under the share button.
       def continue_y = center_y + (safe.height * 0.41)
 

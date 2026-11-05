@@ -8,7 +8,8 @@ class PlaytestLogTest < Minitest::Test
   def setup
     @store = DotPopper::BestScore::Memory.new
     @game = DotPopper::Game.new(field, random: Random.new(9))
-    @game.subscribe(DotPopper::PlaytestLog.new(@store, clock: -> { Time.utc(2026, 11, 5, 9, 30) }))
+    @game.subscribe(DotPopper::PlaytestLog.new(@store, clock: -> { Time.utc(2026, 11, 5, 9, 30) },
+                                               today: -> { Date.new(2026, 11, 5) }))
   end
 
   def test_each_finished_round_appends_a_line_under_one_header
@@ -16,13 +17,14 @@ class PlaytestLogTest < Minitest::Test
     play_round(pops: 0)
 
     lines = @store.read.lines(chomp: true)
-    assert_equal "time,seed,score,duration,pops,slips,softened,mean_wait,longest_wait", lines.first
+    assert_equal "time,seed,score,duration,pops,slips,softened,mean_wait,longest_wait,goal,goal_met", lines.first
     assert_equal 3, lines.size
-    time, seed, score, duration, pops, slips, softened, mean_wait, longest_wait = lines[1].split(",")
+    time, seed, score, duration, pops, slips, softened, mean_wait, longest_wait, goal, met = lines[1].split(",")
     assert_equal "2026-11-05T09:30:00Z", time
     assert_match(/\A\d+\z/, seed)
     assert_equal %w[2 12.00 2 0 0], [score, duration, pops, slips, softened]
     assert_equal %w[0.50 1.00], [mean_wait, longest_wait]
+    assert_equal [DotPopper::DailyGoal.for(Date.new(2026, 11, 5)).to_s, "false"], [goal, met]
   end
 
   def test_a_round_still_in_play_is_not_logged

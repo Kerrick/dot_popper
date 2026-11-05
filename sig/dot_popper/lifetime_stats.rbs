@@ -2,10 +2,6 @@ module DotPopper
   class LifetimeStats < ::Data
     RECENT: Integer
 
-    COUNTS: Array[Symbol]
-
-    TIMES: Array[Symbol]
-
     DAY: Regexp
 
     attr_reader rounds: Integer
@@ -30,13 +26,15 @@ module DotPopper
 
     attr_reader recent: Array[Integer]
 
+    attr_reader streak: GoalStreak
+
     def self.new: (?rounds: Integer, ?pops: Integer, ?slips: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
                    ?longest_round: number, ?longest_run: Integer, ?fastest_pop: number?, ?longest_wait: number,
-                   ?recent: Array[Integer]) -> instance
+                   ?recent: Array[Integer], ?streak: GoalStreak) -> instance
 
     def initialize: (?rounds: Integer, ?pops: Integer, ?slips: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
                      ?longest_round: number, ?longest_run: Integer, ?fastest_pop: number?, ?longest_wait: number,
-                     ?recent: Array[Integer]) -> void
+                     ?recent: Array[Integer], ?streak: GoalStreak) -> void
 
     def self.parse: (String? text) -> LifetimeStats
 

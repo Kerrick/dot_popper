@@ -58,8 +58,9 @@ module DotPopper
       def left(text, font, x, y, color) = pen.text(text, font, x + (font.width(text) / 2.0), y, color)
       def right(text, font, x, y, color) = pen.text(text, font, x - (font.width(text) / 2.0), y, color)
 
-      # The last scores as bars on a faint baseline, the best of them
-      # brighter and labelled with its score. The chart's title, above it,
+      # The last scores as bars on a faint baseline, in a fresh dot's
+      # deeper orange, the best of them in its light cream and labelled
+      # with its score: lighter, so it stands out by more than its hue. The chart's title, above it,
       # is placed as a section's is.
       def chart(scores, placed, size)
         palette = pen.palette
@@ -69,7 +70,7 @@ module DotPopper
                                      height: placed.height - label.height)
         bars = Presentation::ScoreBars.new(scores:).bars(box, pixels)
         bars.each do |bar|
-          pen.color(palette.fresh_body, bar.best ? 1.0 : 0.5)
+          pen.color(bar.best ? palette.fresh_light : palette.fresh_deep)
           corner = [bar.width / 2.0, 2 / pixels.scale].min
           G.rectangle(:fill, bar.x, bar.y, bar.width, bar.height, corner, corner, 8)
         end

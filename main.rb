@@ -27,6 +27,8 @@
 #                               narrow screen.
 #   DOT_POPPER_SAVE_AS=test     saves in a folder of this name instead, so
 #                               a run starts from nothing.
+#   DOT_POPPER_TODAY=2026-11-07 plays as if it were that date, for its
+#                               daily goal and the goal's streak.
 #   DOT_POPPER_CALM=1           turns off the screen shake, and lets the
 #                               game-over pile settle softly (reduced
 #                               motion). This one is for players, too.

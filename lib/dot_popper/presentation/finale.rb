@@ -9,15 +9,24 @@ module DotPopper
     # round's RoundStats, for the line of facts under the score.
     # +copied_at+ is when the result was last copied to share. +record+
     # is the most impressive lifetime record the round set
-    # (LifetimeStats::Record), or nil.
-    class Finale < Data.define(:look, :score, :best, :new_best, :at, :stats, :record, :copied_at, :ready_at,
-                               :celebrated)
+    # (LifetimeStats::Record), or nil, and +goal_met+ whether it was the
+    # first round to meet today's goal, which is celebrated once, also when
+    # the score has counted.
+    class Finale < Data.define(:look, :score, :best, :new_best, :at, :stats, :record, :goal_met, :copied_at,
+                               :ready_at, :celebrated, :goal_celebrated)
       COPIED_FOR = 1.6 # seconds "Copy my result" says "Copied!"
 
-      def initialize(look:, score:, best:, new_best:, at:, stats: RoundStats.start, record: nil, copied_at: nil,
-                     ready_at: nil, celebrated: false)
+      def initialize(look:, score:, best:, new_best:, at:, stats: RoundStats.start, record: nil, goal_met: false,
+                     copied_at: nil, ready_at: nil, celebrated: false, goal_celebrated: false)
         super
       end
+
+      def goal_due?(now) = goal_met && !goal_celebrated && counted?(now)
+      def goal_celebrate = with(goal_celebrated: true)
+
+      # How far the lines that follow the count, a record or the goal, have
+      # faded in.
+      def afterword(now) = counted?(now) ? look.prompt.at(now - at - look.tally.duration) : 0.0
 
       def copy(now) = with(copied_at: now)
       def copied?(now) = !copied_at.nil? && now - copied_at < COPIED_FOR

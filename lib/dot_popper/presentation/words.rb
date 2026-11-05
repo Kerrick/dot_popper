@@ -7,9 +7,11 @@ module DotPopper
     # what a tap will do, in full sentences where a sentence is needed,
     # with no name the game made up for itself. +covered+ is the first-run
     # hint, a sentence a line. +labels+ name the Records screen's sections
-    # and rows, by what they count.
+    # and rows, by what they count. +goals+ say each kind of DailyGoal as
+    # the end of "Today's goal: ...", with %d for its target.
     class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time, :covered,
-                              :share, :copied, :records, :go_back, :no_rounds, :labels)
+                              :share, :copied, :records, :go_back, :no_rounds, :labels, :goals, :goal_done,
+                              :goal_met)
       MINUS = "−" # a true minus sign, as wide as the plus
 
       # +1, −2, or 0 for a number of points.
@@ -106,6 +108,41 @@ module DotPopper
 
         hours = count(minutes / 60, "hour")
         (minutes % 60).zero? ? hours : "#{hours} #{count(minutes % 60, "minute")}"
+      end
+
+      # Today's goal on the title: "Today's goal: pop 15 bright dots in a
+      # row without tapping a popped one."
+      def goal(goal) = "Today's goal: #{format(goals.fetch(goal.kind), goal.target)}."
+
+      # The days in a row the goal has been met, for the title once there
+      # are two or more: "You've met the daily goal 3 days in a row."
+      def streak(days) = "You've met the daily goal #{days} days in a row."
+
+      # +text+ broken between words into lines no wider than +room+, as
+      # the block measures a line. A single word wider than +room+ keeps a
+      # line of its own.
+      def self.wrap(text, room, &width)
+        text.split.each_with_object([]) do |word, lines|
+          joined = [lines.last, word].compact.join(" ")
+          if lines.any? && width.call(joined) <= room then lines[-1] = joined
+          else lines << word
+          end
+        end
+      end
+
+      # +text+ wrapped into as few lines as #wrap needs for +room+, but
+      # with those lines as even as they can be, so no word is left alone
+      # on the last.
+      def self.balance(text, room, &width)
+        lines = wrap(text, room, &width)
+        return lines if lines.size < 2
+
+        narrowest = (room * 0.5).floor
+        (narrowest..room).step([room / 50, 1].max).each do |tried|
+          even = wrap(text, tried, &width)
+          return even if even.size == lines.size
+        end
+        lines
       end
 
       # The chart's caption: "Your last 20 rounds", or "Your last round".

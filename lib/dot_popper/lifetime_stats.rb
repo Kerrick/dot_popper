@@ -5,21 +5,20 @@ module DotPopper
   # pops, wrong taps, seconds, and the distinct days played, counted by
   # +last_day+), the bests a round can set (its length, the most pops in
   # a row without a wrong tap, the fastest pop, and the longest wait that
-  # still ended in a pop), and the last RECENT scores, oldest first. Days
-  # are ISO 8601 dates ("2026-11-05"), local to the player. The best score
-  # stays with BestScore. It saves as lines of +key=value+, and reads back
-  # whatever it can of a damaged file.
+  # still ended in a pop), the last RECENT scores, oldest first, and the
+  # daily goal's GoalStreak. Days are ISO 8601 dates ("2026-11-05"), local
+  # to the player. The best score stays with BestScore. It saves as lines
+  # of +key=value+, and reads back whatever it can of a damaged file.
   class LifetimeStats < Data.define(:rounds, :pops, :slips, :seconds, :days, :last_day, :longest_round, :longest_run,
-                                    :fastest_pop, :longest_wait, :recent)
+                                    :fastest_pop, :longest_wait, :recent, :streak)
     RECENT = 20
-    COUNTS = %i[rounds pops slips days longest_run].freeze
-    TIMES = %i[seconds longest_round fastest_pop longest_wait].freeze
     DAY = /\A\d{4}-\d{2}-\d{2}\z/
 
     def initialize(rounds: 0, pops: 0, slips: 0, seconds: 0.0, days: 0, last_day: nil, longest_round: 0.0,
-                   longest_run: 0, fastest_pop: nil, longest_wait: 0.0, recent: [])
+                   longest_run: 0, fastest_pop: nil, longest_wait: 0.0, recent: [], streak: GoalStreak.new)
       super(rounds:, pops:, slips:, seconds: seconds.to_f, days:, last_day:, longest_round: longest_round.to_f,
-            longest_run:, fastest_pop: fastest_pop&.to_f, longest_wait: longest_wait.to_f, recent: recent.dup.freeze)
+            longest_run:, fastest_pop: fastest_pop&.to_f, longest_wait: longest_wait.to_f, recent: recent.dup.freeze,
+            streak:)
     end
 
     # The stats read from +text+ as #to_text wrote it. A missing, unknown,
@@ -30,7 +29,9 @@ module DotPopper
           seconds: pairs.time(:seconds) || 0.0, days: pairs.count(:days), last_day: pairs.day(:last_day),
           longest_round: pairs.time(:longest_round) || 0.0, longest_run: pairs.count(:longest_run),
           fastest_pop: pairs.time(:fastest_pop), longest_wait: pairs.time(:longest_wait) || 0.0,
-          recent: pairs.counts(:recent).last(RECENT))
+          recent: pairs.counts(:recent).last(RECENT),
+          streak: GoalStreak.new(current: pairs.count(:goal_streak), longest: pairs.count(:longest_goal_streak),
+                                 last_met: pairs.day(:goal_met_on)))
     end
 
     # The stats after one more round, played on +day+.
@@ -60,7 +61,8 @@ module DotPopper
     def to_text
       [["rounds", rounds], ["pops", pops], ["slips", slips], ["seconds", seconds], ["days", days],
        ["last_day", last_day], ["longest_round", longest_round], ["longest_run", longest_run],
-       ["fastest_pop", fastest_pop], ["longest_wait", longest_wait], ["recent", recent.join(",")]]
+       ["fastest_pop", fastest_pop], ["longest_wait", longest_wait], ["recent", recent.join(",")],
+       ["goal_streak", streak.current], ["longest_goal_streak", streak.longest], ["goal_met_on", streak.last_met]]
         .reject { |_, value| value.nil? }.map { |key, value| "#{key}=#{value}\n" }.join
     end
 

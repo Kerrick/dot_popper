@@ -18,9 +18,13 @@ When time runs out, the dots tumble to the bottom of the screen in a heap behind
 
 Under that line, a **Copy my result** button copies two short lines to the clipboard, ready to paste into a message: your score, whether it set or tied your best, any lifetime record the round set, and how many pops and wrong taps the round had and how long it lasted. A tap on the button only copies; a tap anywhere else continues.
 
+### Today's goal
+
+Once you have finished a round, the title screen also shows a goal for the day, such as "Today's goal: pop 15 bright dots in a row without tapping a popped one." A goal is met within one round. Every day has one goal, picked from a list of seven by the date, so it stays the same all day and changes at midnight. The round that first meets it says "You met today's goal!" on its Game Over screen, with a small burst of sparkles, and the title then says "Today's goal is done." The game counts how many days in a row you have met the goal. From two days on, the title says so ("You've met the daily goal 3 days in a row."). A day without it simply starts the count again, and the Records screen keeps your longest run of days.
+
 ### Your records
 
-Once you have finished a round, the title screen shows a **Your records** button in its bottom left corner. It opens a screen with your best score and your other bests (your longest round, the most pops in a row without a wrong tap, your fastest pop, and the longest wait that still ended in a pop), your totals across every round, and a bar chart of your last 20 scores, with the highest of them labelled. Tap anywhere to go back to the title. Nothing on this screen affects a round.
+Once you have finished a round, the title screen shows a **Your records** button in its bottom left corner. It opens a screen with your best score and your other bests (your longest round, the most pops in a row without a wrong tap, your fastest pop, and the longest wait that still ended in a pop), your totals across every round, how many days in a row you have met the daily goal and the most you ever have, and a bar chart of your last 20 scores, with the highest of them labelled. Tap anywhere to go back to the title. Nothing on this screen affects a round.
 
 ### Controls
 
@@ -132,6 +136,7 @@ Running `bundle exec rake` with no task name runs the tests and then [Steep](htt
 | `DOT_POPPER_NO_SHADERS=1` | Draws plain shapes without shaders, and so without the fresh dots' glow. The game does this on its own when a shader fails to compile. |
 | `DOT_POPPER_CALM=1` | Turns off screen shake and the bouncing at the end of a round (see "Reduced motion"). |
 | `DOT_POPPER_WINDOW=400x850` | Opens the desktop window at this size, in logical pixels, to check how a narrow screen looks. |
+| `DOT_POPPER_TODAY=2026-11-07` | Plays as if it were that date, to see that day's goal, or to build up a streak of days. |
 | `DOT_POPPER_SAVE_AS=test` | Saves in a folder of this name instead of `dot_popper`, so a test run starts with no rounds played and leaves your own records alone. |
 
 ### The playtest log
@@ -156,6 +161,8 @@ The first line of `rounds.csv` names the columns:
 | `softened` | How many of those mistakes cost less than the full two points, because the score can't go below zero |
 | `mean_wait` | The average number of seconds from a fresh dot appearing to its being popped |
 | `longest_wait` | The longest of those waits |
+| `goal` | The day's goal, by name and target, such as `clean_run_15` (see `DotPopper::DailyGoal::LIST`) |
+| `goal_met` | `true` if this round met the day's goal, whether or not an earlier round had |
 
 ## License
 

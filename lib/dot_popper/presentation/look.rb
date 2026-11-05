@@ -34,8 +34,19 @@ module DotPopper
           longest_run: "Most pops in a row without a wrong tap", fastest_pop: "Fastest pop",
           longest_wait: "Longest wait that ended in a pop",
           totals: "All your rounds", rounds: "Rounds played", pops: "Dots popped", slips: "Wrong taps",
-          seconds: "Time played", days: "Days played", none: "None yet"
-        }.freeze
+          seconds: "Time played", days: "Days played", none: "None yet",
+          goal: "Daily goal", streak: "Days in a row you've met it", longest_streak: "Most days in a row"
+        }.freeze,
+        goals: {
+          clean_run: "pop %d bright dots in a row without tapping a popped one",
+          patient_pop: "pop a bright dot that has been on screen for at least %d seconds",
+          quick_start: "pop %d bright dots in the first 10 seconds of a round",
+          long_round: "keep one round going for %d seconds",
+          comeback: "finish a round with %d points even after tapping a popped dot",
+          score: "score %d points in one round",
+          clean_round: "score %d points in a round without ever tapping a popped dot"
+        }.freeze,
+        goal_done: "Today's goal is done.", goal_met: "You met today's goal!"
       )
 
       # The Records screen, opened from the title: the heading's and the
@@ -151,7 +162,7 @@ module DotPopper
       # Game over: how the round dims, how the score counts up, and the
       # celebration of a new best. Its sparkles may outlive a pop's
       # droplets, because no round is in play behind them.
-      class FinaleLook < Data.define(:dim, :arrive, :tally, :prompt, :sparkles, :sparkle_life); end
+      class FinaleLook < Data.define(:dim, :arrive, :tally, :prompt, :sparkles, :goal_sparkles, :sparkle_life); end
       FINALE = FinaleLook.new(
         dim: Tween.new(from: 0.0, to: 0.62, duration: 0.5, ease: :out_cubic),
         arrive: Tween.new(from: 0.0, to: 1.0, duration: 0.45, ease: :out_back),
@@ -159,6 +170,8 @@ module DotPopper
         prompt: Tween.new(from: 0.0, to: 1.0, duration: 0.35, ease: :out_cubic),
         sparkles: Burst.new(count: 60, speed: 2.0..7.0, life: 0.8..1.4, size: 0.1..0.24, drag: 1.6,
                             gravity: 4.0, alpha: 0.9, spin: 7.0..1.0, sprite: :twinkle),
+        goal_sparkles: Burst.new(count: 22, speed: 1.5..4.0, life: 0.6..1.0, size: 0.08..0.16, drag: 2.0,
+                                 gravity: 2.5, alpha: 0.85, spin: 6.0..1.0, sprite: :twinkle),
         sparkle_life: 1.4
       )
 

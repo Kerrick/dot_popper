@@ -6,9 +6,11 @@ module DotPopper
 
     @clock: ^() -> Time
 
+    @today: ^() -> Date
+
     @recorder: RoundStats::Recorder
 
-    def initialize: (BestScore::_Store store, ?clock: ^() -> Time) -> void
+    def initialize: (BestScore::_Store store, ?clock: ^() -> Time, ?today: ^() -> Date) -> void
 
     def call: (event event) -> void
 

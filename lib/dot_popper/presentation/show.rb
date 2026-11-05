@@ -60,8 +60,9 @@ module DotPopper
       # What the Records screen shows, while it is open.
       def records = @records
 
-      # Whether the title offers "Your records": only once a round has
-      # finished, so a first-time player's title says only how to play.
+      # Whether the title offers "Your records" and today's goal: only once
+      # a round has finished, so a first-time player's title says only how
+      # to play.
       def records_offered? = lifetime.stats.rounds.positive?
       def playing? = game.state.is_a?(Game::Playing)
       def finished? = game.state.is_a?(Game::GameOver)
@@ -108,7 +109,7 @@ module DotPopper
       def open_records
         return unless title?
 
-        @records = RecordsSheet.build(lifetime.stats, best: game.best.value, words:)
+        @records = RecordsSheet.build(lifetime.stats, best: game.best.value, words:, streak: lifetime.streak)
         sounds.play(:tick)
       end
 
@@ -206,9 +207,9 @@ module DotPopper
       end
 
       def round_ended(event)
-        record = lifetime.record(stats).first
+        result = lifetime.record(stats)
         @finale = Finale.new(look: look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now,
-                             stats:, record:)
+                             stats:, record: result.records.first, goal_met: result.goal_met)
         sounds.play(event.new_best ? :new_best : :game_over)
       end
 
@@ -253,10 +254,19 @@ module DotPopper
 
       def follow_finale
         @finale = finale.ready(now) if game.state.ready?
+        goal_burst if finale.goal_due?(now)
         return unless finale.celebration_due?(now)
 
         @finale = finale.celebrate
         celebrate
+      end
+
+      # A small burst of twinkles where "You met today's goal!" appears.
+      def goal_burst
+        @finale = finale.goal_celebrate
+        effects.burst(layout.center_x, layout.finale_goal_y, look::FINALE.goal_sparkles, palette.confetti,
+                      longest: look::FINALE.sparkle_life)
+        sounds.play(:tick, pitch: 1.5)
       end
 
       def celebrate

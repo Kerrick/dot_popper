@@ -236,6 +236,26 @@ The screen belongs to the presentation, not the rules: `Show` keeps it open whil
 
 **To reverse:** Stop `TitlePainter` from drawing the button and `Show#tap` from opening the screen; nothing else depends on it.
 
+### A daily goal, judged by the player's own round, replaces the daily challenge's purpose
+
+Each local date picks one goal from a list of seven in `DotPopper::DailyGoal::LIST`, using a fixed hash of the date (32-bit FNV-1a of "2026-11-05"), so the goal is the same all day, on every device, and in every run. Ruby's own `String#hash` changes from run to run, so it couldn't be used. A goal is met within a single round, judged from that round's `RoundStats` when it ends. The goals, as the title says them:
+
+- "Pop 15 bright dots in a row without tapping a popped one."
+- "Pop a bright dot that has been on screen for at least 3 seconds."
+- "Pop 10 bright dots in the first 10 seconds of a round."
+- "Keep one round going for 40 seconds."
+- "Finish a round with 20 points even after tapping a popped dot."
+- "Score 25 points in one round."
+- "Score 10 points in a round without ever tapping a popped dot."
+
+The title shows the day's goal as one line of plain words, balanced over two lines on a narrow screen, and "✓ Today's goal is done." once it is met. The round that first meets it adds "You met today's goal!" between "Time's up!" and the score, with a small burst of twinkles, once the score has counted up. The game keeps a streak of days in a row with the goal met, and the longest streak, in `lifetime.txt`. The title mentions the streak only from two days on ("You've met the daily goal 3 days in a row."); a missed day starts the count again without a word. `rounds.csv` logs each round's goal and whether it met it. Like the Records button, the goal appears only after the player's first round.
+
+**Why:** The cut daily challenge (below) promised a shared puzzle that the game can't deliver. A goal judged only against the player's own round needs no shared screen: a 15-pop run is just as hard to earn on a phone as on a monitor, relative to everything else on that screen. Most goals reward the game's real skill, patience, rather than a surface reward bolted on (Ferrara's *Playful Design*). The one speed goal, 10 pops in the first 10 seconds, applies while the field is still nearly empty, so it doesn't invite wrong taps. The streak is kept quiet, and losing it costs nothing, because a reward for coming back can crowd out the reason to play (Nguyen), and a failure should feel fair (Juul).
+
+**How the targets were set:** a model player like the one in `script/simulate.rb` played 300 rounds on the 24 × 16 R window. It met a 15-pop clean run in about half its rounds and 25 points in about a third, so those stayed as suggested. It lasted 45 seconds in only 2 to 6% of rounds, so that goal became 40 seconds (about 30%). It almost never waits three seconds on a dot, but a person can choose to, so that target stays as a deliberate test of patience. The model taps fast and slips often, so its figures for the no-wrong-tap goals mean little; 10 points without a wrong tap is a modest round for a careful player.
+
+**To reverse:** Remove `daily_goal` from `TitlePainter` and `goal_met` from `FinalePainter`; the streak would then stay at zero. The list and its targets are in `DailyGoal::LIST`, and the words in `goals:` in `Look::WORDS`. Changing the hash, or the list's order or length, changes which goal every date gets.
+
 ### Cut: the daily challenge
 
 For a while the title screen had a second button, "Play today's challenge". Its round's seed came from the local date, so everyone who played on the same day got the same sequence of new dots: the same starting places, directions, and speeds. The game kept the day's best score, and afterwards a button copied the day's result to share. The idea was Wordle's: one puzzle a day, the same for everyone, so that players have something to compare and a reason to come back.

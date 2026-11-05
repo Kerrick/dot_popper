@@ -8,8 +8,22 @@ module DotPopper
 
     def initialize: (BestScore::_Store store, ?today: ^() -> Date) -> void
 
-    def record: (RoundStats round) -> Array[LifetimeStats::Record]
+    def record: (RoundStats round) -> Result
 
     def today: () -> Date
+
+    def goal: () -> DailyGoal
+
+    def goal_done?: () -> bool
+
+    def streak: () -> Integer
+
+    class Result < ::Data
+      attr_reader records: Array[LifetimeStats::Record]
+
+      attr_reader goal_met: bool
+
+      def self.new: (records: Array[LifetimeStats::Record], goal_met: bool) -> instance
+    end
   end
 end

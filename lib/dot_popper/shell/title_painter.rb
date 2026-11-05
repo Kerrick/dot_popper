@@ -4,7 +4,7 @@ module DotPopper
   module Shell
     # The title screen: the name, a legend that teaches the rule with one
     # dot of each kind, the best score, the prompt, the mute button, and,
-    # once a round has been played, "Your records".
+    # once a round has been played, today's goal and "Your records".
     class TitlePainter < Data.define(:pen, :dots)
       G = ::Lota::Graphics
 
@@ -19,19 +19,46 @@ module DotPopper
         Lettering.new(pen:).candy(show.words.title, title, layout.center_x, center - (height * 0.2) - ((1 - intro) * 24),
                                   intro)
         legend(show, layout, center + (height * 0.02), intro)
+        goal = show.records_offered?
         best = pen.fonts.semibold(layout.scaled(type.best))
         if marquee.best.positive?
-          pen.text(show.words.best_line(marquee.best), best, layout.center_x, center + (height * 0.14),
+          pen.text(show.words.best_line(marquee.best), best, layout.center_x, center + (height * (goal ? 0.125 : 0.14)),
                     pen.palette.soft, intro)
         end
+        daily_goal(show, layout, center + (height * 0.195), intro) if goal
         prompt = pen.fonts.bold(layout.scaled(type.prompt))
-        pen.text(show.words.play, prompt, layout.center_x, center + (height * 0.27), pen.palette.cream,
+        pen.text(show.words.play, prompt, layout.center_x, center + (height * (goal ? 0.29 : 0.27)), pen.palette.cream,
                   intro * marquee.prompt(now))
         MuteButton.new(pen:).draw(layout.mute_button, show.sounds.muted?)
         PillButton.new(pen:).draw(layout.records_button, show.words.records, alpha: intro) if show.records_offered?
       end
 
       private
+
+      # Today's goal, broken into lines that fit across, or once it is met,
+      # "Today's goal is done." with a check; under it, the days in a row
+      # it has been met, from two days on. Centred on +y+.
+      def daily_goal(show, layout, y, alpha)
+        words = show.words
+        lifetime = show.lifetime
+        font = pen.fonts.semibold(layout.scaled(pen.look::TYPE.summary * 1.1))
+        room = layout.safe.width - (layout.margin * 4)
+        lines = if lifetime.goal_done? then [words.goal_done]
+                else Presentation::Words.balance(words.goal(lifetime.goal), room) { font.width(it) }
+                end
+        step = font.height * 1.2
+        streak = lifetime.streak
+        streak_line = words.streak(streak) if streak >= 2
+        # The streak is a line apart, half a line below the goal's.
+        lines_y = lines.each_index.map { it * step }
+        lines_y << (lines_y.last + (step * 1.5)) if streak_line
+        top = y - (lines_y.last / 2.0)
+        (lines + [streak_line].compact).zip(lines_y).each_with_index do |(line, dy), i|
+          if lifetime.goal_done? && i.zero? then Check.new(pen:).labelled(line, font, layout.center_x, top, alpha)
+          else pen.text(line, font, layout.center_x, top + dy, pen.palette.soft, alpha)
+          end
+        end
+      end
 
       # The title's size, shrunk if the name would not fit across.
       def fit(size, text, layout)

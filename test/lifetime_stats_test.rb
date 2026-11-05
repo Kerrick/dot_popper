@@ -71,6 +71,7 @@ class LifetimeStatsTest < Minitest::Test
 
   def test_it_saves_and_reads_back
     stats = LifetimeStats.new.add(round, day: "2026-11-05").add(round(score: 3, waits: []), day: "2026-11-05")
+    stats = stats.with(streak: DotPopper::GoalStreak.new(current: 2, longest: 4, last_met: "2026-11-05"))
 
     assert_equal stats, LifetimeStats.parse(stats.to_text)
   end

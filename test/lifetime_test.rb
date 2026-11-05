@@ -24,7 +24,33 @@ class LifetimeTest < Minitest::Test
     @lifetime.record(RoundStats.start.with(longest_run: 3, duration: 10.0))
 
     assert_equal %i[longest_run longest_round],
-                 @lifetime.record(RoundStats.start.with(longest_run: 5, duration: 20.0)).map(&:kind)
+                 @lifetime.record(RoundStats.start.with(longest_run: 5, duration: 20.0)).records.map(&:kind)
+  end
+
+  # 2026-11-03's goal is to score 25 points in one round.
+  def test_the_first_round_to_meet_todays_goal_says_so_and_adds_a_day_to_the_streak
+    day = Date.new(2026, 11, 3)
+    lifetime = Lifetime.new(@store, today: -> { day })
+    assert_equal :score, lifetime.goal.kind
+
+    refute lifetime.record(RoundStats.start.with(score: 24)).goal_met
+    refute lifetime.goal_done?
+    assert lifetime.record(RoundStats.start.with(score: 25)).goal_met
+    assert lifetime.goal_done?
+    refute lifetime.record(RoundStats.start.with(score: 30)).goal_met, "it is met only once a day"
+    assert_equal 1, lifetime.streak
+    assert_equal 1, Lifetime.new(@store, today: -> { day }).streak, "the streak is saved"
+  end
+
+  def test_the_streak_counts_days_in_a_row_and_a_missed_day_starts_it_again
+    days = { Date.new(2026, 11, 3) => :score, Date.new(2026, 11, 8) => :score, Date.new(2026, 11, 12) => :score }
+    days.each_key do |day|
+      Lifetime.new(@store, today: -> { day }).record(RoundStats.start.with(score: 25))
+    end
+    later = Lifetime.new(@store, today: -> { Date.new(2026, 11, 13) })
+
+    assert_equal 1, later.streak
+    assert_equal 1, later.stats.streak.longest
   end
 
   def test_a_store_holding_nonsense_starts_from_nothing
