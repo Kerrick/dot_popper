@@ -9,6 +9,9 @@ module DotPopperGui
     scenario :pile_gamepad
 
     def play
+      # Under X11 the pointer resting over a window as it opens moves the
+      # mouse, which the words follow, so the pad speaks first.
+      pad(:dpup)
       check_equal("Press A to play", words.play, "the words name the gamepad's button")
       pad(:start)
       check(show.playing?, "Start starts a round")
