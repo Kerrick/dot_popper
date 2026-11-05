@@ -186,7 +186,7 @@ Each sound effect is mono, so OpenAL, LÖVE's audio library, can place it in ste
 
 **Why:** When the glow was added on top of the dots, it washed the fresh dot out to yellow and hid its shine. Drawn underneath, it leaves every dot exactly as sharp as before. It also respects the stacking: popped dots on top of a fresh dot hide its glow just as they hide the dot, so the glow never gives away a covered fresh dot. No text is drawn near the canvas, so text stays sharp. In autoplay, a frame took about 4 ms with the glow and about 4 ms without it.
 
-The glow is off when shaders are off, when a canvas can't be made, or when `BLOOM.strength` in `look.rb` is 0.
+The glow is off when shaders are off, when a canvas can't be made, or when `BLOOM.strength` in `look.rb` is 0. It is now off by default; see "A fresh dot's edge is its hit circle".
 
 **To reverse:** Set `BLOOM.strength` to 0.
 
@@ -522,3 +522,11 @@ The title's "Dot size" control no longer names its options from a designer's vie
 **Why:** "Same everywhere" and "Fit the screen" only make sense to someone comparing devices, which most players never do (Pinker's curse of knowledge). A player sees one screen, so the labels say what happens on it (Podmajersky), and the dot icons preview each option before it is chosen (Tidwell's Preview pattern; Saffer's "bring the data forward"). A choice that changes nothing visible is noise, so it is hidden until it matters, and the cross-device reason moves to the Records screen, where scores are compared (Lidwell's progressive disclosure).
 
 **To reverse:** Have `Show#sizing_offered?` return `records_offered?`, and name the segments with fixed words again in `Words#sizing`.
+
+### A fresh dot's edge is its hit circle
+
+A fresh dot at rest now ends exactly at radius R, where its hit circle ends, in a thin bright cream rim (`palette.fresh_rim`, 0.055 R wide and never under a pixel and a half) whose outer edge is smoothed over one device pixel. The halo is a faint lip about 0.035 R deep at 16%, down from a cloud reaching 1.6 R at 34%. Every dot's shadow is smaller and lighter (a disc 1.08 R across dropped 0.07 R, at 40%), so a popped dot's opaque body visibly ends at R too. The plain-shapes fallback draws the same rim, and its shadow is only a crescent below. The idle "breathing" swell of fresh dots is gone; spawn, pop, and wrong-tap motions still scale a dot briefly. The bloom pass is off (`BLOOM.strength` 0), with its code left in place.
+
+**Why:** After playing, the maintainer said the fuzzy glow made it hard to track where the clickable area was while everything moved. A target is acquired by its edge (Fitts's law, via Lidwell), and people track a moving target by what they perceive as its boundary (Johnson; Hodent), so the visible edge has to be the clickable edge. Swink's rule of clarity before polish applies. The halo reached 60% past the hit circle, and breathing moved the edge by about 2%. The bloom blurred the whole bright disc. Any bloom strong enough to see spreads several pixels past R, and one tight enough to stay inside the rim adds nothing, so it is off. Fill, gloss, and rim keep the fresh dot the brightest thing on screen. Fresh and popped still differ by lightness, and a popped dot is still never drawn inside its hit circle. `LookTest` checks that the halo has faded to nothing by 1.15 R, that the shadow stays within 1.16 R, and that bloom is off. `DotAnimationsTest` checks that a fresh dot at rest is drawn at exactly scale 1.
+
+**To reverse:** In `Look::DOT`, set `rim: 0`, `halo_width: 0.3`, `halo_alpha: 0.34`, `extent: 1.6`, `shadow_reach: 1.25`, `shadow_offset: 0.11`, and `shadow_alpha: 0.55`, and set `BLOOM.strength` to 0.7. Breathing was a `Breathe` term in `DotAnimations#pose`; restore it from the commit before this one.

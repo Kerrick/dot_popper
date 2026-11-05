@@ -13,11 +13,13 @@ class DotAnimationsTest < Minitest::Test
     assert_equal Pose::STILL, pose
   end
 
-  def test_a_fresh_dot_breathes_only_a_little
-    scales = (0..40).map { @animations.pose(dot(0, 0), it * 0.05).scale_x }
+  # A player aims at a fresh dot's edge, so at rest it never swells or
+  # shrinks: it is drawn exactly at its hit circle.
+  def test_a_fresh_dot_at_rest_is_still_at_its_size
+    poses = (0..40).map { @animations.pose(dot(0, 0), it * 0.05) }
 
-    assert_operator scales.max - scales.min, :>, 0.01
-    scales.each { assert_in_delta 1.0, it, Look::MOTION.breathe.amplitude + 1e-9 }
+    assert(poses.all?(Pose::FRESH))
+    assert_equal [1.0, 1.0], [Pose::FRESH.scale_x, Pose::FRESH.scale_y]
   end
 
   def test_a_new_dot_grows_from_a_seed_past_its_size_and_settles
@@ -27,7 +29,7 @@ class DotAnimationsTest < Minitest::Test
 
     assert_operator sizes.first, :<, 0.3
     assert_operator sizes.max, :>, 1.03
-    assert_in_delta 1.0, @animations.pose(fresh, 2.0).scale_x, Look::MOTION.breathe.amplitude + 1e-9
+    assert_equal Pose::FRESH, @animations.pose(fresh, 2.0)
   end
 
   def test_a_popped_dot_stretches_and_springs_back

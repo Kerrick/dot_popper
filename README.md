@@ -10,7 +10,7 @@ Dot Popper is written in Ruby, on [Lota](https://github.com/setdef/Lota). Lota r
 
 On the title screen, tap anywhere to start a round. During a round, tap or click the fresh dot whenever it is uncovered. Any mouse button works, and a press counts the moment it goes down, not when it is released. When the round ends, the game shows your score and ignores taps for a moment, so that a tap aimed at a dot in the last instant doesn't skip past it. Tap again after that to return to the title screen.
 
-A fresh dot and a popped dot differ in more than colour. A fresh dot is light and shiny with a soft glow around it. A popped dot is dark and matte, with a crater in its centre. Because they differ in lightness and in shape, players can tell them apart in greyscale and with colour blindness.
+A fresh dot and a popped dot differ in more than colour. A fresh dot is light and shiny, with a thin bright rim at its edge, which is exactly where a tap reaches it. A popped dot is dark and matte, with a crater in its centre. Because they differ in lightness and in shape, players can tell them apart in greyscale and with colour blindness.
 
 The game also helps a new player understand a mistake. The first two times a round ends after you tapped a popped dot with the fresh one hidden under it, Game Over explains the stacking rule in two short lines, away from the action. Whenever a wrong tap happens because a fresh dot was hidden underneath, the game briefly outlines that hidden fresh dot, so you can see what you were too quick for.
 
@@ -156,7 +156,7 @@ Running `bundle exec rake` with no task name runs the tests and then [Steep](htt
 | `DOT_POPPER_QUIT_AFTER=20` | Quits after this many seconds of play. |
 | `DOT_POPPER_SEED=42` | Seeds the random number generator, so the same seed and the same taps produce the same dots. |
 | `DOT_POPPER_PERF=1` | Every five seconds, prints how many frames a second the game drew and its longest single frame, measured before the game caps how much time one frame may pass to the rules. Useful for checking a new computer. |
-| `DOT_POPPER_NO_SHADERS=1` | Draws plain shapes without shaders, and so without the fresh dots' glow. The game does this on its own when a shader fails to compile. |
+| `DOT_POPPER_NO_SHADERS=1` | Draws plain shapes without shaders. The game does this on its own when a shader fails to compile. |
 | `DOT_POPPER_CALM=1` | Turns off screen shake and the bouncing at the end of a round (see "Reduced motion"). |
 | `DOT_POPPER_FAKE_TILT=0.6,0` | Pretends to have an accelerometer that always reads this x,y, in g, along the device's portrait axes (x toward its right edge, y toward its top edge). `0.6,0` holds the device tilted to the side, so the Game Over pile rolls to the left. At Game Over the game prints where its tilt comes from: the accelerometer, the fake reading, the gamepad's right stick, or none. |
 | `DOT_POPPER_WINDOW=400x850` | Opens the desktop window at this size, in logical pixels, to check how a narrow screen looks. |

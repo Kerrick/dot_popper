@@ -10,8 +10,10 @@ module DotPopper
     # of a just-popped dot as it squashes and springs back (its height is
     # the inverse, so it keeps its volume); +pop_cover+ is how much of the
     # fresh look still shows over the popped one; +wobble+ is the
-    # "wrong!" shudder; +breathe+ the idle swell of a fresh dot.
-    class DotMotion < Data.define(:spawn, :pop_stretch, :pop_cover, :wobble, :breathe); end
+    # "wrong!" shudder. A dot at rest is still, at exactly its size: a
+    # fresh dot that swelled and shrank would move the edge a player aims
+    # at.
+    class DotMotion < Data.define(:spawn, :pop_stretch, :pop_cover, :wobble); end
 
     # A shudder: how far it squashes at first (a fraction of the radius),
     # how long it lasts, and how many times a second it shakes.
@@ -25,18 +27,13 @@ module DotPopper
       def glow(elapsed) = elapsed >= duration ? 0.0 : 1 - (elapsed / duration)
     end
 
-    # A slow swell: how much bigger at its fullest (a fraction), and how
-    # many seconds one breath takes.
-    class Breathe < Data.define(:amplitude, :period)
-      def at(time, phase) = 1 + (amplitude * Math.sin(((time / period) + phase) * 2 * Math::PI))
-    end
-
     # How to draw one dot at one moment: its scale across and down, how
     # much of its fresh look still shows (1 for a fresh dot, 0 once a
     # popped dot has finished changing), and how strongly its rim glows
     # from a wrong tap.
     class Pose < Data.define(:scale_x, :scale_y, :freshness, :alarm)
       STILL = new(scale_x: 1.0, scale_y: 1.0, freshness: 0.0, alarm: 0.0)
+      FRESH = STILL.with(freshness: 1.0)
     end
 
     # When each dot was born, popped, and tapped by mistake, kept by dot
@@ -63,14 +60,13 @@ module DotPopper
 
       def pose(dot, now)
         found = @records[dot.id]
-        breath = dot.fresh? ? @motion.breathe.at(now, phase(dot.id)) : 1.0
-        return still(dot, breath) unless found
+        return dot.fresh? ? Pose::FRESH : Pose::STILL unless found
 
         scale = found.born ? @motion.spawn.at(now - found.born) : 1.0
         stretch_x, stretch_y = stretch(found, now)
         wobble = found.wobbled ? @motion.wobble.at(now - found.wobbled) : 0.0
-        scale_x = scale * breath * stretch_x * (1 + wobble)
-        scale_y = scale * breath * stretch_y * (1 - wobble)
+        scale_x = scale * stretch_x * (1 + wobble)
+        scale_y = scale * stretch_y * (1 - wobble)
         scale_x, scale_y = [scale_x, 1.0].max, [scale_y, 1.0].max if dot.popped?
         Pose.new(scale_x:, scale_y:, freshness: freshness(dot, found, now),
                  alarm: found.wobbled ? @motion.wobble.glow(now - found.wobbled) : 0.0)
@@ -79,12 +75,6 @@ module DotPopper
       private
 
       def note(id, **moment) = @records[id] = @records.fetch(id, Moments::NONE).with(**moment)
-
-      def still(dot, breath)
-        return Pose::STILL if dot.popped?
-
-        Pose.new(scale_x: breath, scale_y: breath, freshness: 1.0, alarm: 0.0)
-      end
 
       # A popped dot sits on top, so it may squash and stretch only
       # outward: drawn narrower than its hit circle on either axis, it
@@ -102,9 +92,6 @@ module DotPopper
 
         @motion.pop_cover.at(now - found.popped).clamp(0.0, 1.0)
       end
-
-      # Each dot breathes a little out of step with the others.
-      def phase(id) = ((id * 0.618034) % 1.0)
     end
   end
 end

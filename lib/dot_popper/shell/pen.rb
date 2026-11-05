@@ -93,11 +93,8 @@ module DotPopper
 
       def configure
         if (dot = @shaders[:dot])
-          look::DOT.then do |sizes|
-            { "extent" => sizes.extent, "shadow_offset" => sizes.shadow_offset, "shadow_alpha" => sizes.shadow_alpha,
-              "halo_alpha" => sizes.halo_alpha }.each { |name, value| uniform(dot, name, value) }
-          end
-          %i[fresh_light fresh_body fresh_deep fresh_bounce gloss halo popped_top popped_bottom popped_rim
+          look::DOT.to_h.except(:legend).each { |name, value| uniform(dot, name.to_s, value) }
+          %i[fresh_light fresh_body fresh_deep fresh_bounce fresh_rim gloss halo popped_top popped_bottom popped_rim
              popped_crater popped_lip shadow alarm].each { uniform(dot, it.to_s, rgb(palette.public_send(it))) }
         end
         return unless (backdrop = @shaders[:backdrop])

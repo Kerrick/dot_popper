@@ -40,7 +40,27 @@ class LookTest < Minitest::Test
 
     assert_in_delta 1.0, motion.spawn.to
     assert_in_delta 1.0, motion.pop_stretch.to
-    assert_operator motion.breathe.amplitude, :<=, 0.03
+  end
+
+  # What is seen of a dot at rest ends at its hit circle: the fresh dot's
+  # rim is inside it, and only a faint halo and a small shadow fall
+  # outside, so a moving target's edge is where a tap reaches it.
+  def test_a_dot_at_rest_ends_at_its_hit_circle
+    dot = Look::DOT
+
+    assert_operator dot.rim, :<, 0.1
+    assert_operator dot.halo(1.0), :<=, 0.2
+    assert_operator dot.halo(1.06), :<, 0.02
+    assert_operator dot.halo(1.15), :<, 0.5 / 255
+    assert_operator dot.shadow_reach, :<=, 1.1
+    assert_operator dot.shadow_edge, :<=, 1.16
+    assert_operator dot.shadow_alpha, :<=, 0.45
+    assert_operator dot.extent, :<=, 1.3
+  end
+
+  # The glow is off: bright enough to see, it blurs the fresh dot's edge.
+  def test_nothing_blooms_around_the_fresh_dot
+    assert_predicate Look::BLOOM.strength, :zero?
   end
 
   def test_the_window_is_a_tablet_sized_play_area

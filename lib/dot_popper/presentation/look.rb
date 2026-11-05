@@ -12,7 +12,7 @@ module DotPopper
       PALETTE = Palette.new(
         ink_top: hex["#1d1a4a"], ink_bottom: hex["#0c0b22"], ink_glow: hex["#2b2766"], ink_edge: hex["#05040f"],
         fresh_light: hex["#fff0bf"], fresh_body: hex["#ffbf52"], fresh_deep: hex["#f07c34"],
-        fresh_bounce: hex["#ffd98c"], gloss: hex["#ffffff"], halo: hex["#ffb347"],
+        fresh_bounce: hex["#ffd98c"], fresh_rim: hex["#fff6d6"], gloss: hex["#ffffff"], halo: hex["#ffb347"],
         popped_top: hex["#4a4570"], popped_bottom: hex["#37335a"], popped_rim: hex["#8f88bd"],
         popped_crater: hex["#29263f"], popped_lip: hex["#6b6596"],
         shadow: hex["#04030d"], alarm: hex["#ff4f9a"],
@@ -90,21 +90,18 @@ module DotPopper
 
       LAYOUT = LayoutLook.new(margin: 16, button: 52, reference: 760.0)
 
-      # How a dot is drawn by the dot shader (assets/shaders/dot.glsl):
-      # +extent+ is the drawn square's half side, room for the halo and
-      # shadow around the disc of radius 1; +shadow_offset+ how far down a
-      # dot's shadow falls on the dots beneath it; +legend+ the size of the
-      # title's example dots.
-      class DotLook < Data.define(:extent, :shadow_offset, :shadow_alpha, :halo_alpha, :legend); end
-
-      DOT = DotLook.new(extent: 1.6, shadow_offset: 0.11, shadow_alpha: 0.55, halo_alpha: 0.34, legend: 0.34)
+      # How a dot is drawn by the dot shader (assets/shaders/dot.glsl),
+      # and the edge a player aims at: what is seen of a dot at rest ends
+      # at its hit circle, radius 1, with a crisp rim, so a moving target
+      # is easy to track. See DotLook.
+      DOT = DotLook.new(extent: 1.25, rim: 0.055, shadow_offset: 0.07, shadow_reach: 1.08, shadow_alpha: 0.4,
+                        halo_width: 0.035, halo_alpha: 0.16, legend: 0.34)
 
       MOTION = DotMotion.new(
         spawn: Tween.new(from: 0.15, to: 1.0, duration: 0.42, ease: :out_back),
         pop_stretch: Tween.new(from: 1.3, to: 1.0, duration: 0.6, ease: :out_elastic),
         pop_cover: Tween.new(from: 1.0, to: 0.0, duration: 0.14, ease: :out_quad),
-        wobble: Wobble.new(amplitude: 0.13, duration: 0.38, frequency: 11.0),
-        breathe: Breathe.new(amplitude: 0.022, period: 1.7)
+        wobble: Wobble.new(amplitude: 0.13, duration: 0.38, frequency: 11.0)
       )
 
       # A pop: droplets, a ring, and the new dot's ripple. The droplets and
@@ -183,8 +180,10 @@ module DotPopper
 
       # The glow fresh dots and droplets cast on the night under the dots
       # (Shell::Bloom), blurred at half the screen's resolution. A
-      # strength of 0 turns it off.
-      BLOOM = BloomLook.new(strength: 0.7, sigma: 3.0, passes: 2, resolution: 0.5)
+      # strength of 0 turns it off, as it is: a glow wide enough to see
+      # blurs the fresh dot's edge, where the player aims (doc/decisions.md,
+      # "A fresh dot's edge is its hit circle"). 0.7 brings it back.
+      BLOOM = BloomLook.new(strength: 0.0, sigma: 3.0, passes: 2, resolution: 0.5)
 
       # Game over: how the round dims, how the score counts up, and the
       # celebration of a new best. Its sparkles may outlive a pop's
