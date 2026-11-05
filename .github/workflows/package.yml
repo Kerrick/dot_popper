@@ -15,9 +15,11 @@ on:
 permissions:
   contents: read
 
+# A run in progress finishes, so that frequent pushes still leave builds
+# to download; only the newest waiting run is kept.
 concurrency:
   group: package-${{ github.ref }}
-  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+  cancel-in-progress: false
 
 defaults:
   run:
