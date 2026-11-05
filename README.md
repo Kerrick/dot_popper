@@ -49,7 +49,8 @@ Any controller your computer or iPad recognizes as a gamepad works, such as an X
 - **A** (cross on a PlayStation controller) or the right trigger presses wherever the cursor is, exactly as a click there would.
 - **Start** starts a round from the title screen, and continues after one ends.
 - **Y** (triangle) copies your result on the Game Over screen.
-- **Back** turns sound on or off.
+- **X** (square) opens the Records screen from the title, once it is offered. **B** (circle) or **Start** goes back to the title from it, as does a press of **A** anywhere.
+- **Back** turns sound on or off, on every screen.
 
 The cursor appears when you use the controller and hides when you move the mouse or touch the screen. On an iPad, a controller paired in the iPad's Bluetooth settings works the same way, from the first iPad build made after controllers were turned on there.
 

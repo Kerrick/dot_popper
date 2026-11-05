@@ -9,7 +9,8 @@
 # toggles fullscreen; M toggles sound, as the speaker on the title does;
 # Escape quits. On a gamepad (Lota 0.1.3 and newer), the left stick or
 # d-pad aims, A or the right trigger presses, Start starts and continues,
-# Y copies the result on Game Over, and Back toggles sound.
+# Y copies the result on Game Over, X opens the Records screen from the
+# title, B (or Start) leaves it, and Back toggles sound.
 #
 # Development settings, read from the environment:
 #

@@ -326,11 +326,13 @@ The cursor is a thin cream ring with four short ticks and a dot in the centre, e
 
 **To reverse:** Remove the `hide` calls in `Shell::App`'s mouse and touch handlers.
 
-### Start and Y are shortcuts on the menus, never during play
+### Start, Y, X, and B are shortcuts on the menus, never during play
 
 On the title screen, **Start** starts an ordinary round (without popping a title dot). On the Game Over screen, it continues, after the same pause as a tap. During a round it does nothing, because only a press at a position may affect the score. **Y** copies the result on the Game Over screen, as the Copy my result button does, and does nothing elsewhere. **Back** turns sound on or off, as **M** does.
 
 **Why:** A button that scored without aiming would bypass the game.
+
+The Records screen added three more. **X** opens it from the title, once it is offered, so a controller player needn't steer the cursor to the corner. **B**, the usual "go back" button, leaves it, and so does **Start**, which on every other menu screen means "go on". **A** works as a tap anywhere, which also leaves it. **Back** stays the sound toggle on every screen, including this one, so one button never means two things. B and X do nothing during a round, for the same reason Start doesn't.
 
 **To reverse:** The button mapping is in `Presentation::GamepadButtons`.
 

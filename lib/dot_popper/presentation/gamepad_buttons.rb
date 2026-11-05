@@ -8,14 +8,17 @@ module DotPopper
     #
     # [:press] a press at the cursor, as a click there (A, and the right
     #   trigger through Trigger)
-    # [:start] start a round from the title, or continue after one (Start)
+    # [:start] start a round from the title, or continue after one, or
+    #   leave the Records screen (Start)
     # [:share] copy the result on Game Over (Y)
-    # [:mute] sound on or off (Back, Select, or Share)
+    # [:records] open the Records screen from the title (X)
+    # [:leave] leave the Records screen (B)
+    # [:mute] sound on or off (Back, Select, or Share), on every screen
     #
     # The d-pad has no intent of its own: it moves the cursor, as the left
-    # stick does (GamepadCursor).
+    # stick does (GamepadCursor). B and X do nothing during a round.
     class GamepadButtons < Data.define(:intents)
-      STANDARD = { a: :press, start: :start, y: :share, back: :mute }.freeze
+      STANDARD = { a: :press, start: :start, y: :share, x: :records, b: :leave, back: :mute }.freeze
 
       def initialize(intents: STANDARD) = super
 

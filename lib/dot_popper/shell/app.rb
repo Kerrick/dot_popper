@@ -90,6 +90,8 @@ module DotPopper
         in :press then gamepad_tap
         in :start then @show.start
         in :share then @show.share
+        in :records then @show.open_records if @show.records_offered?
+        in :leave then @show.back
         in :mute then @speaker.toggle_mute
         in nil then nil
         end
