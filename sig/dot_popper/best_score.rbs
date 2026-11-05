@@ -6,7 +6,15 @@ module DotPopper
       def write: (String text) -> void
     end
 
+    interface _Removable
+      include _Store
+
+      def remove: () -> void
+    end
+
     @store: _Store
+
+    @legacy: SizeClass
 
     @values: Hash[SizeClass, Integer]
 
@@ -17,6 +25,12 @@ module DotPopper
     def first?: (SizeClass size_class) -> bool
 
     def record: (Integer score, SizeClass size_class) -> bool
+
+    def saved: () -> String?
+
+    def clear: () -> void
+
+    def restore: (String? text) -> void
 
     private
 
@@ -40,6 +54,8 @@ module DotPopper
       def read: () -> String?
 
       def write: (String text) -> String
+
+      def remove: () -> nil
     end
   end
 end

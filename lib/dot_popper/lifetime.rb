@@ -13,6 +13,7 @@ module DotPopper
     def initialize(store, today: -> { Date.today }, legacy: SizeClass::MEDIUM)
       @store = store
       @today = today
+      @legacy = legacy
       text = store.read
       @stats = LifetimeStats.parse(text, legacy:)
       store.write(stats.to_text) if LifetimeStats.old?(text)
@@ -33,6 +34,22 @@ module DotPopper
     end
 
     def today = @today.call
+
+    # The store's whole text, as saved, for #restore (RecordKeeper).
+    def saved = @store.read
+
+    # Forgets every round, as on a new device: the totals, the chart, each
+    # class's bests, and the daily goal's streaks and today's goal met.
+    def clear
+      @stats = LifetimeStats.new
+      @store.write("")
+    end
+
+    # Puts back +text+, the store's whole text as #saved gave it.
+    def restore(text)
+      @store.write(text.to_s)
+      @stats = LifetimeStats.parse(text, legacy: @legacy)
+    end
 
     # Today's goal, and whether a round has met it yet today.
     def goal = DailyGoal.for(today)

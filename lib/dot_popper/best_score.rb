@@ -14,6 +14,7 @@ module DotPopper
   class BestScore
     def initialize(store, legacy: SizeClass::MEDIUM)
       @store = store
+      @legacy = legacy
       text = store.read.to_s
       @values = Best.parse(text, legacy:)
       save if Best.old?(text)
@@ -35,6 +36,21 @@ module DotPopper
       @values = @values.merge(size_class => score)
       save
       !first
+    end
+
+    # The store's whole text, as saved, for #restore (RecordKeeper).
+    def saved = @store.read
+
+    # Forgets every class's best, as on a new device.
+    def clear
+      @values = {}
+      @store.write("")
+    end
+
+    # Puts back +text+, the store's whole text as #saved gave it.
+    def restore(text)
+      @store.write(text.to_s)
+      @values = Best.parse(text.to_s, legacy: @legacy)
     end
 
     private
@@ -70,6 +86,7 @@ module DotPopper
       def initialize(text = nil) = @text = text
       def read = @text
       def write(text) = @text = text
+      def remove = @text = nil
     end
   end
 end

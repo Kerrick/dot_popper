@@ -1,0 +1,51 @@
+module DotPopper
+  class RecordKeeper
+    interface _Kept
+      def saved: () -> String?
+
+      def clear: () -> void
+
+      def restore: (String? text) -> void
+    end
+
+    type folder = ^(String name) -> BestScore::_Removable
+
+    NOTE: String
+
+    BACKUP: Regexp
+
+    @kept: Hash[String, _Kept]
+
+    @folder: folder | Folder
+
+    @clock: ^() -> Time
+
+    @cleared: bool
+
+    def initialize: (best: _Kept, lifetime: _Kept, ?folder: folder | Folder, ?clock: ^() -> Time) -> void
+
+    def cleared?: () -> bool
+
+    def clear: () -> Cleared
+
+    def restore: (Cleared cleared) -> void
+
+    class Cleared < ::Data
+      attr_reader texts: Hash[String, String?]
+
+      def self.new: (texts: Hash[String, String?]) -> instance
+    end
+
+    class Folder
+      @stores: Hash[String, BestScore::Memory]
+
+      def initialize: () -> void
+
+      def call: (String name) -> BestScore::Memory
+    end
+
+    private
+
+    def back_up: (Hash[String, String?] texts) -> void
+  end
+end
