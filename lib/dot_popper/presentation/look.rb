@@ -252,12 +252,14 @@ module DotPopper
       HAPTICS = HapticsLook.new(pop: 0.015, penalty: 0.04)
 
       # The gamepad cursor (Lota 0.1.3 and newer). At full tilt it crosses
-      # the 24 R window in about 1.5 s, outrunning the fastest dot (6 R/s)
-      # nearly threefold; the squared curve leaves half a tilt at a quarter
-      # of that, for aiming. The reticle is thin and open in the middle, so
-      # it never hides the dot under it.
-      GAMEPAD = GamepadLook.new(dead_zone: 0.2, curve: 2.0, speed: 16.0, trigger_press: 0.5, trigger_release: 0.3,
-                                ring: 0.3, ticks: 0.42..0.6, line: 0.04, pip: 4)
+      # the window corner to corner in a second, whatever the window's
+      # size, and never slower than 16 R/s, nearly three times the fastest
+      # dot (6 R/s), which crosses a small 24 R window in 1.5 s. It gathers
+      # that speed over 0.3 s; the squared curve leaves half a tilt at a
+      # quarter of it, for aiming. The reticle is thin and open in the
+      # middle, so it never hides the dot under it.
+      GAMEPAD = GamepadLook.new(dead_zone: 0.2, curve: 2.0, speed: 16.0, crossing: 1.0, ramp: 0.3, trigger_press: 0.5,
+                                trigger_release: 0.3, ring: 0.3, ticks: 0.42..0.6, line: 0.04, pip: 4)
 
       PATCHES = {
         # A bubbly "bloop": a sine that swoops up, with a soft click.

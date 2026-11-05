@@ -5,15 +5,20 @@ module DotPopper
     # How the gamepad cursor moves and looks. A push inside +dead_zone+
     # (of a full tilt, 1) is a stick at rest, so a worn stick does not
     # drift; past it, the push rises along a curve of power +curve+, so a
-    # small tilt aims finely and a full one crosses the screen. +speed+ is
-    # radii a second at full tilt. The right trigger presses when pulled
+    # small tilt aims finely and a full one crosses the screen. At full
+    # tilt the cursor crosses the window's diagonal in +crossing+
+    # seconds, whatever its size, but never goes slower than +speed+
+    # radii a second, so a small window keeps its feel. It gathers speed
+    # over +ramp+ seconds rather than all at once, and only up to the
+    # push's: a gentle push is at its speed almost at once, and letting
+    # go stops it dead. The right trigger presses when pulled
     # to +trigger_press+ (of 1) and lets go below +trigger_release+, so a
     # trigger resting near the line does not chatter. The reticle's
     # +ring+ and its +ticks+ (from, to) are in radii, +line+ is its
     # stroke, in radii too, and +pip+ is the dot at its centre, in device
     # pixels across.
-    class GamepadLook < Data.define(:dead_zone, :curve, :speed, :trigger_press, :trigger_release, :ring, :ticks, :line,
-                                    :pip)
+    class GamepadLook < Data.define(:dead_zone, :curve, :speed, :crossing, :ramp, :trigger_press, :trigger_release,
+                                    :ring, :ticks, :line, :pip)
     end
 
     # A push on a stick or d-pad, each way from -1 to 1; down is positive,
@@ -49,21 +54,34 @@ module DotPopper
     # Where the gamepad aims, and whether it shows. It shows once a
     # gamepad is used and hides when the mouse or a finger is, waiting
     # where the mouse last was, so a player who picks up the pad starts
-    # from there. It stays inside +area+, the window.
-    class GamepadCursor < Data.define(:x, :y, :visible, :area, :look, :radius)
+    # from there. It stays inside +area+, the window. +pace+ is how fast
+    # it is going, of its top speed, as it gathers speed.
+    class GamepadCursor < Data.define(:x, :y, :visible, :area, :look, :radius, :pace)
       # A hidden cursor in the middle of +area+.
       def self.centered(area, look:, radius:)
         new(x: area.center_x, y: area.center_y, visible: false, area:, look:, radius:)
       end
 
+      def initialize(pace: 0.0, **) = super
+
       # The cursor +seconds+ later, pushed by +stick+. A push past the dead
-      # zone moves it and shows it.
+      # zone moves it and shows it; a stick at rest stops it.
       def update(seconds, stick)
         push = stick.shaped(look.dead_zone, look.curve)
-        return self if push.rest?
+        return pace.zero? ? self : with(pace: 0.0) if push.rest?
 
-        step = look.speed * radius * seconds
-        at(x + (push.x * step), y + (push.y * step)).show
+        strength = Math.hypot(push.x, push.y)
+        paced = [pace + (seconds / look.ramp), strength].min
+        step = top_speed * seconds * paced / strength
+        at(x + (push.x * step), y + (push.y * step)).with(pace: paced).show
+      end
+
+      # Graphics units a second at full tilt and full pace: enough to cross
+      # the window's diagonal in the look's +crossing+, counting the half
+      # of the ramp it spends gathering speed, and no less than +speed+
+      # radii a second.
+      def top_speed
+        [Math.hypot(area.width, area.height) / (look.crossing - (look.ramp / 2.0)), look.speed * radius].max
       end
 
       def show = with(visible: true)
