@@ -7,18 +7,22 @@
 # The icon is CC0-1.0 (LICENSES/ICONS.md). Run it from the
 # repository's root: ruby script/make_icon.rb
 #
-# Design: a deep ink rounded square (#141127), a bold coral dot (#FF6B5E)
-# with an ink gap and a mint ring (#5EE6C0), and a small mint dot popping
-# off to the upper right. Each pixel's coverage comes from its distance
+# Design: the game's central picture in its own palette (the
+# presentation's palette.rb): on a deep ink rounded square (#1D1A4A), a
+# fresh golden dot (#FFBF52, with its highlight #FFF0BF) half covered by a
+# popped one on top (#4A4570, rim #8F88BD, crater #29263F). Each pixel's coverage comes from its distance
 # to each shape's edge, so every size is drawn sharp, not scaled down.
 
 require "zlib"
 require "fileutils"
 require "tmpdir"
 
-INK = [0x14, 0x11, 0x27].freeze
-CORAL = [0xFF, 0x6B, 0x5E].freeze
-MINT = [0x5E, 0xE6, 0xC0].freeze
+INK = [0x1D, 0x1A, 0x4A].freeze
+FRESH = [0xFF, 0xBF, 0x52].freeze
+FRESH_LIGHT = [0xFF, 0xF0, 0xBF].freeze
+POPPED = [0x4A, 0x45, 0x70].freeze
+POPPED_RIM = [0x8F, 0x88, 0xBD].freeze
+CRATER = [0x29, 0x26, 0x3F].freeze
 
 # Signed distances, in units of the icon's side (0..1); negative inside.
 def rounded_square(x, y, inset, radius)
@@ -35,9 +39,11 @@ def ring(x, y, cx, cy, r, width) = (Math.hypot(x - cx, y - cy) - r).abs - width 
 # Layers, bottom to top: [colour, distance function].
 LAYERS = [
   [INK, ->(x, y) { rounded_square(x, y, 0.04, 0.2) }],
-  [MINT, ->(x, y) { ring(x, y, 0.43, 0.57, 0.305, 0.05) }],
-  [CORAL, ->(x, y) { circle(x, y, 0.43, 0.57, 0.24) }],
-  [MINT, ->(x, y) { circle(x, y, 0.76, 0.25, 0.1) }],
+  [FRESH, ->(x, y) { circle(x, y, 0.62, 0.62, 0.25) }],
+  [FRESH_LIGHT, ->(x, y) { circle(x, y, 0.69, 0.53, 0.06) }],
+  [POPPED_RIM, ->(x, y) { circle(x, y, 0.38, 0.38, 0.25) }],
+  [POPPED, ->(x, y) { circle(x, y, 0.38, 0.38, 0.225) }],
+  [CRATER, ->(x, y) { circle(x, y, 0.38, 0.38, 0.1) }],
 ].freeze
 
 def render(size)

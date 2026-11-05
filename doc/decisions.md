@@ -55,3 +55,25 @@ Its output on 2026-11-05, 60 rounds per device (`bundle exec ruby script/simulat
 
 The model player is crude (its impatience sets the penalty count), so read the
 columns against each other, not as predictions of a person's score.
+
+## Presentation
+
+- **One frame advances the rules by at most 0.1 s.** The spec has the clock
+  count down in real time, using each frame's elapsed time. A long frame, such
+  as dragging a window on Windows, a heavily loaded machine, or an iPad
+  resuming, would otherwise take seconds off the clock while the player could
+  not see or touch anything. Normal frames, down to 10 a second, are
+  unaffected.
+- **The look is "gumdrops at night."** Fresh dots are light, glossy, and
+  haloed; popped dots are dark, matte, opaque discs with a light rim and a
+  sunken crater, so the two differ in lightness (a 5.4:1 contrast ratio,
+  enforced by a test) and in shape, not only in hue. Each dot's halo and shadow
+  are drawn with the dot, in stack order, so a popped dot visibly covers a
+  fresh one. The icon shows exactly that picture.
+- **The sound setting is remembered** in the save folder (`sound.txt`), as is
+  the best score (`best_score.txt`).
+- **Every shader is optional.** If one fails to compile, the game says so once
+  and draws plain shapes that keep the fresh/popped distinction
+  (`DOT_POPPER_NO_SHADERS=1` forces this). Lota's CI drew the fused Windows
+  build's title with Mesa's software OpenGL, shaders and all; no real Windows
+  GPU has run it yet.

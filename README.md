@@ -16,7 +16,7 @@ Dot Popper is written in Ruby on [Lota](https://github.com/setdef/Lota), which r
 | Fullscreen | **F11**, or **Alt+Enter** (**Cmd+Enter** on a Mac) |
 | Quit | **Escape**, or close the window |
 
-A fresh dot is bright and glossy. A popped dot is a muted, matte disc with a dark crater in its centre. The two differ in lightness and shape as well as colour, so they read apart in greyscale and for colour-blind players. The game keeps your best score on the device. Set `DOT_POPPER_CALM=1` to turn off the screen shake.
+A fresh dot is bright and glossy. A popped dot is a muted, matte disc with a dark crater in its centre. The two differ in lightness and shape as well as colour, so they read apart in greyscale and for colour-blind players. The game keeps your best score, and whether sound is on, on the device. Set `DOT_POPPER_CALM=1` to turn off the screen shake.
 
 ## Installing and running
 
@@ -28,6 +28,18 @@ bundle exec lota run
 ```
 
 To play without Ruby, download a build instead. Every push to `trunk` builds a Windows installer and `.zip`, and a macOS `.dmg`, as artifacts of the [Package workflow](https://github.com/Kerrick/dot_popper/actions/workflows/package.yml). A `v0.*` tag also attaches them to a [release](https://github.com/Kerrick/dot_popper/releases). [PACKAGING.md](PACKAGING.md) explains how the builds are made, and how to build one yourself.
+
+## Development settings
+
+`main.rb` reads these from the environment, for testing and for capturing screenshots:
+
+| Variable | Effect |
+| --- | --- |
+| `DOT_POPPER_AUTOPLAY=1` | A bot plays: it mostly taps fresh dots and sometimes a popped one, so penalties show |
+| `DOT_POPPER_SHOTS=0.5,3,6.5` | Saves screenshots at these game-time seconds as `shot-N.png` in the save folder, and prints each path |
+| `DOT_POPPER_QUIT_AFTER=20` | Quits after this many seconds of game time |
+| `DOT_POPPER_SEED=42` | Makes the dots' randomness repeatable |
+| `DOT_POPPER_NO_SHADERS=1` | Draws without shaders, as the game does on its own when a shader fails to compile |
 
 ## Running the tests
 
