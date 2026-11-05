@@ -50,4 +50,5 @@ def Lota.resize(_width, _height) = @app&.resize
 # 0.1.3, Lota passes the Joystick first, as LÖVE does.
 def Lota.gamepadpressed(_joystick, button) = @app&.gamepad_pressed(button)
 def Lota.gamepadaxis(_joystick, axis, value) = @app&.gamepad_axis(axis, value)
-def Lota.joystickremoved(_joystick) = @app&.gamepad_removed
+def Lota.joystickadded(joystick) = @app&.gamepad_added(joystick)
+def Lota.joystickremoved(joystick) = @app&.gamepad_removed(joystick)

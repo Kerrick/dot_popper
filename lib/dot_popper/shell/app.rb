@@ -41,7 +41,7 @@ module DotPopper
         @renderer = Renderer.new(@show, @pen, pile: @pile, sparks: @sparks, bloom: @bloom)
         @renderer.prepare
         @input = Presentation::InputRouter.new
-        @gamepads = Gamepads.new
+        @gamepads = Gamepads.new(enabled: !DotSize.touch?(os))
         @buttons = Presentation::GamepadButtons.new
         @trigger = Presentation::Trigger.released
         @cursor = Presentation::GamepadCursor.centered(@show.layout.whole, look: Look::GAMEPAD,
@@ -106,8 +106,14 @@ module DotPopper
         gamepad_tap
       end
 
-      # A gamepad was unplugged: let its trigger go.
-      def gamepad_removed = @trigger = Presentation::Trigger.released
+      # A controller was plugged in, or was there when the game started.
+      def gamepad_added(joystick) = @gamepads.added(joystick)
+
+      # A controller was unplugged: forget it, and let its trigger go.
+      def gamepad_removed(joystick)
+        @gamepads.removed(joystick)
+        @trigger = Presentation::Trigger.released
+      end
 
       def key_pressed(key)
         return @speaker.toggle_mute if key == :m
