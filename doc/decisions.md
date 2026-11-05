@@ -498,3 +498,11 @@ From "Time's up!" down to "Tap to continue", Game Over's words sit on a dark, ro
 **Why:** Figure and ground. Once the pile settled behind the summary line and the share button, light dots ran through the text and made it harder to read. A darker ground behind only the text keeps it readable. The pile is the toy, so the backing must never hide it: at 60%, with feathered edges, the dots stay visible.
 
 **To reverse:** Remove the `backing` call from `FinalePainter#draw`.
+
+### The title reads more clearly
+
+Three changes. At its faintest, "Tap anywhere to play" now breathes down to 80% opacity rather than 50%, so it stays easy to read at every point in its cycle. The legend's base size is 29 rather than 24. It still scales with the layout and shrinks by whole sizes until it fits, so wide windows get larger legend type and narrow screens are unchanged. Finally, the title's words, from its name to its prompt, sit on a faint feathered backing at 40%, and the veil over the whole title is slightly darker (76%, up from 72%). Together these dim the drifting dots most where they pass behind the text.
+
+**Why:** At half opacity the prompt nearly disappeared over a passing dot, at the moment a new player looks for what to do. The legend teaches the scoring, but on a wide window it was small next to the name. The drifting dots are scenery and shouldn't compete with the words.
+
+**To reverse:** Set `Look::TITLE.faintest` to 0.5, `dim` to 0.72, and `TYPE.legend` to 24, and remove the `backing` call from `TitlePainter#draw`.

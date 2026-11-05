@@ -5,7 +5,8 @@ module DotPopper
     # The title screen: the name, a legend that teaches the rule with one
     # dot of each kind, the best score, the prompt, the mute button, and,
     # once a round has been played, today's goal, "Your records", and the
-    # choice of how dots are sized.
+    # choice of how dots are sized. From the name to the prompt, the words
+    # sit on a faint backing, so the dots drifting behind them dim further.
     class TitlePainter < Data.define(:pen, :dots)
       G = ::Lota::Graphics
 
@@ -17,19 +18,21 @@ module DotPopper
         height = layout.safe.height
         center = layout.center_y
         title = pen.fonts.bold(fit(layout.scaled(type.title), show.words.title, layout))
+        goal = show.records_offered?
+        prompt = pen.fonts.bold(layout.scaled(type.prompt))
+        prompt_y = center + (height * (goal ? 0.29 : 0.27))
+        backing(layout, title, show.words, center - (height * 0.2) - (title.height * 0.4),
+                prompt_y + (prompt.height * 0.5), intro)
         Lettering.new(pen:).candy(show.words.title, title, layout.center_x, center - (height * 0.2) - ((1 - intro) * 24),
                                   intro)
         legend(show, layout, center + (height * 0.02), intro)
-        goal = show.records_offered?
         best = pen.fonts.semibold(layout.scaled(type.best))
         if marquee.best.positive?
           pen.text(show.words.best_line(marquee.best), best, layout.center_x, center + (height * (goal ? 0.125 : 0.14)),
                     pen.palette.soft, intro)
         end
         daily_goal(show, layout, center + (height * 0.195), intro) if goal
-        prompt = pen.fonts.bold(layout.scaled(type.prompt))
-        pen.text(show.words.play, prompt, layout.center_x, center + (height * (goal ? 0.29 : 0.27)), pen.palette.cream,
-                  intro * marquee.prompt(now))
+        pen.text(show.words.play, prompt, layout.center_x, prompt_y, pen.palette.cream, intro * marquee.prompt(now))
         MuteButton.new(pen:).draw(layout.mute_button, show.sounds.muted?)
         return unless show.records_offered?
 
@@ -39,6 +42,23 @@ module DotPopper
       end
 
       private
+
+      # The backing from +top+ to +bottom+, as wide as the name or the
+      # legend, whichever is wider.
+      def backing(layout, title, words, top, bottom, alpha)
+        font = legend_font(legend_items(words), layout)
+        width = [title.width(words.title), legend_width(legend_items(words), font)].max
+        rect = Presentation::Rect.new(x: layout.center_x - (width / 2.0), y: top, width:, height: bottom - top)
+        ScrimPainter.new(pen:).draw(rect, pen.look::TITLE_BACKING, layout, alpha:)
+      end
+
+      def legend_items(words) = [[true, words.legend_fresh], [false, words.legend_popped]]
+
+      # How wide the legend is in +font+: a dot, a gap, and its longer line.
+      def legend_width(items, font)
+        radius = font.height * 0.5
+        items.map { |_, text| (radius * 2.7) + font.width(text) }.max
+      end
 
       # Today's goal, broken into lines that fit across, or once it is met,
       # "Today's goal is done." with a check; under it, the days in a row
@@ -76,12 +96,11 @@ module DotPopper
       # popped dot's line beneath it, the two lines left-aligned on their
       # dots so they read as a pair.
       def legend(show, layout, y, alpha)
-        words = show.words
-        items = [[true, words.legend_fresh], [false, words.legend_popped]]
+        items = legend_items(show.words)
         font = legend_font(items, layout)
         radius = font.height * 0.5
         gap = radius * 0.7
-        width = items.map { |_, text| (radius * 2) + gap + font.width(text) }.max
+        width = legend_width(items, font)
         x = layout.center_x - (width / 2.0)
         items.each_with_index do |(fresh, text), i|
           item(x, y + ((i - 0.5) * radius * 2.8), radius, gap, fresh, text, font, alpha)

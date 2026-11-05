@@ -77,7 +77,7 @@ module DotPopper
       TYPE = Type.new(
         bold: "assets/fonts/Fredoka-Bold.ttf", semibold: "assets/fonts/Fredoka-SemiBold.ttf",
         title: 108, heading: 64, final_score: 136, hud_number: 40, hud_label: 13,
-        prompt: 26, legend: 24, best: 26, floater: 34, new_best: 34, hint: 21, summary: 20
+        prompt: 26, legend: 29, best: 26, floater: 34, new_best: 34, hint: 21, summary: 20
       )
 
       # The desktop window opens at 24 × 16 radii (1200 × 800 units when
@@ -159,10 +159,14 @@ module DotPopper
         urgent_below: 3
       )
 
-      # The title: its drifting dots, and the prompt's breath.
-      class TitleLook < Data.define(:dots, :drift, :dim, :breath, :intro); end
-      TITLE = TitleLook.new(dots: 7, drift: 0.35, dim: 0.72, breath: 2.4,
+      # The title: its drifting dots and how far they dim, the prompt's
+      # breath and its faintest point in it, which stays easy to read.
+      class TitleLook < Data.define(:dots, :drift, :dim, :breath, :faintest, :intro); end
+      TITLE = TitleLook.new(dots: 7, drift: 0.35, dim: 0.76, breath: 2.4, faintest: 0.8,
                             intro: Tween.new(from: 0.0, to: 1.0, duration: 0.5, ease: :out_cubic))
+      # ...and the title's words, from its name to its prompt, sit on a
+      # faint backing, so a dot drifting behind them dims further.
+      TITLE_BACKING = ScrimLook.new(alpha: 0.4, feather: 48, layers: 10, pad: 12)
 
       # The glow fresh dots and droplets cast on the night under the dots
       # (Shell::Bloom), blurred at half the screen's resolution. A

@@ -7,9 +7,12 @@ module DotPopper
     class Marquee < Data.define(:look, :best, :at)
       def intro(now) = look.intro.at(now - at)
 
-      # The prompt breathes, between half and fully opaque, once every
-      # +breath+ seconds.
-      def prompt(now) = 0.75 - (0.25 * Math.cos((now - at) * 2 * Math::PI / look.breath))
+      # The prompt breathes, between +faintest+ and fully opaque, once
+      # every +breath+ seconds.
+      def prompt(now)
+        swing = (1 - look.faintest) / 2.0
+        1 - swing - (swing * Math.cos((now - at) * 2 * Math::PI / look.breath))
+      end
     end
   end
 end
