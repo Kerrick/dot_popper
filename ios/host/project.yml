@@ -1,0 +1,55 @@
+# XcodeGen's description of Dot Popper's Xcode project, which `fledge
+# build ios` lays over the one it writes and fills in (@@NAME@@ and the
+# other marks) before it generates the project. It is Fledge 0.5.0's
+# examples/sdl_phone/host/ios/project.yml (AGPL-3.0-or-later), less its UI
+# test target: SDL3 owns the main loop, and Ruby runs inside SDL_RunApp
+# on the main thread, so the executable asks for a 64 MB main thread
+# stack, and the Debug configuration keeps the app's code in it
+# (ENABLE_DEBUG_DYLIB). The target's shared scheme (scheme: {}) sets no
+# environment, so OS_ACTIVITY_DT_MODE stays out of it (doc/ios.md).
+name: @@NAME@@
+options:
+  deploymentTarget:
+    iOS: "15.0"
+settings:
+  base:
+    OTHER_LDFLAGS: -Wl,-stack_size,0x4000000
+    ENABLE_DEBUG_DYLIB: NO
+targets:
+  @@NAME@@:
+    type: application
+    platform: iOS
+    sources:
+      - path: Host
+    dependencies:
+      - framework: FledgeRuby.xcframework
+        embed: false
+      @@EXTENSIONS@@
+    postCompileScripts:
+      - name: Copy Ruby and the app
+        basedOnDependencyAnalysis: false
+        script: |
+          set -eu
+          slice=ios-arm64
+          if [ "$PLATFORM_NAME" = iphonesimulator ]; then slice=ios-arm64-simulator; fi
+          root="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/fledge"
+          rm -rf "$root"
+          ditto "$PROJECT_DIR/FledgeRuby.xcframework/$slice/lib" "$root/lib"
+          ditto "$PROJECT_DIR/FledgeRuby.xcframework/$slice/libexec" "$root/libexec"
+          ditto "$PROJECT_DIR/fledge" "$root"
+    scheme: {}
+    settings:
+      base:
+        PRODUCT_NAME: @@NAME@@
+        PRODUCT_BUNDLE_IDENTIFIER: @@IDENTIFIER@@
+        MARKETING_VERSION: @@VERSION@@
+        CURRENT_PROJECT_VERSION: @@VERSION@@
+        INFOPLIST_FILE: Host/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: @@APP_ICON@@
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ARCHS: arm64
+        CLANG_ENABLE_MODULES: YES
+        CLANG_ENABLE_OBJC_ARC: YES
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        OTHER_LDFLAGS: @@LDFLAGS@@
