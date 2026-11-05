@@ -11,7 +11,7 @@ module DotPopper
     # finger is one tap. A trackpad's touches have normalized 0 to 1
     # coordinates and are not taps either. A tap counts when the button or
     # finger goes down, and every finger is a tap of its own.
-    class InputRouter
+    class InputRouter < Data.define
       MOUSE_BUTTONS = [1, 2, 3].freeze
 
       # The tap for a mousepressed, or nil.

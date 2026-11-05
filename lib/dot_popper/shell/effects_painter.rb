@@ -2,61 +2,85 @@
 
 module DotPopper
   module Shell
-    # Draws what follows a tap: rings, droplets (additive, so they only
-    # ever brighten), and floating numbers.
-    class EffectsPainter
+    # Draws what follows a tap: rings (each around its dot, if it follows
+    # one), droplets (additive, so they only ever brighten), and floating
+    # numbers, outlined so they read over any dot.
+    class EffectsPainter < Data.define(:pen)
       G = ::Lota::Graphics
+      EDGE_BANDS = 8 # strips of the edge glow, without its shader
 
-      def initialize(pen)
-        @pen = pen
-      end
-
-      def draw(effects, layout)
-        rings(effects.rings)
+      def draw(effects, layout, dots)
+        rings(effects.rings, effects.now, dots)
         droplets(effects.particles)
-        floaters(effects.floaters, layout)
+        floaters(effects.floaters, effects.now, layout)
       end
 
       # The glow at the screen's edges, over everything in the field.
-      def flash(flash, width, height)
-        return if flash.alpha <= 0.0
+      def flash(effects, width, height)
+        alpha = effects.flash_alpha
+        return if alpha <= 0.0
 
-        @pen.shading(:edge) do |shader|
-          @pen.send(shader, "size", [width.to_f, height.to_f])
-          @pen.send(shader, "band", [width, height].min * 0.16)
-          @pen.color(flash.color, flash.alpha)
-          @pen.square(width / 2.0, height / 2.0, width / 2.0, height / 2.0)
+        band = [width, height].min * 0.16
+        return flat_flash(effects.flash.color, alpha, width, height, band) unless pen.shader?(:edge)
+
+        pen.shading(:edge) do |shader|
+          pen.send(shader, "size", [width.to_f, height.to_f])
+          pen.send(shader, "band", band)
+          pen.color(effects.flash.color, alpha)
+          pen.square(width / 2.0, height / 2.0, width / 2.0, height / 2.0)
         end
       end
 
       private
 
-      def rings(rings)
+      def rings(rings, now, dots)
         rings.each do |ring|
-          next if ring.width <= 0.0
+          width = ring.width(now)
+          next if width <= 0.0
 
-          @pen.color(ring.look.color, ring.alpha)
-          G.line_width = ring.width
-          G.circle(:line, ring.x, ring.y, ring.radius, 64)
+          x, y = ring.center(dots)
+          pen.color(ring.look.color, ring.alpha(now))
+          G.line_width = width
+          G.circle(:line, x, y, ring.radius(now), 64)
         end
       end
 
       def droplets(particles)
-        @pen.adding do
-          @pen.shading(:glow) do
+        pen.adding do
+          if pen.shader?(:glow)
+            pen.shading(:glow) { particles.each { droplet(it) } }
+          else
             particles.each do |particle|
-              @pen.color(particle.color, particle.alpha)
-              @pen.square(particle.x, particle.y, particle.size, particle.size)
+              pen.color(particle.color, particle.alpha * 0.8)
+              G.circle(:fill, particle.x, particle.y, particle.size * 0.6, 12)
             end
           end
         end
       end
 
-      def floaters(floaters, layout)
+      def droplet(particle)
+        pen.color(particle.color, particle.alpha)
+        pen.square(particle.x, particle.y, particle.size, particle.size)
+      end
+
+      def floaters(floaters, now, layout)
         return if floaters.empty?
 
-        font = @pen.fonts.bold(layout.scaled(@pen.look::TYPE.floater))
-        floaters.each { @pen.text(it.text, font, it.x, it.y, it.color, it.alpha) }
+        font = pen.fonts.bold(layout.scaled(pen.look::TYPE.floater))
+        floaters.each { pen.outlined(it.text, font, it.x, it.height(now), it.color, it.alpha(now)) }
+      end
+
+      # Strips along each edge, fainter toward the middle.
+      def flat_flash(color, alpha, width, height, band)
+        step = band / EDGE_BANDS
+        EDGE_BANDS.times do |i|
+          pen.color(color, alpha * ((1 - (i.to_f / EDGE_BANDS))**2) * 0.5)
+          inset = i * step
+          G.rectangle(:fill, inset, inset, width - (2 * inset), step)
+          G.rectangle(:fill, inset, height - inset - step, width - (2 * inset), step)
+          G.rectangle(:fill, inset, inset + step, step, height - (2 * (inset + step)))
+          G.rectangle(:fill, width - inset - step, inset + step, step, height - (2 * (inset + step)))
+        end
       end
     end
   end

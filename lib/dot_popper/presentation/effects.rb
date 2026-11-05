@@ -3,23 +3,26 @@
 module DotPopper
   module Presentation
     # Everything that plays out after a tap and then goes away: droplets,
-    # rings, floating numbers, the shake, and the edge flash. Each frame
-    # moves them all along by the time that passed. Sizes and speeds come
-    # in radii and leave in graphics units, scaled by +radius+.
+    # rings, floating numbers, the shake, and the edge flash. It keeps its
+    # own clock, +now+; rings, floaters, the shake, and the flash are
+    # values that say how they look at a moment, and droplets are pooled
+    # and moved each frame. Sizes and speeds come in radii and leave in
+    # graphics units, scaled by +radius+.
     class Effects
       MOST_RINGS = 32
       MOST_FLOATERS = 24
 
-      attr_reader :particles, :rings, :floaters, :shake, :flash
+      attr_reader :particles, :rings, :floaters, :shake, :flash, :now
 
       def initialize(radius:, random: Random.new, calm: false, particle_capacity: 400)
         @radius = radius
         @random = random
+        @now = 0.0
         @particles = ParticlePool.new(particle_capacity)
         @rings = []
         @floaters = []
-        @shake = Shake.new(radius, calm:)
-        @flash = EdgeFlash.new
+        @shake = Shake.none(radius, calm:)
+        @flash = EdgeFlash::NONE
       end
 
       # Throws +look.count+ droplets out from (+x+, +y+), each a color
@@ -36,23 +39,26 @@ module DotPopper
         end
       end
 
-      def ring(x, y, look) = keep(@rings, Ring.new(x, y, look, @radius), MOST_RINGS)
-
-      def float(text, x, y, color, look)
-        keep(@floaters, Floater.new(text:, x:, y:, color:, look:, scale: @radius), MOST_FLOATERS)
+      def ring(x, y, look, follow: nil)
+        keep(@rings, Ring.new(x:, y:, look:, scale: @radius, born: now, follow:), MOST_RINGS)
       end
 
-      def kick(look) = @shake.kick(look)
-      def light(look) = @flash.trigger(look)
+      def float(text, x, y, color, look)
+        keep(@floaters, Floater.new(text:, x:, y:, color:, look:, scale: @radius, born: now), MOST_FLOATERS)
+      end
+
+      def kick(look) = @shake = @shake.kick(look, now)
+      def light(look) = @flash = EdgeFlash.new(look:, born: now)
+
+      def shake_x = @shake.offset_x(now)
+      def shake_y = @shake.offset_y(now)
+      def flash_alpha = @flash.alpha(now)
 
       def update(seconds)
+        @now += seconds
         @particles.update(seconds)
-        [@rings, @floaters].each do |list|
-          list.each { it.update(seconds) }
-          list.select!(&:alive?)
-        end
-        @shake.update(seconds)
-        @flash.update(seconds)
+        @rings.select! { it.alive?(now) }
+        @floaters.select! { it.alive?(now) }
       end
 
       def clear

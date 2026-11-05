@@ -43,16 +43,20 @@ module DotPopper
     # id, since a dot is a new value every frame. A dot with no record is
     # simply at rest.
     class DotAnimations
-      Record = Struct.new(:born, :popped, :wobbled, :phase)
+      # When one dot was born, popped, and tapped by mistake; nil for what
+      # has not happened to it.
+      class Moments < Data.define(:born, :popped, :wobbled)
+        NONE = new(born: nil, popped: nil, wobbled: nil)
+      end
 
       def initialize(motion)
         @motion = motion
         @records = {}
       end
 
-      def spawn(id, now) = record(id).born = now
-      def pop(id, now) = record(id).popped = now
-      def wobble(id, now) = record(id).wobbled = now
+      def spawn(id, now) = note(id, born: now)
+      def pop(id, now) = note(id, popped: now)
+      def wobble(id, now) = note(id, wobbled: now)
 
       def clear = @records.clear
       def size = @records.size
@@ -71,7 +75,7 @@ module DotPopper
 
       private
 
-      def record(id) = @records[id] ||= Record.new(nil, nil, nil, nil)
+      def note(id, **moment) = @records[id] = @records.fetch(id, Moments::NONE).with(**moment)
 
       def still(dot, breath)
         return Pose::STILL if dot.popped?

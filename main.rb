@@ -19,6 +19,8 @@
 #                               save folder, and prints each file's path.
 #   DOT_POPPER_QUIT_AFTER=20    quits after this many seconds.
 #   DOT_POPPER_SEED=42          makes the dots' randomness repeatable.
+#   DOT_POPPER_NO_SHADERS=1    draws with plain shapes, as on a GPU whose
+#                               driver will not compile the shaders.
 #   DOT_POPPER_CALM=1           turns off the screen shake (reduced motion).
 #                               This one is for players, too.
 

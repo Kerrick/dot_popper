@@ -35,7 +35,7 @@ module DotPopper
       TYPE = Type.new(
         bold: "assets/fonts/Fredoka-Bold.ttf", semibold: "assets/fonts/Fredoka-SemiBold.ttf",
         title: 108, heading: 64, final_score: 136, hud_number: 40, hud_label: 13,
-        prompt: 26, legend: 24, best: 26, floater: 30, new_best: 34
+        prompt: 26, legend: 24, best: 26, floater: 34, new_best: 34
       )
 
       # The desktop window opens at 24 × 16 radii (1200 × 800 units when
@@ -109,7 +109,7 @@ module DotPopper
 
       # The title: its drifting dots, and the prompt's breath.
       class TitleLook < Data.define(:dots, :drift, :dim, :breath, :intro); end
-      TITLE = TitleLook.new(dots: 7, drift: 0.35, dim: 0.5, breath: 2.4,
+      TITLE = TitleLook.new(dots: 7, drift: 0.35, dim: 0.72, breath: 2.4,
                             intro: Tween.new(from: 0.0, to: 1.0, duration: 0.5, ease: :out_cubic))
 
       # Game over: how the round dims, how the score counts up, and the
@@ -172,8 +172,8 @@ module DotPopper
       # each screen, how long it thinks before each tap (which grows with
       # the score, so a round ends), and how often it taps a popped dot.
       class AutopilotLook < Data.define(:title_wait, :finale_wait, :think, :tiring, :mistakes); end
-      AUTOPILOT = AutopilotLook.new(title_wait: 1.6, finale_wait: 1.8, think: 0.22..0.45, tiring: 0.045,
-                                    mistakes: 0.14)
+      AUTOPILOT = AutopilotLook.new(title_wait: 1.6, finale_wait: 1.8, think: 0.22..0.45, tiring: 0.07,
+                                    mistakes: 0.2)
     end
   end
 end

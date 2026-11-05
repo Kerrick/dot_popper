@@ -22,10 +22,10 @@ module DotPopper
         @random = random
         @effects = Effects.new(radius:, random:, calm:)
         @animations = DotAnimations.new(look::MOTION)
-        @hud = Hud.new(look::HUD, look::WORDS)
-        @attract = Attract.new(game.field, look::TITLE)
+        @hud = Hud.blank(look::HUD, look::WORDS)
+        @attract = Attract.spawn(game.field, look::TITLE)
         @now = 0.0
-        @marquee = Marquee.new(look::TITLE, best: game.best.value, at: @now)
+        @marquee = Marquee.new(look: look::TITLE, best: game.best.value, at: @now)
         @finale = nil
         @penalized_at = -Float::INFINITY
         game.subscribe(self)
@@ -50,14 +50,14 @@ module DotPopper
 
       def resize(layout, field)
         @layout = layout
-        attract.field = field
+        @attract = attract.refit(field)
       end
 
       def update(seconds)
         @now += seconds
         effects.update(seconds)
-        attract.update(seconds) if title?
-        hud.update(game.round, now) { tick(it) } if playing?
+        @attract = attract.update(seconds) if title?
+        @hud = hud.read(game.round, now) { tick(it) } if playing?
         follow_finale if finished?
       end
 
@@ -78,7 +78,7 @@ module DotPopper
       def round_started(event)
         effects.clear
         animations.clear
-        hud.reset
+        @hud = Hud.blank(look::HUD, look::WORDS)
         event.round.dots.each { animations.spawn(it.id, now) }
         @finale = nil
         sounds.play(:start)
@@ -89,8 +89,8 @@ module DotPopper
         animations.pop(dot.id, now)
         animations.spawn(event.spawned.id, now)
         effects.burst(event.x, event.y, look::POP_BURST, palette.confetti)
-        effects.ring(dot.x, dot.y, look::SHOCKWAVE)
-        effects.ring(event.spawned.x, event.spawned.y, look::SPAWN_RIPPLE)
+        effects.ring(dot.x, dot.y, look::SHOCKWAVE, follow: dot.id)
+        effects.ring(event.spawned.x, event.spawned.y, look::SPAWN_RIPPLE, follow: event.spawned.id)
         float_pair(event.x, event.y, Words.points(event.points), Words.seconds(event.seconds),
                    palette.cream, palette.gain, look::GAIN_FLOAT)
         sounds.play(:pop, pitch: pop_pitch)
@@ -99,7 +99,7 @@ module DotPopper
       def penalized(event)
         @penalized_at = now
         animations.wobble(event.dot.id, now)
-        effects.ring(event.dot.x, event.dot.y, look::ALARM_RING)
+        effects.ring(event.dot.x, event.dot.y, look::ALARM_RING, follow: event.dot.id)
         effects.kick(look::PENALTY_SHAKE)
         effects.light(look::PENALTY_FLASH)
         # The floor can keep the score from falling; say only what was lost.
@@ -110,14 +110,14 @@ module DotPopper
       end
 
       def round_ended(event)
-        @finale = Finale.new(look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now)
+        @finale = Finale.new(look: look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now)
         sounds.play(event.new_best ? :new_best : :game_over)
       end
 
       def title_shown(event)
         effects.clear
         @finale = nil
-        @marquee = Marquee.new(look::TITLE, best: event.best, at: now)
+        @marquee = Marquee.new(look: look::TITLE, best: event.best, at: now)
       end
 
       # One floater to the left and one to the right of the tap; with only
@@ -142,9 +142,10 @@ module DotPopper
       end
 
       def follow_finale
-        finale.ready!(now) if game.state.ready?
-        return unless finale.celebrate?(now)
+        @finale = finale.ready(now) if game.state.ready?
+        return unless finale.celebration_due?(now)
 
+        @finale = finale.celebrate
         celebrate
       end
 

@@ -12,45 +12,36 @@ module DotPopper
     # stretching glyphs), and how urgent it is, from 0 (calm) to 1.
     class Readout < Data.define(:label, :text, :scale, :urgency); end
 
-    # The score and the time left, as the player sees them. It notices
-    # when either changes, so the number can bump, and when the clock
-    # passes a whole second near the end, so it can tick.
-    class Hud
-      def initialize(look, words)
-        @look = look
-        @words = words
-        reset
+    # The score and the time left as the player last saw them, and when
+    # each last changed, so a number can bump and the clock can tick.
+    class Hud < Data.define(:look, :words, :score, :seconds, :score_changed, :seconds_changed, :now)
+      def self.blank(look, words)
+        new(look:, words:, score: nil, seconds: nil, score_changed: -Float::INFINITY,
+            seconds_changed: -Float::INFINITY, now: 0.0)
       end
 
-      def reset
-        @score = @seconds = nil
-        @score_changed = @seconds_changed = -Float::INFINITY
-        @now = 0.0
-      end
-
-      # Reads the round at time +now+. Yields the whole seconds left each
-      # time the clock runs down past a second while it is urgent.
-      def update(round, now)
-        @now = now
+      # The HUD after reading +round+ at time +now+. Yields the whole
+      # seconds left when the clock runs down past a second while urgent.
+      def read(round, now)
         score = round.score
         seconds = [round.countdown.whole_seconds, 0].max
-        @score_changed = now if @score && score != @score
-        if @seconds && seconds != @seconds
-          @seconds_changed = now
-          yield seconds if block_given? && seconds < @seconds && seconds.positive? && seconds <= @look.urgent_below
+        if self.seconds && seconds < self.seconds && seconds.positive? && seconds <= look.urgent_below && block_given?
+          yield seconds
         end
-        @score = score
-        @seconds = seconds
+        with(score:, seconds:, now:,
+             score_changed: self.score && score != self.score ? now : score_changed,
+             seconds_changed: self.seconds && seconds != self.seconds ? now : seconds_changed)
       end
 
-      def urgent? = !@seconds.nil? && @seconds <= @look.urgent_below
+      def urgent? = !seconds.nil? && seconds <= look.urgent_below
 
-      def score = Readout.new(label: @words.score, text: @score.to_s, scale: @look.bump.at(@now - @score_changed),
-                              urgency: 0.0)
+      def score_readout
+        Readout.new(label: words.score, text: score.to_s, scale: look.bump.at(now - score_changed), urgency: 0.0)
+      end
 
-      def time
-        tween = urgent? ? @look.pulse : @look.bump
-        Readout.new(label: @words.time, text: @seconds.to_s, scale: tween.at(@now - @seconds_changed),
+      def time_readout
+        tween = urgent? ? look.pulse : look.bump
+        Readout.new(label: words.time, text: seconds.to_s, scale: tween.at(now - seconds_changed),
                     urgency: urgent? ? 1.0 : 0.0)
       end
     end

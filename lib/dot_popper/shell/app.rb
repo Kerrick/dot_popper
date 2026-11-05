@@ -22,11 +22,11 @@ module DotPopper
         puts "Dot Popper: a dot's radius is #{@dot_size.reason}"
         open_window unless TOUCH_SYSTEMS.include?(os)
         random = seed ? Random.new(seed) : Random.new
-        @game = Game.new(field, best: BestScore.new(SaveFile.new("best_score.txt")), random:)
-        @speaker = Speaker.new(Look::PATCHES, store: SaveFile.new("sound.txt"), volume: Look::SOUND.volume)
+        @game = Game.new(field, best: BestScore.new(SaveFile.new(name: "best_score.txt")), random:)
+        @speaker = Speaker.new(Look::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Look::SOUND.volume)
         @show = Presentation::Show.new(game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"))
-        @pen = Pen.new(Look)
+        @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
         @renderer = Renderer.new(@show, @pen)
         @input = Presentation::InputRouter.new
         @autopilot = Presentation::Autopilot.new(Look::AUTOPILOT) if flag?("DOT_POPPER_AUTOPLAY")

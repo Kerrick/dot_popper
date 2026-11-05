@@ -6,26 +6,17 @@ module DotPopper
     # strongest +alpha+, and how many seconds it takes to fade.
     class FlashLook < Data.define(:color, :alpha, :duration); end
 
-    # The edge glow at each moment: bright at once, then fading out.
-    class EdgeFlash
-      def initialize
-        @look = nil
-        @age = 0.0
-      end
+    # An edge glow lit at +born+: bright at once, then fading out.
+    class EdgeFlash < Data.define(:look, :born)
+      NONE = new(look: nil, born: -Float::INFINITY)
 
-      def trigger(look)
-        @look = look
-        @age = 0.0
-      end
+      def color = look&.color
 
-      def update(seconds) = @age += seconds
+      def alpha(now)
+        elapsed = now - born
+        return 0.0 if look.nil? || elapsed >= look.duration
 
-      def color = @look&.color
-
-      def alpha
-        return 0.0 if @look.nil? || @age >= @look.duration
-
-        @look.alpha * (1 - Ease.out_cubic(@age / @look.duration))
+        look.alpha * (1 - Ease.out_cubic(elapsed / look.duration))
       end
     end
   end
