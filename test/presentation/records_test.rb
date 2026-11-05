@@ -30,9 +30,9 @@ class RecordsTest < Minitest::Test
 
     assert_equal "Your bests with standard dots on screens this size", sheet.bests.title
     assert_equal({ "Best score" => "27", "Longest round" => "48 seconds",
-                   "Most pops in a row without a wrong tap" => "18", "Fastest pop" => "0.3 seconds",
+                   "Most pops in a row without a mistake" => "18", "Fastest pop" => "0.3 seconds",
                    "Longest wait that ended in a pop" => "6.2 seconds" }, rows)
-    assert_equal [["Rounds played", "42"], ["Dots popped", "812"], ["Wrong taps", "61"], ["Time played", "31 minutes"],
+    assert_equal [["Rounds played", "42"], ["Dots popped", "812"], ["Mistakes", "61"], ["Time played", "31 minutes"],
                   ["Days played", "5"]], sheet.totals.rows.map { [it.label, it.value] }
     assert_equal [3, 9, 27, 12], sheet.scores
     refute sheet.empty

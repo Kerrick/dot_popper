@@ -22,12 +22,22 @@ module DotPopper
       )
 
       WORDS = Words.new(
-        title: "Dot Popper", play: "Tap anywhere to play", continue: "Tap to continue", time_up: "Time's up!",
-        new_best: "New best!", best: "Your best", score: "SCORE", time: "TIME",
-        covered: ["New dots appear under the popped ones.",
-                  "Wait for the bright dot to slide out, then tap it."].freeze,
+        title: "Dot Popper",
+        play: ByInput.new(touch: "Tap anywhere to play", mouse: "Click anywhere to play", gamepad: "Press A to play"),
+        continue: ByInput.new(touch: "Tap to continue", mouse: "Click to continue", gamepad: "Press A to continue"),
+        time_up: "Time's up!", new_best: "New best!", best: "Your best", score: "SCORE", time: "TIME",
+        covered: ByInput.new(
+          touch: ["New dots appear under the popped ones.", "Wait for the bright dot to slide out, then tap it."].freeze,
+          mouse: ["New dots appear under the popped ones.", "Wait for the bright dot to slide out, then click it."].freeze,
+          gamepad: ["New dots appear under the popped ones.", "Wait for the bright dot to slide out, then pop it."].freeze
+        ),
+        legend: ByInput.new(touch: ["Tap a bright dot", "Tap a popped dot"].freeze,
+                            mouse: ["Click a bright dot", "Click a popped dot"].freeze,
+                            gamepad: ["Pop a bright dot", "Hit a popped dot"].freeze),
         share: "Copy my result", copied: "Copied! Paste it anywhere.",
-        records: "Your records", go_back: "Tap anywhere to go back",
+        records: "Your records",
+        go_back: ByInput.new(touch: "Tap anywhere to go back", mouse: "Click anywhere to go back",
+                             gamepad: "Press B to go back"),
         no_rounds: "Play a round, and your records will appear here.",
         labels: {
           bests: "Your bests with standard dots on screens this size",
@@ -35,20 +45,20 @@ module DotPopper
           chart_note: "Brighter bars are rounds with standard dots on screens this size.",
           fitted_chart_note: "Brighter bars are rounds with dots sized to the screen.",
           best_score: "Best score", longest_round: "Longest round",
-          longest_run: "Most pops in a row without a wrong tap", fastest_pop: "Fastest pop",
+          longest_run: "Most pops in a row without a mistake", fastest_pop: "Fastest pop",
           longest_wait: "Longest wait that ended in a pop",
-          totals: "All your rounds", rounds: "Rounds played", pops: "Dots popped", slips: "Wrong taps",
+          totals: "All your rounds", rounds: "Rounds played", pops: "Dots popped", slips: "Mistakes",
           seconds: "Time played", days: "Days played", none: "None yet",
           goal: "Daily goal", streak: "Days in a row you've met it", longest_streak: "Most days in a row"
         }.freeze,
         goals: {
-          clean_run: "pop %d bright dots in a row without tapping a popped one",
+          clean_run: "pop %d bright dots in a row without a mistake",
           patient_pop: "pop a bright dot that has been on screen for at least %d seconds",
           quick_start: "pop %d bright dots in the first 10 seconds of a round",
           long_round: "keep one round going for %d seconds",
-          comeback: "finish a round with %d points even after tapping a popped dot",
+          comeback: "finish a round with %d points even after a mistake",
           score: "score %d points in one round",
-          clean_round: "score %d points in a round without ever tapping a popped dot"
+          clean_round: "score %d points in a round without a single mistake"
         }.freeze,
         goal_done: "Today's goal is done.", goal_met: "You met today's goal!",
         screen_size: {
@@ -226,7 +236,7 @@ module DotPopper
                           most_kick: 14.0, shakes: true, fling: Throw.new(spread: 1.0, least: 0.5), dead_zone: 0.2,
                           hint_rounds: 3, hint_at: 0.465, hint_alpha: 0.7,
                           tilt_hint: "Tilt your %s to roll the dots.",
-                          stick_hint: "Push the right stick to roll the dots.",
+                          stick_hint: "Hold A on a dot to drag it, or push the right stick to roll them.",
                           drag_hint: "Drag the dots to play with them.",
                           drag_tilt_hint: "Drag the dots, or tilt your %s to roll them.")
       CALM_TILT = TILT.with(smoothing: 0.8, shakes: false)

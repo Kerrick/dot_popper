@@ -61,7 +61,7 @@ module DotPopper
       # play with the pile.
       def finale(layout)
         @finale.draw(@show, layout, below: @hud.bounds(@show.hud, layout).bottom)
-        hint = @tilting&.hint
+        hint = @tilting&.hint&.for(@show.input)
         @tilt_hint.draw(hint, @show, layout) if hint
       end
 

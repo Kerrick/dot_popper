@@ -50,6 +50,8 @@ The control only shows where the two sizes differ by more than a tenth. On a scr
 | Turn sound on or off | The speaker button on the title screen | **M** |
 | Roll the dots about on the Game Over screen | Tilt the iPad or phone, or shake it | |
 | Throw a dot about on the Game Over screen | Drag it with a finger or the mouse, and let go | |
+
+The words on screen follow whatever you last played with. With a finger they say "Tap", with a mouse they say "Click", and with a controller they name its button ("Press A to play"). A phone or tablet starts out saying "Tap", and a computer starts out saying "Click".
 | Toggle fullscreen (desktop only) | | **F11**, or **Alt+Enter** (**Cmd+Enter** on a Mac) |
 | Quit (desktop only) | Close the window | **Escape**, except on the Records screen |
 
@@ -57,15 +59,16 @@ On a phone or tablet the game always fills the screen, and only **M**, and **Esc
 
 ### Playing with a controller
 
-Any controller your computer or iPad recognizes as a gamepad works, such as an Xbox or PlayStation controller. This needs Lota 0.1.3 or newer, which the game now uses; nobody has yet tried it with a real controller, so please report how it feels.
+Any controller your computer or iPad recognizes as a gamepad works, such as an Xbox or PlayStation controller, and an Xbox Elite controller's back paddles work when they are mapped to **A**. This needs Lota 0.1.3 or newer, which the game uses.
 
-- The left stick or the d-pad moves a cursor around the screen.
+- The left stick or the d-pad moves a cursor around the screen. At full tilt it crosses the window from corner to corner in about a second, however big the window is, and it takes about a third of a second to get up to that speed. A gentle tilt moves it slowly, for aiming, and letting go stops it at once.
 - **A** (cross on a PlayStation controller) or the right trigger presses wherever the cursor is, exactly as a click there would.
 - **Start** starts a round from the title screen, and continues after one ends.
 - **Y** (triangle) copies your result on the Game Over screen.
 - **X** (square) opens the Records screen from the title, once it is offered. **B** (circle) or **Start** goes back to the title from it, as does a press of **A** anywhere.
 - Either shoulder button (**LB** or **RB**, or **L1** or **R1**) switches the dot size on the title screen, while it is shown.
 - **Back** turns sound on or off, on every screen.
+- On the Game Over screen, holding **A** on a dot picks it up. Move the cursor to drag the dot, and let go of **A** to throw it. A quick press of **A** that drags nothing continues as you let go, just like a click does.
 - The right stick tilts the pile of dots on the Game Over screen, so they roll the way you push it. Let go, and they fall down again.
 
 The cursor appears when you use the controller and hides when you move the mouse or touch the screen. On an iPad, a controller paired in the iPad's Bluetooth settings works the same way, from the first iPad build made after controllers were turned on there.
@@ -162,6 +165,7 @@ Running `bundle exec rake` with no task name runs the tests and then [Steep](htt
 | `DOT_POPPER_NO_SHADERS=1` | Draws plain shapes without shaders. The game does this on its own when a shader fails to compile. |
 | `DOT_POPPER_CALM=1` | Turns off screen shake and the bouncing at the end of a round (see "Reduced motion"). |
 | `DOT_POPPER_FAKE_TILT=0.6,0` | Pretends to have an accelerometer that always reads this x,y, in g, along the device's portrait axes (x toward its right edge, y toward its top edge). `0.6,0` holds the device tilted to the side, so the Game Over pile rolls to the left. At Game Over the game prints where its tilt comes from: the accelerometer, the fake reading, the gamepad's right stick, or none. |
+| `DOT_POPPER_FAKE_GAMEPAD=1` | Plays as if a controller were in hand. The words name its buttons, its cursor shows, Game Over says how to play with the pile using one, and `DOT_POPPER_FAKE_DRAG` makes its drag with the cursor and **A** instead of the mouse. |
 | `DOT_POPPER_FAKE_DRAG=0.5,0.9,0.3,0.3` | On each Game Over, 1.2 seconds in, takes the dot nearest the first point, drags it to the second over a second, and throws it there. Each point is a pair of fractions of the window's width and height. The game prints when it takes and throws the dot, to time screenshots by. |
 | `DOT_POPPER_WINDOW=400x850` | Opens the desktop window at this size, in logical pixels, to check how a narrow screen looks. |
 | `DOT_POPPER_TODAY=2026-11-07` | Plays as if it were that date, to see that day's goal, or to build up a streak of days. |

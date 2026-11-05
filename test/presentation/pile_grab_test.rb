@@ -21,6 +21,24 @@ class PileGrabTest < Minitest::Test
     assert_equal Click.new(x: 100.0, y: 100.0), @grabs.release(:mouse, 100, 100, now: 0.1)
   end
 
+  # A gamepad's A is a pointer too, at its cursor, which the shell moves
+  # every frame it is held, even standing still: a quick press goes on,
+  # and a hold on a dot drags it and throws it at the cursor's speed.
+  def test_a_gamepad_held_on_a_ball_drags_it_and_throws_it_with_the_cursor
+    press(:gamepad)
+    assert_instance_of Click, @grabs.release(:gamepad, 100, 100, now: 0.1)
+
+    press(:gamepad, ball: 3)
+    12.times { @grabs.move(:gamepad, 100, 100, now: it / 60.0) }
+    @grabs.update(12 / 60.0)
+    assert_equal [3], @grabs.drags.map(&:ball)
+
+    (1..6).each { @grabs.move(:gamepad, 100 + (10 * it), 100, now: (12 + it) / 60.0) }
+    fling = @grabs.release(:gamepad, 160, 100, now: 18 / 60.0)
+    assert_equal 3, fling.ball
+    assert_in_delta 600.0, fling.velocity[0], 100.0, "about the cursor's 600 units a second"
+  end
+
   def test_a_click_off_the_pile_goes_on_however_long_it_is_held
     press
     @grabs.update(2.0)

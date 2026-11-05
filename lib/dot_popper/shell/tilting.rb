@@ -16,7 +16,8 @@ module DotPopper
     class Tilting
       STICK = "the gamepad's right stick"
 
-      # The light line Game Over shows, saying how to play, or nil.
+      # The light line Game Over shows, saying how to play, as a ByInput,
+      # or nil.
       attr_reader :hint
 
       def initialize(pile:, gamepads:, accelerometer:, look:, hint:, device:, turns:, pointer: false,

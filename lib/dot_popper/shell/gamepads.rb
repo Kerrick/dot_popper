@@ -15,9 +15,13 @@ module DotPopper
     # that is a gamepad is kept, so an iPad's accelerometer never is, and
     # an Xbox or PlayStation controller paired with the iPad plays as it
     # does on a computer.
+    #
+    # A +pretend+ set of pads (DOT_POPPER_FAKE_GAMEPAD) counts as there,
+    # with every stick at rest, so Game Over says how to play with one.
     class Gamepads
-      def initialize(enabled: true)
+      def initialize(enabled: true, pretend: false)
         @enabled = enabled
+        @pretend = pretend
         @pads = []
       end
 
@@ -38,7 +42,7 @@ module DotPopper
         end
       end
 
-      def any? = @pads.any?
+      def any? = @pretend || @pads.any?
 
       private
 

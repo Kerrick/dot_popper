@@ -16,8 +16,8 @@ module DotPopper
     # +cooldown+ seconds, each ball as +fling+ (a Throw) says. A calm
     # pile (+shakes+ false) never throws a ball. A stick inside +dead_zone+ is at rest. The hint shows on the
     # first +hint_rounds+ Game Overs, +hint_at+ of the safe area's height
-    # below its middle, at +hint_alpha+ of the prompt's: +stick_hint+ with
-    # a gamepad, +drag_tilt_hint+ with a pointer and an accelerometer,
+    # below its middle, at +hint_alpha+ of the prompt's: +stick_hint+ to
+    # a player at a gamepad, +drag_tilt_hint+ with a pointer and an accelerometer,
     # +drag_hint+ with a pointer alone, or +tilt_hint+ with an
     # accelerometer alone, %s naming the device.
     class TiltLook < Data.define(:smoothing, :wake, :shake, :settle, :cooldown, :kick, :most_kick, :shakes,
@@ -231,23 +231,25 @@ module DotPopper
 
       attr_reader :shown
 
-      # The line for a Game Over with these ways to tilt, counting it as
-      # shown, or nil once it has shown enough, or with no way to tilt.
-      # +device+ names the thing to tilt: "iPad", say. +pointer+ says
-      # whether a mouse or a finger can drag the dots.
+      # The line for a Game Over with these ways to play with the pile, as
+      # a ByInput, counting it as shown, or nil once it has shown enough,
+      # or with no way to play. A player at the gamepad is told about its
+      # A and right stick, and one at a mouse or a screen about dragging
+      # and tilting. +device+ names the thing to tilt: "iPad", say.
+      # +pointer+ says whether a mouse or a finger can drag the dots.
       def offer(gamepad:, accelerometer:, device:, pointer: false)
         return if @shown >= @look.hint_rounds
 
-        line = if gamepad then @look.stick_hint
-               elsif pointer && accelerometer then format(@look.drag_tilt_hint, device)
-               elsif pointer then @look.drag_hint
-               elsif accelerometer then format(@look.tilt_hint, device)
-               end
-        return unless line
+        by_hand = if pointer && accelerometer then format(@look.drag_tilt_hint, device)
+                  elsif pointer then @look.drag_hint
+                  elsif accelerometer then format(@look.tilt_hint, device)
+                  end
+        by_pad = @look.stick_hint if gamepad
+        return unless by_hand || by_pad
 
         @shown += 1
         @store.write(@shown.to_s)
-        line
+        ByInput.new(touch: by_hand || by_pad, mouse: by_hand || by_pad, gamepad: by_pad || by_hand)
       end
 
       # What to call the device in the hint: an iPad or iPhone on iOS, by

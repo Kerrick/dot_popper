@@ -292,15 +292,19 @@ class TiltTest < Minitest::Test
     store = Store.new
     lines = 5.times.map { TiltHint.new(store, Look::TILT).offer(gamepad: false, accelerometer: true, device: "iPad") }
 
-    assert_equal ["Tilt your iPad to roll the dots."] * Look::TILT.hint_rounds, lines.compact
+    assert_equal ["Tilt your iPad to roll the dots."] * Look::TILT.hint_rounds,
+                 lines.compact.map { it.for(InputKind::TOUCH) }
     assert_equal Look::TILT.hint_rounds.to_s, store.text
   end
 
-  def test_with_a_gamepad_the_hint_says_to_push_the_stick
-    hint = TiltHint.new(Store.new, Look::TILT)
+  def test_with_a_gamepad_the_hint_says_how_to_drag_and_roll_with_it_to_a_player_holding_it
+    hint = TiltHint.new(Store.new, Look::TILT).offer(gamepad: true, accelerometer: true, device: "iPad", pointer: true)
 
-    assert_equal "Push the right stick to roll the dots.",
-                 hint.offer(gamepad: true, accelerometer: true, device: "iPad")
+    assert_equal "Hold A on a dot to drag it, or push the right stick to roll them.", hint.for(InputKind::GAMEPAD)
+    assert_equal "Drag the dots, or tilt your iPad to roll them.", hint.for(InputKind::TOUCH)
+    assert_equal "Hold A on a dot to drag it, or push the right stick to roll them.",
+                 TiltHint.new(Store.new, Look::TILT).offer(gamepad: true, accelerometer: false, device: "device")
+                         .for(InputKind::MOUSE)
   end
 
   def test_with_no_way_to_tilt_there_is_no_hint_and_none_is_counted
@@ -313,10 +317,10 @@ class TiltTest < Minitest::Test
   def test_with_a_pointer_the_hint_says_to_drag_and_to_tilt_where_both_work
     assert_equal "Drag the dots to play with them.",
                  TiltHint.new(Store.new, Look::TILT).offer(gamepad: false, accelerometer: false, device: "device",
-                                                           pointer: true)
+                                                           pointer: true).for(InputKind::MOUSE)
     assert_equal "Drag the dots, or tilt your iPad to roll them.",
                  TiltHint.new(Store.new, Look::TILT).offer(gamepad: false, accelerometer: true, device: "iPad",
-                                                           pointer: true)
+                                                           pointer: true).for(InputKind::GAMEPAD)
   end
 
   def test_the_device_is_named_on_ios_and_generic_elsewhere

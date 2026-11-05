@@ -362,13 +362,13 @@ The cursor goes only where the stick sends it. It doesn't drift toward nearby do
 
 ### The cursor moves fast at full tilt and slowly at a small one
 
-The stick has a circular dead zone of 0.2, because worn sticks can drift up to about 0.15 when left alone. Beyond the dead zone, the cursor's speed is the square of the push, up to 16 R per second at full tilt (`GAMEPAD` in `look.rb`). At full speed it crosses the 24 R desktop window in 1.5 seconds, nearly three times the speed of the fastest dot. At half tilt it moves at a quarter of that speed, for fine aiming. A diagonal on the d-pad moves no faster than a straight direction.
+The stick has a circular dead zone of 0.2, because worn sticks can drift up to about 0.15 when left alone. Beyond the dead zone, the cursor's speed is the square of the push (`GAMEPAD` in `look.rb`). At half tilt it moves at a quarter of the top speed, for fine aiming. The top speed is set by the window, not by the dot's radius: at full tilt the cursor crosses the window's diagonal in one second, ramp included. In a small window, the speed never drops below 16 R per second. That floor is the speed the cursor had before, which still crosses the 24 R desktop window in 1.5 seconds. (See "The gamepad cursor's speed follows the window" below.) A diagonal on the d-pad moves no faster than a straight direction.
 
 The stick is read every frame, rather than through axis-change events, so that a change of window focus can't leave the cursor stuck moving. When several gamepads are connected, their pushes add together.
 
 **Why:** A player needs to cross the screen quickly and also to settle precisely on a dot.
 
-**To reverse:** Adjust `dead_zone`, `curve`, and `speed` in `GAMEPAD`.
+**To reverse:** Adjust `dead_zone`, `curve`, `speed`, `crossing`, and `ramp` in `GAMEPAD`.
 
 ### The cursor appears only for a controller
 
@@ -556,3 +556,29 @@ Each of the last 20 scores now keeps the size class it was played in (`LifetimeS
 **Why:** Ferrara and Garfield on honest feedback. The chart sat next to bests that count only one class's rounds, yet it showed every round alike and could crown a bar from a phone, or from fitted dots, as the best. Dimming keeps the history visible while showing which rounds the bests actually compare.
 
 **To reverse:** Pass `mine: [true] * scores.size` to `ScoreBars` in `RecordsPainter#chart`, and make `RecordsSheet.build` set `chart_note: nil`.
+
+### The words name the press the player is making
+
+Every line that says what to do follows the input the player used last (`Presentation::InputKind`, which `Show#input=` sets from each `Tap` that `InputRouter` makes and from each gamepad button or stick push). With a finger the line says "Tap", with a mouse it says "Click", and with a gamepad it names the button: "Press A to play", "Press A to continue", and "Press B to go back". The title's legend says "Pop a bright dot" and "Hit a popped dot" with a gamepad, because "Press A on a bright dot" reads worse. The stacking lesson ends "then pop it". Game Over's hint says "Hold A on a dot to drag it, or push the right stick to roll them." Phones and tablets start out with touch, and computers start out with the mouse. `Words#for(kind)` gives the words for one kind of input. Each phrase that varies is a `ByInput`, so painters read `words.play` as before.
+
+The words that count mistakes are now the same for every input: "2 mistakes" in the round's summary, the shared result, and the Records screen, and "without a mistake" in the daily goals. A total over a lifetime of rounds may mix taps and clicks, so it shouldn't name either.
+
+**Why:** In a real-hardware playtest, the maintainer pointed out that "tap" is for touch screens and "click" is for a mouse. An instruction should name what the player is actually doing with their hands.
+
+**To reverse:** Give every field of each `ByInput` in `WORDS` the same text.
+
+### The gamepad cursor's speed follows the window
+
+At full tilt, the cursor crosses the window's diagonal in one second (`crossing`), whatever the window's size. Its speed never drops below 16 R a second (`speed`). It gathers speed over 0.3 seconds (`ramp`): its pace may rise by at most 1/0.3 of the top speed each second, and only up to what the push asks for. So a gentle tilt is at its speed within a few frames, a full tilt takes 0.3 seconds to reach full speed, and letting go stops the cursor dead. The top speed counts half the ramp, so the whole crossing still takes one second.
+
+**Why:** On a 4K TV at 200%, a speed fixed in dot radii felt far too slow when the window was maximized, though it felt right in a small window. Building up speed lets a full tilt cover the screen without making the first frames jumpy. Stopping at once keeps aiming precise.
+
+**To reverse:** Set `crossing` very high to return to the fixed speed, and set `ramp` near zero to remove the build-up.
+
+### A gamepad's A drags the Game Over pile as a mouse button does
+
+The A button, or the right trigger, is a pointer at the cursor. It goes through the same `PileGrabs` as the mouse, under the key `:gamepad`. Each frame while it is held, the shell moves that pointer to the cursor. Holding A on a dot for 0.15 seconds, or moving the cursor past the slop, picks the dot up. The dot then follows the cursor at the same pace as it follows a mouse. Letting go throws it at the cursor's speed over the last tenth of a second. A quick press and release that drags nothing is a click, which continues as it is let go, after the same grace. Start still continues at once. Holding A and the trigger together counts as one press. `Lota.gamepadreleased` is new in `main.rb`.
+
+**Why:** The maintainer found that dragging worked with the mouse but not with the controller.
+
+**To reverse:** In `App#gamepad_down`, call `tap` directly, and drop `gamepad_released`.

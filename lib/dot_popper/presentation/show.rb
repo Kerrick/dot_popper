@@ -14,16 +14,19 @@ module DotPopper
     # round the device has played. +sizing_store+ keeps the player's
     # DotSizing, chosen on the title. +radius+ is the usual dot's, which
     # sizes the buttons' reach; a round's effects follow its own dots.
+    # +input+ (InputKind) is what the player last pressed with, and the
+    # words follow it.
     class Show
       # The dot-size choices in the order the title draws their segments.
       SIZINGS = [DotSizing::STANDARD, DotSizing::SIZED_TO_SCREEN].freeze
 
       attr_reader :game, :effects, :animations, :hud, :attract, :layout, :marquee, :finale, :sounds, :now, :look,
-                  :lifetime
+                  :lifetime, :input, :words
 
       def initialize(game:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false,
                      tutor: Tutor.new(BestScore::Memory.new, times: look::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
-                     lifetime: Lifetime.new(BestScore::Memory.new), sizing_store: BestScore::Memory.new)
+                     lifetime: Lifetime.new(BestScore::Memory.new), sizing_store: BestScore::Memory.new,
+                     input: InputKind::MOUSE)
         @game = game
         @lifetime = lifetime
         @layout = layout
@@ -33,10 +36,12 @@ module DotPopper
         @scale = radius
         @sizing_store = sizing_store
         @look = look
+        @input = input
+        @words = look::WORDS.for(input)
         @random = random
         @effects = Effects.new(radius:, random:, calm:)
         @animations = DotAnimations.new(look::MOTION)
-        @hud = Hud.blank(look::HUD, look::WORDS)
+        @hud = Hud.blank(look::HUD, words)
         @attract = Attract.spawn(game.field, look::TITLE)
         @now = 0.0
         @marquee = Marquee.new(look: look::TITLE, best: game.best.of(game.size_class), at: @now)
@@ -55,7 +60,16 @@ module DotPopper
       def stats = @recorder.stats
 
       def palette = look::PALETTE
-      def words = look::WORDS
+
+      # The player pressed with +kind+ (InputKind): from now on the words
+      # say what to do with it, the lesson on Game Over too.
+      def input=(kind)
+        return if kind == input
+
+        @input = kind
+        @words = look::WORDS.for(kind)
+        @finale = finale.with(lesson: words.covered) if finale&.lesson
+      end
 
       def title? = game.state.is_a?(Game::Title)
 
@@ -223,7 +237,7 @@ module DotPopper
         effects.clear
         effects.scale_to(@scale)
         animations.clear
-        @hud = Hud.blank(look::HUD, look::WORDS)
+        @hud = Hud.blank(look::HUD, words)
         event.round.dots.each { animations.spawn(it.id, now) }
         @finale = nil
         @hid_fresh = false

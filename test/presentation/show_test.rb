@@ -24,6 +24,18 @@ class ShowTest < Minitest::Test
     assert_equal 1, @show.effects.rings.size
   end
 
+  # The words name the press the player last made: a click to start,
+  # until a gamepad or a finger is used.
+  def test_the_words_follow_the_input_last_used
+    assert_equal [InputKind::MOUSE, "Click anywhere to play"], [@show.input, @show.words.play]
+    @show.input = InputKind::GAMEPAD
+    assert_equal "Press A to play", @show.words.play
+    @show.input = InputKind::TOUCH
+    assert_equal "Tap a popped dot: −2 points, −2 seconds", @show.words.legend_popped
+    assert_equal "Tap to continue",
+                 Show.new(game: @game, layout:, sounds: @sounds, radius: R, input: InputKind::TOUCH).words.continue
+  end
+
   def test_on_game_over_copy_my_result_copies_it_and_does_not_continue
     start_and_pop
     @game.update(20)
@@ -32,7 +44,7 @@ class ShowTest < Minitest::Test
     @show.tap(*middle(@show.share_reach))
 
     assert @show.finished?
-    assert_equal "Dot Popper: 1 point\n🟡 1 pop · ⚫ 0 wrong taps · ⏱ 11 seconds\n" \
+    assert_equal "Dot Popper: 1 point\n🟡 1 pop · ⚫ 0 mistakes · ⏱ 11 seconds\n" \
                  "Played on a screen about 8 dots wide and 6 dots tall.", @clipboard.text
     assert @show.finale.copied?(@show.now)
   end
@@ -379,6 +391,9 @@ class ShowTest < Minitest::Test
     @game.update(20)
     assert_equal Look::WORDS.covered, @show.finale.lesson
     assert_equal "1", store.read
+    @show.input = InputKind::GAMEPAD
+    assert_equal "Wait for the bright dot to slide out, then pop it.", @show.finale.lesson.last,
+                 "the lesson follows the hand the player picks up"
 
     @game.update(DotPopper::Rules::GAME_OVER_GRACE)
     @show.tap(10, 10)

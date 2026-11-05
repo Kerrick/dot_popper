@@ -13,8 +13,10 @@
 # title, B (or Start) leaves it, either shoulder button switches the
 # dot size on the title, and Back toggles sound. On Game Over the right
 # stick, or tilting a tablet, rolls the pile of dots about, and a shake
-# throws them; a mouse or a finger drags a dot about and throws it, and a
-# click or tap that drags nothing goes back to the title as it is let go.
+# throws them; a mouse, a finger, or A held on a dot drags it about and
+# throws it, and a click, tap, or press of A that drags nothing goes back
+# to the title as it is let go. The words on screen say "tap", "click",
+# or name the button, after whatever the player last pressed with.
 #
 # Development settings, read from the environment:
 #
@@ -45,6 +47,10 @@
 #                               first point (fractions of the window's
 #                               width and height), drags it to the second
 #                               over a second, and throws it there.
+#   DOT_POPPER_FAKE_GAMEPAD=1   plays as if a gamepad were in hand: the
+#                               words name its buttons and its cursor
+#                               shows, and DOT_POPPER_FAKE_DRAG's drag is
+#                               made with the cursor and A.
 #   DOT_POPPER_CALM=1           turns off the screen shake, and lets the
 #                               game-over pile settle softly and turn
 #                               slowly when tilted, never thrown by a
@@ -84,6 +90,7 @@ def Lota.resize(_width, _height) = @app&.resize
 # Gamepads, from Lota 0.1.3. Lota passes the Joystick first, as LÖVE
 # does.
 def Lota.gamepadpressed(_joystick, button) = @app&.gamepad_pressed(button)
+def Lota.gamepadreleased(_joystick, button) = @app&.gamepad_released(button)
 def Lota.gamepadaxis(_joystick, axis, value) = @app&.gamepad_axis(axis, value)
 def Lota.joystickadded(joystick) = @app&.gamepad_added(joystick)
 def Lota.joystickremoved(joystick) = @app&.gamepad_removed(joystick)

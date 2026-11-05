@@ -6,7 +6,8 @@ module DotPopper
     # callbacks to one of these methods. Each frame, taps go to the game
     # first, on the frame they happen; then the gamepad cursor moves and
     # the rules move on; then the Show catches up; then the Renderer
-    # draws it.
+    # draws it. Whatever the player presses with, a finger, the mouse, or
+    # a gamepad, the Show hears of it, so its words name that press.
     class App
       Look = Presentation::Look
       PLAYTEST_LOG = "rounds.csv"
@@ -39,13 +40,13 @@ module DotPopper
                                                                     times: Look::LESSON.times),
                                        haptics: Haptics.for(os), clipboard: Clipboard.new,
                                        lifetime: Lifetime.new(SaveFile.new(name: "lifetime.txt"), today:, legacy:),
-                                       sizing_store:)
+                                       sizing_store:, input: starting_input)
         @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
                                         archive: ->(name) { SaveFile.new(name:) }))
         puts "Dot Popper: each round is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"
         @pile = Pile.new(flag?("DOT_POPPER_CALM") ? Look::CALM_PILE : Look::PILE)
         @game.subscribe(@pile)
-        @gamepads = Gamepads.new
+        @gamepads = Gamepads.new(pretend: fake_gamepad?)
         @tilting = tilting(os)
         @game.subscribe(@tilting)
         @dragging = Dragging.new(pile: @pile, show: @show, look: flag?("DOT_POPPER_CALM") ? Look::CALM_GRAB : Look::GRAB)
@@ -61,6 +62,8 @@ module DotPopper
         @trigger = Presentation::Trigger.released
         @cursor = Presentation::GamepadCursor.centered(@show.layout.whole, look: Look::GAMEPAD,
                                                        radius: @dot_size.radius)
+        @cursor = @cursor.show if fake_gamepad?
+        @pad_held = []
         @autopilot = Presentation::Autopilot.new(Look::AUTOPILOT) if flag?("DOT_POPPER_AUTOPLAY")
         @shots = Presentation::ShotSchedule.parse(@env["DOT_POPPER_SHOTS"])
         @quit_after = Float(@env.fetch("DOT_POPPER_QUIT_AFTER", ""), exception: false)
@@ -71,7 +74,9 @@ module DotPopper
       def update(seconds)
         measure(seconds)
         seconds = seconds.clamp(0.0, Rules::LONGEST_FRAME)
-        @cursor = @cursor.update(seconds, @gamepads.stick)
+        moved = @cursor.update(seconds, @gamepads.stick)
+        @show.input = Presentation::InputKind::GAMEPAD unless moved == @cursor
+        @cursor = moved
         if @autopilot
           x, y = @autopilot.update(seconds, @game, @show)
           tap(x, y) if x
@@ -80,6 +85,7 @@ module DotPopper
         @show.update(seconds)
         @tilting.update(seconds)
         fake_drag
+        @dragging.move(:gamepad, @cursor.x, @cursor.y) if @pad_held.any?
         @dragging.update(seconds)
         @pile.update(seconds)
         @sparks.update(seconds, @show.effects)
@@ -90,12 +96,12 @@ module DotPopper
 
       def mouse_pressed(x, y, button, istouch)
         @cursor = @cursor.hide(x, y)
-        press(:mouse, @input.mouse_pressed(x, y, button, istouch))
+        press(:mouse, heard(@input.mouse_pressed(x, y, button, istouch)))
       end
 
       def mouse_moved(x, y, istouch)
         @cursor = @cursor.hide(x, y)
-        point = @input.mouse_moved(x, y, istouch)
+        point = heard(@input.mouse_moved(x, y, istouch))
         @dragging.move(:mouse, point.x, point.y) if point
       end
 
@@ -106,11 +112,11 @@ module DotPopper
 
       def touch_pressed(id, x, y, devicetype, mouse)
         @cursor = @cursor.hide
-        press(id, @input.touch_pressed(id, x, y, devicetype, mouse))
+        press(id, heard(@input.touch_pressed(id, x, y, devicetype, mouse)))
       end
 
       def touch_moved(id, x, y, devicetype, mouse)
-        point = @input.touch_moved(id, x, y, devicetype, mouse)
+        point = heard(@input.touch_moved(id, x, y, devicetype, mouse))
         @dragging.move(id, point.x, point.y) if point
       end
 
@@ -128,9 +134,9 @@ module DotPopper
       # A gamepad button went down (Lota 0.1.3 and newer). Any button shows
       # the cursor; GamepadButtons says what each one asks for.
       def gamepad_pressed(button)
-        @cursor = @cursor.show
+        gamepad_used
         case @buttons.intent(button)
-        in :press then gamepad_tap
+        in :press then gamepad_down(:a)
         in :start then @show.start
         in :share then @show.share
         in :records then @show.open_records if @show.records_offered?
@@ -141,16 +147,24 @@ module DotPopper
         end
       end
 
-      # A gamepad's axis moved. The right trigger presses as A does; the
-      # sticks are read each frame instead (Gamepads).
+      # A gamepad button came up. Letting go of A ends its press, which on
+      # Game Over throws a dragged dot, or goes on, as a click does.
+      def gamepad_released(button)
+        gamepad_up(:a) if @buttons.intent(button) == :press
+      end
+
+      # A gamepad's axis moved. The right trigger presses and lets go as A
+      # does; the sticks are read each frame instead (Gamepads).
       def gamepad_axis(axis, value)
         return unless axis.to_s == "triggerright"
 
+        was_held = @trigger.held
         @trigger = @trigger.pull(value.to_f, Look::GAMEPAD)
+        return gamepad_up(:trigger) if was_held && !@trigger.held
         return unless @trigger.pressed
 
-        @cursor = @cursor.show
-        gamepad_tap
+        gamepad_used
+        gamepad_down(:trigger)
       end
 
       # A controller was plugged in, or was there when the game started.
@@ -160,6 +174,7 @@ module DotPopper
       def gamepad_removed(joystick)
         @gamepads.removed(joystick)
         @trigger = Presentation::Trigger.released
+        @pad_held.dup.each { gamepad_up(it) }
       end
 
       def key_pressed(key)
@@ -202,6 +217,26 @@ module DotPopper
 
       def tap(x, y) = @show.tap(x, y)
 
+      # Tells the Show what made +tap+, if anything did, so its words name
+      # that press. Returns +tap+.
+      def heard(tap)
+        @show.input = tap.kind if tap
+        tap
+      end
+
+      # The gamepad was used: its cursor shows, and the words name its
+      # buttons.
+      def gamepad_used
+        @cursor = @cursor.show
+        @show.input = Presentation::InputKind::GAMEPAD
+      end
+
+      def starting_input
+        return Presentation::InputKind::GAMEPAD if fake_gamepad?
+
+        Presentation::InputKind.starting(touch: @touch)
+      end
+
       # A mouse button or finger went down, as +tap+ (or nil for none). It
       # counts at once, unless the Show waits for its release, on Game
       # Over, where it may become a drag.
@@ -213,7 +248,8 @@ module DotPopper
       end
 
       # DOT_POPPER_FAKE_DRAG's drag, a step each frame once Game Over has
-      # been shown long enough.
+      # been shown long enough. With DOT_POPPER_FAKE_GAMEPAD, the gamepad
+      # makes it: the cursor goes where the drag is, and A holds the dot.
       def fake_drag
         return unless @fake_drag && @show.finished?
 
@@ -224,13 +260,37 @@ module DotPopper
             puts "Dot Popper: the fake drag #{action == :press ? "takes" : "throws"} a dot at #{x.round}, #{y.round}, " \
                  "#{@elapsed.round(1)} seconds in"
           end
-          @dragging.public_send(action, :fake, x, y)
+          fake_gamepad? ? fake_pad(action, x, y) : @dragging.public_send(action, :fake, x, y)
         end
       end
 
-      def gamepad_tap
-        tap = @input.gamepad_pressed(@cursor)
-        tap(tap.x, tap.y)
+      def fake_pad(action, x, y)
+        @cursor = @cursor.at(x, y).show
+        case action
+        in :press then gamepad_down(:a)
+        in :release then gamepad_up(:a)
+        in :move then nil
+        end
+      end
+
+      def fake_gamepad? = flag?("DOT_POPPER_FAKE_GAMEPAD")
+
+      # A or the right trigger, +source+, went down: a press at the cursor,
+      # as a mouse button's. On Game Over it waits to be let go, as a
+      # click does, and held on a dot it drags it; elsewhere it counts at
+      # once. A second source held with the first adds nothing.
+      def gamepad_down(source)
+        @pad_held << source
+        press(:gamepad, @input.gamepad_pressed(@cursor)) if @pad_held.size == 1
+      end
+
+      # A or the right trigger let go: once neither is held, the press ends
+      # where the cursor is.
+      def gamepad_up(source)
+        return unless @pad_held.delete(source) && @pad_held.empty?
+
+        point = @input.gamepad_released(@cursor)
+        @dragging.release(:gamepad, point.x, point.y)
       end
 
       def open_window
