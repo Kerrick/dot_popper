@@ -60,7 +60,7 @@ module DotPopper
           score: "score %d points in one round",
           clean_round: "score %d points in a round without a single mistake"
         }.freeze,
-        goal_done: "Today's goal is done.", goal_met: "You met today's goal!",
+        goal_done: "Done today:", goal_met: "You met today's goal!",
         screen_size: {
           here: "This screen is about %d dots wide and %d dots tall.",
           played: "Played on a screen about %d dots wide and %d dots tall.",
@@ -229,11 +229,13 @@ module DotPopper
       # Playing with the pile (Presentation::Tilt): tilting a tablet, or
       # pushing a gamepad's right stick, turns its gravity, and a shake
       # throws the dots up. The filter's fifth of a second keeps a hand's
-      # tremor out of the dots without lagging a turn; a jolt of over 1.2 g
-      # is a shake, past the bump of setting a tablet down. A calm pile
+      # tremor out of the dots without lagging a turn; a jolt of over 0.8 g
+      # is a shake, past the bump of setting a tablet down. A shake throws
+      # hard, several times a dot's fastest speed, because a toss no
+      # bigger than a tilt reads as nothing (the first iPad playtest). A calm pile
       # turns slowly and never throws.
-      TILT = TiltLook.new(smoothing: 0.2, wake: 0.05, shake: 1.2, settle: 0.3, cooldown: 0.6, kick: 8.0,
-                          most_kick: 14.0, shakes: true, fling: Throw.new(spread: 1.0, least: 0.5), dead_zone: 0.2,
+      TILT = TiltLook.new(smoothing: 0.2, wake: 0.05, shake: 0.8, settle: 0.3, cooldown: 0.6, kick: 24.0,
+                          most_kick: 36.0, shakes: true, fling: Throw.new(spread: 1.0, least: 0.5), dead_zone: 0.2,
                           hint_rounds: 3, hint_alpha: 0.7,
                           tilt_hint: "Tilt your %s to roll the dots.",
                           stick_hint: "Hold A on a dot to drag it, or push the right stick to roll them.",

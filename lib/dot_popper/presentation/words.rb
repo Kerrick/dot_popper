@@ -19,6 +19,9 @@ module DotPopper
                               :share, :copied, :records, :go_back, :no_rounds, :labels, :goals, :goal_done,
                               :goal_met, :screen_size, :legend, :input)
       MINUS = "−" # a true minus sign, as wide as the plus
+      # How near a round must come to the best for Game Over to say by how
+      # much; further off, the gap is only a number to dwell on.
+      CLOSE_TO_BEST = 3
 
       # +1, −2, or 0 for a number of points.
       def self.points(points) = signed(points)
@@ -67,7 +70,11 @@ module DotPopper
         return best_line(best) if first
 
         gap = best - score
-        return "#{Words.count(gap, "point")} short of your best of #{best}" if gap.positive?
+        if gap.positive?
+          return "Just #{Words.count(gap, "point")} short of your best of #{best}" if gap <= CLOSE_TO_BEST
+
+          return "Your best is #{best}"
+        end
 
         best.positive? ? "You tied your best of #{best}" : ""
       end
@@ -182,6 +189,11 @@ module DotPopper
       # Today's goal on the title: "Today's goal: pop 15 bright dots in a
       # row without a mistake."
       def goal(goal) = "Today's goal: #{format(goals.fetch(goal.kind), goal.target)}."
+
+      # Today's goal once it is met, still saying what it was, since a
+      # player who met it wants to see what they did: "Done today: keep one
+      # round going for 40 seconds."
+      def goal_done_line(goal) = "#{goal_done} #{format(goals.fetch(goal.kind), goal.target)}."
 
       # The days in a row the goal has been met, for the title once there
       # are two or more: "You've met the daily goal 3 days in a row."

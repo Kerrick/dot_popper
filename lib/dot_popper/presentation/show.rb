@@ -205,7 +205,7 @@ module DotPopper
 
       # Where the title's words and buttons go (TitlePlan).
       def title_plan
-        goal = lifetime.goal_done? ? words.goal_done : words.goal(lifetime.goal) if records_offered?
+        goal = lifetime.goal_done? ? words.goal_done_line(lifetime.goal) : words.goal(lifetime.goal) if records_offered?
         TitleScreen.new(layout:, type: look::TYPE, words:, measure: @measure, best: marquee.best, goal:,
                         done: lifetime.goal_done?, streak: lifetime.streak, records: records_offered?,
                         sizing: sizing_offered?).plan

@@ -57,17 +57,19 @@ module DotPopper
         pen.text(text, pen.fonts.semibold(plan.size(size)), rect.center_x, rect.center_y, color, alpha)
       end
 
-      # Today's goal in the lines the plan broke it into, or once it is
-      # met, "Today's goal is done." with a check.
+      # Today's goal in the lines the plan broke it into; once it is met,
+      # the same goal, "Done today: ...", with a check before its first
+      # line.
       def daily_goal(show, layout, plan, alpha)
         font = pen.fonts.semibold(plan.size(:goal))
         top = plan[:goal].y + (font.height / 2.0)
-        if show.lifetime.goal_done?
-          return Check.new(pen:).labelled(plan.goal_lines.first, font, layout.center_x, top, alpha)
-        end
-
         plan.goal_lines.each_with_index do |line, i|
-          pen.text(line, font, layout.center_x, top + (font.height * 1.2 * i), pen.palette.soft, alpha)
+          y = top + (font.height * 1.2 * i)
+          if show.lifetime.goal_done? && i.zero?
+            Check.new(pen:).labelled(line, font, layout.center_x, y, alpha)
+          else
+            pen.text(line, font, layout.center_x, y, pen.palette.soft, alpha)
+          end
         end
       end
 

@@ -157,10 +157,19 @@ class WordsTest < Minitest::Test
   end
 
   def test_how_far_short_of_the_best
-    assert_equal "3 points short of your best of 27", Look::WORDS.short_of_best(24, 27)
-    assert_equal "1 point short of your best of 27", Look::WORDS.short_of_best(26, 27)
+    assert_equal "Just 3 points short of your best of 27", Look::WORDS.short_of_best(24, 27)
+    assert_equal "Just 1 point short of your best of 27", Look::WORDS.short_of_best(26, 27)
+    assert_equal "Your best is 28", Look::WORDS.short_of_best(5, 28), "a far-off best isn't a gap to dwell on"
     assert_equal "You tied your best of 27", Look::WORDS.short_of_best(27, 27)
     assert_equal "", Look::WORDS.short_of_best(0, 0), "no best to compare with yet"
     assert_equal "Your best: 27", Look::WORDS.short_of_best(27, 27, first: true), "a first round tied nothing"
+  end
+
+  def test_a_met_goal_still_says_what_it_was
+    goal = DotPopper::DailyGoal.for(Date.new(2026, 11, 1))
+    line = Look::WORDS.goal_done_line(goal)
+
+    assert line.start_with?("Done today: ")
+    assert_equal Look::WORDS.goal(goal).delete_prefix("Today's goal: "), line.delete_prefix("Done today: ")
   end
 end

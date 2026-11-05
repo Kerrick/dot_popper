@@ -19,7 +19,7 @@ class ScreenPlansTest < Minitest::Test
       screen_layout = layout(width, height)
       [0, 75].product([nil, :open, :done], [0, 5], [true, false]) do |best, goal, streak, sizing|
         screen = TitleScreen.new(layout: screen_layout, type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
-                                 best:, goal: { open: GOAL, done: WORDS.goal_done }[goal], done: goal == :done,
+                                 best:, goal: { open: GOAL, done: WORDS.goal_done_line(DotPopper::DailyGoal.for(Date.new(2026, 11, 1))) }[goal], done: goal == :done,
                                  streak:, records: !goal.nil?, sizing: sizing && !goal.nil?)
         plan = screen.plan
         name = "#{width}x#{height} best #{best}, goal #{goal.inspect}, streak #{streak}, sizing #{sizing}"
