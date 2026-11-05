@@ -30,12 +30,12 @@ Your bests are kept separately for each size of screen, because a small screen g
 
 ### How big the dots are
 
-Once you have finished a round, the title screen also shows a **Dot size** control with two segments, the chosen one filled. Tap a segment to choose it:
+Once you have finished a round, the title screen may also show a **Dot size** control with two segments, the chosen one filled. Each segment shows a small dot at the size it gives, so you can see the difference before you choose. Tap a segment to choose it:
 
-- **Same everywhere** is the usual game. A dot is the same size on every screen, so a phone holds fewer dots than a big monitor, gets crowded sooner, and is harder to score on.
-- **Fit the screen** makes the dots bigger on a big screen and smaller on a small one, so every screen has about the same room for dots as the desktop window. Scores can then be compared across devices. The dots never get smaller than 60 points across, so they stay easy to tap on a phone. The size is worked out when each round starts, and if you resize the window during a round, the dots keep their size until it ends.
+- **Standard** is the usual game. A dot is the same size on every screen, so a phone holds fewer dots than a big monitor, gets crowded sooner, and is harder to score on. In a window you resize, the dots keep their size and a bigger window gives them more room.
+- The other segment sizes the dots to this screen, and it says what that does here. On a phone it reads **Smaller, more room**. On a big monitor it reads **Bigger, less room**. In a resizable window, the dots grow and shrink with the window. Either way, every screen ends up with about the same room for dots as the desktop window, and the dots never get smaller than 60 points across, so they stay easy to tap on a phone. The size is worked out when each round starts, and if you resize the window during a round, the dots keep their size until it ends.
 
-The title's dots change size as soon as you switch, and the game remembers your choice. Rounds played with dots sized to the screen keep their own bests, because every screen plays about the same that way.
+The control only shows where the two sizes differ by more than a tenth. On a screen about the desktop window's size, they look alike, so the control is left out, and the game keeps your choice for when you play on another screen or resize the window. The title's dots change size as soon as you switch, and the game remembers your choice. Rounds played with dots sized to the screen keep their own bests, because every screen plays about the same that way, and the Records screen says so: "Dots are sized to fit this screen, so scores compare across devices."
 
 ### Controls
 
@@ -63,7 +63,7 @@ Any controller your computer or iPad recognizes as a gamepad works, such as an X
 - **Start** starts a round from the title screen, and continues after one ends.
 - **Y** (triangle) copies your result on the Game Over screen.
 - **X** (square) opens the Records screen from the title, once it is offered. **B** (circle) or **Start** goes back to the title from it, as does a press of **A** anywhere.
-- Either shoulder button (**LB** or **RB**, or **L1** or **R1**) switches the dot size on the title screen, once it is offered.
+- Either shoulder button (**LB** or **RB**, or **L1** or **R1**) switches the dot size on the title screen, while it is shown.
 - **Back** turns sound on or off, on every screen.
 - The right stick tilts the pile of dots on the Game Over screen, so they roll the way you push it. Let go, and they fall down again.
 
@@ -110,7 +110,7 @@ Every distance and speed in the rules is measured in multiples of one number: th
 
 Because R is fixed, the number of radii that fit on the screen varies from device to device, and a more crowded screen makes for a harder game. The desktop window therefore opens at 24 × 16 R (1200 × 800 logical pixels), which is about the size of an 11-inch iPad measured in radii, so that rounds on a computer and on an iPad play alike. For the same reason, bests are kept separately for small, medium, and large screens. The cut-offs, 250 and 700 square radii, are in `lib/dot_popper/rules.rb`.
 
-A player who chooses **Fit the screen** on the title replaces the fixed R. At the start of each round, `DotPopper::DotSize.fitted` sets R so that the field's area is 24 × 16 = 384 square radii: R = √(width × height ÷ 384). R is never under 30 units, and never over a seventh of the screen's shorter side. `DotPopper::DotSizing` holds the player's choice. [doc/decisions.md](doc/decisions.md) gives the measurements behind these choices, including the simulation of both settings.
+A player who chooses to size the dots to the screen on the title replaces the fixed R. At the start of each round, `DotPopper::DotSize.fitted` sets R so that the field's area is 24 × 16 = 384 square radii: R = √(width × height ÷ 384). R is never under 30 units, and never over a seventh of the screen's shorter side. `DotPopper::DotSizing` holds the player's choice. [doc/decisions.md](doc/decisions.md) gives the measurements behind these choices, including the simulation of both settings.
 
 ## Running the tests
 

@@ -51,6 +51,8 @@ The rules never change with the window: the radius, the speeds, and the clock st
 
 A dot's radius is 50 points, about 8 mm (see `DotSize`), and the game prints that when it starts. An iPad Pro 13-inch is 1032 × 1376 points, so a portrait field there is about 21 × 28 radii. An 11-inch iPad's is about 17 × 24.
 
+Once a round has been played, the title's **Dot size** control appears only where sizing the dots to the screen would change them by more than a tenth. On an iPad Pro 13-inch the fitted radius is about 61 points, so its second segment reads "Bigger, less room"; on an 11-inch iPad the fitted radius is about 51 points, so the two sizes look alike and the control is left out.
+
 ### Input
 
 A finger on the screen reaches the game as a `touchpressed` call with the device type `touchscreen`. SDL also generates a mouse press for each finger, marked `istouch`, and `InputRouter` ignores those, so one finger makes exactly one tap. A mouse or trackpad connected to an iPad clicks just as on a Mac. Every screen in the game can be used by tapping alone.

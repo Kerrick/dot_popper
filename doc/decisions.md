@@ -61,12 +61,12 @@ An upright iPhone is 8 × 17 R. On that field, the simulated player scores about
 
 ### The player may choose to size the dots to the screen
 
-Once a round has been played, the title shows a button in its bottom row (on an upright phone, in a row of its own just above). It reads "Dots: same size everywhere" or "Dots: sized to your screen", and a tap switches between the two. The title's dots and its best score change at once to match. Either shoulder button on a controller does the same. The choice is saved in `dot_size.txt` in the save folder.
+Once a round has been played, the title shows a button in its bottom row (on an upright phone, in a row of its own just above). It read "Dots: same size everywhere" or "Dots: sized to your screen" (since reworded; see "The dot-size choice says what it does on this screen"), and a tap switches between the two. The title's dots and its best score change at once to match. Either shoulder button on a controller does the same. The choice is saved in `dot_size.txt` in the save folder.
 
-- **Same size everywhere** is the default, and it is exactly the spec's rule: R is `DotSize.for(os)`, 50 units on every system.
-- **Sized to your screen** sets R when each round starts, to the radius that gives the field an area of 24 × 16 = 384 square radii, the desktop window's area: R = √(field area ÷ 384). R is never smaller than 30 units, so a dot is 60 points across, comfortably over Apple's 44-point smallest touch target. It is never larger than a seventh of the screen's shorter side, so that on a long, thin window a dot stays a dot. The numbers are `FITTED_AREA`, `SMALLEST_FITTED_RADIUS`, and `LARGEST_FITTED_SHARE` in `rules.rb`, and `DotSize.fitted` and `DotSizing` apply them.
+- **The standard dot size** is the default, and it is exactly the spec's rule: R is `DotSize.for(os)`, 50 units on every system.
+- **Dots sized to the screen** sets R when each round starts, to the radius that gives the field an area of 24 × 16 = 384 square radii, the desktop window's area: R = √(field area ÷ 384). R is never smaller than 30 units, so a dot is 60 points across, comfortably over Apple's 44-point smallest touch target. It is never larger than a seventh of the screen's shorter side, so that on a long, thin window a dot stays a dot. The numbers are `FITTED_AREA`, `SMALLEST_FITTED_RADIUS`, and `LARGEST_FITTED_SHARE` in `rules.rb`, and `DotSize.fitted` and `DotSizing` apply them.
 
-A round keeps its radius until it ends. If the window is resized during a round, the dots are kept on screen but stay the same size, and the next round works out its radius again. Speeds are still in radii per second, so they scale with R. Rings, droplets, and floating numbers scale with the round's dots too. Buttons and their tap areas don't change, because they are sized for a finger, not for the field. Because every screen is about equally crowded with this choice, its rounds keep bests of their own (`SizeClass::FITTED`, shown as "Your bests with dots sized to the screen"), apart from the small, medium, and large classes. The Records screen explains the choice in one line, and a shared result says "Played with the dots sized to my screen."
+A round keeps its radius until it ends. If the window is resized during a round, the dots are kept on screen but stay the same size, and the next round works out its radius again. Speeds are still in radii per second, so they scale with R. Rings, droplets, and floating numbers scale with the round's dots too. Buttons and their tap areas don't change, because they are sized for a finger, not for the field. Because every screen is about equally crowded with this choice, its rounds keep bests of their own (`SizeClass::FITTED`, shown as "Your bests with dots sized to the screen"), apart from the small, medium, and large classes. The Records screen explains the choice in one line, and a shared result says "Played with dots sized to the screen."
 
 The words never call either choice easy or hard. They say what each choice does.
 
@@ -80,13 +80,13 @@ The words never call either choice easy or hard. They say what each choice does.
 
 The spec's rule stays the default, and it changes only when the player chooses. The setting is a choice rather than the new rule because R is meant as a physical size, and some players will prefer dots that feel the same everywhere.
 
-**To reverse:** Remove the button from `TitlePainter` and the tap from `Show#tap`, and delete `dot_size.txt`. With the saved choice gone, `DotSizing.parse` returns `SAME_EVERYWHERE`, which is the spec's rule. The fitted bests stay in the saved files but are no longer shown.
+**To reverse:** Remove the button from `TitlePainter` and the tap from `Show#tap`, and delete `dot_size.txt`. With the saved choice gone, `DotSizing.parse` returns `STANDARD`, which is the spec's rule. The fitted bests stay in the saved files but are no longer shown.
 
 ### What the simulation found
 
 These results are from 2026-11-05, with 60 rounds per device for each choice of dot size (`bundle exec ruby script/simulate.rb 60`). "R" is the radius in graphics units, "Area" is the field's size in square radii, and "Penalties" counts wrong taps per round.
 
-With dots the same size everywhere (the default, and the spec's rule):
+With the standard dot size (the default, and the spec's rule):
 
 | Device | R | Area (R²) | Mean score | 90th percentile | Mean round (s) | Penalties |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -108,7 +108,7 @@ With dots sized to the screen:
 | 27-inch 1440p monitor, fullscreen | 98.0 | 384 | 23.6 | 35 | 34.2 | 7.3 |
 | 32-inch 6K monitor, fullscreen | 115.1 | 384 | 20.3 | 31 | 31.1 | 7.2 |
 
-Sized to the screen, the mean scores fall between 20.3 and 23.6, within 8% of their average of 21.9. With the same size everywhere they run from 6.0 to 76.8, nearly thirteen times apart. On the phone, the smallest radius applies: the exact fit would be 29.6, so its field is 373 R² rather than 384, a little more crowded than the others, though its score is still within the range. The rest of the spread follows the screens' shapes and the model player's luck, not their size.
+Sized to the screen, the mean scores fall between 20.3 and 23.6, within 8% of their average of 21.9. With the standard dot size they run from 6.0 to 76.8, nearly thirteen times apart. On the phone, the smallest radius applies: the exact fit would be 29.6, so its field is 373 R² rather than 384, a little more crowded than the others, though its score is still within the range. The rest of the spread follows the screens' shapes and the model player's luck, not their size.
 
 The simulated player is crude. In particular, the number of penalties mostly reflects how impatient it was told to be. Compare the rows with one another rather than reading them as predictions of a person's score.
 
@@ -477,7 +477,7 @@ The hint that explains the stacking rule no longer appears during a round. It ap
 
 ### The dot-size choice is a labelled segmented control
 
-The title's dot-size choice used to be a single pill that read "Dots: same size everywhere" and switched when tapped. It is now a small control labelled "Dot size", with two segments side by side: "Same everywhere" and "Fit the screen". The chosen segment is filled in cream with dark text. Tapping a segment chooses it, and tapping the chosen one again changes nothing. Either shoulder button on a controller still switches between the two. On a wide window the control sits in the bottom row between "Your records" and the mute button, with its label on the left and its segments centred on the screen. On an upright phone it takes a row of its own above them, with the label above the segments. Each segment is a button's height (at least 44 units), and a tap reaches it within a dot's width, as for the other title buttons.
+The title's dot-size choice used to be a single pill that read "Dots: same size everywhere" and switched when tapped. It is now a small control labelled "Dot size", with two segments side by side, one for each choice (now named by what they do on this screen; see "The dot-size choice says what it does on this screen"). The chosen segment is filled in cream with dark text. Tapping a segment chooses it, and tapping the chosen one again changes nothing. Either shoulder button on a controller still switches between the two. On a wide window the control sits in the bottom row between "Your records" and the mute button, with its label on the left and its segments centred on the screen. On an upright phone it takes a row of its own above them, with the label above the segments. Each segment is a button's height (at least 44 units), and a tap reaches it within a dot's width, as for the other title buttons.
 
 **Why:** A toggle should show its options and which one is chosen (Tidwell). A single pill showed only the current state, so it didn't say that tapping it would switch, or what the other choice was. Naming the choice "Dot size" and each option by what it does makes the control read as a setting rather than a statement (Podmajersky).
 
@@ -485,7 +485,7 @@ The title's dot-size choice used to be a single pill that read "Dots: same size 
 
 ### The Records screen keeps labels near their numbers
 
-The rows' type is a little larger (23 units at a layout scale of 1, up from 20). Each column is only as wide as its longest row needs, measured at that size, so the columns no longer stretch to fill a wide window. Two columns stand side by side only when both fit at that width; otherwise everything stacks in one centred column. A faint dotted leader runs from each label to its number. The two dense sentences under the heading are now one short line, "This screen is about 12 dots wide and 8 dots tall." With **Fit the screen** chosen, a second line follows: "Dots fit the screen, so scores compare across devices."
+The rows' type is a little larger (23 units at a layout scale of 1, up from 20). Each column is only as wide as its longest row needs, measured at that size, so the columns no longer stretch to fill a wide window. Two columns stand side by side only when both fit at that width; otherwise everything stacks in one centred column. A faint dotted leader runs from each label to its number. The two dense sentences under the heading are now one short line, "This screen is about 12 dots wide and 8 dots tall." With dots sized to the screen, a second line follows: "Dots are sized to fit this screen, so scores compare across devices."
 
 **Why:** Proximity groups things (Johnson, Tidwell). On a wide window, the old columns put a label like "Best score" half the screen away from its number, so the eye could lose the row. The second sentence explained a setting from a screen where it can't be changed. Now the title's segmented control names both choices, so Records only needs to say what the current choice means.
 
@@ -514,3 +514,11 @@ The HUD's pill is a little smaller, with 35-unit numbers (down from 40) and less
 **Why:** The HUD sits over the field, and the field is what the player is watching. An opaque pill hid dots that a tap could still reach. The edge glow tinted dots near the edges pink for almost half a second, which made it harder to tell which ones were fresh just when the player was trying to recover from a mistake.
 
 **To reverse:** Restore `Look::HUD.backing` to 0.62 and `TYPE.hud_number` to 40, draw the readouts with `pen.text`, and set `PENALTY_FLASH` back to `alpha: 0.6, duration: 0.42, band: 0.16`.
+
+### The dot-size choice says what it does on this screen
+
+The title's "Dot size" control no longer names its options from a designer's view of many devices. The first segment is **Standard**, the spec's size. The second is named by what sizing the dots to the screen does here: **Smaller, more room** where the fitted dot is more than a tenth smaller than the standard one (a phone), and **Bigger, less room** where it is more than a tenth bigger (a big monitor). Each segment starts with a small fresh dot, the standard one about a third of the segment's height across and the other in true proportion to it, kept between half and 2.2 times as big so both stay legible. The title's drifting dots already take the chosen size, so choosing shows its effect at once. Where the two sizes are within a tenth of each other, as in the 24 × 16 R window, the control is left out: its taps and the shoulder buttons do nothing, the saved choice is kept, and rounds still follow it (within a tenth, it makes no visible difference). Everything is worked out again from the window's size whenever it is asked, so a resized window brings the control back or takes it away. `Presentation::SizingPreview` holds the comparison, `Look::SIZING` the numbers, and the words are in `Look::WORDS`. The Records screen keeps the reason for the choice, in one line, when dots are sized to the screen: "Dots are sized to fit this screen, so scores compare across devices." In the code, `DotSizing::SAME_EVERYWHERE` is now `DotSizing::STANDARD`; `dot_size.txt` still says "same" or "fitted", so old saves keep working. With autoplay, the bot taps the other choice the first time the title shows it, so a development run shows the dots change.
+
+**Why:** "Same everywhere" and "Fit the screen" only make sense to someone comparing devices, which most players never do (Pinker's curse of knowledge). A player sees one screen, so the labels say what happens on it (Podmajersky), and the dot icons preview each option before it is chosen (Tidwell's Preview pattern; Saffer's "bring the data forward"). A choice that changes nothing visible is noise, so it is hidden until it matters, and the cross-device reason moves to the Records screen, where scores are compared (Lidwell's progressive disclosure).
+
+**To reverse:** Have `Show#sizing_offered?` return `records_offered?`, and name the segments with fixed words again in `Words#sizing`.
