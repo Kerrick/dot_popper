@@ -115,9 +115,12 @@ module DotPopper
         sized ? screen_size.fetch(:fitted_played) : format(screen_size.fetch(:played), *Words.dots_across(field))
       end
 
-      # The title's choice of dot size, as it stands: "Dots: same size
-      # everywhere".
+      # The name of one choice of dot size, on its segment of the title's
+      # "Dot size" control: "Same everywhere" or "Fit the screen".
       def sizing(sizing) = screen_size.fetch(sizing.sized_to_screen? ? :fitted_choice : :same_choice)
+
+      # The control's label: "Dot size".
+      def sizing_label = screen_size.fetch(:choice)
 
       # The Records screen's heading for the bests it shows.
       def bests_heading(sizing) = labels.fetch(sizing.sized_to_screen? ? :fitted_bests : :bests)

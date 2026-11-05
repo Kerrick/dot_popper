@@ -15,6 +15,9 @@ module DotPopper
     # DotSizing, chosen on the title. +radius+ is the usual dot's, which
     # sizes the buttons' reach; a round's effects follow its own dots.
     class Show
+      # The dot-size choices in the order the title draws their segments.
+      SIZINGS = [DotSizing::SAME_EVERYWHERE, DotSizing::SIZED_TO_SCREEN].freeze
+
       attr_reader :game, :effects, :animations, :hud, :attract, :layout, :marquee, :finale, :sounds, :now, :look,
                   :lifetime
 
@@ -80,7 +83,7 @@ module DotPopper
         if records? then close_records
         elsif title? && layout.mute_button.contains?(x, y) then sounds.toggle_mute
         elsif title? && records_offered? && records_reach.contains?(x, y) then open_records
-        elsif title? && records_offered? && sizing_reach.contains?(x, y) then toggle_sizing
+        elsif title? && records_offered? && (sizing = sizing_at(x, y)) then choose_sizing(sizing)
         elsif finished? && share_reach.contains?(x, y) then share
         else
           scenery = attract.dots.top_at(x, y) if title?
@@ -109,13 +112,18 @@ module DotPopper
         true
       end
 
-      # Switches how dots are sized (DotSizing), on the title once it
+      # Switches how dots are sized (DotSizing) to the other choice, as a
+      # gamepad's shoulder button does.
+      def toggle_sizing = choose_sizing(game.sizing.toggled)
+
+      # Sizes dots as +sizing+ (DotSizing) says, on the title once it
       # offers the choice, and remembers it. The title's dots and best
       # change with it, so the choice shows at once.
-      def toggle_sizing
+      def choose_sizing(sizing)
         return unless title? && records_offered?
+        return sounds.play(:tick, pitch: 0.8) if sizing == game.sizing
 
-        game.sizing = game.sizing.toggled
+        game.sizing = sizing
         @sizing_store.write(game.sizing.to_text)
         @attract = Attract.spawn(game.field, look::TITLE)
         @marquee = marquee.with(best: game.best.of(game.size_class))
@@ -156,8 +164,10 @@ module DotPopper
       # and never past the safe area's bottom.
       def records_reach = within_safe(layout.records_button.reach(2 * @radius))
 
-      # Where a tap reaches the dot-size choice, likewise.
-      def sizing_reach = within_safe(layout.sizing_button.reach(2 * @radius))
+      # Where a tap reaches each segment of the dot-size choice, as a
+      # DotSizing and its Rect: never less than a dot's width, and never
+      # past the safe area's bottom.
+      def sizing_reaches = SIZINGS.zip(layout.sizing_control.options.map { within_safe(it.reach(2 * @radius)) })
 
       # The window changed size. The title's dots are respawned if their
       # size changes with it, as dots sized to the screen do.
@@ -187,6 +197,9 @@ module DotPopper
       end
 
       private
+
+      # The dot-size choice whose segment a tap at +x+, +y+ reaches, or nil.
+      def sizing_at(x, y) = sizing_reaches.find { |_, reach| reach.contains?(x, y) }&.first
 
       def within_safe(reach) = reach.with(height: [reach.height, layout.safe.bottom - reach.y].min)
 

@@ -34,7 +34,8 @@ module DotPopper
         return unless show.records_offered?
 
         PillButton.new(pen:).draw(layout.records_button, show.words.records, alpha: intro)
-        PillButton.new(pen:).draw(layout.sizing_button, show.words.sizing(show.game.sizing), alpha: intro)
+        choices = Presentation::Show::SIZINGS.map { [show.words.sizing(it), it == show.game.sizing] }
+        SegmentedPainter.new(pen:).draw(layout.sizing_control, show.words.sizing_label, choices, alpha: intro)
       end
 
       private

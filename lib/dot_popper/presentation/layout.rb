@@ -23,6 +23,17 @@ module DotPopper
       end
     end
 
+    # A labelled choice between options side by side, as a segmented
+    # control: where its label goes, and each option's segment, left to
+    # right.
+    class Segmented < Data.define(:label, :options)
+      # The outline around every segment.
+      def frame
+        first, last = options.first, options.last
+        Rect.new(x: first.x, y: first.y, width: last.right - first.x, height: first.height)
+      end
+    end
+
     # The window's first size on a desktop: a reference play area measured
     # in radii, so the field is about as crowded as on a tablet, shrunk to
     # fit +most+ of the desktop if the desktop is smaller.
@@ -72,20 +83,23 @@ module DotPopper
         Rect.new(x: safe.x + margin, y: safe.bottom - margin - height, width: height * 3.8, height:)
       end
 
-      # The title's choice of dot size, a pill wide enough for its longer
-      # label. It sits between "Your records" and the mute button when
-      # there is room, centred on the screen if it can be, and otherwise
-      # centred a row above them, as on an upright phone.
-      def sizing_button
+      # The title's choice of dot size: its label, then its two segments,
+      # each as tall as a button. With room between "Your records" and the
+      # mute button, it sits there, label on the left, its segments
+      # centred on the screen if they can be. Otherwise, as on an upright
+      # phone, its segments are centred a row above them, under the label.
+      def sizing_control
         height = button_size
-        width = height * 6.2
+        segment = height * 3.5
+        label = height * 2.1
         left = records_button.right + margin
         right = mute_button.x - margin
-        bottom_row = mute_button.y
-        return Rect.new(x: center_x - (width / 2.0), y: bottom_row - margin - height, width:, height:) if right - left < width
+        return stacked_choice(height, segment, label) if right - left < label + (segment * 2)
 
-        x = (center_x - (width / 2.0)).clamp(left, right - width)
-        Rect.new(x:, y: bottom_row, width:, height:)
+        x = (center_x - segment).clamp(left + label, right - (segment * 2))
+        y = mute_button.y
+        Segmented.new(label: Rect.new(x: x - label, y:, width: label, height:),
+                      options: segments(x, y, segment, height))
       end
 
       # Game Over's "Copy my result" button, under the round's summary.
@@ -103,6 +117,18 @@ module DotPopper
       def continue_y = center_y + (safe.height * 0.41)
 
       private
+
+      def stacked_choice(height, segment, label)
+        segment = [segment, (safe.width / 2.0) - margin].min
+        y = mute_button.y - margin - height
+        tall = height * 0.7
+        Segmented.new(label: Rect.new(x: center_x - (label / 2.0), y: y - tall, width: label, height: tall),
+                      options: segments(center_x - segment, y, segment, height))
+      end
+
+      def segments(x, y, width, height)
+        [Rect.new(x:, y:, width:, height:), Rect.new(x: x + width, y:, width:, height:)]
+      end
 
       # Never smaller than a fingertip (44 units).
       def button_size = [look.button * ui, 44.0].max

@@ -474,3 +474,11 @@ The hint that explains the stacking rule no longer appears during a round. It ap
 **Why:** Players don't read during intense action (Johnson, Hodent), so a sentence that appeared mid-round mostly went unread and covered the field. A penalty is also the wrong trigger for reading (Saffer). Game Over is calm, and it follows the mistake closely enough that the note still makes sense. Showing it only after a mistake caused by a hidden dot means it explains something the player just saw. Showing it twice gives a player who taps through quickly a second chance.
 
 **To reverse:** Pass `lesson: nil` to the `Finale` in `Show#round_ended`. Setting `Look::LESSON.times` changes how often the note shows.
+
+### The dot-size choice is a labelled segmented control
+
+The title's dot-size choice used to be a single pill that read "Dots: same size everywhere" and switched when tapped. It is now a small control labelled "Dot size", with two segments side by side: "Same everywhere" and "Fit the screen". The chosen segment is filled in cream with dark text. Tapping a segment chooses it, and tapping the chosen one again changes nothing. Either shoulder button on a controller still switches between the two. On a wide window the control sits in the bottom row between "Your records" and the mute button, with its label on the left and its segments centred on the screen. On an upright phone it takes a row of its own above them, with the label above the segments. Each segment is a button's height (at least 44 units), and a tap reaches it within a dot's width, as for the other title buttons.
+
+**Why:** A toggle should show its options and which one is chosen (Tidwell). A single pill showed only the current state, so it didn't say that tapping it would switch, or what the other choice was. Naming the choice "Dot size" and each option by what it does makes the control read as a setting rather than a statement (Podmajersky).
+
+**To reverse:** In `TitlePainter#draw`, draw a `PillButton` at `layout.sizing_control.frame` instead of the `SegmentedPainter`, and have `Show#tap` call `toggle_sizing` on that frame's reach.

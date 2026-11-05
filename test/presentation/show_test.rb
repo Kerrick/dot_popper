@@ -122,7 +122,7 @@ class ShowTest < Minitest::Test
     finish_round
     assert_operator @show.marquee.best, :>, 0
 
-    @show.tap(*middle(@show.sizing_reach))
+    @show.tap(*middle(reach(DotPopper::DotSizing::SIZED_TO_SCREEN)))
     assert @show.title?, "the tap never starts a round"
     assert @game.sizing.sized_to_screen?
     assert_equal DotPopper::DotSizing::SIZED_TO_SCREEN.to_text, @sizing_store.read
@@ -136,8 +136,24 @@ class ShowTest < Minitest::Test
     assert_equal "Played with the dots sized to my screen.", @show.finale.screen
   end
 
+  # A tap on a segment chooses it, so tapping the chosen one again keeps
+  # it; a shoulder button switches to the other.
+  def test_each_segment_of_the_dot_size_choice_chooses_it
+    finish_round
+    same = DotPopper::DotSizing::SAME_EVERYWHERE
+    @show.tap(*middle(reach(same)))
+    refute @game.sizing.sized_to_screen?
+    assert_nil @sizing_store.read, "nothing changed, so nothing is saved"
+
+    @show.toggle_sizing
+    assert @game.sizing.sized_to_screen?
+    @show.tap(*middle(reach(same)))
+    refute @game.sizing.sized_to_screen?
+    assert @show.title?
+  end
+
   def test_the_dot_size_choice_is_offered_only_once_a_round_has_finished
-    @show.tap(*middle(@show.sizing_reach))
+    @show.tap(*middle(reach(DotPopper::DotSizing::SIZED_TO_SCREEN)))
 
     assert @show.playing?
     refute @game.sizing.sized_to_screen?
@@ -380,6 +396,8 @@ class ShowTest < Minitest::Test
     round = @game.round
     round.instance_variable_set(:@dots, round.dots.map_dots { it.id == id ? it.with(x:, y:) : it })
   end
+
+  def reach(sizing) = @show.sizing_reaches.to_h.fetch(sizing)
 
   def hide_fresh_under_a_popped_dot_and_tap_it(started: false)
     start_and_pop(started:)

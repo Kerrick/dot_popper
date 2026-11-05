@@ -45,7 +45,7 @@ class RecordsTest < Minitest::Test
     assert_equal "42", phone.totals.rows.first.value
     assert_equal "This screen is about 4 dots wide and 9 dots tall.", phone.notes.first
     assert_equal "This screen is about 12 dots wide and 8 dots tall.", sheet.notes.first
-    assert_match(/sized to your screen/, sheet.notes.last)
+    assert_match(/Fit the screen/, sheet.notes.last)
   end
 
   def test_with_dots_sized_to_the_screen_the_sheet_says_so

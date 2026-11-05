@@ -30,10 +30,10 @@ Your bests are kept separately for each size of screen, because a small screen g
 
 ### How big the dots are
 
-Once you have finished a round, the title screen also shows a button with your choice of dot size. Tap it to switch between the two choices:
+Once you have finished a round, the title screen also shows a **Dot size** control with two segments, the chosen one filled. Tap a segment to choose it:
 
-- **Dots: same size everywhere** is the usual game. A dot is the same size on every screen, so a phone holds fewer dots than a big monitor, gets crowded sooner, and is harder to score on.
-- **Dots: sized to your screen** makes the dots bigger on a big screen and smaller on a small one, so every screen has about the same room for dots as the desktop window. Scores can then be compared across devices. The dots never get smaller than 60 points across, so they stay easy to tap on a phone. The size is worked out when each round starts, and if you resize the window during a round, the dots keep their size until it ends.
+- **Same everywhere** is the usual game. A dot is the same size on every screen, so a phone holds fewer dots than a big monitor, gets crowded sooner, and is harder to score on.
+- **Fit the screen** makes the dots bigger on a big screen and smaller on a small one, so every screen has about the same room for dots as the desktop window. Scores can then be compared across devices. The dots never get smaller than 60 points across, so they stay easy to tap on a phone. The size is worked out when each round starts, and if you resize the window during a round, the dots keep their size until it ends.
 
 The title's dots change size as soon as you switch, and the game remembers your choice. Rounds played with dots sized to the screen keep their own bests, because every screen plays about the same that way.
 
@@ -45,7 +45,7 @@ The title's dots change size as soon as you switch, and the game remembers your 
 | Start a round, or continue after one | Tap or click anywhere | |
 | Copy your result | **Copy my result** on the Game Over screen | |
 | See your records | **Your records** on the title screen | |
-| Choose how big the dots are | The **Dots:** button on the title screen | |
+| Choose how big the dots are | The **Dot size** control on the title screen | |
 | Leave the Records screen | Tap or click anywhere | **Escape** |
 | Turn sound on or off | The speaker button on the title screen | **M** |
 | Roll the dots about on the Game Over screen | Tilt the iPad or phone, or shake it | |
@@ -110,7 +110,7 @@ Every distance and speed in the rules is measured in multiples of one number: th
 
 Because R is fixed, the number of radii that fit on the screen varies from device to device, and a more crowded screen makes for a harder game. The desktop window therefore opens at 24 × 16 R (1200 × 800 logical pixels), which is about the size of an 11-inch iPad measured in radii, so that rounds on a computer and on an iPad play alike. For the same reason, bests are kept separately for small, medium, and large screens. The cut-offs, 250 and 700 square radii, are in `lib/dot_popper/rules.rb`.
 
-A player who chooses **Dots: sized to your screen** on the title replaces the fixed R. At the start of each round, `DotPopper::DotSize.fitted` sets R so that the field's area is 24 × 16 = 384 square radii: R = √(width × height ÷ 384). R is never under 30 units, and never over a seventh of the screen's shorter side. `DotPopper::DotSizing` holds the player's choice. [doc/decisions.md](doc/decisions.md) gives the measurements behind these choices, including the simulation of both settings.
+A player who chooses **Fit the screen** on the title replaces the fixed R. At the start of each round, `DotPopper::DotSize.fitted` sets R so that the field's area is 24 × 16 = 384 square radii: R = √(width × height ÷ 384). R is never under 30 units, and never over a seventh of the screen's shorter side. `DotPopper::DotSizing` holds the player's choice. [doc/decisions.md](doc/decisions.md) gives the measurements behind these choices, including the simulation of both settings.
 
 ## Running the tests
 

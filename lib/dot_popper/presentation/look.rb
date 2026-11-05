@@ -51,12 +51,12 @@ module DotPopper
         screen_size: {
           here: "This screen is about %d dots wide and %d dots tall.",
           played: "Played on a screen about %d dots wide and %d dots tall.",
-          tip: "Choosing “Dots: sized to your screen” on the title gives every screen the same room, " \
+          tip: "Choosing “Fit the screen” for the dot size on the title gives every screen the same room, " \
                "so scores compare across devices.",
           fitted_here: "Dots are sized to your screen, so every screen has the same room, " \
                        "and scores compare across devices.",
           fitted_played: "Played with the dots sized to my screen.",
-          same_choice: "Dots: same size everywhere", fitted_choice: "Dots: sized to your screen"
+          choice: "Dot size", same_choice: "Same everywhere", fitted_choice: "Fit the screen"
         }.freeze
       )
 

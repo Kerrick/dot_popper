@@ -52,25 +52,37 @@ class LayoutTest < Minitest::Test
     assert_operator button.reach(2 * R).right, :<, narrow.mute_button.x
   end
 
-  # The dot-size choice shares the bottom row on a wide window, and on an
-  # upright phone takes a row of its own above it; either way it overlaps
-  # neither button, and stays in the safe area.
+  # The dot-size choice, label and segments, shares the bottom row on a
+  # wide window, and on an upright phone takes a row of its own above it,
+  # under its label; either way it overlaps neither button, and stays in
+  # the safe area.
   def test_the_dot_size_choice_finds_room_beside_or_above_the_corner_buttons
     [[1200, 800], [400, 850], [400, 320], [800, 600], [2560, 1440]].each do |width, height|
       plan = layout(width, height)
-      pill = plan.sizing_button
-      others = [plan.records_button, plan.mute_button]
+      control = plan.sizing_control
+      left, right = control.options
 
-      assert_operator pill.height, :>=, 44, "#{width}x#{height}"
-      assert_operator pill.x, :>=, 0, "#{width}x#{height}"
-      assert_operator pill.right, :<=, width, "#{width}x#{height}"
-      others.each do |other|
-        apart = pill.right <= other.x || other.right <= pill.x || pill.bottom <= other.y || other.bottom <= pill.y
-        assert apart, "#{width}x#{height}"
+      assert_operator left.height, :>=, 44, "#{width}x#{height}"
+      assert_equal left.right, right.x, "#{width}x#{height}: the segments touch"
+      [control.label, control.frame].each do |part|
+        assert_operator part.x, :>=, 0, "#{width}x#{height}"
+        assert_operator part.right, :<=, width, "#{width}x#{height}"
+        [plan.records_button, plan.mute_button].each { assert apart?(part, it), "#{width}x#{height}" }
       end
+      assert apart?(control.label, control.frame), "#{width}x#{height}"
     end
-    assert_equal layout(1200, 800).mute_button.y, layout(1200, 800).sizing_button.y
-    assert_operator layout(400, 850).sizing_button.bottom, :<, layout(400, 850).mute_button.y
+    wide = layout(1200, 800).sizing_control
+    assert_equal layout(1200, 800).mute_button.y, wide.frame.y
+    assert_in_delta 600, wide.frame.center_x, 0.01, "its segments are centred"
+    narrow = layout(400, 850).sizing_control
+    assert_operator narrow.frame.bottom, :<, layout(400, 850).mute_button.y
+    assert_operator narrow.label.bottom, :<=, narrow.frame.y + 1e-9
+  end
+
+  # Whether two rects do not overlap, to within a rounding error.
+  def apart?(one, other, slack = 1e-9)
+    one.right <= other.x + slack || other.right <= one.x + slack || one.bottom <= other.y + slack ||
+      other.bottom <= one.y + slack
   end
 
   def test_the_prompt_makes_room_for_share
