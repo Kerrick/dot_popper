@@ -120,6 +120,10 @@ class GameTest < Minitest::Test
     assert_equal 300, @game.round.field.width
   end
 
+  def test_a_subscriber_must_be_a_listener_or_a_block
+    assert_raises(ArgumentError) { @game.subscribe }
+  end
+
   private
 
   def play_to_score(points)

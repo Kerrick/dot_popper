@@ -1,0 +1,27 @@
+module DotPopper
+  class BestScore
+    interface _Store
+      def read: () -> String?
+
+      def write: (String text) -> void
+    end
+
+    attr_reader value: Integer
+
+    @store: _Store
+
+    def initialize: (_Store store) -> void
+
+    def record: (Integer score) -> bool
+
+    class Memory
+      @text: String?
+
+      def initialize: (?String? text) -> void
+
+      def read: () -> String?
+
+      def write: (String text) -> String
+    end
+  end
+end

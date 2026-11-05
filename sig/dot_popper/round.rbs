@@ -1,0 +1,33 @@
+module DotPopper
+  class Round
+    attr_reader field: Field
+
+    attr_reader dots: Stack
+
+    attr_reader score: Integer
+
+    attr_reader countdown: Countdown
+
+    @random: Random
+
+    @next_id: Integer
+
+    def initialize: (Field field, ?random: Random, ?dots: Stack?) -> void
+
+    def over?: () -> bool
+
+    def update: (number seconds) -> void
+
+    def tap_at: (number x, number y) -> tap_event?
+
+    def field=: (Field field) -> void
+
+    private
+
+    def spawn: () -> Dot
+
+    def pop: (Dot dot, number x, number y) -> Events::Popped
+
+    def penalize: (Dot dot, number x, number y) -> Events::Penalized
+  end
+end

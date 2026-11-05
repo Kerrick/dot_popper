@@ -1,0 +1,87 @@
+module DotPopper
+  class Game
+    interface _Listener
+      def call: (event event) -> void
+    end
+
+    type state = Title | Playing | GameOver
+
+    attr_reader state: state
+
+    attr_reader best: BestScore
+
+    attr_reader field: Field
+
+    @random: Random
+
+    @listeners: Array[_Listener]
+
+    def initialize: (Field field, ?best: BestScore, ?random: Random) -> void
+
+    def subscribe: (?_Listener? listener) ?{ (event event) -> void } -> self
+
+    def press: (number x, number y) -> self
+
+    def update: (number seconds) -> self
+
+    def round: () -> Round?
+
+    def field=: (Field field) -> void
+
+    def announce: [E < event] (E? event) -> E?
+
+    def show_title: () -> Title
+
+    def start_round: () -> Playing
+
+    def finish: (Round round) -> GameOver
+
+    private
+
+    def advance: (state next_state) -> self
+
+    class Title < ::Data
+      def self.new: () -> instance
+
+      def round: () -> nil
+
+      def press: (Game game, number x, number y) -> Playing
+
+      def update: (Game game, number seconds) -> Title
+    end
+
+    class Playing < ::Data
+      attr_reader round: Round
+
+      def self.new: (round: Round) -> instance
+
+      def press: (Game game, number x, number y) -> (Playing | GameOver)
+
+      def update: (Game game, number seconds) -> (Playing | GameOver)
+
+      private
+
+      def settle: (Game game) -> (Playing | GameOver)
+    end
+
+    class GameOver < ::Data
+      attr_reader round: Round
+
+      attr_reader new_best: bool
+
+      attr_reader shown: Float
+
+      def self.new: (round: Round, new_best: bool, ?shown: Float) -> instance
+
+      def initialize: (round: Round, new_best: bool, ?shown: Float) -> void
+
+      def score: () -> Integer
+
+      def ready?: () -> bool
+
+      def press: (Game game, number x, number y) -> (GameOver | Title)
+
+      def update: (Game game, number seconds) -> GameOver
+    end
+  end
+end

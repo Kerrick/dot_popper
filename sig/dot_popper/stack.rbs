@@ -1,0 +1,27 @@
+module DotPopper
+  class Stack < ::Data
+    include Enumerable[Dot]
+
+    attr_reader dots: Array[Dot]
+
+    def self.new: (?dots: Array[Dot]) -> instance
+
+    def initialize: (?dots: Array[Dot]) -> void
+
+    def slide_under: (Dot dot) -> Stack
+
+    def top_at: (number x, number y) -> Dot?
+
+    def fresh_beneath: (Dot dot, number x, number y) -> Dot?
+
+    def replace: (Dot dot) -> Stack
+
+    def map_dots: () { (Dot) -> Dot } -> Stack
+
+    def each: () { (Dot) -> void } -> Array[Dot]
+
+    def bottom_up: () -> Enumerator[Dot, Array[Dot]]
+
+    def size: () -> Integer
+  end
+end

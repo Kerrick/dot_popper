@@ -27,6 +27,13 @@ class FieldTest < Minitest::Test
     assert_in_delta 400, xs.sum / xs.size, 10
   end
 
+  def test_its_measurements_are_floats_whatever_it_is_given
+    measurements = DotPopper::Field.new(800, 600, 50).to_h.values
+
+    assert_equal [800.0, 600.0, 50.0], measurements
+    assert measurements.all?(Float)
+  end
+
   def test_a_field_narrower_than_a_dot_centres_it
     narrow = DotPopper::Field.new(60, 600, R)
 

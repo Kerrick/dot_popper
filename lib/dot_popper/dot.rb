@@ -13,7 +13,8 @@ module DotPopper
     end
 
     def initialize(id:, x:, y:, velocity_x:, velocity_y:, radius:, popped: false)
-      super(id:, x: x.to_f, y: y.to_f, velocity_x: velocity_x.to_f, velocity_y: velocity_y.to_f, radius:, popped:)
+      super(id:, x: x.to_f, y: y.to_f, velocity_x: velocity_x.to_f, velocity_y: velocity_y.to_f, radius: radius.to_f,
+            popped:)
     end
 
     def popped? = popped

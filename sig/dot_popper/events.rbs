@@ -1,0 +1,72 @@
+module DotPopper
+  type event = Events::Popped | Events::Penalized | Events::Missed
+             | Events::RoundStarted | Events::RoundEnded | Events::TitleShown
+
+  type tap_event = Events::Popped | Events::Penalized | Events::Missed
+
+  module Events
+    class Popped < ::Data
+      attr_reader dot: Dot
+
+      attr_reader x: number
+
+      attr_reader y: number
+
+      attr_reader points: Integer
+
+      attr_reader seconds: Float
+
+      attr_reader spawned: Dot
+
+      def self.new: (dot: Dot, x: number, y: number, points: Integer, seconds: Float, spawned: Dot) -> instance
+    end
+
+    class Penalized < ::Data
+      attr_reader dot: Dot
+
+      attr_reader x: number
+
+      attr_reader y: number
+
+      attr_reader points: Integer
+
+      attr_reader seconds: Float
+
+      def self.new: (dot: Dot, x: number, y: number, points: Integer, seconds: Float) -> instance
+
+      def softened?: () -> bool
+    end
+
+    class Missed < ::Data
+      attr_reader x: number
+
+      attr_reader y: number
+
+      def self.new: (x: number, y: number) -> instance
+    end
+
+    class RoundStarted < ::Data
+      attr_reader round: Round
+
+      def self.new: (round: Round) -> instance
+    end
+
+    class RoundEnded < ::Data
+      attr_reader round: Round
+
+      attr_reader best: Integer
+
+      attr_reader new_best: bool
+
+      def self.new: (round: Round, best: Integer, new_best: bool) -> instance
+
+      def score: () -> Integer
+    end
+
+    class TitleShown < ::Data
+      attr_reader best: Integer
+
+      def self.new: (best: Integer) -> instance
+    end
+  end
+end

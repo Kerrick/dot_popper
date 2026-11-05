@@ -1,0 +1,23 @@
+module DotPopper
+  module Rules
+    RADIUS: Integer
+
+    SPEEDS: Array[Float]
+
+    STARTING_SECONDS: Float
+
+    POP_POINTS: Integer
+
+    POP_SECONDS: Float
+
+    PENALTY_POINTS: Integer
+
+    PENALTY_SECONDS: Float
+
+    LOWEST_SCORE: Integer
+
+    LONGEST_FRAME: Float
+
+    GAME_OVER_GRACE: Float
+  end
+end

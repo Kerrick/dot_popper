@@ -1,0 +1,30 @@
+module DotPopper
+  class Field < ::Data
+    attr_reader width: Float
+
+    attr_reader height: Float
+
+    attr_reader radius: Float
+
+    def self.new: (number width, number height, number radius) -> instance
+                | (width: number, height: number, radius: number) -> instance
+
+    def initialize: (width: number, height: number, radius: number) -> void
+
+    def random_center: (Random random) -> [Float, Float]
+
+    def random_speed: (Random random) -> Float
+
+    def min_x: () -> Float
+
+    def max_x: () -> Float
+
+    def min_y: () -> Float
+
+    def max_y: () -> Float
+
+    private
+
+    def random_between: (Random random, Float low, Float high) -> Float
+  end
+end

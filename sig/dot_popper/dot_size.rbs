@@ -1,0 +1,17 @@
+module DotPopper
+  class DotSize < ::Data
+    TOUCH_SYSTEMS: Array[String]
+
+    attr_reader radius: Integer
+
+    attr_reader reason: String
+
+    def self.new: (radius: Integer, reason: String) -> instance
+
+    def self.for: (String os) -> DotSize
+
+    def self.touch?: (String os) -> bool
+
+    def field: (number width, number height) -> Field
+  end
+end

@@ -15,6 +15,11 @@ gem "lota", "0.1.2"
 # development group, so fledge build leaves it out of the app.
 group :development do
   gem "fledge", git: "https://github.com/setdef/Fledge", ref: "007b5514e4630ca02a67aabb5b8b701e66c919cd"
+
+  # Steep checks the rules core against its RBS signatures in sig/
+  # (bundle exec rake steep). Only the default rake task needs it;
+  # rake test runs without it.
+  gem "steep", "~> 2.1", require: false
 end
 
 group :development, :test do

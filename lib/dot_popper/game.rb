@@ -20,7 +20,7 @@ module DotPopper
 
     # Adds a listener: anything that answers +call(event)+.
     def subscribe(listener = nil, &block)
-      @listeners << (listener || block)
+      @listeners << (listener || block || raise(ArgumentError, "subscribe needs a listener or a block"))
       self
     end
 
@@ -34,7 +34,8 @@ module DotPopper
     # and the next round starts on the new field.
     def field=(field)
       @field = field
-      round.field = field if state.is_a?(Playing)
+      playing = state
+      playing.round.field = field if playing.is_a?(Playing)
     end
 
     # Tells every listener of +event+; nil is nothing to tell.

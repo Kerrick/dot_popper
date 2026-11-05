@@ -47,6 +47,8 @@ To play without Ruby, download a build instead. Every push to `trunk` builds a W
 bundle exec rake test
 ```
 
+`bundle exec rake` runs the tests and then [Steep](https://github.com/soutaro/steep), which checks the rules against their RBS signatures in `sig/`.
+
 The tests need no window. The rules (dots, scoring, the clock, which dot a tap reaches, and the flow from title to game over) live in `lib/dot_popper` and know nothing of Lota. The presentation's own logic, such as easing, effects, input routing, layout, and pixel snapping, lives in `lib/dot_popper/presentation` and is tested the same way. Only `lib/dot_popper/shell` and `main.rb` talk to Lota.
 
 `script/simulate.rb` plays the real rules with a model player at several screen sizes. It's a design tool, not a test, and [doc/decisions.md](doc/decisions.md) explains what it found.

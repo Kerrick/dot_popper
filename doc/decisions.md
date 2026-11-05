@@ -123,3 +123,20 @@ the player understanding what just happened to them.
   teaches the core rule at the moment it bit. It is an outline, never a fill,
   so it cannot pass for an uncovered fresh dot and invite a second wrong tap.
   `Stack#fresh_beneath` answers the question; it decides nothing.
+
+## Code
+
+- **The rules core is type-checked by Steep, strictly.** `sig/dot_popper/`
+  holds an RBS signature for every class in `lib/dot_popper/*.rb`, with no
+  `untyped`, and `bundle exec rake` runs Steep after the tests with its
+  strict diagnostics, so a call Steep cannot type fails the build instead
+  of passing silently. `rake test` alone does not need Steep, so a machine
+  without it can still run the tests. Steep's gems are cached in
+  `vendor/cache` for all three platforms, like the rest. Two things the
+  checker asked for changed the code: a `Field` now stores its width,
+  height, and radius as floats, as a `Dot` already did, because an integer
+  radius could leak into a dot's position through `confine`; and
+  `Game#subscribe` with neither a listener nor a block raises at once
+  instead of failing on the next event. RBS's core signatures leave out
+  `Data#initialize`, so `sig/core/data.rbs` declares it, which lets a
+  value's own `initialize` call `super` with keywords.

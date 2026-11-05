@@ -4,6 +4,8 @@ module DotPopper
   # The rectangle dots live in, and the radius they all share. It knows
   # where a dot may be, so a dot stays on screen.
   class Field < Data.define(:width, :height, :radius)
+    def initialize(width:, height:, radius:) = super(width: width.to_f, height: height.to_f, radius: radius.to_f)
+
     # A uniformly random point whose distance from every edge is at least
     # one radius, so a dot centred there starts wholly on screen. On a
     # field narrower than a dot, the centre line is the only choice.

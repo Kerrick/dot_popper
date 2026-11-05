@@ -1,0 +1,41 @@
+module DotPopper
+  class Dot < ::Data
+    attr_reader id: Integer
+
+    attr_reader x: Float
+
+    attr_reader y: Float
+
+    attr_reader velocity_x: Float
+
+    attr_reader velocity_y: Float
+
+    attr_reader radius: Float
+
+    attr_reader popped: bool
+
+    def self.spawn: (Field field, Random random, id: Integer) -> Dot
+
+    def self.new: (id: Integer, x: number, y: number, velocity_x: number, velocity_y: number, radius: number, ?popped: bool) -> instance
+
+    def initialize: (id: Integer, x: number, y: number, velocity_x: number, velocity_y: number, radius: number, ?popped: bool) -> void
+
+    def popped?: () -> bool
+
+    def fresh?: () -> bool
+
+    def pop: () -> Dot
+
+    def covers?: (number point_x, number point_y) -> bool
+
+    def overlaps?: (Dot other) -> bool
+
+    def move: (number seconds, Field field) -> Dot
+
+    def confine: (Field field) -> Dot
+
+    private
+
+    def bounce: (Float position, Float velocity, Float low, Float high) -> [Float, Float]
+  end
+end

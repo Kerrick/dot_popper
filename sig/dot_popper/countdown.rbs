@@ -1,0 +1,17 @@
+module DotPopper
+  class Countdown < ::Data
+    attr_reader remaining: Float
+
+    def self.new: (remaining: number) -> instance
+
+    def initialize: (remaining: number) -> void
+
+    def tick: (number seconds) -> Countdown
+
+    def adjust: (number seconds) -> Countdown
+
+    def expired?: () -> bool
+
+    def whole_seconds: () -> Integer
+  end
+end

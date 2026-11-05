@@ -1,0 +1,9 @@
+module DotPopper
+  type number = Integer | Float
+
+  module Presentation
+  end
+
+  module Shell
+  end
+end
