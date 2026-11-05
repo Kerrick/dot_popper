@@ -11,11 +11,16 @@ module DotPopper
     # Seconds of play so far.
     attr_reader elapsed: Float
 
+    # Every dot spawned this round, oldest first, with how it was drawn.
+    attr_reader spawns: Array[Spawn]
+
     @random: Random
+
+    @spawner: Spawner
 
     @next_id: Integer
 
-    def initialize: (Field field, ?random: Random, ?dots: Stack?) -> void
+    def initialize: (Field field, ?random: Random, ?dots: Stack?, ?spawn_tries: Integer) -> void
 
     def over?: () -> bool
 
@@ -27,7 +32,7 @@ module DotPopper
 
     private
 
-    def spawn: () -> Dot
+    def spawn: (Stack above) -> Dot
 
     def pop: (Dot dot, number x, number y) -> Events::Popped
 

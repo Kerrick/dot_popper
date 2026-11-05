@@ -44,6 +44,7 @@ class RulesFuzzTest < Minitest::Test
 
   def play(random, where)
     round = DotPopper::Round.new(random_field(random), random:)
+    check_spawn(round, [], where)
     check_round(round, where)
     STEPS.times do
       break if round.over?
@@ -115,10 +116,24 @@ class RulesFuzzTest < Minitest::Test
       assert_equal top&.id, dot.id, "#{where}: a pop reached past the top dot"
       assert top.fresh?, "#{where}: a popped dot was popped again"
       assert_equal before.map { it.id == dot.id ? it.pop : it } + [spawned], after, "#{where}: a pop changed more"
+      check_spawn(round, after[0...-1], where)
     in DotPopper::Events::Penalized(dot:)
       assert_equal top&.id, dot.id, "#{where}: a penalty reached past the top dot"
       assert top.popped?, "#{where}: a fresh dot cost a penalty"
       assert_equal before, after, "#{where}: a penalty changed the dots"
+    end
+  end
+
+  # The round's newest dot, spawned under +above+, has a touch target
+  # within the lookahead, or every try to give it one failed.
+  def check_spawn(round, above, where)
+    spawn = round.spawns.last
+    assert_equal round.dots.to_a.last, spawn.dot, "#{where}: the spawn is not the newest dot"
+    if spawn.exhausted?
+      tries = DotPopper::Rules::SPAWN_TRIES
+      assert_equal [tries, tries], [spawn.velocity_redraws, spawn.position_redraws], "#{where}: gave up too soon"
+    else
+      assert DotPopper::SpawnCheck.for(round.field).exposed_soon?(spawn.dot, above), "#{where}: a spawn stayed hidden"
     end
   end
 

@@ -1,0 +1,27 @@
+module DotPopper
+  class SpawnCheck < ::Data
+    STEP: Float
+
+    STEPS: Integer
+
+    attr_reader field: Field
+
+    attr_reader target: TouchTarget
+
+    def self.for: (Field field) -> SpawnCheck
+
+    def self.new: (field: Field, target: TouchTarget) -> instance
+
+    def initialize: (field: Field, target: TouchTarget) -> void
+
+    def exposed_soon?: (Dot dot, Array[Dot] above) -> bool
+
+    private
+
+    def at: (Dot dot, Float seconds) -> Dot
+
+    def time_to_reach: (Dot dot, Dot other) -> Float
+
+    def time_to_close: (Float apart, Float speed, Float other_speed, Float reach) -> Float
+  end
+end

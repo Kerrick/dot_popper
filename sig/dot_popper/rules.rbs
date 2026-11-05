@@ -16,6 +16,12 @@ module DotPopper
 
     LOWEST_SCORE: Integer
 
+    TOUCH_TARGET: Integer
+
+    SPAWN_LOOKAHEAD: Float
+
+    SPAWN_TRIES: Integer
+
     LONGEST_FRAME: Float
 
     GAME_OVER_GRACE: Float

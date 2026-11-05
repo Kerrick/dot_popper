@@ -1,0 +1,25 @@
+module DotPopper
+  class TouchTarget < ::Data
+    HALF: Float
+
+    SPACING: Float
+
+    attr_reader reach: Float
+
+    attr_reader offsets: Array[[Float, Float]]
+
+    def self.on: (number radius) -> TouchTarget
+
+    def self.rings: (Float reach) -> Array[[Float, Float]]
+
+    def self.ring: (Float radius, Float turn) -> Array[[Float, Float]]
+
+    def self.new: (reach: number, offsets: Array[[Float, Float]]) -> instance
+
+    def initialize: (reach: number, offsets: Array[[Float, Float]]) -> void
+
+    def fits?: () -> bool
+
+    def clear_on?: (Float x, Float y, Array[Dot] above) -> bool
+  end
+end

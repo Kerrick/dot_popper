@@ -1,0 +1,17 @@
+module DotPopper
+  class Spawner < ::Data
+    attr_reader check: SpawnCheck
+
+    attr_reader tries: Integer
+
+    def self.for: (Field field, ?tries: Integer) -> Spawner
+
+    def self.new: (check: SpawnCheck, tries: Integer) -> instance
+
+    def initialize: (check: SpawnCheck, tries: Integer) -> void
+
+    def field: () -> Field
+
+    def spawn: (Random random, id: Integer, above: Array[Dot]) -> Spawn
+  end
+end

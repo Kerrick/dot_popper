@@ -5,16 +5,20 @@ module DotPopper
   # the rules that changes, and it changes by swapping in new values, so a
   # tap changes all three at once and says what it did with an event.
   class Round
-    attr_reader :field, :dots, :score, :countdown, :elapsed
+    attr_reader :field, :dots, :score, :countdown, :elapsed, :spawns
 
-    def initialize(field, random: Random.new, dots: nil)
+    # +spawn_tries+ is how hard a spawn works for a touch target (Spawner);
+    # 0 turns the rule off, as the simulator does to measure it.
+    def initialize(field, random: Random.new, dots: nil, spawn_tries: Rules::SPAWN_TRIES)
       @field = field
       @random = random
+      @spawner = Spawner.for(field, tries: spawn_tries)
+      @spawns = []
       @next_id = 0
       @score = 0
       @elapsed = 0.0
       @countdown = Countdown.new(remaining: Rules::STARTING_SECONDS)
-      @dots = dots || Stack.new.slide_under(spawn)
+      @dots = dots || Stack.new.slide_under(spawn(Stack.new))
       @next_id = @dots.map(&:id).max.to_i + 1
     end
 
@@ -45,19 +49,26 @@ module DotPopper
     # screen.
     def field=(field)
       @field = field
+      @spawner = Spawner.for(field, tries: @spawner.tries)
       @dots = dots.map_dots { it.confine(field) }
     end
 
     private
 
-    def spawn
-      Dot.spawn(field, @random, id: @next_id).tap { @next_id += 1 }
+    # A fresh dot to go in beneath every dot of +above+, recorded in
+    # +spawns+.
+    def spawn(above)
+      spawn = @spawner.spawn(@random, id: @next_id, above: above.to_a)
+      @next_id += 1
+      @spawns << spawn
+      spawn.dot
     end
 
     def pop(dot, x, y)
       popped = dot.pop
-      spawned = spawn
-      @dots = dots.replace(popped).slide_under(spawned)
+      above = dots.replace(popped)
+      spawned = spawn(above)
+      @dots = above.slide_under(spawned)
       @score += Rules::POP_POINTS
       @countdown = countdown.adjust(Rules::POP_SECONDS)
       Events::Popped.new(dot: popped, x:, y:, points: Rules::POP_POINTS, seconds: Rules::POP_SECONDS, spawned:)

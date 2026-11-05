@@ -1,0 +1,21 @@
+module DotPopper
+  class Spawn < ::Data
+    attr_reader dot: Dot
+
+    attr_reader velocity_redraws: Integer
+
+    attr_reader position_redraws: Integer
+
+    attr_reader exposed: bool
+
+    def self.new: (dot: Dot, ?velocity_redraws: Integer, ?position_redraws: Integer, ?exposed: bool) -> instance
+
+    def initialize: (dot: Dot, ?velocity_redraws: Integer, ?position_redraws: Integer, ?exposed: bool) -> void
+
+    def redrawn?: () -> bool
+
+    def moved?: () -> bool
+
+    def exhausted?: () -> bool
+  end
+end

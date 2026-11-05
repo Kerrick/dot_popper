@@ -24,6 +24,19 @@ module DotPopper
 
     LOWEST_SCORE = 0
 
+    # A fresh dot spawns at a uniformly random place with a random
+    # velocity, but must offer a touch target within SPAWN_LOOKAHEAD
+    # seconds: a circle TOUCH_TARGET units across, wholly on the dot and
+    # clear of every dot above it. TOUCH_TARGET is Apple's smallest
+    # comfortable touch target, 44 points, and the same 44 logical pixels
+    # under a mouse. A draw that offers none tries another velocity, up to
+    # SPAWN_TRIES times, then another place and velocity, up to SPAWN_TRIES
+    # more, and keeps its last draw if every try fails, so a dot always
+    # spawns. See Spawner, and doc/decisions.md for how rarely it applies.
+    TOUCH_TARGET = 44
+    SPAWN_LOOKAHEAD = 1.0
+    SPAWN_TRIES = 4
+
     # The most time one frame may pass on to the rules. A frame that took
     # longer, because the window was dragged, the app was in the
     # background, or the computer stalled, did not give the player that
