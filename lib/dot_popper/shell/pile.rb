@@ -42,12 +42,15 @@ module DotPopper
         end
       end
 
-      # The window changed size: the walls move to its new edges.
+      # The window changed size, or a tablet turned: the walls move to its
+      # new edges, and a ball the new walls would leave outside comes back
+      # in, since Box2D never pushes a body back through a wall.
       def refit(field)
         return unless @world
 
         @walls.destroy
         @walls = walls(field)
+        @balls.each_value { bring_inside(it, field) }
       end
 
       private
@@ -80,6 +83,15 @@ module DotPopper
         body.linear_damping = @look.damping
         body.linear_velocity = @look.launch(dot)
         body
+      end
+
+      def bring_inside(body, field)
+        x, y = body.position
+        inside = [x.clamp(field.min_x, field.max_x), [y, field.max_y].min]
+        return if inside == [x, y]
+
+        body.position = inside
+        body.linear_velocity = [0, 1] # wakes it, as Box2D wakes a body given any speed
       end
 
       def walls(field)

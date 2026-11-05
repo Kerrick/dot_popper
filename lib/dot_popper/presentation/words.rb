@@ -33,7 +33,9 @@ module DotPopper
       # beat: "3 short of your best (27)".
       def short_of_best(score, best)
         gap = best - score
-        gap.positive? ? "#{gap} short of your best (#{best})" : "You matched your best (#{best})"
+        return "#{gap} short of your best (#{best})" if gap.positive?
+
+        best.positive? ? "You matched your best (#{best})" : ""
       end
 
       # The round in one quiet line: "14 pops · 2 slips · longest wait 3.1 s".

@@ -43,5 +43,6 @@ class WordsTest < Minitest::Test
   def test_how_far_short_of_the_best
     assert_equal "3 short of your best (27)", Look::WORDS.short_of_best(24, 27)
     assert_equal "You matched your best (27)", Look::WORDS.short_of_best(27, 27)
+    assert_equal "", Look::WORDS.short_of_best(0, 0), "no best to compare with yet"
   end
 end
