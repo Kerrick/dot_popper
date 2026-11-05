@@ -4,8 +4,8 @@ module DotPopper
   module Shell
     # Game over, over the finished round: "Time!", the score counting up,
     # a new best or how far short of the best it fell, a quiet line of the
-    # round's facts, "Copy my result", and, once a tap will be heard, the
-    # prompt to go on.
+    # round's facts, a lifetime record it set, "Copy my result", and, once
+    # a tap will be heard, the prompt to go on.
     class FinalePainter < Data.define(:pen)
       def draw(show, layout)
         finale = show.finale or return
@@ -26,6 +26,7 @@ module DotPopper
         summary = pen.fonts.semibold(layout.scaled(type.summary))
         pen.text(words.summary(finale.stats), summary, layout.center_x, center + (height * 0.19), palette.soft,
                  shown * 0.8)
+        record(finale, words, layout, center + (height * 0.235), now)
         copied = finale.copied?(now)
         PillButton.new(pen:).draw(layout.share_button, copied ? words.copied : words.share, alpha: shown,
                                   color: copied ? palette.gain : palette.cream)
@@ -35,6 +36,16 @@ module DotPopper
       end
 
       private
+
+      # The lifetime record the round set, if any, once the score has
+      # counted up: quiet, in the colour of a gain.
+      def record(finale, words, layout, y, now)
+        return unless finale.record && finale.counted?(now)
+
+        font = pen.fonts.semibold(layout.scaled(pen.look::TYPE.summary))
+        alpha = finale.look.prompt.at(now - finale.at - finale.look.tally.duration)
+        pen.text(words.record(finale.record), font, layout.center_x, y, pen.palette.gain, alpha)
+      end
 
       def best_line(finale, words, layout, y, now, alpha)
         type = pen.look::TYPE

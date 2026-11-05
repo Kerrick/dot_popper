@@ -7,12 +7,15 @@ module DotPopper
     # shows only from +ready_at+, once a press would be heard. A new best
     # is celebrated once, when it has finished counting. +stats+ are the
     # round's RoundStats, for the line of facts under the score.
-    # +copied_at+ is when the result was last copied to share.
-    class Finale < Data.define(:look, :score, :best, :new_best, :at, :stats, :copied_at, :ready_at, :celebrated)
+    # +copied_at+ is when the result was last copied to share. +record+
+    # is the most impressive lifetime record the round set
+    # (LifetimeStats::Record), or nil.
+    class Finale < Data.define(:look, :score, :best, :new_best, :at, :stats, :record, :copied_at, :ready_at,
+                               :celebrated)
       COPIED_FOR = 1.6 # seconds "Copy my result" says "Copied!"
 
-      def initialize(look:, score:, best:, new_best:, at:, stats: RoundStats.start, copied_at: nil, ready_at: nil,
-                     celebrated: false)
+      def initialize(look:, score:, best:, new_best:, at:, stats: RoundStats.start, record: nil, copied_at: nil,
+                     ready_at: nil, celebrated: false)
         super
       end
 

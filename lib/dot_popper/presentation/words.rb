@@ -57,16 +57,36 @@ module DotPopper
         parts.join(", ")
       end
 
+      # The one lifetime record a round set that Game Over names (the most
+      # impressive, LifetimeStats::Record::ORDER), as a sentence:
+      # "New record: 18 pops in a row without a wrong tap".
+      def record(record)
+        value = record.value
+        "New record: " +
+          case record.kind
+          when :longest_run then "#{Words.count(value.to_i, "pop")} in a row without a wrong tap"
+          when :longest_round then "your longest round, #{Words.count(value.round, "second")}"
+          when :longest_wait then "you waited #{Words.tenths(value)} seconds for a dot, then popped it"
+          else "your fastest pop, #{Words.tenths(value)} seconds after the dot appeared"
+          end
+      end
+
       # What "Copy my result" puts on the clipboard: the score, whether it
-      # set or tied the player's +best+, and what the round was made of.
+      # set or tied the player's +best+, the lifetime +record+ it set, if
+      # any, and what the round was made of.
       #
       #   Dot Popper: 25 points, a new best!
+      #   New record: 18 pops in a row without a wrong tap
       #   🟡 27 pops · ⚫ 1 wrong tap · ⏱ 38 seconds
-      def share_text(score, stats, best:, new_best:)
-        "Dot Popper: #{Words.count(score, "point")}#{best_note(score, best, new_best)}\n" \
-          "🟡 #{Words.count(stats.pops, "pop")} · ⚫ #{Words.count(stats.slips, "wrong tap")} · " \
-          "⏱ #{Words.count(stats.duration.round, "second")}"
+      def share_text(score, stats, best:, new_best:, record: nil)
+        ["Dot Popper: #{Words.count(score, "point")}#{best_note(score, best, new_best)}",
+         (self.record(record) if record),
+         "🟡 #{Words.count(stats.pops, "pop")} · ⚫ #{Words.count(stats.slips, "wrong tap")} · " \
+         "⏱ #{Words.count(stats.duration.round, "second")}"].compact.join("\n")
       end
+
+      # Seconds to one decimal place: "0.4".
+      def self.tenths(seconds) = format("%.1f", seconds)
 
       # "1 pop", "2 pops".
       def self.count(number, noun) = "#{number} #{noun}#{"s" unless number == 1}"

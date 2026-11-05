@@ -214,6 +214,16 @@ After every round, `Lifetime` adds the round's numbers to totals and bests that 
 
 **To reverse:** Remove `lifetime:` from the `Show` in `Shell::App#load`; the Show then keeps the stats only in memory. Deleting `lifetime.txt` starts them from nothing.
 
+### Game Over names one lifetime record, the most impressive
+
+When a round beats one of the lifetime bests, Game Over adds one line under the round's summary, in the gain colour, once the score has finished counting: for example "New record: 18 pops in a row without a wrong tap". If the round beat several, only the most impressive is named, in this order: pops in a row without a wrong tap, then the longest round, then the longest wait that ended in a pop, then the fastest pop. The best score isn't on that list, because "New best!" already says it. "Copy my result" puts the same line between the score and the round's numbers.
+
+A player's first round sets no record, since there is nothing yet to beat. Neither does a round that only matches a best as the game shows it: a round's length counts in whole seconds, and a wait in tenths, so "New record" always shows a bigger number than before.
+
+**Why:** The order puts skill before luck. A long run without a wrong tap is exactly the patience the game asks for, and it is what makes a round last. A fast pop mostly means a dot happened to appear in the open. One line keeps the screen quiet; a list of four records would bury the score.
+
+**To reverse:** The order is `LifetimeStats::Record::ORDER`. To drop the line, stop `FinalePainter` from drawing it and pass no `record:` to `share_text`.
+
 ### Cut: the daily challenge
 
 For a while the title screen had a second button, "Play today's challenge". Its round's seed came from the local date, so everyone who played on the same day got the same sequence of new dots: the same starting places, directions, and speeds. The game kept the day's best score, and afterwards a button copied the day's result to share. The idea was Wordle's: one puzzle a day, the same for everyone, so that players have something to compare and a reason to come back.

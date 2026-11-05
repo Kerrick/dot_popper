@@ -44,6 +44,21 @@ class ShowTest < Minitest::Test
     assert_equal [1], @show.lifetime.stats.recent
   end
 
+  def test_game_over_names_the_best_record_the_round_set
+    start_and_pop
+    @game.update(20)
+    assert_nil @show.finale.record, "a first round has nothing to beat"
+
+    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @game.press(10, 10)
+    @game.press(10, 10)
+    2.times { start_and_pop(started: true) }
+    @game.update(30)
+
+    assert_equal :longest_run, @show.finale.record.kind
+    assert_equal 2, @show.finale.record.value
+  end
+
   def test_a_tap_elsewhere_on_game_over_continues_once_the_grace_is_over
     @show.tap(10, 10)
     @game.update(20)

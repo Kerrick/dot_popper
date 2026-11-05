@@ -80,7 +80,8 @@ module DotPopper
       def share
         return unless finished? && finale
 
-        @clipboard.copy(words.share_text(finale.score, finale.stats, best: finale.best, new_best: finale.new_best?))
+        @clipboard.copy(words.share_text(finale.score, finale.stats, best: finale.best, new_best: finale.new_best?,
+                                         record: finale.record))
         @finale = finale.copy(now)
         sounds.play(:tick)
       end
@@ -156,9 +157,9 @@ module DotPopper
       end
 
       def round_ended(event)
-        lifetime.record(stats)
+        record = lifetime.record(stats).first
         @finale = Finale.new(look: look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now,
-                             stats:)
+                             stats:, record:)
         sounds.play(event.new_best ? :new_best : :game_over)
       end
 

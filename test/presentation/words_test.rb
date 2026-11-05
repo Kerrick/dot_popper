@@ -40,6 +40,24 @@ class WordsTest < Minitest::Test
     assert_match(/\ADot Popper: 0 points\n/, Look::WORDS.share_text(0, stats, best: 0, new_best: false))
   end
 
+  def test_the_shared_result_names_a_record_on_its_own_line
+    stats = DotPopper::RoundStats.start.with(pops: 27, slips: 1, duration: 38.2)
+    record = DotPopper::LifetimeStats::Record.new(kind: :longest_run, value: 18)
+
+    assert_equal "Dot Popper: 25 points, a new best!\nNew record: 18 pops in a row without a wrong tap\n" \
+                 "🟡 27 pops · ⚫ 1 wrong tap · ⏱ 38 seconds",
+                 Look::WORDS.share_text(25, stats, best: 25, new_best: true, record:)
+  end
+
+  def test_each_record_reads_as_a_sentence
+    record = ->(kind, value) { Look::WORDS.record(DotPopper::LifetimeStats::Record.new(kind:, value:)) }
+
+    assert_equal "New record: 18 pops in a row without a wrong tap", record[:longest_run, 18]
+    assert_equal "New record: your longest round, 48 seconds", record[:longest_round, 47.6]
+    assert_equal "New record: you waited 6.2 seconds for a dot, then popped it", record[:longest_wait, 6.24]
+    assert_equal "New record: your fastest pop, 0.3 seconds after the dot appeared", record[:fastest_pop, 0.31]
+  end
+
   # The title teaches the scoring in words a first-time player can act on,
   # with the numbers taken from the rules.
   def test_the_legend_says_what_each_tap_does

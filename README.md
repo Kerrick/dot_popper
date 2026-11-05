@@ -14,9 +14,9 @@ A fresh dot and a popped dot differ in more than colour. A fresh dot is light an
 
 The game also helps a new player understand a mistake. The first time you ever tap a popped dot, a one-line hint under the score explains the stacking rule, and it never appears again. Whenever a wrong tap happens because a fresh dot was hidden underneath, the game briefly outlines that hidden fresh dot, so you can see what you were too quick for.
 
-When time runs out, the dots tumble to the bottom of the screen in a heap behind your score. Under the score, a line sums up the round: how many dots you popped, how many popped dots you tapped by mistake, and the longest you had to wait for a fresh dot.
+When time runs out, the dots tumble to the bottom of the screen in a heap behind your score. Under the score, a line sums up the round: how many dots you popped, how many popped dots you tapped by mistake, and the longest you had to wait for a fresh dot. If the round beat one of your lifetime records, such as the most pops in a row without a wrong tap, one more line names the most impressive of them, for example "New record: 18 pops in a row without a wrong tap".
 
-Under that line, a **Copy my result** button copies two short lines to the clipboard, ready to paste into a message: your score, whether it set or tied your best, and how many pops and wrong taps the round had and how long it lasted. A tap on the button only copies; a tap anywhere else continues.
+Under that line, a **Copy my result** button copies two short lines to the clipboard, ready to paste into a message: your score, whether it set or tied your best, any lifetime record the round set, and how many pops and wrong taps the round had and how long it lasted. A tap on the button only copies; a tap anywhere else continues.
 
 ### Controls
 
