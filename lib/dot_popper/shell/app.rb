@@ -50,9 +50,11 @@ module DotPopper
         @autopilot = Presentation::Autopilot.new(Look::AUTOPILOT) if flag?("DOT_POPPER_AUTOPLAY")
         @shots = Presentation::ShotSchedule.parse(@env["DOT_POPPER_SHOTS"])
         @quit_after = Float(@env.fetch("DOT_POPPER_QUIT_AFTER", ""), exception: false)
+        @frames = Presentation::FrameMeter.start(5) if flag?("DOT_POPPER_PERF")
       end
 
       def update(seconds)
+        measure(seconds)
         seconds = seconds.clamp(0.0, Rules::LONGEST_FRAME)
         @cursor = @cursor.update(seconds, @gamepads.stick)
         if @autopilot
@@ -208,6 +210,15 @@ module DotPopper
         @elapsed += seconds
         @shots.due(before, @elapsed).each { screenshot(it) }
         ::Lota::Event.quit if @quit_after && @elapsed >= @quit_after
+      end
+
+      # With DOT_POPPER_PERF=1, prints how smoothly the game ran every five
+      # seconds, from each frame's real time.
+      def measure(seconds)
+        return unless @frames
+
+        @frames, report = @frames.record(seconds)
+        puts "Dot Popper: #{report}" if report
       end
 
       def screenshot(number)

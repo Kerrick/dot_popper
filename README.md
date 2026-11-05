@@ -134,6 +134,7 @@ Running `bundle exec rake` with no task name runs the tests and then [Steep](htt
 | `DOT_POPPER_SHOTS=0.5,3,6.5` | Takes a screenshot at each of these times, counted in seconds of play, and saves them as `shot-1.png`, `shot-2.png`, and so on in the save folder. The game prints each file's path. |
 | `DOT_POPPER_QUIT_AFTER=20` | Quits after this many seconds of play. |
 | `DOT_POPPER_SEED=42` | Seeds the random number generator, so the same seed and the same taps produce the same dots. |
+| `DOT_POPPER_PERF=1` | Every five seconds, prints how many frames a second the game drew and its longest single frame, measured before the game caps how much time one frame may pass to the rules. Useful for checking a new computer. |
 | `DOT_POPPER_NO_SHADERS=1` | Draws plain shapes without shaders, and so without the fresh dots' glow. The game does this on its own when a shader fails to compile. |
 | `DOT_POPPER_CALM=1` | Turns off screen shake and the bouncing at the end of a round (see "Reduced motion"). |
 | `DOT_POPPER_WINDOW=400x850` | Opens the desktop window at this size, in logical pixels, to check how a narrow screen looks. |

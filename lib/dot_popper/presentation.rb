@@ -16,5 +16,5 @@ end
 %w[
   reveal tutor clipboard
   color ease tween pixels palette words layout particles rings floaters shake edge_flash effects
-  dot_animations hud synth stereo haptics input_router gamepad_cursor gamepad_buttons attract marquee finale records pile bloom autopilot shot_schedule look show
+  dot_animations hud synth stereo haptics input_router gamepad_cursor gamepad_buttons attract marquee finale records pile bloom autopilot shot_schedule frame_meter look show
 ].each { require_relative "presentation/#{it}" }
