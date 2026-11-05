@@ -12,4 +12,4 @@ module DotPopper
 end
 
 %w[save_file speaker font_book pen dot_painter effects_painter hud_painter mute_button lettering title_painter
-   finale_painter pile renderer app].each { require_relative "shell/#{it}" }
+   finale_painter pile sparks renderer app].each { require_relative "shell/#{it}" }

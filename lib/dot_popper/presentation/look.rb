@@ -64,7 +64,10 @@ module DotPopper
         breathe: Breathe.new(amplitude: 0.022, period: 1.7)
       )
 
-      # A pop: droplets, a ring, and the new dot's ripple.
+      # A pop: droplets, a ring, and the new dot's ripple. The droplets and
+      # the new best's twinkles are LÖVE particles, drawn from sprites
+      # PARTICLE_SPRITE units across, made at the screen's density.
+      PARTICLE_SPRITE = 24
       POP_BURST = Burst.new(count: 14, speed: 2.2..5.2, life: 0.25..0.42, size: 0.05..0.11, drag: 3.5,
                             gravity: 3.0, alpha: 0.8)
       SHOCKWAVE = RingLook.new(
@@ -121,8 +124,8 @@ module DotPopper
         arrive: Tween.new(from: 0.0, to: 1.0, duration: 0.45, ease: :out_back),
         tally: Tween.new(from: 0.0, to: 1.0, duration: 0.8, ease: :out_cubic),
         prompt: Tween.new(from: 0.0, to: 1.0, duration: 0.35, ease: :out_cubic),
-        sparkles: Burst.new(count: 60, speed: 2.0..7.0, life: 0.8..1.4, size: 0.06..0.14, drag: 1.6,
-                            gravity: 4.0, alpha: 0.9),
+        sparkles: Burst.new(count: 60, speed: 2.0..7.0, life: 0.8..1.4, size: 0.1..0.24, drag: 1.6,
+                            gravity: 4.0, alpha: 0.9, spin: 7.0..1.0, sprite: :twinkle),
         sparkle_life: 1.4
       )
 

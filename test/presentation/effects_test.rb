@@ -5,29 +5,43 @@ require_relative "presentation_helper"
 class EffectsTest < Minitest::Test
   include PresentationTest
 
-  def setup = @effects = Effects.new(radius: R, random: Random.new(1), particle_capacity: 40)
+  def setup = @effects = Effects.new(radius: R, random: Random.new(1))
 
-  def test_droplets_never_outnumber_the_pool
-    10.times { @effects.burst(0, 0, Look::POP_BURST, Look::PALETTE.confetti) }
+  def test_a_burst_waits_for_the_shell_to_throw_it
+    @effects.burst(10, 20, Look::POP_BURST, Look::PALETTE.confetti)
+    sprays = @effects.take_sprays
 
-    assert_equal 40, @effects.particles.count
+    assert_equal [[10, 20]], sprays.map { [it.x, it.y] }
+    assert_empty @effects.take_sprays
   end
 
-  def test_droplets_are_gone_within_their_longest_life
+  def test_a_pop_never_outlives_the_longest_life
     @effects.burst(0, 0, Look::POP_BURST.with(life: 5.0..6.0), Look::PALETTE.confetti)
-    @effects.update(Burst::LONGEST_LIFE + 0.01)
 
-    assert_equal 0, @effects.particles.count
+    assert_operator @effects.take_sprays.first.longest, :<=, Burst::LONGEST_LIFE
   end
 
-  def test_a_droplet_fades_and_shrinks_as_it_goes
-    particle = Particle.new.launch(x: 0, y: 0, velocity_x: 10, velocity_y: 0, life: 0.4, size: 4, color: nil,
-                                   drag: 0, gravity: 0, alpha: 0.8)
-    particle.update(0.2)
+  def test_waiting_bursts_are_capped
+    50.times { @effects.burst(0, 0, Look::POP_BURST, Look::PALETTE.confetti) }
 
-    assert_operator particle.alpha, :<, 0.8
-    assert_operator particle.size, :<, 4
-    assert_in_delta 2.0, particle.x
+    assert_equal Effects::MOST_SPRAYS, @effects.take_sprays.size
+  end
+
+  def test_a_clear_drops_waiting_bursts_and_says_so
+    @effects.burst(0, 0, Look::POP_BURST, Look::PALETTE.confetti)
+    @effects.clear
+
+    assert_empty @effects.take_sprays
+    assert_equal 1, @effects.cleared
+  end
+
+  def test_every_droplet_of_a_burst_gets_a_color
+    colors = Look::PALETTE.confetti
+    shares = Look::POP_BURST.shares(colors, Random.new(4))
+
+    assert_equal Look::POP_BURST.count, shares.values.sum
+    assert_equal colors.size, shares.size
+    assert_operator shares.values.minmax.then { |least, most| most - least }, :<=, 1
   end
 
   def test_the_shake_is_small_and_short

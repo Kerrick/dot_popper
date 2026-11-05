@@ -90,3 +90,14 @@ columns against each other, not as predictions of a person's score.
   Box2D is tuned for. Each step is at most 1/30 s. `DOT_POPPER_CALM=1` makes it
   a slow, soft settle with no bounce. The autoplay bot waits 3.2 s at game over,
   not 1.8 s, so captures show the pile settled.
+- **A pop's droplets and a new best's fireworks are LÖVE's ParticleSystem.**
+  The hand-rolled droplet pool (and its glow shader) is gone. `Shell::Sparks`
+  draws two sprites in code into an ImageData at the screen's density, a soft
+  round droplet and a four-rayed twinkle, and gives each Burst look and color
+  its own system, since a system's colors run through every particle's life.
+  The Burst settings in `look.rb` still decide everything, and
+  `Presentation::Emission` turns them into LÖVE's sizes, colors over life,
+  speeds, damping, gravity, and spin, so the 0.45 s cap and the low opacity
+  hold. Side by side in captures, the new droplets read as the old ones did,
+  a little softer; the fireworks now twinkle and spin. With no sprite there are
+  no droplets, and play is unaffected.

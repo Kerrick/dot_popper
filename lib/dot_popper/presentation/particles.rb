@@ -4,87 +4,89 @@ module DotPopper
   module Presentation
     # How a burst of droplets looks: how many, how fast (radii a second),
     # how long each lives (seconds), how big (radii), how quickly the air
-    # slows them, how hard they fall (radii a second squared), and how
-    # opaque they start.
-    class Burst < Data.define(:count, :speed, :life, :size, :drag, :gravity, :alpha)
+    # slows them, how hard they fall (radii a second squared), how opaque
+    # they start, how fast they turn (radians a second, start to end), and
+    # which sprite they are (SpriteArt). LÖVE's ParticleSystem flies them
+    # (Shell::Sparks); Emission turns this into its settings.
+    class Burst < Data.define(:count, :speed, :life, :size, :drag, :gravity, :alpha, :spin, :sprite)
       # The longest any droplet may live, so a burst never hides the dots
       # around it for long.
       LONGEST_LIFE = 0.45
+
+      def initialize(count:, speed:, life:, size:, drag:, gravity:, alpha:, spin: 0.0..0.0, sprite: :droplet) = super
+
+      # How many of +count+ droplets each of +colors+ gets: an even share,
+      # and the rest to colors picked at random.
+      def shares(colors, random)
+        each, rest = count.divmod(colors.size)
+        lucky = colors.sample(rest, random:)
+        colors.to_h { [it, each + (lucky.include?(it) ? 1 : 0)] }
+      end
     end
 
-    # One droplet. Particles live in a ParticlePool and are reused, so a
-    # burst on every tap makes no new objects.
-    class Particle
-      attr_reader :x, :y, :color
-
-      def initialize
-        @age = @life = 0.0
-      end
-
-      # Starts this particle afresh; it is alive until +life+ runs out.
-      def launch(x:, y:, velocity_x:, velocity_y:, life:, size:, color:, drag:, gravity:, alpha:)
-        @x = x
-        @y = y
-        @velocity_x = velocity_x
-        @velocity_y = velocity_y
-        @life = life
-        @size = size
-        @color = color
-        @drag = drag
-        @gravity = gravity
-        @alpha = alpha
-        @age = 0.0
-        self
-      end
-
-      def alive? = @age < @life
-
-      def update(seconds)
-        return unless alive?
-
-        @age += seconds
-        slowing = Math.exp(-@drag * seconds)
-        @velocity_x *= slowing
-        @velocity_y = (@velocity_y * slowing) + (@gravity * seconds)
-        @x += @velocity_x * seconds
-        @y += @velocity_y * seconds
-      end
-
-      def progress = (@age / @life).clamp(0.0, 1.0)
-
-      # It shrinks and fades as it goes.
-      def size = @size * (1 - (0.55 * progress))
-      def alpha = @alpha * (1 - Ease.in_quad(progress))
-
-      def kill = @age = @life
+    # A burst asked for at (+x+, +y+), waiting for the shell to throw it:
+    # its look, its colors, and the longest a droplet of it may live.
+    class Spray < Data.define(:x, :y, :look, :colors, :longest)
+      def emission(radius, sprite_size) = Emission.new(look:, longest:, radius:, sprite_size:)
     end
 
-    # A fixed set of particles, reused in turn. When every one is alive,
-    # the next launch takes the oldest, so the pool never grows.
-    class ParticlePool
-      include Enumerable
+    # A Burst as a ParticleSystem's settings, in graphics units, for dots
+    # of +radius+ and a sprite +sprite_size+ units across.
+    class Emission < Data.define(:look, :longest, :radius, :sprite_size)
+      # A droplet shrinks to this much of its first size as it goes.
+      SHRINK = 0.45
 
-      attr_reader :capacity
+      def lifetime = [[look.life.begin, longest].min, [look.life.end, longest].min]
+      def speed = [look.speed.begin * radius, look.speed.end * radius]
+      def damping = [look.drag, look.drag]
+      def acceleration = [0.0, look.gravity * radius, 0.0, look.gravity * radius]
+      def spin = [look.spin.begin, look.spin.end]
 
-      def initialize(capacity)
-        @capacity = capacity
-        @particles = Array.new(capacity) { Particle.new }
-        @next = 0
+      # The sprite's scale at the start and end of a droplet's life, for
+      # the largest droplet; a Burst's size is a droplet's radius.
+      def sizes
+        largest = 2 * look.size.end * radius / sprite_size
+        [largest, largest * SHRINK]
       end
 
-      def launch(**)
-        particle = @particles[@next]
-        @next = (@next + 1) % capacity
-        particle.launch(**)
+      # How far toward its end size a droplet may start, so the smallest
+      # starts at the Burst's smallest size (LÖVE's size variation).
+      def size_variation = ((1 - (look.size.begin / look.size.end)) / (1 - SHRINK)).clamp(0.0, 1.0)
+
+      # One color's fade, as LÖVE's colors through a particle's life: it
+      # holds most of its opacity through the middle, then goes.
+      def colors(color)
+        [1.0, 0.75, 0.0].map { [color.r, color.g, color.b, look.alpha * it] }
+      end
+    end
+
+    # The particles' sprites, drawn in code: each is an opacity at a point
+    # (+x+, +y+) from -1 to 1 across the sprite, white everywhere else.
+    module SpriteArt
+      module_function
+
+      # A soft round droplet, brightest in the middle.
+      def droplet(x, y) = 1.0 - smoothstep(0.3, 1.0, Math.hypot(x, y))
+
+      # A twinkle: a soft core with four thin rays, so its spin shows.
+      def twinkle(x, y)
+        core = 1.0 - smoothstep(0.0, 0.45, Math.hypot(x, y))
+        rays = [x.abs, y.abs].minmax.then { |thin, long| (1.0 - smoothstep(0.0, 0.12, thin)) * (1.0 - long) }
+        [core + rays, 1.0].min
       end
 
-      # Every live particle.
-      def each
-        @particles.each { |particle| yield particle if particle.alive? }
+      def smoothstep(low, high, value)
+        t = ((value - low) / (high - low)).clamp(0.0, 1.0)
+        t * t * (3 - (2 * t))
       end
 
-      def update(seconds) = @particles.each { it.update(seconds) }
-      def clear = @particles.each(&:kill)
+      # The opacity of +sprite+ at pixel (+column+, +row+) of a square
+      # +pixels+ wide, sampled at the pixel's centre.
+      def alpha(sprite, column, row, pixels)
+        across = ((column + 0.5) / pixels * 2) - 1
+        down = ((row + 0.5) / pixels * 2) - 1
+        public_send(sprite, across, down).clamp(0.0, 1.0)
+      end
     end
   end
 end

@@ -3,15 +3,15 @@
 module DotPopper
   module Shell
     # Draws what follows a tap: rings (each around its dot, if it follows
-    # one), droplets (additive, so they only ever brighten), and floating
-    # numbers, outlined so they read over any dot.
-    class EffectsPainter < Data.define(:pen)
+    # one), the droplets that Sparks flies, and floating numbers, outlined
+    # so they read over any dot.
+    class EffectsPainter < Data.define(:pen, :sparks)
       G = ::Lota::Graphics
       EDGE_BANDS = 8 # strips of the edge glow, without its shader
 
       def draw(effects, layout, dots)
         rings(effects.rings, effects.now, dots)
-        droplets(effects.particles)
+        pen.adding { sparks.draw } # droplets only ever brighten
         floaters(effects.floaters, effects.now, layout)
       end
 
@@ -43,24 +43,6 @@ module DotPopper
           G.line_width = width
           G.circle(:line, x, y, ring.radius(now), 64)
         end
-      end
-
-      def droplets(particles)
-        pen.adding do
-          if pen.shader?(:glow)
-            pen.shading(:glow) { particles.each { droplet(it) } }
-          else
-            particles.each do |particle|
-              pen.color(particle.color, particle.alpha * 0.8)
-              G.circle(:fill, particle.x, particle.y, particle.size * 0.6, 12)
-            end
-          end
-        end
-      end
-
-      def droplet(particle)
-        pen.color(particle.color, particle.alpha)
-        pen.square(particle.x, particle.y, particle.size, particle.size)
       end
 
       def floaters(floaters, now, layout)

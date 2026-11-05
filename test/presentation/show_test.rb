@@ -31,7 +31,7 @@ class ShowTest < Minitest::Test
 
     assert_equal ["+1", "+1s"], @show.effects.floaters.map(&:text)
     assert_equal :pop, @sounds.names.last
-    assert_operator @show.effects.particles.count, :>, 0
+    assert_equal [Look::POP_BURST], @show.effects.take_sprays.map(&:look)
     assert_equal 2, @show.effects.rings.size
   end
 

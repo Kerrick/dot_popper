@@ -9,12 +9,12 @@ module DotPopper
     class Renderer
       G = ::Lota::Graphics
 
-      def initialize(show, pen, pile:)
+      def initialize(show, pen, pile:, sparks:)
         @show = show
         @pen = pen
         @pile = pile
         @dots = DotPainter.new(pen:)
-        @effects = EffectsPainter.new(pen:)
+        @effects = EffectsPainter.new(pen:, sparks:)
         @hud = HudPainter.new(pen:)
         @title = TitlePainter.new(pen:, dots: @dots)
         @finale = FinalePainter.new(pen:)

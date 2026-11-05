@@ -5,39 +5,47 @@ module DotPopper
     # Everything that plays out after a tap and then goes away: droplets,
     # rings, floating numbers, the shake, and the edge flash. It keeps its
     # own clock, +now+; rings, floaters, the shake, and the flash are
-    # values that say how they look at a moment, and droplets are pooled
-    # and moved each frame. Sizes and speeds come in radii and leave in
+    # values that say how they look at a moment. Droplets are LÖVE's
+    # particles, so a burst waits here as a Spray until the shell takes
+    # it; +cleared+ counts the clears, so the shell knows to drop the
+    # droplets already flying. Sizes and speeds come in radii and leave in
     # graphics units, scaled by +radius+.
     class Effects
       MOST_RINGS = 32
       MOST_FLOATERS = 24
 
-      attr_reader :particles, :rings, :floaters, :shake, :flash, :now
+      MOST_SPRAYS = 16
 
-      def initialize(radius:, random: Random.new, calm: false, particle_capacity: 400)
+      attr_reader :rings, :floaters, :shake, :flash, :now, :cleared
+
+      def initialize(radius:, random: Random.new, calm: false)
         @radius = radius
         @random = random
         @now = 0.0
-        @particles = ParticlePool.new(particle_capacity)
+        @cleared = 0
+        @sprays = []
         @rings = []
         @floaters = []
         @shake = Shake.none(radius, calm:)
         @flash = EdgeFlash::NONE
       end
 
-      # Throws +look.count+ droplets out from (+x+, +y+), each a color
-      # from +colors+. No droplet outlives +longest+, which only a screen
-      # with no round in play may raise.
+      # Throws +look.count+ droplets out from (+x+, +y+), shared among
+      # +colors+. No droplet outlives +longest+, which only a screen with
+      # no round in play may raise.
       def burst(x, y, look, colors, longest: Burst::LONGEST_LIFE)
-        look.count.times do
-          angle = @random.rand(0.0...(2 * Math::PI))
-          speed = @random.rand(look.speed) * @radius
-          @particles.launch(x:, y:, velocity_x: Math.cos(angle) * speed, velocity_y: Math.sin(angle) * speed,
-                            life: [@random.rand(look.life), longest].min,
-                            size: @random.rand(look.size) * @radius, color: colors.sample(random: @random),
-                            drag: look.drag, gravity: look.gravity * @radius, alpha: look.alpha)
-        end
+        keep(@sprays, Spray.new(x:, y:, look:, colors:, longest: [longest, look.life.end].min), MOST_SPRAYS)
       end
+
+      # The bursts asked for since the last call, which the shell throws.
+      def take_sprays
+        sprays = @sprays
+        @sprays = []
+        sprays
+      end
+
+      # How many droplets of +spray+ each of its colors gets.
+      def shares(spray) = spray.look.shares(spray.colors, @random)
 
       def ring(x, y, look, follow: nil)
         keep(@rings, Ring.new(x:, y:, look:, scale: @radius, born: now, follow:), MOST_RINGS)
@@ -56,13 +64,13 @@ module DotPopper
 
       def update(seconds)
         @now += seconds
-        @particles.update(seconds)
         @rings.select! { it.alive?(now) }
         @floaters.select! { it.alive?(now) }
       end
 
       def clear
-        @particles.clear
+        @cleared += 1
+        @sprays.clear
         @rings.clear
         @floaters.clear
       end
