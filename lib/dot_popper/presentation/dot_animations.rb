@@ -69,8 +69,11 @@ module DotPopper
         scale = found.born ? @motion.spawn.at(now - found.born) : 1.0
         stretch_x, stretch_y = stretch(found, now)
         wobble = found.wobbled ? @motion.wobble.at(now - found.wobbled) : 0.0
-        Pose.new(scale_x: scale * breath * stretch_x * (1 + wobble), scale_y: scale * breath * stretch_y * (1 - wobble),
-                 freshness: freshness(dot, found, now), alarm: found.wobbled ? @motion.wobble.glow(now - found.wobbled) : 0.0)
+        scale_x = scale * breath * stretch_x * (1 + wobble)
+        scale_y = scale * breath * stretch_y * (1 - wobble)
+        scale_x, scale_y = [scale_x, 1.0].max, [scale_y, 1.0].max if dot.popped?
+        Pose.new(scale_x:, scale_y:, freshness: freshness(dot, found, now),
+                 alarm: found.wobbled ? @motion.wobble.glow(now - found.wobbled) : 0.0)
       end
 
       private
@@ -83,11 +86,14 @@ module DotPopper
         Pose.new(scale_x: breath, scale_y: breath, freshness: 1.0, alarm: 0.0)
       end
 
+      # A popped dot sits on top, so it may squash and stretch only
+      # outward: drawn narrower than its hit circle on either axis, it
+      # would show as uncovered a sliver a tap there would still reach.
       def stretch(found, now)
         return [1.0, 1.0] unless found.popped
 
         across = @motion.pop_stretch.at(now - found.popped)
-        [across, 1 / across]
+        across >= 1 ? [across, 1.0] : [1.0, 1 / across]
       end
 
       def freshness(dot, found, now)

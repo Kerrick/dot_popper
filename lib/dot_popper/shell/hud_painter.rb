@@ -24,6 +24,15 @@ module DotPopper
         divider(pill.x + cell, pill.y + (pad * 0.7), pill.bottom - (pad * 0.7))
       end
 
+      # Makes every size a bump or an urgent pulse passes through, an
+      # elastic one's undershoot included, before the first number changes.
+      def prepare(layout)
+        hud = pen.look::HUD
+        size = layout.scaled(pen.look::TYPE.hud_number)
+        largest = [hud.bump.from, hud.pulse.from].max
+        largest.step(0.85, -0.01) { pen.fonts.bold(Presentation::Pixels.font_size(size * it, step: BUMP_STEP)) }
+      end
+
       private
 
       def pill(x, y, width, height)

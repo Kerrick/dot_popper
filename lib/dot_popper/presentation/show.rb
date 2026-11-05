@@ -57,7 +57,7 @@ module DotPopper
         @now += seconds
         effects.update(seconds)
         @attract = attract.update(seconds) if title?
-        @hud = hud.read(game.round, now) { tick(it) } if playing?
+        @hud = hud.read(game.round, now) { tick(it) if playing? } if game.round
         follow_finale if finished?
       end
 

@@ -3,9 +3,9 @@
 module DotPopper
   module Shell
     # Draws a frame of the Show, straight to the window at its own
-    # resolution: the night behind, then the dots (shaken a little after a
-    # wrong tap), the effects over them, the edge glow, and the screen's
-    # words and HUD on top, which never shake.
+    # resolution: the night behind, the edge glow, the dots, the effects
+    # over them, and the screen's words and HUD on top. Only the HUD
+    # shakes.
     class Renderer
       G = ::Lota::Graphics
 
@@ -29,15 +29,14 @@ module DotPopper
           veil(width, height, @pen.look::TITLE.dim)
           @title.draw(@show, layout)
         else
-          field
           @effects.flash(@show.effects, width, height)
-          if @show.playing?
-            @hud.draw(@show.hud, layout)
-          else
+          field
+          unless @show.playing?
             veil(width, height, @show.finale&.dim(@show.now).to_f)
             @effects.draw(@show.effects, layout, @show.game.round&.dots)
             @finale.draw(@show, layout)
           end
+          hud(layout)
         end
       end
 
@@ -47,12 +46,27 @@ module DotPopper
 
       def field
         round = @show.game.round or return
+        @dots.draw(round.dots, @show.animations, @show.now, round.field.radius)
+        @effects.draw(@show.effects, @show.layout, round.dots) if @show.playing?
+      end
+
+      # The score and clock, on top of everything, through Game Over too,
+      # so a round ended by a penalty is seen to reach 0. After a wrong tap
+      # the HUD shakes, by whole device pixels; the dots never do, since a
+      # tap is judged where a dot really is.
+      def hud(layout)
+        pixels = @pen.pixels
         G.push do
-          G.translate(@show.effects.shake_x, @show.effects.shake_y)
-          @dots.draw(round.dots, @show.animations, @show.now, round.field.radius)
-          @effects.draw(@show.effects, @show.layout, round.dots) if @show.playing?
+          G.translate(pixels.snap(@show.effects.shake_x), pixels.snap(@show.effects.shake_y))
+          @hud.draw(@show.hud, layout)
         end
       end
+
+      public
+
+      # Makes the fonts a frame may need, so the first pop or tick of a
+      # round does not stall on making one.
+      def prepare = @hud.prepare(@show.layout)
 
       def backdrop(width, height)
         return flat_backdrop(width, height) unless @pen.shader?(:backdrop)

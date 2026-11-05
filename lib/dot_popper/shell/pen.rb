@@ -31,6 +31,7 @@ module DotPopper
       def refresh
         @pixels = Presentation::Pixels.new(scale: G.dpi_scale)
         fonts.density = G.dpi_scale
+        fonts.forget
       end
 
       def color(color, alpha = color.a) = G.color = [color.r, color.g, color.b, alpha]

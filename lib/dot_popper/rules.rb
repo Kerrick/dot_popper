@@ -24,6 +24,12 @@ module DotPopper
 
     LOWEST_SCORE = 0
 
+    # The most time one frame may pass on to the rules. A frame that took
+    # longer, because the window was dragged, the app was in the
+    # background, or the computer stalled, did not give the player that
+    # time to play, so it must not take it off the clock either.
+    LONGEST_FRAME = 0.1
+
     # How long Game Over ignores presses, so a tap meant for a dot in the
     # round's last moment does not dismiss the final score unseen.
     GAME_OVER_GRACE = 0.9

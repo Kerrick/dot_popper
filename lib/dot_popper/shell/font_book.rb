@@ -20,8 +20,11 @@ module DotPopper
         return if density == @density
 
         @density = density
-        @fonts.clear
+        forget
       end
+
+      # Lets go of every font, since a new window size asks for new sizes.
+      def forget = @fonts.clear
 
       private
 

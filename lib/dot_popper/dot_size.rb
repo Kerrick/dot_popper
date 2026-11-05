@@ -27,5 +27,8 @@ module DotPopper
     end
 
     def field(width, height) = Field.new(width, height, radius)
+
+    # Whether +os+ is a phone or tablet, played by touch and fullscreen.
+    def self.touch?(os) = TOUCH_SYSTEMS.include?(os)
   end
 end

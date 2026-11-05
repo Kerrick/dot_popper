@@ -30,14 +30,27 @@ class DotAnimationsTest < Minitest::Test
     assert_in_delta 1.0, @animations.pose(fresh, 2.0).scale_x, Look::MOTION.breathe.amplitude + 1e-9
   end
 
-  def test_a_popped_dot_squashes_keeping_its_area_and_springs_back
+  def test_a_popped_dot_stretches_and_springs_back
     @animations.pop(2, 1.0)
     popped = dot(0, 0, id: 2, popped: true)
-    squashed = @animations.pose(popped, 1.0)
 
-    assert_operator squashed.scale_x, :>, 1.2
-    assert_in_delta 1.0, squashed.scale_x * squashed.scale_y, 1e-9
+    assert_operator @animations.pose(popped, 1.0).scale_x, :>, 1.2
     assert_in_delta 1.0, @animations.pose(popped, 3.0).scale_x, 1e-3
+  end
+
+  # A popped dot covers what is under it, so drawing it narrower than its
+  # hit circle would show a sliver as uncovered that a tap would still
+  # find popped.
+  def test_a_popped_dot_is_never_drawn_inside_its_hit_circle
+    @animations.pop(2, 1.0)
+    @animations.wobble(2, 1.1)
+    popped = dot(0, 0, id: 2, popped: true)
+
+    (1.0..2.0).step(0.005).each do |now|
+      pose = @animations.pose(popped, now)
+      assert_operator pose.scale_x, :>=, 1.0, "at #{now}"
+      assert_operator pose.scale_y, :>=, 1.0, "at #{now}"
+    end
   end
 
   def test_a_popped_dot_looks_popped_almost_at_once

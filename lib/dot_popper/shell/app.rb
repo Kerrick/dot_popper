@@ -8,13 +8,7 @@ module DotPopper
     # Show catches up; then the Renderer draws it.
     class App
       Look = Presentation::Look
-      TOUCH_SYSTEMS = %w[iOS Android].freeze
       SMALLEST_WINDOW = [400, 320].freeze
-      # The most time one frame may pass on to the rules. A frame that took
-      # longer, because the window was dragged, the app was in the
-      # background, or the computer stalled, did not give the player that
-      # time to play, so it must not take it off the clock either.
-      LONGEST_FRAME = 0.1
 
       def initialize(env = ENV)
         @env = env
@@ -25,7 +19,7 @@ module DotPopper
         os = ::Lota::System.os
         @dot_size = DotSize.for(os)
         puts "Dot Popper: a dot's radius is #{@dot_size.reason}"
-        open_window unless TOUCH_SYSTEMS.include?(os)
+        open_window unless DotSize.touch?(os)
         random = seed ? Random.new(seed) : Random.new
         @game = Game.new(field, best: BestScore.new(SaveFile.new(name: "best_score.txt")), random:)
         @speaker = Speaker.new(Look::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Look::SOUND.volume)
@@ -33,6 +27,7 @@ module DotPopper
                                        random:, calm: flag?("DOT_POPPER_CALM"))
         @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
         @renderer = Renderer.new(@show, @pen)
+        @renderer.prepare
         @input = Presentation::InputRouter.new
         @autopilot = Presentation::Autopilot.new(Look::AUTOPILOT) if flag?("DOT_POPPER_AUTOPLAY")
         @shots = Presentation::ShotSchedule.parse(@env["DOT_POPPER_SHOTS"])
@@ -40,7 +35,7 @@ module DotPopper
       end
 
       def update(seconds)
-        seconds = seconds.clamp(0.0, LONGEST_FRAME)
+        seconds = seconds.clamp(0.0, Rules::LONGEST_FRAME)
         if @autopilot
           x, y = @autopilot.update(seconds, @game)
           tap(x, y) if x
@@ -78,6 +73,7 @@ module DotPopper
         @pen.refresh
         @game.field = field
         @show.resize(layout, @game.field)
+        @renderer.prepare
       end
 
       private
