@@ -20,8 +20,9 @@ module DotPopper
       def load
         os = ::Lota::System.os
         @dot_size = DotSize.for(os)
+        @touch = DotSize.touch?(os)
         puts "Dot Popper: a dot's radius is #{@dot_size.reason}"
-        open_window unless DotSize.touch?(os)
+        @touch ? fill_screen : open_window
         random = seed ? Random.new(seed) : Random.new
         @game = Game.new(field, best: BestScore.new(SaveFile.new(name: "best_score.txt")), random:,
                          daily_best: DailyBest.new(SaveFile.new(name: "daily_best.txt")))
@@ -109,11 +110,15 @@ module DotPopper
       def gamepad_removed = @trigger = Presentation::Trigger.released
 
       def key_pressed(key)
+        return @speaker.toggle_mute if key == :m
+        # A tablet's keyboard neither quits the app nor takes it out of
+        # fullscreen: iOS apps are left by the system, never by the app.
+        return if @touch
+
         case key
         when :escape then ::Lota::Event.quit
         when :f11 then toggle_fullscreen
         when :return, :kpenter then toggle_fullscreen if ::Lota::Keyboard.down?(:lalt, :ralt, :lgui, :rgui)
-        when :m then @speaker.toggle_mute
         end
       end
 
@@ -145,6 +150,12 @@ module DotPopper
         ::Lota::Window.set_mode(*size, resizable: true, centered: true, minwidth: SMALLEST_WINDOW[0],
                                        minheight: SMALLEST_WINDOW[1])
       end
+
+      # A phone or tablet's window already covers the screen; fullscreen
+      # hides the status bar over it and, on iOS, makes a swipe from an
+      # edge ask twice before it leaves the game (SDL's UIKit view
+      # controller), so a tap near the edge stays a tap.
+      def fill_screen = ::Lota::Window.set_fullscreen(true, :desktop)
 
       def toggle_fullscreen
         fullscreen, = ::Lota::Window.fullscreen
