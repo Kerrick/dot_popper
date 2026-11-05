@@ -134,6 +134,32 @@ One test, `test/rules_fuzz_test.rb`, plays thousands of random rounds from a fix
 
 Running `bundle exec rake` with no task name runs the tests and then [Steep](https://github.com/soutaro/steep), a type checker, which checks the rules against their type signatures in `sig/`. `rake test` on its own doesn't need Steep.
 
+### The windowed tests
+
+```sh
+bundle exec rake test:gui
+```
+
+`rake test` checks every layer but never runs the game itself. `rake test:gui` does: it starts the real game with `bundle exec lota run`, once for each of seven short scripted sessions, and each one opens a window, plays, checks what happens as it goes, and quits. The sessions are a whole round from the title back to the title (with a few pops, a wrong tap on a popped dot over the fresh one, and the lesson it brings), resizing the window and switching to fullscreen during a round and on Game Over, the Records screen, choosing the dot size in a narrow window, dragging and throwing the Game Over pile by mouse, by a pretend gamepad and with a pretend tilt, the words changing between "Click", "Tap" and "Press A", and the whole round again drawn without shaders. Each session checks the rules' numbers, the screens, the save files, and a few pixels of the window. A session that fails prints `FAILED` and the reason, and exits with status 1.
+
+The presses don't move the real mouse pointer. Each session pushes them onto Lota's event queue, and the game's clock moves on by a fixed step each frame instead of real time. So a run plays the same on a fast or a busy computer, and a session takes seconds, not as long as a player would. Every session uses a fixed seed, date and window size, saves in a fresh folder that it removes afterward, so your own records are left alone, and plays no sound (`ALSOFT_DRIVERS=null`).
+
+The suite takes about half a minute, and needs a screen it can open windows on. On your own computer, it opens and closes eight windows, one after another, and switches one of them to fullscreen, so leave the screen alone until it finishes. On a Linux machine without a screen, run it on a virtual one, as the [GUI workflow](.github/workflows/gui.yml) does on every push to `trunk`: `xvfb-run --server-args="-screen 0 1280x1024x24" bash script/with-openbox.sh bundle exec rake test:gui`, with Xvfb, Openbox and Mesa installed. On the maintainer's Mac, it runs in a hidden macOS session:
+
+```sh
+S=/Users/kerrick/Developer/hidden_session
+$S/stage dot_popper
+$S/hidden-run --account deckbuildertest --merge -- /Users/Shared/hidden-session/mirror \
+  /Users/Shared/hidden-src/dot_popper/dot_popper /Users/deckbuildertest/dot_popper-mirror
+$S/hidden-run --account deckbuildertest --merge --timeout 600 \
+  --cwd /Users/deckbuildertest/dot_popper-mirror/dot_popper $($S/toolchain-env dot_popper) \
+  --env ALSOFT_DRIVERS=null -- bundle exec rake test:gui
+```
+
+To play one session by hand and watch it, set `DOT_POPPER_SCENARIO` to its name (`round`, `resizing`, `records`, `dot_size`, `pile`, `pile_gamepad`, or `words`) and run `bundle exec lota run`. `test/gui/scenarios_test.rb` lists the other settings each session needs.
+
+`test/shell/defined_calls_test.rb`, in `rake test`, remains a quick check of the Lota layer without a window: it fails if a method in `lib/dot_popper/shell` calls a method of its own class that doesn't exist.
+
 `script/simulate.rb` is a design tool, not a test. It plays the real rules with a simulated player on several screen sizes, with both choices of dot size, each in its own Ractor (Ruby's unit of parallel execution). [doc/decisions.md](doc/decisions.md) reports what it found.
 
 ## Where things are
@@ -169,6 +195,7 @@ Running `bundle exec rake` with no task name runs the tests and then [Steep](htt
 | `DOT_POPPER_FAKE_DRAG=0.5,0.9,0.3,0.3` | On each Game Over, 1.2 seconds in, takes the dot nearest the first point, drags it to the second over a second, and throws it there. Each point is a pair of fractions of the window's width and height. The game prints when it takes and throws the dot, to time screenshots by. |
 | `DOT_POPPER_WINDOW=400x850` | Opens the desktop window at this size, in logical pixels, to check how a narrow screen looks. |
 | `DOT_POPPER_TODAY=2026-11-07` | Plays as if it were that date, to see that day's goal, or to build up a streak of days. |
+| `DOT_POPPER_SCENARIO=round` | Plays one of `rake test:gui`'s scripted sessions, checks it, and quits (see "The windowed tests"). |
 | `DOT_POPPER_SAVE_AS=test` | Saves in a folder of this name instead of `dot_popper`, so a test run starts with no rounds played and leaves your own records alone. |
 
 ### The playtest log
