@@ -1,18 +1,20 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # One round: the dots, the score, and the clock. Taps change all three
-  # at once and say what they did by returning an event.
+  # One round: the dots, the score, and the clock. It is the one thing in
+  # the rules that changes, and it changes by swapping in new values, so a
+  # tap changes all three at once and says what it did with an event.
   class Round
     attr_reader :field, :dots, :score, :countdown
 
-    def initialize(field, random: Random.new)
+    def initialize(field, random: Random.new, dots: nil)
       @field = field
       @random = random
-      @dots = Stack.new
+      @next_id = 0
       @score = 0
-      @countdown = Countdown.new(Rules::STARTING_SECONDS)
-      spawn
+      @countdown = Countdown.new(remaining: Rules::STARTING_SECONDS)
+      @dots = dots || Stack.new.slide_under(spawn)
+      @next_id = @dots.map(&:id).max.to_i + 1
     end
 
     def over? = countdown.expired?
@@ -20,8 +22,8 @@ module DotPopper
     def update(seconds)
       return if over?
 
-      dots.each { |dot| dot.move(seconds, field) }
-      countdown.tick(seconds)
+      @dots = dots.map_dots { it.move(seconds, field) }
+      @countdown = countdown.tick(seconds)
     end
 
     # Taps the point (+x+, +y+), which reaches only the topmost dot there.
@@ -41,24 +43,28 @@ module DotPopper
     # screen.
     def field=(field)
       @field = field
-      dots.each { |dot| dot.confine(field) }
+      @dots = dots.map_dots { it.confine(field) }
     end
 
     private
 
-    def spawn = dots.slide_under(Dot.spawn(field, @random))
+    def spawn
+      Dot.spawn(field, @random, id: @next_id).tap { @next_id += 1 }
+    end
 
     def pop(dot, x, y)
-      dot.pop
+      popped = dot.pop
+      spawned = spawn
+      @dots = dots.replace(popped).slide_under(spawned)
       @score += Rules::POP_POINTS
-      countdown.adjust(Rules::POP_SECONDS)
-      Events::Popped.new(dot:, x:, y:, points: Rules::POP_POINTS, seconds: Rules::POP_SECONDS, spawned: spawn)
+      @countdown = countdown.adjust(Rules::POP_SECONDS)
+      Events::Popped.new(dot: popped, x:, y:, points: Rules::POP_POINTS, seconds: Rules::POP_SECONDS, spawned:)
     end
 
     def penalize(dot, x, y)
       lost = [Rules::PENALTY_POINTS, score - Rules::LOWEST_SCORE].min
       @score -= lost
-      countdown.adjust(-Rules::PENALTY_SECONDS)
+      @countdown = countdown.adjust(-Rules::PENALTY_SECONDS)
       Events::Penalized.new(dot:, x:, y:, points: -lost, seconds: -Rules::PENALTY_SECONDS)
     end
   end

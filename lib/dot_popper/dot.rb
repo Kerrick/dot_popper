@@ -1,33 +1,27 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # One dot: where it is, how fast it goes on each axis, and whether it has
-  # been popped. Popping changes only how a tap treats it; a popped dot
-  # keeps moving for the rest of the round.
-  class Dot
-    attr_reader :x, :y, :velocity_x, :velocity_y, :radius
-
-    def self.spawn(field, random)
+  # One dot at one moment: where it is, how fast it goes on each axis, and
+  # whether it has been popped. A dot is a value; moving or popping it
+  # gives a new dot with the same +id+, so anything that follows a dot
+  # through a round, such as its animation, follows the id.
+  class Dot < Data.define(:id, :x, :y, :velocity_x, :velocity_y, :radius, :popped)
+    def self.spawn(field, random, id:)
       x, y = field.random_center(random)
-      new(x:, y:, velocity_x: field.random_speed(random), velocity_y: field.random_speed(random), radius: field.radius)
+      new(id:, x:, y:, velocity_x: field.random_speed(random), velocity_y: field.random_speed(random),
+          radius: field.radius)
     end
 
-    def initialize(x:, y:, velocity_x:, velocity_y:, radius:)
-      @x = x.to_f
-      @y = y.to_f
-      @velocity_x = velocity_x.to_f
-      @velocity_y = velocity_y.to_f
-      @radius = radius
-      @popped = false
+    def initialize(id:, x:, y:, velocity_x:, velocity_y:, radius:, popped: false)
+      super(id:, x: x.to_f, y: y.to_f, velocity_x: velocity_x.to_f, velocity_y: velocity_y.to_f, radius:, popped:)
     end
 
-    def popped? = @popped
-    def fresh? = !@popped
+    def popped? = popped
+    def fresh? = !popped
 
-    def pop
-      @popped = true
-      self
-    end
+    # The same dot, popped. Popping changes only how a tap treats it and
+    # how it looks; a popped dot keeps moving for the rest of the round.
+    def pop = with(popped: true)
 
     # Whether a point lies on this dot, edge included. The hit circle is
     # always the dot's radius, whatever the dot looks like.
@@ -35,22 +29,17 @@ module DotPopper
       ((point_x - x)**2) + ((point_y - y)**2) <= radius**2
     end
 
-    # Moves the dot by its velocity over +seconds+, reflecting off the
-    # field's edges. A dot that would pass an edge comes back by as far as
-    # it went past, so the distance it travels does not depend on the
-    # frame rate.
+    # Where the dot is +seconds+ later, reflecting off the field's edges.
+    # A dot that would pass an edge comes back by as far as it went past,
+    # so the distance it travels does not depend on the frame rate.
     def move(seconds, field)
-      @x, @velocity_x = bounce(x + (velocity_x * seconds), velocity_x, field.min_x, field.max_x)
-      @y, @velocity_y = bounce(y + (velocity_y * seconds), velocity_y, field.min_y, field.max_y)
-      self
+      new_x, new_velocity_x = bounce(x + (velocity_x * seconds), velocity_x, field.min_x, field.max_x)
+      new_y, new_velocity_y = bounce(y + (velocity_y * seconds), velocity_y, field.min_y, field.max_y)
+      with(x: new_x, y: new_y, velocity_x: new_velocity_x, velocity_y: new_velocity_y)
     end
 
-    # Puts the dot back inside a field that has changed size.
-    def confine(field)
-      @x = x.clamp(field.min_x, field.max_x)
-      @y = y.clamp(field.min_y, field.max_y)
-      self
-    end
+    # The same dot, back inside a field that has changed size.
+    def confine(field) = with(x: x.clamp(field.min_x, field.max_x), y: y.clamp(field.min_y, field.max_y))
 
     private
 

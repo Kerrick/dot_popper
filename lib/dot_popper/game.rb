@@ -2,9 +2,11 @@
 
 module DotPopper
   # The game as a whole: Title, then Playing, then Game Over, then Title
-  # again. Each state is an object that answers +press+ and +update+ and
-  # returns the state that follows it, so the transitions read in one
-  # place each. Listeners hear every event the rules report, in order.
+  # again. Each state is a value that answers +press+ and +update+ with
+  # the state that follows it, so each transition reads in one place.
+  # The Game is the shell around them: it holds the current state, makes
+  # rounds, keeps the best score, and tells its listeners every event, in
+  # order.
   class Game
     attr_reader :state, :best, :field
 
@@ -13,7 +15,7 @@ module DotPopper
       @best = best
       @random = random
       @listeners = []
-      @state = Title.new(self)
+      @state = show_title
     end
 
     # Adds a listener: anything that answers +call(event)+.
@@ -22,93 +24,87 @@ module DotPopper
       self
     end
 
-    def press(x, y) = transition(state.press(x, y))
-    def update(seconds) = transition(state.update(seconds))
+    def press(x, y) = advance(state.press(self, x, y))
+    def update(seconds) = advance(state.update(self, seconds))
 
-    # The window changed size. A round in play keeps its dots on screen;
-    # the next round starts on the new field.
+    # The round in play or just finished, or nil on the title.
+    def round = state.round
+
+    # The window changed size. A round in play keeps its dots on screen,
+    # and the next round starts on the new field.
     def field=(field)
       @field = field
-      state.round.field = field if state.respond_to?(:round)
+      round.field = field if state.is_a?(Playing)
     end
 
-    def round = state.respond_to?(:round) ? state.round : nil
-
+    # Tells every listener of +event+; nil is nothing to tell.
     def announce(event)
-      @listeners.each { |listener| listener.call(event) }
+      @listeners.each { |listener| listener.call(event) } if event
       event
     end
 
-    def new_round = Round.new(field, random: @random)
+    # The transitions, each with the event that says it happened.
+
+    def show_title
+      announce(Events::TitleShown.new(best: best.value))
+      Title.new
+    end
+
+    def start_round
+      round = Round.new(field, random: @random)
+      announce(Events::RoundStarted.new(round:))
+      Playing.new(round:)
+    end
+
+    def finish(round)
+      new_best = best.record(round.score)
+      announce(Events::RoundEnded.new(round:, best: best.value, new_best:))
+      GameOver.new(round:, new_best:)
+    end
 
     private
 
-    def transition(next_state)
+    def advance(next_state)
       @state = next_state
       self
     end
 
     # Waiting to start. Any press begins a round.
-    class Title
-      def initialize(game)
-        @game = game
-        game.announce(Events::TitleShown.new(best: game.best.value))
-      end
-
-      def press(_x, _y) = Playing.new(@game)
-      def update(_seconds) = self
+    class Title < Data.define
+      def round = nil
+      def press(game, _x, _y) = game.start_round
+      def update(_game, _seconds) = self
     end
 
     # A round in progress. It ends the moment the clock reaches zero,
     # whether time ran out or a penalty took the last of it.
-    class Playing
-      attr_reader :round
-
-      def initialize(game)
-        @game = game
-        @round = game.new_round
-        game.announce(Events::RoundStarted.new(round:))
+    class Playing < Data.define(:round)
+      def press(game, x, y)
+        game.announce(round.tap_at(x, y))
+        settle(game)
       end
 
-      def press(x, y)
-        event = round.tap_at(x, y)
-        @game.announce(event) if event
-        settle
-      end
-
-      def update(seconds)
+      def update(game, seconds)
         round.update(seconds)
-        settle
+        settle(game)
       end
 
       private
 
-      def settle = round.over? ? GameOver.new(@game, round) : self
+      def settle(game) = round.over? ? game.finish(round) : self
     end
 
     # The round is over and its score is shown. Presses are ignored for a
     # moment so a last frantic tap does not skip it; after that, a press
     # goes back to the title.
-    class GameOver
-      attr_reader :round, :new_best
-
-      def initialize(game, round)
-        @game = game
-        @round = round
-        @shown = 0.0
-        @new_best = game.best.record(round.score)
-        game.announce(Events::RoundEnded.new(round:, best: game.best.value, new_best:))
-      end
+    class GameOver < Data.define(:round, :new_best, :shown)
+      def initialize(round:, new_best:, shown: 0.0) = super
 
       def score = round.score
-      def ready? = @shown >= Rules::GAME_OVER_GRACE
+      def ready? = shown >= Rules::GAME_OVER_GRACE
 
-      def press(_x, _y) = ready? ? Title.new(@game) : self
-
-      def update(seconds)
-        @shown += seconds
-        self
-      end
+      def press(game, _x, _y) = ready? ? game.show_title : self
+      def update(_game, seconds) = with(shown: shown + seconds)
     end
   end
 end

@@ -126,7 +126,7 @@ class GameTest < Minitest::Test
     @game.press(0, 0)
     points.times do
       fresh = @game.round.dots.find(&:fresh?)
-      @game.round.dots.each { it.instance_variable_set(:@x, -1000.0) unless it.equal?(fresh) } # clear the way
+      clear_around!(@game.round, fresh)
       @game.press(fresh.x, fresh.y)
     end
   end

@@ -16,8 +16,8 @@ class DotTest < Minitest::Test
     at_30 = dot(400, 300, velocity_x: 300, velocity_y: 240)
     at_144 = dot(400, 300, velocity_x: 300, velocity_y: 240)
 
-    30.times { at_30.move(1 / 30.0, field) }
-    144.times { at_144.move(1 / 144.0, field) }
+    30.times { at_30 = at_30.move(1 / 30.0, field) }
+    144.times { at_144 = at_144.move(1 / 144.0, field) }
 
     assert_in_delta at_30.x, at_144.x, 1e-6
     assert_in_delta at_30.y, at_144.y, 1e-6
@@ -50,10 +50,9 @@ class DotTest < Minitest::Test
 
   def test_a_dot_never_leaves_the_screen_even_in_a_very_long_frame
     random = Random.new(5)
-    dots = Array.new(200) { DotPopper::Dot.spawn(field, random) }
+    dots = Array.new(200) { DotPopper::Dot.spawn(field, random, id: 0) }
 
-    dots.each do |d|
-      d.move(3.7, field)
+    dots.map { it.move(3.7, field) }.each do |d|
       assert_operator d.x, :>=, R
       assert_operator d.x, :<=, 800 - R
       assert_operator d.y, :>=, R
@@ -70,7 +69,7 @@ class DotTest < Minitest::Test
 
   def test_speeds_change_only_by_bouncing
     steady = dot(400, 300, velocity_x: 60, velocity_y: 120)
-    600.times { steady.move(1 / 60.0, field) }
+    600.times { steady = steady.move(1 / 60.0, field) }
 
     assert_equal 60.0, steady.velocity_x.abs
     assert_equal 120.0, steady.velocity_y.abs
@@ -87,16 +86,18 @@ class DotTest < Minitest::Test
   end
 
   def test_popping_keeps_the_dot_moving
-    popped = dot(400, 300, velocity_x: 60).pop
+    original = dot(400, 300, velocity_x: 60)
+    popped = original.pop
 
     assert popped.popped?
-    popped.move(1, field)
-    assert_in_delta 460, popped.x
+    assert original.fresh?, "a dot is a value; popping gives a new one"
+    assert_equal original.id, popped.id
+    assert_in_delta 460, popped.move(1, field).x
   end
 
   def test_a_spawned_dot_has_its_own_speed_on_each_axis
     random = Random.new(11)
-    dots = Array.new(300) { DotPopper::Dot.spawn(field, random) }
+    dots = Array.new(300) { DotPopper::Dot.spawn(field, random, id: 0) }
 
     assert dots.any? { it.velocity_x.abs != it.velocity_y.abs }
     assert dots.all?(&:fresh?)

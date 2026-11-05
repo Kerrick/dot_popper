@@ -23,19 +23,21 @@ class RoundTest < Minitest::Test
     event = round.tap_at(410, 290)
 
     assert_instance_of Events::Popped, event
-    assert target.popped?
     assert_equal 1, round.score
     assert_in_delta 11.0, round.countdown.remaining
     assert_equal 2, round.dots.size
-    assert_same target, round.dots.first, "the popped dot stays on top"
-    assert_same event.spawned, round.dots.to_a.last, "the new dot goes underneath"
-    assert event.spawned.fresh?
+    top, bottom = round.dots.to_a
+    assert_equal target.id, top.id, "the popped dot stays on top"
+    assert top.popped?
+    assert_equal event.spawned, bottom, "the new dot goes underneath"
+    assert bottom.fresh?
+    assert_equal top, event.dot
     assert_equal [1, 1.0], [event.points, event.seconds]
   end
 
   def test_tapping_a_popped_dot_costs_two_points_and_two_seconds
     round = round_with(dot(400, 300, popped: true))
-    round.instance_variable_set(:@score, 5)
+    score!(round, 5)
 
     event = round.tap_at(400, 300)
 
@@ -43,11 +45,12 @@ class RoundTest < Minitest::Test
     assert_equal 3, round.score
     assert_in_delta 8.0, round.countdown.remaining
     assert_equal [-2, -2.0], [event.points, event.seconds]
+    refute event.softened?
   end
 
   def test_the_score_never_goes_below_zero
     round = round_with(dot(400, 300, popped: true))
-    round.instance_variable_set(:@score, 1)
+    score!(round, 1)
 
     first = round.tap_at(400, 300)
     second = round.tap_at(400, 300)
@@ -71,29 +74,23 @@ class RoundTest < Minitest::Test
   end
 
   def test_a_tap_on_overlapping_dots_reaches_only_the_topmost
-    popped_on_top = dot(400, 300, popped: true)
-    fresh_beneath = dot(410, 300)
-    round = round_with(popped_on_top, fresh_beneath)
+    round = round_with(dot(400, 300, popped: true), dot(410, 300))
 
     event = round.tap_at(405, 300)
 
     assert_instance_of Events::Penalized, event
-    assert fresh_beneath.fresh?, "the tap does not pass through"
+    assert round.dots.to_a.last.fresh?, "the tap does not pass through"
   end
 
   def test_a_fresh_dot_out_from_under_the_popped_ones_can_be_popped
-    popped_on_top = dot(400, 300, popped: true)
-    fresh_beneath = dot(480, 300)
-    round = round_with(popped_on_top, fresh_beneath)
+    round = round_with(dot(400, 300, popped: true), dot(480, 300))
 
     assert_instance_of Events::Popped, round.tap_at(520, 300)
-    assert fresh_beneath.popped?
+    assert round.dots.to_a[1].popped?
   end
 
   def test_a_fresh_dot_on_top_of_a_popped_one_is_the_one_tapped
-    fresh_on_top = dot(400, 300)
-    popped_beneath = dot(400, 300, popped: true)
-    round = round_with(fresh_on_top, popped_beneath)
+    round = round_with(dot(400, 300), dot(400, 300, popped: true))
 
     assert_instance_of Events::Popped, round.tap_at(400, 300)
   end
@@ -101,22 +98,20 @@ class RoundTest < Minitest::Test
   def test_each_new_dot_spawns_under_all_the_others
     round = round_with(dot(400, 300))
     first = round.tap_at(400, 300).spawned
-    first.instance_variable_set(:@x, 100.0)
-    first.instance_variable_set(:@y, 100.0)
-    second = round.tap_at(100, 100).spawned
+    clear_around!(round, first)
+    second = round.tap_at(first.x, first.y).spawned
 
-    assert_equal second, round.dots.to_a.last
-    assert_equal first, round.dots.to_a[1]
+    assert_equal [first.id, second.id], round.dots.to_a.last(2).map(&:id)
+    assert_equal 3, round.dots.map(&:id).uniq.size, "every dot has its own id"
   end
 
   def test_time_runs_down_and_dots_move_with_each_update
-    mover = dot(400, 300, velocity_x: 60)
-    round = round_with(mover)
+    round = round_with(dot(400, 300, velocity_x: 60))
 
     round.update(0.5)
 
     assert_in_delta 9.5, round.countdown.remaining
-    assert_in_delta 430, mover.x
+    assert_in_delta 430, round.dots.first.x
   end
 
   def test_the_round_ends_when_the_clock_reaches_zero_and_shows_zero
@@ -139,13 +134,13 @@ class RoundTest < Minitest::Test
   end
 
   def test_nothing_happens_once_the_round_is_over
-    target = dot(400, 300, velocity_x: 60)
-    round = round_with(target)
+    round = round_with(dot(400, 300, velocity_x: 60))
     round.update(11)
+    resting = round.dots.first
 
-    assert_nil round.tap_at(target.x, target.y)
+    assert_nil round.tap_at(resting.x, resting.y)
     round.update(1)
-    assert target.fresh?
+    assert_equal resting, round.dots.first
     assert_equal 0, round.score
   end
 
