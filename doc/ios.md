@@ -1,104 +1,69 @@
 # Dot Popper on an iPad
 
-What the game needs from an iOS or iPadOS build, what it does differently
-there, and how to tell a good run from a bad one. The app itself is built
-outside this repository, with Lota trunk's experimental iOS engine and
-`fledge build ios`; this page is the game's side of that build. Nothing
-here has run in a Simulator or on a device yet (see "Unverified").
+This page describes the game's side of an iOS or iPadOS build: what the app needs, what the game does differently there, and how to tell a good run from a bad one.
+
+The app itself isn't built in this repository. It is built with Lota's experimental iOS engine, which exists only on Lota's development branches, and with Fledge's `fledge build ios` command, which generates an Xcode project. The repository's `Gemfile` stays on Lota 0.1.2, so the desktop builds and CI are unaffected.
+
+## Where things stand
+
+- **A kit exists.** A Lota agent built an Xcode project for Dot Popper v0.5.1, called the iPad kit, with Lota's "iPad kit" workflow. It is in the maintainer's `~/Downloads/dot-popper-ipad/`, together with a `README.txt` that walks through signing the app with a free Apple ID and installing it on an iPad.
+- **It has run in the Simulator.** On Lota's CI, the kit built with Xcode 26.3 and ran in iOS 26.2 Simulators of an iPad Pro 13-inch, an iPad (A16), and an iPad mini. The autoplay bot played to the end and the app exited with status 0. All four shaders, the fonts, the particles, the physics heap at Game Over, and the save folder worked. A separate UI test tapped the screen and rotated the Simulator from portrait to landscape and back; the taps started rounds, and the layout rebuilt itself for each orientation. Screenshots are in `~/Downloads/dot-popper-ipad/screenshots/`.
+- **It hasn't run on a real iPad.** The device build compiled and linked without signing, but nobody has yet signed it, installed it, or played it on hardware. See "What is still unverified" at the end.
 
 ## The program
 
-The app's program is `bin/dot_popper`, as on the desktop (`fledge.yml`,
-`programs`). It boots the repository's root as a fused Lota game. `main.rb`
-is *not* a program: it only defines Lota's callbacks, so an app that ran it
-directly would define them and exit at once.
+The app's program is `bin/dot_popper`, the same launcher the desktop builds use (it is listed under `programs` in `fledge.yml`). It starts the repository's folder as a fused Lota game, meaning a standalone app rather than a development run. `main.rb` is *not* the program: it only defines the callbacks Lota calls, so an app that ran it directly would define them and exit at once.
 
-`bin/dot_popper` finds the game as `File.expand_path("..", __dir__)`, so the
-whole folder must ship beside it: `conf.rb`, `main.rb`, `lib/`, and
-`assets/` (the Fredoka fonts and the four GLSL shaders). Every asset path is
-relative to that folder and is read through Lota's filesystem, never through
-the working directory. `$PROGRAM_NAME` is read only by the
-`DOT_POPPER_SMOKE` check, which is for CI runners and is never set on iOS.
+`bin/dot_popper` finds the game in the folder above itself (`File.expand_path("..", __dir__)`), so the whole folder must ship beside it, including `conf.rb`, `main.rb`, `lib/`, and `assets/` (the Fredoka fonts and the four GLSL shaders). Every asset is read through Lota's filesystem by a path relative to that folder, never through the working directory. The only code that reads `$PROGRAM_NAME` is the `DOT_POPPER_SMOKE` build check, which CI uses on desktop builds and which is never set on iOS.
 
-The bundle identifier is `com.kerricklong.DotPopper` (`fledge.yml`).
+The bundle identifier is `com.kerricklong.DotPopper`, set in `fledge.yml`.
 
 ## What the iOS app needs
 
-| Need | Choice | Why |
+| Setting | Value | Why |
 | --- | --- | --- |
-| Lota | Trunk at 04d5b11 or later, not 0.1.2 | Only trunk builds for iOS, and only trunk calls `Lota.touchpressed`. 0.1.2 has neither. The repository's `Gemfile` stays on 0.1.2, so the desktop builds and CI are unchanged |
-| `t.highdpi` | `true` (already in `conf.rb`) | Without it LÖVE, and so Lota, draws at 1x on a Retina iPad |
-| Orientations | All four on iPad (`UISupportedInterfaceOrientations~ipad`); portrait and both landscapes on iPhone | The field is the whole window and refits on every resize. `conf.rb`'s window is resizable, so SDL allows every orientation that Info.plist allows (`UIKit_GetSupportedOrientations`) |
-| Multitasking | Leave `UIRequiresFullScreen` unset | Split View and Stage Manager resize the window, which the game handles as it handles a rotation |
-| Status bar | Hidden: `UIStatusBarHidden` = `true` in Info.plist for the launch screen; the game hides it itself after launch | See "Fullscreen" below |
-| Audio session | `AVAudioSessionCategoryAmbient`, set by the host before `SDL_RunApp` | See "Sound" below |
-| Entitlements | None | No network, no iCloud, no Game Center, no camera or microphone. The save folder is the app's own container |
-| `UIApplicationSupportsIndirectInputEvents` | `true` | SDL asks for it to see a mouse or trackpad on an iPad. The game takes clicks as taps |
+| Lota | A development build with the iOS engine (trunk at `04d5b11` or later; the kit used `experiment/ipad-kit` at `f5c6093`), not 0.1.2 | Only Lota's development branches build for iOS and call `Lota.touchpressed` |
+| `t.highdpi` | `true`, already set in `conf.rb` | Without it, LÖVE, and so Lota, draws at 1× on a Retina iPad, and everything looks blurry |
+| Orientations | All four on iPad (`UISupportedInterfaceOrientations~ipad`); portrait and both landscapes on iPhone | The field is the whole window and rebuilds itself whenever the window changes size. Because `conf.rb` makes the window resizable, SDL allows every orientation that Info.plist allows |
+| Multitasking | Leave `UIRequiresFullScreen` unset | Split View and Stage Manager resize the window, which the game handles exactly as it handles a rotation |
+| Status bar | Hidden: set `UIStatusBarHidden` to `true` in Info.plist for the launch screen; the game hides it itself after launch | See "Fullscreen and the safe area" |
+| Audio session | `AVAudioSessionCategoryAmbient`, set by the host program before `SDL_RunApp` | See "Sound" |
+| Entitlements | None | The game uses no network, iCloud, Game Center, camera, or microphone, and saves only in the app's own container |
+| `UIApplicationSupportsIndirectInputEvents` | `true` | SDL needs it to see a mouse or trackpad on an iPad. The game treats clicks as taps |
 
 ## How the game behaves on iOS
 
-`Shell::App#load` asks `Lota::System.os`, which answers `"iOS"` there
-(LÖVE's `System::getOS`), and `DotSize.touch?` turns that into one flag.
-Everything below is guarded by it or by Lota itself, so the desktop takes
-exactly the paths it took before.
+When the game starts, `Shell::App#load` asks `Lota::System.os` which system it is on. On iOS the answer is `"iOS"` (from LÖVE's `System::getOS`), and `DotSize.touch?` turns that into a single "this is a touch device" flag. Every difference described below depends on that flag or on Lota itself, so a desktop follows exactly the same code paths as before.
 
 ### Fullscreen and the safe area
 
-On a desktop the game sizes its window to the play area. On a phone or
-tablet it calls `Lota::Window.set_fullscreen(true, :desktop)` instead. SDL's
-iOS window already covers the screen, so this changes no size. It hides the
-status bar (`SDL_uikitviewcontroller.m`, `prefersStatusBarHidden`). It also
-makes a swipe from the screen's edge need a second swipe before the system
-takes it (`preferredScreenEdgesDeferringSystemGestures`), so a quick tap near
-the home indicator stays a tap.
+On a desktop, the game sizes its window to fit the play area. On a phone or tablet it calls `Lota::Window.set_fullscreen(true, :desktop)` instead. SDL's iOS window already covers the whole screen, so this changes no sizes, but it does two useful things. It hides the status bar (through `prefersStatusBarHidden` in SDL's `SDL_uikitviewcontroller.m`). And it makes a swipe from the edge of the screen need a second swipe before iOS acts on it (through `preferredScreenEdgesDeferringSystemGestures`), so a quick tap near the home indicator stays a tap.
 
-Dots use the whole screen, corners included. The score, the clock, the mute
-button, the Daily and Share buttons, and every line of text stay inside
-`Lota::Window.safe_area` (SDL's `SDL_GetWindowSafeArea`). If the safe area
-comes back empty, the whole window stands in for it. On an iPad with Face
-ID, with the status bar hidden, the bottom inset is for the home indicator.
+Dots use the whole screen, corners included. Everything else stays inside the safe area, the part of the screen that rounded corners, the camera housing, and the home indicator don't cover. That includes the score, the clock, the mute button, the Daily and Share buttons, and every line of text. The game gets the safe area from `Lota::Window.safe_area` (SDL's `SDL_GetWindowSafeArea`). If that comes back empty, the game uses the whole window instead. On an iPad with Face ID, once the status bar is hidden, the safe area's bottom inset is there for the home indicator.
 
 ### Rotation and resizing
 
-A rotation, Split View, or a Stage Manager window is a `Lota.resize`. The
-game then rebuilds the field and the layout, and every dot on screen is
-moved back inside the new field (`Dot#confine`), mid-round included, so no
-dot is left off screen. The rules never change: same radius, same speeds,
-same clock. A portrait field is taller and narrower, which plays as the
-field-size table in `doc/decisions.md` says. Fonts are remade for the new
-size and density.
+Rotating the iPad, entering Split View, or resizing a Stage Manager window all reach the game as a `Lota.resize` call. The game then rebuilds the field and the layout, and moves every dot back inside the new field (`Dot#confine`), even in the middle of a round, so no dot is ever left off screen. The heap of dots at Game Over is refitted the same way.
+
+The rules never change with the window: the radius, the speeds, and the clock stay the same. A portrait field is just taller and narrower, and plays as the field-size table in [decisions.md](decisions.md) predicts. Fonts are rebuilt for the new size and pixel density.
 
 ### Dot size
 
-A dot's radius is 50 points, about 8 mm (`DotSize`), and the game prints
-that when it starts. An iPad Pro 13-inch is 1032 × 1376 points, so a
-portrait field is about 21 × 28 radii; an 11-inch iPad is about 17 × 24.
+A dot's radius is 50 points, about 8 mm (see `DotSize`), and the game prints that when it starts. An iPad Pro 13-inch is 1032 × 1376 points, so a portrait field there is about 21 × 28 radii. An 11-inch iPad's is about 17 × 24.
 
 ### Input
 
-A finger is a `touchpressed` with device type `touchscreen`. SDL also makes
-up a mouse press for each finger, with `istouch` true, which
-`InputRouter` ignores, so one finger is one tap. A mouse or trackpad on an
-iPad clicks as on a Mac. Every screen works by tap alone.
+A finger on the screen reaches the game as a `touchpressed` call with the device type `touchscreen`. SDL also generates a mouse press for each finger, marked `istouch`, and `InputRouter` ignores those, so one finger makes exactly one tap. A mouse or trackpad connected to an iPad clicks just as on a Mac. Every screen in the game can be used by tapping alone.
 
-On iOS the keyboard does less. **M** still toggles the sound. **Escape**
-does nothing, because an iOS app is left by the system, never by the app.
-**F11** and **Alt+Enter** do nothing either, since the app is always
-fullscreen.
+The keyboard does less on iOS. **M** still turns sound on or off. **Escape** does nothing, because iOS apps are closed by the system, never by the app itself. **F11** and **Alt+Enter** do nothing either, since the app is always fullscreen.
+
+Game controllers are ignored on a phone or tablet: `Shell::Gamepads` takes none there. An earlier version asked Lota for the list of joysticks every frame, and on iOS, where SDL presents the accelerometer as a joystick, that crashed the game in the Simulator. As a further safeguard, the kit's host program turns off SDL's accelerometer joystick (`SDL_ACCELEROMETER_AS_JOYSTICK=0` in `Host/main.m`).
 
 ### Sound
 
-The sounds are synthesized when the game starts, so no MP3 or AAC decoder
-is needed (Lota's iOS build has none). Audio goes through Apple's
-`OpenAL.framework`, as in LÖVE's iOS build.
+The game synthesizes its sounds when it starts, so it needs no MP3 or AAC decoder (Lota's iOS build has none). Audio plays through Apple's `OpenAL.framework`, as in LÖVE's iOS build.
 
-The audio session should be **Ambient**: it mixes with other apps' music
-and stays quiet in silent mode, which suits a casual game. The game cannot
-choose this itself. Lota does not apply `t.audio.mixwithsystem` yet, so the
-session keeps iOS's default, SoloAmbient, which stops other apps' music.
-LÖVE's own setting would not help either: it picks Playback
-(`common/ios.mm`, `setAudioMixWithOthers`), which plays even in silent mode.
-So the host's `main.m` should set the category before `SDL_RunApp`:
+The audio session should use the Ambient category. Ambient audio mixes with music from other apps and goes quiet when the iPad is in silent mode, which suits a casual game. The game can't choose this itself, for two reasons. Lota doesn't apply LÖVE's `t.audio.mixwithsystem` setting yet, so the session keeps iOS's default category, SoloAmbient, which stops other apps' music. And LÖVE's own setting wouldn't help, because it chooses the Playback category (`setAudioMixWithOthers` in LÖVE's `common/ios.mm`), which keeps playing even in silent mode. So the host program's `main.m` sets the category before it calls `SDL_RunApp`:
 
 ```objc
 @import AVFoundation;
@@ -106,68 +71,50 @@ So the host's `main.m` should set the category before `SDL_RunApp`:
 [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryAmbient error:nil];
 ```
 
-With no audio device, the game plays on without sound and prints a warning.
+The kit's host program already does this. If no audio device is available, the game prints a warning and plays on without sound.
 
 ### Haptics
 
-iOS gets none. LÖVE's `vibrate` on iOS ignores the length it is given and
-plays the system's long vibration (`common/ios.mm`, `vibrate`). On an
-iPhone, every pop would run into the next one. An iPad has no vibration
-motor anyway. So `Shell::Haptics.for` buzzes only on Android. A real tap on
-iOS would need `UIImpactFeedbackGenerator`, which neither LÖVE nor Lota
-exposes.
+iOS gets no vibration. On iOS, LÖVE's `vibrate` ignores the length it is given and plays the system's long vibration (`vibrate` in `common/ios.mm`), so on an iPhone every pop's buzz would run into the next one. An iPad has no vibration motor anyway. So `Shell::Haptics.for` turns vibration on only for Android. A short tap on iOS would need Apple's `UIImpactFeedbackGenerator`, which neither LÖVE nor Lota exposes.
 
 ### Share
 
-Share copies the Daily's result with `Lota::System.clipboard_text=`, which
-SDL turns into `UIPasteboard` on iOS. Writing to the pasteboard needs no
-permission. If the copy fails, the game prints a warning and goes on.
+After a Daily round, Share copies the result with `Lota::System.clipboard_text=`, which SDL turns into a write to `UIPasteboard` on iOS. Writing to the pasteboard needs no permission. If the copy fails, the game prints a warning and carries on.
 
 ### Files the game writes
 
-Fused, the save folder is `Library/Application Support/dot_popper` in the
-app's data container. iOS keeps it across launches and updates, and backs
-it up. Every read and write goes through `Lota::Filesystem` (`SaveFile`),
-and a failure loses the value, never the game.
+As a fused app, the game saves into `Library/Application Support/dot_popper` inside the app's data container. iOS keeps that folder across launches and updates, and includes it in backups. Every read and write goes through `Lota::Filesystem` (wrapped by `SaveFile`), and if one fails, only that value is lost; the game keeps running.
 
-| File | Holds |
+| File | What it holds |
 | --- | --- |
 | `best_score.txt` | The best score |
-| `daily_best.txt` | Today's date and the day's best Daily score |
+| `daily_best.txt` | Today's date and the best Daily score for that day |
 | `sound.txt` | `muted` or `on` |
-| `taught.txt` | Present once the popped-dot hint has been shown |
-| `rounds.csv` | The playtest log, one line per finished round (README, "Playtest log") |
-| `shot-N.png` | Only when `DOT_POPPER_SHOTS` asks for screenshots |
+| `taught.txt` | Present once the first-mistake hint has been shown |
+| `rounds.csv` | The playtest log, one line per finished round (see "The playtest log" in the README) |
+| `shot-N.png` | Screenshots, only when `DOT_POPPER_SHOTS` asks for them |
 
-In the Simulator the container is at
-`$(xcrun simctl get_app_container "$UDID" com.kerricklong.DotPopper data)`.
-On a device, Xcode's Devices window can download the container (Window >
-Devices and Simulators, select the app, then the gear menu > Download
-Container).
+In the Simulator, this command prints the container's path:
+
+```sh
+xcrun simctl get_app_container "$UDID" com.kerricklong.DotPopper data
+```
+
+On a device, Xcode can download the container: choose Window > Devices and Simulators, select the iPad and then the app, and choose Download Container from the gear menu.
 
 ### Output
 
-`puts` and `warn` go to the app's standard output and standard error.
-Fledge's iOS runtime forwards both to the unified log, under the subsystem
-`com.kerricklong.DotPopper`, category `ruby`. The host logs its exit status
-under category `app`.
+The game's `puts` and `warn` lines go to the app's standard output and standard error. Fledge's iOS runtime forwards both to the system's unified log, under the subsystem `com.kerricklong.DotPopper` and the category `ruby`. The host program logs the app's exit status under the category `app`.
 
-**Leave `OS_ACTIVITY_DT_MODE` unset**, with any value, `NO` included, in
-Xcode's scheme and in `simctl launch`'s environment. With it set, the log
-copies each entry back to standard error. On Fledge 0.4.0's runtimes, the
-app then freezes in a loop of its own output and draws nothing (Fledge's
-`doc/contributors/device-test.md`, step 4, and ADR 011, section 5).
+**Leave `OS_ACTIVITY_DT_MODE` unset**, with any value, `NO` included, both in Xcode's scheme and in the environment `simctl launch` passes. When it is set, the system copies every log entry back to standard error. With Fledge 0.4.0's runtime, that standard error is forwarded to the log again, so the app freezes in a loop of its own output and draws nothing (see step 4 of Fledge's `doc/contributors/device-test.md`, and section 5 of its ADR 011). The kit's host program detects the variable and, when it is set, leaves the game's output on its own streams, but the safest course is to keep it out of the scheme.
 
 ### Environment variables
 
-The development settings in `README.md` are read from `ENV`. A home-screen
-launch has none of them, so the game plays normally.
-`xcrun simctl launch` passes each `SIMCTL_CHILD_NAME=value` to the app as
-`NAME=value`.
+The developer settings listed in the README are read from the environment. An app launched from the Home Screen has none of them, so it plays normally. In the Simulator, `xcrun simctl launch` passes each `SIMCTL_CHILD_NAME=value` in its own environment to the app as `NAME=value`, which is how the check below sets them.
 
-## Proving a good run in the Simulator
+## Checking a run in the Simulator
 
-With the app built for the Simulator and installed on a booted iPad (`$UDID`):
+With the app built for the Simulator and installed on a booted iPad Simulator whose identifier is in `$UDID`, run:
 
 ```sh
 SIMCTL_CHILD_DOT_POPPER_AUTOPLAY=1 SIMCTL_CHILD_DOT_POPPER_SEED=7 \
@@ -178,8 +125,11 @@ xcrun simctl spawn "$UDID" log show --last 2m --info --style compact \
   --predicate 'subsystem == "com.kerricklong.DotPopper"'
 ```
 
-A good run logs these lines in this order, under category `ruby`.
-`<data>` is the app's data container:
+This starts the autoplay bot with a fixed seed, takes four screenshots, quits after 45 seconds of play, and then prints the app's log.
+
+### What a good run logs
+
+A good run logs these lines, in this order, under the category `ruby`. Here `<data>` stands for the app's data container:
 
 ```
 Dot Popper: a dot's radius is 50 points, about 8 mm
@@ -190,63 +140,46 @@ Dot Popper: screenshot <data>/Library/Application Support/dot_popper/shot-3.png
 Dot Popper: screenshot <data>/Library/Application Support/dot_popper/shot-4.png
 ```
 
-Then, under category `app`, the host's line that the app exited with
-status 0. The same command on a Mac (`bundle exec lota run .` with those
-variables) printed the same six lines, with "50 logical pixels" and
-`~/Library/Application Support/Lota/dot_popper`.
+After them, under the category `app`, the host program logs that the app exited with status 0. The same command run on a Mac (`bundle exec lota run .` with the same variables) printed the same six lines, except that the first said "50 logical pixels" and the paths were under `~/Library/Application Support/Lota/dot_popper`.
 
-Each of these lines means something went wrong, though the game still
-runs:
+### What a bad run logs
 
-| Line | Meaning |
+Each of these lines means something went wrong, although the game keeps running:
+
+| Line | What it means |
 | --- | --- |
-| `a dot's radius is 50 logical pixels` | `Lota::System.os` did not answer `iOS`, so the game took the desktop's paths |
-| `drawing without shaders`, or `drawing <name> without its shader (...)` | A GLSL shader failed to translate to Metal. Dots are drawn plainly |
-| `drawing without the glow (...)` | No canvas for the bloom |
-| `playing without sound (...)` | No OpenAL device |
-| `using Lota's own font (...)` | `assets/fonts` did not ship |
-| `could not save <file>` or `could not read <file>` | The save folder is not writable |
-| Any line repeated, nested inside itself | `OS_ACTIVITY_DT_MODE` reached the app |
+| `a dot's radius is 50 logical pixels` | `Lota::System.os` didn't answer `iOS`, so the game took the desktop's code paths |
+| `drawing without shaders`, or `drawing <name> without its shader (...)` | A GLSL shader failed to translate to Metal, so dots are drawn as plain shapes |
+| `drawing without the glow (...)` | The glow beneath the dots couldn't get the offscreen canvas it draws into |
+| `playing without sound (...)` | There is no OpenAL audio device |
+| `using Lota's own font (...)` | The `assets/fonts` folder didn't ship with the app |
+| `could not save <file>` or `could not read <file>` | The save folder isn't writable |
+| Any line repeated inside itself | `OS_ACTIVITY_DT_MODE` reached the app |
 
-The four screenshots, at game-time seconds 3, 12, 25, and 38, show:
+### What the screenshots should show
 
-- 3: the first round, a few seconds in, with dots and the HUD (the bot
-  starts at once)
-- 12 and 25: the round, with popped dots crowding
-- 38: Game Over, "Time!" with the score and the pile of dots
+The four screenshots are taken at 3, 12, 25, and 38 seconds of play:
 
-Check each one:
+- At 3 seconds, the first round has just begun, with dots and the score bar showing. (The bot starts a round right away.)
+- At 12 and 25 seconds, the round is under way, with popped dots crowding the screen.
+- At 38 seconds, the round is over: the Game Over heading, the score, and the dots in a heap.
 
-- It fills the screen, with no status bar and no letterboxing.
-- The score pill sits below the top inset, and the mute button sits above
-  the home indicator.
-- A dot is about the size of a fingertip: its diameter is about a tenth of
-  the screen's short side (100 of 1032 points on a 13-inch iPad).
-- Text is sharp, which means `highdpi` is on.
+In each one, check that:
 
-Scores differ from the Mac's: the same seed on a different field size draws
-different dots.
+- the game fills the screen, with no status bar and no black bars at the sides;
+- the score bar sits below the top inset, and the mute button sits above the home indicator;
+- a dot is about the size of a fingertip, with a diameter about a tenth of the screen's short side (100 of 1032 points on a 13-inch iPad);
+- text is sharp, which shows that `highdpi` is on.
+
+Scores will differ from a Mac's even with the same seed, because a different field size produces different dots.
 
 ## On a real iPad
 
-Signing with an Apple ID and installing follow Fledge's
-`doc/contributors/device-test.md`, section 3, with the project `fledge build
-ios` writes for this game in place of `SdlPhone-ios`. A free Apple ID's
-profile lasts 7 days. Keep `OS_ACTIVITY_DT_MODE` out of the scheme (step 4).
+The kit's `README.txt` in `~/Downloads/dot-popper-ipad/` gives the full steps: checking and unpacking the kit, signing it in Xcode with a free Apple ID's Personal Team, turning on Developer Mode on the iPad, checking the scheme, and running. Those steps follow section 3 of Fledge's `doc/contributors/device-test.md`, using the project `fledge build ios` writes for this game in place of Fledge's sample `SdlPhone-ios`. A free Apple ID's signing profile lasts 7 days, after which the app must be run from Xcode again. As above, keep `OS_ACTIVITY_DT_MODE` out of the scheme (step 4).
 
-## Unverified
+## What is still unverified
 
-- Nothing above has run on iOS. The behaviour comes from reading LÖVE's
-  iOS code, SDL 3.4.10's UIKit backend, Lota trunk, and Fledge's
-  device-test runbook.
-- Whether `set_fullscreen` on iOS sends a `resize`, and whether the safe
-  area changes when the status bar hides. The game handles either.
-- Whether LÖVE's touch coordinates on a Retina iPad are in the same units
-  as `Lota::Graphics.dimensions`, as they should be with `usedpiscale`
-  on. The bot's taps go straight to the game and skip touch input, so only a
-  real finger (or a click in the Simulator's window) tests it: a tap on a
-  dot that does nothing is a mismatch.
-- Whether the four shaders translate to Metal. If they do not, the game
-  falls back as the table above says.
-- Whether Apple's deprecated `OpenAL.framework` still plays on iPadOS 26
-  and 27.
+- **Running on a real iPad.** Everything above about devices comes from the Simulator runs and from reading LÖVE's iOS code, SDL 3.4.10's UIKit backend, Lota's iOS engine, and Fledge's device-test guide.
+- **Touch coordinates on a Retina iPad.** They should be in the same units as `Lota::Graphics.dimensions` when `usedpiscale` is on. The bot's taps go straight to the game without passing through touch input, and the UI test's taps only started rounds, which a tap anywhere does. Only a real finger on a dot, or a click on a dot in the Simulator's window, tests it: if a tap on a dot does nothing, the units don't match.
+- **Whether `set_fullscreen` on iOS sends a resize,** and whether the safe area changes when the status bar hides. The game handles either case.
+- **Sound on a device.** Nobody has heard the game on an iPad, and Apple has deprecated `OpenAL.framework`, so it isn't certain that it still plays on iPadOS 26 and 27.
