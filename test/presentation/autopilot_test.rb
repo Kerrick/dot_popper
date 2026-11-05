@@ -31,4 +31,12 @@ class AutopilotTest < Minitest::Test
 
     assert_nil pilot.send(:exposed_fresh, round)
   end
+
+  def test_its_mistake_is_impatience_with_the_covered_fresh_dot
+    cover = dot(400, 300, popped: true)
+    round = round_with(cover, dot(900, 900, popped: true), dot(430, 300))
+    pilot = Autopilot.new(Look::AUTOPILOT.with(mistakes: 1.0))
+
+    assert_equal cover, round.dots.top_at(*pilot.send(:mistake, round))
+  end
 end

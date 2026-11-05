@@ -14,6 +14,7 @@ module DotPopper
 end
 
 %w[
+  reveal
   color ease tween pixels palette words layout particles rings floaters shake edge_flash effects
   dot_animations hud synth stereo input_router attract marquee finale pile autopilot shot_schedule look show
 ].each { require_relative "presentation/#{it}" }

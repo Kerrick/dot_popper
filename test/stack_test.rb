@@ -32,4 +32,28 @@ class StackTest < Minitest::Test
     assert_equal [false, true, false], replaced.map(&:popped?)
     refute stack.to_a[1].popped?, "a stack is a value too"
   end
+
+  def test_it_finds_the_fresh_dot_a_tap_on_a_popped_one_was_too_soon_for
+    popped = dot(400, 300, popped: true)
+    hidden = dot(440, 300)
+    stack = DotPopper::Stack.new(dots: [popped, hidden])
+
+    assert_equal hidden, stack.fresh_beneath(popped, 380, 300)
+  end
+
+  def test_a_fresh_dot_elsewhere_was_not_under_there
+    popped = dot(400, 300, popped: true)
+    stack = DotPopper::Stack.new(dots: [popped, dot(600, 300)])
+
+    assert_nil stack.fresh_beneath(popped, 400, 300)
+  end
+
+  def test_only_a_fresh_dot_beneath_the_tapped_one_counts
+    fresh_above = dot(420, 300)
+    popped = dot(400, 300, popped: true)
+    popped_below = dot(410, 300, popped: true)
+    stack = DotPopper::Stack.new(dots: [fresh_above, popped, popped_below])
+
+    assert_nil stack.fresh_beneath(popped, 400, 300)
+  end
 end

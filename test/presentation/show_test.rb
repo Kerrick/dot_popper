@@ -71,6 +71,28 @@ class ShowTest < Minitest::Test
     assert_equal "−2s", @show.effects.floaters.last.text
   end
 
+  def test_a_wrong_tap_over_the_fresh_dot_outlines_it
+    start_and_pop
+    popped = @game.round.dots.first
+    fresh = @game.round.dots.find(&:fresh?)
+    clear_around!(@game.round, popped)
+    put!(fresh.id, popped.x + 30, popped.y)
+    @show.tap(popped.x - 20, popped.y)
+
+    assert_equal [fresh.id], @show.effects.reveals.map(&:follow)
+    @show.update(Look::REVEAL.duration)
+    assert_empty @show.effects.reveals
+  end
+
+  def test_a_wrong_tap_with_the_fresh_dot_elsewhere_reveals_nothing
+    start_and_pop
+    popped = @game.round.dots.first
+    clear_around!(@game.round, popped)
+    @show.tap(popped.x, popped.y)
+
+    assert_empty @show.effects.reveals
+  end
+
   def test_game_over_counts_up_then_asks_to_continue_once_ready
     start_and_pop
     @game.update(20)
@@ -109,6 +131,11 @@ class ShowTest < Minitest::Test
   end
 
   private
+
+  def put!(id, x, y)
+    round = @game.round
+    round.instance_variable_set(:@dots, round.dots.map_dots { it.id == id ? it.with(x:, y:) : it })
+  end
 
   def start_and_pop(started: false)
     @show.tap(10, 10) unless started

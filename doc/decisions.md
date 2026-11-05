@@ -109,3 +109,17 @@ columns against each other, not as predictions of a person's score.
   There is no spawn sound to pan, and none was added, since that would change
   the game's sound design. The panning was checked by logging each voice's
   position; nobody has listened to it in the hidden session.
+
+## Game design
+
+Calls made in the game-design pass, which changes no rule. Each one aims at
+the player understanding what just happened to them.
+
+- **A wrong tap shows the fresh dot it was too soon for.** When a penalty lands
+  on a popped dot that lies over the fresh dot (the fresh dot is under the tap,
+  or its disc touches the tapped one), the fresh dot's outline is drawn over
+  everything for 0.6 s, dashed, the drawing convention for an edge out of
+  sight, and fading. A failure the player can see the cause of feels fair and
+  teaches the core rule at the moment it bit. It is an outline, never a fill,
+  so it cannot pass for an uncovered fresh dot and invite a second wrong tap.
+  `Stack#fresh_beneath` answers the question; it decides nothing.

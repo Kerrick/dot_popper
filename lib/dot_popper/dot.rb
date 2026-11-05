@@ -29,6 +29,9 @@ module DotPopper
       ((point_x - x)**2) + ((point_y - y)**2) <= radius**2
     end
 
+    # Whether this dot's disc and +other+'s share any point.
+    def overlaps?(other) = Math.hypot(x - other.x, y - other.y) <= radius + other.radius
+
     # Where the dot is +seconds+ later, reflecting off the field's edges.
     # A dot that would pass an edge comes back by as far as it went past,
     # so the distance it travels does not depend on the frame rate.

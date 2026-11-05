@@ -3,8 +3,8 @@
 module DotPopper
   module Presentation
     # Everything that plays out after a tap and then goes away: droplets,
-    # rings, floating numbers, the shake, and the edge flash. It keeps its
-    # own clock, +now+; rings, floaters, the shake, and the flash are
+    # rings, reveals, floating numbers, the shake, and the edge flash. It
+    # keeps its own clock, +now+; rings, floaters, the shake, and the flash are
     # values that say how they look at a moment. Droplets are LÖVE's
     # particles, so a burst waits here as a Spray until the shell takes
     # it; +cleared+ counts the clears, so the shell knows to drop the
@@ -16,7 +16,7 @@ module DotPopper
 
       MOST_SPRAYS = 16
 
-      attr_reader :rings, :floaters, :shake, :flash, :now, :cleared
+      attr_reader :rings, :reveals, :floaters, :shake, :flash, :now, :cleared
 
       def initialize(radius:, random: Random.new, calm: false)
         @radius = radius
@@ -25,6 +25,7 @@ module DotPopper
         @cleared = 0
         @sprays = []
         @rings = []
+        @reveals = []
         @floaters = []
         @shake = Shake.none(radius, calm:)
         @flash = EdgeFlash::NONE
@@ -51,6 +52,11 @@ module DotPopper
         keep(@rings, Ring.new(x:, y:, look:, scale: @radius, born: now, follow:), MOST_RINGS)
       end
 
+      # Outlines +dot+, wherever it goes, over every other dot.
+      def reveal(dot, look)
+        keep(@reveals, Reveal.new(follow: dot.id, x: dot.x, y: dot.y, look:, scale: @radius, born: now), MOST_RINGS)
+      end
+
       def float(text, x, y, color, look)
         keep(@floaters, Floater.new(text:, x:, y:, color:, look:, scale: @radius, born: now), MOST_FLOATERS)
       end
@@ -65,6 +71,7 @@ module DotPopper
       def update(seconds)
         @now += seconds
         @rings.select! { it.alive?(now) }
+        @reveals.select! { it.alive?(now) }
         @floaters.select! { it.alive?(now) }
       end
 
@@ -72,6 +79,7 @@ module DotPopper
         @cleared += 1
         @sprays.clear
         @rings.clear
+        @reveals.clear
         @floaters.clear
       end
 

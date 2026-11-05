@@ -94,6 +94,13 @@ module DotPopper
         width: Tween.new(from: 0.14, to: 0.0, duration: 0.3, ease: :out_quad),
         alpha: Tween.new(from: 0.85, to: 0.0, duration: 0.3, ease: :out_quad), color: PALETTE.alarm
       )
+      # ...and if the fresh dot was underneath, its outline shows through,
+      # so the player sees why: it was under there.
+      REVEAL = RevealLook.new(
+        radius: Tween.new(from: 1.35, to: 1.04, duration: 0.22, ease: :out_cubic),
+        alpha: Tween.new(from: 1.0, to: 0.0, duration: 0.6, ease: :in_quad),
+        width: 0.075, dashes: 12, color: PALETTE.fresh_light
+      )
       PENALTY_SHAKE = ShakeLook.new(amplitude: 0.12, duration: 0.22, frequency: 24.0)
       PENALTY_FLASH = FlashLook.new(color: PALETTE.alarm, alpha: 0.6, duration: 0.42)
       # The clock's last seconds give each tick a faint glow too.

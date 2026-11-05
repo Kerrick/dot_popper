@@ -17,6 +17,15 @@ module DotPopper
     # never one beneath it.
     def top_at(x, y) = dots.find { |dot| dot.covers?(x, y) }
 
+    # The topmost fresh dot beneath +dot+ that lies under the point
+    # (+x+, +y+) or overlaps +dot+ itself, or nil: the dot a tap on +dot+
+    # was too soon for. It only answers a question; a tap still reaches
+    # only the top dot.
+    def fresh_beneath(dot, x, y)
+      below = dots.drop_while { it.id != dot.id }.drop(1)
+      below.find { it.fresh? && (it.covers?(x, y) || it.overlaps?(dot)) }
+    end
+
     # The stack with +dot+ in place of the dot that has its id.
     def replace(dot) = with(dots: dots.map { |each| each.id == dot.id ? dot : each })
 

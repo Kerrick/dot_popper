@@ -11,6 +11,7 @@ module DotPopper
 
       def draw(effects, layout, dots)
         rings(effects.rings, effects.now, dots)
+        reveals(effects.reveals, effects.now, dots)
         pen.adding { sparks.draw } # droplets only ever brighten
         floaters(effects.floaters, effects.now, layout)
       end
@@ -42,6 +43,22 @@ module DotPopper
           pen.color(ring.look.color, ring.alpha(now))
           G.line_width = width
           G.circle(:line, x, y, ring.radius(now), 64)
+        end
+      end
+
+      # Each hidden dot's outline, in dashes, over a darker one so it reads
+      # over a light dot as well as a dark one.
+      def reveals(reveals, now, dots)
+        reveals.each do |reveal|
+          x, y = reveal.center(dots)
+          radius = reveal.radius(now)
+          alpha = reveal.alpha(now)
+          [[pen.palette.shadow, reveal.width * 2.2, alpha * 0.5], [reveal.look.color, reveal.width, alpha]]
+            .each do |color, width, strength|
+            pen.color(color, strength)
+            G.line_width = width
+            reveal.dashes(now).each { |from, to| G.arc(:line, :open, x, y, radius, from, to, 10) }
+          end
         end
       end
 

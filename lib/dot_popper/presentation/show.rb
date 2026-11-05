@@ -100,6 +100,8 @@ module DotPopper
         @penalized_at = now
         animations.wobble(event.dot.id, now)
         effects.ring(event.dot.x, event.dot.y, look::ALARM_RING, follow: event.dot.id)
+        hidden = game.round.dots.fresh_beneath(event.dot, event.x, event.y)
+        effects.reveal(hidden, look::REVEAL) if hidden
         effects.kick(look::PENALTY_SHAKE)
         effects.light(look::PENALTY_FLASH)
         # The floor can keep the score from falling; say only what was lost.

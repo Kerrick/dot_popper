@@ -85,6 +85,13 @@ class DotTest < Minitest::Test
     refute target.covers?(451, 300)
   end
 
+  def test_dots_overlap_when_their_discs_touch
+    target = dot(400, 300)
+
+    assert target.overlaps?(dot(500, 300))
+    refute target.overlaps?(dot(501, 300))
+  end
+
   def test_popping_keeps_the_dot_moving
     original = dot(400, 300, velocity_x: 60)
     popped = original.pop

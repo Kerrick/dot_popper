@@ -59,15 +59,29 @@ module DotPopper
         target
       end
 
+      # A point on the fresh dot where a popped one lies over it, or nil.
+      def covered_fresh(round)
+        fresh = round.dots.find(&:fresh?)
+        return unless fresh
+
+        probes(fresh).find { |x, y| round.dots.top_at(x, y)&.popped? }
+      end
+
+      def probes(dot) = PROBES.lazy.map { |dx, dy| [dot.x + (dx * dot.radius), dot.y + (dy * dot.radius)] }
+
       def exposed_fresh(round)
         fresh = round.dots.find(&:fresh?)
         return unless fresh
 
-        PROBES.lazy.map { |dx, dy| [fresh.x + (dx * fresh.radius), fresh.y + (dy * fresh.radius)] }
-              .find { |x, y| round.dots.top_at(x, y)&.id == fresh.id }
+        probes(fresh).find { |x, y| round.dots.top_at(x, y)&.id == fresh.id }
       end
 
+      # A player's usual mistake is impatience: tapping the fresh dot
+      # before it has come out. Failing that, any popped dot in view.
       def mistake(round)
+        hidden = covered_fresh(round)
+        return hidden if hidden
+
         popped = round.dots.select { |dot| dot.popped? && round.dots.top_at(dot.x, dot.y)&.id == dot.id }
         dot = popped.sample(random: @random)
         dot && [dot.x, dot.y]
