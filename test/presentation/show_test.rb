@@ -41,9 +41,9 @@ class ShowTest < Minitest::Test
     @show.tap(*middle(@show.share_reach))
 
     assert @show.finished?
-    assert_equal "Dot Popper Daily · 2026-11-05 · 1 point\n🟡 1 pop · ⚫ 0 slips · ⏱ 11 s", @clipboard.text
+    assert_equal "Dot Popper, today's challenge (2026-11-05): 1 point\n🟡 1 pop · ⚫ 0 wrong taps · ⏱ 11 seconds", @clipboard.text
     assert @show.finale.copied?(@show.now)
-    assert_equal "Daily · Nov 5", @show.words.daily_label(@show.finale.date)
+    assert_equal "Today's challenge, Nov 5", @show.words.daily_label(@show.finale.date)
   end
 
   def test_after_a_daily_a_tap_elsewhere_continues_once_the_grace_is_over
@@ -116,7 +116,7 @@ class ShowTest < Minitest::Test
     @show.update(0.1)
     @show.daily
     assert @show.finished?
-    assert_match(/\ADot Popper Daily · 2026-11-05/, @clipboard.text)
+    assert_match(/\ADot Popper, today's challenge \(2026-11-05\)/, @clipboard.text)
   end
 
   def test_y_after_a_free_round_does_nothing

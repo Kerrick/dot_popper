@@ -28,11 +28,14 @@ module DotPopper
         pen.text(show.words.play, prompt, layout.center_x, center + (height * 0.27), pen.palette.cream,
                   intro * marquee.prompt(now))
         MuteButton.new(pen:).draw(layout.mute_button, show.sounds.muted?)
-        PillButton.new(pen:).draw(layout.daily_button(2 * show.game.field.radius), show.words.daily_label(show.today),
-                                  alpha: intro)
+        daily_button(show, layout, intro)
       end
 
       private
+
+      def daily_button(show, layout, alpha)
+        PillButton.new(pen:).draw(layout.daily_button(2 * show.game.field.radius), show.words.daily, alpha:)
+      end
 
       # The title's size, shrunk if the name would not fit across.
       def fit(size, text, layout)
@@ -41,26 +44,32 @@ module DotPopper
         width > room ? (size * room / width).floor : size
       end
 
-      # "+1 · +1s" beside a fresh dot and "−2 · −2s" beside a popped one:
-      # side by side, or one above the other on a narrow screen.
+      # "Tap a bright dot: +1 point, +1 second" beside a fresh dot, and the
+      # popped dot's line beneath it, the two lines left-aligned on their
+      # dots so they read as a pair.
       def legend(show, layout, y, alpha)
-        font = pen.fonts.semibold(layout.scaled(pen.look::TYPE.legend))
+        words = show.words
+        items = [[true, words.legend_fresh], [false, words.legend_popped]]
+        font = legend_font(items, layout)
         radius = font.height * 0.5
         gap = radius * 0.7
-        items = [[true, "#{Presentation::Words.points(Rules::POP_POINTS)} · #{Presentation::Words.seconds(Rules::POP_SECONDS)}"],
-                 [false, "#{Presentation::Words.points(-Rules::PENALTY_POINTS)} · #{Presentation::Words.seconds(-Rules::PENALTY_SECONDS)}"]]
-        widths = items.map { |_, text| (radius * 2) + gap + font.width(text) }
-        spacing = radius * 2.4
-        if widths.sum + spacing <= layout.safe.width - (layout.margin * 2)
-          x = layout.center_x - ((widths.sum + spacing) / 2.0)
-          items.each_with_index do |(fresh, text), i|
-            item(x, y, radius, gap, fresh, text, font, alpha)
-            x += widths[i] + spacing
-          end
-        else
-          items.each_with_index do |(fresh, text), i|
-            item(layout.center_x - (widths[i] / 2.0), y + ((i - 0.5) * radius * 2.8), radius, gap, fresh, text, font, alpha)
-          end
+        width = items.map { |_, text| (radius * 2) + gap + font.width(text) }.max
+        x = layout.center_x - (width / 2.0)
+        items.each_with_index do |(fresh, text), i|
+          item(x, y + ((i - 0.5) * radius * 2.8), radius, gap, fresh, text, font, alpha)
+        end
+      end
+
+      # The legend's size, shrunk to whole sizes until its longer line fits.
+      def legend_font(items, layout)
+        size = layout.scaled(pen.look::TYPE.legend)
+        room = layout.safe.width - (layout.margin * 2)
+        loop do
+          font = pen.fonts.semibold(size)
+          widest = items.map { |_, text| (font.height * 1.7) + font.width(text) }.max
+          return font if widest <= room || size <= 12
+
+          size -= 1
         end
       end
 

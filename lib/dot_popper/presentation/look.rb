@@ -22,10 +22,12 @@ module DotPopper
       )
 
       WORDS = Words.new(
-        title: "Dot Popper", play: "Tap anywhere to play", continue: "Tap to continue", time_up: "Time!",
-        new_best: "New best!", best: "Best", score: "SCORE", time: "TIME",
-        covered: ["Popped dots sit on top.", "Wait for the bright one to slide out."].freeze,
-        daily: "Daily", share: "Share", copied: "Copied!", new_daily_best: "Best today!", daily_best: "Today's best"
+        title: "Dot Popper", play: "Tap anywhere to play", continue: "Tap to continue", time_up: "Time's up!",
+        new_best: "New best!", best: "Your best", score: "SCORE", time: "TIME",
+        covered: ["Popped dots stay on top, and new dots appear under them.",
+                  "Wait for the bright dot to slide out, then tap it."].freeze,
+        daily: "Play today's challenge", share: "Copy my result", copied: "Copied! Paste it anywhere.",
+        new_daily_best: "Your best today!", daily_best: "Your best today"
       )
 
       # The first-run hint, under the HUD.

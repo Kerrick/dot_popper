@@ -70,7 +70,7 @@ module DotPopper
       # inside the safe area too.
       def daily_button(least)
         height = button_size
-        width = height * 2.9
+        width = height * 4.6
         middle = safe.bottom - margin - ([height, least].max / 2.0)
         left = safe.x + margin + (([width, least].max - width) / 2.0)
         Rect.new(x: left, y: middle - (height / 2.0), width:, height:)
@@ -79,7 +79,7 @@ module DotPopper
       # Game Over's Share button, under the round's summary.
       def share_button
         height = button_size
-        width = height * 3.2
+        width = height * 4.6
         Rect.new(x: center_x - (width / 2.0), y: center_y + (safe.height * 0.3) - (height / 2.0), width:, height:)
       end
 

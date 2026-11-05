@@ -28,7 +28,8 @@ module DotPopper
         pen.text(words.summary(finale.stats), summary, layout.center_x, center + (height * 0.19), palette.soft,
                  shown * 0.8)
         if finale.daily?
-          PillButton.new(pen:).draw(layout.share_button, finale.copied?(now) ? words.copied : words.share,
+          button = layout.share_button
+          PillButton.new(pen:).draw(button, finale.copied?(now) ? words.copied : words.share,
                                     alpha: shown, color: finale.copied?(now) ? palette.gain : palette.cream)
         end
         prompt = pen.fonts.bold(layout.scaled(type.prompt))

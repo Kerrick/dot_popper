@@ -40,7 +40,7 @@ class AutopilotTest < Minitest::Test
     end
 
     assert_equal %i[free daily free], modes
-    assert_match(/\ADot Popper Daily/, clipboard.text)
+    assert_match(/\ADot Popper, today's challenge/, clipboard.text)
   end
 
   def test_it_taps_only_a_fresh_dot_it_can_see

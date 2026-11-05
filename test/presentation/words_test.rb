@@ -23,26 +23,31 @@ class WordsTest < Minitest::Test
     assert_equal "0", Words.clock(DotPopper::Countdown.new(remaining: -3))
   end
 
-  def test_the_copy_is_short
-    words = Look::WORDS
-    assert_equal "Best 12", words.best_line(12)
-    labels = words.to_h.except(:covered)
-    labels.each_value { |text| assert_operator text.split.size, :<=, 4, text }
-    words.covered.each { |sentence| assert_operator sentence.split.size, :<=, 8, sentence }
+  def test_the_best_score_is_named
+    assert_equal "Your best: 12", Look::WORDS.best_line(12)
+    assert_equal "Your best today: 9", Look::WORDS.daily_best_line(9)
+  end
+
+  # The title teaches the scoring in words a first-time player can act on,
+  # with the numbers taken from the rules.
+  def test_the_legend_says_what_each_tap_does
+    assert_equal "Tap a bright dot: +1 point, +1 second", Look::WORDS.legend_fresh
+    assert_equal "Tap a popped dot: −2 points, −2 seconds", Look::WORDS.legend_popped
   end
 
   def test_the_round_in_one_line
     stats = DotPopper::RoundStats.start.with(pops: 14, slips: 2, waits: [1.0, 3.14])
 
-    assert_equal "14 pops · 2 slips · longest wait 3.1 s", Look::WORDS.summary(stats)
-    assert_equal "1 pop · 1 slip · longest wait 0.0 s",
+    assert_equal "14 pops, 2 wrong taps, slowest pop 3.1 seconds", Look::WORDS.summary(stats)
+    assert_equal "1 pop, 1 wrong tap, slowest pop 0.0 seconds",
                  Look::WORDS.summary(DotPopper::RoundStats.start.with(pops: 1, slips: 1, waits: [0.0]))
-    assert_equal "0 pops · 0 slips", Look::WORDS.summary(DotPopper::RoundStats.start)
+    assert_equal "0 pops, 0 wrong taps", Look::WORDS.summary(DotPopper::RoundStats.start)
   end
 
   def test_how_far_short_of_the_best
-    assert_equal "3 short of your best (27)", Look::WORDS.short_of_best(24, 27)
-    assert_equal "You matched your best (27)", Look::WORDS.short_of_best(27, 27)
+    assert_equal "3 points short of your best of 27", Look::WORDS.short_of_best(24, 27)
+    assert_equal "1 point short of your best of 27", Look::WORDS.short_of_best(26, 27)
+    assert_equal "You tied your best of 27", Look::WORDS.short_of_best(27, 27)
     assert_equal "", Look::WORDS.short_of_best(0, 0), "no best to compare with yet"
   end
 end
