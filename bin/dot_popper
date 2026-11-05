@@ -17,6 +17,11 @@
 # It writes what it found to that file and exits with 0, or 1 if
 # something is wrong, without opening a window or starting the engine.
 
+# A packaged app's output goes through a pipe (Fledge forwards it to the
+# system's log on a phone), where Ruby would hold it until the program
+# ends; each line should arrive as it is printed.
+$stdout.sync = true
+
 game = File.expand_path("..", __dir__)
 
 smoke = ENV.fetch("DOT_POPPER_SMOKE", "")
