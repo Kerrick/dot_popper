@@ -1,0 +1,23 @@
+module DotPopper
+  class PlaytestLog
+    COLUMNS: Array[String]
+
+    @store: BestScore::_Store
+
+    @clock: ^() -> Time
+
+    @recorder: RoundStats::Recorder
+
+    def initialize: (BestScore::_Store store, ?clock: ^() -> Time) -> void
+
+    def call: (event event) -> void
+
+    private
+
+    def row: (Events::RoundEnded ended, RoundStats stats) -> String
+
+    def seconds: (Float value) -> String
+
+    def append: (String line) -> void
+  end
+end

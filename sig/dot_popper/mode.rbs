@@ -1,0 +1,15 @@
+module DotPopper
+  class Mode < ::Data
+    LARGEST_SEED: Integer
+
+    attr_reader name: Symbol
+
+    attr_reader seed: Integer
+
+    def self.new: (name: Symbol, seed: Integer) -> instance
+
+    def self.free: (Random random) -> Mode
+
+    def random: () -> Random
+  end
+end

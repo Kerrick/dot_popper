@@ -41,6 +41,23 @@ To play without Ruby, download a build instead. Every push to `trunk` builds a W
 | `DOT_POPPER_SEED=42` | Makes the dots' randomness repeatable |
 | `DOT_POPPER_NO_SHADERS=1` | Draws without shaders, as the game does on its own when a shader fails to compile |
 
+## Playtest log
+
+Every finished round adds a line to `rounds.csv` in the save folder, so playtests can be compared afterwards. The game prints the file's path when it starts. Under `lota run` on a Mac it's `~/Library/Application Support/Lota/dot_popper/rounds.csv`; a packaged build keeps it in a `dot_popper` folder in the system's application-data folder (see [PACKAGING.md](PACKAGING.md)). The first line names the columns:
+
+| Column | What it holds |
+| --- | --- |
+| `time` | When the round ended, in ISO 8601 with the local offset |
+| `mode` | `free` for a round from "Tap anywhere to play", `daily` for the Daily |
+| `seed` | The seed the round's dots were drawn from |
+| `score` | The final score |
+| `duration` | Seconds the round lasted |
+| `pops` | Fresh dots popped |
+| `slips` | Popped dots tapped |
+| `softened` | Slips the score floor kept from costing the full 2 points |
+| `mean_wait` | Mean seconds from a fresh dot appearing to its pop |
+| `longest_wait` | The longest of those waits |
+
 ## Running the tests
 
 ```sh

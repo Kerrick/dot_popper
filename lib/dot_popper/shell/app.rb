@@ -8,6 +8,7 @@ module DotPopper
     # Show catches up; then the Renderer draws it.
     class App
       Look = Presentation::Look
+      PLAYTEST_LOG = "rounds.csv"
       SMALLEST_WINDOW = [400, 320].freeze
 
       def initialize(env = ENV)
@@ -26,6 +27,8 @@ module DotPopper
         @show = Presentation::Show.new(game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"),
                                        tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt")))
+        @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG)))
+        puts "Dot Popper: each round is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"
         @pile = Pile.new(flag?("DOT_POPPER_CALM") ? Look::CALM_PILE : Look::PILE)
         @game.subscribe(@pile)
         @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))

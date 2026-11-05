@@ -51,16 +51,18 @@ module DotPopper
       Title.new
     end
 
-    def start_round
-      round = Round.new(field, random: @random)
-      announce(Events::RoundStarted.new(round:))
-      Playing.new(round:)
+    # A round in +mode+; by default, the usual round, with a seed of its
+    # own drawn from the game's randomness.
+    def start_round(mode = Mode.free(@random))
+      round = Round.new(field, random: mode.random)
+      announce(Events::RoundStarted.new(round:, mode:))
+      Playing.new(round:, mode:)
     end
 
-    def finish(round)
+    def finish(round, mode)
       new_best = best.record(round.score)
-      announce(Events::RoundEnded.new(round:, best: best.value, new_best:))
-      GameOver.new(round:, new_best:)
+      announce(Events::RoundEnded.new(round:, best: best.value, new_best:, mode:))
+      GameOver.new(round:, new_best:, mode:)
     end
 
     private
@@ -79,7 +81,7 @@ module DotPopper
 
     # A round in progress. It ends the moment the clock reaches zero,
     # whether time ran out or a penalty took the last of it.
-    class Playing < Data.define(:round)
+    class Playing < Data.define(:round, :mode)
       def press(game, x, y)
         game.announce(round.tap_at(x, y))
         settle(game)
@@ -92,14 +94,14 @@ module DotPopper
 
       private
 
-      def settle(game) = round.over? ? game.finish(round) : self
+      def settle(game) = round.over? ? game.finish(round, mode) : self
     end
 
     # The round is over and its score is shown. Presses are ignored for a
     # moment so a last frantic tap does not skip it; after that, a press
     # goes back to the title.
-    class GameOver < Data.define(:round, :new_best, :shown)
-      def initialize(round:, new_best:, shown: 0.0) = super
+    class GameOver < Data.define(:round, :new_best, :mode, :shown)
+      def initialize(round:, new_best:, mode:, shown: 0.0) = super
 
       def score = round.score
       def ready? = shown >= Rules::GAME_OVER_GRACE

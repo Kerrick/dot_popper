@@ -136,6 +136,14 @@ the player understanding what just happened to them.
   impatience the game punishes, and the longest wait is how long patience
   was asked of them. `RoundStats` builds them from the rules' events, timed by
   `Round#elapsed`, which counts only the time the clock ran.
+- **Every round has a seed of its own, and the playtest log records it.**
+  `Game#start_round` takes a `Mode`, whose seed gives the round its own
+  `Random`; a free round's seed is drawn from the game's randomness, so
+  `DOT_POPPER_SEED` still repeats a whole session. A round's dots no longer
+  share a Random with the effects, so a burst of droplets cannot change which
+  dots come next. `rounds.csv` gets one line per finished round (README lists
+  the columns); it is rewritten whole on each append, as Lota's save folder
+  offers no append, which is fine for the few hundred lines a playtest makes.
 
 ## Code
 

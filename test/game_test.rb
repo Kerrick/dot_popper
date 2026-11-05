@@ -124,7 +124,24 @@ class GameTest < Minitest::Test
     assert_raises(ArgumentError) { @game.subscribe }
   end
 
+  def test_each_round_has_a_seed_of_its_own_that_replays_its_dots
+    @game.press(0, 0)
+    first = @heard.last.mode
+    seeded = DotPopper::Round.new(field, random: first.random)
+
+    assert_equal seeded.dots.to_a, @game.round.dots.to_a
+    finish_and_restart
+    refute_equal first.seed, @heard.last.mode.seed
+  end
+
   private
+
+  def finish_and_restart
+    @game.update(20)
+    @game.update(1)
+    @game.press(0, 0)
+    @game.press(0, 0)
+  end
 
   def play_to_score(points)
     @game.press(0, 0)
