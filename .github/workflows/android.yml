@@ -227,9 +227,9 @@ jobs:
           done
           "$tools/zipalign" -c -P 16 -v 4 "$apk" | tail -1
           "$tools/apksigner" verify --print-certs "$apk" | head -3
-          "$tools/aapt2" dump badging "$apk" | grep -E "package:|sdkVersion|targetSdkVersion|native-code" | tee "$RUNNER_TEMP/badging.txt"
+          "$tools/aapt2" dump badging "$apk" | grep -E "package:|[sS]dkVersion|native-code" | tee "$RUNNER_TEMP/badging.txt"
           grep -q "package: name='$IDENTIFIER'" "$RUNNER_TEMP/badging.txt"
-          grep -q "sdkVersion:'26'" "$RUNNER_TEMP/badging.txt"
+          grep -q "minSdkVersion:'26'" "$RUNNER_TEMP/badging.txt"
           grep -q "targetSdkVersion:'36'" "$RUNNER_TEMP/badging.txt"
           "$tools/aapt2" dump xmltree --file AndroidManifest.xml "$apk" > "$RUNNER_TEMP/manifest.txt"
           grep -A1 "SDL_ENV.SDL_ANDROID_TRAP_BACK_BUTTON" "$RUNNER_TEMP/manifest.txt"
