@@ -1,5 +1,7 @@
 module DotPopper
   class Game
+    LARGEST_SEED: Integer
+
     interface _Listener
       def call: (event event) -> void
     end
@@ -32,9 +34,9 @@ module DotPopper
 
     def show_title: () -> Title
 
-    def start_round: (?Mode mode) -> Playing
+    def start_round: (?Integer seed) -> Playing
 
-    def finish: (Round round, Mode mode) -> GameOver
+    def finish: (Round round, Integer seed) -> GameOver
 
     private
 
@@ -53,9 +55,9 @@ module DotPopper
     class Playing < ::Data
       attr_reader round: Round
 
-      attr_reader mode: Mode
+      attr_reader seed: Integer
 
-      def self.new: (round: Round, mode: Mode) -> instance
+      def self.new: (round: Round, seed: Integer) -> instance
 
       def press: (Game game, number x, number y) -> (Playing | GameOver)
 
@@ -71,13 +73,11 @@ module DotPopper
 
       attr_reader new_best: bool
 
-      attr_reader mode: Mode
-
       attr_reader shown: Float
 
-      def self.new: (round: Round, new_best: bool, mode: Mode, ?shown: Float) -> instance
+      def self.new: (round: Round, new_best: bool, ?shown: Float) -> instance
 
-      def initialize: (round: Round, new_best: bool, mode: Mode, ?shown: Float) -> void
+      def initialize: (round: Round, new_best: bool, ?shown: Float) -> void
 
       def score: () -> Integer
 

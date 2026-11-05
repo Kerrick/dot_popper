@@ -20,13 +20,13 @@ module DotPopper
     # A tap hit no dot.
     class Missed < Data.define(:x, :y); end
 
-    # A round began, in +mode+.
-    class RoundStarted < Data.define(:round, :mode); end
+    # A round began, its dots drawn from +seed+.
+    class RoundStarted < Data.define(:round, :seed); end
 
     # A round's clock reached zero; +best+ is the device's best score
-    # after this round, +new_best+ whether this round set it, and +mode+
-    # how the round was started.
-    class RoundEnded < Data.define(:round, :best, :new_best, :mode)
+    # after this round, +new_best+ whether this round set it, and +seed+
+    # the one its dots were drawn from.
+    class RoundEnded < Data.define(:round, :best, :new_best, :seed)
       def score = round.score
     end
 

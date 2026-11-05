@@ -48,9 +48,9 @@ module DotPopper
     class RoundStarted < ::Data
       attr_reader round: Round
 
-      attr_reader mode: Mode
+      attr_reader seed: Integer
 
-      def self.new: (round: Round, mode: Mode) -> instance
+      def self.new: (round: Round, seed: Integer) -> instance
     end
 
     class RoundEnded < ::Data
@@ -60,9 +60,9 @@ module DotPopper
 
       attr_reader new_best: bool
 
-      attr_reader mode: Mode
+      attr_reader seed: Integer
 
-      def self.new: (round: Round, best: Integer, new_best: bool, mode: Mode) -> instance
+      def self.new: (round: Round, best: Integer, new_best: bool, seed: Integer) -> instance
 
       def score: () -> Integer
     end

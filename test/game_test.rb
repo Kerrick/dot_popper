@@ -126,12 +126,12 @@ class GameTest < Minitest::Test
 
   def test_each_round_has_a_seed_of_its_own_that_replays_its_dots
     @game.press(0, 0)
-    first = @heard.last.mode
-    seeded = DotPopper::Round.new(field, random: first.random)
+    first = @heard.last.seed
+    seeded = DotPopper::Round.new(field, random: Random.new(first))
 
     assert_equal seeded.dots.to_a, @game.round.dots.to_a
     finish_and_restart
-    refute_equal first.seed, @heard.last.mode.seed
+    refute_equal first, @heard.last.seed
   end
 
   private

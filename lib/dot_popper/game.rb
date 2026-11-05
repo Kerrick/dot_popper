@@ -8,6 +8,8 @@ module DotPopper
   # rounds, keeps the best score, and tells its listeners every event, in
   # order.
   class Game
+    LARGEST_SEED = 2_147_483_648 # 2**31
+
     attr_reader :state, :best, :field
 
     def initialize(field, best: BestScore.new(BestScore::Memory.new), random: Random.new)
@@ -50,18 +52,21 @@ module DotPopper
       Title.new
     end
 
-    # A round in +mode+; by default, the usual round, with a seed of its
-    # own drawn from the game's randomness.
-    def start_round(mode = Mode.free(@random))
-      round = Round.new(field, random: mode.random)
-      announce(Events::RoundStarted.new(round:, mode:))
-      Playing.new(round:, mode:)
+    # A round drawn from +seed+, by default one of its own from the
+    # game's randomness. The round gets a Random of its own from its seed,
+    # and draws from it only when a dot spawns, so the same seed and the
+    # same taps give the same dots, whatever else uses randomness
+    # meanwhile.
+    def start_round(seed = @random.rand(LARGEST_SEED))
+      round = Round.new(field, random: Random.new(seed))
+      announce(Events::RoundStarted.new(round:, seed:))
+      Playing.new(round:, seed:)
     end
 
-    def finish(round, mode)
+    def finish(round, seed)
       new_best = best.record(round.score)
-      announce(Events::RoundEnded.new(round:, best: best.value, new_best:, mode:))
-      GameOver.new(round:, new_best:, mode:)
+      announce(Events::RoundEnded.new(round:, best: best.value, new_best:, seed:))
+      GameOver.new(round:, new_best:)
     end
 
     private
@@ -80,7 +85,7 @@ module DotPopper
 
     # A round in progress. It ends the moment the clock reaches zero,
     # whether time ran out or a penalty took the last of it.
-    class Playing < Data.define(:round, :mode)
+    class Playing < Data.define(:round, :seed)
       def press(game, x, y)
         game.announce(round.tap_at(x, y))
         settle(game)
@@ -93,14 +98,14 @@ module DotPopper
 
       private
 
-      def settle(game) = round.over? ? game.finish(round, mode) : self
+      def settle(game) = round.over? ? game.finish(round, seed) : self
     end
 
     # The round is over and its score is shown. Presses are ignored for a
     # moment so a last frantic tap does not skip it; after that, a press
     # goes back to the title.
-    class GameOver < Data.define(:round, :new_best, :mode, :shown)
-      def initialize(round:, new_best:, mode:, shown: 0.0) = super
+    class GameOver < Data.define(:round, :new_best, :shown)
+      def initialize(round:, new_best:, shown: 0.0) = super
 
       def score = round.score
       def ready? = shown >= Rules::GAME_OVER_GRACE

@@ -67,7 +67,6 @@ class ShowTest < Minitest::Test
     @show.start
 
     assert @show.playing?
-    assert_equal :free, @game.state.mode.name
     assert_equal [:start], @sounds.names
   end
 
