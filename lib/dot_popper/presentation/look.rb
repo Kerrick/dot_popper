@@ -159,6 +159,10 @@ module DotPopper
       SOUND = SoundLook.new(pop_climb: 0.02, pop_highest: 1.4, tick_climb: 0.12, volume: 0.8,
                             stereo: Stereo.new(spread: 0.6))
 
+      # A short buzz under the finger for a pop, a longer one for a wrong
+      # tap, on phones and tablets that can (Shell::Haptics).
+      HAPTICS = HapticsLook.new(pop: 0.015, penalty: 0.04)
+
       PATCHES = {
         # A bubbly "bloop": a sine that swoops up, with a soft click.
         pop: Patch.new(notes: [

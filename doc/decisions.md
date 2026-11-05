@@ -118,7 +118,12 @@ columns against each other, not as predictions of a person's score.
   exactly as sharp as before, and the popped dots above a fresh one hide its
   light just as they hide the dot, so the glow never hints at a covered dot.
   No text goes near a canvas. It is off without shaders, a canvas, or with
-  `BLOOM.strength` 0, and costs well under a millisecond a frame in autoplay.
+  `BLOOM.strength` 0. In autoplay a frame took about 4 ms with it and without.
+- **A pop buzzes the phone briefly, a wrong tap a little longer.**
+  `Lota::System.vibrate` for 15 ms on a pop and 40 ms on a wrong tap
+  (`HAPTICS` in `look.rb`; 0 turns either off), so the two feel apart under
+  the finger as they sound apart. LÖVE vibrates only on iOS and Android, so
+  every other system gets `NoHaptics`. It has not been felt on a device yet.
 
 ## Game design
 

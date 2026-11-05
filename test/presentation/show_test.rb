@@ -35,6 +35,18 @@ class ShowTest < Minitest::Test
     assert_equal 2, @show.effects.rings.size
   end
 
+  def test_a_pop_buzzes_briefly_and_a_wrong_tap_longer
+    haptics = FakeHaptics.new
+    @show = Show.new(game: @game, layout: layout, sounds: @sounds, radius: R, random: Random.new(3), haptics:)
+    start_and_pop
+    popped = @game.round.dots.find(&:popped?)
+    clear_around!(@game.round, popped)
+    @show.tap(popped.x, popped.y)
+
+    assert_equal [Look::HAPTICS.pop, Look::HAPTICS.penalty], haptics.buzzes
+    assert_operator Look::HAPTICS.penalty, :>, Look::HAPTICS.pop
+  end
+
   def test_a_pop_is_heard_where_it_is
     start_and_pop
     x = @game.round.dots.find(&:popped?).x

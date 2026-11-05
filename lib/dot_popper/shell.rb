@@ -11,5 +11,5 @@ module DotPopper
   end
 end
 
-%w[save_file speaker font_book pen dot_painter effects_painter hud_painter hint_painter mute_button lettering title_painter
+%w[save_file speaker haptics font_book pen dot_painter effects_painter hud_painter hint_painter mute_button lettering title_painter
    finale_painter pile sparks bloom renderer app].each { require_relative "shell/#{it}" }

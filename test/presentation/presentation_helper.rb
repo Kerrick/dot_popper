@@ -25,6 +25,14 @@ module PresentationTest
     def names = played.map(&:first)
   end
 
+  # Haptics that only remember how long each buzz was.
+  class FakeHaptics
+    attr_reader :buzzes
+
+    def initialize = @buzzes = []
+    def buzz(seconds) = @buzzes << seconds
+  end
+
   def layout(width = 800, height = 600)
     Layout.new(width:, height:, safe: Rect.new(x: 0, y: 0, width:, height:), look: Look::LAYOUT)
   end

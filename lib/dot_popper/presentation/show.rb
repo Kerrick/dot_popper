@@ -9,15 +9,17 @@ module DotPopper
     # animations play against. A renderer draws from it; it draws nothing
     # itself.
     #
-    # +sounds+ answers play(name, pitch:, pan:), muted?, and toggle_mute.
+    # +sounds+ answers play(name, pitch:, pan:), muted?, and toggle_mute;
+    # +haptics+ answers buzz(seconds).
     class Show
       attr_reader :game, :effects, :animations, :hud, :hint, :attract, :layout, :marquee, :finale, :sounds, :now, :look
 
       def initialize(game:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false,
-                     tutor: Tutor.new(BestScore::Memory.new))
+                     tutor: Tutor.new(BestScore::Memory.new), haptics: NoHaptics.new)
         @game = game
         @layout = layout
         @sounds = sounds
+        @haptics = haptics
         @radius = radius
         @look = look
         @random = random
@@ -103,6 +105,7 @@ module DotPopper
         float_pair(event.x, event.y, Words.points(event.points), Words.seconds(event.seconds),
                    palette.cream, palette.gain, look::GAIN_FLOAT)
         sounds.play(:pop, pitch: pop_pitch, pan: pan(event.x))
+        @haptics.buzz(look::HAPTICS.pop)
       end
 
       def penalized(event)
@@ -119,6 +122,7 @@ module DotPopper
         float_pair(event.x, event.y, points, Words.seconds(event.seconds), palette.alarm, palette.alarm,
                    look::LOSS_FLOAT)
         sounds.play(:bonk, pan: pan(event.x))
+        @haptics.buzz(look::HAPTICS.penalty)
       end
 
       def round_ended(event)
