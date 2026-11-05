@@ -84,15 +84,18 @@ module DotPopper
 
     # The Records screen laid out in the safe area: the heading at the
     # top, the prompt to go back at the bottom, and between them the
-    # chart and the sections. A wide screen puts the bests and the daily
-    # goal on the left and the chart and totals on the right; a narrow one
-    # stacks them. Rows shrink, never below a readable size,
-    # to fit a short screen. Under the heading go the sheet's notes, in
-    # +note_lines+ lines once the shell has wrapped them to fit across.
-    class RecordsLayout < Data.define(:layout, :sheet, :look, :note_lines)
+    # chart and the sections, in centred columns no wider than +widest+,
+    # the room the longest row needs as the shell measures it, so a label
+    # sits near its number. A wide screen puts the bests and the daily
+    # goal on the left and the chart and totals on the right, when the two
+    # columns fit side by side; otherwise they stack. Rows shrink, never
+    # below a readable size, to fit a short screen. Under the heading go
+    # the sheet's notes, in +note_lines+ lines once the shell has wrapped
+    # them to fit across.
+    class RecordsLayout < Data.define(:layout, :sheet, :look, :note_lines, :widest)
       SMALLEST_TEXT = 11
 
-      def initialize(layout:, sheet:, look:, note_lines: sheet.notes.size) = super
+      def initialize(layout:, sheet:, look:, note_lines: sheet.notes.size, widest: nil) = super
 
       def heading_size = layout.scaled(look.heading)
       def heading_y = layout.top + (heading_size * 0.6)
@@ -107,7 +110,10 @@ module DotPopper
       def text_size = [(row / look.line).floor, SMALLEST_TEXT].max
       def row = [layout.scaled(look.text) * look.line, room / columns.map { lines(it) }.max].min
 
-      def wide? = layout.safe.width >= layout.safe.height * 1.2 && layout.safe.width >= layout.scaled(look.column) * 1.8
+      def wide?
+        layout.safe.width >= layout.safe.height * 1.2 &&
+          layout.safe.width - (layout.margin * 2) >= (wanted * 2) + gap
+      end
 
       # Each column's parts, as Placed, top to bottom.
       def placements
@@ -127,8 +133,12 @@ module DotPopper
 
       def column_width
         room = layout.safe.width - (layout.margin * 2) - ((columns.size - 1) * gap)
-        [room / columns.size, layout.scaled(look.column)].min
+        [room / columns.size, wanted].min
       end
+
+      # How wide a column would like to be: as its longest row needs, and
+      # never past the look's widest.
+      def wanted = [widest || Float::INFINITY, layout.scaled(look.column)].min
 
       # The body starts under the heading, lowered by a third of the room
       # its tallest column leaves, so it sits a little above the middle.

@@ -5,7 +5,8 @@ module DotPopper
     # The Records screen, over the title's dimmed dots: the heading, the
     # notes on the screen's size under it, the chart of the last scores,
     # the bests and totals as rows with their labels on the left and
-    # their numbers lined up on the right, and the prompt to go back. Presentation::RecordsLayout decides where each
+    # their numbers lined up on the right, a faint dotted leader between,
+    # and the prompt to go back. Presentation::RecordsLayout decides where each
     # goes; this only draws, on whole device pixels.
     class RecordsPainter < Data.define(:pen)
       G = ::Lota::Graphics
@@ -14,7 +15,8 @@ module DotPopper
         sheet = show.records or return
         words = show.words
         palette = pen.palette
-        plan = Presentation::RecordsLayout.new(layout:, sheet:, look: pen.look::RECORDS)
+        plan = Presentation::RecordsLayout.new(layout:, sheet:, look: pen.look::RECORDS,
+                                               widest: widest(sheet, layout.scaled(pen.look::RECORDS.text)))
         notes = note_lines(sheet, plan, layout)
         plan = plan.with(note_lines: notes.size)
         pen.text(words.records, pen.fonts.bold(plan.heading_size), layout.center_x, plan.heading_y, palette.cream)
@@ -29,6 +31,18 @@ module DotPopper
       end
 
       private
+
+      # The room a column needs at type +size+: its longest row, a label
+      # and its number with room for a short leader between, or its
+      # longest title.
+      def widest(sheet, size)
+        label = pen.fonts.semibold(size)
+        value = pen.fonts.bold(size)
+        sections = [sheet.bests, sheet.totals, sheet.goal]
+        rows = sections.flat_map(&:rows).map { label.width(it.label) + value.width(it.value) + (size * 2) }
+        titles = sections.map(&:title) + [Presentation::Words.last_rounds(sheet.scores.size)]
+        (rows + titles.map { value.width(it) }).max
+      end
 
       # The sheet's notes, each broken into even lines that fit across.
       def note_lines(sheet, plan, layout)
@@ -60,10 +74,28 @@ module DotPopper
         case placed.item
         in String => title then left(title, pen.fonts.bold(size), placed.x, placed.y, palette.gain)
         in Presentation::RecordRow => row
-          left(row.label, pen.fonts.semibold(size), placed.x, placed.y, palette.soft)
-          right(row.value, pen.fonts.bold(size), placed.right, placed.y, palette.cream)
+          label = pen.fonts.semibold(size)
+          value = pen.fonts.bold(size)
+          left(row.label, label, placed.x, placed.y, palette.soft)
+          right(row.value, value, placed.right, placed.y, palette.cream)
+          leader(placed.x + label.width(row.label), placed.right - value.width(row.value), placed.y, size)
         in :chart then chart(sheet.scores, placed, size)
         end
+      end
+
+      # A faint dotted line from a label to its number, so the eye keeps
+      # its row across the gap between them.
+      def leader(from, to, y, size)
+        pixels = pen.pixels
+        step = size * 0.5
+        from += size * 0.6
+        to -= size * 0.6
+        return if to <= from
+
+        pen.color(pen.palette.soft, 0.4)
+        dot = pixels.line_width(1.5)
+        line = pixels.snap(y + (size * 0.28))
+        (from..to).step(step).each { G.rectangle(:fill, pixels.snap(it), line, dot, dot) }
       end
 
       def left(text, font, x, y, color) = pen.text(text, font, x + (font.width(text) / 2.0), y, color)

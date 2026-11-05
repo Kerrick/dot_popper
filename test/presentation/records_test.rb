@@ -45,7 +45,7 @@ class RecordsTest < Minitest::Test
     assert_equal "42", phone.totals.rows.first.value
     assert_equal "This screen is about 4 dots wide and 9 dots tall.", phone.notes.first
     assert_equal "This screen is about 12 dots wide and 8 dots tall.", sheet.notes.first
-    assert_match(/Fit the screen/, sheet.notes.last)
+    assert_equal 1, sheet.notes.size, "one short line, with the usual dot size"
   end
 
   def test_with_dots_sized_to_the_screen_the_sheet_says_so
@@ -55,8 +55,8 @@ class RecordsTest < Minitest::Test
 
     assert_equal "Your bests with dots sized to the screen", fitted.bests.title
     assert_equal ["None yet"], fitted.bests.rows.map(&:value).values_at(3)
-    assert_equal ["Dots are sized to your screen, so every screen has the same room, and scores compare across devices."],
-                 fitted.notes
+    assert_equal ["This screen is about 7 dots wide and 14 dots tall.",
+                  "Dots fit the screen, so scores compare across devices."], fitted.notes
   end
 
   def test_with_no_rounds_the_sheet_is_empty_and_says_none_yet
@@ -118,5 +118,21 @@ class RecordsTest < Minitest::Test
 
     assert_equal ["Your last 4 rounds", :chart, "Your bests on screens this size"],
                  plan.placements.first(3).map(&:item)
+  end
+
+  # A column is only as wide as its longest row needs, so a label stays
+  # near its number, and the columns stay centred together.
+  def test_columns_are_as_wide_as_their_rows_need_and_centred
+    plan = RecordsLayout.new(layout: layout(1200, 800), sheet:, look: Look::RECORDS, widest: 400)
+    lefts = plan.placements.map(&:x).uniq
+
+    assert plan.wide?
+    assert_equal [400], plan.placements.map(&:width).uniq
+    assert_in_delta 600, (lefts.min + lefts.max + 400) / 2.0, 0.01
+  end
+
+  def test_two_columns_only_when_both_fit_side_by_side
+    refute RecordsLayout.new(layout: layout(1000, 800), sheet:, look: Look::RECORDS, widest: 520).wide?
+    assert RecordsLayout.new(layout: layout(1000, 800), sheet:, look: Look::RECORDS, widest: 420).wide?
   end
 end

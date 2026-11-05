@@ -51,10 +51,7 @@ module DotPopper
         screen_size: {
           here: "This screen is about %d dots wide and %d dots tall.",
           played: "Played on a screen about %d dots wide and %d dots tall.",
-          tip: "Choosing “Fit the screen” for the dot size on the title gives every screen the same room, " \
-               "so scores compare across devices.",
-          fitted_here: "Dots are sized to your screen, so every screen has the same room, " \
-                       "and scores compare across devices.",
+          fitted_here: "Dots fit the screen, so scores compare across devices.",
           fitted_played: "Played with the dots sized to my screen.",
           choice: "Dot size", same_choice: "Same everywhere", fitted_choice: "Fit the screen"
         }.freeze
@@ -63,8 +60,9 @@ module DotPopper
       # The Records screen, opened from the title: the heading's and the
       # rows' sizes, a row's height in its type size, the chart's height in
       # rows, the gap between columns and a column's widest, and how far
-      # the title's dots dim behind it.
-      RECORDS = RecordsLook.new(heading: 48, text: 20, line: 1.6, chart: 4.2, gap: 64, column: 500, veil: 0.9)
+      # the title's dots dim behind it. A column is only as wide as its
+      # longest row needs, so each label stays near its number.
+      RECORDS = RecordsLook.new(heading: 48, text: 23, line: 1.6, chart: 4.2, gap: 56, column: 520, veil: 0.9)
 
       # The stacking rule, taught on the first two Game Overs after a wrong
       # tap that had the bright dot hidden under the popped one.

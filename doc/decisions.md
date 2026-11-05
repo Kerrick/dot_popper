@@ -482,3 +482,11 @@ The title's dot-size choice used to be a single pill that read "Dots: same size 
 **Why:** A toggle should show its options and which one is chosen (Tidwell). A single pill showed only the current state, so it didn't say that tapping it would switch, or what the other choice was. Naming the choice "Dot size" and each option by what it does makes the control read as a setting rather than a statement (Podmajersky).
 
 **To reverse:** In `TitlePainter#draw`, draw a `PillButton` at `layout.sizing_control.frame` instead of the `SegmentedPainter`, and have `Show#tap` call `toggle_sizing` on that frame's reach.
+
+### The Records screen keeps labels near their numbers
+
+The rows' type is a little larger (23 units at a layout scale of 1, up from 20). Each column is only as wide as its longest row needs, measured at that size, so the columns no longer stretch to fill a wide window. Two columns stand side by side only when both fit at that width; otherwise everything stacks in one centred column. A faint dotted leader runs from each label to its number. The two dense sentences under the heading are now one short line, "This screen is about 12 dots wide and 8 dots tall." With **Fit the screen** chosen, a second line follows: "Dots fit the screen, so scores compare across devices."
+
+**Why:** Proximity groups things (Johnson, Tidwell). On a wide window, the old columns put a label like "Best score" half the screen away from its number, so the eye could lose the row. The second sentence explained a setting from a screen where it can't be changed. Now the title's segmented control names both choices, so Records only needs to say what the current choice means.
+
+**To reverse:** Pass `widest: nil` to `RecordsLayout` in `RecordsPainter#draw`, drop `leader`, and restore `Look::RECORDS.text` to 20.

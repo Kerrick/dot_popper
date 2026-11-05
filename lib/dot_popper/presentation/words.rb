@@ -95,14 +95,12 @@ module DotPopper
 
       # What the Records screen says about the screen, given its +field+
       # and the player's DotSizing: how big it is, counted in dots side by
-      # side, and what the choice of dot size does.
+      # side, and, with the dots fitted to it, what that does.
       #
       #   This screen is about 12 dots wide and 8 dots tall.
-      #   Choosing "Dots: sized to your screen" on the title gives ...
+      #   Dots fit the screen, so scores compare across devices.
       def screen_notes(field, sizing)
-        return [screen_size.fetch(:fitted_here)] if sizing.sized_to_screen?
-
-        [screen_here(field), screen_size.fetch(:tip)]
+        [screen_here(field), (screen_size.fetch(:fitted_here) if sizing.sized_to_screen?)].compact
       end
 
       # "This screen is about 12 dots wide and 8 dots tall."
