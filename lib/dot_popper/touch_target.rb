@@ -47,6 +47,10 @@ module DotPopper
 
     def fits? = !reach.negative?
 
+    # Whether +dot+, above a dot centred at (+x+, +y+), leaves no room for
+    # a target anywhere on it.
+    def covered_by?(x, y, dot) = Math.hypot(dot.x - x, dot.y - y) + reach < dot.radius + HALF
+
     # Whether a target fits on a dot centred at (+x+, +y+) and clear of
     # every dot in +above+, touching allowed.
     def clear_on?(x, y, above)
@@ -56,7 +60,7 @@ module DotPopper
         apart = Math.hypot(offset_x, offset_y)
         clearance = dot.radius + HALF
         next unless apart < reach + clearance
-        return false if apart + reach < clearance # it covers every centre
+        return false if apart + reach < clearance # covered_by?(x, y, dot)
 
         [offset_x, offset_y, clearance**2, apart] #: [Float, Float, Float, Float]
       end

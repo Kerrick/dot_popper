@@ -20,6 +20,8 @@ module DotPopper
 
     def fits?: () -> bool
 
+    def covered_by?: (Float x, Float y, Dot dot) -> bool
+
     def clear_on?: (Float x, Float y, Array[Dot] above) -> bool
   end
 end

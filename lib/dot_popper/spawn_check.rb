@@ -26,22 +26,36 @@ module DotPopper
     # on each axis, two dots close no faster than their two speeds on it
     # added, bounces or not, and a dot covers none of the fresh one until
     # it is near on both. +soonest+ holds that time for each dot above.
+    #
+    # On a full screen a step usually fails because one dot above covers
+    # every place a target could go, so a step stops at the first such
+    # dot without moving the rest, and asks last step's first.
     def exposed_soon?(dot, above)
       return true unless target.fits?
 
       soonest = Array.new(above.size, 0.0)
+      order = (0...above.size).to_a
       (0..STEPS).any? do |step|
         seconds = step * STEP
         fresh = at(dot, seconds)
         near = [] #: Array[Dot]
-        above.each_with_index do |other, index|
-          next if soonest.fetch(index) > seconds
+        cover = order.index do |index|
+          next false if soonest.fetch(index) > seconds
 
-          moved = at(other, seconds)
+          moved = at(above.fetch(index), seconds)
           wait = time_to_reach(fresh, moved)
-          wait.positive? ? soonest[index] = seconds + wait : near << moved
+          if wait.positive?
+            soonest[index] = seconds + wait
+            false
+          elsif target.covered_by?(fresh.x, fresh.y, moved)
+            true
+          else
+            near << moved
+            false
+          end
         end
-        target.clear_on?(fresh.x, fresh.y, near)
+        order.unshift(order.delete_at(cover)) if cover
+        cover.nil? && target.clear_on?(fresh.x, fresh.y, near)
       end
     end
 

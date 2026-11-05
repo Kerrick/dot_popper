@@ -43,6 +43,15 @@ class TouchTargetTest < Minitest::Test
     refute target.clear_on?(400.0, 300.0, [dot(370, 300), dot(450, 300)]), "covered from both sides"
   end
 
+  # 72 is a target's clearance from a dot above at R 50, and 28 its
+  # reach, so a dot above covers every place for one within 44 of centre.
+  def test_a_dot_above_covers_every_place_for_a_target_only_when_it_is_close
+    target = DotPopper::TouchTarget.on(R)
+
+    assert target.covered_by?(400.0, 300.0, dot(443, 300))
+    refute target.covered_by?(400.0, 300.0, dot(445, 300))
+  end
+
   def test_a_dot_too_small_for_a_target_has_no_room_at_all
     target = DotPopper::TouchTarget.on(20)
 

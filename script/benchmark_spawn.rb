@@ -17,7 +17,9 @@ module SpawnBenchmark
   FIELDS = {
     "27\" 1440p fullscreen, 1475 R²" => DotPopper::Field.new(51.2 * R, 28.8 * R, R),
     "32\" 6K sized to screen, R 115" => DotPopper::Field.new(60.2 * R, 33.8 * R, 115.1),
-    "Desktop window, 384 R², crowded" => DotPopper::Field.new(24 * R, 16 * R, R)
+    "Desktop window, 384 R², crowded" => DotPopper::Field.new(24 * R, 16 * R, R),
+    "iPhone portrait, 134 R², full" => DotPopper::Field.new(7.9 * R, 17 * R, R),
+    "iPhone sized to screen, R 30, full" => DotPopper::Field.new(7.9 * R, 17 * R, 30)
   }.freeze
 
   def self.run(spawns)
