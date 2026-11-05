@@ -1,0 +1,353 @@
+# Builds Dot Popper's EXPERIMENTAL Android kit (PACKAGING.md, "The Android
+# kit"), for a phone such as a OnePlus Nord N30 5G (Android 13,
+# arm64-v8a). No released Lota builds for Android, so this follows the
+# recipe of Lota's spike workflow (.github/workflows/android-spike.yml) at
+# Lota's unreleased commit 84c0eda, pinned by its full SHA because the
+# experiment/android-spike branch may be rewritten:
+#
+# 1. rake android:deps builds LÖVE's libraries for arm64-v8a and x86_64
+#    with NDK r30, OpenAL Soft among them as a shared libopenal.so;
+# 2. Fledge's examples/sdl_phone/sdl3/build.sh builds SDL3, whose Java
+#    classes go into the host;
+# 3. a folder of only the files lota.gemspec ships becomes a path gem,
+#    since Fledge carries a path gem's whole folder into the app;
+# 4. fledge build android (Fledge v0.5.1) writes a Gradle project with
+#    android/host laid over it, and Gradle builds the debug APK.
+#
+# A second job installs the kit's APK on an x86_64 emulator of API 33
+# (Android 13, as on the Nord) and checks a bot's 45-second run and what
+# Back does (.github/android_emulator_checks.sh). A v* tag attaches the
+# kit to the tag's GitHub Release.
+
+name: Android kit (experimental)
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  LOTA_REPOSITORY: https://github.com/setdef/Lota.git
+  LOTA_COMMIT: 84c0eda5690d2ec6c821c737cf3a56c0b5591e02
+  NDK_REVISION: 30.0.16248370
+  FLEDGE_TAG: v0.5.1
+  IDENTIFIER: com.kerricklong.DotPopper
+
+jobs:
+  build:
+    name: Android APK and kit (experimental)
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: .ruby-version
+
+      - name: Clone Lota at 84c0eda, with LÖVE's sources
+        run: |
+          lota=$RUNNER_TEMP/lota
+          git init --quiet "$lota"
+          git -C "$lota" remote add origin "$LOTA_REPOSITORY"
+          git -C "$lota" fetch --quiet --depth 1 origin "$LOTA_COMMIT"
+          git -C "$lota" -c advice.detachedHead=false checkout --quiet FETCH_HEAD
+          git -C "$lota" submodule update --init --depth 1 vendor/love
+          [ "$(git -C "$lota" rev-parse HEAD)" = "$LOTA_COMMIT" ]
+          git -C "$lota" log --oneline -1
+          echo "LOTA_SOURCE=$lota" >> "$GITHUB_ENV"
+
+      - name: Use Java 21, and install ccache, Ninja, and the NDK
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
+          sudo apt-get update -qq && sudo apt-get install --assume-yes -qq ccache ninja-build > /dev/null
+          # yes ends on a broken pipe once sdkmanager stops reading.
+          (yes 2> /dev/null || true) | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK_REVISION" \
+            > "$RUNNER_TEMP/sdkmanager.log" || { tail -20 "$RUNNER_TEMP/sdkmanager.log"; exit 1; }
+          echo "ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/$NDK_REVISION" >> "$GITHUB_ENV"
+          grep Pkg.Revision "$ANDROID_HOME/ndk/$NDK_REVISION/source.properties"
+          ls "$ANDROID_HOME/platforms" "$ANDROID_HOME/build-tools"
+          cmake --version | head -1
+          ninja --version
+          echo "CCACHE_DIR=$HOME/.cache/lota/ccache" >> "$GITHUB_ENV"
+          echo "CCACHE_BASEDIR=$RUNNER_TEMP" >> "$GITHUB_ENV"
+          echo "CMAKE_C_COMPILER_LAUNCHER=ccache" >> "$GITHUB_ENV"
+          echo "CMAKE_CXX_COMPILER_LAUNCHER=ccache" >> "$GITHUB_ENV"
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/lota/ccache
+          key: android-ccache-${{ github.sha }}
+          restore-keys: android-ccache-
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ${{ runner.temp }}/lota/tmp/android/deps
+            ${{ runner.temp }}/lota/vendor/sources/android
+          key: android-deps-${{ env.LOTA_COMMIT }}-${{ env.NDK_REVISION }}
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/sdl3
+          key: android-sdl3-fledge-${{ env.FLEDGE_TAG }}-${{ env.NDK_REVISION }}
+
+      - name: Install Lota's bundle, and evaluate its engine's Android source list
+        working-directory: ${{ env.LOTA_SOURCE }}
+        env:
+          BUNDLE_PATH: ${{ runner.temp }}/lota-bundle
+        run: |
+          bundle install --quiet
+          bundle exec rake android:sources
+          git diff --stat -- ext/lota/engine/sources_android.cmake
+          echo "RICE_DIR=$(bundle exec ruby -e 'print Gem.loaded_specs.fetch("rice").full_gem_path')" >> "$GITHUB_ENV"
+
+      - name: Build LÖVE's libraries for arm64-v8a and x86_64 with rake android:deps
+        working-directory: ${{ env.LOTA_SOURCE }}
+        env:
+          BUNDLE_PATH: ${{ runner.temp }}/lota-bundle
+        run: |
+          time bundle exec rake android:deps || { tail -80 tmp/android/deps/build.log; exit 1; }
+          for abi in arm64-v8a x86_64; do
+            echo "== $abi"; ls -la "tmp/android/deps/$abi/lib"
+            "$ANDROID_NDK_ROOT"/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf -h -d "tmp/android/deps/$abi/lib/libopenal.so" \
+              | grep -E "Machine|NEEDED|SONAME"
+          done
+
+      - name: Build SDL3 shared with Fledge's script
+        run: |
+          git clone --quiet --depth 1 --branch "$FLEDGE_TAG" https://github.com/setdef/Fledge "$RUNNER_TEMP/fledge"
+          if [ ! -f "$RUNNER_TEMP/sdl3/x86_64/lib/libSDL3.so" ]; then
+            "$RUNNER_TEMP/fledge/examples/sdl_phone/sdl3/build.sh" android "$RUNNER_TEMP/sdl3" > "$RUNNER_TEMP/sdl3.log" 2>&1 \
+              || { tail -60 "$RUNNER_TEMP/sdl3.log"; exit 1; }
+          fi
+          ls -la "$RUNNER_TEMP"/sdl3/*/lib/libSDL3.so
+          grep -h "SDL_MAJOR_VERSION\|SDL_MINOR_VERSION\|SDL_MICRO_VERSION" "$RUNNER_TEMP/sdl3/x86_64/include/SDL3/SDL_version.h" | head -3
+          # Neither SDL's Java nor MainActivity asks Android for audio focus,
+          # so the game's sound plays alongside another app's music.
+          if grep -l "requestAudioFocus" "$RUNNER_TEMP"/sdl3/work/SDL3-*/android-project/app/src/main/java/org/libsdl/app/*.java; then
+            echo "::warning::SDL's Java requests audio focus, which may stop other apps' music"
+          else
+            echo "SDL's Java requests no audio focus"
+          fi
+
+      # Fledge carries a path gem's whole folder into the app, so the app
+      # gets a folder with only what lota.gemspec packages.
+      - name: Make a folder of Lota's packaged files
+        working-directory: ${{ env.LOTA_SOURCE }}
+        run: |
+          gem=$RUNNER_TEMP/lota-gem
+          mkdir -p "$gem"
+          git ls-files -z -- exe lib sig README.rdoc CHANGELOG.md LICENSE LICENSES lota.gemspec \
+            ext/lota/extconf.rb ext/lota/CMakeLists.txt ext/lota/cmake ext/lota/engine ext/lota/native ext/lota/phone \
+            ext/lota/preload | xargs -0 -I{} cp --parents {} "$gem/"
+          cp ext/lota/engine/sources_android.cmake "$gem/ext/lota/engine/"
+          git -C "$gem" init --quiet && git -C "$gem" add --all
+          du -sh "$gem"
+          echo "LOTA_GEM=$gem" >> "$GITHUB_ENV"
+
+      # The desktop's precompiled Lota gems and lockfile give way to the
+      # folder above, as a path gem whose extension fledge build android
+      # compiles for each ABI; fledge.yml names the kit's program,
+      # android/android_kit, and the host in android/host, which gains
+      # SDL's Java classes.
+      - name: Lay out the game for fledge build android
+        run: |
+          game=$RUNNER_TEMP/game
+          mkdir -p "$game"
+          git archive HEAD | tar -x -C "$game"
+          rm -rf "$game/vendor/cache" "$game/Gemfile.lock" "$game/mise.toml" "$game/.ruby-version"
+          cp android/android_kit "$game/bin/android_kit"
+          java=$game/android/host/src/main/java/org/libsdl/app
+          mkdir -p "$java"
+          cp "$RUNNER_TEMP"/sdl3/work/SDL3-*/android-project/app/src/main/java/org/libsdl/app/*.java "$java/"
+          ls "$java"
+          cat > "$game/Gemfile" <<EOF
+          # frozen_string_literal: true
+
+          # Written by android.yml for fledge build android.
+          source "https://rubygems.org"
+
+          gem "lota", path: "$LOTA_GEM"
+          gem "fledge", git: "https://github.com/setdef/Fledge", tag: "$FLEDGE_TAG", group: :development
+          EOF
+          ruby -ryaml -e '
+            config = YAML.load_file("fledge.yml")
+            config.delete("installers")
+            config.fetch("programs").first["path"] = "bin/android_kit"
+            config["android"] = { "host" => "android/host" }
+            File.write(ARGV[0], "# Written by android.yml for fledge build android, from fledge.yml.\n" + YAML.dump(config))
+          ' "$game/fledge.yml"
+          cat "$game/Gemfile" "$game/fledge.yml"
+          version=$(ruby -ryaml -e 'print YAML.load_file("fledge.yml").fetch("version")')
+          echo "APP_VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: fledge build android, and Gradle's debug APK
+        working-directory: ${{ runner.temp }}/game
+        env:
+          BUNDLE_GEMFILE: ${{ runner.temp }}/game/Gemfile
+          BUNDLE_PATH: ${{ runner.temp }}/app-bundle
+          XDG_CACHE_HOME: ${{ runner.temp }}/cache
+        run: |
+          bundle config set --local build.lota \
+            "--with-lota-source=$LOTA_SOURCE --with-lota-sdl3=$RUNNER_TEMP/sdl3 --with-lota-android-deps=$LOTA_SOURCE/tmp/android/deps --with-rice-dir=$RICE_DIR"
+          bundle lock --add-platform ruby
+          bundle install --quiet
+          bundle exec fledge --version
+          mkdir -p "$RUNNER_TEMP/out"
+          time bundle exec fledge build android 2> >(tee "$RUNNER_TEMP/out/fledge.log" >&2)
+          ccache --show-stats | head -12 || true
+          cd "dist/Dot Popper-android"
+          time ./gradlew --no-daemon --quiet assembleDebug
+          find . -name "*.apk" -exec ls -la {} +
+          cp build/outputs/apk/debug/*.apk "$RUNNER_TEMP/out/DotPopper-debug.apk"
+
+      - name: Check the APK
+        run: |
+          tools=$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)
+          apk=$RUNNER_TEMP/out/DotPopper-debug.apk
+          unzip -l "$apk" | grep -E "lib/" | tee "$RUNNER_TEMP/libs.txt"
+          for abi in arm64-v8a x86_64; do
+            for lib in libSDL3.so libopenal.so libfledgeruby.so libfledgeext.so; do
+              grep -q "lib/$abi/$lib" "$RUNNER_TEMP/libs.txt" || { echo "::error::the APK has no lib/$abi/$lib"; exit 1; }
+            done
+          done
+          "$tools/zipalign" -c -P 16 -v 4 "$apk" | tail -1
+          "$tools/apksigner" verify --print-certs "$apk" | head -3
+          "$tools/aapt2" dump badging "$apk" | grep -E "package:|sdkVersion|targetSdkVersion|native-code" | tee "$RUNNER_TEMP/badging.txt"
+          grep -q "package: name='$IDENTIFIER'" "$RUNNER_TEMP/badging.txt"
+          grep -q "sdkVersion:'26'" "$RUNNER_TEMP/badging.txt"
+          grep -q "targetSdkVersion:'36'" "$RUNNER_TEMP/badging.txt"
+          "$tools/aapt2" dump xmltree --file AndroidManifest.xml "$apk" > "$RUNNER_TEMP/manifest.txt"
+          grep -A1 "SDL_ENV.SDL_ANDROID_TRAP_BACK_BUTTON" "$RUNNER_TEMP/manifest.txt"
+          grep -q "SDL_ENV.SDL_ANDROID_TRAP_BACK_BUTTON" "$RUNNER_TEMP/manifest.txt"
+          grep -q "android:debuggable" "$RUNNER_TEMP/manifest.txt"
+
+      - name: Assemble and zip the kit
+        run: |
+          {
+            echo "Dot Popper $GITHUB_REF_NAME, commit $GITHUB_SHA, version $APP_VERSION"
+            echo "EXPERIMENTAL: built by fledge build android (Fledge $FLEDGE_TAG) with Lota's unreleased commit ${LOTA_COMMIT:0:7} (experiment/android-spike)"
+            echo "NDK $NDK_REVISION; minSdk 26, targetSdk 36; arm64-v8a and x86_64; built $(date -u +%Y-%m-%d)"
+            echo "Workflow run $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          } > "$RUNNER_TEMP/build.txt"
+          kit=$RUNNER_TEMP/kit/dot-popper-android-kit
+          mkdir -p "$kit"
+          cp "$RUNNER_TEMP/out/DotPopper-debug.apk" "$kit/"
+          ruby script/playtest_kit.rb text playtest/README-android.txt "$kit/README.txt" "$RUNNER_TEMP/build.txt"
+          ruby script/playtest_kit.rb sheet android "$kit/android-results.txt" "$RUNNER_TEMP/build.txt"
+          cat "$kit/android-results.txt"
+          (cd "$RUNNER_TEMP/kit" && zip -qry "$RUNNER_TEMP/out/dot-popper-android-kit.zip" dot-popper-android-kit)
+          ls -la "$kit" "$RUNNER_TEMP/out"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dot-popper-android-kit
+          path: ${{ runner.temp }}/out/dot-popper-android-kit.zip
+          if-no-files-found: error
+          compression-level: 0
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: ci-results-android-build-logs
+          path: |
+            ${{ runner.temp }}/lota/tmp/android/deps/build.log
+            ${{ runner.temp }}/sdl3.log
+            ${{ runner.temp }}/out/fledge.log
+            ${{ runner.temp }}/cache/**/*.log
+          if-no-files-found: warn
+          retention-days: 14
+
+  emulator:
+    name: Android kit on an x86_64 emulator, API 33
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: .ruby-version
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dot-popper-android-kit
+          path: ${{ runner.temp }}/download
+
+      - name: Unpack the kit
+        run: |
+          unzip -q "$RUNNER_TEMP/download/dot-popper-android-kit.zip" -d "$RUNNER_TEMP/unpacked"
+          ls -la "$RUNNER_TEMP/unpacked/dot-popper-android-kit"
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Install the kit's APK, play it with the bot, and press Back
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          ram-size: 4096M
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: bash .github/android_emulator_checks.sh "${{ runner.temp }}/unpacked/dot-popper-android-kit/DotPopper-debug.apk" "${{ runner.temp }}/emulator"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ci-results-android-emulator
+          path: ${{ runner.temp }}/emulator
+          if-no-files-found: warn
+
+  release:
+    name: Attach the Android kit to the release
+    needs: [build, emulator]
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dot-popper-android-kit
+          path: files
+
+      - name: Attach the kit to the tag's release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -la files
+          tag="$GITHUB_REF_NAME"
+          # The Package and Kits workflows may be making the same release at once.
+          for attempt in 1 2 3 4 5; do
+            if gh release view "$tag" -R "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+              gh release upload "$tag" -R "$GITHUB_REPOSITORY" --clobber files/dot-popper-android-kit.zip && exit 0
+            elif gh release create "$tag" -R "$GITHUB_REPOSITORY" --title "Dot Popper $tag" --prerelease \
+                --notes "Built by the Package, Kits, and Android workflows from $GITHUB_SHA. See PACKAGING.md." files/dot-popper-android-kit.zip; then
+              exit 0
+            fi
+            sleep $((attempt * 10))
+          done
+          exit 1
