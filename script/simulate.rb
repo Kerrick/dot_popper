@@ -13,8 +13,10 @@
 # popped dot on top. Simulated at 30 updates a second.
 #
 # Every device plays with each choice of dot size (DotSizing): the
-# standard size, as the spec has it, and sized to the screen. Each
-# pair plays in its own Ractor, in parallel, and then again one after
+# standard size, as the spec has it, and sized to the screen. Each plays
+# twice, with the spawn rule (Spawner) and without it, to show how often
+# a new dot is redrawn and what that does to the score. Each run plays in
+# its own Ractor, in parallel, and then again one after
 # another, to show the two give the same rounds and how much sooner the
 # Ractors finish.
 
@@ -53,15 +55,17 @@ module Simulation
   ].freeze
 
   # How one round went. +covered+ counts the fresh dots that spawned
-  # under a popped one.
-  Result = Data.define(:score, :seconds, :penalties, :dots, :covered) do
+  # under a popped one; +spawns+, how each was drawn (DotPopper::Spawn).
+  Result = Data.define(:score, :seconds, :penalties, :dots, :covered, :spawns) do
     def endless? = seconds > GIVE_UP
+    def count(&) = spawns.count(&)
   end
 
   SIZINGS = [DotPopper::DotSizing::STANDARD, DotPopper::DotSizing::SIZED_TO_SCREEN].freeze
 
-  # One device with one choice of dot size.
-  Job = Data.define(:device, :sizing) do
+  # One device with one choice of dot size, and the spawn rule's tries
+  # (0 turns it off).
+  Job = Data.define(:device, :sizing, :spawn_tries) do
     # The field a round starts on: the device's screen in graphics
     # units, as the game would see it, with the dots sized as chosen.
     def field
@@ -70,12 +74,15 @@ module Simulation
     end
   end
 
-  JOBS = SIZINGS.flat_map { |sizing| DEVICES.map { Job.new(it, sizing) } }.freeze
+  TRIES = [DotPopper::Rules::SPAWN_TRIES, 0].freeze
+
+  JOBS = SIZINGS.flat_map { |sizing| DEVICES.flat_map { |device| TRIES.map { Job.new(device, sizing, it) } } }.freeze
 
   class Player
     def initialize(job, random)
       @device = job.device
       @field = job.field
+      @spawn_tries = job.spawn_tries
       @random = random
       @r = @field.radius
       @hand = [0.0, 0.0]
@@ -84,7 +91,7 @@ module Simulation
     def play
       field = @field
       @hand = [field.width / 2, field.height / 2]
-      round = DotPopper::Round.new(field, random: @random)
+      round = DotPopper::Round.new(field, random: @random, spawn_tries: @spawn_tries)
       t = 0.0
       penalties = 0
       covered_spawns = 0
@@ -116,7 +123,8 @@ module Simulation
           end
         end
       end
-      Result.new(score: round.score, seconds: t, penalties:, dots: round.dots.size, covered: covered_spawns)
+      Result.new(score: round.score, seconds: t, penalties:, dots: round.dots.size, covered: covered_spawns,
+                 spawns: round.spawns)
     end
 
     private
@@ -168,22 +176,34 @@ module Simulation
   end
 
   # A table for each choice of dot size: each device's radius, its
-  # field's area in square radii, and how its rounds went.
+  # field's area in square radii, and how its rounds went with the spawn
+  # rule. "redrawn" and "moved" are the share of spawns whose velocity,
+  # and then place, were drawn again; "no target" is the share of spawns
+  # without the rule that offered no touch target for a second, and
+  # "old score" the mean score without it.
   def self.report(rounds, all_results)
     JOBS.zip(all_results).group_by { |job, _| job.sizing }.each do |sizing, rows|
       puts sizing.sized_to_screen? ? "\nDots sized to the screen" : "\nStandard dot size"
-      puts format("%-26s %6s %6s %6s %6s %6s %7s %6s", "device", "R", "area", "score", "p90", "secs", "endless", "pen")
-      rows.each { |job, results| report_row(job, results, rounds) }
+      puts format("%-26s %6s %6s %6s %6s %6s %7s %6s %8s %7s %9s %9s", "device", "R", "area", "score", "p90", "secs",
+                  "endless", "pen", "redrawn", "moved", "no target", "old score")
+      rows.each_slice(TRIES.size) { |(job, results), (_, unruled)| report_row(job, results, unruled, rounds) }
     end
   end
 
-  def self.report_row(job, results, rounds)
+  def self.report_row(job, results, unruled, rounds)
     field = job.field
     scores = results.map(&:score).sort
-    puts format("%-26s %6.1f %6.0f %6.1f %6d %6.1f %6.0f%% %6.1f",
+    puts format("%-26s %6.1f %6.0f %6.1f %6d %6.1f %6.0f%% %6.1f %7.2f%% %6.2f%% %8.2f%% %9.1f",
                 job.device.name, field.radius, field.width * field.height / (field.radius**2),
                 scores.sum.fdiv(rounds), scores[(rounds * 0.9).floor], results.sum(&:seconds) / rounds,
-                100.0 * results.count(&:endless?) / rounds, results.sum(&:penalties).fdiv(rounds))
+                100.0 * results.count(&:endless?) / rounds, results.sum(&:penalties).fdiv(rounds),
+                share(results, &:redrawn?), share(results, &:moved?), share(unruled, &:exhausted?),
+                unruled.sum(&:score).fdiv(rounds))
+  end
+
+  # The percentage of all the spawns in +results+ for which the block holds.
+  def self.share(results, &)
+    100.0 * results.sum { it.count(&) } / results.sum { it.spawns.size }
   end
 end
 

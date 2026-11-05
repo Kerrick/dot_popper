@@ -35,6 +35,43 @@ For 0.9 seconds after time runs out, the Game Over screen ignores presses. The c
 
 **To reverse:** Set `GAME_OVER_GRACE` to 0.
 
+### A new dot is never hidden for its whole first second
+
+This is a change to the spec's rules, approved by the maintainer after the first iPad playtest, in his words: "The rule change, if we do it, should only apply when velocity and position would cause there to be no HIG-compliant touch target within, say, 1 second."
+
+A fresh dot's place and velocity are drawn at random, as the spec has it. Then `Spawner` asks `SpawnCheck` whether the new dot will offer a **touch target** within one second (`Rules::SPAWN_LOOKAHEAD`). A touch target is a circle 44 units across (`Rules::TOUCH_TARGET`, Apple's smallest touch target of 44 points, and 44 logical pixels on a desktop) that lies wholly on the new dot and clear of every dot above it. The check moves the new dot and every dot above it forward with the real `Dot#move`, bounces included, and asks at every 1/30 s step. If a target fits at any step, the draw stands. That is nearly always the case, and it uses no more randomness than before, so seeded rounds and replays play exactly as they did unless a redraw happens. If no target fits, the velocity is drawn again, keeping the place, up to four times (`Rules::SPAWN_TRIES`), and then the place and velocity together, up to four more times. If every try fails, the last draw stands, so a dot always spawns.
+
+How the check works, and what it costs:
+
+- `TouchTarget` samples where the target's centre may go: rings 5 units apart, with points 5 units apart along each ring. Every possible centre is within 3.5 units of a sample, at any radius from 30 to 120. A target it finds is always real, and one it misses had less than 3.5 units to spare around its 22-unit radius.
+- Any opening lasting 1/30 s or longer contains a step. Shorter ones are two frames at 60 Hz, too brief to tap on purpose.
+- A dot above that is too far away to reach the new one before a step isn't moved. On a full screen, a step stops at the first dot that covers every place a target could go.
+- `script/benchmark_spawn.rb` times a spawn with 100 popped dots on the field, in CPU time on the maintainer's Mac. On a 27-inch monitor's field, where long rounds really do reach 100 dots, a spawn takes 0.08 ms on average and 0.6 ms at the 99th percentile. On an upright phone's field packed with 100 dots, where nearly every draw fails, it takes 1.7 ms on average and 6 ms at the 99th percentile. A spawn happens once per pop.
+
+**Why:** In the iPad playtest, a bright dot spawned almost wholly under a popped dot moving at nearly the same velocity, and stayed hidden until the clock ran out. Nothing the player did could have saved that round. Juul (*The Art of Failure*) argues that failure is worth enjoying only when the player can see it was their own, and this loss wasn't. Garfield (*Characteristics of Games*) separates the luck a player can respond to from luck that decides the outcome alone, and this was the second kind. The rule is as narrow as the maintainer asked: it only acts when the new dot would offer nowhere to tap for a whole second, so waiting for the fresh dot to come out from under the others is still the game.
+
+**How rarely it applies:** `script/simulate.rb` now plays every device twice, with the rule and without it (`Round.new(..., spawn_tries: 0)`). These results are from 200 rounds per row. "Redrawn" and "Moved" are the shares of spawns whose velocity, and then place, were drawn again. "No target" is the share of spawns without the rule that offered no touch target for a second. In the script's output these are the "redrawn", "moved", "no target", and "old score" columns.
+
+| Device | Dot size | Redrawn | Moved | No target | Mean score | Mean score without the rule |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| iPhone, portrait | standard | 1.39% | 0.00% | 1.22% | 6.1 | 5.8 |
+| 11-inch iPad | standard | 0.41% | 0.00% | 0.48% | 24.0 | 23.0 |
+| 13-inch iPad Pro | standard | 0.34% | 0.00% | 0.32% | 33.4 | 33.9 |
+| Desktop window, 24 × 16 R | standard | 0.50% | 0.00% | 0.39% | 23.6 | 21.4 |
+| 27-inch 1440p monitor | standard | 0.20% | 0.00% | 0.19% | 60.9 | 60.0 |
+| 32-inch 6K monitor | standard | 0.13% | 0.00% | 0.10% | 74.9 | 75.9 |
+| iPhone, portrait | sized, R 30 | 4.97% | 0.05% | 4.72% | 24.1 | 22.0 |
+| 11-inch iPad | sized, R 50.2 | 0.56% | 0.00% | 0.53% | 24.0 | 23.4 |
+| 13-inch iPad Pro | sized, R 60.7 | 0.22% | 0.00% | 0.14% | 24.0 | 23.7 |
+| 27-inch 1440p monitor | sized, R 98 | 0.08% | 0.00% | 0.09% | 22.8 | 23.8 |
+| 32-inch 6K monitor | sized, R 115 | 0.04% | 0.00% | 0.04% | 21.5 | 22.6 |
+
+On every device but one, fewer than 1 spawn in 70 is redrawn, and a new place is almost never needed. The exception is a phone with dots sized to the screen, where R is 30 and a 44-unit target leaves only 8 units of room, so about 1 spawn in 20 is redrawn. The mean scores with and without the rule differ by −1.0 to +2.2 points. The two sets of rounds diverge after the first redraw, so that difference is within the simulation's noise, not a measured effect. With 200 rounds a row, the model player's scores vary by about a point between seeds.
+
+**When the screen is really full:** The model player's rounds never get that crowded, so `script/benchmark_spawn.rb` tests it directly, with 100 popped dots on an upright phone's field. There, 70% of spawns are redrawn and 10% use every try and keep their last draw. So on a packed screen the rule does real work: it looks for the gaps that are left and puts the new dot in one when it can, which makes a packed screen somewhat kinder than the spec's rule would. That is the case the maintainer asked for, since a dot that can't be tapped for a second is the unfair failure. When no gap exists at all, the dot spawns as it would have, and the tries cost about 1.7 ms on average and 6 ms at worst.
+
+**To reverse:** Set `Rules::SPAWN_TRIES` to 0. Every first draw then stands, which is exactly the spec's rule, and `Round#spawns` still says which spawns would have been redrawn. To remove the code as well, have `Round#spawn` call `Dot.spawn` again, and delete `Spawner`, `SpawnCheck`, `TouchTarget`, and `Spawn`.
+
 ## How crowded the field is
 
 The rules fix R as a physical size, so the number of radii that fit on a screen changes a great deal from one device to another. An upright phone holds about 15 times fewer than a 6K monitor. That matters because the game's central tension, a fresh dot appearing underneath popped ones, depends on how crowded the field gets.
@@ -465,7 +502,8 @@ Pattern matching is still used where nothing is type-checked: the fuzz test matc
 - the clock never goes negative, and changes only as the rules say;
 - exactly one dot is fresh while the round is running;
 - a tap reaches the topmost dot under it and changes no other dot;
-- older dots stay above newer ones.
+- older dots stay above newer ones;
+- every new dot offers a touch target within a second of spawning, or used every try to (see "A new dot is never hidden for its whole first second").
 
 A second test drives the whole `Game` through its screens and checks that nothing outside a running round touches the score or the clock. The fuzz test needs no extra gem and runs in under a second. When it fails, it prints its seed, and setting `RULES_FUZZ_SEED` to that seed replays the failure. Deliberately reversing `Stack#top_at` or `Stack#slide_under` makes it fail at once.
 
