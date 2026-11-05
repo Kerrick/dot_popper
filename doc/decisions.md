@@ -703,11 +703,21 @@ The iOS project is built from a clone of Lota at its `v0.1.3` tag, as a path gem
 
 **To reverse:** Drop the `ipad` and `ipad-simulator` jobs from kits.yml.
 
-### No Android kit
+### The Android kit copies Lota's spike, pinned to commit 84c0eda
 
-**Why:** No released Lota builds for Android. Lota 0.1.3's README says phones and tablets are planned, and its CHANGELOG mentions only iOS. Fledge's `fledge build android` would write a Gradle project with no Lota engine to put in it.
+The experimental Android kit is built by `.github/workflows/android.yml` from Lota's unreleased commit `84c0eda` on its `experiment/android-spike` branch, pinned by full SHA, following that commit's `android-spike.yml`: `rake android:deps` with NDK r30, SDL3 from Fledge's `sdl_phone` script, a slim path gem of the files `lota.gemspec` ships, and `fledge build android`. The host in `android/host` and the probe program `android/android_kit` are the spike's. Fledge is v0.5.1 rather than the spike's v0.5.0. The kit is a debug APK, a README, and `android-results.txt`.
 
-**To reverse:** Add a kit once a Lota release documents an Android build.
+**Why:** No Lota release builds for Android, and Lota's maintainer said the spike's recipe is the only route, to be copied at our own risk. Pinning the commit, not the branch, keeps the build the same when the branch is rewritten. v0.5.1 matches the iPad kit, and its one phone change makes the game's lines reach logcat as they are printed, which the emulator checks and a crash report both need. A debug build is the one Android installs without a signing key of the maintainer's own, and only a debuggable build takes `lota.env.*` intent extras, which the emulator checks use.
+
+**To reverse:** Delete `android.yml`, `android/`, `.github/android_emulator*.{rb,sh}`, the `android` list in `playtest/checks.yml`, and `playtest/README-android.txt`. Once a Lota release documents an Android build, move the job to it.
+
+### The Android host traps Back
+
+The manifest sets `SDL_ENV.SDL_ANDROID_TRAP_BACK_BUTTON`, and `MainActivity` registers an empty `OnBackInvokedCallback` on API 33 and newer when it is set, so Back reaches the game only as Escape. The emulator job checks that Back is ignored in a round and at Game Over and leaves the app from the title.
+
+**Why:** Without the trap, SDL sends Escape and then lets Back through, and Android closes the app at once, so Back in a round would throw it away. Under predictive back, which an app targeting API 36 gets on Android 16, the system's own callback takes Back before SDL sees it, and the empty callback stands in its place. On Android 13, as on the Nord, the system ignores that callback without `android:enableOnBackInvokedCallback`, and SDL traps Back in `onBackPressed`.
+
+**To reverse:** Remove the meta-data line from `android/host/src/main/AndroidManifest.xml`; Back then leaves the app from every screen.
 
 ### A mouse lights up the button under it
 

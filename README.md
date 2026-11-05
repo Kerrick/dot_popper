@@ -111,6 +111,10 @@ bundle exec lota run
 
 An iPad and iPhone version is in progress. It uses Lota's experimental iOS engine, which first shipped in Lota 0.1.3, and the Kits workflow builds it into an Xcode project to sign and install with a free Apple ID (PACKAGING.md, "The iPad and iPhone kit"). The game has run in iPad Simulators but not yet on a real device. [doc/ios.md](doc/ios.md) describes what the game needs from an iOS build and how to tell whether a run went well.
 
+### On an Android phone
+
+An Android version is an experiment. No Lota release builds for Android yet, so the Android workflow builds a debug APK from an unreleased Lota commit (PACKAGING.md, "The Android kit"). It has run on an Android 13 emulator but not yet on a real phone.
+
 ## How the dot's size is chosen
 
 Every distance and speed in the rules is measured in multiples of one number: the dot's radius, which the code calls R. Choosing R well matters, because a dot needs to be a comfortable target for a mouse and for a finger alike. The goal is a radius of 50 logical pixels under a mouse, and about 8 mm under a finger. (A logical pixel is a pixel after the operating system's display scaling; on a 2× display, each logical pixel is drawn as four physical ones.)

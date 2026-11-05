@@ -117,7 +117,7 @@ The [Package workflow](.github/workflows/package.yml) runs on every push to `tru
 - **Windows x64**, on `windows-latest`; **macOS arm64**, on `macos-15`; and **Linux x86_64**, on `ubuntu-24.04` (its glibc is 2.39, Fledge's Linux floor), each run `lota fuse`, unpack the app under a folder with a space in its name, play it with the autoplay bot for 20 seconds with no Ruby on its `PATH` and an all but empty environment, and upload the `dot-popper-windows-x64`, `dot-popper-macos-arm64`, or `dot-popper-linux-x86_64` artifact. GitHub's Windows and Linux runners have no graphics card, so the game draws there with Mesa's software OpenGL (llvmpipe): on Windows, Mesa's `opengl32.dll` from the runner's MSYS2 goes beside the program, and on Linux it draws on Xvfb. The run must exit with status 0 and print its frame rate.
 - **Release** runs only for a `v0.` tag. It attaches the apps to a GitHub prerelease for the tag. It requires the Windows job to have passed. Nothing is published to RubyGems.
 
-The [Kits workflow](.github/workflows/kits.yml), on `v*` tags and by hand, builds the playtest kits and attaches them to the tag's release too. It is described below.
+The [Kits workflow](.github/workflows/kits.yml), on `v*` tags and by hand, builds the playtest kits and attaches them to the tag's release too. The [Android workflow](.github/workflows/android.yml) does the same for the experimental Android kit. Both are described below.
 
 ## Playtest kits
 
@@ -129,19 +129,18 @@ The maintainer's rule for kits is **one kit in, one results file out, per device
 | `dot-popper-macos-kit.zip` | `Dot Popper.app`, `README.txt`, and `macos-results.txt` | `macos-results.txt`, filled in by hand |
 | `dot-popper-linux-kit.tar.gz` | The fused game in `Dot Popper/`, `playtest.sh`, and `README.txt` | `dot-popper-results.txt`, which `playtest.sh` writes beside itself |
 | `dot-popper-ipad-kit.zip` (experimental) | The Xcode project in `DotPopper-ios/`, `README.txt`, `BUILD-INFO.txt`, and `ipad-results.txt` | `ipad-results.txt`, filled in by hand, one copy per iPad or iPhone |
-
-There is no Android kit. Lota 0.1.3 documents no Android build: its README says phones and tablets are planned, and its CHANGELOG's only phone entry is the experimental iOS one. Fledge can write a Gradle project, but there is no Lota engine for Android to put in it.
+| `dot-popper-android-kit.zip` (experimental, from the [Android workflow](.github/workflows/android.yml)) | `DotPopper-debug.apk`, `README.txt`, and `android-results.txt` | `android-results.txt`, filled in by hand |
 
 ### The questions, `playtest/checks.yml`
 
-Every question a kit asks lives in [`playtest/checks.yml`](playtest/checks.yml), in the game's own words: a `desktop` list for Windows, macOS, and Linux, whose wording differs by system only where the keys or tools do (F11 or Command+Enter, Notepad or TextEdit), and an `ipad` list. `script/playtest_kit.rb` renders them into each kit: into `playtest.ps1` from `playtest/playtest.ps1`, into `playtest.sh` from `playtest/playtest.sh`, and into `macos-results.txt` and `ipad-results.txt`. `test/playtest_kit_test.rb` checks that every check has wording and an answer on every system, and that each phrase a check quotes, such as "Copy my result" or "Smaller, more room", is one the game still shows. To read what a kit will ask, render it yourself:
+Every question a kit asks lives in [`playtest/checks.yml`](playtest/checks.yml), in the game's own words: a `desktop` list for Windows, macOS, and Linux, whose wording differs by system only where the keys or tools do (F11 or Command+Enter, Notepad or TextEdit), an `ipad` list, and an `android` list. `script/playtest_kit.rb` renders them into each kit: into `playtest.ps1` from `playtest/playtest.ps1`, into `playtest.sh` from `playtest/playtest.sh`, and into `macos-results.txt`, `ipad-results.txt`, and `android-results.txt`. `test/playtest_kit_test.rb` checks that every check has wording and an answer on every system, and that each phrase a check quotes, such as "Copy my result" or "Smaller, more room", is one the game still shows. To read what a kit will ask, render it yourself:
 
 ```console
 $ ruby script/playtest_kit.rb sheet ipad /tmp/ipad-results.txt
 $ ruby script/playtest_kit.rb windows /tmp/playtest.ps1
 ```
 
-The desktop list is the maintainer's 18 checks: sound and mute first (the mute check has the script quit and restart the game, to see that the mute is remembered), then edges, fullscreen, resizing, stereo panning, the bright dot's edge, the Dot size choice, Copy my result, Your records, sharp text, the Game Over pile, and overall feel; then, only for a player with a controller, 14 to 18: the cursor's smoothness and top speed, A, Start, X and B, and the pile with A and the right stick. The iPad list is his 13.
+The desktop list is the maintainer's 18 checks: sound and mute first (the mute check has the script quit and restart the game, to see that the mute is remembered), then edges, fullscreen, resizing, stereo panning, the bright dot's edge, the Dot size choice, Copy my result, Your records, sharp text, the Game Over pile, and overall feel; then, only for a player with a controller, 14 to 18: the cursor's smoothness and top speed, A, Start, X and B, and the pile with A and the right stick. The iPad list is his 13. The Android list is the iPad's checks in a phone's words, plus a check of the buzzes, one of what Back does on each screen, one of leaving for the Home screen mid-round, and, in the crash check, the `adb logcat -d` command that keeps the log if the app closes at launch.
 
 ### The Windows kit
 
@@ -180,6 +179,27 @@ The kit's README gives the free-Apple-ID steps: unzip with Finder (which keeps t
 
 A second, fresh `macos-15` runner, with no Lota, Fledge, or bundle, unzips the kit, builds it with `xcodebuild` for the Simulator and, unsigned, for devices, installs it in an iPad Pro 13-inch Simulator, and runs the autoplay check from doc/ios.md: the log must say the dot's radius is 50 points, take four screenshots, and end with exit status 0. Its screenshots, log, and save folder are the `ci-results-ipad-simulator` artifact.
 
+### The Android kit (experimental)
+
+This kit is **experimental**, and built from **unreleased** Lota. No Lota release builds for Android. Lota's experiment branch `experiment/android-spike` has a spike workflow that builds a Lota game, and Dot Popper itself, with `fledge build android`, and runs them on an emulator. The [Android workflow](.github/workflows/android.yml) copies that recipe at our own risk, pinned to Lota's commit **`84c0eda`** (`84c0eda5690d2ec6c821c737cf3a56c0b5591e02`) by its full SHA, because the branch may be rewritten. It runs on `v*` tags and by hand (workflow_dispatch), on `ubuntu-latest`:
+
+1. clone Lota at `84c0eda`, with the `vendor/love` submodule, and install its bundle;
+2. install NDK r30 (`30.0.16248370`) and Java 21, then, in the clone, `bundle exec rake android:sources` and `bundle exec rake android:deps`, which build LÖVE's libraries (zlib, Ogg, Vorbis, Theora, ModPlug, FreeType, HarfBuzz, and OpenAL Soft as a shared `libopenal.so`) for `arm64-v8a` and `x86_64`;
+3. build SDL3 shared with Fledge's `examples/sdl_phone/sdl3/build.sh`, and copy SDL's Java classes into the host;
+4. copy only the files `lota.gemspec` ships into a folder of their own, a slim path gem, since Fledge carries a path gem's whole folder into the app;
+5. lay out the game with a Gemfile naming that folder and Fledge **v0.5.1**, and a `fledge.yml` whose program is `bin/android_kit` and whose `android: host:` is `android/host`;
+6. `bundle exec fledge build android`, then `./gradlew assembleDebug` in the project it writes.
+
+The spike names Fledge v0.5.0. Dot Popper uses v0.5.1, as its iPad kit does: v0.5.1's only change for a phone is that the app's printed lines reach the log as they are printed, and the SDL build script is the same in both.
+
+`android/host` holds the host that `fledge build android` lays over its own, Lota's spike host: `MainActivity.java`, unchanged, which is Fledge's SDL host with the methods of love-android's `GameActivity` that LÖVE's engine calls, and `AndroidManifest.xml`, with one line added. That line sets `SDL_ENV.SDL_ANDROID_TRAP_BACK_BUTTON` in its `<application>` meta-data, so Back reaches the game as Escape and Android does not close the app at once; `MainActivity` also registers an `OnBackInvokedCallback` on API 33 and newer when the manifest sets it, which takes Back's place under predictive back. The game then does what README.md says: Back leaves Your records for the title, leaves the app from the title, and does nothing during a round or at Game Over. `android/android_kit`, the spike's program, runs `bin/dot_popper` unchanged; only when `DOT_POPPER_KIT_PROBE=1` is passed, as the emulator runs do, it also logs each key and touch with the state it arrives in, and the game's events.
+
+The APK's id is `com.kerricklong.DotPopper`, with minSdk 26 and targetSdk 36 (Fledge's Gradle template; the job checks both), code for `arm64-v8a` and `x86_64`, libraries aligned for 16 KB pages. It is a debug build, signed with a debug key Gradle makes fresh on each CI run, so installing a newer kit over an older one fails with `INSTALL_FAILED_UPDATE_INCOMPATIBLE`: `adb uninstall com.kerricklong.DotPopper` first. Being debuggable, it takes environment variables as intent extras, `am start --es lota.env.NAME VALUE`, which a launch from the app drawer never has. Sound is Lota's OpenAL Soft through OpenSL ES, on the media volume. Neither SDL's Java nor the host asks Android for audio focus (the job checks SDL's), so the game's sound plays alongside another app's music; the hand check asks whether it does.
+
+A second job, on a fresh runner, unzips the kit, installs its APK on an `x86_64` emulator of API 33 (Android 13, as on a OnePlus Nord N30 5G), and runs [`.github/android_emulator_checks.sh`](.github/android_emulator_checks.sh), which drives [`.github/android_emulator.rb`](.github/android_emulator.rb) (the spike's driver, with two options added). Every run passes `--es lota.env.ALSOFT_DRIVERS null`. The first starts the bot with `DOT_POPPER_AUTOPLAY=1`, `DOT_POPPER_SEED=7`, and `DOT_POPPER_QUIT_AFTER=45`, presses Back 3 seconds into its first round and 1 second into its first Game Over, and requires the log to say "a dot's radius is 50 dp, about 8 mm", both Backs to arrive as Escape in `Playing` and `GameOver`, the game to carry on to the title, and the app to end with "exited with status 0". The second starts on the title, presses Back, and requires the app to leave by itself with status 0. Its logcat, the game's lines, and screenshots are the `ci-results-android-emulator` artifact.
+
+On the maintainer's Mac, the kit is unpacked into `/Users/Shared/dot-popper-kits/<ref>/android/`, and a blank `android-results.txt` waits in `/Users/Shared/dot-popper-results/oneplus-nord/`. The kit's README gives both ways to install: `adb install` with USB debugging on (which also gives a log), or opening the APK on the phone with "install unknown apps" allowed for the Files app.
+
 ## What has been verified, and what hasn't
 
 These have been verified on CI's runners:
@@ -187,11 +207,13 @@ These have been verified on CI's runners:
 - `lota fuse` builds the Windows, macOS, and Linux apps from Lota 0.1.3's release gems, and each app plays itself with no Ruby on its `PATH` (Windows and Linux with Mesa's software OpenGL).
 - The Windows kit's `playtest.ps1`, run from a downloaded, unzipped kit in Windows PowerShell 5.1 with answers on standard input, asks every check, restarts the game for check 2, captures the game's frame-rate output, collects `%APPDATA%\dot_popper`, and writes one complete `dot-popper-results.txt`. The Linux kit's `playtest.sh` does the same under Xvfb.
 - The iPad kit is built from Lota's v0.1.3 tag and Fledge's release, builds on a fresh Mac for the Simulator and, unsigned, for devices, and plays itself to the end in an iPad Simulator.
+- The Android kit's APK, built from Lota's unreleased commit `84c0eda`, installs on an `x86_64` emulator of API 33 (a 320 × 640 dp screen, drawn by LÖVE's Vulkan renderer on SwiftShader), plays itself for 45 seconds and exits with status 0, prints a radius of 50 dp, ignores Back during a round and at Game Over, and leaves the app on Back from the title ([run 42125758990](https://github.com/Kerrick/dot_popper/actions/runs/42125758990)).
 
 These have not been verified:
 
 - **Any kit on the maintainer's own devices**: real graphics cards and drivers, real sound, display scales above 100%, controllers, and the hand checks themselves, which only a person can answer.
 - **The iPad and iPhone build on hardware.** Nobody has signed, installed, or played it on a device. See doc/ios.md, "What is still unverified".
+- **The Android build on hardware, and its `arm64-v8a` code anywhere.** CI runs only the `x86_64` code, on an emulator. The maintainer's OnePlus Nord N30 5G will be the first run of the `arm64-v8a` code. Not checked on the emulator either: Back on Your records, a back *gesture* rather than the Back key, sound (the emulator runs with no audio), vibration, and tilt.
 - **Restarting.** `lota run` restarts a game that calls `Lota::Event.restart`, but a fused game quits instead.
 - **Signing.** The builds are unsigned, so SmartScreen and Gatekeeper warn about them, and the `.dmg` isn't notarized.
 - **A computer with no usable graphics driver.** Fledge's own testing found that Lota then shows an error message box that begins with a Ruby backtrace, which a player would find confusing.
