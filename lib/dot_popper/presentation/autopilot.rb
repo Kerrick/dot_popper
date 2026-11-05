@@ -55,8 +55,15 @@ module DotPopper
 
       def center(field) = [field.width / 2.0, field.height * 0.62]
 
+      # The Daily every other time; otherwise a tap on one of the title's
+      # fresh dots, which pops it as the round starts, or the middle.
       def start(game, show)
-        show && @titles.even? ? middle(show.daily_reach) : center(game.field)
+        return center(game.field) unless show
+        return middle(show.daily_reach) if @titles.even?
+
+        dots = show.attract.dots
+        toy = dots.find { it.fresh? && dots.top_at(it.x, it.y) == it }
+        toy ? [toy.x, toy.y] : center(game.field)
       end
 
       # Shares a daily result first, then goes on once the game will hear.

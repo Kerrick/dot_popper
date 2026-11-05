@@ -175,6 +175,19 @@ the player understanding what just happened to them.
   day's dots away. A press on Share only shares; anywhere else continues as
   before, after the same grace. The share line includes the score, which the
   brief's example left out, because the score is the number players compare.
+- **The title's dots pop, but the same tap still starts the round.** The
+  brief offered a full toy: a tap on a title dot pops it, scoreless, and only a
+  tap on empty space starts a round. That breaks the title's one instruction,
+  "Tap anywhere to play": with seven dots drifting behind it, a player's
+  first tap lands on one often enough (about one in sixteen on the reference
+  window, more on a phone), and the obvious target, a bright dot, would be
+  the one place a tap does not start the game. A promise kept only most of
+  the time is a hidden mode, which Saffer warns against, and the first
+  seconds are when trust is cheapest to lose. So a tap on a fresh title dot
+  gives its droplets, ring, and bloop and starts the round in the same
+  instant; a popped title dot just starts it. The pop is scenery: it scores
+  nothing, and its ring follows no dot of the round. The Daily button and
+  the mute button still take their own taps.
 
 ## Code
 

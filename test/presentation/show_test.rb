@@ -15,6 +15,16 @@ class ShowTest < Minitest::Test
                      clipboard: @clipboard, today: -> { DAY })
   end
 
+  def test_a_tap_on_a_title_dot_pops_it_and_still_starts_the_round
+    fresh = @show.attract.dots.find { it.fresh? && @show.attract.dots.top_at(it.x, it.y) == it }
+    @show.tap(fresh.x, fresh.y)
+
+    assert @show.playing?
+    assert_equal 0, @game.round.score
+    assert_equal %i[start pop], @sounds.names
+    assert_equal 1, @show.effects.rings.size
+  end
+
   def test_the_daily_button_starts_todays_daily
     x, y = middle(@show.daily_reach)
     @show.tap(x, y)

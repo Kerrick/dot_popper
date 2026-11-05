@@ -56,12 +56,16 @@ module DotPopper
 
       # A tap anywhere. On the title, the mute and Daily buttons take
       # their own taps, as Share does after a daily round; every other
-      # tap goes to the game at once.
+      # tap goes to the game at once. A tap on one of the title's fresh
+      # dots also pops it, as the round starts.
       def tap(x, y)
         if title? && layout.mute_button.contains?(x, y) then sounds.toggle_mute
         elsif title? && daily_reach.contains?(x, y) then game.choose(Mode.daily(today))
         elsif finished? && finale&.daily? && share_reach.contains?(x, y) then share
-        else game.press(x, y)
+        else
+          scenery = attract.dots.top_at(x, y) if title?
+          game.press(x, y)
+          toy_pop(scenery, x, y) if scenery&.fresh?
         end
       end
 
@@ -147,6 +151,14 @@ module DotPopper
         effects.clear
         @finale = nil
         @marquee = Marquee.new(look: look::TITLE, best: event.best, at: now)
+      end
+
+      # The title's dot, popped by the tap that started the round: its
+      # droplets, its ring, and its bloop, but no score.
+      def toy_pop(dot, x, y)
+        effects.burst(x, y, look::POP_BURST, palette.confetti)
+        effects.ring(dot.x, dot.y, look::SHOCKWAVE)
+        sounds.play(:pop, pan: pan(x))
       end
 
       def share
