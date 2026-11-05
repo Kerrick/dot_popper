@@ -14,7 +14,9 @@ module DotPopperGui
       check_equal("Tap anywhere to play", words.play, "a finger on the screen makes it Tap")
       check_equal("Tap a bright dot", words.legend.first, "the legend says Tap too")
       move(layout.center_x, layout.center_y)
-      check_equal("Click anywhere to play", words.play, "the mouse makes it Click again")
+      check_equal("Tap anywhere to play", words.play, "a motion that goes nowhere, as a window opening under the pointer sends, changes nothing")
+      move(layout.center_x + 30, layout.center_y)
+      check_equal("Click anywhere to play", words.play, "a real move of the mouse makes it Click again")
       pad(:dpup)
       check_equal("Press A to play", words.play, "a gamepad's button makes it Press A")
       title_drawn
@@ -23,7 +25,8 @@ module DotPopperGui
       run_out_the_clock
       check_equal("Tap to continue", words.continue, "Game Over says Tap after a round played by touch")
       move(layout.center_x, layout.center_y)
-      check_equal("Click to continue", words.continue, "the mouse makes it Click")
+      move(layout.center_x + 30, layout.center_y)
+      check_equal("Click to continue", words.continue, "a real move of the mouse makes it Click")
       pad(:dpdown)
       check_equal("Press A to continue", words.continue, "a gamepad makes it Press A")
       continue_to_title(->(*) { pad(:start) })

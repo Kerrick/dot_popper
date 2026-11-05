@@ -104,10 +104,16 @@ module DotPopper
         press(:mouse, heard(@input.mouse_pressed(x, y, button, istouch)))
       end
 
+      # A motion counts as using the mouse only once it has gone far
+      # enough (MouseTravel); a drag follows it either way.
       def mouse_moved(x, y, istouch)
-        @cursor = @cursor.hide(x, y)
-        point = heard(@input.mouse_moved(x, y, istouch))
-        @dragging.move(:mouse, point.x, point.y) if point
+        point = @input.mouse_moved(x, y, istouch) or return
+        @travel = (@travel || Presentation::MouseTravel.start).moved(x, y)
+        if @travel.deliberate?
+          @cursor = @cursor.hide(x, y)
+          heard(point)
+        end
+        @dragging.move(:mouse, point.x, point.y)
       end
 
       def mouse_released(x, y, button, istouch)
@@ -232,6 +238,7 @@ module DotPopper
       # The gamepad was used: its cursor shows, and the words name its
       # buttons.
       def gamepad_used
+        @travel = Presentation::MouseTravel.start
         @cursor = @cursor.show
         @show.input = Presentation::InputKind::GAMEPAD
       end
