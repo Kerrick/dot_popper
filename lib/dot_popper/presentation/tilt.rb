@@ -15,13 +15,13 @@ module DotPopper
     # that, at most +most_kick+, and the next shake counts only after
     # +cooldown+ seconds, each ball as +fling+ (a Throw) says. A calm
     # pile (+shakes+ false) never throws a ball. A stick inside +dead_zone+ is at rest. The hint shows on the
-    # first +hint_rounds+ Game Overs, +hint_at+ of the safe area's height
-    # below its middle, at +hint_alpha+ of the prompt's: +stick_hint+ to
-    # a player at a gamepad, +drag_tilt_hint+ with a pointer and an accelerometer,
+    # first +hint_rounds+ Game Overs, under the prompt, at +hint_alpha+ of
+    # the prompt's: +stick_hint+ to a player at a gamepad,
+    # +drag_tilt_hint+ with a pointer and an accelerometer,
     # +drag_hint+ with a pointer alone, or +tilt_hint+ with an
     # accelerometer alone, %s naming the device.
     class TiltLook < Data.define(:smoothing, :wake, :shake, :settle, :cooldown, :kick, :most_kick, :shakes,
-                                 :fling, :dead_zone, :hint_rounds, :hint_at, :hint_alpha, :tilt_hint, :stick_hint,
+                                 :fling, :dead_zone, :hint_rounds, :hint_alpha, :tilt_hint, :stick_hint,
                                  :drag_hint, :drag_tilt_hint)
       # The speed, in radii a second, a jolt of +jolt+ g throws a ball.
       def kick_for(jolt) = ((jolt - shake) * kick).clamp(0.0, most_kick)

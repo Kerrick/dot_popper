@@ -3,16 +3,18 @@
 module DotPopper
   module Shell
     # Game Over's light line saying the pile can be played with: small,
-    # quiet, under "Tap to continue", and coming in with it.
+    # quiet, under "Tap to continue" where the FinalePlan puts it, and
+    # coming in with it.
     class TiltHintPainter < Data.define(:pen)
-      def draw(hint, show, layout)
+      def draw(hint, show)
         finale = show.finale or return
         alpha = finale.prompt(show.now) * look.hint_alpha
         return if alpha <= 0.0
 
-        font = pen.fonts.semibold(layout.scaled(pen.look::TYPE.summary))
-        y = layout.center_y + (layout.safe.height * look.hint_at)
-        pen.text(hint, font, layout.center_x, y, pen.palette.soft, alpha)
+        plan = show.finale_plan
+        rect = plan[:hint] or return
+
+        pen.text(hint, pen.fonts.semibold(plan.size(:summary)), rect.center_x, rect.center_y, pen.palette.soft, alpha)
       end
 
       private

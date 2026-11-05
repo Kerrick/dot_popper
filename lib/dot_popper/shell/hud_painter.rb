@@ -26,7 +26,7 @@ module DotPopper
       def bounds(hud, layout)
         number, label = fonts(layout)
         cell = cell([hud.score_readout, hud.time_readout], number, label)
-        height = label.height + (number.height * 0.9) + padding(number)
+        height = Presentation::Hud.height(number.height, label.height)
         pixels = pen.pixels
         Presentation::Rect.new(x: pixels.snap(layout.center_x - cell), y: pixels.snap(layout.top),
                                width: pixels.snap(cell * 2), height: pixels.snap(height))
@@ -48,7 +48,7 @@ module DotPopper
         [pen.fonts.bold(layout.scaled(type.hud_number)), pen.fonts.semibold(layout.scaled(type.hud_label))]
       end
 
-      def padding(number) = number.height * 0.28
+      def padding(number) = Presentation::Hud.padding(number.height)
 
       # Each readout's half of the pill: room for its widest text.
       def cell(readouts, number, label)

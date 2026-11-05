@@ -80,7 +80,7 @@ module DotPopper
 
       # The stacking rule, taught on the first two Game Overs after a wrong
       # tap that had the bright dot hidden under the popped one.
-      LESSON = LessonLook.new(times: 2, alpha: 1.0, room: 0.065)
+      LESSON = LessonLook.new(times: 2, alpha: 1.0)
 
       # The rounded face, Fredoka (SIL Open Font License; assets/fonts).
       # Sizes are graphics units at a layout scale of 1. A size that
@@ -101,7 +101,7 @@ module DotPopper
       # tablets play fullscreen.
       WINDOW = WindowLook.new(width: 24, height: 16, most: 0.9)
 
-      LAYOUT = LayoutLook.new(margin: 16, button: 52, reference: 760.0)
+      LAYOUT = LayoutLook.new(margin: 16, button: 52, reference: 760.0, shrink: 0.7, step: 0.05, least: 12)
 
       # How a dot is drawn by the dot shader (assets/shaders/dot.glsl),
       # and the edge a player aims at: what is seen of a dot at rest ends
@@ -234,7 +234,7 @@ module DotPopper
       # turns slowly and never throws.
       TILT = TiltLook.new(smoothing: 0.2, wake: 0.05, shake: 1.2, settle: 0.3, cooldown: 0.6, kick: 8.0,
                           most_kick: 14.0, shakes: true, fling: Throw.new(spread: 1.0, least: 0.5), dead_zone: 0.2,
-                          hint_rounds: 3, hint_at: 0.465, hint_alpha: 0.7,
+                          hint_rounds: 3, hint_alpha: 0.7,
                           tilt_hint: "Tilt your %s to roll the dots.",
                           stick_hint: "Hold A on a dot to drag it, or push the right stick to roll them.",
                           drag_hint: "Drag the dots to play with them.",

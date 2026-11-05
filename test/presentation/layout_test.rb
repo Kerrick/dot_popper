@@ -84,8 +84,4 @@ class LayoutTest < Minitest::Test
     one.right <= other.x + slack || other.right <= one.x + slack || one.bottom <= other.y + slack ||
       other.bottom <= one.y + slack
   end
-
-  def test_the_prompt_makes_room_for_share
-    assert_operator layout.continue_y, :>, layout.share_button.reach(2 * R).bottom
-  end
 end

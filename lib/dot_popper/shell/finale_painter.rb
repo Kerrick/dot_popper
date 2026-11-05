@@ -2,129 +2,88 @@
 
 module DotPopper
   module Shell
-    # Game over, over the finished round: "Time!", the score counting up,
-    # a new best or how far short of the best it fell, a quiet line of the
-    # round's facts, a lifetime record it set, "You met today's goal!" if
-    # it did, "Copy my result", and, once a tap will be heard, the prompt
+    # Game over, over the finished round, each line where the Show's
+    # FinalePlan puts it: "Time's up!", "You met today's goal!" if the
+    # round did, the score counting up, a new best or how far short of the
+    # best it fell, a quiet line of the round's facts, a lifetime record
+    # it set, "Copy my result", and, once a tap will be heard, the prompt
     # to go on. On the first Game Overs after a wrong tap with the bright
-    # dot hidden, the stacking rule sits between the HUD, whose bottom is
-    # at +below+, and "Time's up!", away from the score. From "Time's up!"
-    # to "Tap to continue", the words sit on a soft, dark backing, so they
-    # read over the pile without hiding it.
+    # dot hidden, the stacking rule comes first. Every line sits on a
+    # soft, dark backing, so they read over the pile without hiding it.
     class FinalePainter < Data.define(:pen)
-      def draw(show, layout, below: layout.top)
+      def draw(show, layout)
         finale = show.finale or return
+        plan = show.finale_plan
         now = show.now
-        type = pen.look::TYPE
         palette = pen.palette
         words = show.words
-        height = layout.safe.height
-        center = layout.center_y
         arrival = finale.arrival(now)
         shown = arrival.clamp(0.0, 1.0)
-        heading = pen.fonts.bold(layout.scaled(type.heading))
-        heading_y = center - (height * (0.27 - (finale.lesson ? pen.look::LESSON.room : 0.0)))
-        summary = pen.fonts.semibold(layout.scaled(type.summary))
-        backing_top = finale.lesson ? below + (layout.margin * 0.5) : heading_y - (heading.height * 0.4)
-        backing(show, layout, backing_top, [heading.width(words.time_up), summary.width(words.summary(finale.stats)),
-                                            lesson_width(finale.lesson, layout)], shown)
-        pen.text(words.time_up, heading, layout.center_x, heading_y - ((1 - arrival) * 30), palette.soft, shown)
-        lesson(finale.lesson, layout, below, heading_y - (layout.scaled(type.heading) * 0.36), shown) if finale.lesson
-        score = pen.fonts.bold(layout.scaled(type.final_score))
-        Lettering.new(pen:).candy(finale.shown_score(now).to_s, score, layout.center_x, center - (height * 0.06), shown)
-        best_line(finale, words, layout, center + (height * 0.13), now, shown)
-        pen.text(words.summary(finale.stats), summary, layout.center_x, center + (height * 0.19), palette.soft,
-                 shown * 0.8)
-        record(finale, words, layout, center + (height * 0.235), now)
-        goal_met(finale, words, layout, now)
-        copied = finale.copied?(now)
-        PillButton.new(pen:).draw(layout.share_button, copied ? words.copied : words.share, alpha: shown,
-                                  color: copied ? palette.gain : palette.cream)
-        prompt = pen.fonts.bold(layout.scaled(type.prompt))
-        pen.text(words.continue, prompt, layout.center_x, layout.continue_y, palette.cream,
-                 finale.prompt(now))
+        ScrimPainter.new(pen:).draw(plan.backing, pen.look::FINALE_BACKING, layout, alpha: shown)
+        lesson(plan, layout, shown) if plan[:lesson]
+        if (heading = plan[:heading])
+          pen.text(words.time_up, pen.fonts.bold(plan.size(:heading)), layout.center_x,
+                   heading.center_y - ((1 - arrival) * 30), palette.soft, shown)
+        end
+        goal_met(finale, words, plan, now)
+        score = pen.fonts.bold(plan.size(:score))
+        Lettering.new(pen:).candy(finale.shown_score(now).to_s, score, layout.center_x,
+                                  plan[:score].y + (score.height / 2.0), shown)
+        best_line(show, plan, now, shown)
+        line(plan, :summary, words.summary(finale.stats), palette.soft, shown * 0.8)
+        line(plan, :record, words.record(finale.record), palette.gain, finale.afterword(now)) if finale.record && finale.counted?(now)
+        if (button = plan.share_button)
+          copied = finale.copied?(now)
+          PillButton.new(pen:).draw(button, copied ? words.copied : words.share, alpha: shown,
+                                    color: copied ? palette.gain : palette.cream)
+        end
+        pen.text(words.continue, pen.fonts.bold(plan.size(:continue)), layout.center_x, plan[:continue].center_y,
+                 palette.cream, finale.prompt(now))
       end
 
       private
 
-      # The backing from +top+ down to the prompt's bottom, as wide as the
-      # widest of the block's lines, +widths+, the share button, and a
-      # record if the round set one, and never past the safe area.
-      def backing(show, layout, top, widths, alpha)
-        finale = show.finale
-        prompt = pen.fonts.bold(layout.scaled(pen.look::TYPE.prompt))
-        widths << prompt.width(show.words.continue) << layout.share_button.width
-        if finale.record
-          widths << pen.fonts.semibold(layout.scaled(pen.look::TYPE.summary)).width(show.words.record(finale.record))
-        end
-        look = pen.look::FINALE_BACKING
-        width = [widths.max, layout.safe.width - (2 * (look.pad + look.feather) * layout.ui)].min
-        bottom = layout.continue_y + (prompt.height * 0.5)
-        rect = Presentation::Rect.new(x: layout.center_x - (width / 2.0), y: top, width:, height: bottom - top)
-        ScrimPainter.new(pen:).draw(rect, look, layout, alpha:)
+      # A semibold line of +text+ in its place in +plan+, if it has one.
+      def line(plan, name, text, color, alpha)
+        rect = plan[name] or return
+
+        pen.text(text, pen.fonts.semibold(plan.size(:summary)), rect.center_x, rect.center_y, color, alpha)
       end
 
-      # The stacking rule, a sentence a line (each broken evenly if it
-      # would not fit across), centred between +top+ and +bottom+, in the
+      # The stacking rule, in the lines the plan broke it into, in the
       # hint's size and bold, since it is the one thing on this screen the
       # player has not seen before.
-      def lesson(sentences, layout, top, bottom, alpha)
-        font = lesson_font(layout)
-        lines = lesson_lines(sentences, layout)
+      def lesson(plan, layout, alpha)
+        font = pen.fonts.bold(plan.size(:lesson))
         step = font.height * 1.05
-        top = ((top + bottom) / 2.0) - (step * lines.size / 2.0)
-        lines.each_with_index do |line, i|
-          pen.text(line, font, layout.center_x, top + (step * (i + 0.5)), pen.palette.cream,
-                   alpha * pen.look::LESSON.alpha)
+        top = plan[:lesson].y + (font.height / 2.0)
+        plan.lesson_lines.each_with_index do |line, i|
+          pen.text(line, font, layout.center_x, top + (step * i), pen.palette.cream, alpha * pen.look::LESSON.alpha)
         end
-      end
-
-      def lesson_font(layout) = pen.fonts.bold(layout.scaled(pen.look::TYPE.hint))
-
-      def lesson_lines(sentences, layout)
-        font = lesson_font(layout)
-        room = layout.safe.width - (layout.margin * 3)
-        sentences.flat_map { |sentence| Presentation::Words.balance(sentence, room) { font.width(it) } }
-      end
-
-      def lesson_width(sentences, layout)
-        return 0 unless sentences
-
-        font = lesson_font(layout)
-        lesson_lines(sentences, layout).map { font.width(it) }.max.to_f
-      end
-
-      # The lifetime record the round set, if any, once the score has
-      # counted up: quiet, in the colour of a gain.
-      def record(finale, words, layout, y, now)
-        return unless finale.record && finale.counted?(now)
-
-        font = pen.fonts.semibold(layout.scaled(pen.look::TYPE.summary))
-        pen.text(words.record(finale.record), font, layout.center_x, y, pen.palette.gain, finale.afterword(now))
       end
 
       # "You met today's goal!", with a check, between "Time's up!" and the
       # score, once the score has counted up; the Show bursts twinkles
       # there as it appears.
-      def goal_met(finale, words, layout, now)
-        return unless finale.goal_met && finale.counted?(now)
+      def goal_met(finale, words, plan, now)
+        rect = plan[:goal]
+        return unless rect && finale.counted?(now)
 
-        font = pen.fonts.bold(layout.scaled(pen.look::TYPE.best))
-        Check.new(pen:).labelled(words.goal_met, font, layout.center_x, layout.finale_goal_y, finale.afterword(now))
+        font = pen.fonts.bold(plan.size(:goal))
+        Check.new(pen:).labelled(words.goal_met, font, rect.center_x, rect.center_y, finale.afterword(now))
       end
 
-      def best_line(finale, words, layout, y, now, alpha)
-        type = pen.look::TYPE
-        if finale.new_best?
-          return unless finale.counted?(now)
+      # A new best, glowing, once the score has counted up, or how far
+      # short of the best the round fell.
+      def best_line(show, plan, now, alpha)
+        rect = plan[:best] or return
+        finale = show.finale
+        return if finale.new_best? && !finale.counted?(now)
 
-          font = pen.fonts.bold(layout.scaled(type.new_best))
-          glow = 0.85 + (0.15 * Math.sin(now * 6))
-          pen.text(words.new_best, font, layout.center_x, y, pen.palette.gain, glow)
-        else
-          font = pen.fonts.semibold(layout.scaled(type.best))
-          pen.text(words.short_of_best(finale.score, finale.best, first: finale.first), font, layout.center_x, y, pen.palette.soft, alpha)
-        end
+        face, size, text = show.finale_screen.best_line(plan.size(:best))
+        color = finale.new_best? ? pen.palette.gain : pen.palette.soft
+        alpha = 0.85 + (0.15 * Math.sin(now * 6)) if finale.new_best?
+        pen.text(text, pen.fonts.public_send(face, size), rect.center_x, rect.center_y, color, alpha)
       end
     end
   end

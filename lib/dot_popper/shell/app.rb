@@ -33,6 +33,7 @@ module DotPopper
         @game = Game.new(screen, best: BestScore.new(SaveFile.new(name: "best_score.txt"), legacy:), random:,
                                  sizing: DotSizing.parse(sizing_store.read))
         puts "Dot Popper: dots are sized to the screen as each round starts" if @game.sizing.sized_to_screen?
+        @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
         @speaker = Speaker.new(Look::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Look::SOUND.volume)
         @show = Presentation::Show.new(game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"),
@@ -40,7 +41,8 @@ module DotPopper
                                                                     times: Look::LESSON.times),
                                        haptics: Haptics.for(os), clipboard: Clipboard.new,
                                        lifetime: Lifetime.new(SaveFile.new(name: "lifetime.txt"), today:, legacy:),
-                                       sizing_store:, input: starting_input)
+                                       sizing_store:, input: starting_input, measure: FontMeasure.new(@pen.fonts),
+                                       hint: -> { @tilting&.hint&.for(@show.input) })
         @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
                                         archive: ->(name) { SaveFile.new(name:) }))
         puts "Dot Popper: each round is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"
@@ -52,7 +54,6 @@ module DotPopper
         @dragging = Dragging.new(pile: @pile, show: @show, look: flag?("DOT_POPPER_CALM") ? Look::CALM_GRAB : Look::GRAB)
         @game.subscribe(@dragging)
         @fake_drag = Presentation::FakeDrag.parse(@env["DOT_POPPER_FAKE_DRAG"])
-        @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
         @sparks = Sparks.new(Look)
         @bloom = Bloom.new(@pen, Look::BLOOM)
         @renderer = Renderer.new(@show, @pen, pile: @pile, sparks: @sparks, bloom: @bloom, tilting: @tilting)

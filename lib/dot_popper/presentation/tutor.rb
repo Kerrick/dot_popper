@@ -3,9 +3,8 @@
 module DotPopper
   module Presentation
     # How the stacking rule is taught: on how many Game Overs, at most,
-    # how strongly its lines show, and how far "Time's up!" moves down to
-    # make room for them, as a part of the safe area's height.
-    class LessonLook < Data.define(:times, :alpha, :room); end
+    # and how strongly its lines show.
+    class LessonLook < Data.define(:times, :alpha); end
 
     # Teaches the stacking rule on Game Over, after a round in which the
     # player tapped a popped dot with the bright one hidden beneath it,

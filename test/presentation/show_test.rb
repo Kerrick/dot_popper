@@ -117,8 +117,23 @@ class ShowTest < Minitest::Test
     refute @show.waits_for_release?(*middle(@show.share_reach))
   end
 
+  def test_copy_my_result_takes_taps_where_its_plan_draws_it
+    finish_round(back_to_title: false)
+    button = @show.finale_plan.share_button
+
+    assert_equal button.reach(2 * R), @show.share_reach
+    assert @show.finale_plan.backing.y <= button.y, "it sits on the backing"
+  end
+
   def test_the_share_buttons_place_on_the_title_is_an_ordinary_tap
-    @show.tap(*middle(@show.share_reach))
+    finish_round(back_to_title: false)
+    place = middle(@show.share_reach)
+    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @show.tap(10, 10)
+    assert @show.title?
+    assert_nil @show.share_reach
+
+    @show.tap(*place)
 
     assert @show.playing?
     assert_nil @clipboard.text

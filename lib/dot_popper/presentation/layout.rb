@@ -48,8 +48,10 @@ module DotPopper
 
     # Sizes for the screen's furniture, in graphics units at a scale of 1:
     # the space kept clear inside the safe area, the mute button, and the
-    # screen size at which text is drawn at its nominal size.
-    class LayoutLook < Data.define(:margin, :button, :reference); end
+    # screen size at which text is drawn at its nominal size. A screen
+    # short of room shrinks its type by +step+ at a time down to +shrink+
+    # of its size, and never below +least+ units, unless it was smaller.
+    class LayoutLook < Data.define(:margin, :button, :reference, :shrink, :step, :least); end
 
     # Where things go on a screen of a given size. The playfield is the
     # whole window; text and buttons stay inside +safe+, the part that no
@@ -60,6 +62,15 @@ module DotPopper
       def ui = ([safe.width, safe.height].min / look.reference).clamp(0.72, 1.35)
 
       def scaled(size) = (size * ui).round
+
+      # The type scales a crowded screen tries, from full size down.
+      def type_scales = (0..((1 - look.shrink) / look.step).round).map { 1.0 - (it * look.step) }
+
+      # +size+ scaled to the screen, then by +scale+, in whole units.
+      def type_size(size, scale = 1.0)
+        nominal = scaled(size)
+        [(nominal * scale).round, [nominal, look.least].min].max
+      end
 
       def margin = look.margin * ui
       def center_x = safe.center_x
@@ -85,10 +96,10 @@ module DotPopper
 
       # The title's choice of dot size: its label, then its two segments,
       # each as tall as a button and wide enough for a dot icon and a few
-      # words. The title shows it only where it changes something, and
-      # nothing else moves for it, so it can come and go. With room between "Your records" and the
-      # mute button, it sits there, label on the left, its segments
-      # centred on the screen if they can be. Otherwise, as on an upright
+      # words. The title shows it only where it changes something. With
+      # room between "Your records" and the mute button, it sits there,
+      # label on the left, its segments centred on the screen if they can
+      # be. Otherwise, as on an upright
       # phone, its segments are centred a row above them, under the label.
       def sizing_control
         height = button_size
@@ -104,19 +115,8 @@ module DotPopper
                       options: segments(x, y, segment, height))
       end
 
-      # Game Over's "Copy my result" button, under the round's summary.
-      def share_button
-        height = button_size
-        width = height * 4.6
-        Rect.new(x: center_x - (width / 2.0), y: center_y + (safe.height * 0.3) - (height / 2.0), width:, height:)
-      end
-
-      # Where Game Over's "You met today's goal!" goes: between "Time's up!"
-      # and the score.
-      def finale_goal_y = center_y - (safe.height * 0.185)
-
-      # Where Game Over's prompt goes: under the share button.
-      def continue_y = center_y + (safe.height * 0.41)
+      # Never smaller than a fingertip (44 units).
+      def button_size = [look.button * ui, 44.0].max
 
       private
 
@@ -131,9 +131,6 @@ module DotPopper
       def segments(x, y, width, height)
         [Rect.new(x:, y:, width:, height:), Rect.new(x: x + width, y:, width:, height:)]
       end
-
-      # Never smaller than a fingertip (44 units).
-      def button_size = [look.button * ui, 44.0].max
     end
   end
 end

@@ -15,7 +15,9 @@ module DotPopper
     # DotSizing, chosen on the title. +radius+ is the usual dot's, which
     # sizes the buttons' reach; a round's effects follow its own dots.
     # +input+ (InputKind) is what the player last pressed with, and the
-    # words follow it.
+    # words follow it. +measure+ sizes the screens' words (RoughMeasure's
+    # methods), and +hint+ gives Game Over's line on playing with the
+    # pile, or nil.
     class Show
       # The dot-size choices in the order the title draws their segments.
       SIZINGS = [DotSizing::STANDARD, DotSizing::SIZED_TO_SCREEN].freeze
@@ -26,8 +28,10 @@ module DotPopper
       def initialize(game:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false,
                      tutor: Tutor.new(BestScore::Memory.new, times: look::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
                      lifetime: Lifetime.new(BestScore::Memory.new), sizing_store: BestScore::Memory.new,
-                     input: InputKind::MOUSE)
+                     input: InputKind::MOUSE, measure: RoughMeasure.new, hint: -> {})
         @game = game
+        @measure = measure
+        @hint = hint
         @lifetime = lifetime
         @layout = layout
         @sounds = sounds
@@ -107,7 +111,7 @@ module DotPopper
         elsif title? && layout.mute_button.contains?(x, y) then sounds.toggle_mute
         elsif title? && records_offered? && records_reach.contains?(x, y) then open_records
         elsif title? && sizing_offered? && (sizing = sizing_at(x, y)) then choose_sizing(sizing)
-        elsif finished? && share_reach.contains?(x, y) then share
+        elsif finished? && share_reach&.contains?(x, y) then share
         else
           scenery = attract.dots.top_at(x, y) if title?
           game.press(x, y)
@@ -119,7 +123,7 @@ module DotPopper
       # Game Over, anywhere but "Copy my result", since it may become a
       # drag of the pile (PileGrabs). Everywhere else a press counts the
       # moment it goes down.
-      def waits_for_release?(x, y) = finished? && !share_reach.contains?(x, y)
+      def waits_for_release?(x, y) = finished? && !share_reach&.contains?(x, y)
 
       # A gamepad's Start: on the title it starts the usual round, and
       # after one it continues, as a tap on empty space would, grace and
@@ -186,17 +190,38 @@ module DotPopper
         sounds.play(:tick)
       end
 
-      # Where a tap reaches "Copy my result": never less than a dot's width.
-      def share_reach = layout.share_button.reach(2 * @radius)
+      # Where a tap reaches "Copy my result", where it is drawn: never
+      # less than a dot's width. Nil without one.
+      def share_reach = finale_plan&.share_button&.reach(2 * @radius)
 
       # Where a tap reaches "Your records": never less than a dot's width,
       # and never past the safe area's bottom.
-      def records_reach = within_safe(layout.records_button.reach(2 * @radius))
+      def records_reach = within_safe(title_plan.records_button.reach(2 * @radius))
 
       # Where a tap reaches each segment of the dot-size choice, as a
       # DotSizing and its Rect: never less than a dot's width, and never
       # past the safe area's bottom.
-      def sizing_reaches = SIZINGS.zip(layout.sizing_control.options.map { within_safe(it.reach(2 * @radius)) })
+      def sizing_reaches = SIZINGS.zip(title_plan.sizing_control.options.map { within_safe(it.reach(2 * @radius)) })
+
+      # Where the title's words and buttons go (TitlePlan).
+      def title_plan
+        goal = lifetime.goal_done? ? words.goal_done : words.goal(lifetime.goal) if records_offered?
+        TitleScreen.new(layout:, type: look::TYPE, words:, measure: @measure, best: marquee.best, goal:,
+                        done: lifetime.goal_done?, streak: lifetime.streak, records: records_offered?,
+                        sizing: sizing_offered?).plan
+      end
+
+      # Where Game Over's words and "Copy my result" go (FinalePlan), or
+      # nil away from Game Over.
+      def finale_plan = finale_screen&.plan
+
+      # Game Over's words to lay out (FinaleScreen), or nil away from it.
+      def finale_screen
+        return unless finale
+
+        FinaleScreen.new(layout:, type: look::TYPE, words:, measure: @measure, scrim: look::FINALE_BACKING, finale:,
+                         below: hud_bottom, hint: @hint.call)
+      end
 
       # The window changed size. The title's dots are respawned if their
       # size changes with it, as dots sized to the screen do.
@@ -229,6 +254,13 @@ module DotPopper
 
       # The dot-size choice whose segment a tap at +x+, +y+ reaches, or nil.
       def sizing_at(x, y) = sizing_reaches.find { |_, reach| reach.contains?(x, y) }&.first
+
+      # Where the HUD's pill ends, at the safe area's top.
+      def hud_bottom
+        type = look::TYPE
+        layout.top + Hud.height(@measure.height(:bold, layout.scaled(type.hud_number)),
+                                @measure.height(:semibold, layout.scaled(type.hud_label)))
+      end
 
       def within_safe(reach) = reach.with(height: [reach.height, layout.safe.bottom - reach.y].min)
 
@@ -334,9 +366,10 @@ module DotPopper
       # A small burst of twinkles where "You met today's goal!" appears.
       def goal_burst
         @finale = finale.goal_celebrate
-        effects.burst(layout.center_x, layout.finale_goal_y, look::FINALE.goal_sparkles, palette.confetti,
-                      longest: look::FINALE.sparkle_life)
         sounds.play(:tick, pitch: 1.5)
+        line = finale_plan[:goal] or return
+        effects.burst(line.center_x, line.center_y, look::FINALE.goal_sparkles, palette.confetti,
+                      longest: look::FINALE.sparkle_life)
       end
 
       def celebrate

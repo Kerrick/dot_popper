@@ -34,6 +34,13 @@ module DotPopper
              seconds_changed: self.seconds && seconds != self.seconds ? now : seconds_changed)
       end
 
+      # How tall the HUD's pill is around a number line +number+ tall and
+      # a label line +label+ tall.
+      def self.height(number, label) = label + (number * 0.9) + padding(number)
+
+      # The pill's padding around a number line +number+ tall.
+      def self.padding(number) = number * 0.28
+
       def urgent? = !seconds.nil? && seconds <= look.urgent_below
 
       def score_readout

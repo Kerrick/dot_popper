@@ -60,9 +60,9 @@ module DotPopper
       # Game Over's lines, and under them, the first few times, how to
       # play with the pile.
       def finale(layout)
-        @finale.draw(@show, layout, below: @hud.bounds(@show.hud, layout).bottom)
+        @finale.draw(@show, layout)
         hint = @tilting&.hint&.for(@show.input)
-        @tilt_hint.draw(hint, @show, layout) if hint
+        @tilt_hint.draw(hint, @show) if hint
       end
 
       def field
