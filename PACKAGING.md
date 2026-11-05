@@ -121,7 +121,7 @@ The [Kits workflow](.github/workflows/kits.yml), on `v*` tags and by hand, build
 
 ## Playtest kits
 
-The maintainer's rule for kits is **one kit in, one results file out, per device**. He opens one kit on a device, plays, and sends back one file, with nothing to coordinate between kits. The [Kits workflow](.github/workflows/kits.yml) builds them:
+The maintainer's rule for kits is **one kit in, one results file out, per device**. He opens one kit on a device, plays, and sends back one file, with nothing to coordinate between kits. On the maintainer's Mac, each tag's kits are unpacked into `/Users/Shared/dot-popper-kits/<tag>/<platform>/`, and each finished results file goes into `/Users/Shared/dot-popper-results/<device>/`. `/Users/Shared` is shared on purpose; the personal `Downloads` folder isn't used. The [Kits workflow](.github/workflows/kits.yml) builds them:
 
 | Kit | Holds | Results file |
 | --- | --- | --- |
