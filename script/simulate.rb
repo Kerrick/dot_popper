@@ -16,6 +16,15 @@
 # after another, to show the two give the same rounds and how much
 # sooner the Ractors finish.
 
+# Ruby 4.0 stops every Ractor for each garbage collection, and a round
+# makes a great deal of short-lived garbage: new dots and stacks every
+# step. With Ruby's default starting heap that is about a thousand
+# collections, and the Ractors spend their time waiting for one another;
+# with a million slots in each of the three smallest size pools (about
+# 250 MB), it is a few dozen. So the script runs itself again with that.
+GC_HEAP = (0..2).to_h { ["RUBY_GC_HEAP_#{it}_INIT_SLOTS", "1000000"] }.freeze
+exec(GC_HEAP, RbConfig.ruby, __FILE__, *ARGV) unless GC_HEAP.all? { |name, slots| ENV[name] == slots }
+
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "dot_popper"
 require "etc"
