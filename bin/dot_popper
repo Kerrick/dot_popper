@@ -11,9 +11,11 @@
 # "Lota" folder there (Lota::Boot's fused: argument).
 #
 # DOT_POPPER_SMOKE, when it names a file, makes this a check that the app
-# is whole, for CI runners, which have no GPU: it loads Lota, checks that
-# the game's files shipped, writes what it found to that file, and exits
-# with 0, or 1 if something is missing, without opening a window.
+# is whole, for CI runners, which have no GPU: it loads Lota, then the
+# game's conf.rb and main.rb, which only define Lota's callbacks, and
+# calls Lota.conf, so a file or a require that did not ship fails here.
+# It writes what it found to that file and exits with 0, or 1 if
+# something is wrong, without opening a window or starting the engine.
 
 game = File.expand_path("..", __dir__)
 
@@ -24,14 +26,24 @@ unless smoke.empty?
   begin
     require "lota"
     lines << "lota #{Lota::VERSION}"
-  rescue LoadError => e
-    lines << "require lota failed: #{e.class}: #{e.message}"
+    $LOAD_PATH.unshift(game)
+    %w[conf.rb main.rb].each do |file|
+      path = File.join(game, file)
+      raise "#{file} is missing" unless File.file?(path)
+
+      require path
+      lines << "#{file} loaded"
+    end
+    settings = Lota::Settings.new
+    Lota.conf(settings) if Lota.respond_to?(:conf)
+    lines << "identity #{settings.identity.inspect}"
+    callbacks = %i[load update draw].select { |name| Lota.respond_to?(name) }
+    lines << "callbacks #{callbacks.join(" ")}"
+    raise "main.rb defines none of Lota.load, update, or draw" if callbacks.empty?
+  rescue StandardError, ScriptError => e
+    lines << "FAILED: #{e.class}: #{e.message}"
+    lines.concat(Array(e.backtrace).first(5).map { |line| "  #{line}" })
     status = 1
-  end
-  %w[conf.rb main.rb].each do |file|
-    found = File.file?(File.join(game, file))
-    lines << "#{file} #{found ? "present" : "MISSING"}"
-    status = 1 unless found
   end
   lines << "status #{status}"
   File.write(smoke, lines.join("\n") + "\n")
