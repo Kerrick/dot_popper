@@ -5,21 +5,28 @@ require_relative "presentation_helper"
 class TutorTest < Minitest::Test
   include PresentationTest
 
-  def test_it_teaches_once_and_remembers_across_sessions
+  def test_it_teaches_a_few_times_and_remembers_across_sessions
     store = DotPopper::BestScore::Memory.new
-    tutor = Tutor.new(store)
+    tutor = Tutor.new(store, times: 2)
 
-    assert_equal Look::WORDS.covered, tutor.slipped(Look::WORDS.covered, Look::HINT, 0.0).lines
-    assert_nil tutor.slipped(Look::WORDS.covered, Look::HINT, 1.0)
-    assert Tutor.new(store).taught?
+    assert_equal Look::WORDS.covered, tutor.lesson(Look::WORDS.covered)
+    refute Tutor.new(store, times: 2).taught?
+    assert_equal Look::WORDS.covered, tutor.lesson(Look::WORDS.covered)
+    assert_nil tutor.lesson(Look::WORDS.covered)
+    assert Tutor.new(store, times: 2).taught?
   end
 
-  def test_a_hint_fades_in_stays_and_goes
-    hint = Hint.new(lines: ["Hi."], look: Look::HINT, at: 1.0)
+  def test_a_player_taught_by_an_older_version_is_not_taught_again
+    store = DotPopper::BestScore::Memory.new
+    store.write(Tutor::LEGACY)
 
-    assert_in_delta 0.0, hint.alpha(1.0)
-    assert_in_delta 1.0, hint.alpha(2.0)
-    assert_operator hint.alpha(1.0 + Look::HINT.life - 0.1), :<, 0.5
-    refute hint.alive?(1.0 + Look::HINT.life)
+    assert_nil Tutor.new(store, times: 2).lesson(Look::WORDS.covered)
+  end
+
+  def test_a_damaged_count_starts_over
+    store = DotPopper::BestScore::Memory.new
+    store.write("lots")
+
+    assert_equal 0, Tutor.new(store, times: 2).shown
   end
 end

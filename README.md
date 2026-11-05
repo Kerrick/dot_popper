@@ -12,7 +12,7 @@ On the title screen, tap anywhere to start a round. During a round, tap or click
 
 A fresh dot and a popped dot differ in more than colour. A fresh dot is light and shiny with a soft glow around it. A popped dot is dark and matte, with a crater in its centre. Because they differ in lightness and in shape, players can tell them apart in greyscale and with colour blindness.
 
-The game also helps a new player understand a mistake. The first time you ever tap a popped dot, a one-line hint under the score explains the stacking rule, and it never appears again. Whenever a wrong tap happens because a fresh dot was hidden underneath, the game briefly outlines that hidden fresh dot, so you can see what you were too quick for.
+The game also helps a new player understand a mistake. The first two times a round ends after you tapped a popped dot with the fresh one hidden under it, Game Over explains the stacking rule in two short lines, away from the action. Whenever a wrong tap happens because a fresh dot was hidden underneath, the game briefly outlines that hidden fresh dot, so you can see what you were too quick for.
 
 When time runs out, the dots tumble to the bottom of the screen in a heap behind your score. Under the score, a line sums up the round: how many dots you popped, how many popped dots you tapped by mistake, and the longest you had to wait for a fresh dot. If the round beat one of your lifetime records, such as the most pops in a row without a wrong tap, one more line names the most impressive of them, for example "New record: 18 pops in a row without a wrong tap".
 
@@ -170,7 +170,7 @@ Each finished round adds a line to `rounds.csv` in the game's save folder, so pl
 - Under `bundle exec lota run` on a Mac: `~/Library/Application Support/Lota/dot_popper/`
 - In a packaged build: a `dot_popper` folder in the system's application-data folder, such as `%APPDATA%\dot_popper` on Windows (see [PACKAGING.md](PACKAGING.md))
 
-The same folder also holds the game's other saved state: the best scores (`best_score.txt`), whether sound is on, whether the first-mistake hint has been shown, the choice of dot size (`dot_size.txt`), and the lifetime stats (`lifetime.txt`), which add up every round played on this device. `best_score.txt` and `lifetime.txt` are plain `key=value` lines, with each size of screen's bests under its name, such as `medium=24` or `small.longest_run=9`. A damaged line is ignored, and a missing file starts from nothing. Files saved by earlier versions, which kept one set of bests, give those bests to the size of the screen the game next opens on.
+The same folder also holds the game's other saved state: the best scores (`best_score.txt`), whether sound is on, how many times Game Over has explained the stacking rule (`taught.txt`), the choice of dot size (`dot_size.txt`), and the lifetime stats (`lifetime.txt`), which add up every round played on this device. `best_score.txt` and `lifetime.txt` are plain `key=value` lines, with each size of screen's bests under its name, such as `medium=24` or `small.longest_run=9`. A damaged line is ignored, and a missing file starts from nothing. Files saved by earlier versions, which kept one set of bests, give those bests to the size of the screen the game next opens on.
 
 The first line of `rounds.csv` names the columns. When a new version of the game changes the columns, it doesn't mix old and new lines in one file: it saves the old log whole as `rounds-<date>-<time>.csv` (for example `rounds-20261105-093015.csv`) and starts a new `rounds.csv`. The columns are:
 

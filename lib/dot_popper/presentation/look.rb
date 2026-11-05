@@ -24,7 +24,7 @@ module DotPopper
       WORDS = Words.new(
         title: "Dot Popper", play: "Tap anywhere to play", continue: "Tap to continue", time_up: "Time's up!",
         new_best: "New best!", best: "Your best", score: "SCORE", time: "TIME",
-        covered: ["Popped dots stay on top, and new dots appear under them.",
+        covered: ["New dots appear under the popped ones.",
                   "Wait for the bright dot to slide out, then tap it."].freeze,
         share: "Copy my result", copied: "Copied! Paste it anywhere.",
         records: "Your records", go_back: "Tap anywhere to go back",
@@ -66,8 +66,9 @@ module DotPopper
       # the title's dots dim behind it.
       RECORDS = RecordsLook.new(heading: 48, text: 20, line: 1.6, chart: 4.2, gap: 64, column: 500, veil: 0.9)
 
-      # The first-run hint, under the HUD.
-      HINT = HintLook.new(fade_in: 0.2, fade_out: 0.5, life: 2.6)
+      # The stacking rule, taught on the first two Game Overs after a wrong
+      # tap that had the bright dot hidden under the popped one.
+      LESSON = LessonLook.new(times: 2, alpha: 0.95, room: 0.035)
 
       # The rounded face, Fredoka (SIL Open Font License; assets/fonts).
       # Sizes are graphics units at a layout scale of 1. A size that

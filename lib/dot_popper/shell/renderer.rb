@@ -19,7 +19,6 @@ module DotPopper
         @dots = DotPainter.new(pen:)
         @effects = EffectsPainter.new(pen:, sparks:)
         @hud = HudPainter.new(pen:)
-        @hint = HintPainter.new(pen:)
         @title = TitlePainter.new(pen:, dots: @dots)
         @records = RecordsPainter.new(pen:)
         @finale = FinalePainter.new(pen:)
@@ -61,7 +60,7 @@ module DotPopper
       # Game Over's lines, and under them, the first few times, how to
       # play with the pile.
       def finale(layout)
-        @finale.draw(@show, layout)
+        @finale.draw(@show, layout, below: @hud.bounds(@show.hud, layout).bottom)
         hint = @tilting&.hint
         @tilt_hint.draw(hint, @show, layout) if hint
       end
@@ -92,11 +91,10 @@ module DotPopper
       # tap is judged where a dot really is.
       def hud(layout)
         pixels = @pen.pixels
-        pill = G.push do
+        G.push do
           G.translate(pixels.snap(@show.effects.shake_x), pixels.snap(@show.effects.shake_y))
           @hud.draw(@show.hud, layout)
         end
-        @hint.draw(@show.hint, @show.now, layout, pill.bottom) if @show.hint
       end
 
       public

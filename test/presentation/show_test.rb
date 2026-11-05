@@ -297,17 +297,32 @@ class ShowTest < Minitest::Test
     assert_empty @show.effects.reveals
   end
 
-  def test_the_first_wrong_tap_ever_explains_the_stack_and_later_ones_do_not
+  # The stacking rule is taught on Game Over, never in play, and only
+  # after a round whose wrong tap had the bright dot hidden beneath.
+  def test_game_over_teaches_the_stack_after_a_wrong_tap_over_the_fresh_dot
+    store = DotPopper::BestScore::Memory.new
+    @show = Show.new(game: @game, layout:, sounds: @sounds, radius: R, random: Random.new(3),
+                     tutor: Tutor.new(store, times: 1))
     start_and_pop
     popped = @game.round.dots.first
     clear_around!(@game.round, popped)
     @show.tap(popped.x, popped.y)
+    @game.update(20)
+    assert_nil @show.finale.lesson, "a wrong tap with nothing under it teaches nothing"
 
-    assert_equal Look::WORDS.covered, @show.hint.lines
-    @show.update(Look::HINT.life)
-    assert_nil @show.hint
-    @show.tap(popped.x, popped.y)
-    assert_nil @show.hint
+    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @show.tap(10, 10)
+    hide_fresh_under_a_popped_dot_and_tap_it
+    @game.update(20)
+    assert_equal Look::WORDS.covered, @show.finale.lesson
+    assert_equal "1", store.read
+
+    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @show.tap(10, 10)
+    @show.tap(10, 10)
+    hide_fresh_under_a_popped_dot_and_tap_it(started: true)
+    @game.update(20)
+    assert_nil @show.finale.lesson, "it has been taught as often as it is"
   end
 
   def test_a_wrong_tap_with_the_fresh_dot_elsewhere_reveals_nothing
@@ -364,6 +379,16 @@ class ShowTest < Minitest::Test
   def put!(id, x, y)
     round = @game.round
     round.instance_variable_set(:@dots, round.dots.map_dots { it.id == id ? it.with(x:, y:) : it })
+  end
+
+  def hide_fresh_under_a_popped_dot_and_tap_it(started: false)
+    start_and_pop(started:)
+    popped = @game.round.dots.first
+    fresh = @game.round.dots.find(&:fresh?)
+    clear_around!(@game.round, popped)
+    put!(fresh.id, popped.x + 30, popped.y)
+    @show.tap(popped.x - 20, popped.y)
+    assert_equal 1, @show.effects.reveals.size
   end
 
   def finish_round(back_to_title: true)

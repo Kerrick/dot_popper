@@ -35,7 +35,8 @@ module DotPopper
         @speaker = Speaker.new(Look::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Look::SOUND.volume)
         @show = Presentation::Show.new(game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"),
-                                       tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt")),
+                                       tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt"),
+                                                                    times: Look::LESSON.times),
                                        haptics: Haptics.for(os), clipboard: Clipboard.new,
                                        lifetime: Lifetime.new(SaveFile.new(name: "lifetime.txt"), today:, legacy:),
                                        sizing_store:)

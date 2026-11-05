@@ -5,8 +5,8 @@ module DotPopper
     # Every word the game shows, and the way it writes numbers. The words
     # are for someone who has never played: each says what happened or
     # what a tap will do, in full sentences where a sentence is needed,
-    # with no name the game made up for itself. +covered+ is the first-run
-    # hint, a sentence a line. +labels+ name the Records screen's sections
+    # with no name the game made up for itself. +covered+ teaches the
+    # stacking rule on Game Over, a sentence a line. +labels+ name the Records screen's sections
     # and rows, by what they count. +goals+ say each kind of DailyGoal as
     # the end of "Today's goal: ...", with %d for its target. +screen_size+
     # says how big a screen is, in dots, with %d for its width and height,

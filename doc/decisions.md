@@ -222,6 +222,8 @@ Sometimes a player taps a popped dot that is lying over the fresh dot, either be
 
 ### The first wrong tap ever explains the rule, once
 
+*Replaced: the rule is now taught on Game Over (see "The stacking rule is taught on Game Over, not in play").*
+
 The first time a player ever taps a popped dot, a hint about the stacking rule appears under the score for 2.6 seconds. The file `taught.txt` in the save folder records that it has been shown, so it never appears again. The hint is not a button, and the round carries on underneath it. On a narrow screen its two sentences stack on two lines.
 
 **Why:** The title screen already explains the scoring, so the hint covers only the stacking, and only at the one moment a player needs it.
@@ -464,3 +466,11 @@ The math lives in `presentation/tilt.rb` and is tested. SDL reports the accelero
 **Why:** Jesse Schell's lens of the toy asks whether something is fun to play with even when there is no goal. Once the round ends, its dots no longer affect anything, which makes them a free toy, and handling the device is the most natural way to play with them. Players linger and play with the dots after the game, instead of leaving the moment the score appears. Since the rules are frozen by then, none of this can touch fairness.
 
 **To reverse:** In `Shell::App#load`, stop creating and subscribing `Tilting`, and stop passing it to the `Renderer`. The pile then falls straight down and the hint never shows. Deleting `presentation/tilt.rb`, `shell/tilting.rb`, `shell/accelerometer.rb`, and `shell/tilt_hint_painter.rb`, along with `Look::TILT`, removes the feature entirely.
+
+### The stacking rule is taught on Game Over, not in play
+
+The hint that explains the stacking rule no longer appears during a round. It appears on Game Over instead, after a round in which the player tapped a popped dot while the bright dot was hidden underneath it. It shows on the first two such Game Overs and never again. The note is two short lines between the score pill and "Time's up!", which moves down a little to make room: "New dots appear under the popped ones. Wait for the bright dot to slide out, then tap it." On a narrow screen, a line that would not fit is broken evenly. `taught.txt` now counts how many times the note has shown. A player whose file says `taught`, from an older version, already saw the hint, so it does not show again. In play, the dashed outline of the hidden bright dot is unchanged.
+
+**Why:** Players don't read during intense action (Johnson, Hodent), so a sentence that appeared mid-round mostly went unread and covered the field. A penalty is also the wrong trigger for reading (Saffer). Game Over is calm, and it follows the mistake closely enough that the note still makes sense. Showing it only after a mistake caused by a hidden dot means it explains something the player just saw. Showing it twice gives a player who taps through quickly a second chance.
+
+**To reverse:** Pass `lesson: nil` to the `Finale` in `Show#round_ended`. Setting `Look::LESSON.times` changes how often the note shows.

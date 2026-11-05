@@ -2,43 +2,40 @@
 
 module DotPopper
   module Presentation
-    # How a hint comes and goes: it fades in, stays, and fades out, all
-    # within +life+ seconds.
-    class HintLook < Data.define(:fade_in, :fade_out, :life); end
+    # How the stacking rule is taught: on how many Game Overs, at most,
+    # how strongly its lines show, and how far "Time's up!" moves down to
+    # make room for them, as a part of the safe area's height.
+    class LessonLook < Data.define(:times, :alpha, :room); end
 
-    # One line of teaching, shown since +at+. Its +lines+ are one sentence
-    # each, so a narrow screen can stack them.
-    class Hint < Data.define(:lines, :look, :at)
-      def alive?(now) = now - at < look.life
-
-      def alpha(now)
-        elapsed = now - at
-        return 0.0 unless elapsed.between?(0.0, look.life)
-
-        [elapsed / look.fade_in, (look.life - elapsed) / look.fade_out, 1.0].min
-      end
-    end
-
-    # Teaches the stacking rule once, the first time ever that the player
-    # is penalized, and remembers that it has. It reads and writes through
-    # a store that answers +read+ and +write(text)+, as BestScore does.
+    # Teaches the stacking rule on Game Over, after a round in which the
+    # player tapped a popped dot with the bright one hidden beneath it,
+    # and never in play, where nobody stops to read. It counts the Game
+    # Overs it has taught on, up to +times+, and keeps the count in a
+    # store that answers +read+ and +write(text)+, as BestScore does.
     class Tutor
-      TAUGHT = "taught"
+      # What an older version saved once it had shown its hint, in play.
+      # A player who saw that has been taught.
+      LEGACY = "taught"
 
-      def initialize(store)
+      def initialize(store, times:)
         @store = store
-        @taught = store.read.to_s.strip == TAUGHT
+        @times = times
+        saved = store.read.to_s.strip
+        @shown = saved == LEGACY ? times : Integer(saved, exception: false) || 0
       end
 
-      def taught? = @taught
+      attr_reader :shown
 
-      # The hint for a first wrong tap, or nil once it has been shown.
-      def slipped(lines, look, now)
+      def taught? = shown >= @times
+
+      # The +lines+ to show on this Game Over, counting them as shown, or
+      # nil once they have been shown +times+.
+      def lesson(lines)
         return if taught?
 
-        @taught = true
-        @store.write(TAUGHT)
-        Hint.new(lines:, look:, at: now)
+        @shown += 1
+        @store.write(@shown.to_s)
+        lines
       end
     end
   end

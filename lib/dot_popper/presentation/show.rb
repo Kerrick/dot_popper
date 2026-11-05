@@ -15,11 +15,11 @@ module DotPopper
     # DotSizing, chosen on the title. +radius+ is the usual dot's, which
     # sizes the buttons' reach; a round's effects follow its own dots.
     class Show
-      attr_reader :game, :effects, :animations, :hud, :hint, :attract, :layout, :marquee, :finale, :sounds, :now, :look,
+      attr_reader :game, :effects, :animations, :hud, :attract, :layout, :marquee, :finale, :sounds, :now, :look,
                   :lifetime
 
       def initialize(game:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false,
-                     tutor: Tutor.new(BestScore::Memory.new), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
+                     tutor: Tutor.new(BestScore::Memory.new, times: look::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
                      lifetime: Lifetime.new(BestScore::Memory.new), sizing_store: BestScore::Memory.new)
         @game = game
         @lifetime = lifetime
@@ -40,7 +40,7 @@ module DotPopper
         @finale = nil
         @tutor = tutor
         @clipboard = clipboard
-        @hint = nil
+        @hid_fresh = false
         @penalized_at = -Float::INFINITY
         @recorder = RoundStats::Recorder.new
         @records = nil
@@ -171,7 +171,6 @@ module DotPopper
         effects.update(seconds)
         @attract = attract.update(seconds) if title?
         @hud = hud.read(game.round, now) { tick(it) if playing? } if game.round
-        @hint = nil unless hint&.alive?(now) && playing?
         follow_finale if finished?
       end
 
@@ -199,6 +198,7 @@ module DotPopper
         @hud = Hud.blank(look::HUD, look::WORDS)
         event.round.dots.each { animations.spawn(it.id, now) }
         @finale = nil
+        @hid_fresh = false
         sounds.play(:start)
       end
 
@@ -221,7 +221,7 @@ module DotPopper
         effects.ring(event.dot.x, event.dot.y, look::ALARM_RING, follow: event.dot.id)
         hidden = game.round.dots.fresh_beneath(event.dot, event.x, event.y)
         effects.reveal(hidden, look::REVEAL) if hidden
-        @hint = @tutor.slipped(words.covered, look::HINT, now) || hint
+        @hid_fresh ||= !hidden.nil?
         effects.kick(look::PENALTY_SHAKE)
         effects.light(look::PENALTY_FLASH)
         # The floor can keep the score from falling; say only what was lost.
@@ -234,8 +234,9 @@ module DotPopper
 
       def round_ended(event)
         result = lifetime.record(stats, event.size_class)
+        lesson = @tutor.lesson(words.covered) if @hid_fresh
         @finale = Finale.new(look: look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now,
-                             stats:, record: result.records.first, goal_met: result.goal_met,
+                             stats:, record: result.records.first, goal_met: result.goal_met, lesson:,
                              screen: words.played_on(event.round.field, sized: event.size_class == SizeClass::FITTED))
         sounds.play(event.new_best ? :new_best : :game_over)
       end

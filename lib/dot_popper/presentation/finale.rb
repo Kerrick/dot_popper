@@ -13,12 +13,14 @@ module DotPopper
     # first round to meet today's goal, which is celebrated once, also when
     # the score has counted. +screen+ says what screen the round was
     # played on, for the result to share (Words#played_on), or is nil.
+    # +lesson+ is the stacking rule's lines (Tutor), on the first Game
+    # Overs after a wrong tap with the bright dot hidden beneath, or nil.
     class Finale < Data.define(:look, :score, :best, :new_best, :at, :stats, :record, :goal_met, :copied_at,
-                               :ready_at, :celebrated, :goal_celebrated, :screen)
+                               :ready_at, :celebrated, :goal_celebrated, :screen, :lesson)
       COPIED_FOR = 1.6 # seconds "Copy my result" says "Copied!"
 
       def initialize(look:, score:, best:, new_best:, at:, stats: RoundStats.start, record: nil, goal_met: false,
-                     copied_at: nil, ready_at: nil, celebrated: false, goal_celebrated: false, screen: nil)
+                     copied_at: nil, ready_at: nil, celebrated: false, goal_celebrated: false, screen: nil, lesson: nil)
         super
       end
 

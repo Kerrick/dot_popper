@@ -6,9 +6,11 @@ module DotPopper
     # a new best or how far short of the best it fell, a quiet line of the
     # round's facts, a lifetime record it set, "You met today's goal!" if
     # it did, "Copy my result", and, once a tap will be heard, the prompt
-    # to go on.
+    # to go on. On the first Game Overs after a wrong tap with the bright
+    # dot hidden, the stacking rule sits between the HUD, whose bottom is
+    # at +below+, and "Time's up!", away from the score.
     class FinalePainter < Data.define(:pen)
-      def draw(show, layout)
+      def draw(show, layout, below: layout.top)
         finale = show.finale or return
         now = show.now
         type = pen.look::TYPE
@@ -19,8 +21,9 @@ module DotPopper
         arrival = finale.arrival(now)
         shown = arrival.clamp(0.0, 1.0)
         heading = pen.fonts.bold(layout.scaled(type.heading))
-        pen.text(words.time_up, heading, layout.center_x, center - (height * 0.27) - ((1 - arrival) * 30), palette.soft,
-                 shown)
+        heading_y = center - (height * (0.27 - (finale.lesson ? pen.look::LESSON.room : 0.0)))
+        pen.text(words.time_up, heading, layout.center_x, heading_y - ((1 - arrival) * 30), palette.soft, shown)
+        lesson(finale.lesson, layout, below, heading_y - (layout.scaled(type.heading) * 0.36), shown) if finale.lesson
         score = pen.fonts.bold(layout.scaled(type.final_score))
         Lettering.new(pen:).candy(finale.shown_score(now).to_s, score, layout.center_x, center - (height * 0.06), shown)
         best_line(finale, words, layout, center + (height * 0.13), now, shown)
@@ -38,6 +41,20 @@ module DotPopper
       end
 
       private
+
+      # The stacking rule, a sentence a line (each broken evenly if it
+      # would not fit across), centred between +top+ and +bottom+.
+      def lesson(sentences, layout, top, bottom, alpha)
+        font = pen.fonts.semibold(layout.scaled(pen.look::TYPE.summary))
+        room = layout.safe.width - (layout.margin * 3)
+        lines = sentences.flat_map { |sentence| Presentation::Words.balance(sentence, room) { font.width(it) } }
+        step = font.height * 0.98
+        top = ((top + bottom) / 2.0) - (step * lines.size / 2.0)
+        lines.each_with_index do |line, i|
+          pen.text(line, font, layout.center_x, top + (step * (i + 0.5)), pen.palette.cream,
+                   alpha * pen.look::LESSON.alpha)
+        end
+      end
 
       # The lifetime record the round set, if any, once the score has
       # counted up: quiet, in the colour of a gain.

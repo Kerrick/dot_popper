@@ -10,19 +10,26 @@ module DotPopper
       BUMP_STEP = 2 # font sizes a bump steps through, in graphics units
 
       def draw(hud, layout)
-        type = pen.look::TYPE
-        number = pen.fonts.bold(layout.scaled(type.hud_number))
-        label = pen.fonts.semibold(layout.scaled(type.hud_label))
+        number, label = fonts(layout)
         readouts = [hud.score_readout, hud.time_readout]
-        pad = number.height * 0.32
-        cell = readouts.map { [number.width(it.text), number.width("00"), label.width(it.label)].max }.max + (pad * 2.4)
-        height = label.height + (number.height * 0.9) + pad
-        pill = pill(layout.center_x - cell, layout.top, cell * 2, height)
+        pad = padding(number)
+        cell = cell(readouts, number, label)
+        pill = pill(bounds(hud, layout))
         readouts.each_with_index do |readout, i|
           readout(readout, pill.x + (cell * (i + 0.5)), pill.y + (pad * 0.55), number, label, layout)
         end
         divider(pill.x + cell, pill.y + (pad * 0.7), pill.bottom - (pad * 0.7))
         pill
+      end
+
+      # Where the pill goes, on whole device pixels, without drawing it.
+      def bounds(hud, layout)
+        number, label = fonts(layout)
+        cell = cell([hud.score_readout, hud.time_readout], number, label)
+        height = label.height + (number.height * 0.9) + padding(number)
+        pixels = pen.pixels
+        Presentation::Rect.new(x: pixels.snap(layout.center_x - cell), y: pixels.snap(layout.top),
+                               width: pixels.snap(cell * 2), height: pixels.snap(height))
       end
 
       # Makes every size a bump or an urgent pulse passes through, an
@@ -36,10 +43,21 @@ module DotPopper
 
       private
 
-      def pill(x, y, width, height)
+      def fonts(layout)
+        type = pen.look::TYPE
+        [pen.fonts.bold(layout.scaled(type.hud_number)), pen.fonts.semibold(layout.scaled(type.hud_label))]
+      end
+
+      def padding(number) = number.height * 0.32
+
+      # Each readout's half of the pill: room for its widest text.
+      def cell(readouts, number, label)
+        readouts.map { [number.width(it.text), number.width("00"), label.width(it.label)].max }.max +
+          (padding(number) * 2.4)
+      end
+
+      def pill(rect)
         pixels = pen.pixels
-        rect = Presentation::Rect.new(x: pixels.snap(x), y: pixels.snap(y), width: pixels.snap(width),
-                                      height: pixels.snap(height))
         corner = rect.height / 2.0
         pen.color(pen.palette.pill)
         G.rectangle(:fill, rect.x, rect.y, rect.width, rect.height, corner, corner, 48)
