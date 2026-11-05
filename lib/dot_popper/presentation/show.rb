@@ -9,7 +9,7 @@ module DotPopper
     # animations play against. A renderer draws from it; it draws nothing
     # itself.
     #
-    # +sounds+ answers play(name, pitch:), muted?, and toggle_mute.
+    # +sounds+ answers play(name, pitch:, pan:), muted?, and toggle_mute.
     class Show
       attr_reader :game, :effects, :animations, :hud, :attract, :layout, :marquee, :finale, :sounds, :now, :look
 
@@ -93,7 +93,7 @@ module DotPopper
         effects.ring(event.spawned.x, event.spawned.y, look::SPAWN_RIPPLE, follow: event.spawned.id)
         float_pair(event.x, event.y, Words.points(event.points), Words.seconds(event.seconds),
                    palette.cream, palette.gain, look::GAIN_FLOAT)
-        sounds.play(:pop, pitch: pop_pitch)
+        sounds.play(:pop, pitch: pop_pitch, pan: pan(event.x))
       end
 
       def penalized(event)
@@ -106,7 +106,7 @@ module DotPopper
         points = event.points.zero? ? nil : Words.points(event.points)
         float_pair(event.x, event.y, points, Words.seconds(event.seconds), palette.alarm, palette.alarm,
                    look::LOSS_FLOAT)
-        sounds.play(:bonk)
+        sounds.play(:bonk, pan: pan(event.x))
       end
 
       def round_ended(event)
@@ -128,6 +128,9 @@ module DotPopper
         effects.float(left, x - spread, y, left_color, float) if left
         effects.float(right, x + spread, y, right_color, float) if right
       end
+
+      # Where across the stereo field a sound at +x+ plays.
+      def pan(x) = look::SOUND.stereo.pan(x, layout.width)
 
       def pop_pitch
         sound = look::SOUND

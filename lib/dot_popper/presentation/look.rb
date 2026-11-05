@@ -136,9 +136,12 @@ module DotPopper
                           fling: 1.0, longest_step: 1 / 30.0)
       CALM_PILE = PILE.with(gravity: 8.0, restitution: 0.0, friction: 0.8, damping: 2.5, fling: 0.25)
 
-      # Sound: the pop climbs a little with the score, up to a cap.
-      class SoundLook < Data.define(:pop_climb, :pop_highest, :tick_climb, :volume); end
-      SOUND = SoundLook.new(pop_climb: 0.02, pop_highest: 1.4, tick_climb: 0.12, volume: 0.8)
+      # Sound: the pop climbs a little with the score, up to a cap. A pop
+      # or a wrong tap is heard where it is across the screen, leaning at
+      # most 60% to a side.
+      class SoundLook < Data.define(:pop_climb, :pop_highest, :tick_climb, :volume, :stereo); end
+      SOUND = SoundLook.new(pop_climb: 0.02, pop_highest: 1.4, tick_climb: 0.12, volume: 0.8,
+                            stereo: Stereo.new(spread: 0.6))
 
       PATCHES = {
         # A bubbly "bloop": a sine that swoops up, with a soft click.

@@ -101,3 +101,11 @@ columns against each other, not as predictions of a person's score.
   hold. Side by side in captures, the new droplets read as the old ones did,
   a little softer; the fireworks now twinkle and spin. With no sprite there are
   no droplets, and play is unaffected.
+- **A pop and a wrong tap are heard where they happen.** Each sound is mono, so
+  OpenAL can place it: `Shell::Speaker` puts each voice relative to the
+  listener on a circle one unit away, at the angle `Presentation::Stereo`
+  gives for the tap's x, leaning at most 60% to a side. The distance never
+  changes, so neither does the loudness. Other sounds play in the centre.
+  There is no spawn sound to pan, and none was added, since that would change
+  the game's sound design. The panning was checked by logging each voice's
+  position; nobody has listened to it in the hidden session.

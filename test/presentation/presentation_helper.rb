@@ -11,10 +11,15 @@ module PresentationTest
 
   # Sounds that only remember what they were asked to play.
   class FakeSounds
-    attr_reader :played
+    attr_reader :played, :pans
 
-    def initialize = (@played = []) && (@muted = false)
-    def play(name, pitch: 1.0) = @played << [name, pitch]
+    def initialize = (@played = []) && (@pans = []) && (@muted = false)
+
+    def play(name, pitch: 1.0, pan: 0.0)
+      @played << [name, pitch]
+      @pans << pan
+    end
+
     def muted? = @muted
     def toggle_mute = @muted = !@muted
     def names = played.map(&:first)

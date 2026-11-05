@@ -3,7 +3,8 @@
 module DotPopper
   module Shell
     # Plays the game's sounds, which the synthesizer makes when the game
-    # starts. Each sound has a few voices, so quick taps overlap rather
+    # starts, each in mono so a pop or a wrong tap can be panned to where
+    # it happened. Each sound has a few voices, so quick taps overlap rather
     # than cut each other off. With no audio device, or muted, it plays
     # nothing and the game goes on. Muting is remembered in +store+.
     class Speaker
@@ -28,7 +29,9 @@ module DotPopper
         @muted
       end
 
-      def play(name, pitch: 1.0)
+      # Plays +name+ at +pitch+, panned by +pan+ from -1 (left) to 1
+      # (right).
+      def play(name, pitch: 1.0, pan: 0.0)
         return if @muted
 
         voices = @voices[name] or return
@@ -36,6 +39,7 @@ module DotPopper
         @next[name] += 1
         voice.stop
         voice.pitch = pitch
+        voice.position = Presentation::Stereo.position(pan)
         voice.play
       rescue StandardError => e
         warn "Dot Popper: could not play #{name}: #{e.message}"
@@ -47,11 +51,18 @@ module DotPopper
         patches.to_h do |name, patch|
           source = ::Lota::Audio::Source.new(sound_data(Presentation::Synth.render(patch)), :static)
           source.volume = @volume
-          [name, [source] + Array.new(VOICES - 1) { source.clone }]
+          [name, ([source] + Array.new(VOICES - 1) { source.clone }).each { place(it) }]
         end
       rescue StandardError => e
         warn "Dot Popper: playing without sound (#{e.message})"
         {}
+      end
+
+      # Every sound is mono, so OpenAL can place it: each voice is placed
+      # relative to the listener, which pans it by its angle (Stereo).
+      def place(voice)
+        voice.relative = true
+        voice.position = Presentation::Stereo.position(Presentation::Stereo::CENTER)
       end
 
       def sound_data(samples)

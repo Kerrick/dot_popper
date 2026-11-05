@@ -35,6 +35,13 @@ class ShowTest < Minitest::Test
     assert_equal 2, @show.effects.rings.size
   end
 
+  def test_a_pop_is_heard_where_it_is
+    start_and_pop
+    x = @game.round.dots.find(&:popped?).x
+
+    assert_in_delta Look::SOUND.stereo.pan(x, 800), @sounds.pans.last
+  end
+
   def test_the_pop_climbs_with_the_score_up_to_a_cap
     @show.tap(10, 10)
     score!(@game.round, 1000)
