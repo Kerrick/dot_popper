@@ -63,6 +63,12 @@ jobs:
           ruby-version: .ruby-version
           windows-toolchain: none
 
+      # The fuse action takes the app's version from fledge.yml; a tag's
+      # build takes the tag's (playtest/kit.rb's BuildVersion), so the
+      # header and lota fuse --app-version name it.
+      - name: Take the version from the tag
+        run: ruby script/playtest_kit.rb tag-version "$GITHUB_REF_NAME" fledge.yml
+
       - uses: ./.github/actions/fuse
         with:
           platform: x64-mingw-ucrt
@@ -70,6 +76,7 @@ jobs:
       - name: Render playtest.ps1 and README.txt from playtest/
         run: |
           mkdir -p "$RUNNER_TEMP/rendered"
+          ruby script/playtest_kit.rb check-build "$GITHUB_REF_NAME" "$RUNNER_TEMP/build.txt"
           ruby script/playtest_kit.rb windows "$RUNNER_TEMP/rendered/playtest.ps1" "$RUNNER_TEMP/build.txt"
           ruby script/playtest_kit.rb text playtest/README-windows.txt "$RUNNER_TEMP/rendered/README.txt" "$RUNNER_TEMP/build.txt" --crlf
 
@@ -178,6 +185,12 @@ jobs:
         with:
           ruby-version: .ruby-version
 
+      # The fuse action takes the app's version from fledge.yml; a tag's
+      # build takes the tag's (playtest/kit.rb's BuildVersion), so the
+      # header and lota fuse --app-version name it.
+      - name: Take the version from the tag
+        run: ruby script/playtest_kit.rb tag-version "$GITHUB_REF_NAME" fledge.yml
+
       - uses: ./.github/actions/fuse
         with:
           platform: arm64-darwin
@@ -208,6 +221,7 @@ jobs:
           kit=$RUNNER_TEMP/kit/dot-popper-macos-kit
           mkdir -p "$kit" "$RUNNER_TEMP/out"
           ditto "$APP" "$kit/Dot Popper.app"
+          ruby script/playtest_kit.rb check-build "$GITHUB_REF_NAME" "$RUNNER_TEMP/build.txt"
           ruby script/playtest_kit.rb text playtest/README-mac.txt "$kit/README.txt" "$RUNNER_TEMP/build.txt"
           ruby script/playtest_kit.rb sheet mac "$kit/macos-results.txt" "$RUNNER_TEMP/build.txt"
           cat "$kit/macos-results.txt"
@@ -248,6 +262,12 @@ jobs:
         with:
           ruby-version: .ruby-version
 
+      # The fuse action takes the app's version from fledge.yml; a tag's
+      # build takes the tag's (playtest/kit.rb's BuildVersion), so the
+      # header and lota fuse --app-version name it.
+      - name: Take the version from the tag
+        run: ruby script/playtest_kit.rb tag-version "$GITHUB_REF_NAME" fledge.yml
+
       - uses: ./.github/actions/fuse
         with:
           platform: x86_64-linux-gnu
@@ -260,6 +280,7 @@ jobs:
           game=$(find "$RUNNER_TEMP/unpacked" -maxdepth 3 -type f -name 'Dot Popper' -perm -u+x | head -1)
           mv "$(dirname "$game")" "$kit/Dot Popper"
           ruby script/playtest_kit.rb linux "$kit/playtest.sh" "$RUNNER_TEMP/build.txt"
+          ruby script/playtest_kit.rb check-build "$GITHUB_REF_NAME" "$RUNNER_TEMP/build.txt"
           bash -n "$kit/playtest.sh"
           ruby script/playtest_kit.rb text playtest/README-linux.txt "$kit/README.txt" "$RUNNER_TEMP/build.txt"
           ls -la "$kit"
@@ -361,6 +382,7 @@ jobs:
           gem "lota", path: "$LOTA_SOURCE"
           gem "fledge", git: "https://github.com/setdef/Fledge", tag: "$FLEDGE_TAG", group: :development
           EOF
+          ruby script/playtest_kit.rb tag-version "$GITHUB_REF_NAME" fledge.yml
           ruby -ryaml -e '
             config = YAML.load_file("fledge.yml")
             config.delete("installers")
@@ -404,6 +426,7 @@ jobs:
             echo "Built $(date -u +%Y-%m-%d) with $(xcodebuild -version | tr '\n' ' ')on $(sw_vers -productName) $(sw_vers -productVersion)"
             echo "Workflow run $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           } > "$RUNNER_TEMP/build.txt"
+          ruby script/playtest_kit.rb check-build "$GITHUB_REF_NAME" "$RUNNER_TEMP/build.txt"
           kit=$RUNNER_TEMP/kit/dot-popper-ipad-kit
           mkdir -p "$kit"
           mv "$project" "$kit/"

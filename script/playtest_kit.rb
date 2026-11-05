@@ -8,10 +8,18 @@
 #   ruby script/playtest_kit.rb linux OUT [BUILD]         # playtest.sh
 #   ruby script/playtest_kit.rb sheet DEVICE OUT [BUILD]  # mac, ipad, or android results sheet
 #   ruby script/playtest_kit.rb text TEMPLATE OUT [BUILD] [--crlf]
+#   ruby script/playtest_kit.rb tag-version REF FLEDGE_YML  # pins a tag's version
+#   ruby script/playtest_kit.rb check-build REF BUILD       # BUILD names it
 #
 # BUILD is a file of lines naming the build the kit holds; each output
 # carries them where its template says @BUILD@. playtest.ps1, and a text
 # file given --crlf, get Windows' CRLF line ends.
+#
+# tag-version sets FLEDGE_YML's version to the one REF (GITHUB_REF_NAME)
+# builds (Playtest::BuildVersion), in CI's copy only, so that lota fuse
+# and every kit's header take a tag's version, and prints it; any other
+# ref keeps fledge.yml's. check-build fails unless BUILD's first line
+# names REF and that version.
 
 require_relative "../playtest/kit"
 
@@ -45,7 +53,19 @@ in ["text", template, out, *rest]
   windows = rest.delete("--crlf")
   text = stamp(File.read(template), build_lines(rest.first))
   File.binwrite(out, windows ? crlf(text) : text)
+in ["tag-version", ref, fledge]
+  text = File.read(fledge)
+  version = Playtest::BuildVersion.of(ref, fallback: YAML.safe_load(text).fetch("version"))
+  File.write(fledge, version.pin(text)) if version.tag?
+  puts version.app
+in ["check-build", ref, build]
+  line = File.foreach(build).first.to_s.chomp
+  fledge = YAML.load_file(File.expand_path("../fledge.yml", __dir__)).fetch("version")
+  version = Playtest::BuildVersion.of(ref, fallback: fledge)
+  abort "#{build} begins #{line.inspect}, not Dot Popper #{ref} at version #{version.app}" unless version.names?(line)
+  puts "#{build} names Dot Popper #{ref} at version #{version.app}"
 else
   abort "usage: ruby script/playtest_kit.rb windows OUT [BUILD] | linux OUT [BUILD] | " \
-        "sheet mac|ipad|android OUT [BUILD] | text TEMPLATE OUT [BUILD] [--crlf]"
+        "sheet mac|ipad|android OUT [BUILD] | text TEMPLATE OUT [BUILD] [--crlf] | " \
+        "tag-version REF FLEDGE_YML | check-build REF BUILD"
 end

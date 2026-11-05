@@ -716,3 +716,11 @@ Every button the mouse is over (the title's "Your records", Dot size segments an
 **Why:** The macOS playtest found no sign of what could be clicked. A mouse user reads affordances from hover (Tidwell); a touch player has no hover to read, and a lit button under a resting pointer would mislead a gamepad player. One list of reaches for taps and hover means a button never lights where a click would miss it.
 
 **To reverse:** Drop `Show#hovered` and `App#point_the_mouse`, and the painters' `hover:` arguments.
+
+### A tagged kit takes the tag's version; a release candidate its base
+
+CI builds a tag as that tag's version, without its `v`, in place of `fledge.yml`'s, and the Kits workflow fails unless each kit's header names the tag and that version. A release candidate (`v0.8.2-rc.1`) builds its base version, 0.8.2, and its header says "Dot Popper v0.8.2-rc.1, …, version 0.8.2". A build by hand, or of a branch, keeps `fledge.yml`'s.
+
+**Why:** The v0.8.2-rc.1 macOS kit said "version 0.8.1", since `fledge.yml` hadn't been bumped. The tag is what a release is. macOS's and iOS's `CFBundleShortVersionString` and Windows' file version take only numbers, so an rc's suffix has no form every platform allows, and the header's tag still tells one candidate from another. Kits.yml pins the version in CI's copy of `fledge.yml` because the shared fuse action reads it from there.
+
+**To reverse:** Drop the "Take the version from the tag" steps and the `check-build` lines from kits.yml.

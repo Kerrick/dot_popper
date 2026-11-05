@@ -71,7 +71,7 @@ $ gem install --local vendor/cache/lota-0.1.3-PLATFORM.gem
 $ lota fuse . --identifier com.kerricklong.DotPopper --app-version VERSION --icon icons/icon --out DIR
 ```
 
-The first line installs Lota's release gem for the platform from `vendor/cache`, after checking its SHA-256 against the `SHA256SUMS` of [Lota's v0.1.3 release](https://github.com/setdef/Lota/releases/tag/v0.1.3). `lota fuse` ships that very gem file in the app. `VERSION` is `fledge.yml`'s `version:`.
+The first line installs Lota's release gem for the platform from `vendor/cache`, after checking its SHA-256 against the `SHA256SUMS` of [Lota's v0.1.3 release](https://github.com/setdef/Lota/releases/tag/v0.1.3). `lota fuse` ships that very gem file in the app. `VERSION` is the tag's version without its `v` when CI builds a tag, and `fledge.yml`'s `version:` otherwise, as for a build by hand. A release candidate builds its base version (`v0.8.2-rc.1` builds 0.8.2), since macOS, iOS, and Windows take only numbers there; the kit's header names the tag beside it, and the Kits workflow checks that it does (`script/playtest_kit.rb check-build`).
 
 `lota fuse` reads the game's name ("Dot Popper", from `conf.rb`'s `t.window.title`) and its save folder's name (`t.identity`, `dot_popper`) without opening a window. It copies the game into `DIR/fuse-project/game/dot_popper`, leaving out `.git`, `.bundle`, and `vendor/cache`, and writes a Gemfile that asks for Lota 0.1.3 and Fledge v0.5.0, a `fledge.yml`, and an entry script that starts the game fused. It then runs `fledge build` in that project. The game's own Gemfile doesn't reach the app, so `lota fuse` warns that only Lota's gem ships, which is all the game needs.
 

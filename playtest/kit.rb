@@ -141,6 +141,36 @@ module Playtest
     def quote(text) = "'#{text.gsub("'") { %q('\\'') }}'"
   end
 
+  # The version a kit's app is built as, from the ref CI builds (+ref+,
+  # such as v0.8.2 or trunk): a tag's own, without its leading v, or else
+  # +fallback+, fledge.yml's, as a local build takes it.
+  #
+  # A release candidate's tag, v0.8.2-rc.1, builds its base version,
+  # 0.8.2: macOS's and iOS's CFBundleShortVersionString and Windows' file
+  # version take only numbers, so an rc's suffix has no form every
+  # platform allows. The kit's header still names the tag beside it.
+  class BuildVersion < Data.define(:ref, :app)
+    TAG = /\Av(?<base>\d+\.\d+\.\d+)(?:-[0-9A-Za-z.]+)?\z/
+
+    def self.of(ref, fallback:)
+      match = TAG.match(ref.to_s)
+      new(ref: ref.to_s, app: match ? match[:base] : fallback.to_s)
+    end
+
+    def tag? = TAG.match?(ref)
+
+    # +text+, a fledge.yml, with its version: line set to this version.
+    def pin(text)
+      raise ArgumentError, "no version: line in fledge.yml" unless text.match?(/^version: /)
+
+      text.sub(/^version: .*$/, "version: #{app.inspect}")
+    end
+
+    # Whether +line+, the first of a kit's build lines, names this build:
+    # its ref, and the version its app was given.
+    def names?(line) = line.start_with?("Dot Popper #{ref},") && line.end_with?(", version #{app}")
+  end
+
   # A kit's results sheet, such as the iPad kit's ipad-results.txt: the
   # build it tests, a few lines about the device, then each check with its
   # blanks, ready to fill in.
