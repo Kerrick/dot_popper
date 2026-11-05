@@ -5,9 +5,12 @@ module DotPopper
     # Game over, shown since +at+: the round dimming behind, the heading
     # arriving, the score counting up, and the prompt to go on, which
     # shows only from +ready_at+, once a press would be heard. A new best
-    # is celebrated once, when it has finished counting.
-    class Finale < Data.define(:look, :score, :best, :new_best, :at, :ready_at, :celebrated)
-      def initialize(look:, score:, best:, new_best:, at:, ready_at: nil, celebrated: false) = super
+    # is celebrated once, when it has finished counting. +stats+ are the
+    # round's RoundStats, for the line of facts under the score.
+    class Finale < Data.define(:look, :score, :best, :new_best, :at, :stats, :ready_at, :celebrated)
+      def initialize(look:, score:, best:, new_best:, at:, stats: RoundStats.start, ready_at: nil, celebrated: false)
+        super
+      end
 
       def new_best? = new_best
 

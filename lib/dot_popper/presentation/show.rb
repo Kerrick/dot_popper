@@ -31,8 +31,13 @@ module DotPopper
         @tutor = tutor
         @hint = nil
         @penalized_at = -Float::INFINITY
+        @recorder = RoundStats::Recorder.new
+        game.subscribe(@recorder)
         game.subscribe(self)
       end
+
+      # The numbers of the round in play, or of the one just finished.
+      def stats = @recorder.stats
 
       def palette = look::PALETTE
       def words = look::WORDS
@@ -117,7 +122,8 @@ module DotPopper
       end
 
       def round_ended(event)
-        @finale = Finale.new(look: look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now)
+        @finale = Finale.new(look: look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now,
+                             stats: stats)
         sounds.play(event.new_best ? :new_best : :game_over)
       end
 

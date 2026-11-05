@@ -3,7 +3,8 @@
 module DotPopper
   module Shell
     # Game over, over the finished round: "Time!", the score counting up,
-    # the best score or a new best, and, once a tap will be heard, the
+    # a new best or how far short of the best it fell, a quiet line of the
+    # round's facts, and, once a tap will be heard, the
     # prompt to go on.
     class FinalePainter < Data.define(:pen)
       def draw(show, layout)
@@ -22,6 +23,9 @@ module DotPopper
         score = pen.fonts.bold(layout.scaled(type.final_score))
         Lettering.new(pen:).candy(finale.shown_score(now).to_s, score, layout.center_x, center - (height * 0.06), shown)
         best_line(finale, words, layout, center + (height * 0.13), now, shown)
+        summary = pen.fonts.semibold(layout.scaled(type.summary))
+        pen.text(words.summary(finale.stats), summary, layout.center_x, center + (height * 0.19), palette.soft,
+                 shown * 0.8)
         prompt = pen.fonts.bold(layout.scaled(type.prompt))
         pen.text(words.continue, prompt, layout.center_x, center + (height * 0.28), palette.cream, finale.prompt(now))
       end
@@ -38,7 +42,7 @@ module DotPopper
           pen.text(words.new_best, font, layout.center_x, y, pen.palette.gain, glow)
         else
           font = pen.fonts.semibold(layout.scaled(type.best))
-          pen.text(words.best_line(finale.best), font, layout.center_x, y, pen.palette.soft, alpha)
+          pen.text(words.short_of_best(finale.score, finale.best), font, layout.center_x, y, pen.palette.soft, alpha)
         end
       end
     end

@@ -8,6 +8,9 @@ module DotPopper
 
     attr_reader countdown: Countdown
 
+    # Seconds of play so far.
+    attr_reader elapsed: Float
+
     @random: Random
 
     @next_id: Integer

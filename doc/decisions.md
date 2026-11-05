@@ -129,6 +129,13 @@ the player understanding what just happened to them.
   legend already teaches the scoring, so this line teaches only the stacking,
   at the one moment the player needs it. It is not a button, and the round goes
   on under it; on a narrow screen the two sentences stack.
+- **Game Over says what the round was made of.** Under the score, one quiet
+  line, "27 pops · 1 slip · longest wait 4.1 s", and, when the round set no
+  new best, how far short it fell ("3 short of your best (27)") in place of
+  "Best 27". These are the numbers a player can act on: slips are the
+  impatience the game punishes, and the longest wait is how long patience
+  was asked of them. `RoundStats` builds them from the rules' events, timed by
+  `Round#elapsed`, which counts only the time the clock ran.
 
 ## Code
 

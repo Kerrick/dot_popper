@@ -1,0 +1,37 @@
+module DotPopper
+  class RoundStats < ::Data
+    attr_reader pops: Integer
+
+    attr_reader slips: Integer
+
+    attr_reader softened: Integer
+
+    attr_reader waits: Array[Float]
+
+    attr_reader fresh_since: Float
+
+    attr_reader duration: Float
+
+    def self.start: () -> RoundStats
+
+    def self.new: (pops: Integer, slips: Integer, softened: Integer, waits: Array[Float], fresh_since: number, duration: number) -> instance
+
+    def initialize: (pops: Integer, slips: Integer, softened: Integer, waits: Array[Float], fresh_since: number, duration: number) -> void
+
+    def record: (event event, at: Float) -> RoundStats
+
+    def longest_wait: () -> Float
+
+    def mean_wait: () -> Float
+
+    class Recorder
+      attr_reader stats: RoundStats
+
+      @round: Round?
+
+      def initialize: () -> void
+
+      def call: (event event) -> void
+    end
+  end
+end

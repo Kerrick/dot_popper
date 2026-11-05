@@ -5,13 +5,14 @@ module DotPopper
   # the rules that changes, and it changes by swapping in new values, so a
   # tap changes all three at once and says what it did with an event.
   class Round
-    attr_reader :field, :dots, :score, :countdown
+    attr_reader :field, :dots, :score, :countdown, :elapsed
 
     def initialize(field, random: Random.new, dots: nil)
       @field = field
       @random = random
       @next_id = 0
       @score = 0
+      @elapsed = 0.0
       @countdown = Countdown.new(remaining: Rules::STARTING_SECONDS)
       @dots = dots || Stack.new.slide_under(spawn)
       @next_id = @dots.map(&:id).max.to_i + 1
@@ -23,6 +24,7 @@ module DotPopper
       return if over?
 
       @dots = dots.map_dots { it.move(seconds, field) }
+      @elapsed += [seconds, countdown.remaining].min # a round plays no longer than its clock
       @countdown = countdown.tick(seconds)
     end
 

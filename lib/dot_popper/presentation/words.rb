@@ -26,6 +26,23 @@ module DotPopper
       end
 
       def best_line(best) = "#{self.best} #{best}"
+
+      # How far a finished round fell short of the best, which it did not
+      # beat: "3 short of your best (27)".
+      def short_of_best(score, best)
+        gap = best - score
+        gap.positive? ? "#{gap} short of your best (#{best})" : "You matched your best (#{best})"
+      end
+
+      # The round in one quiet line: "14 pops · 2 slips · longest wait 3.1 s".
+      def summary(stats)
+        parts = [Words.count(stats.pops, "pop"), Words.count(stats.slips, "slip")]
+        parts << "longest wait #{format("%.1f", stats.longest_wait)} s" if stats.pops.positive?
+        parts.join(" · ")
+      end
+
+      # "1 pop", "2 pops".
+      def self.count(number, noun) = "#{number} #{noun}#{"s" unless number == 1}"
     end
   end
 end

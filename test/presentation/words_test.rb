@@ -30,4 +30,18 @@ class WordsTest < Minitest::Test
     labels.each_value { |text| assert_operator text.split.size, :<=, 4, text }
     words.covered.each { |sentence| assert_operator sentence.split.size, :<=, 8, sentence }
   end
+
+  def test_the_round_in_one_line
+    stats = DotPopper::RoundStats.start.with(pops: 14, slips: 2, waits: [1.0, 3.14])
+
+    assert_equal "14 pops · 2 slips · longest wait 3.1 s", Look::WORDS.summary(stats)
+    assert_equal "1 pop · 1 slip · longest wait 0.0 s",
+                 Look::WORDS.summary(DotPopper::RoundStats.start.with(pops: 1, slips: 1, waits: [0.0]))
+    assert_equal "0 pops · 0 slips", Look::WORDS.summary(DotPopper::RoundStats.start)
+  end
+
+  def test_how_far_short_of_the_best
+    assert_equal "3 short of your best (27)", Look::WORDS.short_of_best(24, 27)
+    assert_equal "You matched your best (27)", Look::WORDS.short_of_best(27, 27)
+  end
 end

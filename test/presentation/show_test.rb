@@ -113,6 +113,7 @@ class ShowTest < Minitest::Test
 
     assert @show.finished?
     assert_equal :new_best, @sounds.names.last
+    assert_equal 1, @show.finale.stats.pops
     assert_in_delta 0.0, @show.finale.prompt(@show.now)
     @game.update(DotPopper::Rules::GAME_OVER_GRACE)
     @show.update(0.01)
