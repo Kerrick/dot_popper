@@ -52,6 +52,27 @@ class LayoutTest < Minitest::Test
     assert_operator button.reach(2 * R).right, :<, narrow.mute_button.x
   end
 
+  # The dot-size choice shares the bottom row on a wide window, and on an
+  # upright phone takes a row of its own above it; either way it overlaps
+  # neither button, and stays in the safe area.
+  def test_the_dot_size_choice_finds_room_beside_or_above_the_corner_buttons
+    [[1200, 800], [400, 850], [400, 320], [800, 600], [2560, 1440]].each do |width, height|
+      plan = layout(width, height)
+      pill = plan.sizing_button
+      others = [plan.records_button, plan.mute_button]
+
+      assert_operator pill.height, :>=, 44, "#{width}x#{height}"
+      assert_operator pill.x, :>=, 0, "#{width}x#{height}"
+      assert_operator pill.right, :<=, width, "#{width}x#{height}"
+      others.each do |other|
+        apart = pill.right <= other.x || other.right <= pill.x || pill.bottom <= other.y || other.bottom <= pill.y
+        assert apart, "#{width}x#{height}"
+      end
+    end
+    assert_equal layout(1200, 800).mute_button.y, layout(1200, 800).sizing_button.y
+    assert_operator layout(400, 850).sizing_button.bottom, :<, layout(400, 850).mute_button.y
+  end
+
   def test_the_prompt_makes_room_for_share
     assert_operator layout.continue_y, :>, layout.share_button.reach(2 * R).bottom
   end

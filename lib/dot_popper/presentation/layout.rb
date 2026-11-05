@@ -72,6 +72,22 @@ module DotPopper
         Rect.new(x: safe.x + margin, y: safe.bottom - margin - height, width: height * 3.8, height:)
       end
 
+      # The title's choice of dot size, a pill wide enough for its longer
+      # label. It sits between "Your records" and the mute button when
+      # there is room, centred on the screen if it can be, and otherwise
+      # centred a row above them, as on an upright phone.
+      def sizing_button
+        height = button_size
+        width = height * 6.2
+        left = records_button.right + margin
+        right = mute_button.x - margin
+        bottom_row = mute_button.y
+        return Rect.new(x: center_x - (width / 2.0), y: bottom_row - margin - height, width:, height:) if right - left < width
+
+        x = (center_x - (width / 2.0)).clamp(left, right - width)
+        Rect.new(x:, y: bottom_row, width:, height:)
+      end
+
       # Game Over's "Copy my result" button, under the round's summary.
       def share_button
         height = button_size

@@ -25,9 +25,10 @@ module DotPopper
     end
 
     # A burst asked for at (+x+, +y+), waiting for the shell to throw it:
-    # its look, its colors, and the longest a droplet of it may live.
-    class Spray < Data.define(:x, :y, :look, :colors, :longest)
-      def emission(radius, sprite_size) = Emission.new(look:, longest:, radius:, sprite_size:)
+    # its look, its colors, the longest a droplet of it may live, and the
+    # +radius+ of the dots it is for, which its sizes are measured in.
+    class Spray < Data.define(:x, :y, :look, :colors, :longest, :radius)
+      def emission(sprite_size) = Emission.new(look:, longest:, radius:, sprite_size:)
     end
 
     # A Burst as a ParticleSystem's settings, in graphics units, for dots

@@ -11,20 +11,24 @@ module DotPopper
     #
     # +sounds+ answers play(name, pitch:, pan:), muted?, and toggle_mute;
     # +haptics+ answers buzz(seconds). +lifetime+ (Lifetime) adds up every
-    # round the device has played.
+    # round the device has played. +sizing_store+ keeps the player's
+    # DotSizing, chosen on the title. +radius+ is the usual dot's, which
+    # sizes the buttons' reach; a round's effects follow its own dots.
     class Show
       attr_reader :game, :effects, :animations, :hud, :hint, :attract, :layout, :marquee, :finale, :sounds, :now, :look,
                   :lifetime
 
       def initialize(game:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false,
                      tutor: Tutor.new(BestScore::Memory.new), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
-                     lifetime: Lifetime.new(BestScore::Memory.new))
+                     lifetime: Lifetime.new(BestScore::Memory.new), sizing_store: BestScore::Memory.new)
         @game = game
         @lifetime = lifetime
         @layout = layout
         @sounds = sounds
         @haptics = haptics
         @radius = radius
+        @scale = radius
+        @sizing_store = sizing_store
         @look = look
         @random = random
         @effects = Effects.new(radius:, random:, calm:)
@@ -67,8 +71,8 @@ module DotPopper
       def playing? = game.state.is_a?(Game::Playing)
       def finished? = game.state.is_a?(Game::GameOver)
 
-      # A tap anywhere. On the title, the mute button and "Your records"
-      # take their own taps, as "Copy my result" does on Game Over, and on
+      # A tap anywhere. On the title, the mute button, "Your records", and
+      # the dot-size choice take their own taps, as "Copy my result" does on Game Over, and on
       # the Records screen a tap anywhere goes back; every other tap goes
       # to the game at once. A tap on one of the title's fresh dots also
       # pops it, as the round starts.
@@ -76,6 +80,7 @@ module DotPopper
         if records? then close_records
         elsif title? && layout.mute_button.contains?(x, y) then sounds.toggle_mute
         elsif title? && records_offered? && records_reach.contains?(x, y) then open_records
+        elsif title? && records_offered? && sizing_reach.contains?(x, y) then toggle_sizing
         elsif finished? && share_reach.contains?(x, y) then share
         else
           scenery = attract.dots.top_at(x, y) if title?
@@ -104,6 +109,19 @@ module DotPopper
         true
       end
 
+      # Switches how dots are sized (DotSizing), on the title once it
+      # offers the choice, and remembers it. The title's dots and best
+      # change with it, so the choice shows at once.
+      def toggle_sizing
+        return unless title? && records_offered?
+
+        game.sizing = game.sizing.toggled
+        @sizing_store.write(game.sizing.to_text)
+        @attract = Attract.spawn(game.field, look::TITLE)
+        @marquee = marquee.with(best: game.best.of(game.size_class))
+        sounds.play(:tick, pitch: game.sizing.sized_to_screen? ? 1.2 : 0.9)
+      end
+
       # Opens the Records screen over the title, with the stats as they
       # are now.
       def open_records
@@ -111,7 +129,7 @@ module DotPopper
 
         size_class = game.size_class
         @records = RecordsSheet.build(lifetime.stats, best: game.best.of(size_class), words:, streak: lifetime.streak,
-                                      size_class:, field: game.field)
+                                      size_class:, field: game.field, sizing: game.sizing)
         sounds.play(:tick)
       end
 
@@ -136,14 +154,16 @@ module DotPopper
 
       # Where a tap reaches "Your records": never less than a dot's width,
       # and never past the safe area's bottom.
-      def records_reach
-        reach = layout.records_button.reach(2 * @radius)
-        reach.with(height: [reach.height, layout.safe.bottom - reach.y].min)
-      end
+      def records_reach = within_safe(layout.records_button.reach(2 * @radius))
 
+      # Where a tap reaches the dot-size choice, likewise.
+      def sizing_reach = within_safe(layout.sizing_button.reach(2 * @radius))
+
+      # The window changed size. The title's dots are respawned if their
+      # size changes with it, as dots sized to the screen do.
       def resize(layout, field)
         @layout = layout
-        @attract = attract.refit(field)
+        @attract = field.radius == attract.field.radius ? attract.refit(field) : Attract.spawn(field, look::TITLE)
       end
 
       def update(seconds)
@@ -169,8 +189,12 @@ module DotPopper
 
       private
 
+      def within_safe(reach) = reach.with(height: [reach.height, layout.safe.bottom - reach.y].min)
+
       def round_started(event)
+        @scale = event.round.field.radius
         effects.clear
+        effects.scale_to(@scale)
         animations.clear
         @hud = Hud.blank(look::HUD, look::WORDS)
         event.round.dots.each { animations.spawn(it.id, now) }
@@ -212,7 +236,7 @@ module DotPopper
         result = lifetime.record(stats, event.size_class)
         @finale = Finale.new(look: look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now,
                              stats:, record: result.records.first, goal_met: result.goal_met,
-                             screen: words.played_on(event.round.field))
+                             screen: words.played_on(event.round.field, sized: event.size_class == SizeClass::FITTED))
         sounds.play(event.new_best ? :new_best : :game_over)
       end
 
@@ -234,7 +258,7 @@ module DotPopper
       # One floater to the left and one to the right of the tap; with only
       # one, it sits over the tap.
       def float_pair(x, y, left, right, left_color, right_color, float)
-        spread = look::FLOAT_SPREAD * @radius
+        spread = look::FLOAT_SPREAD * @scale
         spread = 0.0 unless left && right
         effects.float(left, x - spread, y, left_color, float) if left
         effects.float(right, x + spread, y, right_color, float) if right

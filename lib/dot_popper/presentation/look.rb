@@ -30,7 +30,8 @@ module DotPopper
         records: "Your records", go_back: "Tap anywhere to go back",
         no_rounds: "Play a round, and your records will appear here.",
         labels: {
-          bests: "Your bests on screens this size", best_score: "Best score", longest_round: "Longest round",
+          bests: "Your bests on screens this size", fitted_bests: "Your bests with dots sized to the screen",
+          best_score: "Best score", longest_round: "Longest round",
           longest_run: "Most pops in a row without a wrong tap", fastest_pop: "Fastest pop",
           longest_wait: "Longest wait that ended in a pop",
           totals: "All your rounds", rounds: "Rounds played", pops: "Dots popped", slips: "Wrong taps",
@@ -49,7 +50,13 @@ module DotPopper
         goal_done: "Today's goal is done.", goal_met: "You met today's goal!",
         screen_size: {
           here: "This screen is about %d dots wide and %d dots tall.",
-          played: "Played on a screen about %d dots wide and %d dots tall."
+          played: "Played on a screen about %d dots wide and %d dots tall.",
+          tip: "Choosing “Dots: sized to your screen” on the title gives every screen the same room, " \
+               "so scores compare across devices.",
+          fitted_here: "Dots are sized to your screen, so every screen has the same room, " \
+                       "and scores compare across devices.",
+          fitted_played: "Played with the dots sized to my screen.",
+          same_choice: "Dots: same size everywhere", fitted_choice: "Dots: sized to your screen"
         }.freeze
       )
 

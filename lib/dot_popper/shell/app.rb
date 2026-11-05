@@ -26,21 +26,25 @@ module DotPopper
         random = seed ? Random.new(seed) : Random.new
         # Bests saved before they were kept by size of screen go to this
         # screen's class.
-        legacy = SizeClass.of(field)
-        @game = Game.new(field, best: BestScore.new(SaveFile.new(name: "best_score.txt"), legacy:), random:)
+        legacy = SizeClass.of(screen)
+        sizing_store = SaveFile.new(name: "dot_size.txt")
+        @game = Game.new(screen, best: BestScore.new(SaveFile.new(name: "best_score.txt"), legacy:), random:,
+                                 sizing: DotSizing.parse(sizing_store.read))
+        puts "Dot Popper: dots are sized to the screen as each round starts" if @game.sizing.sized_to_screen?
         @speaker = Speaker.new(Look::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Look::SOUND.volume)
         @show = Presentation::Show.new(game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"),
                                        tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt")),
                                        haptics: Haptics.for(os), clipboard: Clipboard.new,
-                                       lifetime: Lifetime.new(SaveFile.new(name: "lifetime.txt"), today:, legacy:))
+                                       lifetime: Lifetime.new(SaveFile.new(name: "lifetime.txt"), today:, legacy:),
+                                       sizing_store:)
         @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
                                         archive: ->(name) { SaveFile.new(name:) }))
         puts "Dot Popper: each round is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"
         @pile = Pile.new(flag?("DOT_POPPER_CALM") ? Look::CALM_PILE : Look::PILE)
         @game.subscribe(@pile)
         @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
-        @sparks = Sparks.new(Look, radius: @dot_size.radius)
+        @sparks = Sparks.new(Look)
         @bloom = Bloom.new(@pen, Look::BLOOM)
         @renderer = Renderer.new(@show, @pen, pile: @pile, sparks: @sparks, bloom: @bloom)
         @renderer.prepare
@@ -98,6 +102,7 @@ module DotPopper
         in :records then @show.open_records if @show.records_offered?
         in :leave then @show.back
         in :mute then @speaker.toggle_mute
+        in :sizing then @show.toggle_sizing
         in nil then nil
         end
       end
@@ -145,9 +150,11 @@ module DotPopper
         @pen.refresh
         @sparks.refresh
         @bloom.refresh
-        @game.field = field
+        @game.screen = screen
         @show.resize(layout, @game.field)
-        @pile.refit(@game.field)
+        # The heap keeps the finished round's dots, and their radius.
+        round = @game.round
+        @pile.refit(round ? Field.new(screen.width, screen.height, round.field.radius) : @game.field)
         @renderer.prepare
         @cursor = @cursor.refit(@show.layout.whole)
       end
@@ -178,7 +185,9 @@ module DotPopper
         ::Lota::Window.set_fullscreen(!fullscreen, :desktop)
       end
 
-      def field = @dot_size.field(*::Lota::Graphics.dimensions)
+      # The window as a field of dots at the usual size; the game sizes a
+      # round's dots on it as the player chose (DotSizing).
+      def screen = @dot_size.field(*::Lota::Graphics.dimensions)
 
       def layout
         width, height = ::Lota::Graphics.dimensions

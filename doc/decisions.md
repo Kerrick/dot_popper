@@ -344,7 +344,7 @@ On the title screen, **Start** starts an ordinary round (without popping a title
 
 **Why:** A button that scored without aiming would bypass the game.
 
-The Records screen added three more. **X** opens it from the title, once it is offered, so a controller player needn't steer the cursor to the corner. **B**, the usual "go back" button, leaves it, and so does **Start**, which on every other menu screen means "go on". **A** works as a tap anywhere, which also leaves it. **Back** stays the sound toggle on every screen, including this one, so one button never means two things. B and X do nothing during a round, for the same reason Start doesn't.
+The Records screen added three more. **X** opens it from the title, once it is offered, so a controller player needn't steer the cursor to the corner. **B**, the usual "go back" button, leaves it, and so does **Start**, which on every other menu screen means "go on". **A** works as a tap anywhere, which also leaves it. **Back** stays the sound toggle on every screen, including this one, so one button never means two things. B and X do nothing during a round, for the same reason Start doesn't. Either shoulder button switches the title's dot-size choice once it is offered, because shoulder buttons usually switch between options, and both were free.
 
 **To reverse:** The button mapping is in `Presentation::GamepadButtons`.
 

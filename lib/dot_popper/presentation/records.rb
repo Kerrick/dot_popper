@@ -13,13 +13,14 @@ module DotPopper
     # streaks (+streak+ is the current one, as it stands today), and the
     # last few scores for the chart. The bests, and +best+, are those of
     # screens of +size_class+, the screen's now, and +notes+ say how big
-    # +field+, the screen, is. With no round played yet, +empty+ is true
+    # +field+, the screen, is, and what +sizing+ (DotSizing) does. With no round played yet, +empty+ is true
     # and there is nothing to list.
     class RecordsSheet < Data.define(:bests, :totals, :goal, :scores, :empty, :notes)
-      def self.build(stats, best:, words:, streak: 0, size_class: SizeClass::MEDIUM, field: nil)
+      def self.build(stats, best:, words:, streak: 0, size_class: SizeClass::MEDIUM, field: nil,
+                     sizing: DotSizing::SAME_EVERYWHERE)
         labels = words.labels
         mine = stats.bests_in(size_class)
-        bests = RecordSection.new(title: labels[:bests], rows: [
+        bests = RecordSection.new(title: words.bests_heading(sizing), rows: [
           RecordRow.new(label: labels[:best_score], value: best.to_s),
           RecordRow.new(label: labels[:longest_round], value: Words.count(mine.longest_round.round, "second")),
           RecordRow.new(label: labels[:longest_run], value: mine.longest_run.to_s),
@@ -38,7 +39,7 @@ module DotPopper
           RecordRow.new(label: labels[:longest_streak], value: Words.count(stats.streak.longest, "day"))
         ])
         new(bests:, totals:, goal:, scores: stats.recent, empty: stats.rounds.zero?,
-            notes: field ? [words.screen_here(field)] : [])
+            notes: field ? words.screen_notes(field, sizing) : [])
       end
     end
 

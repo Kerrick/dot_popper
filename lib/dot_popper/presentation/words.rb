@@ -9,7 +9,8 @@ module DotPopper
     # hint, a sentence a line. +labels+ name the Records screen's sections
     # and rows, by what they count. +goals+ say each kind of DailyGoal as
     # the end of "Today's goal: ...", with %d for its target. +screen_size+
-    # says how big a screen is, in dots, with %d for its width and height.
+    # says how big a screen is, in dots, with %d for its width and height,
+    # and names the choices of dot size (DotSizing) and what they do.
     class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time, :covered,
                               :share, :copied, :records, :go_back, :no_rounds, :labels, :goals, :goal_done,
                               :goal_met, :screen_size)
@@ -92,13 +93,34 @@ module DotPopper
          screen].compact.join("\n")
       end
 
-      # How big +field+ is, counted in dots side by side, for the Records
-      # screen: "This screen is about 12 dots wide and 8 dots tall."
+      # What the Records screen says about the screen, given its +field+
+      # and the player's DotSizing: how big it is, counted in dots side by
+      # side, and what the choice of dot size does.
+      #
+      #   This screen is about 12 dots wide and 8 dots tall.
+      #   Choosing "Dots: sized to your screen" on the title gives ...
+      def screen_notes(field, sizing)
+        return [screen_size.fetch(:fitted_here)] if sizing.sized_to_screen?
+
+        [screen_here(field), screen_size.fetch(:tip)]
+      end
+
+      # "This screen is about 12 dots wide and 8 dots tall."
       def screen_here(field) = format(screen_size.fetch(:here), *Words.dots_across(field))
 
-      # The same for a shared result: "Played on a screen about 12 dots
-      # wide and 8 dots tall."
-      def played_on(field) = format(screen_size.fetch(:played), *Words.dots_across(field))
+      # The shared result's last line: "Played on a screen about 12 dots
+      # wide and 8 dots tall.", or, with the dots +sized+ to the screen,
+      # that they were.
+      def played_on(field, sized: false)
+        sized ? screen_size.fetch(:fitted_played) : format(screen_size.fetch(:played), *Words.dots_across(field))
+      end
+
+      # The title's choice of dot size, as it stands: "Dots: same size
+      # everywhere".
+      def sizing(sizing) = screen_size.fetch(sizing.sized_to_screen? ? :fitted_choice : :same_choice)
+
+      # The Records screen's heading for the bests it shows.
+      def bests_heading(sizing) = labels.fetch(sizing.sized_to_screen? ? :fitted_bests : :bests)
 
       # How many dots fit across +field+ and down it, side by side, to the
       # nearest whole dot, and never none.

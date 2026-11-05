@@ -23,5 +23,11 @@ module DotPopper
     SMALL_FIELD_BELOW: Integer
 
     LARGE_FIELD_FROM: Integer
+
+    FITTED_AREA: Integer
+
+    SMALLEST_FITTED_RADIUS: Integer
+
+    LARGEST_FITTED_SHARE: Float
   end
 end

@@ -30,6 +30,15 @@ module DotPopper
       end
     end
 
+    # The size of a dot "sized to your screen" (DotSizing) on a window
+    # +width+ by +height+ units: the radius that makes the field
+    # Rules::FITTED_AREA square radii, within the limits the rules set.
+    def self.fitted(width, height)
+      largest = [[width.to_f, height.to_f].min * Rules::LARGEST_FITTED_SHARE, Rules::SMALLEST_FITTED_RADIUS].max
+      radius = Math.sqrt(width.to_f * height.to_f / Rules::FITTED_AREA).clamp(Rules::SMALLEST_FITTED_RADIUS.to_f, largest)
+      new(radius:, reason: format("%.1f units, sized to the screen", radius))
+    end
+
     def field(width, height) = Field.new(width, height, radius)
 
     # Whether +os+ is a phone or tablet, played by touch and fullscreen.

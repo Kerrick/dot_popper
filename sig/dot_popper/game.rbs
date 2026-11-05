@@ -12,13 +12,15 @@ module DotPopper
 
     attr_reader best: BestScore
 
-    attr_reader field: Field
+    attr_reader screen: Field
+
+    attr_reader sizing: DotSizing
 
     @random: Random
 
     @listeners: Array[_Listener]
 
-    def initialize: (Field field, ?best: BestScore, ?random: Random) -> void
+    def initialize: (Field screen, ?best: BestScore, ?random: Random, ?sizing: DotSizing) -> void
 
     def subscribe: (?_Listener? listener) ?{ (event event) -> void } -> self
 
@@ -28,9 +30,13 @@ module DotPopper
 
     def round: () -> Round?
 
+    def field: () -> Field
+
     def size_class: () -> SizeClass
 
-    def field=: (Field field) -> void
+    def screen=: (Field screen) -> void
+
+    def sizing=: (DotSizing sizing) -> void
 
     def announce: [E < event] (E? event) -> E?
 

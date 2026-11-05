@@ -43,8 +43,20 @@ class RecordsTest < Minitest::Test
 
     assert_equal ["6", "12 seconds", "3", "None yet"], phone.bests.rows.first(4).map(&:value)
     assert_equal "42", phone.totals.rows.first.value
-    assert_equal ["This screen is about 4 dots wide and 9 dots tall."], phone.notes
-    assert_equal ["This screen is about 12 dots wide and 8 dots tall."], sheet.notes
+    assert_equal "This screen is about 4 dots wide and 9 dots tall.", phone.notes.first
+    assert_equal "This screen is about 12 dots wide and 8 dots tall.", sheet.notes.first
+    assert_match(/sized to your screen/, sheet.notes.last)
+  end
+
+  def test_with_dots_sized_to_the_screen_the_sheet_says_so
+    fitted = RecordsSheet.build(stats, best: 0, words: Look::WORDS, size_class: DotPopper::SizeClass::FITTED,
+                                       field: DotPopper::Field.new(395, 850, 30),
+                                       sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
+
+    assert_equal "Your bests with dots sized to the screen", fitted.bests.title
+    assert_equal ["None yet"], fitted.bests.rows.map(&:value).values_at(3)
+    assert_equal ["Dots are sized to your screen, so every screen has the same room, and scores compare across devices."],
+                 fitted.notes
   end
 
   def test_with_no_rounds_the_sheet_is_empty_and_says_none_yet

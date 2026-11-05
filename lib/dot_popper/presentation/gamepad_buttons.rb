@@ -14,11 +14,14 @@ module DotPopper
     # [:records] open the Records screen from the title (X)
     # [:leave] leave the Records screen (B)
     # [:mute] sound on or off (Back, Select, or Share), on every screen
+    # [:sizing] switch how dots are sized, on the title once it offers the
+    #   choice (either shoulder button)
     #
     # The d-pad has no intent of its own: it moves the cursor, as the left
-    # stick does (GamepadCursor). B and X do nothing during a round.
+    # stick does (GamepadCursor). B, X, and the shoulders do nothing during a round.
     class GamepadButtons < Data.define(:intents)
-      STANDARD = { a: :press, start: :start, y: :share, x: :records, b: :leave, back: :mute }.freeze
+      STANDARD = { a: :press, start: :start, y: :share, x: :records, b: :leave, back: :mute, leftshoulder: :sizing,
+                   rightshoulder: :sizing }.freeze
 
       def initialize(intents: STANDARD) = super
 

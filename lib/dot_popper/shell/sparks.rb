@@ -14,9 +14,8 @@ module DotPopper
       G = ::Lota::Graphics
       BUFFER = 4 # bursts of one look each system has room for at once
 
-      def initialize(look, radius:)
+      def initialize(look)
         @look = look
-        @radius = radius
         @systems = {}
         @cleared = 0
         refresh
@@ -60,8 +59,8 @@ module DotPopper
 
       def system_for(spray, color)
         texture = @sprites[spray.look.sprite] or return
-        @systems[[spray.look, spray.longest, color]] ||= configure(
-          G::ParticleSystem.new(texture, spray.look.count * BUFFER), spray.emission(@radius, texture.width), color
+        @systems[[spray.look, spray.longest, spray.radius, color]] ||= configure(
+          G::ParticleSystem.new(texture, spray.look.count * BUFFER), spray.emission(texture.width), color
         )
       end
 

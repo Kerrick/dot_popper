@@ -12,6 +12,8 @@ module DotPopper
 
     LARGE: SizeClass
 
+    FITTED: SizeClass
+
     ALL: Array[SizeClass]
 
     def self.of: (Field field) -> SizeClass

@@ -8,13 +8,18 @@ module DotPopper
   # rounds, keeps the best scores, and tells its listeners every event, in
   # order. A round's records count among those of its SizeClass, the
   # class of the field it started on.
+  #
+  # +screen+ is the window as a Field at the usual dot size (DotSize);
+  # +sizing+ (DotSizing) decides the radius a round's dots get on it.
   class Game
     LARGEST_SEED = 2_147_483_648 # 2**31
 
-    attr_reader :state, :best, :field
+    attr_reader :state, :best, :screen, :sizing
 
-    def initialize(field, best: BestScore.new(BestScore::Memory.new), random: Random.new)
-      @field = field
+    def initialize(screen, best: BestScore.new(BestScore::Memory.new), random: Random.new,
+                   sizing: DotSizing::SAME_EVERYWHERE)
+      @screen = screen
+      @sizing = sizing
       @best = best
       @random = random
       @listeners = []
@@ -33,14 +38,22 @@ module DotPopper
     # The round in play or just finished, or nil on the title.
     def round = state.round
 
-    # The class of screen a round started now would count among.
-    def size_class = SizeClass.of(field)
+    # The field a round started now would play on, and the class of
+    # screen it would count among.
+    def field = sizing.fit(screen)
+    def size_class = sizing.size_class(screen)
 
     # The window changed size. A round in play keeps its dots on screen,
-    # and the next round starts on the new field.
-    def field=(field)
-      @field = field
-      state.round.field = field if state.is_a?(Playing)
+    # and their radius, and the next round starts on the new screen.
+    def screen=(screen)
+      @screen = screen
+      state.round.field = Field.new(screen.width, screen.height, state.round.field.radius) if state.is_a?(Playing)
+    end
+
+    # The player chose how dots are sized. Only the title may change it,
+    # so a round in play keeps the radius it started with.
+    def sizing=(sizing)
+      @sizing = sizing if state.is_a?(Title)
     end
 
     # Tells every listener of +event+; nil is nothing to tell.

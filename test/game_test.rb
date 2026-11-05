@@ -102,7 +102,7 @@ class GameTest < Minitest::Test
   def test_a_round_counts_among_the_bests_of_the_screen_it_started_on
     assert_equal DotPopper::SizeClass::SMALL, @game.size_class
     play_to_score(2)
-    @game.field = field(1200, 800)
+    @game.screen = field(1200, 800)
     @game.update(20)
 
     assert_equal DotPopper::SizeClass::SMALL, @heard.last.size_class
@@ -128,10 +128,27 @@ class GameTest < Minitest::Test
   end
 
   def test_a_new_round_uses_the_field_as_it_is_when_the_round_starts
-    @game.field = field(300, 200)
+    @game.screen = field(300, 200)
     @game.press(0, 0)
 
     assert_equal 300, @game.round.field.width
+  end
+
+  # 1200 by 800 is the reference window, where a fitted dot is the usual
+  # 50; 600 by 400 fits a radius of 25, which the rules raise to 30.
+  def test_sized_to_the_screen_sets_each_rounds_radius_when_it_starts_and_keeps_it
+    @game.screen = field(600, 400)
+    @game.sizing = DotPopper::DotSizing::SIZED_TO_SCREEN
+    @game.press(0, 0)
+    assert_in_delta 30.0, @game.round.field.radius
+    assert_equal DotPopper::SizeClass::FITTED, @game.state.size_class
+
+    @game.screen = field(1200, 800)
+    @game.sizing = DotPopper::DotSizing::SAME_EVERYWHERE
+    assert_in_delta 30.0, @game.round.field.radius, 0.001, "a round keeps its radius through a resize"
+    assert_equal 1200, @game.round.field.width
+    assert_equal DotPopper::DotSizing::SIZED_TO_SCREEN, @game.sizing, "only the title changes the choice"
+    assert_in_delta 50.0, @game.field.radius, 0.001, "the next round fits the new screen"
   end
 
   def test_a_subscriber_must_be_a_listener_or_a_block

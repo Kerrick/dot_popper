@@ -1,0 +1,25 @@
+module DotPopper
+  class DotSizing < ::Data
+    attr_reader name: String
+
+    def self.new: (name: String) -> instance
+
+    def initialize: (name: String) -> void
+
+    SAME_EVERYWHERE: DotSizing
+
+    SIZED_TO_SCREEN: DotSizing
+
+    def self.parse: (String? text) -> DotSizing
+
+    def sized_to_screen?: () -> bool
+
+    def toggled: () -> DotSizing
+
+    def fit: (Field screen) -> Field
+
+    def size_class: (Field screen) -> SizeClass
+
+    def to_text: () -> String
+  end
+end

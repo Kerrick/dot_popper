@@ -9,8 +9,9 @@ class ShowTest < Minitest::Test
     @sounds = FakeSounds.new
     @game = DotPopper::Game.new(field, random: Random.new(2))
     @clipboard = MemoryClipboard.new
+    @sizing_store = DotPopper::BestScore::Memory.new
     @show = Show.new(game: @game, layout: layout, sounds: @sounds, radius: R, random: Random.new(3),
-                     clipboard: @clipboard)
+                     clipboard: @clipboard, sizing_store: @sizing_store)
   end
 
   def test_a_tap_on_a_title_dot_pops_it_and_still_starts_the_round
@@ -114,6 +115,32 @@ class ShowTest < Minitest::Test
 
     finish_round
     assert @show.records_offered?
+  end
+
+  # 800 by 600 fits a radius of about 35 when dots are sized to it.
+  def test_the_dot_size_choice_switches_on_the_title_and_is_remembered
+    finish_round
+    assert_operator @show.marquee.best, :>, 0
+
+    @show.tap(*middle(@show.sizing_reach))
+    assert @show.title?, "the tap never starts a round"
+    assert @game.sizing.sized_to_screen?
+    assert_equal DotPopper::DotSizing::SIZED_TO_SCREEN.to_text, @sizing_store.read
+    assert_in_delta 35.4, @show.attract.dots.first.radius, 0.1
+    assert_equal 0, @show.marquee.best, "the title shows this choice's best"
+
+    @show.tap(10, 10)
+    assert_in_delta 35.4, @game.round.field.radius, 0.1
+
+    @game.update(20)
+    assert_equal "Played with the dots sized to my screen.", @show.finale.screen
+  end
+
+  def test_the_dot_size_choice_is_offered_only_once_a_round_has_finished
+    @show.tap(*middle(@show.sizing_reach))
+
+    assert @show.playing?
+    refute @game.sizing.sized_to_screen?
   end
 
   def test_your_records_opens_over_the_title_and_any_tap_goes_back

@@ -4,7 +4,8 @@ module DotPopper
   module Shell
     # The title screen: the name, a legend that teaches the rule with one
     # dot of each kind, the best score, the prompt, the mute button, and,
-    # once a round has been played, today's goal and "Your records".
+    # once a round has been played, today's goal, "Your records", and the
+    # choice of how dots are sized.
     class TitlePainter < Data.define(:pen, :dots)
       G = ::Lota::Graphics
 
@@ -30,7 +31,10 @@ module DotPopper
         pen.text(show.words.play, prompt, layout.center_x, center + (height * (goal ? 0.29 : 0.27)), pen.palette.cream,
                   intro * marquee.prompt(now))
         MuteButton.new(pen:).draw(layout.mute_button, show.sounds.muted?)
-        PillButton.new(pen:).draw(layout.records_button, show.words.records, alpha: intro) if show.records_offered?
+        return unless show.records_offered?
+
+        PillButton.new(pen:).draw(layout.records_button, show.words.records, alpha: intro)
+        PillButton.new(pen:).draw(layout.sizing_button, show.words.sizing(show.game.sizing), alpha: intro)
       end
 
       private
