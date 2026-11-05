@@ -3,7 +3,8 @@
 # renders them into each kit: the desktop list into the Windows kit's
 # playtest.ps1 and the Linux kit's playtest.sh, which ask them one at a
 # time while the game runs, and into the macOS kit's macos-results.txt;
-# the iPad list into the iPad kit's ipad-results.txt. The results sheets
+# the iPad list into the iPad kit's ipad-results.txt, and the Android list
+# into the Android kit's android-results.txt. The results sheets
 # are filled in by hand. test/playtest_kit_test.rb checks that every check
 # has wording on every system, and that each phrase in +quotes+ is one the
 # game shows (Presentation::Look), so a question never names a button by a
@@ -30,7 +31,7 @@
 # of windows, mac, and linux to their words, with default for the rest.
 #
 # Desktop checks are written with a mouse's words ("Click"), the iPad's
-# with a touch screen's ("Tap"). Windows wording stays in ASCII, since
+# and Android's with a touch screen's ("Tap"). Windows wording stays in ASCII, since
 # Windows PowerShell 5.1 reads a script without a byte order mark as ANSI.
 
 desktop:
@@ -256,3 +257,114 @@ ipad:
     parts:
       - ask: Your wife's first impression, in her own words
         answer: describe
+
+# The Android kit's checks (experimental), for a phone. Back is Android's
+# own: the game takes it as Escape, so check 7 asks what it does on each
+# screen. Check 14 says how to keep the log if the app fails at launch.
+android:
+  - id: 1
+    try: Open Dot Popper from the app drawer. Turn the phone to portrait, then to landscape.
+    ask: The game fills the screen in portrait and in landscape, with nothing hidden under the camera or the navigation bar.
+    answer: yes_no
+
+  - id: 2
+    ask: A tap pops a bright dot right where your finger is.
+    answer: yes_no
+
+  - id: 3
+    try: In a round, tap a popped (dark) dot on purpose, ideally one with the bright dot hiding under it. The title calls this "Tap a popped dot".
+    ask: Tapping a popped dot costs 2 points and 2 seconds, and a dashed outline shows the bright dot it hid.
+    answer: yes_no
+    quotes: [Tap a popped dot]
+
+  - id: 4
+    ask: "How big a dot feels under your finger:"
+    answer: choice
+    options: [too small, right, too big]
+
+  - id: 5
+    ask: The phone gives a short buzz when you pop a dot and a slightly longer one when you tap a popped dot.
+    answer: yes_no
+    parts:
+      - ask: The buzzes feel right, not annoying.
+        answer: yes_no
+
+  - id: 6
+    try: Start some music in another app (YouTube Music, Spotify, a podcast), then switch to Dot Popper and pop a few dots. Press the volume buttons. Then set the phone to silent or vibrate.
+    ask: "The game's sound:"
+    parts:
+      - ask: plays at all
+        answer: yes_no
+      - ask: mixes with the music from the other app, which keeps playing
+        answer: yes_no
+      - ask: gets louder and quieter with the volume buttons
+        answer: yes_no
+      - ask: goes quiet in silent or vibrate mode
+        answer: yes_no
+
+  - id: 7
+    try: >-
+      Press Back (the back button, or a swipe in from the left or right edge)
+      on each screen in turn: on "Your records" (tap it on the title screen),
+      during a round, at Game Over, and last on the title screen.
+    ask: "What Back does:"
+    parts:
+      - ask: on Your records, it goes back to the title
+        answer: yes_no
+      - ask: during a round, it does nothing, and the round carries on
+        answer: yes_no
+      - ask: at Game Over, it does nothing
+        answer: yes_no
+      - ask: on the title screen, it leaves the app
+        answer: yes_no
+    quotes: [Your records]
+
+  - id: 8
+    ask: Rotating the phone in the middle of a round keeps every dot on screen.
+    answer: yes_no
+
+  - id: 9
+    try: On the Game Over screen, tilt the phone one way and another, then give it a short shake.
+    ask: Tilting at Game Over rolls the dots toward the lowest edge. (If they roll the wrong way, say in the note how you held the phone.)
+    answer: yes_no
+    parts:
+      - ask: A shake tosses them up.
+        answer: yes_no
+
+  - id: 10
+    try: On the Game Over screen, drag a dot in the pile with your finger, and let go while moving. Then, on another Game Over, tap once without dragging.
+    ask: Dragging a pile dot with a finger throws it, and a tap ("Tap to continue") goes to the title.
+    answer: yes_no
+    quotes: [Tap to continue]
+
+  - id: 11
+    try: After a round, look at the title screen for a "Dot size" choice. If it is there, tap its second option ("Smaller, more room" or "Bigger, less room"), then play a round.
+    ask: The Dot size choice changes the next round's dots. If the title shows no "Dot size" choice, write "not shown".
+    answer: yes_no_not_shown
+    quotes: [Dot size, "Smaller, more room", "Bigger, less room"]
+
+  - id: 12
+    try: On the Game Over screen, tap "Copy my result". Then paste it into a message or a note.
+    ask: The pasted result reads sensibly.
+    answer: paste
+    quotes: [Copy my result]
+
+  - id: 13
+    try: In the middle of a round, go to the Home screen, wait a few seconds, and open Dot Popper again.
+    ask: The round carries on where it was, and the clock did not jump.
+    answer: yes_no
+
+  - id: 14
+    ask: >-
+      Did anything crash, freeze, or look wrong? Describe it, and take a
+      screenshot (power and volume down together) to send along. If Dot
+      Popper closed at launch, or Android said "Dot Popper keeps stopping",
+      plug the phone into the computer with USB debugging on (README.txt,
+      Way 1), run this on the computer, and send the file it writes along with this sheet:
+      adb logcat -d > dot-popper-logcat.txt
+    answer: describe
+
+  - id: 15
+    ask: Overall, how does Dot Popper feel to play?
+    answer: rating
+    scale: 1 (not fun) to 5 (great)

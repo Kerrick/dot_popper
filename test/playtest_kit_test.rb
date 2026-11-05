@@ -12,7 +12,8 @@ class PlaytestKitTest < Minitest::Test
   MAC = Playtest::Checklist.load(:mac)
   LINUX = Playtest::Checklist.load(:linux)
   IPAD = Playtest::Checklist.load(:ipad)
-  LISTS = [WINDOWS, MAC, LINUX, IPAD].freeze
+  ANDROID = Playtest::Checklist.load(:android)
+  LISTS = [WINDOWS, MAC, LINUX, IPAD, ANDROID].freeze
 
   # Every String the presentation's settings hold, the words among them.
   def self.game_strings(value = DotPopper::Presentation::Look.constants.map { DotPopper::Presentation::Look.const_get(it) })
@@ -30,6 +31,7 @@ class PlaytestKitTest < Minitest::Test
   def test_the_lists_hold_the_checks_the_maintainer_asked_for
     [WINDOWS, MAC, LINUX].each { assert_equal (1..18).map(&:to_s), it.checks.map(&:id) }
     assert_equal (1..13).map(&:to_s), IPAD.checks.map(&:id)
+    assert_equal (1..15).map(&:to_s), ANDROID.checks.map(&:id)
     assert_equal %w[14 15 16 17 18], WINDOWS.checks.select(&:controller?).map(&:id)
   end
 
@@ -113,6 +115,17 @@ class PlaytestKitTest < Minitest::Test
     assert sheet.start_with?("Dot Popper macOS playtest results\n")
     assert_includes sheet, "macOS version: ->"
     assert_includes sheet, "4. Command+Enter"
+  end
+
+  def test_the_android_sheet_asks_what_back_does_on_each_screen_and_how_to_keep_the_log
+    sheet = Playtest::ResultsSheet.new(ANDROID, "Dot Popper v9.9.9").render
+
+    assert sheet.start_with?("Dot Popper Android playtest results (experimental)\n")
+    assert_includes sheet, "Android version (Settings > About device > Version): ->"
+    ["on Your records, it goes back to the title", "during a round, it does nothing",
+     "at Game Over, it does nothing", "on the title screen, it leaves the app"].each { assert_includes sheet, it }
+    # On a line of its own, so it copies whole into a terminal.
+    assert_match(/^ +adb logcat -d > dot-popper-logcat\.txt$/, sheet)
   end
 
   def test_the_results_sheet_holds_the_build_and_every_check_with_a_blank

@@ -4,8 +4,8 @@ require "yaml"
 
 # The playtest kits' hand checks (playtest/checks.yml) and what they are
 # rendered into: the Windows kit's playtest.ps1 and the Linux kit's
-# playtest.sh, which ask them one at a time, and the macOS and iPad kits'
-# results sheets, which the player fills in. Nothing here loads the game
+# playtest.sh, which ask them one at a time, and the macOS, iPad, and
+# Android kits' results sheets, which the player fills in. Nothing here loads the game
 # or Lota; script/playtest_kit.rb runs it in CI
 # (.github/workflows/kits.yml), and test/playtest_kit_test.rb tests it.
 module Playtest
@@ -152,6 +152,10 @@ module Playtest
       ipad: ["Dot Popper iPad playtest results",
              ["Date played: ->", "iPad or iPhone, and its model (Settings > General > About): ->",
               "iPadOS or iOS version: ->", "Xcode version on the Mac: ->"]],
+      android: ["Dot Popper Android playtest results (experimental)",
+                ["Date played: ->", "Phone model (Settings > About device): ->",
+                 "Android version (Settings > About device > Version): ->",
+                 "How you installed it (adb install, or opening the APK on the phone): ->"]],
       mac: ["Dot Popper macOS playtest results",
             ["Date played: ->", "Mac model and chip (Apple menu > About This Mac): ->", "macOS version: ->",
              "Display (built-in or external, its size and refresh rate): ->",
