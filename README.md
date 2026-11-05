@@ -26,6 +26,17 @@ Once you have finished a round, the title screen also shows a goal for the day, 
 
 Once you have finished a round, the title screen shows a **Your records** button in its bottom left corner. It opens a screen with your best score and your other bests (your longest round, the most pops in a row without a wrong tap, your fastest pop, and the longest wait that still ended in a pop), your totals across every round, how many days in a row you have met the daily goal and the most you ever have, and a bar chart of your last 20 scores, with the highest of them labelled. Tap anywhere to go back to the title. Nothing on this screen affects a round.
 
+Your bests are kept separately for each size of screen, because a small screen gets crowded sooner and is harder to score on. The game sorts screens into three sizes. Small is about the size of a phone, medium is a tablet or the desktop window as it first opens, and large is a big monitor at fullscreen. A round counts with the screen it started on, so "New best!" and "New record" only compare it with rounds on screens of the same size. The Records screen shows the bests for the screen you are using, under the heading "Your bests on screens this size", and says how big that screen is, for example "This screen is about 12 dots wide and 8 dots tall." The totals and the chart cover every round you have played, on any screen. **Copy my result** adds the same kind of line, so a friend can see what screen you played on.
+
+### How big the dots are
+
+Once you have finished a round, the title screen also shows a button with your choice of dot size. Tap it to switch between the two choices:
+
+- **Dots: same size everywhere** is the usual game. A dot is the same size on every screen, so a phone holds fewer dots than a big monitor, gets crowded sooner, and is harder to score on.
+- **Dots: sized to your screen** makes the dots bigger on a big screen and smaller on a small one, so every screen has about the same room for dots as the desktop window. Scores can then be compared across devices. The dots never get smaller than 60 points across, so they stay easy to tap on a phone. The size is worked out when each round starts, and if you resize the window during a round, the dots keep their size until it ends.
+
+The title's dots change size as soon as you switch, and the game remembers your choice. Rounds played with dots sized to the screen keep their own bests, because every screen plays about the same that way.
+
 ### Controls
 
 | Action | Touch or mouse | Keyboard |
@@ -34,6 +45,7 @@ Once you have finished a round, the title screen shows a **Your records** button
 | Start a round, or continue after one | Tap or click anywhere | |
 | Copy your result | **Copy my result** on the Game Over screen | |
 | See your records | **Your records** on the title screen | |
+| Choose how big the dots are | The **Dots:** button on the title screen | |
 | Leave the Records screen | Tap or click anywhere | **Escape** |
 | Turn sound on or off | The speaker button on the title screen | **M** |
 | Toggle fullscreen (desktop only) | | **F11**, or **Alt+Enter** (**Cmd+Enter** on a Mac) |
@@ -50,6 +62,7 @@ Any controller your computer or iPad recognizes as a gamepad works, such as an X
 - **Start** starts a round from the title screen, and continues after one ends.
 - **Y** (triangle) copies your result on the Game Over screen.
 - **X** (square) opens the Records screen from the title, once it is offered. **B** (circle) or **Start** goes back to the title from it, as does a press of **A** anywhere.
+- Either shoulder button (**LB** or **RB**, or **L1** or **R1**) switches the dot size on the title screen, once it is offered.
 - **Back** turns sound on or off, on every screen.
 
 The cursor appears when you use the controller and hides when you move the mouse or touch the screen. On an iPad, a controller paired in the iPad's Bluetooth settings works the same way, from the first iPad build made after controllers were turned on there.
@@ -89,7 +102,9 @@ Every distance and speed in the rules is measured in multiples of one number: th
 
 `conf.rb` turns on Lota's `t.highdpi` setting. With it on, Lota measures graphics in logical pixels on a desktop, and in points (on iOS) or density-independent pixels, called dp (on Android). Lota reports the display's scale as `Lota::Graphics.dpi_scale`, but neither Lota nor LÖVE can report how many pixels fit in a millimetre of the actual screen. So the game can't compute an exact 8 mm. Instead, `DotPopper::DotSize` sets R to 50 units on every system when the game starts. On a desktop that is 50 logical pixels. On a touch screen it is 50 points or dp, which measures 7.9 to 9.6 mm on current iPhones and iPads, and 7.9 mm by Android's definition of a dp. The game prints its choice when it starts.
 
-Because R is fixed, the number of radii that fit on the screen varies from device to device, and a more crowded screen makes for a harder game. The desktop window therefore opens at 24 × 16 R (1200 × 800 logical pixels), which is about the size of an 11-inch iPad measured in radii, so that rounds on a computer and on an iPad play alike. [doc/decisions.md](doc/decisions.md) gives the measurements behind this choice.
+Because R is fixed, the number of radii that fit on the screen varies from device to device, and a more crowded screen makes for a harder game. The desktop window therefore opens at 24 × 16 R (1200 × 800 logical pixels), which is about the size of an 11-inch iPad measured in radii, so that rounds on a computer and on an iPad play alike. For the same reason, bests are kept separately for small, medium, and large screens. The cut-offs, 250 and 700 square radii, are in `lib/dot_popper/rules.rb`.
+
+A player who chooses **Dots: sized to your screen** on the title replaces the fixed R. At the start of each round, `DotPopper::DotSize.fitted` sets R so that the field's area is 24 × 16 = 384 square radii: R = √(width × height ÷ 384). R is never under 30 units, and never over a seventh of the screen's shorter side. `DotPopper::DotSizing` holds the player's choice. [doc/decisions.md](doc/decisions.md) gives the measurements behind these choices, including the simulation of both settings.
 
 ## Running the tests
 
@@ -107,7 +122,7 @@ One test, `test/rules_fuzz_test.rb`, plays thousands of random rounds from a fix
 
 Running `bundle exec rake` with no task name runs the tests and then [Steep](https://github.com/soutaro/steep), a type checker, which checks the rules against their type signatures in `sig/`. `rake test` on its own doesn't need Steep.
 
-`script/simulate.rb` is a design tool, not a test. It plays the real rules with a simulated player on several screen sizes at once, each in its own Ractor (Ruby's unit of parallel execution). [doc/decisions.md](doc/decisions.md) reports what it found.
+`script/simulate.rb` is a design tool, not a test. It plays the real rules with a simulated player on several screen sizes, with both choices of dot size, each in its own Ractor (Ruby's unit of parallel execution). [doc/decisions.md](doc/decisions.md) reports what it found.
 
 ## Where things are
 
@@ -148,7 +163,7 @@ Each finished round adds a line to `rounds.csv` in the game's save folder, so pl
 - Under `bundle exec lota run` on a Mac: `~/Library/Application Support/Lota/dot_popper/`
 - In a packaged build: a `dot_popper` folder in the system's application-data folder, such as `%APPDATA%\dot_popper` on Windows (see [PACKAGING.md](PACKAGING.md))
 
-The same folder also holds the game's other saved state: the best score (`best_score.txt`), whether sound is on, whether the first-mistake hint has been shown, and the lifetime stats (`lifetime.txt`), which add up every round played on this device. `lifetime.txt` is plain `key=value` lines; a damaged line is ignored, and a missing file starts the stats from nothing.
+The same folder also holds the game's other saved state: the best scores (`best_score.txt`), whether sound is on, whether the first-mistake hint has been shown, the choice of dot size (`dot_size.txt`), and the lifetime stats (`lifetime.txt`), which add up every round played on this device. `best_score.txt` and `lifetime.txt` are plain `key=value` lines, with each size of screen's bests under its name, such as `medium=24` or `small.longest_run=9`. A damaged line is ignored, and a missing file starts from nothing. Files saved by earlier versions, which kept one set of bests, give those bests to the size of the screen the game next opens on.
 
 The first line of `rounds.csv` names the columns. When a new version of the game changes the columns, it doesn't mix old and new lines in one file: it saves the old log whole as `rounds-<date>-<time>.csv` (for example `rounds-20261105-093015.csv`) and starts a new `rounds.csv`. The columns are:
 
