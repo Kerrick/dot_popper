@@ -63,12 +63,16 @@ jobs:
       - run: bundle install
       - run: bundle exec fledge --version
       - name: fledge build
+        id: build
         run: bundle exec fledge build
       - run: ls -la dist
       - name: Check the build with no Ruby on PATH, unpacked and installed
         shell: pwsh
         run: pwsh -NoProfile -File script/smoke-windows.ps1 -Dist dist -Results "$env:RUNNER_TEMP/smoke"
+      # Uploaded even when the check fails, so a build to look at exists;
+      # the job stays red.
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ always() && steps.build.outcome == 'success' }}
         with:
           name: dot-popper-windows-x64
           path: |
@@ -89,6 +93,7 @@ jobs:
           ruby-version: .ruby-version
       - run: bundle install
       - name: fledge build
+        id: build
         run: bundle exec fledge build
       - run: ls -la dist
       - name: Check the build with no Ruby on PATH
@@ -100,7 +105,10 @@ jobs:
           env -i HOME="$HOME" PATH=/usr/bin:/bin DOT_POPPER_SMOKE="$report" "$program"
           cat "$report"
           grep -q 'status 0' "$report"
+      # Uploaded even when the check fails, so a build to look at exists;
+      # the job stays red.
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ always() && steps.build.outcome == 'success' }}
         with:
           name: dot-popper-macos-arm64
           path: |

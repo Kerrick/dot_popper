@@ -45,7 +45,7 @@ The first build downloads Fledge's Ruby runtime for your platform (about a minut
 
 On Windows, the same two commands write the `.zip` and the `-setup.exe`, with RubyInstaller's Ruby 4.0.9. Fledge's runtime brings NSIS and rcedit, so you install nothing else.
 
-**Checking a build without a window.** If `DOT_POPPER_SMOKE` names a file, the launcher loads Lota, checks that `conf.rb` and `main.rb` shipped, writes what it found to that file, and exits with status 0, or 1 if anything is missing. It opens no window. CI uses this because its runners have no GPU:
+**Checking a build without a window.** If `DOT_POPPER_SMOKE` names a file, the launcher loads Lota, then the game's `conf.rb` and `main.rb`, and calls `Lota.conf`. Those files only define Lota's callbacks, so a file or a `require` that did not ship fails at this step. The launcher writes what it found to that file and exits with status 0, or 1 if anything is wrong. It opens no window and does not start the engine. CI uses this because its runners have no GPU:
 
 ```console
 $ env -i HOME="$HOME" PATH=/usr/bin:/bin DOT_POPPER_SMOKE=/tmp/smoke.txt \
@@ -59,16 +59,16 @@ On Windows, `script/smoke-windows.ps1 -Dist dist -Results smoke` runs the same c
 The [Package workflow](.github/workflows/package.yml) runs on every push to `trunk`, on `v0.*` tags, and by hand (workflow_dispatch):
 
 - **Test** (Ubuntu) runs `bundle exec rake test` once a `Rakefile` exists, and skips with a notice until then.
-- **Windows x64** (`windows-latest`) runs `bundle exec fledge build`, then `script/smoke-windows.ps1`, and uploads `dot-popper-windows-x64`.
+- **Windows x64** (`windows-latest`) runs `bundle exec fledge build`, then `script/smoke-windows.ps1`, and uploads `dot-popper-windows-x64`. The artifact is uploaded even if the check fails, but only a green run's build is known to work.
 - **macOS arm64** (`macos-15`) runs `bundle exec fledge build`, smoke-runs the `.app` with an empty environment, and uploads `dot-popper-macos-arm64`.
-- **Release**, on a `v0.*` tag, attaches the builds to a GitHub prerelease. It needs the Windows build to succeed. The macOS build is included when it built. Nothing is published to RubyGems.
+- **Release**, on a `v0.*` tag, attaches the builds to a GitHub prerelease. It needs the Windows job to pass. The macOS build is included when it built. Nothing is published to RubyGems.
 
 ## What is verified and what is not
 
 Verified, on CI runners and on the maintainer's Mac:
 
 - `fledge build` writes the Windows `.zip` and `-setup.exe` on `windows-latest`, and the macOS `.app`, `.tar.gz`, and `.dmg` on Apple silicon.
-- With no Ruby on `PATH`, the built program starts, loads Lota 0.1.2 and its native library, finds the game's `conf.rb` and `main.rb`, and exits cleanly. On Windows this holds both unpacked and after a silent install, and the installer makes a Start menu shortcut and uninstalls.
+- With no Ruby on `PATH`, the built program starts, loads Lota 0.1.2 and its native library, loads the game's `conf.rb` and `main.rb` (and everything they `require`), and exits cleanly. On Windows this holds both unpacked and after a silent install, and the installer makes a Start menu shortcut and uninstalls.
 
 Not verified:
 
