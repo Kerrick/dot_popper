@@ -1,45 +1,54 @@
 # The hand checks of Dot Popper's playtest kits (PACKAGING.md, "Playtest
-# kits"), one list per device, and the only place their words live:
-# script/playtest_kit.rb renders the Windows list into the kit's
-# playtest.ps1, which asks them one at a time, and the iPad list into the
-# kit's ipad-results.txt, which the player fills in. test/playtest_kit_test.rb
-# checks that every check has wording, and that each phrase in +quotes+
-# is one the game shows (Presentation::Look), so a question never names a
-# button by a word the game no longer uses.
+# kits"), and the only place their words live. script/playtest_kit.rb
+# renders them into each kit: the desktop list into the Windows kit's
+# playtest.ps1 and the Linux kit's playtest.sh, which ask them one at a
+# time while the game runs, and into the macOS kit's macos-results.txt;
+# the iPad list into the iPad kit's ipad-results.txt. The results sheets
+# are filled in by hand. test/playtest_kit_test.rb checks that every check
+# has wording on every system, and that each phrase in +quotes+ is one the
+# game shows (Presentation::Look), so a question never names a button by a
+# word the game no longer uses.
 #
 # Each check has:
 #   id       its number, which the results name it by
 #   ask      what the player answers, as a statement to agree with or a
 #            question, in the game's own words
-#   answer   the kind of answer (left out when +parts+ holds them all): yes_no (y / n / skip), yes_no_not_shown
-#            (also "not shown"), rating (1 to 5, with +scale+), choice
-#            (one of +options+), paste (y / n, then the pasted text), or
-#            describe (free text)
+#   answer   the kind of answer (left out when +parts+ holds them all):
+#            yes_no (y / n / skip), yes_no_not_shown (also "not shown"),
+#            rating (1 to 5, with +scale+), choice (one of +options+),
+#            paste (y / n, then the pasted text), or describe (free text)
 # and may have:
 #   try      what to do before answering, shown first
-#   restart  true when the Windows kit waits for the player to quit the
-#            game and starts it again before asking
+#   restart  true when the kit waits for the player to quit the game and
+#            starts it again before asking (a sheet asks the player to)
 #   after    what to do once it is answered
 #   group    controller, for checks asked only of a player with one
 #   parts    further answers the check asks for, each with ask and answer
 #   quotes   the phrases of +ask+ (or +try+) that the game itself shows
 #
-# Windows checks are written with the desktop's words ("Click"), the
-# iPad's with a touch screen's ("Tap"). Windows wording stays in ASCII,
-# since Windows PowerShell 5.1 reads a script without a byte order mark as
-# ANSI.
+# A desktop check's try, ask, and after may differ by system: a mapping
+# of windows, mac, and linux to their words, with default for the rest.
+#
+# Desktop checks are written with a mouse's words ("Click"), the iPad's
+# with a touch screen's ("Tap"). Windows wording stays in ASCII, since
+# Windows PowerShell 5.1 reads a script without a byte order mark as ANSI.
 
-windows:
+desktop:
   - id: 1
     try: Play a round. Click a few bright dots, and listen.
     ask: Sound plays through your speakers or headphones.
     answer: yes_no
 
   - id: 2
-    try: >-
-      Go back to the title screen. Press M, or click the speaker icon in its
-      corner, so the sound is off. Then quit Dot Popper with Escape on the
-      title screen. The kit starts it again by itself.
+    try:
+      default: >-
+        Go back to the title screen. Press M, or click the speaker icon in its
+        corner, so the sound is off. Then quit Dot Popper with Escape on the
+        title screen. The kit starts it again by itself.
+      mac: >-
+        Go back to the title screen. Press M, or click the speaker icon in its
+        corner, so the sound is off. Then quit Dot Popper with Escape on the
+        title screen, and open it again.
     restart: true
     ask: The sound is still off after quitting and starting again (the speaker icon still shows it off, and pops are silent).
     answer: yes_no
@@ -51,15 +60,21 @@ windows:
     answer: yes_no
 
   - id: 4
-    try: Press F11, then F11 again. Then press Alt+Enter, then Alt+Enter again.
-    ask: F11 and Alt+Enter each switch fullscreen on and off, and the dots stay on screen each time.
+    try:
+      default: Press F11, then F11 again. Then press Alt+Enter, then Alt+Enter again.
+      mac: Press Command+Enter, then Command+Enter again.
+    ask:
+      default: F11 and Alt+Enter each switch fullscreen on and off, and the dots stay on screen each time.
+      mac: Command+Enter switches fullscreen on and off, and the dots stay on screen each time.
     answer: yes_no
 
   - id: 5
-    try: >-
-      In the middle of a round, drag an edge or corner of the window to make it
-      much smaller, then much bigger. (Windows pauses the game while you drag
-      the window's edge. That is expected.)
+    try:
+      default: In the middle of a round, drag an edge or corner of the window to make it much smaller, then much bigger.
+      windows: >-
+        In the middle of a round, drag an edge or corner of the window to make it
+        much smaller, then much bigger. (Windows pauses the game while you drag
+        the window's edge. That is expected.)
     ask: Resizing the window mid-round keeps every dot on screen.
     answer: yes_no
 
@@ -85,7 +100,10 @@ windows:
     quotes: [Dot size, "Bigger, less room", "Smaller, more room"]
 
   - id: 9
-    try: On the Game Over screen, click "Copy my result". Then open Notepad and paste (Ctrl+V).
+    try:
+      windows: On the Game Over screen, click "Copy my result". Then open Notepad and paste (Ctrl+V).
+      mac: On the Game Over screen, click "Copy my result". Then open TextEdit and paste (Command+V).
+      linux: On the Game Over screen, click "Copy my result". Then open a text editor and paste (Ctrl+V).
     ask: The pasted result reads sensibly.
     answer: paste
     quotes: [Copy my result]
@@ -116,7 +134,9 @@ windows:
 
   - id: 14
     group: controller
-    try: Press F11 for fullscreen. Push the controller's left stick all the way, across the whole screen, and back. Then move the mouse.
+    try:
+      default: Press F11 for fullscreen. Push the controller's left stick all the way, across the whole screen, and back. Then move the mouse.
+      mac: Press Command+Enter for fullscreen. Push the controller's left stick all the way, across the whole screen, and back. Then move the mouse.
     ask: The cursor moves smoothly at full speed across the fullscreen window, and moving the mouse hides it.
     answer: yes_no
     parts:

@@ -4,8 +4,9 @@
 # kits"). CI runs it (.github/workflows/kits.yml); so can anyone, to read
 # what a kit will ask:
 #
-#   ruby script/playtest_kit.rb windows OUT [BUILD]   # playtest.ps1
-#   ruby script/playtest_kit.rb ipad OUT [BUILD]      # ipad-results.txt
+#   ruby script/playtest_kit.rb windows OUT [BUILD]       # playtest.ps1
+#   ruby script/playtest_kit.rb linux OUT [BUILD]         # playtest.sh
+#   ruby script/playtest_kit.rb sheet DEVICE OUT [BUILD]  # mac or ipad results sheet
 #   ruby script/playtest_kit.rb text TEMPLATE OUT [BUILD] [--crlf]
 #
 # BUILD is a file of lines naming the build the kit holds; each output
@@ -26,18 +27,25 @@ end
 
 def crlf(text) = text.gsub(/\r?\n/, "\r\n")
 
+def template(name) = File.read(File.join(PLAYTEST, name))
+
 case ARGV
 in ["windows", out, *build]
-  template = File.read(File.join(PLAYTEST, "playtest.ps1"))
-  script = Playtest::PowerShellList.new(Playtest::Checklist.load(:windows)).fill(stamp(template, build_lines(build.first)))
+  list = Playtest::PowerShellList.new(Playtest::Checklist.load(:windows))
+  script = list.fill(stamp(template("playtest.ps1"), build_lines(build.first)))
   abort "#{out} would hold bytes outside ASCII, which PowerShell 5.1 misreads" unless script.ascii_only?
   File.binwrite(out, crlf(script))
-in ["ipad", out, *build]
-  File.write(out, Playtest::ResultsSheet.new(Playtest::Checklist.load(:ipad), build_lines(build.first)).render)
+in ["linux", out, *build]
+  list = Playtest::ShellList.new(Playtest::Checklist.load(:linux))
+  File.write(out, list.fill(stamp(template("playtest.sh"), build_lines(build.first))))
+  File.chmod(0o755, out)
+in ["sheet", ("mac" | "ipad") => device, out, *build]
+  File.write(out, Playtest::ResultsSheet.new(Playtest::Checklist.load(device), build_lines(build.first)).render)
 in ["text", template, out, *rest]
   windows = rest.delete("--crlf")
   text = stamp(File.read(template), build_lines(rest.first))
   File.binwrite(out, windows ? crlf(text) : text)
 else
-  abort "usage: ruby script/playtest_kit.rb windows OUT [BUILD] | ipad OUT [BUILD] | text TEMPLATE OUT [BUILD] [--crlf]"
+  abort "usage: ruby script/playtest_kit.rb windows OUT [BUILD] | linux OUT [BUILD] | " \
+        "sheet mac|ipad OUT [BUILD] | text TEMPLATE OUT [BUILD] [--crlf]"
 end

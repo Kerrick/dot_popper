@@ -1,0 +1,49 @@
+# Fuses Dot Popper with `lota fuse` on this runner's platform (PACKAGING.md),
+# as Lota 0.1.3's README documents: Lota's gem for the platform, from
+# vendor/cache and checked against the SHA256SUMS of Lota's release, is
+# installed, and lota fuse builds the app into $RUNNER_TEMP/fuse. It also
+# writes $RUNNER_TEMP/build.txt, the lines a kit names its build by, and
+# sets APP_VERSION from fledge.yml.
+name: lota fuse
+description: Fuse Dot Popper for this runner's platform with Lota's release gem
+inputs:
+  platform:
+    description: Lota's gem platform, such as x64-mingw-ucrt
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Name the build
+      shell: bash
+      env:
+        PLATFORM: ${{ inputs.platform }}
+      run: |
+        version=$(ruby -ryaml -e 'print YAML.load_file("fledge.yml").fetch("version")')
+        echo "APP_VERSION=$version" >> "$GITHUB_ENV"
+        {
+          echo "Dot Popper $GITHUB_REF_NAME, commit $GITHUB_SHA, version $version"
+          echo "Fused by lota fuse, from Lota $LOTA_VERSION's release gem for $PLATFORM"
+          echo "Built $(date -u +%Y-%m-%d) by $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+        } > "$RUNNER_TEMP/build.txt"
+        cat "$RUNNER_TEMP/build.txt"
+
+    - name: Check Lota's gem against its release, and install it
+      shell: bash
+      env:
+        PLATFORM: ${{ inputs.platform }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        gem_file="vendor/cache/lota-$LOTA_VERSION-$PLATFORM.gem"
+        gh release download "v$LOTA_VERSION" -R setdef/Lota -p SHA256SUMS -D "$RUNNER_TEMP/lota-release"
+        expected=$(grep " lota-$LOTA_VERSION-$PLATFORM.gem\$" "$RUNNER_TEMP/lota-release/SHA256SUMS" | cut -d' ' -f1)
+        if command -v sha256sum > /dev/null; then actual=$(sha256sum "$gem_file" | cut -d' ' -f1); else actual=$(shasum -a 256 "$gem_file" | cut -d' ' -f1); fi
+        echo "release: $expected"; echo "vendor/cache: $actual"
+        [ -n "$expected" ] && [ "$expected" = "$actual" ]
+        gem install --local "$gem_file"
+        ruby -S lota --version
+
+    - name: lota fuse
+      shell: bash
+      run: |
+        ruby -S lota fuse . --identifier "$IDENTIFIER" --app-version "$APP_VERSION" --icon icons/icon --out "$RUNNER_TEMP/fuse"
+        ls -la "$RUNNER_TEMP/fuse"

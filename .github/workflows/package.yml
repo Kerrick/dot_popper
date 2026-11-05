@@ -1,8 +1,12 @@
-# Builds Dot Popper into apps people without Ruby can run, with Fledge
-# (PACKAGING.md): on Windows x64 a .zip and an NSIS -setup.exe, on macOS
-# arm64 an .app in a .tar.gz and a .dmg. Each build is checked without a
-# window, since runners have no GPU or audio. A v0.* tag also attaches
-# them to a GitHub Release.
+# Builds Dot Popper into apps people without Ruby can run (PACKAGING.md),
+# one way: `lota fuse`, with Lota 0.1.3's release gem
+# (.github/actions/fuse), each on its own platform's runner. On Windows
+# x64 a .zip and an installer, on macOS arm64 a .dmg and a .tar.gz, and on
+# Linux x86_64 (glibc 2.39, so ubuntu-24.04) a .tar.gz and an AppImage.
+# Each app then plays itself for 20 seconds with no Ruby on its PATH,
+# drawing with Mesa's software OpenGL where the runner has no GPU. A v0.*
+# tag also attaches them to a GitHub Release. The Kits workflow builds the
+# playtest kits from the same apps.
 
 name: Package
 
@@ -27,6 +31,10 @@ defaults:
 
 env:
   BUNDLE_FROZEN: "true"
+  LOTA_VERSION: "0.1.3"
+  IDENTIFIER: com.kerricklong.DotPopper
+  # The bot plays, sounds go nowhere, and the save folder is a test's own.
+  PLAY_ENV: ALSOFT_DRIVERS=null DOT_POPPER_AUTOPLAY=1 DOT_POPPER_SEED=7 DOT_POPPER_QUIT_AFTER=20 DOT_POPPER_PERF=1 DOT_POPPER_SAVE_AS=ci-play
 
 jobs:
   test:
@@ -40,14 +48,8 @@ jobs:
       - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
         with:
           ruby-version: .ruby-version
-      - name: bundle exec rake test, once there is a Rakefile
-        run: |
-          if [ ! -f Rakefile ]; then
-            echo "::notice::No Rakefile yet, so there are no tests to run."
-            exit 0
-          fi
-          bundle install
-          bundle exec rake test
+      - run: bundle install
+      - run: bundle exec rake test
 
   windows:
     name: Windows x64
@@ -60,25 +62,61 @@ jobs:
       - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
         with:
           ruby-version: .ruby-version
-      - run: bundle install
-      - run: bundle exec fledge --version
-      - name: fledge build
-        id: build
-        run: bundle exec fledge build
-      - run: ls -la dist
-      - name: Check the build with no Ruby on PATH, unpacked and installed
+          windows-toolchain: none
+      - uses: ./.github/actions/fuse
+        with:
+          platform: x64-mingw-ucrt
+
+      # Unpacked under a folder with a space, Mesa's llvmpipe beside the
+      # program (SDL loads opengl32.dll from there first), and a clean
+      # environment with no Ruby.
+      - name: Play the unpacked app with no Ruby on its PATH
         shell: pwsh
-        run: pwsh -NoProfile -File script/smoke-windows.ps1 -Dist dist -Results "$env:RUNNER_TEMP/smoke"
-      # Uploaded even when the check fails, so a build to look at exists;
-      # the job stays red.
+        run: |
+          C:\msys64\usr\bin\pacman.exe -S --noconfirm --needed mingw-w64-ucrt-x86_64-mesa | Out-Host
+          $zip = Get-ChildItem -LiteralPath "$env:RUNNER_TEMP/fuse" -Filter 'Dot Popper-*.zip' | Select-Object -First 1
+          $place = Join-Path $env:RUNNER_TEMP 'play\My Games'
+          Expand-Archive -LiteralPath $zip.FullName -DestinationPath $place
+          $program = Get-ChildItem -LiteralPath $place -Recurse -File -Filter 'Dot Popper.exe' | Select-Object -First 1
+          foreach ($pattern in 'opengl32.dll', 'libgallium_wgl.dll', 'libffi-*.dll', 'libgcc_s_seh-1.dll', 'libiconv-2.dll', 'libintl-8.dll',
+              'libLLVM*.dll', 'libSPIRV-Tools*.dll', 'libstdc++-6.dll', 'libsystre-0.dll', 'libtre-5.dll', 'libwinpthread-1.dll',
+              'libxml2*.dll', 'libzstd.dll', 'zlib1.dll') {
+            Get-ChildItem -LiteralPath 'C:\msys64\ucrt64\bin' -Filter $pattern | Copy-Item -Destination $program.DirectoryName
+          }
+          $system = $env:SystemRoot
+          $start = [Diagnostics.ProcessStartInfo]::new($program.FullName)
+          $start.UseShellExecute = $false
+          $start.RedirectStandardOutput = $true
+          $start.RedirectStandardError = $true
+          $start.WorkingDirectory = $system
+          $start.Environment.Clear()
+          $variables = @{
+            SystemRoot = $system; SystemDrive = $env:SystemDrive; windir = $system
+            PATH = "$system\System32;$system;$system\System32\Wbem"
+            USERPROFILE = $env:USERPROFILE; APPDATA = $env:APPDATA; LOCALAPPDATA = $env:LOCALAPPDATA
+            TEMP = $env:RUNNER_TEMP; TMP = $env:RUNNER_TEMP; GALLIUM_DRIVER = 'llvmpipe'
+          }
+          foreach ($name in $variables.Keys) { $start.Environment[$name] = $variables[$name] }
+          foreach ($pair in ($env:PLAY_ENV -split ' ')) { $name, $value = $pair -split '=', 2; $start.Environment[$name] = $value }
+          $process = [Diagnostics.Process]::Start($start)
+          $out = $process.StandardOutput.ReadToEndAsync()
+          $err = $process.StandardError.ReadToEndAsync()
+          if (-not $process.WaitForExit(120000)) { $process.Kill($true); throw 'Dot Popper.exe still ran after 120 s' }
+          $process.WaitForExit()
+          Write-Host "exit status: $($process.ExitCode)"
+          Write-Host "--- stdout"; Write-Host $out.Result
+          Write-Host "--- stderr"; Write-Host $err.Result
+          if ($process.ExitCode -ne 0) { exit 1 }
+          if ($out.Result -notmatch 'frames a second') { Write-Host '::error::the game never reported drawing a frame'; exit 1 }
+
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: ${{ always() && steps.build.outcome == 'success' }}
         with:
           name: dot-popper-windows-x64
           path: |
-            dist/*.zip
-            dist/*-setup.exe
+            ${{ runner.temp }}/fuse/*.zip
+            ${{ runner.temp }}/fuse/*-setup.exe
           if-no-files-found: error
+          compression-level: 0
 
   macos:
     name: macOS arm64
@@ -91,36 +129,80 @@ jobs:
       - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
         with:
           ruby-version: .ruby-version
-      - run: bundle install
-      - name: fledge build
-        id: build
-        run: bundle exec fledge build
-      - run: ls -la dist
-      - name: Check the build with no Ruby on PATH
+      - uses: ./.github/actions/fuse
+        with:
+          platform: arm64-darwin
+
+      - name: Play the unpacked app with no Ruby on its PATH
         run: |
-          mkdir -p "$RUNNER_TEMP/unpacked"
-          tar -xzf dist/*-arm64-darwin.tar.gz -C "$RUNNER_TEMP/unpacked"
-          program=$(find "$RUNNER_TEMP/unpacked" -path '*.app/Contents/MacOS/Dot Popper' -type f | head -1)
-          report="$RUNNER_TEMP/smoke.txt"
-          env -i HOME="$HOME" PATH=/usr/bin:/bin DOT_POPPER_SMOKE="$report" "$program"
-          cat "$report"
-          grep -q 'status 0' "$report"
-      # Uploaded even when the check fails, so a build to look at exists;
-      # the job stays red.
+          mkdir -p "$RUNNER_TEMP/play/My Games"
+          tar -xzf "$RUNNER_TEMP"/fuse/*.tar.gz -C "$RUNNER_TEMP/play/My Games"
+          app=$(find "$RUNNER_TEMP/play" -maxdepth 3 -name 'Dot Popper.app' -type d | head -1)
+          # shellcheck disable=SC2086
+          env -i HOME="$HOME" PATH=/usr/bin:/bin $PLAY_ENV "$app/Contents/MacOS/Dot Popper" > "$RUNNER_TEMP/play/out.txt" 2>&1 &
+          pid=$!
+          for _ in $(seq 120); do kill -0 "$pid" 2> /dev/null || break; sleep 1; done
+          if kill -0 "$pid" 2> /dev/null; then kill "$pid"; echo "::error::the app still ran after 120 s"; fi
+          wait "$pid"; status=$?
+          echo "exit status $status"; cat "$RUNNER_TEMP/play/out.txt"
+          [ "$status" = 0 ] && grep -q "frames a second" "$RUNNER_TEMP/play/out.txt"
+
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: ${{ always() && steps.build.outcome == 'success' }}
         with:
           name: dot-popper-macos-arm64
           path: |
-            dist/*.dmg
-            dist/*.tar.gz
+            ${{ runner.temp }}/fuse/*.dmg
+            ${{ runner.temp }}/fuse/*.tar.gz
           if-no-files-found: error
+          compression-level: 0
+
+  linux:
+    name: Linux x86_64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install OpenGL, Mesa, and Xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install --assume-yes libgl1 libegl1 libgl1-mesa-dri xvfb
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: .ruby-version
+      - uses: ./.github/actions/fuse
+        with:
+          platform: x86_64-linux-gnu
+
+      - name: Play the unpacked app with no Ruby on its PATH, under Xvfb
+        run: |
+          mkdir -p "$RUNNER_TEMP/play/My Games"
+          tar -xzf "$(ls "$RUNNER_TEMP"/fuse/*.tar.gz | head -1)" -C "$RUNNER_TEMP/play/My Games"
+          program=$(find "$RUNNER_TEMP/play" -maxdepth 4 -type f -name 'Dot Popper' -perm -u+x | head -1)
+          set +e
+          # DISPLAY is Xvfb's, which only the inner shell knows.
+          # shellcheck disable=SC2016
+          xvfb-run -a -s "-screen 0 1280x800x24" sh -c \
+            'exec env -i HOME="$HOME" PATH=/usr/bin:/bin DISPLAY="$DISPLAY" LIBGL_ALWAYS_SOFTWARE=1 $PLAY_ENV timeout 120 "$0"' \
+            "$program" > "$RUNNER_TEMP/play/out.txt" 2>&1
+          status=$?
+          set -e
+          echo "exit status $status"; cat "$RUNNER_TEMP/play/out.txt"
+          [ "$status" = 0 ] && grep -q "frames a second" "$RUNNER_TEMP/play/out.txt"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dot-popper-linux-x86_64
+          path: |
+            ${{ runner.temp }}/fuse/*.tar.gz
+            ${{ runner.temp }}/fuse/*.AppImage
+          if-no-files-found: error
+          compression-level: 0
 
   release:
     name: Release
-    needs: [windows, macos]
-    # The Windows build is the one that must ship; macOS joins it when it
-    # built.
+    needs: [test, windows, macos, linux]
     if: ${{ always() && startsWith(github.ref, 'refs/tags/v0.') && needs.windows.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -138,9 +220,14 @@ jobs:
         run: |
           ls -la artifacts
           tag="$GITHUB_REF_NAME"
-          if gh release view "$tag" -R "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
-            gh release upload "$tag" -R "$GITHUB_REPOSITORY" --clobber artifacts/*
-          else
-            gh release create "$tag" -R "$GITHUB_REPOSITORY" --title "Dot Popper $tag" \
-              --notes "Built by the Package workflow from $GITHUB_SHA. See PACKAGING.md." --prerelease artifacts/*
-          fi
+          # The Kits workflow may be making the same release at once.
+          for attempt in 1 2 3 4 5; do
+            if gh release view "$tag" -R "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+              gh release upload "$tag" -R "$GITHUB_REPOSITORY" --clobber artifacts/* && exit 0
+            elif gh release create "$tag" -R "$GITHUB_REPOSITORY" --title "Dot Popper $tag" --prerelease \
+                --notes "Built by the Package and Kits workflows from $GITHUB_SHA. See PACKAGING.md." artifacts/*; then
+              exit 0
+            fi
+            sleep $((attempt * 10))
+          done
+          exit 1

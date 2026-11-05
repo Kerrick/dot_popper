@@ -3,12 +3,16 @@
 require "yaml"
 
 # The playtest kits' hand checks (playtest/checks.yml) and what they are
-# rendered into: the Windows kit's playtest.ps1, which asks them one at a
-# time, and the iPad kit's ipad-results.txt, which the player fills in.
-# Nothing here loads the game or Lota; script/playtest_kit.rb runs it in
-# CI (.github/workflows/kits.yml), and test/playtest_kit_test.rb tests it.
+# rendered into: the Windows kit's playtest.ps1 and the Linux kit's
+# playtest.sh, which ask them one at a time, and the macOS and iPad kits'
+# results sheets, which the player fills in. Nothing here loads the game
+# or Lota; script/playtest_kit.rb runs it in CI
+# (.github/workflows/kits.yml), and test/playtest_kit_test.rb tests it.
 module Playtest
   CHECKS = File.expand_path("checks.yml", __dir__)
+
+  # The desktop systems, which share checks.yml's desktop list.
+  DESKTOPS = %i[windows mac linux].freeze
 
   # The kinds of answer a check can ask for, and how each is prompted.
   ANSWERS = {
@@ -25,11 +29,14 @@ module Playtest
     def self.from(hash) = new(ask: hash["ask"].to_s, answer: hash["answer"], scale: hash["scale"], options: Array(hash["options"]))
   end
 
-  # One hand check, as checks.yml describes it.
+  # One hand check, as checks.yml describes it for one +device+: a field
+  # that differs by system is a mapping, of which the device's entry, or
+  # else default, is the one it reads.
   class Check < Data.define(:id, :ask, :answer, :try, :restart, :after, :group, :parts, :quotes, :scale, :options)
-    def self.from(hash)
-      new(id: hash.fetch("id").to_s, ask: hash["ask"].to_s, answer: hash["answer"], try: hash["try"],
-          restart: hash["restart"] == true, after: hash["after"], group: hash["group"],
+    def self.from(hash, device)
+      words = ->(key) { (value = hash[key]).is_a?(Hash) ? value.fetch(device.to_s) { value["default"] } : value }
+      new(id: hash.fetch("id").to_s, ask: words["ask"].to_s, answer: hash["answer"], try: words["try"],
+          restart: hash["restart"] == true, after: words["after"], group: hash["group"],
           parts: Array(hash["parts"]).map { Part.from(it) }, quotes: Array(hash["quotes"]).map(&:to_s),
           scale: hash["scale"], options: Array(hash["options"]))
     end
@@ -47,27 +54,33 @@ module Playtest
   # The checks for one device, in the order they are asked.
   class Checklist < Data.define(:device, :checks)
     def self.load(device, path = CHECKS)
-      new(device:, checks: YAML.load_file(path).fetch(device.to_s).map { Check.from(it) })
+      list = DESKTOPS.include?(device.to_sym) ? "desktop" : device.to_s
+      new(device: device.to_sym, checks: YAML.load_file(path).fetch(list).map { Check.from(it, device) })
     end
 
     def each(&) = checks.each(&)
   end
 
-  # The PowerShell array playtest.ps1 asks from: one hashtable a check,
-  # with single-quoted strings, in which only a quote needs escaping.
-  class PowerShellList < Data.define(:checklist)
+  # A rendering that takes the place of one marked line of a template.
+  module Filling
     MARK = "# @CHECKS@"
 
-    def render
-      rows = checklist.checks.map { "  #{table(it)}" }
-      "$Checks = @(\n#{rows.join(",\n")}\n)"
-    end
-
-    # +template+ with MARK's line replaced by the list.
+    # +template+ with MARK's line replaced by #render.
     def fill(template)
       raise ArgumentError, "the template has no #{MARK} line" unless template.include?(MARK)
 
       template.sub(/^#{Regexp.escape(MARK)}$/) { render }
+    end
+  end
+
+  # The PowerShell array playtest.ps1 asks from: one hashtable a check,
+  # with single-quoted strings, in which only a quote needs escaping.
+  class PowerShellList < Data.define(:checklist)
+    include Filling
+
+    def render
+      rows = checklist.checks.map { "  #{table(it)}" }
+      "$Checks = @(\n#{rows.join(",\n")}\n)"
     end
 
     private
@@ -95,39 +108,78 @@ module Playtest
     end
   end
 
-  # The iPad kit's ipad-results.txt: the build it tests, a few lines
-  # about the iPad, then each check with its blanks, ready to fill in.
-  class ResultsSheet < Data.define(:checklist, :build)
-    WIDTH = 76
+  # The checks as playtest.sh asks them: a Bash function a check, which
+  # calls the script's begin_check, answer, and end_check, and the lists
+  # of every check's id and the controller checks' ids. Strings are
+  # single-quoted, in which only a quote needs escaping.
+  class ShellList < Data.define(:checklist)
+    include Filling
 
     def render
-      [heading, "", *build.lines(chomp: true).map { "  #{it}" }, "", *intro, "", *device, "",
-       *checklist.checks.flat_map { [*check(it), ""] }, *ending].join("\n") + "\n"
+      ids = checklist.checks.map(&:id)
+      [%(CHECK_IDS=(#{ids.join(" ")})),
+       %(CONTROLLER_IDS=" #{checklist.checks.select(&:controller?).map(&:id).join(" ")} "),
+       *checklist.checks.map { function(it) }].join("\n")
     end
 
     private
 
-    def heading = "Dot Popper iPad playtest results\n#{"=" * 32}"
+    def function(check)
+      calls = [call("begin_check", check.id, check.ask, check.try.to_s, check.restart.to_s)]
+      check.answers.each do |part|
+        label = part.ask == check.ask ? "answer" : part.ask
+        calls << call("answer", part.answer, label, part.scale.to_s, part.options.join("|"))
+      end
+      calls << call("end_check", check.after.to_s)
+      "check_#{check.id}() {\n#{calls.map { "  #{it}" }.join("\n")}\n}"
+    end
+
+    def call(name, *arguments) = [name, *arguments.map { quote(it) }].join(" ")
+
+    # A block, since in a replacement String \' would mean what follows
+    # the match.
+    def quote(text) = "'#{text.gsub("'") { %q('\\'') }}'"
+  end
+
+  # A kit's results sheet, such as the iPad kit's ipad-results.txt: the
+  # build it tests, a few lines about the device, then each check with its
+  # blanks, ready to fill in.
+  class ResultsSheet < Data.define(:checklist, :build)
+    WIDTH = 76
+
+    # The sheet's title, and the lines about the device it asks first.
+    DEVICES = {
+      ipad: ["Dot Popper iPad playtest results",
+             ["Date played: ->", "iPad or iPhone, and its model (Settings > General > About): ->",
+              "iPadOS or iOS version: ->", "Xcode version on the Mac: ->"]],
+      mac: ["Dot Popper macOS playtest results",
+            ["Date played: ->", "Mac model and chip (Apple menu > About This Mac): ->", "macOS version: ->",
+             "Display (built-in or external, its size and refresh rate): ->",
+             "Controller (none, or which one): ->"]]
+    }.freeze
+
+    def render
+      title, device = DEVICES.fetch(checklist.device)
+      [title, "=" * title.length, "", *build.lines(chomp: true).map { "  #{it}" }, "", *intro, "", *device, "",
+       *checklist.checks.flat_map { [*check(it), ""] }, "Thank you!"].join("\n") + "\n"
+    end
+
+    private
 
     def intro
       wrap("Fill in each answer after its arrow (->), in your own words where it asks. " \
            "Skip anything you can't try. Then save this file and send it back, with any screenshots.")
     end
 
-    def device
-      ["Date played: ->", "iPad model (Settings > General > About): ->", "iPadOS version: ->",
-       "Xcode version on the Mac: ->"]
-    end
-
     def check(check)
-      lines = ["#{check.id}. #{"(Only with a controller.) " if check.controller?}#{check.ask}"]
-      lines = wrap(lines.first, indent: "    ", first: "")
+      lines = wrap("#{check.id}. #{"(Only with a controller.) " if check.controller?}#{check.ask}", indent: "    ")
       lines += wrap("Try: #{check.try}", indent: "    ", first: "    ") if check.try
       check.answers.each do |part|
         label = part.ask == check.ask ? "Answer" : part.ask.sub(/:\z/, "")
         lines += wrap("#{label} (#{prompt(part)}): ->", indent: "      ", first: "    ")
       end
       lines += ["    Pasted result:", "", "", ""] if check.answers.any? { it.answer == "paste" }
+      lines += wrap("Then: #{check.after}", indent: "    ", first: "    ") if check.after
       lines + ["    Note: ->"]
     end
 
@@ -139,8 +191,6 @@ module Playtest
       else ANSWERS.fetch(part.answer)
       end
     end
-
-    def ending = ["Thank you!"]
 
     def wrap(text, indent: "", first: "")
       text.split.each_with_object([+first]) do |word, lines|

@@ -9,8 +9,10 @@ require_relative "../playtest/kit"
 # shows, and both renderings carry every check.
 class PlaytestKitTest < Minitest::Test
   WINDOWS = Playtest::Checklist.load(:windows)
+  MAC = Playtest::Checklist.load(:mac)
+  LINUX = Playtest::Checklist.load(:linux)
   IPAD = Playtest::Checklist.load(:ipad)
-  LISTS = [WINDOWS, IPAD].freeze
+  LISTS = [WINDOWS, MAC, LINUX, IPAD].freeze
 
   # Every String the presentation's settings hold, the words among them.
   def self.game_strings(value = DotPopper::Presentation::Look.constants.map { DotPopper::Presentation::Look.const_get(it) })
@@ -26,7 +28,7 @@ class PlaytestKitTest < Minitest::Test
   GAME_STRINGS = game_strings.freeze
 
   def test_the_lists_hold_the_checks_the_maintainer_asked_for
-    assert_equal (1..18).map(&:to_s), WINDOWS.checks.map(&:id)
+    [WINDOWS, MAC, LINUX].each { assert_equal (1..18).map(&:to_s), it.checks.map(&:id) }
     assert_equal (1..13).map(&:to_s), IPAD.checks.map(&:id)
     assert_equal %w[14 15 16 17 18], WINDOWS.checks.select(&:controller?).map(&:id)
   end
@@ -83,6 +85,34 @@ class PlaytestKitTest < Minitest::Test
     assert_includes template, "@BUILD@"
     assert template.ascii_only?
     assert_raises(ArgumentError) { Playtest::PowerShellList.new(WINDOWS).fill("no mark") }
+  end
+
+  def test_each_system_reads_its_own_words
+    assert_match(/Command\+Enter/, MAC.checks[3].ask)
+    assert_match(/F11/, LINUX.checks[3].ask)
+    assert_match(/Windows pauses/, WINDOWS.checks[4].try)
+    refute_match(/Windows/, LINUX.checks[4].try)
+    assert_match(/Notepad/, WINDOWS.checks[8].try)
+    assert_match(/TextEdit/, MAC.checks[8].try)
+    refute_match(/kit starts it/, MAC.checks[1].try)
+  end
+
+  def test_the_shell_list_has_a_function_per_check_with_quotes_escaped
+    list = Playtest::ShellList.new(LINUX).render
+
+    assert_includes list, "CHECK_IDS=(#{(1..18).to_a.join(" ")})"
+    assert_includes list, %(CONTROLLER_IDS=" 14 15 16 17 18 ")
+    assert_equal 18, list.scan(/^check_\d+\(\) \{$/).size
+    assert_includes list, %q('The bright dot'\''s edge is easy to see while it moves.')
+    assert_includes list, "answer 'rating' 'The cursor'\\''s top speed:'"
+  end
+
+  def test_the_mac_sheet_asks_about_the_mac
+    sheet = Playtest::ResultsSheet.new(MAC, "Dot Popper v9.9.9").render
+
+    assert sheet.start_with?("Dot Popper macOS playtest results\n")
+    assert_includes sheet, "macOS version: ->"
+    assert_includes sheet, "4. Command+Enter"
   end
 
   def test_the_results_sheet_holds_the_build_and_every_check_with_a_blank
