@@ -18,6 +18,10 @@ When time runs out, the dots tumble to the bottom of the screen in a heap behind
 
 Under that line, a **Copy my result** button copies two short lines to the clipboard, ready to paste into a message: your score, whether it set or tied your best, any lifetime record the round set, and how many pops and wrong taps the round had and how long it lasted. A tap on the button only copies; a tap anywhere else continues.
 
+### Your records
+
+Once you have finished a round, the title screen shows a **Your records** button in its bottom left corner. It opens a screen with your best score and your other bests (your longest round, the most pops in a row without a wrong tap, your fastest pop, and the longest wait that still ended in a pop), your totals across every round, and a bar chart of your last 20 scores, with the highest of them labelled. Tap anywhere to go back to the title. Nothing on this screen affects a round.
+
 ### Controls
 
 | Action | Touch or mouse | Keyboard |
@@ -25,11 +29,13 @@ Under that line, a **Copy my result** button copies two short lines to the clipb
 | Pop a dot | Tap or click it | |
 | Start a round, or continue after one | Tap or click anywhere | |
 | Copy your result | **Copy my result** on the Game Over screen | |
+| See your records | **Your records** on the title screen | |
+| Leave the Records screen | Tap or click anywhere | **Escape** |
 | Turn sound on or off | The speaker button on the title screen | **M** |
 | Toggle fullscreen (desktop only) | | **F11**, or **Alt+Enter** (**Cmd+Enter** on a Mac) |
-| Quit (desktop only) | Close the window | **Escape** |
+| Quit (desktop only) | Close the window | **Escape**, except on the Records screen |
 
-On a phone or tablet the game always fills the screen and never quits itself, so only **M** does anything on an attached keyboard.
+On a phone or tablet the game always fills the screen and never quits itself, so only **M**, and **Escape** on the Records screen, do anything on an attached keyboard.
 
 ### Playing with a controller
 
@@ -119,12 +125,14 @@ Running `bundle exec rake` with no task name runs the tests and then [Steep](htt
 
 | Variable | Effect |
 | --- | --- |
-| `DOT_POPPER_AUTOPLAY=1` | A bot plays the game. It mostly taps fresh dots, but now and then it taps a popped dot that covers one, so that penalties appear too. It starts each round by tapping one of the title screen's dots, and copies every other result. |
+| `DOT_POPPER_AUTOPLAY=1` | A bot plays the game. It mostly taps fresh dots, but now and then it taps a popped dot that covers one, so that penalties appear too. It starts each round by tapping one of the title screen's dots, and copies every other result. On its second visit to the title, it opens the Records screen for three seconds first. |
 | `DOT_POPPER_SHOTS=0.5,3,6.5` | Takes a screenshot at each of these times, counted in seconds of play, and saves them as `shot-1.png`, `shot-2.png`, and so on in the save folder. The game prints each file's path. |
 | `DOT_POPPER_QUIT_AFTER=20` | Quits after this many seconds of play. |
 | `DOT_POPPER_SEED=42` | Seeds the random number generator, so the same seed and the same taps produce the same dots. |
 | `DOT_POPPER_NO_SHADERS=1` | Draws plain shapes without shaders, and so without the fresh dots' glow. The game does this on its own when a shader fails to compile. |
 | `DOT_POPPER_CALM=1` | Turns off screen shake and the bouncing at the end of a round (see "Reduced motion"). |
+| `DOT_POPPER_WINDOW=400x850` | Opens the desktop window at this size, in logical pixels, to check how a narrow screen looks. |
+| `DOT_POPPER_SAVE_AS=test` | Saves in a folder of this name instead of `dot_popper`, so a test run starts with no rounds played and leaves your own records alone. |
 
 ### The playtest log
 

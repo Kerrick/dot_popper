@@ -74,6 +74,19 @@ class WordsTest < Minitest::Test
     assert_equal "0 pops, 0 wrong taps", Look::WORDS.summary(DotPopper::RoundStats.start)
   end
 
+  def test_a_long_time_reads_in_the_units_that_suit_it
+    assert_equal "45 seconds", Words.duration(45.9)
+    assert_equal "1 minute", Words.duration(61)
+    assert_equal "31 minutes", Words.duration(1890)
+    assert_equal "2 hours", Words.duration(7200)
+    assert_equal "2 hours 5 minutes", Words.duration(7500)
+  end
+
+  def test_the_charts_caption_counts_the_rounds
+    assert_equal "Your last 20 rounds", Words.last_rounds(20)
+    assert_equal "Your last round", Words.last_rounds(1)
+  end
+
   def test_how_far_short_of_the_best
     assert_equal "3 points short of your best of 27", Look::WORDS.short_of_best(24, 27)
     assert_equal "1 point short of your best of 27", Look::WORDS.short_of_best(26, 27)

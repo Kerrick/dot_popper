@@ -39,6 +39,7 @@ module DotPopper
         @hint = nil
         @penalized_at = -Float::INFINITY
         @recorder = RoundStats::Recorder.new
+        @records = nil
         game.subscribe(@recorder)
         game.subscribe(self)
       end
@@ -50,15 +51,30 @@ module DotPopper
       def words = look::WORDS
 
       def title? = game.state.is_a?(Game::Title)
+
+      # Whether the Records screen is open over the title. It is the
+      # presentation's alone: the game stays on its title meanwhile, and
+      # no tap there reaches the game.
+      def records? = !@records.nil?
+
+      # What the Records screen shows, while it is open.
+      def records = @records
+
+      # Whether the title offers "Your records": only once a round has
+      # finished, so a first-time player's title says only how to play.
+      def records_offered? = lifetime.stats.rounds.positive?
       def playing? = game.state.is_a?(Game::Playing)
       def finished? = game.state.is_a?(Game::GameOver)
 
-      # A tap anywhere. On the title, the mute button takes its own taps,
-      # as "Copy my result" does on Game Over; every other tap goes to the
-      # game at once. A tap on one of the title's fresh dots also pops it,
-      # as the round starts.
+      # A tap anywhere. On the title, the mute button and "Your records"
+      # take their own taps, as "Copy my result" does on Game Over, and on
+      # the Records screen a tap anywhere goes back; every other tap goes
+      # to the game at once. A tap on one of the title's fresh dots also
+      # pops it, as the round starts.
       def tap(x, y)
-        if title? && layout.mute_button.contains?(x, y) then sounds.toggle_mute
+        if records? then close_records
+        elsif title? && layout.mute_button.contains?(x, y) then sounds.toggle_mute
+        elsif title? && records_offered? && records_reach.contains?(x, y) then open_records
         elsif finished? && share_reach.contains?(x, y) then share
         else
           scenery = attract.dots.top_at(x, y) if title?
@@ -72,7 +88,33 @@ module DotPopper
       # all; where it presses does not matter on either screen. In a round
       # it does nothing, since only a press at a place may touch the score.
       def start
+        return close_records if records?
+
         game.press(layout.center_x, layout.center_y) unless playing?
+      end
+
+      # Escape, or a gamepad's B: leaves the Records screen. Says whether
+      # there was one to leave, so that elsewhere the key can do its usual
+      # job.
+      def back
+        return false unless records?
+
+        close_records
+        true
+      end
+
+      # Opens the Records screen over the title, with the stats as they
+      # are now.
+      def open_records
+        return unless title?
+
+        @records = RecordsSheet.build(lifetime.stats, best: game.best.value, words:)
+        sounds.play(:tick)
+      end
+
+      def close_records
+        @records = nil
+        sounds.play(:tick, pitch: 0.8)
       end
 
       # A gamepad's Y, or a tap on "Copy my result": on Game Over, copies
@@ -88,6 +130,13 @@ module DotPopper
 
       # Where a tap reaches "Copy my result": never less than a dot's width.
       def share_reach = layout.share_button.reach(2 * @radius)
+
+      # Where a tap reaches "Your records": never less than a dot's width,
+      # and never past the safe area's bottom.
+      def records_reach
+        reach = layout.records_button.reach(2 * @radius)
+        reach.with(height: [reach.height, layout.safe.bottom - reach.y].min)
+      end
 
       def resize(layout, field)
         @layout = layout
@@ -164,6 +213,7 @@ module DotPopper
       end
 
       def title_shown(event)
+        @records = nil
         effects.clear
         @finale = nil
         @marquee = Marquee.new(look: look::TITLE, best: event.best, at: now)

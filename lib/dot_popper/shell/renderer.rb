@@ -20,6 +20,7 @@ module DotPopper
         @hud = HudPainter.new(pen:)
         @hint = HintPainter.new(pen:)
         @title = TitlePainter.new(pen:, dots: @dots)
+        @records = RecordsPainter.new(pen:)
         @finale = FinalePainter.new(pen:)
         @cursor = CursorPainter.new(pen:)
         @at_rest = Presentation::DotAnimations.new(pen.look::MOTION)
@@ -31,8 +32,13 @@ module DotPopper
         backdrop(width, height)
         if @show.title?
           @dots.draw(@show.attract.dots, @at_rest, @show.now, radius)
-          veil(width, height, @pen.look::TITLE.dim)
-          @title.draw(@show, layout)
+          if @show.records?
+            veil(width, height, @pen.look::RECORDS.veil)
+            @records.draw(@show, layout)
+          else
+            veil(width, height, @pen.look::TITLE.dim)
+            @title.draw(@show, layout)
+          end
         else
           @effects.flash(@show.effects, width, height)
           glow

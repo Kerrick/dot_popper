@@ -41,6 +41,17 @@ class LayoutTest < Minitest::Test
     assert_equal 12, rect.inset(2).x
   end
 
+  def test_your_records_sits_across_from_the_mute_button_in_the_safe_area
+    safe = Rect.new(x: 40, y: 20, width: 320, height: 800)
+    narrow = Layout.new(width: 400, height: 850, safe:, look: Look::LAYOUT)
+    button = narrow.records_button
+
+    assert_operator button.x, :>=, safe.x
+    assert_operator button.bottom, :<=, safe.bottom
+    assert_operator button.height, :>=, 44
+    assert_operator button.reach(2 * R).right, :<, narrow.mute_button.x
+  end
+
   def test_the_prompt_makes_room_for_share
     assert_operator layout.continue_y, :>, layout.share_button.reach(2 * R).bottom
   end

@@ -6,9 +6,10 @@ module DotPopper
     # the title to a round, taps fresh dots where they show, sometimes taps
     # a popped one by mistake, slows as its score grows so the round ends,
     # and taps through game over back to the title. Given the Show, it
-    # starts a round by popping one of the title's dots, and copies every
-    # other result. It sees only what a player sees: the dots and the
-    # screen.
+    # starts a round by popping one of the title's dots, copies every
+    # other result, and on its second visit to the title looks at the
+    # Records screen for a while first. It sees only what a player sees:
+    # the dots and the screen.
     class Autopilot
       # Where it looks for an uncovered part of the fresh dot: its centre,
       # then points around it, in radii.
@@ -21,6 +22,8 @@ module DotPopper
         @waited = 0.0
         @cooldown = 0.0
         @finales = 0
+        @titles = 0
+        @browsed = false
         @shared = false
       end
 
@@ -29,7 +32,7 @@ module DotPopper
         notice(game.state)
         @waited += seconds
         case game.state
-        when Game::Title then press_once(@look.title_wait) { start(game, show) }
+        when Game::Title then title(game, show)
         when Game::GameOver then finish(game, show)
         when Game::Playing then play(seconds, game.round)
         end
@@ -41,6 +44,7 @@ module DotPopper
         return if state.class == @state
 
         @finales += 1 if state.is_a?(Game::GameOver)
+        @titles += 1 if state.is_a?(Game::Title)
         @shared = false
         @state = state.class
         @waited = 0.0
@@ -55,6 +59,28 @@ module DotPopper
       end
 
       def center(field) = [field.width / 2.0, field.height * 0.62]
+
+      def title(game, show)
+        return browse(show) if show && (show.records? || (@titles == 2 && !@browsed))
+
+        press_once(@look.title_wait) { start(game, show) }
+      end
+
+      # Opens "Your records" once it is offered, and taps to go back after
+      # +records_wait+; the title's own wait then starts again.
+      def browse(show)
+        if show.records?
+          return if @waited < @look.records_wait
+
+          @waited = 0.0
+          return center(show.game.field)
+        end
+        return unless show.records_offered? && @waited >= @look.title_wait / 2
+
+        @browsed = true
+        @waited = 0.0
+        middle(show.records_reach)
+      end
 
       # A tap on one of the title's fresh dots, which pops it as the round
       # starts, or the middle.

@@ -46,6 +46,27 @@ class AutopilotTest < Minitest::Test
     assert_match(/\ADot Popper: \d+ points?/, copies[1])
   end
 
+  def test_on_its_second_title_it_looks_at_the_records_and_goes_back
+    game = DotPopper::Game.new(field, random: Random.new(4))
+    show = Show.new(game:, layout: layout, sounds: FakeSounds.new, radius: R)
+    pilot = Autopilot.new(Look::AUTOPILOT, random: Random.new(5))
+    opened = false
+    rounds = 0
+    game.subscribe { rounds += 1 if it.is_a?(DotPopper::Events::RoundStarted) }
+    12_000.times do
+      x, y = pilot.update(1 / 60.0, game, show)
+      show.tap(x, y) if x
+      opened ||= show.records?
+      game.update(1 / 60.0)
+      show.update(1 / 60.0)
+      break if rounds >= 2
+    end
+
+    assert opened
+    refute show.records?
+    assert_equal 2, rounds
+  end
+
   def test_it_taps_only_a_fresh_dot_it_can_see
     covered = dot(400, 300)
     round = round_with(dot(400, 300, popped: true), covered)

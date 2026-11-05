@@ -117,6 +117,8 @@ module DotPopper
 
       def key_pressed(key)
         return @speaker.toggle_mute if key == :m
+        # Escape leaves the Records screen first, on any device.
+        return if key == :escape && @show.back
         # A tablet's keyboard neither quits the app nor takes it out of
         # fullscreen: iOS apps are left by the system, never by the app.
         return if @touch
@@ -152,7 +154,7 @@ module DotPopper
       end
 
       def open_window
-        size = Look::WINDOW.size_for(*::Lota::Window.desktop_dimensions, @dot_size.radius)
+        size = window_size || Look::WINDOW.size_for(*::Lota::Window.desktop_dimensions, @dot_size.radius)
         ::Lota::Window.set_mode(*size, resizable: true, centered: true, minwidth: SMALLEST_WINDOW[0],
                                        minheight: SMALLEST_WINDOW[1])
       end
@@ -176,6 +178,13 @@ module DotPopper
         safe = Presentation::Rect.new(x:, y:, width: safe_width, height: safe_height)
         safe = Presentation::Rect.new(x: 0, y: 0, width:, height:) unless safe.width.to_f.positive?
         Presentation::Layout.new(width:, height:, safe:, look: Look::LAYOUT)
+      end
+
+      # DOT_POPPER_WINDOW=400x850: a window of that size, for checking a
+      # narrow screen; nil without it.
+      def window_size
+        width, height = @env.fetch("DOT_POPPER_WINDOW", "").split("x", 2).map { Integer(it, exception: false) }
+        [[width, SMALLEST_WINDOW[0]].max, [height, SMALLEST_WINDOW[1]].max] if width && height
       end
 
       def flag?(name) = @env[name] == "1"

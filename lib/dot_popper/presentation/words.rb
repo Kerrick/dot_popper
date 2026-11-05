@@ -6,9 +6,10 @@ module DotPopper
     # are for someone who has never played: each says what happened or
     # what a tap will do, in full sentences where a sentence is needed,
     # with no name the game made up for itself. +covered+ is the first-run
-    # hint, a sentence a line.
+    # hint, a sentence a line. +labels+ name the Records screen's sections
+    # and rows, by what they count.
     class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time, :covered,
-                              :share, :copied)
+                              :share, :copied, :records, :go_back, :no_rounds, :labels)
       MINUS = "−" # a true minus sign, as wide as the plus
 
       # +1, −2, or 0 for a number of points.
@@ -87,6 +88,28 @@ module DotPopper
 
       # Seconds to one decimal place: "0.4".
       def self.tenths(seconds) = format("%.1f", seconds)
+
+      # A time to one decimal place, "0.4 seconds", or "None yet" for a
+      # time that nothing has set: nil, or nothing at all.
+      def seconds_or_none(seconds)
+        seconds.to_f.positive? ? "#{Words.tenths(seconds)} seconds" : labels[:none]
+      end
+
+      # A long time in the largest whole units that suit it: "45 seconds",
+      # "31 minutes", "2 hours 5 minutes".
+      def self.duration(seconds)
+        whole = seconds.floor
+        return count(whole, "second") if whole < 60
+
+        minutes = whole / 60
+        return count(minutes, "minute") if minutes < 60
+
+        hours = count(minutes / 60, "hour")
+        (minutes % 60).zero? ? hours : "#{hours} #{count(minutes % 60, "minute")}"
+      end
+
+      # The chart's caption: "Your last 20 rounds", or "Your last round".
+      def self.last_rounds(count) = count == 1 ? "Your last round" : "Your last #{count} rounds"
 
       # "1 pop", "2 pops".
       def self.count(number, noun) = "#{number} #{noun}#{"s" unless number == 1}"

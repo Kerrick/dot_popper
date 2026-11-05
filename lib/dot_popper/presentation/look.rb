@@ -26,8 +26,23 @@ module DotPopper
         new_best: "New best!", best: "Your best", score: "SCORE", time: "TIME",
         covered: ["Popped dots stay on top, and new dots appear under them.",
                   "Wait for the bright dot to slide out, then tap it."].freeze,
-        share: "Copy my result", copied: "Copied! Paste it anywhere."
+        share: "Copy my result", copied: "Copied! Paste it anywhere.",
+        records: "Your records", go_back: "Tap anywhere to go back",
+        no_rounds: "Play a round, and your records will appear here.",
+        labels: {
+          bests: "Your bests", best_score: "Best score", longest_round: "Longest round",
+          longest_run: "Most pops in a row without a wrong tap", fastest_pop: "Fastest pop",
+          longest_wait: "Longest wait that ended in a pop",
+          totals: "All your rounds", rounds: "Rounds played", pops: "Dots popped", slips: "Wrong taps",
+          seconds: "Time played", days: "Days played", none: "None yet"
+        }.freeze
       )
+
+      # The Records screen, opened from the title: the heading's and the
+      # rows' sizes, a row's height in its type size, the chart's height in
+      # rows, the gap between columns and a column's widest, and how far
+      # the title's dots dim behind it.
+      RECORDS = RecordsLook.new(heading: 48, text: 20, line: 1.6, chart: 4.2, gap: 64, column: 500, veil: 0.9)
 
       # The first-run hint, under the HUD.
       HINT = HintLook.new(fade_in: 0.2, fade_out: 0.5, life: 2.6)
@@ -212,11 +227,12 @@ module DotPopper
       }.freeze
 
       # The autoplay bot, for development (main.rb): how long it waits on
-      # each screen, how long it thinks before each tap (which grows with
-      # the score, so a round ends), and how often it taps a popped dot.
-      class AutopilotLook < Data.define(:title_wait, :finale_wait, :think, :tiring, :mistakes); end
-      AUTOPILOT = AutopilotLook.new(title_wait: 1.6, finale_wait: 3.2, think: 0.22..0.45, tiring: 0.07,
-                                    mistakes: 0.2)
+      # each screen, the Records screen too, how long it thinks before each
+      # tap (which grows with the score, so a round ends), and how often it
+      # taps a popped dot.
+      class AutopilotLook < Data.define(:title_wait, :finale_wait, :records_wait, :think, :tiring, :mistakes); end
+      AUTOPILOT = AutopilotLook.new(title_wait: 1.6, finale_wait: 3.2, records_wait: 3.0, think: 0.22..0.45,
+                                    tiring: 0.07, mistakes: 0.2)
     end
   end
 end

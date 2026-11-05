@@ -65,6 +65,13 @@ module DotPopper
         Rect.new(x: safe.right - margin - size, y: safe.bottom - margin - size, width: size, height: size)
       end
 
+      # The title's "Your records" button, in the safe area's bottom left
+      # corner, across from the mute button and as tall as it.
+      def records_button
+        height = button_size
+        Rect.new(x: safe.x + margin, y: safe.bottom - margin - height, width: height * 3.8, height:)
+      end
+
       # Game Over's "Copy my result" button, under the round's summary.
       def share_button
         height = button_size

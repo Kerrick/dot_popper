@@ -87,6 +87,48 @@ class ShowTest < Minitest::Test
     assert @show.title?
   end
 
+  def test_your_records_is_offered_only_once_a_round_has_finished
+    refute @show.records_offered?
+    @show.tap(*middle(@show.records_reach))
+    assert @show.playing?, "before then, its corner is an ordinary tap"
+
+    finish_round
+    assert @show.records_offered?
+  end
+
+  def test_your_records_opens_over_the_title_and_any_tap_goes_back
+    finish_round
+    @show.tap(*middle(@show.records_reach))
+    assert @show.records?
+    assert @show.title?
+    assert_equal 1, @show.records.totals.rows.first.value.to_i
+
+    fresh = @show.attract.dots.find(&:fresh?)
+    @show.tap(fresh.x, fresh.y)
+    refute @show.records?
+    assert @show.title?, "the tap that goes back never starts a round"
+  end
+
+  def test_start_and_back_leave_the_records_screen_and_only_it
+    finish_round
+    @show.open_records
+    @show.start
+    refute @show.records?
+    assert @show.title?
+
+    @show.open_records
+    assert @show.back
+    refute @show.back, "with no Records screen, back has nothing to do"
+    assert @show.title?
+  end
+
+  def test_the_records_screen_opens_only_from_the_title
+    finish_round(back_to_title: false)
+    @show.open_records
+
+    refute @show.records?
+  end
+
   def test_a_gamepads_start_begins_the_usual_round_without_popping_a_title_dot
     @show.start
 
@@ -275,6 +317,15 @@ class ShowTest < Minitest::Test
   def put!(id, x, y)
     round = @game.round
     round.instance_variable_set(:@dots, round.dots.map_dots { it.id == id ? it.with(x:, y:) : it })
+  end
+
+  def finish_round(back_to_title: true)
+    start_and_pop
+    @game.update(20)
+    return unless back_to_title
+
+    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @show.tap(10, 10)
   end
 
   def start_and_pop(started: false)

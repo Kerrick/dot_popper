@@ -224,6 +224,18 @@ A player's first round sets no record, since there is nothing yet to beat. Neith
 
 **To reverse:** The order is `LifetimeStats::Record::ORDER`. To drop the line, stop `FinalePainter` from drawing it and pass no `record:` to `share_text`.
 
+### The Records screen opens from the title, and lives outside the rules
+
+The title screen has a **Your records** button in its bottom left corner, across from the mute button and as tall as it; its tap area is at least a dot's width (2 R) across. It opens a screen over the title's dimmed dots: the heading "Your records", then the player's bests, their totals, and a bar chart of their last 20 scores, and at the bottom "Tap anywhere to go back". On a wide window the bests take the left column and the chart and totals the right; on a narrow one they stack. Each row has its label on the left and its number on the right, so the numbers line up and can be scanned down. The chart is one colour, the fresh dots' amber, with the highest score brighter and labelled with its number. It has no axes or gridlines, and twenty places for bars, so it fills up as rounds are played. Escape also goes back; on a desktop it no longer quits from this screen.
+
+The button appears only once a round has been finished. A first-time player's title still says only what the dots are and "Tap anywhere to play"; a button for records they don't have yet would be one more thing to read before playing.
+
+The screen belongs to the presentation, not the rules: `Show` keeps it open while the game stays on its title, and a tap there only closes it, so it can never start a round or touch a score. The layout is worked out without Lota in `Presentation::RecordsLayout` and tested at sizes from 400 × 320 to 2560 × 1440.
+
+**Why:** The lifetime stats are only worth keeping if the player can see them. A separate screen is a mode, which Saffer's *Microinteractions* advises making obvious when it can't be avoided, hence the heading, the much darker veil, and the standing instruction to go back. Rows rather than tiles because people scan rather than read (Redish), and lined-up numbers group by proximity before a word is read (Johnson).
+
+**To reverse:** Stop `TitlePainter` from drawing the button and `Show#tap` from opening the screen; nothing else depends on it.
+
 ### Cut: the daily challenge
 
 For a while the title screen had a second button, "Play today's challenge". Its round's seed came from the local date, so everyone who played on the same day got the same sequence of new dots: the same starting places, directions, and speeds. The game kept the day's best score, and afterwards a button copied the day's result to share. The idea was Wordle's: one puzzle a day, the same for everyone, so that players have something to compare and a reason to come back.

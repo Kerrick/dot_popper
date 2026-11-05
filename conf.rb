@@ -4,7 +4,9 @@
 # window to the play area DotPopper::Presentation::Look::WINDOW names,
 # fitted to the desktop.
 def Lota.conf(t)
-  t.identity = "dot_popper" # the save folder's name
+  # The save folder's name. DOT_POPPER_SAVE_AS gives a test run a folder
+  # of its own, so it starts from nothing and leaves the player's alone.
+  t.identity = ENV.fetch("DOT_POPPER_SAVE_AS", "dot_popper")
   t.highdpi = true # graphics units are logical pixels, so a dot is the same size on any display
   t.window.title = "Dot Popper"
   t.window.width = 1200
