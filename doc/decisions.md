@@ -39,7 +39,7 @@ For 0.9 seconds after time runs out, the Game Over screen ignores presses. The c
 
 The rules fix R as a physical size, so the number of radii that fit on a screen changes a great deal from one device to another. An upright phone holds about 15 times fewer than a 6K monitor. That matters because the game's central tension, a fresh dot appearing underneath popped ones, depends on how crowded the field gets.
 
-To measure the effect, `script/simulate.rb` plays the real rules with a simulated player on several screen sizes. The simulated player waits a human reaction time, takes the time Fitts's law predicts to move to a target, waits while the fresh dot is covered, and now and then taps impatiently anyway. The two decisions below come from its results.
+To measure the effect, `script/simulate.rb` plays the real rules with a simulated player on several screen sizes. The simulated player waits a human reaction time, takes the time Fitts's law predicts to move to a target, waits while the fresh dot is covered, and now and then taps impatiently anyway. The three decisions below come from its results.
 
 ### The desktop window opens at 24 × 16 radii
 
@@ -57,18 +57,58 @@ An upright iPhone is 8 × 17 R. On that field, the simulated player scores about
 
 **To reverse:** Not applicable; this is a decision not to act. Any of the three changes above would be a new rule.
 
+**Later:** The maintainer approved the first of those changes as a choice for the player, not a new default. See the next entry.
+
+### The player may choose to size the dots to the screen
+
+Once a round has been played, the title shows a button in its bottom row (on an upright phone, in a row of its own just above). It reads "Dots: same size everywhere" or "Dots: sized to your screen", and a tap switches between the two. The title's dots and its best score change at once to match. Either shoulder button on a controller does the same. The choice is saved in `dot_size.txt` in the save folder.
+
+- **Same size everywhere** is the default, and it is exactly the spec's rule: R is `DotSize.for(os)`, 50 units on every system.
+- **Sized to your screen** sets R when each round starts, to the radius that gives the field an area of 24 × 16 = 384 square radii, the desktop window's area: R = √(field area ÷ 384). R is never smaller than 30 units, so a dot is 60 points across, comfortably over Apple's 44-point smallest touch target. It is never larger than a seventh of the screen's shorter side, so that on a long, thin window a dot stays a dot. The numbers are `FITTED_AREA`, `SMALLEST_FITTED_RADIUS`, and `LARGEST_FITTED_SHARE` in `rules.rb`, and `DotSize.fitted` and `DotSizing` apply them.
+
+A round keeps its radius until it ends. If the window is resized during a round, the dots are kept on screen but stay the same size, and the next round works out its radius again. Speeds are still in radii per second, so they scale with R. Rings, droplets, and floating numbers scale with the round's dots too. Buttons and their tap areas don't change, because they are sized for a finger, not for the field. Because every screen is about equally crowded with this choice, its rounds keep bests of their own (`SizeClass::FITTED`, shown as "Your bests with dots sized to the screen"), apart from the small, medium, and large classes. The Records screen explains the choice in one line, and a shared result says "Played with the dots sized to my screen."
+
+The words never call either choice easy or hard. They say what each choice does.
+
+**Why:** The simulation (below) shows the screen deciding the difficulty: the same model player averages 6 points on an upright phone and 77 on a 6K monitor. That works against several ideas the game is built on:
+
+- Juul (*The Art of Failure*) argues that failure is worth enjoying only when the player can blame it on themselves. A phone player who loses to a crowded screen they didn't choose can't.
+- Garfield (*Characteristics of Games*) separates luck and skill, which players can see, from a handicap that is hidden. Screen size is a hidden handicap: nothing tells the player it is there.
+- Koster (*A Theory of Fun*) says the challenge must be calibrated. With R fixed, a phone starts its difficulty curve far above a monitor's.
+- Nguyen (*Games: Agency as Art*) describes games as chosen constraints. Making the field's size a setting the player picks turns an accident of hardware into one of those choices.
+- Sylvester (*Designing Games*) favours one rule that works at both ends of a range over special cases. One formula fits a phone and a 6K monitor alike, with no table of devices.
+
+The spec's rule stays the default, and it changes only when the player chooses. The setting is a choice rather than the new rule because R is meant as a physical size, and some players will prefer dots that feel the same everywhere.
+
+**To reverse:** Remove the button from `TitlePainter` and the tap from `Show#tap`, and delete `dot_size.txt`. With the saved choice gone, `DotSizing.parse` returns `SAME_EVERYWHERE`, which is the spec's rule. The fitted bests stay in the saved files but are no longer shown.
+
 ### What the simulation found
 
-These results are from 2026-11-05, with 60 rounds per device (`bundle exec ruby script/simulate.rb 60`). "Area" is the field's size in square radii, and "Penalties" counts wrong taps per round.
+These results are from 2026-11-05, with 60 rounds per device for each choice of dot size (`bundle exec ruby script/simulate.rb 60`). "R" is the radius in graphics units, "Area" is the field's size in square radii, and "Penalties" counts wrong taps per round.
 
-| Device | Area (R²) | Mean score | 90th percentile | Mean round (s) | Penalties |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| iPhone, portrait | 134 | 6.0 | 12 | 16.5 | 6.6 |
-| 11-inch iPad | 387 | 23.6 | 35 | 34.2 | 8.8 |
-| 13-inch iPad Pro | 566 | 33.3 | 48 | 43.8 | 9.6 |
-| Desktop window, 24 × 16 R | 384 | 20.8 | 31 | 31.5 | 7.2 |
-| 27-inch 1440p monitor, fullscreen | 1475 | 62.8 | 84 | 73.3 | 7.4 |
-| 32-inch 6K monitor, fullscreen | 2035 | 76.8 | 103 | 87.6 | 7.2 |
+With dots the same size everywhere (the default, and the spec's rule):
+
+| Device | R | Area (R²) | Mean score | 90th percentile | Mean round (s) | Penalties |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| iPhone, portrait | 50 | 134 | 6.0 | 12 | 16.5 | 6.6 |
+| 11-inch iPad | 50 | 387 | 23.6 | 35 | 34.2 | 8.8 |
+| 13-inch iPad Pro | 50 | 566 | 33.3 | 48 | 43.8 | 9.6 |
+| Desktop window, 24 × 16 R | 50 | 384 | 20.8 | 31 | 31.5 | 7.2 |
+| 27-inch 1440p monitor, fullscreen | 50 | 1475 | 62.8 | 84 | 73.3 | 7.4 |
+| 32-inch 6K monitor, fullscreen | 50 | 2035 | 76.8 | 103 | 87.6 | 7.2 |
+
+With dots sized to the screen:
+
+| Device | R | Area (R²) | Mean score | 90th percentile | Mean round (s) | Penalties |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| iPhone, portrait | 30.0 | 373 | 21.6 | 33 | 32.2 | 8.6 |
+| 11-inch iPad | 50.2 | 384 | 22.2 | 33 | 32.8 | 8.8 |
+| 13-inch iPad Pro | 60.7 | 384 | 23.0 | 33 | 33.6 | 8.7 |
+| Desktop window, 24 × 16 R | 50.0 | 384 | 20.8 | 31 | 31.5 | 7.2 |
+| 27-inch 1440p monitor, fullscreen | 98.0 | 384 | 23.6 | 35 | 34.2 | 7.3 |
+| 32-inch 6K monitor, fullscreen | 115.1 | 384 | 20.3 | 31 | 31.1 | 7.2 |
+
+Sized to the screen, the mean scores fall between 20.3 and 23.6, within 8% of their average of 21.9. With the same size everywhere they run from 6.0 to 76.8, nearly thirteen times apart. On the phone, the smallest radius applies: the exact fit would be 29.6, so its field is 373 R² rather than 384, a little more crowded than the others, though its score is still within the range. The rest of the spread follows the screens' shapes and the model player's luck, not their size.
 
 The simulated player is crude. In particular, the number of penalties mostly reflects how impatient it was told to be. Compare the rows with one another rather than reading them as predictions of a person's score.
 
@@ -365,6 +405,8 @@ Two changes to the code came from what the checker found. A `Field` now stores i
 Ractors are Ruby's units of parallel execution, and they can share only deeply frozen (fully immutable) objects. The rules' values (fields, dots, stacks, clocks, and tap events) are all deeply frozen, so each Ractor can read the device list and the rule numbers without copying them. Each Ractor makes its own random number generator, seeded exactly as the one-at-a-time run was, so it plays the same rounds, and the script checks that the results match. `DotSize` was the one value that couldn't be shared, because its reason was a string built at run time. It is now frozen, and a test checks that every value can be shared.
 
 **Why:** It makes the simulator faster on a machine with many cores, and shows off a modern Ruby feature.
+
+Every device now plays once with each choice of dot size, so the script starts twelve Ractors; `DotSizing` and `SizeClass` freeze their names for the same reason `DotSize` freezes its reason.
 
 **To reverse:** Run the devices in a plain loop in `script/simulate.rb`.
 

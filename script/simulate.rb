@@ -12,9 +12,11 @@
 # waits, and with a small chance per attempt it taps anyway and hits a
 # popped dot on top. Simulated at 30 updates a second.
 #
-# Each device plays in its own Ractor, in parallel, and then again one
-# after another, to show the two give the same rounds and how much
-# sooner the Ractors finish.
+# Every device plays with each choice of dot size (DotSizing): the same
+# size everywhere, as the spec has it, and sized to the screen. Each
+# pair plays in its own Ractor, in parallel, and then again one after
+# another, to show the two give the same rounds and how much sooner the
+# Ractors finish.
 
 # Ruby 4.0 stops every Ractor for each garbage collection, and a round
 # makes a great deal of short-lived garbage: new dots and stacks every
@@ -56,16 +58,31 @@ module Simulation
     def endless? = seconds > GIVE_UP
   end
 
+  SIZINGS = [DotPopper::DotSizing::SAME_EVERYWHERE, DotPopper::DotSizing::SIZED_TO_SCREEN].freeze
+
+  # One device with one choice of dot size.
+  Job = Data.define(:device, :sizing) do
+    # The field a round starts on: the device's screen in graphics
+    # units, as the game would see it, with the dots sized as chosen.
+    def field
+      r = DotPopper::Rules::RADIUS
+      sizing.fit(DotPopper::Field.new(device.width_r * r, device.height_r * r, r))
+    end
+  end
+
+  JOBS = SIZINGS.flat_map { |sizing| DEVICES.map { Job.new(it, sizing) } }.freeze
+
   class Player
-    def initialize(device, random)
-      @device = device
+    def initialize(job, random)
+      @device = job.device
+      @field = job.field
       @random = random
-      @r = DotPopper::Rules::RADIUS
+      @r = @field.radius
       @hand = [0.0, 0.0]
     end
 
     def play
-      field = DotPopper::Field.new(@device.width_r * @r, @device.height_r * @r, @r)
+      field = @field
       @hand = [field.width / 2, field.height / 2]
       round = DotPopper::Round.new(field, random: @random)
       t = 0.0
@@ -118,22 +135,22 @@ module Simulation
     end
   end
 
-  # One device's rounds, from its own seeded Random. The same seed gives
-  # the same rounds whether they run here or in a Ractor.
-  def self.play(device, rounds)
+  # One job's rounds, from its own seeded Random. The same seed gives the
+  # same rounds whether they run here or in a Ractor.
+  def self.play(job, rounds)
     random = Random.new(2026)
-    Array.new(rounds) { Player.new(device, random).play }
+    Array.new(rounds) { Player.new(job, random).play }
   end
 
-  # Every device in its own Ractor. A Ractor shares nothing mutable, so
-  # each makes its own Random, Round, and Player; what it reads from
-  # outside (DEVICES, the rule numbers) is deeply frozen, and what it
-  # returns is copied back.
+  # Every job in its own Ractor. A Ractor shares nothing mutable, so each
+  # makes its own Random, Round, and Player; what it reads from outside
+  # (JOBS, the rule numbers) is deeply frozen, and what it returns is
+  # copied back.
   def self.play_in_parallel(rounds)
-    DEVICES.map { |device| Ractor.new(device, rounds) { |each, count| Simulation.play(each, count) } }.map(&:value)
+    JOBS.map { |job| Ractor.new(job, rounds) { |each, count| Simulation.play(each, count) } }.map(&:value)
   end
 
-  def self.play_serially(rounds) = DEVICES.map { play(it, rounds) }
+  def self.play_serially(rounds) = JOBS.map { play(it, rounds) }
 
   def self.run(rounds)
     serial, serial_seconds = timed { play_serially(rounds) }
@@ -141,8 +158,8 @@ module Simulation
     abort "The Ractors' rounds differ from the serial ones." unless parallel == serial
 
     report(rounds, parallel)
-    puts format("\n%d devices: %.2f s one after another, %.2f s in Ractors, %.1fx as fast (%d cores)",
-                DEVICES.size, serial_seconds, parallel_seconds, serial_seconds / parallel_seconds, Etc.nprocessors)
+    puts format("\n%d runs: %.2f s one after another, %.2f s in Ractors, %.1fx as fast (%d cores)",
+                JOBS.size, serial_seconds, parallel_seconds, serial_seconds / parallel_seconds, Etc.nprocessors)
   end
 
   def self.timed
@@ -150,15 +167,23 @@ module Simulation
     [yield, Process.clock_gettime(Process::CLOCK_MONOTONIC) - started]
   end
 
+  # A table for each choice of dot size: each device's radius, its
+  # field's area in square radii, and how its rounds went.
   def self.report(rounds, all_results)
-    puts format("%-26s %6s %6s %6s %6s %7s %6s", "device", "area", "score", "p90", "secs", "endless", "pen")
-    DEVICES.zip(all_results).each do |device, results|
-      scores = results.map(&:score).sort
-      puts format("%-26s %6.0f %6.1f %6d %6.1f %6.0f%% %6.1f",
-                  device.name, device.width_r * device.height_r, scores.sum.fdiv(rounds), scores[(rounds * 0.9).floor],
-                  results.sum(&:seconds) / rounds, 100.0 * results.count(&:endless?) / rounds,
-                  results.sum(&:penalties).fdiv(rounds))
+    JOBS.zip(all_results).group_by { |job, _| job.sizing }.each do |sizing, rows|
+      puts sizing.sized_to_screen? ? "\nSized to the screen" : "\nSame size everywhere"
+      puts format("%-26s %6s %6s %6s %6s %6s %7s %6s", "device", "R", "area", "score", "p90", "secs", "endless", "pen")
+      rows.each { |job, results| report_row(job, results, rounds) }
     end
+  end
+
+  def self.report_row(job, results, rounds)
+    field = job.field
+    scores = results.map(&:score).sort
+    puts format("%-26s %6.1f %6.0f %6.1f %6d %6.1f %6.0f%% %6.1f",
+                job.device.name, field.radius, field.width * field.height / (field.radius**2),
+                scores.sum.fdiv(rounds), scores[(rounds * 0.9).floor], results.sum(&:seconds) / rounds,
+                100.0 * results.count(&:endless?) / rounds, results.sum(&:penalties).fdiv(rounds))
   end
 end
 
