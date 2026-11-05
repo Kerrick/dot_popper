@@ -124,6 +124,18 @@ columns against each other, not as predictions of a person's score.
   (`HAPTICS` in `look.rb`; 0 turns either off), so the two feel apart under
   the finger as they sound apart. LÖVE vibrates only on iOS and Android, so
   every other system gets `NoHaptics`. It has not been felt on a device yet.
+- **Only Android buzzes; iOS gets `NoHaptics` too.** LÖVE's iOS `vibrate`
+  ignores the length and plays the system's long vibration
+  (`common/ios.mm`), so on an iPhone every pop would run into the next, and
+  an iPad has no motor at all. A light tap on iOS needs
+  `UIImpactFeedbackGenerator`, which neither LÖVE nor Lota exposes.
+- **On a phone or tablet the game goes fullscreen and the keyboard only
+  mutes.** `Shell::App` calls `set_fullscreen` where a desktop sizes its
+  window: on iOS that hides the status bar and makes an edge swipe ask
+  twice, so a tap near the edge stays a tap. Escape and the fullscreen keys
+  do nothing there, since an iOS app never quits itself. `doc/ios.md` has
+  the rest of what an iOS build needs: every orientation, an Ambient audio
+  session set by the host, and no entitlements.
 
 ## Game design
 

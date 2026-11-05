@@ -17,7 +17,7 @@ Dot Popper is written in Ruby on [Lota](https://github.com/setdef/Lota), which r
 | Sound on or off | The speaker on the title screen, or **M** |
 | Play with a controller | Needs Lota 0.1.3 or newer; on Lota 0.1.2, which this version uses, a controller does nothing yet. The left stick or d-pad moves a cursor, and **A** (cross on a PlayStation controller) or the right trigger presses there, just as a click would. **Start** starts a round and continues after one, **Y** (triangle) plays the Daily or shares its result, and **Back** turns sound on or off. The cursor hides when you use the mouse or touch the screen |
 | Fullscreen | **F11**, or **Alt+Enter** (**Cmd+Enter** on a Mac) |
-| Quit | **Escape**, or close the window |
+| Quit | **Escape**, or close the window (on a desktop) |
 
 A fresh dot is bright and glossy. A popped dot is a muted, matte disc with a dark crater in its centre. The two differ in lightness and shape as well as colour, so they read apart in greyscale and for colour-blind players. The first time you tap a popped dot, a one-line hint under the score explains why, and never again. The game keeps your best score, whether sound is on, and whether you've seen that hint, on the device. When time is up, the dots tumble into a pile behind your score. Set `DOT_POPPER_CALM=1` to turn off the screen shake and let the pile settle softly.
 
@@ -29,6 +29,8 @@ You need Ruby 4.0.9 (named in `.ruby-version` and `mise.toml`) on macOS 15 or ne
 bundle install
 bundle exec lota run
 ```
+
+An iPad build is in progress on Lota's experimental iOS engine; [doc/ios.md](doc/ios.md) says what the game needs from it and how to check a run.
 
 To play without Ruby, download a build instead. Every push to `trunk` builds a Windows installer and `.zip`, and a macOS `.dmg`, as artifacts of the [Package workflow](https://github.com/Kerrick/dot_popper/actions/workflows/package.yml). A `v0.*` tag also attaches them to a [release](https://github.com/Kerrick/dot_popper/releases). [PACKAGING.md](PACKAGING.md) explains how the builds are made, and how to build one yourself.
 
