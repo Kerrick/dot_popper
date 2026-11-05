@@ -163,7 +163,7 @@ drops below zero, exactly one dot is fresh, and a tap reaches only the top
 dot. That is over half a million assertions in under a second. Reverse the
 order `top_at` searches in, and it fails on the tenth round.
 
-None of this is impossible in Lua; busted is a good test runner. But LÖVE
+None of this is impossible in Lua; busted, a popular Lua test framework, is a good one. But LÖVE
 code tends to call `love.graphics` from the same functions that keep score,
 and then a test needs a fake `love` table first. Ruby's culture of small
 objects and fast tests makes the separation the normal way to work.
@@ -199,7 +199,7 @@ typed core uses `if` where it would rather use `in`.
 ## Ractors
 
 `script/simulate.rb` plays the rules with a model player on six screen
-sizes. Each size now runs in its own Ractor:
+sizes. Each size runs in its own Ractor, Ruby's unit of parallel execution:
 
 ```ruby
 DEVICES.map { |device| Ractor.new(device, rounds) { |each, count| Simulation.play(each, count) } }.map(&:value)
@@ -255,9 +255,10 @@ Mac, and a packaged Ruby game carries that runtime and its standard
 library on top of the same engine LÖVE ships.
 
 **Reach.** LÖVE ships builds for Android and iOS, and community ports
-such as love.js run it in a browser. Lota's gems today are for macOS,
-Windows, and Linux. If the game must be on a phone this month, that
-settles it.
+such as love.js run it in a browser. Lota's released gems are for macOS,
+Windows, and Linux. Its iOS engine is experimental, and this game's iPad
+build has so far run only in the Simulator. If the game must be on a
+phone this month, that settles it.
 
 **Ecosystem.** LÖVE has nearly two decades of libraries (bump, hump, anim8,
 STI), tutorials, and game-jam code to borrow. Lota has its docs and this
