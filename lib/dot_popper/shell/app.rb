@@ -403,7 +403,9 @@ module DotPopper
       end
 
       # Notes the latest thing to happen, for a slow frame's report.
-      def happened(what) = @recent = [what, @elapsed] if @frames
+      def happened(what)
+        @recent = [what, @elapsed] if @frames
+      end
 
       def screenshot(number)
         name = "shot-#{number}.png"
