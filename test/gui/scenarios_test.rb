@@ -30,6 +30,11 @@ class GuiScenariosTest < Minitest::Test
     play("records", "a click goes back", "Escape goes back", "a gamepad's B goes back")
   end
 
+  def test_clearing_the_records_and_undoing_it
+    play("clearing", "letting go too soon clears nothing", "Undo restores every file exactly",
+         "the playtest log is untouched", "a press of Y undoes")
+  end
+
   def test_choosing_the_dot_size_on_a_narrow_window
     play("dot_size", "the next round's dots are sized to the window", window: "400x850")
   end

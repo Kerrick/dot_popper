@@ -332,6 +332,30 @@ The title screen has seven dots drifting behind its text. The brief proposed mak
 
 **To reverse:** To get the brief's version, change `Show#tap` so that a tap on a fresh title dot calls `toy_pop` without calling `game.press`.
 
+### Records are cleared by a held press, and undone, not confirmed
+
+The Records screen has a quiet **Clear my records…** in its bottom right corner, on a row of its own under the prompt to go back, across from the title's **Your records** where the player's finger just was. It clears only once held for two seconds (`RECORDS_CLEAR` in look.rb), with a bar filling under it and the prompt replaced by what will go; letting go sooner changes nothing, and a press let go too soon leaves "Press and hold to clear…" for a moment. A gamepad holds **Y**, or **A** with the cursor on it, and the words name the button held. Clearing offers **Undo** in the same corner for ten seconds; a round, or the window losing focus during a hold, ends the offer or the hold.
+
+**Why:** Lidwell's forgiveness: an undo serves the player better than a confirmation dialog they learn to dismiss, and a held press is hard to make by accident yet the same with a finger, a mouse, or a gamepad. The control is small and soft-coloured because records aren't the point of the game (Ferrara), and it sits far from where "Tap anywhere to go back" is aimed (Fitts). Its press never counts as going back. A round ends the offer because undoing after it would lose that round.
+
+**To reverse:** Drop the corner control and `RecordKeeper`; nothing else depends on them.
+
+### Clearing copies the records to one timestamped backup
+
+`RecordKeeper` copies `best_score.txt` and `lifetime.txt` exactly to `best_score-<stamp>.txt` and `lifetime-<stamp>.txt`, notes them in `cleared.txt`, and only then empties the two files. The next clearing removes the copies the note names (and only names shaped like backups). Undo restores the exact text kept in memory; the backup stays on disk for support. The playtest log, `sound.txt`, `dot_size.txt`, `taught.txt` and `tilt_hint.txt` aren't records and are never touched.
+
+**Why:** Lota's save folder can't rename, so, as the playtest log's archive does, the copy is written before anything is lost. One backup keeps the folder tidy while leaving a way back after Undo is gone.
+
+**To reverse:** Keep every backup by not removing the noted ones, or none by skipping `back_up`.
+
+### After clearing, the title is a new player's except for its buttons
+
+With no rounds in the records, the title shows no best and no daily goal, as for a new player. It still offers **Your records** and the dot-size choice, because `cleared.txt` shows this player has played: the dot-size choice is a setting, not a record, and hiding it would leave a chosen size unchangeable until the next round; **Your records** leads back to Undo while it lasts.
+
+**Why:** The player asked for their records to go, not for the game to forget them as a player.
+
+**To reverse:** Make `Show#records_offered?` only `played?`.
+
 ## Controllers
 
 ### Gamepad support was written before Lota could report controllers

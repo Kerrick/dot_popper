@@ -26,6 +26,8 @@ Once you have finished a round, the title screen also shows a goal for the day, 
 
 Once you have finished a round, the title screen shows a **Your records** button in its bottom left corner. It opens a screen with your best score and your other bests (your longest round, the most pops in a row without a wrong tap, your fastest pop, and the longest wait that still ended in a pop), your totals across every round, how many days in a row you have met the daily goal and the most you ever have, and a bar chart of your last 20 scores, with the highest that counts toward the bests shown labelled. Tap anywhere to go back to the title. Nothing on this screen affects a round.
 
+To start your records again, press and hold **Clear my records…** in the screen's bottom right corner for two seconds. While you hold it, the screen says what will go: your bests, totals, chart, and goal streak (with today's goal counted as not yet met). Let go sooner and nothing changes. Once they are cleared, the screen shows "Records cleared." with an **Undo** button for ten seconds, which puts everything back exactly as it was. Playing a round ends the chance to undo. Clearing keeps your settings (sound and dot size), the playtest log, and how often the game has explained the stacking rule and the pile. Afterward the title shows no best score or daily goal until you finish another round, as for a new player, but it keeps **Your records** and the dot-size choice.
+
 Your bests are kept separately for each size of screen, because a small screen gets crowded sooner and is harder to score on. The game sorts screens into three sizes. Small is about the size of a phone, medium is a tablet or the desktop window as it first opens, and large is a big monitor at fullscreen. A round counts with the screen it started on, so "New best!" and "New record" only compare it with rounds on screens of the same size. The first round you play on a new size of screen has nothing to beat, so it sets your best there without being called a new best; Game Over just shows "Your best: 18". The Records screen shows the bests for the screen you are using, under the heading "Your bests with standard dots on screens this size", and says how big that screen is, for example "This screen is about 12 dots wide and 8 dots tall." The totals and the chart cover every round you have played, on any screen, but the chart's bars for rounds that don't count toward the bests shown are dimmed, and a line under it says which rounds the brighter bars are. **Copy my result** adds the same kind of line, so a friend can see what screen you played on.
 
 ### How big the dots are
@@ -47,6 +49,7 @@ The control only shows where the two sizes differ by more than a tenth. On a scr
 | See your records | **Your records** on the title screen | |
 | Choose how big the dots are | The **Dot size** control on the title screen | |
 | Leave the Records screen | Tap or click anywhere | **Escape** |
+| Clear your records | Hold **Clear my records…** on the Records screen for two seconds | |
 | Turn sound on or off | The speaker button on the title screen | **M** |
 | Roll the dots about on the Game Over screen | Tilt the iPad or phone, or shake it | |
 | Throw a dot about on the Game Over screen | Drag it with a finger or the mouse, and let go | |
@@ -64,7 +67,7 @@ Any controller your computer or iPad recognizes as a gamepad works, such as an X
 - The left stick or the d-pad moves a cursor around the screen. At full tilt it crosses the window from corner to corner in about a second, however big the window is, and it takes about a third of a second to get up to that speed. A gentle tilt moves it slowly, for aiming, and letting go stops it at once.
 - **A** (cross on a PlayStation controller) or the right trigger presses wherever the cursor is, exactly as a click there would.
 - **Start** starts a round from the title screen, and continues after one ends.
-- **Y** (triangle) copies your result on the Game Over screen.
+- **Y** (triangle) copies your result on the Game Over screen. On the Records screen, holding **Y** for two seconds clears your records (as does holding **A** with the cursor on **Clear my records…**), and a press of **Y** while **Undo** shows undoes it.
 - **X** (square) opens the Records screen from the title, once it is offered. **B** (circle) or **Start** goes back to the title from it, as does a press of **A** anywhere.
 - Either shoulder button (**LB** or **RB**, or **L1** or **R1**) switches the dot size on the title screen, while it is shown.
 - **Back** turns sound on or off, on every screen.
@@ -140,7 +143,7 @@ Running `bundle exec rake` with no task name runs the tests and then [Steep](htt
 bundle exec rake test:gui
 ```
 
-`rake test` checks every layer but never runs the game itself. `rake test:gui` does: it starts the real game with `bundle exec lota run`, once for each of seven short scripted sessions, and each one opens a window, plays, checks what happens as it goes, and quits. The sessions are a whole round from the title back to the title (with a few pops, a wrong tap on a popped dot over the fresh one, and the lesson it brings), resizing the window and switching to fullscreen during a round and on Game Over, the Records screen, choosing the dot size in a narrow window, dragging and throwing the Game Over pile by mouse, by a pretend gamepad and with a pretend tilt, the words changing between "Click", "Tap" and "Press A", and the whole round again drawn without shaders. Each session checks the rules' numbers, the screens, the save files, and a few pixels of the window. A session that fails prints `FAILED` and the reason, and exits with status 1.
+`rake test` checks every layer but never runs the game itself. `rake test:gui` does: it starts the real game with `bundle exec lota run`, once for each of eight short scripted sessions, and each one opens a window, plays, checks what happens as it goes, and quits. The sessions are a whole round from the title back to the title (with a few pops, a wrong tap on a popped dot over the fresh one, and the lesson it brings), resizing the window and switching to fullscreen during a round and on Game Over, the Records screen, clearing the records by a held press and undoing it (and a press let go too soon, which changes nothing), choosing the dot size in a narrow window, dragging and throwing the Game Over pile by mouse, by a pretend gamepad and with a pretend tilt, the words changing between "Click", "Tap" and "Press A", and the whole round again drawn without shaders. Each session checks the rules' numbers, the screens, the save files, and a few pixels of the window. A session that fails prints `FAILED` and the reason, and exits with status 1.
 
 The presses don't move the real mouse pointer. Each session pushes them onto Lota's event queue, and the game's clock moves on by a fixed step each frame instead of real time. So a run plays the same on a fast or a busy computer, and a session takes seconds, not as long as a player would. Every session uses a fixed seed, date and window size, saves in a fresh folder that it removes afterward, so your own records are left alone, and plays no sound (`ALSOFT_DRIVERS=null`).
 
@@ -156,7 +159,7 @@ $S/hidden-run --account deckbuildertest --merge --timeout 600 \
   --env ALSOFT_DRIVERS=null -- bundle exec rake test:gui
 ```
 
-To play one session by hand and watch it, set `DOT_POPPER_SCENARIO` to its name (`round`, `resizing`, `records`, `dot_size`, `pile`, `pile_gamepad`, or `words`) and run `bundle exec lota run`. `test/gui/scenarios_test.rb` lists the other settings each session needs.
+To play one session by hand and watch it, set `DOT_POPPER_SCENARIO` to its name (`round`, `resizing`, `records`, `clearing`, `dot_size`, `pile`, `pile_gamepad`, or `words`) and run `bundle exec lota run`. `test/gui/scenarios_test.rb` lists the other settings each session needs.
 
 `test/shell/defined_calls_test.rb`, in `rake test`, remains a quick check of the Lota layer without a window: it fails if a method in `lib/dot_popper/shell` calls a method of its own class that doesn't exist.
 
@@ -206,6 +209,8 @@ Each finished round adds a line to `rounds.csv` in the game's save folder, so pl
 - In a packaged build: a `dot_popper` folder in the system's application-data folder, such as `%APPDATA%\dot_popper` on Windows (see [PACKAGING.md](PACKAGING.md))
 
 The same folder also holds the game's other saved state: the best scores (`best_score.txt`), whether sound is on, how many times Game Over has explained the stacking rule (`taught.txt`), the choice of dot size (`dot_size.txt`), and the lifetime stats (`lifetime.txt`), which add up every round played on this device. `best_score.txt` and `lifetime.txt` are plain `key=value` lines, with each size of screen's bests under its name, such as `medium=24` or `small.longest_run=9`. A damaged line is ignored, and a missing file starts from nothing. Files saved by earlier versions, which kept one set of bests, give those bests to the size of the screen the game next opens on.
+
+Clearing the records from the Records screen first copies `best_score.txt` and `lifetime.txt`, exactly, to `best_score-<date>-<time>.txt` and `lifetime-<date>-<time>.txt` (for example `lifetime-20261105-093015.txt`) in the same folder, and then empties them. `cleared.txt` says when and names the copies. Only the latest clearing's copies are kept: the next one removes them. To bring cleared records back after Undo has gone, quit the game and copy the two backups over `best_score.txt` and `lifetime.txt`.
 
 The first line of `rounds.csv` names the columns. When a new version of the game changes the columns, it doesn't mix old and new lines in one file: it saves the old log whole as `rounds-<date>-<time>.csv` (for example `rounds-20261105-093015.csv`) and starts a new `rounds.csv`. The columns are:
 

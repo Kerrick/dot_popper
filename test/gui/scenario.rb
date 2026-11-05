@@ -91,6 +91,9 @@ module DotPopperGui
       push(:touchreleased, id, x.to_f, y.to_f, 0.0, 0.0, 1.0, "touchscreen", false)
     end
 
+    def touch_down(x, y, id: 1) = push(:touchpressed, id, x.to_f, y.to_f, 0.0, 0.0, 1.0, "touchscreen", false)
+    def touch_up(x, y, id: 1) = push(:touchreleased, id, x.to_f, y.to_f, 0.0, 0.0, 1.0, "touchscreen", false)
+
     def touch_move(x, y, id: 1) = push(:touchmoved, id, x.to_f, y.to_f, 0.0, 0.0, 1.0, "touchscreen", false)
 
     def key(name) = push(:keypressed, name.to_s, name.to_s, false)
@@ -144,6 +147,15 @@ module DotPopperGui
       shot = nil
       L::Graphics.capture_screenshot { shot = Shot.new(it, L::Graphics.width, L::Graphics.height) }
       wait_for("a screenshot", within: 10) { shot }
+    end
+
+    # Saves what the window shows now as +name+.png in the save folder,
+    # to look at after a run, and says where.
+    def keep_screenshot(name)
+      file = "#{name}.png"
+      L::Graphics.capture_screenshot(file)
+      frames
+      say "screenshot #{saved(file)}"
     end
 
     # Checks
