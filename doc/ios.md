@@ -39,7 +39,7 @@ When the game starts, `Shell::App#load` asks `Lota::System.os` which system it i
 
 On a desktop, the game sizes its window to fit the play area. On a phone or tablet it calls `Lota::Window.set_fullscreen(true, :desktop)` instead. SDL's iOS window already covers the whole screen, so this changes no sizes, but it does two useful things. It hides the status bar (through `prefersStatusBarHidden` in SDL's `SDL_uikitviewcontroller.m`). And it makes a swipe from the edge of the screen need a second swipe before iOS acts on it (through `preferredScreenEdgesDeferringSystemGestures`), so a quick tap near the home indicator stays a tap.
 
-Dots use the whole screen, corners included. Everything else stays inside the safe area, the part of the screen that rounded corners, the camera housing, and the home indicator don't cover. That includes the score, the clock, the mute button, the Daily and Share buttons, and every line of text. The game gets the safe area from `Lota::Window.safe_area` (SDL's `SDL_GetWindowSafeArea`). If that comes back empty, the game uses the whole window instead. On an iPad with Face ID, once the status bar is hidden, the safe area's bottom inset is there for the home indicator.
+Dots use the whole screen, corners included. Everything else stays inside the safe area, the part of the screen that rounded corners, the camera housing, and the home indicator don't cover. That includes the score, the clock, the mute button, the Copy my result button, and every line of text. The game gets the safe area from `Lota::Window.safe_area` (SDL's `SDL_GetWindowSafeArea`). If that comes back empty, the game uses the whole window instead. On an iPad with Face ID, once the status bar is hidden, the safe area's bottom inset is there for the home indicator.
 
 ### Rotation and resizing
 
@@ -77,9 +77,9 @@ The kit's host program already does this. If no audio device is available, the g
 
 iOS gets no vibration. On iOS, LÖVE's `vibrate` ignores the length it is given and plays the system's long vibration (`vibrate` in `common/ios.mm`), so on an iPhone every pop's buzz would run into the next one. An iPad has no vibration motor anyway. So `Shell::Haptics.for` turns vibration on only for Android. A short tap on iOS would need Apple's `UIImpactFeedbackGenerator`, which neither LÖVE nor Lota exposes.
 
-### Share
+### Copy my result
 
-After a Daily round, Share copies the result with `Lota::System.clipboard_text=`, which SDL turns into a write to `UIPasteboard` on iOS. Writing to the pasteboard needs no permission. If the copy fails, the game prints a warning and carries on.
+On the Game Over screen, Copy my result copies the result with `Lota::System.clipboard_text=`, which SDL turns into a write to `UIPasteboard` on iOS. Writing to the pasteboard needs no permission. If the copy fails, the game prints a warning and carries on.
 
 ### Files the game writes
 
@@ -88,7 +88,6 @@ As a fused app, the game saves into `Library/Application Support/dot_popper` ins
 | File | What it holds |
 | --- | --- |
 | `best_score.txt` | The best score |
-| `daily_best.txt` | Today's date and the best Daily score for that day |
 | `sound.txt` | `muted` or `on` |
 | `taught.txt` | Present once the first-mistake hint has been shown |
 | `rounds.csv` | The playtest log, one line per finished round (see "The playtest log" in the README) |

@@ -16,9 +16,7 @@ The game also helps a new player understand a mistake. The first time you ever t
 
 When time runs out, the dots tumble to the bottom of the screen in a heap behind your score. Under the score, a line sums up the round: how many dots you popped, how many popped dots you tapped by mistake, and the longest you had to wait for a fresh dot.
 
-### The Daily
-
-The **Daily** button on the title screen starts the day's shared round. Everyone who plays on the same date gets the same dots, so players can compare scores. The game remembers your best Daily score for that day. After a Daily round, a **Share** button copies a short result to the clipboard: the date, your score, and a few numbers about the round, with nothing that would give away where that day's dots go.
+Under that line, a **Copy my result** button copies two short lines to the clipboard, ready to paste into a message: your score, whether it set or tied your best, and how many pops and wrong taps the round had and how long it lasted. A tap on the button only copies; a tap anywhere else continues.
 
 ### Controls
 
@@ -26,6 +24,7 @@ The **Daily** button on the title screen starts the day's shared round. Everyone
 | --- | --- | --- |
 | Pop a dot | Tap or click it | |
 | Start a round, or continue after one | Tap or click anywhere | |
+| Copy your result | **Copy my result** on the Game Over screen | |
 | Turn sound on or off | The speaker button on the title screen | **M** |
 | Toggle fullscreen (desktop only) | | **F11**, or **Alt+Enter** (**Cmd+Enter** on a Mac) |
 | Quit (desktop only) | Close the window | **Escape** |
@@ -39,7 +38,7 @@ The game has gamepad support written and tested, but it can't be used yet. It ne
 - The left stick or the d-pad moves a cursor around the screen.
 - **A** (cross on a PlayStation controller) or the right trigger presses wherever the cursor is, exactly as a click there would.
 - **Start** starts a round from the title screen, and continues after one ends.
-- **Y** (triangle) plays the Daily from the title screen, and shares its result afterwards.
+- **Y** (triangle) copies your result on the Game Over screen.
 - **Back** turns sound on or off.
 
 The cursor appears when you use the controller and hides when you move the mouse or touch the screen. An iPad build, which runs on Lota's development engine rather than 0.1.2, should accept a controller paired with the iPad in the same way, but nobody has tried one yet, and the current iPad kit was built before this was turned on.
@@ -120,7 +119,7 @@ Running `bundle exec rake` with no task name runs the tests and then [Steep](htt
 
 | Variable | Effect |
 | --- | --- |
-| `DOT_POPPER_AUTOPLAY=1` | A bot plays the game. It mostly taps fresh dots, but now and then it taps a popped dot that covers one, so that penalties appear too. Every other round, it plays the Daily and shares the result. |
+| `DOT_POPPER_AUTOPLAY=1` | A bot plays the game. It mostly taps fresh dots, but now and then it taps a popped dot that covers one, so that penalties appear too. It starts each round by tapping one of the title screen's dots, and copies every other result. |
 | `DOT_POPPER_SHOTS=0.5,3,6.5` | Takes a screenshot at each of these times, counted in seconds of play, and saves them as `shot-1.png`, `shot-2.png`, and so on in the save folder. The game prints each file's path. |
 | `DOT_POPPER_QUIT_AFTER=20` | Quits after this many seconds of play. |
 | `DOT_POPPER_SEED=42` | Seeds the random number generator, so the same seed and the same taps produce the same dots. |
@@ -134,14 +133,13 @@ Each finished round adds a line to `rounds.csv` in the game's save folder, so pl
 - Under `bundle exec lota run` on a Mac: `~/Library/Application Support/Lota/dot_popper/`
 - In a packaged build: a `dot_popper` folder in the system's application-data folder, such as `%APPDATA%\dot_popper` on Windows (see [PACKAGING.md](PACKAGING.md))
 
-The same folder also holds the game's other saved state: the best score, the best Daily score, whether sound is on, and whether the first-mistake hint has been shown.
+The same folder also holds the game's other saved state: the best score, whether sound is on, and whether the first-mistake hint has been shown.
 
 The first line of `rounds.csv` names the columns:
 
 | Column | What it holds |
 | --- | --- |
 | `time` | When the round ended, in ISO 8601 format with the local time-zone offset |
-| `mode` | `free` for an ordinary round, or `daily` for the Daily |
 | `seed` | The seed the round's dots were drawn from |
 | `score` | The final score |
 | `duration` | How many seconds the round lasted |

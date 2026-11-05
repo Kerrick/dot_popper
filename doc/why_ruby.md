@@ -74,7 +74,7 @@ class Title < Data.define
   def update(_game, _seconds) = self
 end
 
-class Playing < Data.define(:round, :mode)
+class Playing < Data.define(:round, :seed)
   def update(game, seconds)
     round.update(seconds)
     settle(game)

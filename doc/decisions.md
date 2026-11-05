@@ -7,7 +7,7 @@ Each entry says what was decided, why, and what it would take to reverse it. The
 - **The spec** is the maintainer's description of the game's rules.
 - **R** is a dot's radius. Every distance and speed in the rules is a multiple of it.
 - **The field** is the area the dots move in, which is the whole window.
-- **A fresh dot** is the one bright dot that can be popped for points. **A popped dot** is one already popped, which stays on screen and costs points if tapped again. A tap on a popped dot is also called a **wrong tap** or a **slip**.
+- **A fresh dot** is the one bright dot that can be popped for points. **A popped dot** is one already popped, which stays on screen and costs points if tapped again. A tap on a popped dot is a **wrong tap**.
 
 ## Rules
 
@@ -198,7 +198,7 @@ Under the final score, one quiet line gives three numbers: how many dots were po
 
 ### Every round has its own seed, and the playtest log records it
 
-`Game#start_round` takes a `Mode`, and the mode's seed gives the round its own random number generator. An ordinary round's seed is drawn from the game's main generator, so `DOT_POPPER_SEED` still makes a whole session repeatable. Because a round no longer shares its generator with the visual effects, a burst of droplets can't change which dots come next. Each finished round adds one line to `rounds.csv`; the README lists its columns.
+`Game#start_round` takes a seed, which gives the round its own random number generator. An ordinary round's seed is drawn from the game's main generator, so `DOT_POPPER_SEED` still makes a whole session repeatable. Because a round no longer shares its generator with the visual effects, a burst of droplets can't change which dots come next. Each finished round adds one line to `rounds.csv`; the README lists its columns.
 
 **Why:** A recorded seed makes any interesting round in a playtest replayable.
 
@@ -206,21 +206,21 @@ Under the final score, one quiet line gives three numbers: how many dots were po
 
 **To reverse:** Stop subscribing the `PlaytestLog` to the game in `Shell::App#load`.
 
-### The Daily: one shared round a day
+### Cut: the daily challenge
 
-The title screen keeps "tap anywhere to play" as the main way in, and adds a small Daily button in the bottom left, opposite the mute button. Its tappable area is at least 2 R in each direction and lies inside the screen's safe area (the part not covered by notches or system bars).
+For a while the title screen had a second button, "Play today's challenge". Its round's seed came from the local date, so everyone who played on the same day got the same sequence of new dots: the same starting places, directions, and speeds. The game kept the day's best score, and afterwards a button copied the day's result to share. The idea was Wordle's: one puzzle a day, the same for everyone, so that players have something to compare and a reason to come back.
 
-The Daily round's seed comes from the local date. `Mode.seed_for` hashes the date's digits (YYYYMMDD) with FNV-1a, a simple fixed hash; Ruby's `String#hash` can't be used, because it gives different results in different processes. Dots use random numbers only when they appear, so on the same day, the same taps give everyone the same dots. A test pins today's seed, so a future change can't quietly alter it. The day turns over at the player's local midnight, not at midnight UTC, as Wordle's does.
+It was removed, because the sameness it promised never reached the screen. Only the *sequence* of spawns was shared. A new dot appears the moment the last one is popped, and every popped dot keeps drifting, so where each new dot lands among the others depends on exactly when the player tapped. After a couple of pops, no two players' screens looked alike, and neither did one player's two tries at the same day. The scores didn't compare across devices either: positions are fractions of the field, and the field's size in radii, which sets how crowded and how hard a round is, varies about fifteen times between a phone and a large monitor. Wordle works because everyone faces an identical puzzle and gets one attempt, and the daily round had neither.
 
-`DailyBest` keeps only today's best Daily score, in `daily_best.txt`. A Daily round also counts toward the all-time best score, since it is the same game. After a Daily round, the heading names the day, the best score shown is the day's, and a Share button copies two lines of text: the date and score, then the number of pops and wrong taps and the round's length. Nothing in it gives away where the day's dots go. A tap on Share only shares; a tap anywhere else continues, after the same pause as any Game Over.
+So it was a mode, and a button, for a difference the player couldn't feel. The game's uncertainty comes from the player's own timing, which no seed can fix (Garfield and Costikyan call this kind *performative*). Modes cost attention (Saffer), surface rewards that aren't backed by the play are shallow (Ferrara), and a small game is better for cutting what doesn't earn its place (Sylvester, Schreier). The title is back to one instruction, "tap anywhere to play", and every round is the same kind of round. Each round keeps a seed of its own, for the playtest log.
 
-**Why:** A shared daily round gives players something to compare, which is a reason to come back. The shared text includes the score, which the brief's example left out, because the score is the number players compare.
+**Copy my result stays,** on every Game Over rather than only after a daily round, because a new best or a neat round is worth showing someone however it was started. It copies two lines: the score, whether it set or tied the best, and the round's pops, wrong taps, and length. Gamepad **Y** does the same.
 
-**To reverse:** Remove the Daily button from the title screen; the rest is unused without it.
+**If a shared challenge ever returns,** it needs what Wordle has. The field would have to be the same size in radii on every device (a fixed field, letterboxed where the screen is bigger), so that the same seed makes the same crowd. And each player would get one attempt a day, so the score is a single performance on a shared puzzle rather than a best of many tries.
 
 ### A tap on a title-screen dot pops it, but still starts the round
 
-The title screen has seven dots drifting behind its text. The brief proposed making the title a toy: a tap on a title dot would pop it without scoring, and only a tap on empty space would start a round. Instead, a tap on a fresh title dot shows its pop (droplets, ring, and sound) and starts the round in the same instant. A tap on a popped title dot just starts the round. The title pop is scenery: it scores nothing, and its ring doesn't follow any dot in the round. The Daily and mute buttons still respond to their own taps.
+The title screen has seven dots drifting behind its text. The brief proposed making the title a toy: a tap on a title dot would pop it without scoring, and only a tap on empty space would start a round. Instead, a tap on a fresh title dot shows its pop (droplets, ring, and sound) and starts the round in the same instant. A tap on a popped title dot just starts the round. The title pop is scenery: it scores nothing, and its ring doesn't follow any dot in the round. The mute button still responds to its own taps.
 
 **Why:** The brief's version would break the title screen's one instruction, "tap anywhere to play". With seven dots on screen, a player's first tap lands on one fairly often (about one tap in sixteen on the desktop window, more on a phone). The most inviting target, a bright dot, would then be the one place where a tap doesn't start the game. An instruction that holds only most of the time is a hidden mode, which Dan Saffer's *Microinteractions* warns against, and a player's first few seconds are when trust is easiest to lose.
 
@@ -240,7 +240,7 @@ Lota's development branch binds `Lota::Joystick` and LÖVE's gamepad callbacks, 
 
 ### A controller aims a cursor and presses where it points, like a click
 
-**A** presses at the cursor's position, on the frame the button goes down, through the same path a mouse press takes (`InputRouter#gamepad_pressed`, then `Show#tap`). So the mute, Daily, and Share buttons, the title-screen pop, and the choice of which dot a press reaches all work exactly as they do for a mouse. The right trigger acts as a second **A**. It presses once when pulled past halfway, and can press again only after it has been released below 0.3, so a trigger resting near the halfway point can't press twice.
+**A** presses at the cursor's position, on the frame the button goes down, through the same path a mouse press takes (`InputRouter#gamepad_pressed`, then `Show#tap`). So the mute and Copy my result buttons, the title-screen pop, and the choice of which dot a press reaches all work exactly as they do for a mouse. The right trigger acts as a second **A**. It presses once when pulled past halfway, and can press again only after it has been released below 0.3, so a trigger resting near the halfway point can't press twice.
 
 **Why:** One path for every kind of press means every rule about presses holds for a controller without extra code.
 
@@ -276,7 +276,7 @@ The cursor is a thin cream ring with four short ticks and a dot in the centre, e
 
 ### Start and Y are shortcuts on the menus, never during play
 
-On the title screen, **Start** starts an ordinary round (without popping a title dot). On the Game Over screen, it continues, after the same pause as a tap. During a round it does nothing, because only a press at a position may affect the score. **Y** acts as the Daily button on the title screen and as Share after a Daily round, and does nothing elsewhere. **Back** turns sound on or off, as **M** does.
+On the title screen, **Start** starts an ordinary round (without popping a title dot). On the Game Over screen, it continues, after the same pause as a tap. During a round it does nothing, because only a press at a position may affect the score. **Y** copies the result on the Game Over screen, as the Copy my result button does, and does nothing elsewhere. **Back** turns sound on or off, as **M** does.
 
 **Why:** A button that scored without aiming would bypass the game.
 
