@@ -236,3 +236,16 @@ the player understanding what just happened to them.
   where nothing is typed: the fuzz test matches on each tap's event, and
   `script/simulate.rb` dispatches on it and reports each round as a `Data`
   value instead of a hash.
+- **A seeded fuzz test checks the rules' invariants.** `test/rules_fuzz_test.rb`
+  plays 2,000 rounds on random fields, from a sliver narrower than a dot to
+  a large monitor, each a random run of taps (mostly aimed at or near a dot,
+  so overlaps are common) and ticks (some 20 s long). After every step it
+  checks that dots stay in the field, the score stays at or above zero and
+  moves only by +1 or by the penalty the floor allows, the clock never goes
+  negative and moves only as the rules say, exactly one dot is fresh while
+  the round runs, a tap reaches the topmost dot under it and changes no
+  other, and older dots stay above newer ones. A second test drives the
+  whole Game through its states and checks that nothing outside Playing
+  touches the score or the clock. It needs no gem, runs in under a second,
+  names its seed on failure, and replays one with `RULES_FUZZ_SEED`.
+  Reversing `Stack#top_at` or `Stack#slide_under` makes it fail at once.
