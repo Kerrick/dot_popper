@@ -1,0 +1,32 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    lota (0.1.2-arm64-darwin)
+    lota (0.1.2-x64-mingw-ucrt)
+    lota (0.1.2-x86_64-linux-gnu)
+    minitest (5.27.0)
+    rake (13.4.2)
+
+PLATFORMS
+  arm64-darwin
+  x64-mingw-ucrt
+  x86_64-linux-gnu
+
+DEPENDENCIES
+  lota (= 0.1.2)
+  minitest (~> 5.25)
+  rake (~> 13.2)
+
+CHECKSUMS
+  bundler (4.0.20) sha256=7978a8ac648767f5e635bc522445b79e80a52b907a39a36c2d8085ed6bc762ae
+  lota (0.1.2-arm64-darwin) sha256=a9a333ad0148c788a61c97581b77b55231482946f938cd0488b4708b8a850e39
+  lota (0.1.2-x64-mingw-ucrt) sha256=61a60b6ad45cb5205b29f56f1bb9fadd6937c7540b912c232b06b3ee9b4e93bb
+  lota (0.1.2-x86_64-linux-gnu) sha256=40b80f67f213dc6bb2eadbb311014e18be907112ca86039ac503f410b0eaa477
+  minitest (5.27.0) sha256=2d3b17f8a36fe7801c1adcffdbc38233b938eb0b4966e97a6739055a45fa77d5
+  rake (13.4.2) sha256=cb825b2bd5f1f8e91ca37bddb4b9aaf345551b4731da62949be002fa89283701
+
+RUBY VERSION
+  ruby 4.0.9
+
+BUNDLED WITH
+  4.0.20
