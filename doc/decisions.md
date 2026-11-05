@@ -490,3 +490,11 @@ The rows' type is a little larger (23 units at a layout scale of 1, up from 20).
 **Why:** Proximity groups things (Johnson, Tidwell). On a wide window, the old columns put a label like "Best score" half the screen away from its number, so the eye could lose the row. The second sentence explained a setting from a screen where it can't be changed. Now the title's segmented control names both choices, so Records only needs to say what the current choice means.
 
 **To reverse:** Pass `widest: nil` to `RecordsLayout` in `RecordsPainter#draw`, drop `leader`, and restore `Look::RECORDS.text` to 20.
+
+### Game Over's words sit on a soft backing
+
+From "Time's up!" down to "Tap to continue", Game Over's words sit on a dark, rounded backing in the night's deepest ink. It is 60% opaque in the middle, and its edges fade out over 40 units in ten layers, so the pile shows through it and around it. It is as wide as the widest line in the block, and it fades in with the heading. `Presentation::ScrimLook` holds the settings, and `Look::FINALE_BACKING` sets them for Game Over.
+
+**Why:** Figure and ground. Once the pile settled behind the summary line and the share button, light dots ran through the text and made it harder to read. A darker ground behind only the text keeps it readable. The pile is the toy, so the backing must never hide it: at 60%, with feathered edges, the dots stay visible.
+
+**To reverse:** Remove the `backing` call from `FinalePainter#draw`.

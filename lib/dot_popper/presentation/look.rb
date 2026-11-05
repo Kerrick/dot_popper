@@ -185,6 +185,11 @@ module DotPopper
         sparkle_life: 1.4
       )
 
+      # Game Over's words, from "Time's up!" to "Tap to continue", sit on a
+      # soft dark backing, 60% at its middle, so they read over the pile;
+      # its edges feather out, so the pile still shows around them.
+      FINALE_BACKING = ScrimLook.new(alpha: 0.6, feather: 40, layers: 10, pad: 18)
+
       # After time's up, the round's dots tumble into a pile behind the
       # score, dimmed (Shell::Pile, with Box2D). A calm pile
       # (DOT_POPPER_CALM) falls slowly and settles without a bounce.
