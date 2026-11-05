@@ -97,13 +97,21 @@ module DotPopper
       end
 
       # A tap on one of the title's fresh dots, which pops it as the round
-      # starts, or the middle.
+      # starts, or the middle. A dot behind one of the title's buttons
+      # would press the button instead, so it is passed over.
       def start(game, show)
         return center(game.field) unless show
 
         dots = show.attract.dots
-        toy = dots.find { it.fresh? && dots.top_at(it.x, it.y) == it }
+        toy = dots.find { it.fresh? && dots.top_at(it.x, it.y) == it && !on_button?(show, it.x, it.y) }
         toy ? [toy.x, toy.y] : center(game.field)
+      end
+
+      def on_button?(show, x, y)
+        buttons = [show.layout.mute_button]
+        buttons << show.records_reach if show.records_offered?
+        buttons.concat(show.sizing_reaches.map(&:last)) if show.sizing_offered?
+        buttons.any? { it.contains?(x, y) }
       end
 
       # Copies every other result first, then goes on once the game will
