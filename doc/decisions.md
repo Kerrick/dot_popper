@@ -548,3 +548,11 @@ The first round ever played in a size class (standard dots on a small, medium, o
 **Why:** Juul and Hodent on fair feedback, and Podmajersky on making every line do a job. A first round in a new class beat nothing, so praising it is praise the player didn't earn, and it cheapens the next real "New best!". The maintainer chose the plain best line over a special first-round message: it is true, and it sets the target for next time. Which class the bests belong to is explained on the Records screen.
 
 **To reverse:** Have `BestScore#record` return `true` on a class's first round, and drop the `first:` arguments from `Words#short_of_best` and `#share_text`.
+
+### The Records chart dims rounds from other groups
+
+Each of the last 20 scores now keeps the size class it was played in (`LifetimeStats#recent_classes`, saved as `recent_classes=?,medium,fitted`). On the Records screen's chart, a bar from a round outside the class whose bests are shown is drawn at 30% and is never marked or labelled as the best. It keeps its true height, so every bar shares one scale. When any bar is dimmed, a line under the chart says "Brighter bars are rounds with standard dots on screens this size." (or "...with dots sized to the screen."). Scores saved before classes were kept count as unknown, and so are dimmed. The bests' heading now names the group in the same words, "Your bests with standard dots on screens this size", using the title's "Standard".
+
+**Why:** Ferrara and Garfield on honest feedback. The chart sat next to bests that count only one class's rounds, yet it showed every round alike and could crown a bar from a phone, or from fitted dots, as the best. Dimming keeps the history visible while showing which rounds the bests actually compare.
+
+**To reverse:** Pass `mine: [true] * scores.size` to `ScoreBars` in `RecordsPainter#chart`, and make `RecordsSheet.build` set `chart_note: nil`.

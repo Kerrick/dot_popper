@@ -14,8 +14,11 @@ module DotPopper
     # last few scores for the chart. The bests, and +best+, are those of
     # screens of +size_class+, the screen's now, and +notes+ say how big
     # +field+, the screen, is, and what +sizing+ (DotSizing) does. With no round played yet, +empty+ is true
-    # and there is nothing to list.
-    class RecordsSheet < Data.define(:bests, :totals, :goal, :scores, :empty, :notes)
+    # and there is nothing to list. +mine+ says, for each of the last
+    # +scores+, whether it was played in +size_class+, and so counts
+    # toward the bests shown; the chart dims the others, and +chart_note+
+    # says so whenever there are any.
+    class RecordsSheet < Data.define(:bests, :totals, :goal, :scores, :empty, :notes, :mine, :chart_note)
       def self.build(stats, best:, words:, streak: 0, size_class: SizeClass::MEDIUM, field: nil,
                      sizing: DotSizing::STANDARD)
         labels = words.labels
@@ -38,25 +41,34 @@ module DotPopper
           RecordRow.new(label: labels[:streak], value: Words.count(streak, "day")),
           RecordRow.new(label: labels[:longest_streak], value: Words.count(stats.streak.longest, "day"))
         ])
+        mine = stats.recent_classes.map { it == size_class }
         new(bests:, totals:, goal:, scores: stats.recent, empty: stats.rounds.zero?,
-            notes: field ? words.screen_notes(field, sizing) : [])
+            notes: field ? words.screen_notes(field, sizing) : [], mine:,
+            chart_note: (words.chart_note(sizing) unless mine.all?))
       end
     end
 
     # One bar of the score chart, on whole device pixels; +best+ marks the
-    # highest score shown.
-    class ScoreBar < Data.define(:x, :y, :width, :height, :score, :best); end
+    # highest score shown of those that count toward the bests shown, and
+    # +dim+ a bar that does not.
+    class ScoreBar < Data.define(:x, :y, :width, :height, :score, :best, :dim)
+      def initialize(x:, y:, width:, height:, score:, best:, dim: false) = super
+    end
 
     # The last scores as bars, oldest on the left, in +slots+ places of
     # equal width so the chart fills up as rounds are played. Bars stand
     # on the bottom of their rect, as tall as their score against the
     # highest; a round of 0 still shows a stub one device pixel high.
-    class ScoreBars < Data.define(:scores, :slots)
-      def initialize(scores:, slots: LifetimeStats::RECENT) = super
+    # +mine+ says which scores count toward the bests shown (by default,
+    # all); the others are dim, and never the best, though they keep
+    # their true height, so every bar is drawn to one scale.
+    class ScoreBars < Data.define(:scores, :slots, :mine)
+      def initialize(scores:, slots: LifetimeStats::RECENT, mine: [true] * scores.size) = super
 
       def bars(rect, pixels)
         highest = scores.max || 0
-        best = scores.rindex(highest)
+        counted = scores.each_index.select { mine[it] }
+        best = counted.max_by { [scores[it], it] }
         slot = rect.width / slots
         gap = pixels.whole([slot * 0.22, 2 / pixels.scale].max)
         bottom = pixels.snap(rect.bottom)
@@ -64,13 +76,16 @@ module DotPopper
           left = pixels.snap(rect.x + (i * slot))
           tall = highest.positive? ? pixels.whole(rect.height * score / highest) : pixels.whole(0)
           ScoreBar.new(x: left, y: bottom - tall, width: pixels.snap(rect.x + ((i + 1) * slot)) - left - gap,
-                       height: tall, score:, best: i == best)
+                       height: tall, score:, best: i == best, dim: !mine[i])
         end
       end
     end
 
+    # The line under the score chart that says what its dim bars are.
+    class ChartNote < Data.define(:text); end
+
     # Where a part of the Records screen goes: +item+ is a section's title
-    # or the chart's (a String), a RecordRow, or :chart. A text line is
+    # or the chart's (a String), a RecordRow, :chart, or a ChartNote. A text line is
     # centred on +y+; the chart's box starts at +y+ and is +height+ tall.
     class Placed < Data.define(:item, :x, :y, :width, :height)
       def right = x + width
@@ -158,7 +173,11 @@ module DotPopper
 
       # How many rows a column's parts take, a section's title and the
       # space after it included.
-      def lines(parts) = parts.sum { it == :chart ? look.chart + 1.6 : it.rows.size + 1.6 }
+      def lines(parts) = parts.sum { it == :chart ? chart_lines : it.rows.size + 1.6 }
+
+      # The chart's rows: its title, its bars, and the note under it, if
+      # any, which may take two lines of its smaller type.
+      def chart_lines = look.chart + 1.6 + (sheet.chart_note ? 1.4 : 0.0)
 
       def place(parts, x, width)
         y = body_top
@@ -166,7 +185,11 @@ module DotPopper
           if part == :chart
             placed = [Placed.new(item: Words.last_rounds(sheet.scores.size), x:, y: y + (row * 0.5), width:, height: row),
                       Placed.new(item: :chart, x:, y: y + row, width:, height: row * look.chart)]
-            y += row * (look.chart + 1.6)
+            if sheet.chart_note
+              note = ChartNote.new(text: sheet.chart_note)
+              placed << Placed.new(item: note, x:, y: y + (row * (look.chart + 1.75)), width:, height: row * 1.2)
+            end
+            y += row * chart_lines
             next placed
           end
 

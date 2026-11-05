@@ -10,6 +10,7 @@ class RecordsTest < Minitest::Test
                                                 longest_wait: 6.2)
     phone = DotPopper::LifetimeStats::Bests.new(rounds: 2, longest_round: 12.0, longest_run: 3)
     DotPopper::LifetimeStats.new(rounds: 42, pops: 812, slips: 61, seconds: 1890.0, days: 5, recent: [3, 9, 27, 12],
+                                 recent_classes: [MEDIUM] * 4,
                                  streak: DotPopper::GoalStreak.new(current: 3, longest: 7, last_met: "2026-11-04"),
                                  bests: { MEDIUM => bests, DotPopper::SizeClass::SMALL => phone })
   end
@@ -27,7 +28,7 @@ class RecordsTest < Minitest::Test
   def test_the_sheet_lists_the_bests_and_the_totals_in_plain_words
     rows = sheet.bests.rows.to_h { [it.label, it.value] }
 
-    assert_equal "Your bests on screens this size", sheet.bests.title
+    assert_equal "Your bests with standard dots on screens this size", sheet.bests.title
     assert_equal({ "Best score" => "27", "Longest round" => "48 seconds",
                    "Most pops in a row without a wrong tap" => "18", "Fastest pop" => "0.3 seconds",
                    "Longest wait that ended in a pop" => "6.2 seconds" }, rows)
@@ -81,6 +82,34 @@ class RecordsTest < Minitest::Test
     assert_operator bars[0].x + bars[0].width, :<, bars[1].x, "bars have a gap between them"
   end
 
+  # A round from another group of screen and dot size is drawn faint and
+  # is never the best, but keeps its true height, so the chart has one
+  # scale.
+  def test_bars_from_other_groups_are_dim_and_never_the_best
+    bars = ScoreBars.new(scores: [5, 10, 8], mine: [true, false, true])
+                    .bars(Rect.new(x: 0, y: 0, width: 200, height: 100), Pixels.new(scale: 1))
+
+    assert_equal [false, true, false], bars.map(&:dim)
+    assert_equal [false, false, true], bars.map(&:best)
+    assert_in_delta 100.0, bars[1].height
+  end
+
+  def test_the_chart_dims_other_groups_rounds_and_says_so
+    mixed = stats.with(recent_classes: [nil, DotPopper::SizeClass::SMALL, MEDIUM, MEDIUM])
+    sheet = RecordsSheet.build(mixed, best: 27, words: Look::WORDS, size_class: MEDIUM)
+    fitted = RecordsSheet.build(mixed, best: 0, words: Look::WORDS, size_class: DotPopper::SizeClass::FITTED,
+                                       sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
+
+    assert_equal [false, false, true, true], sheet.mine, "an old round's group is unknown"
+    assert_equal "Brighter bars are rounds with standard dots on screens this size.", sheet.chart_note
+    assert_equal "Brighter bars are rounds with dots sized to the screen.", fitted.chart_note
+    assert_nil RecordsSheet.build(stats, best: 27, words: Look::WORDS, size_class: MEDIUM).chart_note,
+               "with every bar bright there is nothing to explain"
+    plan = RecordsLayout.new(layout: layout(400, 850), sheet:, look: Look::RECORDS)
+    assert_equal ["Your last 4 rounds", :chart, ChartNote.new(text: sheet.chart_note)],
+                 plan.placements.first(3).map(&:item)
+  end
+
   def test_twenty_slots_leave_room_for_the_rounds_to_come
     bars = ScoreBars.new(scores: [4]).bars(Rect.new(x: 0, y: 0, width: 200, height: 50), Pixels.new(scale: 1))
 
@@ -116,7 +145,7 @@ class RecordsTest < Minitest::Test
   def test_the_chart_leads_when_there_are_scores
     plan = RecordsLayout.new(layout: layout(400, 850), sheet:, look: Look::RECORDS)
 
-    assert_equal ["Your last 4 rounds", :chart, "Your bests on screens this size"],
+    assert_equal ["Your last 4 rounds", :chart, "Your bests with standard dots on screens this size"],
                  plan.placements.first(3).map(&:item)
   end
 

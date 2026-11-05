@@ -4,6 +4,8 @@ module DotPopper
 
     DAY: Regexp
 
+    UNKNOWN: String
+
     attr_reader rounds: Integer
 
     attr_reader pops: Integer
@@ -18,15 +20,19 @@ module DotPopper
 
     attr_reader recent: Array[Integer]
 
+    attr_reader recent_classes: Array[SizeClass?]
+
     attr_reader streak: GoalStreak
 
     attr_reader bests: Hash[SizeClass, Bests]
 
     def self.new: (?rounds: Integer, ?pops: Integer, ?slips: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
-                   ?recent: Array[Integer], ?streak: GoalStreak, ?bests: Hash[SizeClass, Bests]) -> instance
+                   ?recent: Array[Integer], ?recent_classes: Array[SizeClass?], ?streak: GoalStreak,
+                   ?bests: Hash[SizeClass, Bests]) -> instance
 
     def initialize: (?rounds: Integer, ?pops: Integer, ?slips: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
-                     ?recent: Array[Integer], ?streak: GoalStreak, ?bests: Hash[SizeClass, Bests]) -> void
+                     ?recent: Array[Integer], ?recent_classes: Array[SizeClass?], ?streak: GoalStreak,
+                     ?bests: Hash[SizeClass, Bests]) -> void
 
     def self.parse: (String? text, ?legacy: SizeClass) -> LifetimeStats
 
@@ -94,6 +100,8 @@ module DotPopper
       def time: (Symbol key) -> Float?
 
       def counts: (Symbol key) -> Array[Integer]
+
+      def classes: (Symbol key) -> Array[SizeClass?]
 
       def day: (Symbol key) -> String?
 

@@ -30,7 +30,10 @@ module DotPopper
         records: "Your records", go_back: "Tap anywhere to go back",
         no_rounds: "Play a round, and your records will appear here.",
         labels: {
-          bests: "Your bests on screens this size", fitted_bests: "Your bests with dots sized to the screen",
+          bests: "Your bests with standard dots on screens this size",
+          fitted_bests: "Your bests with dots sized to the screen",
+          chart_note: "Brighter bars are rounds with standard dots on screens this size.",
+          fitted_chart_note: "Brighter bars are rounds with dots sized to the screen.",
           best_score: "Best score", longest_round: "Longest round",
           longest_run: "Most pops in a row without a wrong tap", fastest_pop: "Fastest pop",
           longest_wait: "Longest wait that ended in a pop",

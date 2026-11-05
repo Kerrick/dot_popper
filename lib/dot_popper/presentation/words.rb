@@ -126,8 +126,14 @@ module DotPopper
       # The control's label: "Dot size".
       def sizing_label = screen_size.fetch(:choice)
 
-      # The Records screen's heading for the bests it shows.
+      # The Records screen's heading for the bests it shows: "Your bests
+      # with standard dots on screens this size".
       def bests_heading(sizing) = labels.fetch(sizing.sized_to_screen? ? :fitted_bests : :bests)
+
+      # The line under the Records screen's chart, when some of its bars
+      # are of rounds that do not count toward the bests shown: "Brighter
+      # bars are rounds with dots sized to the screen."
+      def chart_note(sizing) = labels.fetch(sizing.sized_to_screen? ? :fitted_chart_note : :chart_note)
 
       # How many dots fit across +field+ and down it, side by side, to the
       # nearest whole dot, and never none.

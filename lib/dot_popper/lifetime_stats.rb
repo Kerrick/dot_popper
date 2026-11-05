@@ -3,21 +3,28 @@
 module DotPopper
   # Every round this device has played, added up: the totals (rounds,
   # pops, wrong taps, seconds, and the distinct days played, counted by
-  # +last_day+), the last RECENT scores, oldest first, and the daily
-  # goal's GoalStreak, across every screen; and for each SizeClass, the
+  # +last_day+), the last RECENT scores, oldest first, with the SizeClass
+  # each was played in (+recent_classes+, nil where a file written before
+  # they were kept does not say), and the daily goal's GoalStreak, across
+  # every screen; and for each SizeClass, the
   # Bests a round on such a screen can set. Days are ISO 8601 dates
   # ("2026-11-05"), local to the player. The best score stays with
   # BestScore. It saves as lines of +key=value+, a class's bests under
   # its name ("medium.longest_run=18"), and reads back whatever it can of
   # a damaged file.
-  class LifetimeStats < Data.define(:rounds, :pops, :slips, :seconds, :days, :last_day, :recent, :streak, :bests)
+  class LifetimeStats < Data.define(:rounds, :pops, :slips, :seconds, :days, :last_day, :recent, :recent_classes,
+                                    :streak, :bests)
     RECENT = 20
     DAY = /\A\d{4}-\d{2}-\d{2}\z/
+    UNKNOWN = "?" # a recent score's class, in a file written before they were kept
 
-    def initialize(rounds: 0, pops: 0, slips: 0, seconds: 0.0, days: 0, last_day: nil, recent: [],
+    # +recent_classes+ line up with +recent+ from the newest back; a score
+    # with none is of an unknown class.
+    def initialize(rounds: 0, pops: 0, slips: 0, seconds: 0.0, days: 0, last_day: nil, recent: [], recent_classes: [],
                    streak: GoalStreak.new, bests: {})
-      super(rounds:, pops:, slips:, seconds: seconds.to_f, days:, last_day:, recent: recent.dup.freeze, streak:,
-            bests: bests.dup.freeze)
+      classes = ([nil] * recent.size) + recent_classes
+      super(rounds:, pops:, slips:, seconds: seconds.to_f, days:, last_day:, recent: recent.dup.freeze,
+            recent_classes: classes.last(recent.size).freeze, streak:, bests: bests.dup.freeze)
     end
 
     # The stats read from +text+ as #to_text wrote it. A missing, unknown,
@@ -30,7 +37,7 @@ module DotPopper
       bests[legacy] = Bests.parse(pairs) if old?(text)
       new(rounds: pairs.count(:rounds), pops: pairs.count(:pops), slips: pairs.count(:slips),
           seconds: pairs.time(:seconds) || 0.0, days: pairs.count(:days), last_day: pairs.day(:last_day),
-          recent: pairs.counts(:recent).last(RECENT),
+          recent: pairs.counts(:recent).last(RECENT), recent_classes: pairs.classes(:recent_classes).last(RECENT),
           streak: GoalStreak.new(current: pairs.count(:goal_streak), longest: pairs.count(:longest_goal_streak),
                                  last_met: pairs.day(:goal_met_on)),
           bests: bests.reject { |_, each| each.rounds.zero? })
@@ -48,6 +55,7 @@ module DotPopper
     def add(stats, day:, size_class:)
       with(rounds: rounds + 1, pops: pops + stats.pops, slips: slips + stats.slips, seconds: seconds + stats.duration,
            days: day == last_day ? days : days + 1, last_day: day, recent: (recent + [stats.score]).last(RECENT),
+           recent_classes: (recent_classes + [size_class]).last(RECENT),
            bests: bests.merge(size_class => bests_in(size_class).add(stats)))
     end
 
@@ -57,7 +65,9 @@ module DotPopper
 
     def to_text
       totals = [["rounds", rounds], ["pops", pops], ["slips", slips], ["seconds", seconds], ["days", days],
-                ["last_day", last_day], ["recent", recent.join(",")], ["goal_streak", streak.current],
+                ["last_day", last_day], ["recent", recent.join(",")],
+                ["recent_classes", recent_classes.map { it&.name || UNKNOWN }.join(",")],
+                ["goal_streak", streak.current],
                 ["longest_goal_streak", streak.longest], ["goal_met_on", streak.last_met]]
       named = bests.flat_map { |size_class, each| each.pairs.map { |key, value| ["#{size_class.name}.#{key}", value] } }
       (totals + named).reject { |_, value| value.nil? }.map { |key, value| "#{key}=#{value}\n" }.join
@@ -147,6 +157,9 @@ module DotPopper
       end
 
       def counts(key) = values[key.to_s].to_s.split(",").filter_map { natural(it) }
+
+      # The SizeClasses a list names, nil for each it does not know.
+      def classes(key) = values[key.to_s].to_s.split(",").map { SizeClass.named(it) }
 
       def day(key)
         value = values[key.to_s].to_s

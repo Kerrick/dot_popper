@@ -264,8 +264,8 @@ module DotPopper
         result = lifetime.record(stats, event.size_class)
         lesson = @tutor.lesson(words.covered) if @hid_fresh
         @finale = Finale.new(look: look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now,
-                             stats:, record: result.records.first, goal_met: result.goal_met, lesson:, first: event.first,
-                             screen: words.played_on(event.round.field, sized: event.size_class == SizeClass::FITTED))
+                             stats:, record: result.records.first, goal_met: result.goal_met, lesson:,
+                             first: event.first, screen: words.played_on(event.round.field, sized: event.size_class == SizeClass::FITTED))
         sounds.play(event.new_best ? :new_best : :game_over)
       end
 

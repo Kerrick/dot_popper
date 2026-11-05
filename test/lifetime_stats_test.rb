@@ -61,6 +61,26 @@ class LifetimeStatsTest < Minitest::Test
     assert_equal [30, 5], stats.recent
   end
 
+  # Each last score keeps the class it was played in, for the chart; a
+  # file written before they were kept leaves its scores' unknown.
+  def test_each_last_score_keeps_its_class_and_older_ones_are_unknown
+    old = LifetimeStats.parse("rounds=2\nrecent=3,9\n")
+    stats = add(add(old, round(score: 4)), round(score: 6), size_class: DotPopper::SizeClass::FITTED)
+
+    assert_equal [3, 9, 4, 6], stats.recent
+    assert_equal [nil, nil, MEDIUM, DotPopper::SizeClass::FITTED], stats.recent_classes
+    assert_includes stats.to_text, "recent_classes=?,?,medium,fitted\n"
+    assert_equal stats.recent_classes, LifetimeStats.parse(stats.to_text).recent_classes
+  end
+
+  def test_the_last_scores_classes_are_trimmed_with_them
+    stats = LifetimeStats.new
+    25.times { stats = add(stats, round(score: it), size_class: it.even? ? SMALL : MEDIUM) }
+
+    assert_equal 20, stats.recent_classes.size
+    assert_equal MEDIUM, stats.recent_classes.first
+  end
+
   def test_a_record_is_judged_against_its_own_class_only
     stats = add(add(LifetimeStats.new, round(longest_run: 20)), round(longest_run: 4), size_class: SMALL)
 
