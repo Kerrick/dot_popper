@@ -2,8 +2,8 @@
 
 module DotPopper
   module Shell
-    # The connected gamepads, and the push of their left sticks and d-pads
-    # each frame. Lota binds controllers from 0.1.3; on an older Lota no
+    # The connected gamepads, and the push of their sticks and d-pads each
+    # frame. Lota binds controllers from 0.1.3; on an older Lota no
     # gamepad is ever added, and every stick is at rest.
     #
     # The pads are the ones Lota's joystickadded and joystickremoved
@@ -29,6 +29,16 @@ module DotPopper
 
       # The push of every gamepad's left stick and d-pad, together.
       def stick = @pads.sum(Presentation::Stick.rest) { push(it) }
+
+      # The push of every gamepad's right stick, together, which tilts the
+      # game-over pile.
+      def right_stick
+        @pads.sum(Presentation::Stick.rest) do |pad|
+          Presentation::Stick.new(x: pad.gamepad_axis(:rightx), y: pad.gamepad_axis(:righty))
+        end
+      end
+
+      def any? = @pads.any?
 
       private
 

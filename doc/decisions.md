@@ -454,3 +454,13 @@ A second test drives the whole `Game` through its screens and checks that nothin
 **Why:** A showcase for Ruby is more convincing when it is honest about where Lua is faster.
 
 **To reverse:** Not applicable; it is a document.
+
+### The Game Over pile is a toy that tilts and shakes
+
+At Game Over, tilting a phone or tablet turns the pile's gravity toward the lowest side of the screen, and a sharp shake throws every dot up, against the pull. With a gamepad, the right stick turns it instead: the dots fall the way it points, and straight down when it is let go. While the pile is tilted, a lid along the top of the window keeps the dots on the screen. The accelerometer is switched on only while the pile exists. A light line under "Tap to continue" says how to do it on the first three Game Overs: "Tilt your iPad to roll the dots.", or "Push the right stick to roll the dots." with a controller. With no accelerometer and no controller, the pile is unchanged.
+
+The math lives in `presentation/tilt.rb` and is tested. SDL reports the accelerometer in the device's own portrait axes, as the push holding the device up, and never turns those axes with the screen, so the game maps each of the four display orientations itself. The reading is smoothed with a time constant of 0.2 seconds, so a hand's tremor never reaches the dots. One g is the pile's existing gravity, so holding the device upright drops the dots exactly as before. A shake is a jump of more than 1.2 g away from the last 0.3 seconds' average, followed by a 0.6-second cooldown. With `DOT_POPPER_CALM=1`, the pull changes four times as slowly and a shake never throws anything. `DOT_POPPER_FAKE_TILT=x,y` stands in for an accelerometer during testing.
+
+**Why:** Jesse Schell's lens of the toy asks whether something is fun to play with even when there is no goal. Once the round ends, its dots no longer affect anything, which makes them a free toy, and handling the device is the most natural way to play with them. Players linger and play with the dots after the game, instead of leaving the moment the score appears. Since the rules are frozen by then, none of this can touch fairness.
+
+**To reverse:** In `Shell::App#load`, stop creating and subscribing `Tilting`, and stop passing it to the `Renderer`. The pile then falls straight down and the hint never shows. Deleting `presentation/tilt.rb`, `shell/tilting.rb`, `shell/accelerometer.rb`, and `shell/tilt_hint_painter.rb`, along with `Look::TILT`, removes the feature entirely.

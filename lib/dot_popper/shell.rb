@@ -12,4 +12,5 @@ module DotPopper
 end
 
 %w[save_file clipboard speaker haptics font_book pen dot_painter effects_painter hud_painter hint_painter mute_button
-   pill_button check lettering title_painter records_painter finale_painter cursor_painter gamepads pile sparks bloom renderer app].each { require_relative "shell/#{it}" }
+   pill_button check lettering title_painter records_painter finale_painter tilt_hint_painter cursor_painter gamepads pile
+   accelerometer tilting sparks bloom renderer app].each { require_relative "shell/#{it}" }

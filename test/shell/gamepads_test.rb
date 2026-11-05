@@ -31,6 +31,16 @@ class GamepadsTest < Minitest::Test
     assert_equal Stick.rest, pads.stick
   end
 
+  def test_the_right_stick_is_read_apart_from_the_left
+    pad = Class.new(Pad) { def gamepad_axis(axis) = { rightx: -0.7, righty: 0.2 }.fetch(axis, 0.0) }
+    pads = DotPopper::Shell::Gamepads.new
+    pads.added(pad.new(gamepad: true, x: 0.0))
+
+    assert_predicate pads, :any?
+    assert_equal Stick.new(x: -0.7, y: 0.2), pads.right_stick
+    assert_equal Stick.rest, pads.stick
+  end
+
   def test_a_joystick_that_is_not_a_gamepad_is_ignored
     pads = DotPopper::Shell::Gamepads.new
     pads.added(Pad.new(gamepad: false, x: 1.0)) # an iPad's accelerometer, say

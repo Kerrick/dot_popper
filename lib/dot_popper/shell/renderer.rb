@@ -10,10 +10,11 @@ module DotPopper
     class Renderer
       G = ::Lota::Graphics
 
-      def initialize(show, pen, pile:, sparks:, bloom:)
+      def initialize(show, pen, pile:, sparks:, bloom:, tilting: nil)
         @show = show
         @pen = pen
         @pile = pile
+        @tilting = tilting
         @bloom = bloom
         @dots = DotPainter.new(pen:)
         @effects = EffectsPainter.new(pen:, sparks:)
@@ -22,6 +23,7 @@ module DotPopper
         @title = TitlePainter.new(pen:, dots: @dots)
         @records = RecordsPainter.new(pen:)
         @finale = FinalePainter.new(pen:)
+        @tilt_hint = TiltHintPainter.new(pen:)
         @cursor = CursorPainter.new(pen:)
         @at_rest = Presentation::DotAnimations.new(pen.look::MOTION)
       end
@@ -46,7 +48,7 @@ module DotPopper
           veil(width, height, @show.finale&.dim(@show.now).to_f) unless @show.playing?
           @effects.scene(@show.effects, dots)
           @effects.words(@show.effects, layout)
-          @finale.draw(@show, layout) unless @show.playing?
+          finale(layout) unless @show.playing?
           hud(layout)
         end
         @cursor.draw(cursor)
@@ -55,6 +57,14 @@ module DotPopper
       private
 
       def radius = @show.game.field.radius
+
+      # Game Over's lines, and under them, the first few times, how to
+      # play with the pile.
+      def finale(layout)
+        @finale.draw(@show, layout)
+        hint = @tilting&.hint
+        @tilt_hint.draw(hint, @show, layout) if hint
+      end
 
       def field
         round = @show.game.round or return

@@ -11,6 +11,9 @@ module DotPopper
     # It hears the rules' events (Game#subscribe). While a pile is falling,
     # +stack+ is the round's stack with each dot where its ball is, in the
     # same order, so popped dots still cover fresh ones.
+    #
+    # Tilting (Shell::Tilting) may turn its gravity, wake its sleeping
+    # balls, and throw them; once it does, a lid closes the window's top.
     class Pile
       P = ::Lota::Physics
 
@@ -32,6 +35,30 @@ module DotPopper
         @world&.update(@look.step(seconds))
       end
 
+      # Pulls the balls toward +pull+ (a Presentation::Pull, 1 being the
+      # pile's own gravity) from now on, under a lid. With +wake+, every
+      # ball asleep wakes, since Box2D leaves a sleeping body where it is
+      # whatever the gravity does.
+      def tilt(pull, wake: false)
+        return unless @world
+
+        close_lid
+        @world.gravity = pull.gravity(@look.gravity_for(@radius))
+        @balls.each_value { wake(it) } if wake
+      end
+
+      # Adds to each ball's velocity what the block gives for the dots'
+      # radius, as [x, y] in graphics units a second: a shake.
+      def throw_balls
+        return unless @world
+
+        @balls.each_value do |body|
+          vx, vy = body.linear_velocity
+          kx, ky = yield(@radius)
+          body.linear_velocity = [vx + kx, vy + ky]
+        end
+      end
+
       # The round's stack, every dot moved to its ball; nil with no pile.
       def stack
         return unless @world
@@ -48,6 +75,7 @@ module DotPopper
       def refit(field)
         return unless @world
 
+        @field = field
         @walls.destroy
         @walls = walls(field)
         @balls.each_value { bring_inside(it, field) }
@@ -57,7 +85,9 @@ module DotPopper
 
       def fill(round)
         empty
-        radius = round.field.radius
+        radius = @radius = round.field.radius
+        @field = round.field
+        @lid = false
         P.meter = @look.meter_for(radius)
         @world = P::World.new(0, @look.gravity_for(radius), true)
         @walls = walls(round.field)
@@ -70,7 +100,7 @@ module DotPopper
 
       def empty
         @world&.destroy
-        @world = @walls = @stack = @balls = nil
+        @world = @walls = @stack = @balls = @field = nil
       end
 
       def ball(dot)
@@ -85,18 +115,36 @@ module DotPopper
         body
       end
 
+      # The lid goes on once, and any ball still above the window, thrown
+      # up as the round ended, comes down inside it first.
+      def close_lid
+        return if @lid
+
+        @lid = true
+        refit(@field)
+      end
+
       def bring_inside(body, field)
         x, y = body.position
-        inside = [x.clamp(field.min_x, field.max_x), [y, field.max_y].min]
+        top = @lid ? field.min_y : -Float::INFINITY
+        inside = [x.clamp(field.min_x, field.max_x), y.clamp(top, field.max_y)]
         return if inside == [x, y]
 
         body.position = inside
         body.linear_velocity = [0, 1] # wakes it, as Box2D wakes a body given any speed
       end
 
+      # Box2D wakes a body given any speed (Lota binds no setAwake), so a
+      # ball at rest is given the least nudge, along the pull.
+      def wake(body)
+        vx, vy = body.linear_velocity
+        gx, gy = @world.gravity
+        body.linear_velocity = vx.zero? && vy.zero? ? [gx * 1e-3, gy * 1e-3] : [vx, vy]
+      end
+
       def walls(field)
         body = P::Body.new(@world, 0, 0, :static)
-        Presentation::PileWalls.new(width: field.width, height: field.height).segments.each do |segment|
+        Presentation::PileWalls.new(width: field.width, height: field.height, lid: @lid).segments.each do |segment|
           P::EdgeShape.new(body, *segment).friction = @look.friction
         end
         body

@@ -48,6 +48,7 @@ The title's dots change size as soon as you switch, and the game remembers your 
 | Choose how big the dots are | The **Dots:** button on the title screen | |
 | Leave the Records screen | Tap or click anywhere | **Escape** |
 | Turn sound on or off | The speaker button on the title screen | **M** |
+| Roll the dots about on the Game Over screen | Tilt the iPad or phone, or shake it | |
 | Toggle fullscreen (desktop only) | | **F11**, or **Alt+Enter** (**Cmd+Enter** on a Mac) |
 | Quit (desktop only) | Close the window | **Escape**, except on the Records screen |
 
@@ -64,12 +65,17 @@ Any controller your computer or iPad recognizes as a gamepad works, such as an X
 - **X** (square) opens the Records screen from the title, once it is offered. **B** (circle) or **Start** goes back to the title from it, as does a press of **A** anywhere.
 - Either shoulder button (**LB** or **RB**, or **L1** or **R1**) switches the dot size on the title screen, once it is offered.
 - **Back** turns sound on or off, on every screen.
+- The right stick tilts the pile of dots on the Game Over screen, so they roll the way you push it. Let go, and they fall down again.
 
 The cursor appears when you use the controller and hides when you move the mouse or touch the screen. On an iPad, a controller paired in the iPad's Bluetooth settings works the same way, from the first iPad build made after controllers were turned on there.
 
+### Playing with the pile
+
+When a round ends, its dots tumble into a pile. The round is over by then, so nothing you do to them changes your score. On a phone or tablet, tilting the device rolls the dots toward whichever side is lowest, as if they were marbles in a box, and a sharp shake throws them up. A lid keeps them on the screen. Holding the device upright drops them exactly as they always fell, and on a computer without a controller they always fall straight down. For the first three rounds, a line under **Tap to continue** says how to do this. Nobody has tried it on a real iPad yet, so please report how it feels.
+
 ### Reduced motion
 
-Setting the environment variable `DOT_POPPER_CALM=1` before starting the game turns off the screen shake that follows a mistake, and makes the dots settle gently at the end of a round instead of bouncing.
+Setting the environment variable `DOT_POPPER_CALM=1` before starting the game turns off the screen shake that follows a mistake, and makes the dots settle gently at the end of a round instead of bouncing. Tilting the pile then turns it slowly, and shaking never throws the dots.
 
 ## Installing and running
 
@@ -152,6 +158,7 @@ Running `bundle exec rake` with no task name runs the tests and then [Steep](htt
 | `DOT_POPPER_PERF=1` | Every five seconds, prints how many frames a second the game drew and its longest single frame, measured before the game caps how much time one frame may pass to the rules. Useful for checking a new computer. |
 | `DOT_POPPER_NO_SHADERS=1` | Draws plain shapes without shaders, and so without the fresh dots' glow. The game does this on its own when a shader fails to compile. |
 | `DOT_POPPER_CALM=1` | Turns off screen shake and the bouncing at the end of a round (see "Reduced motion"). |
+| `DOT_POPPER_FAKE_TILT=0.6,0` | Pretends to have an accelerometer that always reads this x,y, in g, along the device's portrait axes (x toward its right edge, y toward its top edge). `0.6,0` holds the device tilted to the side, so the Game Over pile rolls to the left. At Game Over the game prints where its tilt comes from: the accelerometer, the fake reading, the gamepad's right stick, or none. |
 | `DOT_POPPER_WINDOW=400x850` | Opens the desktop window at this size, in logical pixels, to check how a narrow screen looks. |
 | `DOT_POPPER_TODAY=2026-11-07` | Plays as if it were that date, to see that day's goal, or to build up a streak of days. |
 | `DOT_POPPER_SAVE_AS=test` | Saves in a folder of this name instead of `dot_popper`, so a test run starts with no rounds played and leaves your own records alone. |

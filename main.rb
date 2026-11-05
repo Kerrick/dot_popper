@@ -11,7 +11,9 @@
 # d-pad aims, A or the right trigger presses, Start starts and continues,
 # Y copies the result on Game Over, X opens the Records screen from the
 # title, B (or Start) leaves it, either shoulder button switches the
-# dot size on the title, and Back toggles sound.
+# dot size on the title, and Back toggles sound. On Game Over the right
+# stick, or tilting a tablet, rolls the pile of dots about, and a shake
+# throws them.
 #
 # Development settings, read from the environment:
 #
@@ -33,9 +35,15 @@
 #                               a run starts from nothing.
 #   DOT_POPPER_TODAY=2026-11-07 plays as if it were that date, for its
 #                               daily goal and the goal's streak.
+#   DOT_POPPER_FAKE_TILT=0.6,0  stands in for an accelerometer that reads
+#                               this x,y, in g, in the device's portrait
+#                               axes, so the game-over pile rolls as on a
+#                               tilted tablet: 0.6,0 rolls it to the left.
 #   DOT_POPPER_CALM=1           turns off the screen shake, and lets the
-#                               game-over pile settle softly (reduced
-#                               motion). This one is for players, too.
+#                               game-over pile settle softly and turn
+#                               slowly when tilted, never thrown by a
+#                               shake (reduced motion). This one is for
+#                               players, too.
 
 require_relative "lib/dot_popper/shell"
 

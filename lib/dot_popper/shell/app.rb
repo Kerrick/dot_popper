@@ -43,13 +43,15 @@ module DotPopper
         puts "Dot Popper: each round is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"
         @pile = Pile.new(flag?("DOT_POPPER_CALM") ? Look::CALM_PILE : Look::PILE)
         @game.subscribe(@pile)
+        @gamepads = Gamepads.new
+        @tilting = tilting(os)
+        @game.subscribe(@tilting)
         @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
         @sparks = Sparks.new(Look)
         @bloom = Bloom.new(@pen, Look::BLOOM)
-        @renderer = Renderer.new(@show, @pen, pile: @pile, sparks: @sparks, bloom: @bloom)
+        @renderer = Renderer.new(@show, @pen, pile: @pile, sparks: @sparks, bloom: @bloom, tilting: @tilting)
         @renderer.prepare
         @input = Presentation::InputRouter.new
-        @gamepads = Gamepads.new
         @buttons = Presentation::GamepadButtons.new
         @trigger = Presentation::Trigger.released
         @cursor = Presentation::GamepadCursor.centered(@show.layout.whole, look: Look::GAMEPAD,
@@ -70,6 +72,7 @@ module DotPopper
         end
         @game.update(seconds)
         @show.update(seconds)
+        @tilting.update(seconds)
         @pile.update(seconds)
         @sparks.update(seconds, @show.effects)
         development(seconds)
@@ -211,6 +214,19 @@ module DotPopper
         -> { pretend }
       rescue Date::Error
         -> { Date.today }
+      end
+
+      # Playing with the game-over pile: by the accelerometer, or
+      # DOT_POPPER_FAKE_TILT's steady reading in its place, and by any
+      # gamepad's right stick.
+      def tilting(os)
+        fake = Presentation::Reading.parse(@env["DOT_POPPER_FAKE_TILT"])
+        width, height = ::Lota::Graphics.dimensions
+        Tilting.new(pile: @pile, gamepads: @gamepads,
+                    accelerometer: fake ? FakeAccelerometer.new(steady: fake) : Accelerometer.new,
+                    look: flag?("DOT_POPPER_CALM") ? Look::CALM_TILT : Look::TILT,
+                    hint: Presentation::TiltHint.new(SaveFile.new(name: "tilt_hint.txt"), Look::TILT),
+                    device: Presentation::TiltHint.device(os, width, height), turns: @touch)
       end
 
       def flag?(name) = @env[name] == "1"
