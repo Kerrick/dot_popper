@@ -56,6 +56,11 @@
 #                               slowly when tilted, never thrown by a
 #                               shake (reduced motion). This one is for
 #                               players, too.
+#   DOT_POPPER_SCENARIO=round   plays one of rake test:gui's scripted
+#                               sessions, through the callbacks below,
+#                               checks it as it goes, and quits with 0
+#                               only if every check passed
+#                               (test/gui/director.rb).
 
 require_relative "lib/dot_popper/shell"
 
@@ -94,3 +99,5 @@ def Lota.gamepadreleased(_joystick, button) = @app&.gamepad_released(button)
 def Lota.gamepadaxis(_joystick, axis, value) = @app&.gamepad_axis(axis, value)
 def Lota.joystickadded(joystick) = @app&.gamepad_added(joystick)
 def Lota.joystickremoved(joystick) = @app&.gamepad_removed(joystick)
+
+require_relative "test/gui/director" unless ENV.fetch("DOT_POPPER_SCENARIO", "").empty?

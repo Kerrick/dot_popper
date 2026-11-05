@@ -13,6 +13,10 @@ module DotPopper
       PLAYTEST_LOG = "rounds.csv"
       SMALLEST_WINDOW = [400, 320].freeze
 
+      # What the GUI suite's director (test/gui/director.rb) watches as it
+      # plays: the rules, the Show, and the game-over pile.
+      attr_reader :game, :show, :pile
+
       def initialize(env = ENV)
         @env = env
         @elapsed = 0.0

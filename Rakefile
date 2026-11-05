@@ -4,8 +4,20 @@ require "rake/testtask"
 
 Rake::TestTask.new(:test) do |t|
   t.libs << "lib" << "test"
-  t.test_files = FileList["test/**/*_test.rb"]
+  t.test_files = FileList["test/**/*_test.rb"].exclude("test/gui/**/*")
   t.warning = true
+end
+
+# The game played in a real window, end to end (test/gui): each scenario
+# boots the game through Lota, plays a scripted session through Lota's
+# callbacks, and quits. It needs a display, so rake test leaves it out.
+namespace :test do
+  Rake::TestTask.new(:gui) do |t|
+    t.description = "Play scripted sessions of the game in real windows"
+    t.libs << "lib" << "test"
+    t.test_files = FileList["test/gui/**/*_test.rb"]
+    t.warning = true
+  end
 end
 
 # Type-checks the rules core against sig/. Steep runs as its own command,
