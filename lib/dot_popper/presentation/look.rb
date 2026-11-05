@@ -99,7 +99,7 @@ module DotPopper
       # Floating numbers; +spread+ sets the two of a tap apart, across.
       GAIN_FLOAT = FloaterLook.new(rise: 1.0, life: 0.65)
       LOSS_FLOAT = FloaterLook.new(rise: 0.7, life: 0.75)
-      FLOAT_SPREAD = 0.42
+      FLOAT_SPREAD = 0.62
 
       HUD = HudLook.new(
         bump: Tween.new(from: 1.3, to: 1.0, duration: 0.32, ease: :out_back),
