@@ -1,3 +1,10 @@
+GIT
+  remote: https://github.com/setdef/Fledge
+  revision: 007b5514e4630ca02a67aabb5b8b701e66c919cd
+  ref: 007b5514e4630ca02a67aabb5b8b701e66c919cd
+  specs:
+    fledge (0.4.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -13,12 +20,14 @@ PLATFORMS
   x86_64-linux-gnu
 
 DEPENDENCIES
+  fledge!
   lota (= 0.1.2)
   minitest (~> 5.25)
   rake (~> 13.2)
 
 CHECKSUMS
   bundler (4.0.20) sha256=7978a8ac648767f5e635bc522445b79e80a52b907a39a36c2d8085ed6bc762ae
+  fledge (0.4.0)
   lota (0.1.2-arm64-darwin) sha256=a9a333ad0148c788a61c97581b77b55231482946f938cd0488b4708b8a850e39
   lota (0.1.2-x64-mingw-ucrt) sha256=61a60b6ad45cb5205b29f56f1bb9fadd6937c7540b912c232b06b3ee9b4e93bb
   lota (0.1.2-x86_64-linux-gnu) sha256=40b80f67f213dc6bb2eadbb311014e18be907112ca86039ac503f410b0eaa477
