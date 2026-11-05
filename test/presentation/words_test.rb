@@ -38,6 +38,7 @@ class WordsTest < Minitest::Test
                  Look::WORDS.share_text(25, stats, best: 25, new_best: false)
     assert_match(/\ADot Popper: 1 point\n/, Look::WORDS.share_text(1, stats, best: 25, new_best: false))
     assert_match(/\ADot Popper: 0 points\n/, Look::WORDS.share_text(0, stats, best: 0, new_best: false))
+    assert_match(/\ADot Popper: 25 points\n/, Look::WORDS.share_text(25, stats, best: 25, new_best: false, first: true))
   end
 
   def test_the_shared_result_names_a_record_on_its_own_line
@@ -135,5 +136,6 @@ class WordsTest < Minitest::Test
     assert_equal "1 point short of your best of 27", Look::WORDS.short_of_best(26, 27)
     assert_equal "You tied your best of 27", Look::WORDS.short_of_best(27, 27)
     assert_equal "", Look::WORDS.short_of_best(0, 0), "no best to compare with yet"
+    assert_equal "Your best: 27", Look::WORDS.short_of_best(27, 27, first: true), "a first round tied nothing"
   end
 end

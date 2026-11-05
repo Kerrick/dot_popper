@@ -123,7 +123,7 @@ module DotPopper
           pen.text(words.new_best, font, layout.center_x, y, pen.palette.gain, glow)
         else
           font = pen.fonts.semibold(layout.scaled(type.best))
-          pen.text(words.short_of_best(finale.score, finale.best), font, layout.center_x, y, pen.palette.soft, alpha)
+          pen.text(words.short_of_best(finale.score, finale.best, first: finale.first), font, layout.center_x, y, pen.palette.soft, alpha)
         end
       end
     end

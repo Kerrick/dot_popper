@@ -15,12 +15,15 @@ module DotPopper
     # played on, for the result to share (Words#played_on), or is nil.
     # +lesson+ is the stacking rule's lines (Tutor), on the first Game
     # Overs after a wrong tap with the bright dot hidden beneath, or nil.
+    # +first+ says the round was the first of its SizeClass, which set the
+    # best without beating one.
     class Finale < Data.define(:look, :score, :best, :new_best, :at, :stats, :record, :goal_met, :copied_at,
-                               :ready_at, :celebrated, :goal_celebrated, :screen, :lesson)
+                               :ready_at, :celebrated, :goal_celebrated, :screen, :lesson, :first)
       COPIED_FOR = 1.6 # seconds "Copy my result" says "Copied!"
 
       def initialize(look:, score:, best:, new_best:, at:, stats: RoundStats.start, record: nil, goal_met: false,
-                     copied_at: nil, ready_at: nil, celebrated: false, goal_celebrated: false, screen: nil, lesson: nil)
+                     copied_at: nil, ready_at: nil, celebrated: false, goal_celebrated: false, screen: nil, lesson: nil,
+                     first: false)
         super
       end
 

@@ -83,8 +83,9 @@ module DotPopper
     # The round's score counts among the bests of +size_class+, the class
     # it started in, even if the window changed size meanwhile.
     def finish(round, seed, size_class)
+      first = best.first?(size_class)
       new_best = best.record(round.score, size_class)
-      announce(Events::RoundEnded.new(round:, best: best.of(size_class), new_best:, seed:, size_class:))
+      announce(Events::RoundEnded.new(round:, best: best.of(size_class), new_best:, seed:, size_class:, first:))
       GameOver.new(round:, new_best:)
     end
 

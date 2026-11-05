@@ -167,7 +167,7 @@ module DotPopper
         return unless finished? && finale
 
         @clipboard.copy(words.share_text(finale.score, finale.stats, best: finale.best, new_best: finale.new_best?,
-                                         record: finale.record, screen: finale.screen))
+                                         record: finale.record, screen: finale.screen, first: finale.first))
         @finale = finale.copy(now)
         sounds.play(:tick)
       end
@@ -264,7 +264,7 @@ module DotPopper
         result = lifetime.record(stats, event.size_class)
         lesson = @tutor.lesson(words.covered) if @hid_fresh
         @finale = Finale.new(look: look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now,
-                             stats:, record: result.records.first, goal_met: result.goal_met, lesson:,
+                             stats:, record: result.records.first, goal_met: result.goal_met, lesson:, first: event.first,
                              screen: words.played_on(event.round.field, sized: event.size_class == SizeClass::FITTED))
         sounds.play(event.new_best ? :new_best : :game_over)
       end

@@ -32,7 +32,7 @@ class ShowTest < Minitest::Test
     @show.tap(*middle(@show.share_reach))
 
     assert @show.finished?
-    assert_equal "Dot Popper: 1 point, a new best!\n🟡 1 pop · ⚫ 0 wrong taps · ⏱ 11 seconds\n" \
+    assert_equal "Dot Popper: 1 point\n🟡 1 pop · ⚫ 0 wrong taps · ⏱ 11 seconds\n" \
                  "Played on a screen about 8 dots wide and 6 dots tall.", @clipboard.text
     assert @show.finale.copied?(@show.now)
   end
@@ -403,7 +403,8 @@ class ShowTest < Minitest::Test
     @show.update(0.1)
 
     assert @show.finished?
-    assert_equal :new_best, @sounds.names.last
+    assert_equal :game_over, @sounds.names.last, "a first round has no best to beat"
+    assert @show.finale.first
     assert_equal 1, @show.finale.stats.pops
     assert_in_delta 0.0, @show.finale.prompt(@show.now)
     @game.update(DotPopper::Rules::GAME_OVER_GRACE)
@@ -411,7 +412,7 @@ class ShowTest < Minitest::Test
     @show.update(1.0)
     assert_equal 1, @show.finale.shown_score(@show.now)
     assert_operator @show.finale.prompt(@show.now), :>, 0.9
-    assert @show.finale.celebrated
+    refute @show.finale.celebrated, "only a beaten best is celebrated"
   end
 
   def test_the_last_seconds_tick

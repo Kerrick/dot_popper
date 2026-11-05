@@ -540,3 +540,11 @@ Lota 0.1.3 binds `MouseJoint.new` but none of its setters (no `setTarget`, no `s
 **Why:** Schell's Lens of the Toy. The pile was the one thing on Game Over a player could play with, but only by tilting a tablet or pushing a stick. Most players have only a finger or a mouse, and reaching out to grab a dot is the first thing they try. Acting on release at Game Over costs nothing, since the round is over and nothing is timed, and it means the press that starts a drag can't throw the player back to the title.
 
 **To reverse:** In `App#press`, call `tap` for every press, and remove `Dragging` from `App#load`.
+
+### A group's first round is never a new best
+
+The first round ever played in a size class (standard dots on a small, medium, or large screen, or dots sized to the screen) sets that class's best but is not called a new best. Game Over shows the ordinary best line, "Your best: 18", with no "New best!", no celebration, and no fanfare, and the shared result doesn't claim a new best or a tie. No "New record" line appears on a class's first round either, as before. `BestScore#first?` says whether a class has a round yet: a class's first round is now saved even when it scores 0, and `Events::RoundEnded#first` carries the answer to the Finale. A class whose rounds were all 0 before this change reads as having none, so its next round counts as its first.
+
+**Why:** Juul and Hodent on fair feedback, and Podmajersky on making every line do a job. A first round in a new class beat nothing, so praising it is praise the player didn't earn, and it cheapens the next real "New best!". The maintainer chose the plain best line over a special first-round message: it is true, and it sets the target for next time. Which class the bests belong to is explained on the Records screen.
+
+**To reverse:** Have `BestScore#record` return `true` on a class's first round, and drop the `first:` arguments from `Words#short_of_best` and `#share_text`.

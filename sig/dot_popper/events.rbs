@@ -64,7 +64,11 @@ module DotPopper
 
       attr_reader size_class: SizeClass
 
-      def self.new: (round: Round, best: Integer, new_best: bool, seed: Integer, size_class: SizeClass) -> instance
+      attr_reader first: bool
+
+      def self.new: (round: Round, best: Integer, new_best: bool, seed: Integer, size_class: SizeClass, ?first: bool) -> instance
+
+      def initialize: (round: Round, best: Integer, new_best: bool, seed: Integer, size_class: SizeClass, ?first: bool) -> void
 
       def score: () -> Integer
     end

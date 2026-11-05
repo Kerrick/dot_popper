@@ -111,20 +111,31 @@ class GameTest < Minitest::Test
     assert_equal DotPopper::SizeClass::MEDIUM, @game.size_class, "the next round counts with the new size"
   end
 
-  def test_the_best_score_is_kept_and_a_new_best_is_announced
+  # A class's first round sets its best, but beat nothing, so it is not
+  # announced as a new one.
+  def test_the_best_score_is_kept_and_only_a_beaten_one_is_a_new_best
     play_to_score(2)
     @game.update(20)
 
     assert_equal 2, @game.best.of(DotPopper::SizeClass::SMALL)
     assert_equal "small=2\n", @store.read
-    assert @heard.last.new_best
+    assert @heard.last.first
+    refute @heard.last.new_best
 
     @game.update(1)
     @game.press(0, 0)
     @game.press(0, 0)
     @game.update(20)
+    refute @heard.last.first
     refute @heard.last.new_best
     assert_equal 2, @heard.last.best
+
+    @game.update(1)
+    @game.press(0, 0)
+    play_to_score(3)
+    @game.update(20)
+    assert @heard.last.new_best
+    assert_equal 3, @heard.last.best
   end
 
   def test_a_new_round_uses_the_field_as_it_is_when_the_round_starts

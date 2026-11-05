@@ -29,8 +29,19 @@ class BestScoreTest < Minitest::Test
     refute best.record(5, SMALL)
     assert best.record(6, SMALL), "a phone's best is beaten on a phone, whatever a bigger screen's is"
     refute best.record(29, MEDIUM)
+    assert_equal "small=6\nmedium=30\n", store.read
+  end
+
+  def test_a_classs_first_round_sets_its_best_but_is_no_new_best
+    store = BestScore::Memory.new("small=5\n")
+    best = BestScore.new(store)
+
+    assert best.first?(LARGE)
+    refute best.record(0, LARGE), "there was nothing to beat"
+    refute best.first?(LARGE)
+    assert_equal 0, best.of(LARGE)
     assert best.record(1, LARGE)
-    assert_equal "small=6\nmedium=30\nlarge=1\n", store.read
+    assert_equal "small=5\nlarge=1\n", store.read
   end
 
   # A best saved before scores were kept by class is one bare number. It

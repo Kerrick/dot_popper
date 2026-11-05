@@ -25,9 +25,12 @@ module DotPopper
 
     # A round's clock reached zero; +best+ is the device's best score on
     # screens of +size_class+ (SizeClass) after this round, +new_best+
-    # whether this round set it, and +seed+ the one its dots were drawn
-    # from.
-    class RoundEnded < Data.define(:round, :best, :new_best, :seed, :size_class)
+    # whether this round set it, +first+ whether it was the first round on
+    # such screens, which sets a best but is never a new one, and +seed+
+    # the one its dots were drawn from.
+    class RoundEnded < Data.define(:round, :best, :new_best, :seed, :size_class, :first)
+      def initialize(round:, best:, new_best:, seed:, size_class:, first: false) = super
+
       def score = round.score
     end
 

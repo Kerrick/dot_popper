@@ -14,6 +14,8 @@ module DotPopper
 
     def of: (SizeClass size_class) -> Integer
 
+    def first?: (SizeClass size_class) -> bool
+
     def record: (Integer score, SizeClass size_class) -> bool
 
     private

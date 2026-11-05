@@ -45,8 +45,12 @@ module DotPopper
                           "#{Words.change(-Rules::PENALTY_SECONDS, "second")}"
 
       # How a finished round compares with the best it did not beat:
-      # "3 points short of your best of 27". With no best yet, nothing.
-      def short_of_best(score, best)
+      # "3 points short of your best of 27". With no best yet, nothing. A
+      # class's +first+ round only says the best it set, "Your best: 18":
+      # with nothing before it, it neither tied nor beat anything.
+      def short_of_best(score, best, first: false)
+        return best_line(best) if first
+
         gap = best - score
         return "#{Words.count(gap, "point")} short of your best of #{best}" if gap.positive?
 
@@ -85,8 +89,8 @@ module DotPopper
       #   New record: 18 pops in a row without a wrong tap
       #   🟡 27 pops · ⚫ 1 wrong tap · ⏱ 38 seconds
       #   Played on a screen about 12 dots wide and 8 dots tall.
-      def share_text(score, stats, best:, new_best:, record: nil, screen: nil)
-        ["Dot Popper: #{Words.count(score, "point")}#{best_note(score, best, new_best)}",
+      def share_text(score, stats, best:, new_best:, record: nil, screen: nil, first: false)
+        ["Dot Popper: #{Words.count(score, "point")}#{best_note(score, best, new_best) unless first}",
          (self.record(record) if record),
          "🟡 #{Words.count(stats.pops, "pop")} · ⚫ #{Words.count(stats.slips, "wrong tap")} · " \
          "⏱ #{Words.count(stats.duration.round, "second")}",
