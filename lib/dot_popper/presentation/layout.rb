@@ -84,13 +84,15 @@ module DotPopper
       end
 
       # The title's choice of dot size: its label, then its two segments,
-      # each as tall as a button. With room between "Your records" and the
+      # each as tall as a button and wide enough for a dot icon and a few
+      # words. The title shows it only where it changes something, and
+      # nothing else moves for it, so it can come and go. With room between "Your records" and the
       # mute button, it sits there, label on the left, its segments
       # centred on the screen if they can be. Otherwise, as on an upright
       # phone, its segments are centred a row above them, under the label.
       def sizing_control
         height = button_size
-        segment = height * 3.5
+        segment = height * 4.2
         label = height * 2.1
         left = records_button.right + margin
         right = mute_button.x - margin

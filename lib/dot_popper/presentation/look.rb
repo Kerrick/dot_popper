@@ -51,9 +51,10 @@ module DotPopper
         screen_size: {
           here: "This screen is about %d dots wide and %d dots tall.",
           played: "Played on a screen about %d dots wide and %d dots tall.",
-          fitted_here: "Dots fit the screen, so scores compare across devices.",
-          fitted_played: "Played with the dots sized to my screen.",
-          choice: "Dot size", same_choice: "Same everywhere", fitted_choice: "Fit the screen"
+          fitted_here: "Dots are sized to fit this screen, so scores compare across devices.",
+          fitted_played: "Played with dots sized to the screen.",
+          choice: "Dot size", standard: "Standard", smaller: "Smaller, more room", bigger: "Bigger, less room",
+          alike: "About the same"
         }.freeze
       )
 
@@ -169,6 +170,13 @@ module DotPopper
       class TitleLook < Data.define(:dots, :drift, :dim, :breath, :faintest, :intro); end
       TITLE = TitleLook.new(dots: 7, drift: 0.35, dim: 0.76, breath: 2.4, faintest: 0.8,
                             intro: Tween.new(from: 0.0, to: 1.0, duration: 0.5, ease: :out_cubic))
+      # The title's "Dot size" choice is offered only where dots sized to
+      # the screen would be more than a tenth smaller or bigger than the
+      # standard ones; nearer than that, as in the 24 × 16 R window, the
+      # two look alike. Each segment shows a dot: the standard one about a
+      # third of the segment's height across, the other in proportion to
+      # it, from half as big to a little over twice.
+      SIZING = SizingLook.new(alike: 0.1, icon: 0.16, icons: 0.5..2.2)
       # ...and the title's words, from its name to its prompt, sit on a
       # faint backing, so a dot drifting behind them dims further.
       TITLE_BACKING = ScrimLook.new(alpha: 0.4, feather: 48, layers: 10, pad: 12)

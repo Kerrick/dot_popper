@@ -17,7 +17,7 @@ module DotPopper
     attr_reader :state, :best, :screen, :sizing
 
     def initialize(screen, best: BestScore.new(BestScore::Memory.new), random: Random.new,
-                   sizing: DotSizing::SAME_EVERYWHERE)
+                   sizing: DotSizing::STANDARD)
       @screen = screen
       @sizing = sizing
       @best = best

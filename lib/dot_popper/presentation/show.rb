@@ -16,7 +16,7 @@ module DotPopper
     # sizes the buttons' reach; a round's effects follow its own dots.
     class Show
       # The dot-size choices in the order the title draws their segments.
-      SIZINGS = [DotSizing::SAME_EVERYWHERE, DotSizing::SIZED_TO_SCREEN].freeze
+      SIZINGS = [DotSizing::STANDARD, DotSizing::SIZED_TO_SCREEN].freeze
 
       attr_reader :game, :effects, :animations, :hud, :attract, :layout, :marquee, :finale, :sounds, :now, :look,
                   :lifetime
@@ -71,6 +71,15 @@ module DotPopper
       # a round has finished, so a first-time player's title says only how
       # to play.
       def records_offered? = lifetime.stats.rounds.positive?
+
+      # What the choice of dot size would do on this screen, worked out
+      # afresh each time, so a resized window is always seen as it is now.
+      def sizing_preview = SizingPreview.of(game.screen, look::SIZING)
+
+      # Whether the title offers the choice of dot size: once a round has
+      # finished, and only where the two sizes look different. Where they
+      # look alike, the saved choice stays as it was, and rounds follow it.
+      def sizing_offered? = records_offered? && sizing_preview.offered?
       def playing? = game.state.is_a?(Game::Playing)
       def finished? = game.state.is_a?(Game::GameOver)
 
@@ -83,7 +92,7 @@ module DotPopper
         if records? then close_records
         elsif title? && layout.mute_button.contains?(x, y) then sounds.toggle_mute
         elsif title? && records_offered? && records_reach.contains?(x, y) then open_records
-        elsif title? && records_offered? && (sizing = sizing_at(x, y)) then choose_sizing(sizing)
+        elsif title? && sizing_offered? && (sizing = sizing_at(x, y)) then choose_sizing(sizing)
         elsif finished? && share_reach.contains?(x, y) then share
         else
           scenery = attract.dots.top_at(x, y) if title?
@@ -113,14 +122,14 @@ module DotPopper
       end
 
       # Switches how dots are sized (DotSizing) to the other choice, as a
-      # gamepad's shoulder button does.
+      # gamepad's shoulder button does, while the title offers it.
       def toggle_sizing = choose_sizing(game.sizing.toggled)
 
-      # Sizes dots as +sizing+ (DotSizing) says, on the title once it
+      # Sizes dots as +sizing+ (DotSizing) says, on the title while it
       # offers the choice, and remembers it. The title's dots and best
       # change with it, so the choice shows at once.
       def choose_sizing(sizing)
-        return unless title? && records_offered?
+        return unless title? && sizing_offered?
         return sounds.play(:tick, pitch: 0.8) if sizing == game.sizing
 
         game.sizing = sizing

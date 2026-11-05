@@ -4,8 +4,8 @@ module DotPopper
   module Shell
     # The title screen: the name, a legend that teaches the rule with one
     # dot of each kind, the best score, the prompt, the mute button, and,
-    # once a round has been played, today's goal, "Your records", and the
-    # choice of how dots are sized. From the name to the prompt, the words
+    # once a round has been played, today's goal, "Your records", and,
+    # where it changes something, the choice of how dots are sized. From the name to the prompt, the words
     # sit on a faint backing, so the dots drifting behind them dim further.
     class TitlePainter < Data.define(:pen, :dots)
       G = ::Lota::Graphics
@@ -37,11 +37,21 @@ module DotPopper
         return unless show.records_offered?
 
         PillButton.new(pen:).draw(layout.records_button, show.words.records, alpha: intro)
-        choices = Presentation::Show::SIZINGS.map { [show.words.sizing(it), it == show.game.sizing] }
-        SegmentedPainter.new(pen:).draw(layout.sizing_control, show.words.sizing_label, choices, alpha: intro)
+        sizing_choice(show, layout.sizing_control, intro) if show.sizing_offered?
       end
 
       private
+
+      # The choice of dot size, each segment named by what it does here
+      # and showing a dot at the size it gives, in true proportion.
+      def sizing_choice(show, control, alpha)
+        preview = show.sizing_preview
+        height = control.options.first.height
+        choices = Presentation::Show::SIZINGS.map do
+          [show.words.sizing(it, preview), it == show.game.sizing, preview.icon(it, height)]
+        end
+        SegmentedPainter.new(pen:, dots:).draw(control, show.words.sizing_label, choices, alpha:)
+      end
 
       # The backing from +top+ to +bottom+, as wide as the name or the
       # legend, whichever is wider.

@@ -56,7 +56,7 @@ class RecordsTest < Minitest::Test
     assert_equal "Your bests with dots sized to the screen", fitted.bests.title
     assert_equal ["None yet"], fitted.bests.rows.map(&:value).values_at(3)
     assert_equal ["This screen is about 7 dots wide and 14 dots tall.",
-                  "Dots fit the screen, so scores compare across devices."], fitted.notes
+                  "Dots are sized to fit this screen, so scores compare across devices."], fitted.notes
   end
 
   def test_with_no_rounds_the_sheet_is_empty_and_says_none_yet

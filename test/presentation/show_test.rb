@@ -133,14 +133,14 @@ class ShowTest < Minitest::Test
     assert_in_delta 35.4, @game.round.field.radius, 0.1
 
     @game.update(20)
-    assert_equal "Played with the dots sized to my screen.", @show.finale.screen
+    assert_equal "Played with dots sized to the screen.", @show.finale.screen
   end
 
   # A tap on a segment chooses it, so tapping the chosen one again keeps
   # it; a shoulder button switches to the other.
   def test_each_segment_of_the_dot_size_choice_chooses_it
     finish_round
-    same = DotPopper::DotSizing::SAME_EVERYWHERE
+    same = DotPopper::DotSizing::STANDARD
     @show.tap(*middle(reach(same)))
     refute @game.sizing.sized_to_screen?
     assert_nil @sizing_store.read, "nothing changed, so nothing is saved"
@@ -157,6 +157,41 @@ class ShowTest < Minitest::Test
 
     assert @show.playing?
     refute @game.sizing.sized_to_screen?
+  end
+
+  # On the 24 × 16 R window, dots sized to it are the standard size, so
+  # the title leaves the choice out, and neither its segments nor a
+  # shoulder button change the saved one.
+  def test_where_the_sizes_look_alike_the_choice_is_not_offered
+    game = DotPopper::Game.new(field(1200, 800), random: Random.new(2), sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
+    show = Show.new(game:, layout: layout(1200, 800), sounds: FakeSounds.new, radius: R, sizing_store: @sizing_store)
+    game.press(10, 10)
+    game.update(20)
+    game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    game.press(10, 10)
+    assert show.records_offered?
+    refute show.sizing_offered?
+
+    show.toggle_sizing
+    assert game.sizing.sized_to_screen?, "the saved choice stays"
+    show.tap(*middle(show.sizing_reaches.to_h.fetch(DotPopper::DotSizing::STANDARD)))
+    assert game.state.is_a?(DotPopper::Game::Playing), "where the control would be is an ordinary tap"
+    assert_nil @sizing_store.read
+  end
+
+  # Resizing the window brings the choice back, or takes it away.
+  def test_the_choice_comes_and_goes_as_the_window_is_resized
+    finish_round
+    assert @show.sizing_offered?
+
+    @game.screen = field(1200, 800)
+    @show.resize(layout(1200, 800), @game.field)
+    refute @show.sizing_offered?
+
+    @game.screen = field(400, 850)
+    @show.resize(layout(400, 850), @game.field)
+    assert @show.sizing_offered?
+    assert_equal :smaller, @show.sizing_preview.effect
   end
 
   def test_your_records_opens_over_the_title_and_any_tap_goes_back

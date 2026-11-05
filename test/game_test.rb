@@ -144,7 +144,7 @@ class GameTest < Minitest::Test
     assert_equal DotPopper::SizeClass::FITTED, @game.state.size_class
 
     @game.screen = field(1200, 800)
-    @game.sizing = DotPopper::DotSizing::SAME_EVERYWHERE
+    @game.sizing = DotPopper::DotSizing::STANDARD
     assert_in_delta 30.0, @game.round.field.radius, 0.001, "a round keeps its radius through a resize"
     assert_equal 1200, @game.round.field.width
     assert_equal DotPopper::DotSizing::SIZED_TO_SCREEN, @game.sizing, "only the title changes the choice"

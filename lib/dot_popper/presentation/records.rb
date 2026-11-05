@@ -17,7 +17,7 @@ module DotPopper
     # and there is nothing to list.
     class RecordsSheet < Data.define(:bests, :totals, :goal, :scores, :empty, :notes)
       def self.build(stats, best:, words:, streak: 0, size_class: SizeClass::MEDIUM, field: nil,
-                     sizing: DotSizing::SAME_EVERYWHERE)
+                     sizing: DotSizing::STANDARD)
         labels = words.labels
         mine = stats.bests_in(size_class)
         bests = RecordSection.new(title: words.bests_heading(sizing), rows: [

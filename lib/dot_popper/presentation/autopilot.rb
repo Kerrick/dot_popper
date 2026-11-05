@@ -8,8 +8,10 @@ module DotPopper
     # and taps through game over back to the title. Given the Show, it
     # starts a round by popping one of the title's dots, copies every
     # other result, and on its second visit to the title looks at the
-    # Records screen for a while first. It sees only what a player sees:
-    # the dots and the screen.
+    # Records screen for a while first. The first time the title offers
+    # the choice of dot size, it taps the other one, so a run shows the
+    # title's dots change. It sees only what a player sees: the dots and
+    # the screen.
     class Autopilot
       # Where it looks for an uncovered part of the fresh dot: its centre,
       # then points around it, in radii.
@@ -24,6 +26,7 @@ module DotPopper
         @finales = 0
         @titles = 0
         @browsed = false
+        @resized = false
         @shared = false
       end
 
@@ -62,8 +65,19 @@ module DotPopper
 
       def title(game, show)
         return browse(show) if show && (show.records? || (@titles == 2 && !@browsed))
+        return choose_size(show) if show && !@resized && show.sizing_offered?
 
         press_once(@look.title_wait) { start(game, show) }
+      end
+
+      # Taps the choice of dot size not yet chosen, once, after half the
+      # title's wait; the title's own wait then starts again.
+      def choose_size(show)
+        return if @waited < @look.title_wait / 2
+
+        @resized = true
+        @waited = 0.0
+        middle(show.sizing_reaches.reject { |sizing, _| sizing == show.game.sizing }.first.last)
       end
 
       # Opens "Your records" once it is offered, and taps to go back after

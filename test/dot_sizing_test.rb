@@ -10,8 +10,8 @@ class DotSizingTest < Minitest::Test
   def test_the_same_size_everywhere_is_the_specs_fixed_radius
     phone = field(395, 850)
 
-    assert_same phone, DotSizing::SAME_EVERYWHERE.fit(phone)
-    assert_equal SizeClass::SMALL, DotSizing::SAME_EVERYWHERE.size_class(phone)
+    assert_same phone, DotSizing::STANDARD.fit(phone)
+    assert_equal SizeClass::SMALL, DotSizing::STANDARD.size_class(phone)
   end
 
   def test_sized_to_the_screen_fits_each_screens_radius_and_is_a_class_of_its_own
@@ -24,10 +24,10 @@ class DotSizingTest < Minitest::Test
   end
 
   def test_it_toggles_and_saves_and_reads_leniently
-    assert_equal DotSizing::SIZED_TO_SCREEN, DotSizing::SAME_EVERYWHERE.toggled
-    assert_equal DotSizing::SAME_EVERYWHERE, DotSizing::SIZED_TO_SCREEN.toggled
+    assert_equal DotSizing::SIZED_TO_SCREEN, DotSizing::STANDARD.toggled
+    assert_equal DotSizing::STANDARD, DotSizing::SIZED_TO_SCREEN.toggled
     assert_equal DotSizing::SIZED_TO_SCREEN, DotSizing.parse("#{DotSizing::SIZED_TO_SCREEN.to_text}\n")
-    assert_equal DotSizing::SAME_EVERYWHERE, DotSizing.parse(nil)
-    assert_equal DotSizing::SAME_EVERYWHERE, DotSizing.parse("huge")
+    assert_equal DotSizing::STANDARD, DotSizing.parse(nil)
+    assert_equal DotSizing::STANDARD, DotSizing.parse("huge")
   end
 end

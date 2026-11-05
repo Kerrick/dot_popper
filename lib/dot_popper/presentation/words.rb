@@ -10,7 +10,7 @@ module DotPopper
     # and rows, by what they count. +goals+ say each kind of DailyGoal as
     # the end of "Today's goal: ...", with %d for its target. +screen_size+
     # says how big a screen is, in dots, with %d for its width and height,
-    # and names the choices of dot size (DotSizing) and what they do.
+    # and names the choices of dot size (DotSizing) by what they do here.
     class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time, :covered,
                               :share, :copied, :records, :go_back, :no_rounds, :labels, :goals, :goal_done,
                               :goal_met, :screen_size)
@@ -98,7 +98,7 @@ module DotPopper
       # side, and, with the dots fitted to it, what that does.
       #
       #   This screen is about 12 dots wide and 8 dots tall.
-      #   Dots fit the screen, so scores compare across devices.
+      #   Dots are sized to fit this screen, so scores compare across devices.
       def screen_notes(field, sizing)
         [screen_here(field), (screen_size.fetch(:fitted_here) if sizing.sized_to_screen?)].compact
       end
@@ -114,8 +114,10 @@ module DotPopper
       end
 
       # The name of one choice of dot size, on its segment of the title's
-      # "Dot size" control: "Same everywhere" or "Fit the screen".
-      def sizing(sizing) = screen_size.fetch(sizing.sized_to_screen? ? :fitted_choice : :same_choice)
+      # "Dot size" control, said by what it does on this screen, as the
+      # +preview+ (SizingPreview) sees it: "Standard", and for dots sized
+      # to the screen "Smaller, more room" or "Bigger, less room".
+      def sizing(sizing, preview) = screen_size.fetch(sizing.sized_to_screen? ? preview.effect : :standard)
 
       # The control's label: "Dot size".
       def sizing_label = screen_size.fetch(:choice)

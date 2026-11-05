@@ -67,6 +67,26 @@ class AutopilotTest < Minitest::Test
     assert_equal 2, rounds
   end
 
+  # 800 by 600 fits smaller dots, so once a round has finished the title
+  # offers the choice, and the pilot switches it once.
+  def test_it_switches_the_dot_size_once_the_title_offers_it
+    game = DotPopper::Game.new(field, random: Random.new(4))
+    show = Show.new(game:, layout: layout, sounds: FakeSounds.new, radius: R)
+    pilot = Autopilot.new(Look::AUTOPILOT, random: Random.new(5))
+    rounds = 0
+    game.subscribe { rounds += 1 if it.is_a?(DotPopper::Events::RoundStarted) }
+    12_000.times do
+      x, y = pilot.update(1 / 60.0, game, show)
+      show.tap(x, y) if x
+      game.update(1 / 60.0)
+      show.update(1 / 60.0)
+      break if rounds >= 3
+    end
+
+    assert game.sizing.sized_to_screen?
+    assert_equal 3, rounds
+  end
+
   def test_it_taps_only_a_fresh_dot_it_can_see
     covered = dot(400, 300)
     round = round_with(dot(400, 300, popped: true), covered)

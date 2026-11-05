@@ -12,8 +12,8 @@
 # waits, and with a small chance per attempt it taps anyway and hits a
 # popped dot on top. Simulated at 30 updates a second.
 #
-# Every device plays with each choice of dot size (DotSizing): the same
-# size everywhere, as the spec has it, and sized to the screen. Each
+# Every device plays with each choice of dot size (DotSizing): the
+# standard size, as the spec has it, and sized to the screen. Each
 # pair plays in its own Ractor, in parallel, and then again one after
 # another, to show the two give the same rounds and how much sooner the
 # Ractors finish.
@@ -58,7 +58,7 @@ module Simulation
     def endless? = seconds > GIVE_UP
   end
 
-  SIZINGS = [DotPopper::DotSizing::SAME_EVERYWHERE, DotPopper::DotSizing::SIZED_TO_SCREEN].freeze
+  SIZINGS = [DotPopper::DotSizing::STANDARD, DotPopper::DotSizing::SIZED_TO_SCREEN].freeze
 
   # One device with one choice of dot size.
   Job = Data.define(:device, :sizing) do
@@ -171,7 +171,7 @@ module Simulation
   # field's area in square radii, and how its rounds went.
   def self.report(rounds, all_results)
     JOBS.zip(all_results).group_by { |job, _| job.sizing }.each do |sizing, rows|
-      puts sizing.sized_to_screen? ? "\nSized to the screen" : "\nSame size everywhere"
+      puts sizing.sized_to_screen? ? "\nDots sized to the screen" : "\nStandard dot size"
       puts format("%-26s %6s %6s %6s %6s %6s %7s %6s", "device", "R", "area", "score", "p90", "secs", "endless", "pen")
       rows.each { |job, results| report_row(job, results, rounds) }
     end
