@@ -6,8 +6,11 @@ module DotPopper
     # notes on the screen's size under it, the chart of the last scores,
     # the bests and totals as rows with their labels on the left and
     # their numbers lined up on the right, a faint dotted leader between,
-    # and the prompt to go back. Presentation::RecordsLayout decides where each
-    # goes; this only draws, on whole device pixels.
+    # the prompt to go back, and under it, in the corner, "Clear my
+    # records…" or, once they are cleared, Undo. While "Clear my records…"
+    # is held, the prompt says what will go, and a bar under it fills.
+    # Presentation::RecordsLayout decides where each goes; this only draws,
+    # on whole device pixels.
     class RecordsPainter < Data.define(:pen)
       G = ::Lota::Graphics
       DIM = 0.3 # how much of a bar shows when its round counts elsewhere
@@ -23,8 +26,8 @@ module DotPopper
         pen.text(words.records, pen.fonts.bold(plan.heading_size), layout.center_x, plan.heading_y, palette.cream)
         font = pen.fonts.semibold(plan.note_size)
         notes.each_with_index { |line, i| pen.text(line, font, layout.center_x, plan.note_y(i), palette.soft) }
-        pen.text(words.go_back, pen.fonts.bold(plan.prompt_size), layout.center_x, plan.prompt_y, palette.cream,
-                 show.marquee.prompt(show.now))
+        prompt(show, plan, layout)
+        corner(show, layout)
         return nothing_yet(words, layout, plan) if sheet.empty
 
         size = fit(plan)
@@ -50,6 +53,75 @@ module DotPopper
         font = pen.fonts.semibold(plan.note_size)
         room = layout.safe.width - (layout.margin * 2)
         sheet.notes.flat_map { |note| Presentation::Words.balance(note, room) { font.width(it) } }
+      end
+
+      # The prompt to go back, or while "Clear my records…" is held, what
+      # holding it will clear; and for a moment after a press let go too
+      # soon, that it must be held.
+      def prompt(show, plan, layout)
+        words = show.words
+        clearing = show.clearing
+        hint = pen.look::RECORDS_CLEAR.hint
+        ago = clearing.let_go_ago(show.now)
+        if clearing.held? then say(words.keep_holding(show.holding_button), plan, layout, 1.0)
+        elsif ago && ago < hint then say(words.hold_to_clear, plan, layout, ((hint - ago) / 0.5).clamp(0.0, 1.0))
+        else
+          pen.text(words.go_back, pen.fonts.bold(plan.prompt_size), layout.center_x, plan.prompt_y, pen.palette.cream,
+                   show.marquee.prompt(show.now))
+        end
+      end
+
+      # +text+ where the prompt goes, in a line or two that fit across.
+      def say(text, plan, layout, alpha)
+        font = pen.fonts.semibold(Presentation::Pixels.font_size(plan.prompt_size * 0.85))
+        lines = Presentation::Words.balance(text, layout.safe.width - (layout.margin * 2)) { font.width(it) }
+        lines.each_with_index do |line, i|
+          y = plan.prompt_y + ((i - ((lines.size - 1) / 2.0)) * font.height * 1.1)
+          pen.text(line, font, layout.center_x, y, pen.palette.cream, alpha)
+        end
+      end
+
+      # The bottom right corner: Undo while it is offered, or else "Clear
+      # my records…" while there are records to clear.
+      def corner(show, layout)
+        if (offer = show.undo_offer) then undo(show, offer, layout)
+        elsif show.clear_offered? then clear(show, layout)
+        end
+      end
+
+      # "Clear my records…", quiet in soft type, and while held, a bar
+      # under it that fills in the alarm's pink as the hold goes on.
+      def clear(show, layout)
+        rect = layout.clear_records_button
+        held = show.clearing.held?
+        PillButton.new(pen:).draw(rect, show.words.clear, alpha: held ? 1.0 : 0.8, color: pen.palette.soft)
+        return unless held
+
+        bar(rect, 1.0, pen.palette.soft, 0.25)
+        bar(rect, show.clearing.progress(show.now), pen.palette.alarm, 1.0)
+      end
+
+      # "Records cleared." beside Undo, and under Undo, a faint bar that
+      # empties as the time to undo runs out.
+      def undo(show, offer, layout)
+        rect = layout.undo_button
+        PillButton.new(pen:).draw(rect, show.words.undo)
+        font = pen.fonts.semibold(Presentation::Pixels.font_size(rect.height * 0.4))
+        text = show.words.cleared
+        pen.text(text, font, rect.x - layout.margin - (font.width(text) / 2.0), rect.center_y, pen.palette.soft)
+        bar(rect, offer.left(show.now), pen.palette.soft, 0.5)
+      end
+
+      # A bar under +rect+, +amount+ of its width from the left.
+      def bar(rect, amount, color, alpha)
+        return if amount <= 0.0
+
+        pixels = pen.pixels
+        x = pixels.snap(rect.x + (rect.height / 2.0))
+        width = pixels.snap((rect.width - rect.height) * amount)
+        pen.color(color, alpha)
+        G.rectangle(:fill, x, pixels.snap(rect.bottom + (rect.height * 0.12)), [width, pixels.line_width(1)].max,
+                    pixels.line_width(3))
       end
 
       def nothing_yet(words, layout, plan)

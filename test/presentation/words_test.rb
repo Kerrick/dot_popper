@@ -99,6 +99,18 @@ class WordsTest < Minitest::Test
                    "Wait for the bright dot to slide out, then pop it."]], said
   end
 
+  # Holding "Clear my records…" says what will go, and on a gamepad
+  # names the button being held.
+  def test_clearing_the_records_says_what_goes_and_names_the_button
+    mouse = Look::WORDS.for(InputKind::MOUSE)
+    pad = Look::WORDS.for(InputKind::GAMEPAD)
+
+    assert_equal "Keep holding to clear your bests, totals, chart, and goal streak.", mouse.keep_holding("A")
+    assert_equal "Keep holding Y to clear your bests, totals, chart, and goal streak.", pad.keep_holding("Y")
+    assert_equal ["Clear my records…", "Hold Y to clear my records…"], [mouse.clear, pad.clear]
+    assert_equal ["Undo", "Undo (Y)"], [mouse.undo, pad.undo]
+  end
+
   def test_a_computer_starts_with_the_mouse_and_a_phone_with_a_finger
     assert_equal InputKind::MOUSE, InputKind.starting(touch: false)
     assert_equal InputKind::TOUCH, InputKind.starting(touch: true)

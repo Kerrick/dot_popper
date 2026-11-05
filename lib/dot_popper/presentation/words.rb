@@ -16,8 +16,9 @@ module DotPopper
     # says how big a screen is, in dots, with %d for its width and height,
     # and names the choices of dot size (DotSizing) by what they do here.
     class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time, :covered,
-                              :share, :copied, :records, :go_back, :no_rounds, :labels, :goals, :goal_done,
-                              :goal_met, :screen_size, :legend, :input)
+                              :share, :copied, :records, :go_back, :no_rounds, :clear, :keep_holding,
+                              :hold_to_clear, :cleared, :undo, :labels, :goals, :goal_done, :goal_met,
+                              :screen_size, :legend, :input)
       MINUS = "−" # a true minus sign, as wide as the plus
       # How near a round must come to the best for Game Over to say by how
       # much; further off, the gap is only a number to dwell on.
@@ -51,6 +52,13 @@ module DotPopper
       def go_back = super.for(input)
       def covered = super.for(input)
       def legend = super.for(input)
+      def clear = super.for(input)
+      def hold_to_clear = super.for(input)
+      def undo = super.for(input)
+
+      # What the Records screen says while "Clear my records…" is held:
+      # on a gamepad, naming +button+, the one held ("A" or "Y").
+      def keep_holding(button) = super().for(input).sub("%s", button.to_s)
 
       # "Your best: 27".
       def best_line(best) = "#{self.best}: #{best}"

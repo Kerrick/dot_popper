@@ -94,6 +94,22 @@ module DotPopper
         Rect.new(x: safe.x + margin, y: safe.bottom - margin - height, width: height * 3.8, height:)
       end
 
+      # The Records screen's "Clear my records…": small, in the safe
+      # area's bottom right corner, across from where "Your records" was
+      # pressed, and on a row of its own under the prompt to go back.
+      def clear_records_button
+        height = button_size
+        width = [height * 4.6, safe.width - (2 * margin)].min
+        Rect.new(x: safe.right - margin - width, y: safe.bottom - margin - height, width:, height:)
+      end
+
+      # Undo, once the records are cleared, at the same corner.
+      def undo_button
+        height = button_size
+        width = height * 2.4
+        Rect.new(x: safe.right - margin - width, y: safe.bottom - margin - height, width:, height:)
+      end
+
       # The title's choice of dot size: its label, then its two segments,
       # each as tall as a button and wide enough for a dot icon and a few
       # words. The title shows it only where it changes something. With

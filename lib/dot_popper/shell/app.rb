@@ -37,6 +37,8 @@ module DotPopper
         @game = Game.new(screen, best: BestScore.new(SaveFile.new(name: "best_score.txt"), legacy:), random:,
                                  sizing: DotSizing.parse(sizing_store.read))
         puts "Dot Popper: dots are sized to the screen as each round starts" if @game.sizing.sized_to_screen?
+        lifetime = Lifetime.new(SaveFile.new(name: "lifetime.txt"), today:, legacy:)
+        keeper = RecordKeeper.new(best: @game.best, lifetime:, folder: ->(name) { SaveFile.new(name:) })
         @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
         @speaker = Speaker.new(Look::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Look::SOUND.volume)
         @show = Presentation::Show.new(game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,
@@ -44,8 +46,7 @@ module DotPopper
                                        tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt"),
                                                                     times: Look::LESSON.times),
                                        haptics: Haptics.for(os), clipboard: Clipboard.new,
-                                       lifetime: Lifetime.new(SaveFile.new(name: "lifetime.txt"), today:, legacy:),
-                                       sizing_store:, input: starting_input, measure: FontMeasure.new(@pen.fonts),
+                                       lifetime:, keeper:, sizing_store:, input: starting_input, measure: FontMeasure.new(@pen.fonts),
                                        hint: -> { @tilting&.hint&.for(@show.input) })
         @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
                                         archive: ->(name) { SaveFile.new(name:) }))
@@ -117,8 +118,9 @@ module DotPopper
       end
 
       def mouse_released(x, y, button, istouch)
-        point = @input.mouse_released(x, y, button, istouch)
-        @dragging.release(:mouse, point.x, point.y) if point
+        point = @input.mouse_released(x, y, button, istouch) or return
+        @show.let_go(:mouse)
+        @dragging.release(:mouse, point.x, point.y)
       end
 
       def touch_pressed(id, x, y, devicetype, mouse)
@@ -132,14 +134,19 @@ module DotPopper
       end
 
       def touch_released(id, x, y, devicetype, mouse)
-        point = @input.touch_released(id, x, y, devicetype, mouse)
-        @dragging.release(id, point.x, point.y) if point
+        point = @input.touch_released(id, x, y, devicetype, mouse) or return
+        @show.let_go(id)
+        @dragging.release(id, point.x, point.y)
       end
 
       # The window lost focus or got it back. A finger or button let go
-      # meanwhile is never heard, so the pile's dots are let go now.
+      # meanwhile is never heard, so the pile's dots are let go now, and
+      # so is "Clear my records…".
       def focus(focused)
-        @dragging.drop unless focused
+        return if focused
+
+        @dragging.drop
+        @show.let_go_of_everything
       end
 
       # A gamepad button went down (Lota 0.1.3 and newer). Any button shows
@@ -149,7 +156,7 @@ module DotPopper
         case @buttons.intent(button)
         in :press then gamepad_down(:a)
         in :start then @show.start
-        in :share then @show.share
+        in :share then @show.records? ? @show.clear_or_undo(:y) : @show.share
         in :records then @show.open_records if @show.records_offered?
         in :leave then @show.back
         in :mute then @speaker.toggle_mute
@@ -159,9 +166,14 @@ module DotPopper
       end
 
       # A gamepad button came up. Letting go of A ends its press, which on
-      # Game Over throws a dragged dot, or goes on, as a click does.
+      # Game Over throws a dragged dot, or goes on, as a click does; letting
+      # go of Y ends a hold of "Clear my records…".
       def gamepad_released(button)
-        gamepad_up(:a) if @buttons.intent(button) == :press
+        case @buttons.intent(button)
+        in :press then gamepad_up(:a)
+        in :share then @show.let_go(:y)
+        else nil
+        end
       end
 
       # A gamepad's axis moved. The right trigger presses and lets go as A
@@ -226,7 +238,9 @@ module DotPopper
 
       private
 
-      def tap(x, y) = @show.tap(x, y)
+      # A press at +x+, +y+, by +by+ (a finger's id, :mouse, :gamepad, or
+      # the autopilot), which its release names too.
+      def tap(x, y, by = :autopilot) = @show.tap(x, y, by:)
 
       # Tells the Show what made +tap+, if anything did, so its words name
       # that press. Returns +tap+.
@@ -254,7 +268,7 @@ module DotPopper
       # Over, where it may become a drag.
       def press(key, tap)
         return unless tap
-        return tap(tap.x, tap.y) unless @show.waits_for_release?(tap.x, tap.y)
+        return tap(tap.x, tap.y, key) unless @show.waits_for_release?(tap.x, tap.y)
 
         @dragging.press(key, tap.x, tap.y)
       end
@@ -302,6 +316,7 @@ module DotPopper
         return unless @pad_held.delete(source) && @pad_held.empty?
 
         point = @input.gamepad_released(@cursor)
+        @show.let_go(:gamepad)
         @dragging.release(:gamepad, point.x, point.y)
       end
 

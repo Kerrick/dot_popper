@@ -39,6 +39,19 @@ module DotPopper
         go_back: ByInput.new(touch: "Tap anywhere to go back", mouse: "Click anywhere to go back",
                              gamepad: "Press B to go back"),
         no_rounds: "Play a round, and your records will appear here.",
+        clear: ByInput.new(touch: "Clear my records…", mouse: "Clear my records…",
+                           gamepad: "Hold Y to clear my records…"),
+        keep_holding: ByInput.new(
+          touch: "Keep holding to clear your bests, totals, chart, and goal streak.",
+          mouse: "Keep holding to clear your bests, totals, chart, and goal streak.",
+          gamepad: "Keep holding %s to clear your bests, totals, chart, and goal streak."
+        ),
+        hold_to_clear: ByInput.new(
+          touch: "Press and hold to clear your bests, totals, chart, and goal streak.",
+          mouse: "Press and hold to clear your bests, totals, chart, and goal streak.",
+          gamepad: "Hold Y to clear your bests, totals, chart, and goal streak."
+        ),
+        cleared: "Records cleared.", undo: ByInput.new(touch: "Undo", mouse: "Undo", gamepad: "Undo (Y)"),
         labels: {
           bests: "Your bests with standard dots on screens this size",
           fitted_bests: "Your bests with dots sized to the screen",
@@ -77,6 +90,12 @@ module DotPopper
       # the title's dots dim behind it. A column is only as wide as its
       # longest row needs, so each label stays near its number.
       RECORDS = RecordsLook.new(heading: 48, text: 23, line: 1.6, chart: 4.2, gap: 56, column: 520, veil: 0.9)
+
+      # Clearing the records, from the Records screen: "Clear my records…"
+      # is held for two seconds, never only tapped, and Undo is offered
+      # for ten after. A press let go too soon leaves its hint, to hold
+      # it, for a moment.
+      RECORDS_CLEAR = ClearLook.new(hold: 2.0, undo: 10.0, hint: 2.5)
 
       # The stacking rule, taught on the first two Game Overs after a wrong
       # tap that had the bright dot hidden under the popped one.

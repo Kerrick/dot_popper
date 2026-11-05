@@ -15,7 +15,8 @@ module DotPopper
     # DotSizing, chosen on the title. +radius+ is the usual dot's, which
     # sizes the buttons' reach; a round's effects follow its own dots.
     # +input+ (InputKind) is what the player last pressed with, and the
-    # words follow it. +measure+ sizes the screens' words (RoughMeasure's
+    # words follow it. +keeper+ (RecordKeeper) clears the records, from
+    # the Records screen, and puts them back. +measure+ sizes the screens' words (RoughMeasure's
     # methods), and +hint+ gives Game Over's line on playing with the
     # pile, or nil.
     class Show
@@ -23,12 +24,13 @@ module DotPopper
       SIZINGS = [DotSizing::STANDARD, DotSizing::SIZED_TO_SCREEN].freeze
 
       attr_reader :game, :effects, :animations, :hud, :attract, :layout, :marquee, :finale, :sounds, :now, :look,
-                  :lifetime, :input, :words
+                  :lifetime, :input, :words, :clearing
 
       def initialize(game:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false,
                      tutor: Tutor.new(BestScore::Memory.new, times: look::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
                      lifetime: Lifetime.new(BestScore::Memory.new), sizing_store: BestScore::Memory.new,
-                     input: InputKind::MOUSE, measure: RoughMeasure.new, hint: -> {})
+                     input: InputKind::MOUSE, measure: RoughMeasure.new, hint: -> {},
+                     keeper: RecordKeeper.new(best: game.best, lifetime:))
         @game = game
         @measure = measure
         @hint = hint
@@ -56,6 +58,9 @@ module DotPopper
         @penalized_at = -Float::INFINITY
         @recorder = RoundStats::Recorder.new
         @records = nil
+        @keeper = keeper
+        @clearing = HoldToConfirm.idle(look::RECORDS_CLEAR.hold)
+        @undo = nil
         game.subscribe(@recorder)
         game.subscribe(self)
       end
@@ -85,10 +90,23 @@ module DotPopper
       # What the Records screen shows, while it is open.
       def records = @records
 
-      # Whether the title offers "Your records" and today's goal: only once
-      # a round has finished, so a first-time player's title says only how
-      # to play.
-      def records_offered? = lifetime.stats.rounds.positive?
+      # Whether the title offers "Your records" and the choice of dot size:
+      # only once a round has finished, so a first-time player's title says
+      # only how to play. A player who cleared their records has played, so
+      # it still offers them, though it shows no best or goal until their
+      # next round (#played?).
+      def records_offered? = played? || @keeper.cleared?
+
+      # Whether a round has finished since the records were last cleared:
+      # the title shows today's goal only then.
+      def played? = lifetime.stats.rounds.positive?
+
+      # Whether the Records screen offers "Clear my records…": while it has
+      # records to clear, and no Undo is offered.
+      def clear_offered? = records? && !records.empty && !undo_offer
+
+      # Undo, while it is offered on the Records screen (UndoOffer), or nil.
+      def undo_offer = (@undo if records?)
 
       # What the choice of dot size would do on this screen, worked out
       # afresh each time, so a resized window is always seen as it is now.
@@ -101,13 +119,16 @@ module DotPopper
       def playing? = game.state.is_a?(Game::Playing)
       def finished? = game.state.is_a?(Game::GameOver)
 
-      # A tap anywhere. On the title, the mute button, "Your records", and
-      # the dot-size choice take their own taps, as "Copy my result" does on Game Over, and on
-      # the Records screen a tap anywhere goes back; every other tap goes
-      # to the game at once. A tap on one of the title's fresh dots also
-      # pops it, as the round starts.
-      def tap(x, y)
-        if records? then close_records
+      # A tap anywhere, by +by+ (a finger's id, :mouse, or :gamepad), which
+      # #let_go names when it lets go. On the title, the mute button, "Your
+      # records", and the dot-size choice take their own taps, as "Copy my
+      # result" does on Game Over. On the Records screen, a press on "Clear
+      # my records…" starts holding it, and one on Undo undoes, and a tap
+      # anywhere else goes back. Every other tap goes to the game at once.
+      # A tap on one of the title's fresh dots also pops it, as the round
+      # starts.
+      def tap(x, y, by: :tap)
+        if records? then records_tap(x, y, by)
         elsif title? && layout.mute_button.contains?(x, y) then sounds.toggle_mute
         elsif title? && records_offered? && records_reach.contains?(x, y) then open_records
         elsif title? && sizing_offered? && (sizing = sizing_at(x, y)) then choose_sizing(sizing)
@@ -168,16 +189,39 @@ module DotPopper
       def open_records
         return unless title?
 
-        size_class = game.size_class
-        @records = RecordsSheet.build(lifetime.stats, best: game.best.of(size_class), words:, streak: lifetime.streak,
-                                      size_class:, field: game.field, sizing: game.sizing)
+        @records = records_sheet
         sounds.play(:tick)
       end
 
       def close_records
         @records = nil
+        @clearing = clearing.cancel
         sounds.play(:tick, pitch: 0.8)
       end
+
+      # A gamepad's Y on the Records screen, held by +by+: Undo while it is
+      # offered, or else the start of holding "Clear my records…".
+      def clear_or_undo(by)
+        return undo if undo_offer
+
+        hold_clear(by) if clear_offered?
+      end
+
+      # +by+ (as #tap names it) let go. A hold of "Clear my records…" it
+      # made ends, with nothing cleared, if it was let go too soon.
+      def let_go(by) = @clearing = clearing.release(by, now)
+
+      # Whatever holds "Clear my records…" stops, with nothing cleared, as
+      # when the window loses focus and a release may never be heard.
+      def let_go_of_everything = @clearing = clearing.cancel
+
+      # Where a press reaches "Clear my records…" and Undo on the Records
+      # screen, as the title's buttons do.
+      def clear_reach = within_safe(layout.clear_records_button.reach(2 * @radius))
+      def undo_reach = within_safe(layout.undo_button.reach(2 * @radius))
+
+      # The gamepad button that holds "Clear my records…", for its words.
+      def holding_button = clearing.by == :y ? "Y" : "A"
 
       # A gamepad's Y, or a tap on "Copy my result": on Game Over, copies
       # the round's result to share. Anywhere else it does nothing.
@@ -205,7 +249,7 @@ module DotPopper
 
       # Where the title's words and buttons go (TitlePlan).
       def title_plan
-        goal = lifetime.goal_done? ? words.goal_done_line(lifetime.goal) : words.goal(lifetime.goal) if records_offered?
+        goal = lifetime.goal_done? ? words.goal_done_line(lifetime.goal) : words.goal(lifetime.goal) if played?
         TitleScreen.new(layout:, type: look::TYPE, words:, measure: @measure, best: marquee.best, goal:,
                         done: lifetime.goal_done?, streak: lifetime.streak, records: records_offered?,
                         sizing: sizing_offered?).plan
@@ -232,6 +276,8 @@ module DotPopper
 
       def update(seconds)
         @now += seconds
+        clear_records if clearing.done?(now)
+        @undo = nil unless @undo&.open?(now)
         effects.update(seconds)
         @attract = attract.update(seconds) if title?
         @hud = hud.read(game.round, now) { tick(it) if playing? } if game.round
@@ -251,6 +297,48 @@ module DotPopper
       end
 
       private
+
+      def records_tap(x, y, by)
+        if undo_offer && undo_reach.contains?(x, y) then undo
+        elsif clear_offered? && clear_reach.contains?(x, y) then hold_clear(by)
+        else close_records
+        end
+      end
+
+      def hold_clear(by)
+        @clearing = clearing.press(by, now)
+        sounds.play(:tick, pitch: 0.7)
+      end
+
+      # "Clear my records…" was held long enough: the records go, and Undo
+      # is offered.
+      def clear_records
+        @clearing = clearing.cancel
+        @undo = UndoOffer.new(cleared: @keeper.clear, at: now, seconds: look::RECORDS_CLEAR.undo)
+        records_changed
+        sounds.play(:bonk, pitch: 0.7)
+        @haptics.buzz(look::HAPTICS.penalty)
+      end
+
+      def undo
+        @keeper.restore(@undo.cleared)
+        @undo = nil
+        records_changed
+        sounds.play(:tick, pitch: 1.2)
+      end
+
+      # The records changed under the Records screen: it, and the title's
+      # best, show them as they are now.
+      def records_changed
+        @records = records_sheet if records?
+        @marquee = marquee.with(best: game.best.of(game.size_class))
+      end
+
+      def records_sheet
+        size_class = game.size_class
+        RecordsSheet.build(lifetime.stats, best: game.best.of(size_class), words:, streak: lifetime.streak,
+                           size_class:, field: game.field, sizing: game.sizing)
+      end
 
       # The dot-size choice whose segment a tap at +x+, +y+ reaches, or nil.
       def sizing_at(x, y) = sizing_reaches.find { |_, reach| reach.contains?(x, y) }&.first
@@ -273,6 +361,7 @@ module DotPopper
         event.round.dots.each { animations.spawn(it.id, now) }
         @finale = nil
         @hid_fresh = false
+        @undo = nil # the round's records would be lost to an undo
         sounds.play(:start)
       end
 
@@ -317,6 +406,7 @@ module DotPopper
 
       def title_shown(event)
         @records = nil
+        @clearing = clearing.cancel
         effects.clear
         @finale = nil
         @marquee = Marquee.new(look: look::TITLE, best: event.best, at: now)
