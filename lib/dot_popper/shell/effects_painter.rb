@@ -24,8 +24,8 @@ module DotPopper
         return flat_flash(effects.flash.color, alpha, width, height, band) unless pen.shader?(:edge)
 
         pen.shading(:edge) do |shader|
-          pen.send(shader, "size", [width.to_f, height.to_f])
-          pen.send(shader, "band", band)
+          pen.uniform(shader, "size", [width.to_f, height.to_f])
+          pen.uniform(shader, "band", band)
           pen.color(effects.flash.color, alpha)
           pen.square(width / 2.0, height / 2.0, width / 2.0, height / 2.0)
         end
@@ -67,7 +67,7 @@ module DotPopper
         return if floaters.empty?
 
         font = pen.fonts.bold(layout.scaled(pen.look::TYPE.floater))
-        floaters.each { pen.outlined(it.text, font, it.x, it.height(now), it.color, it.alpha(now)) }
+        floaters.each { pen.outlined(it.text, font, it.x, it.y_at(now), it.color, it.alpha(now)) }
       end
 
       # Strips along each edge, fainter toward the middle.

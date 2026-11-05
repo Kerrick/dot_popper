@@ -14,7 +14,7 @@ module DotPopper
     class Floater < Data.define(:text, :x, :y, :color, :look, :scale, :born)
       def alive?(now) = now - born < look.life
 
-      def height(now) = y - (look.rise_tween.at(now - born) * scale)
+      def y_at(now) = y - (look.rise_tween.at(now - born) * scale)
 
       # Fully there for its first third, then gone quickly.
       def alpha(now)

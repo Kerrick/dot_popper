@@ -77,7 +77,7 @@ module DotPopper
 
       # A shader's uniform, if the shader uses it (a GPU compiler drops one
       # that does not count).
-      def send(shader, name, value) = shader.uniform?(name) && shader.send(name, value)
+      def uniform(shader, name, value) = shader.uniform?(name) && shader.send(name, value)
 
       def rgb(color) = [color.r, color.g, color.b]
 
@@ -94,14 +94,14 @@ module DotPopper
         if (dot = @shaders[:dot])
           look::DOT.then do |sizes|
             { "extent" => sizes.extent, "shadow_offset" => sizes.shadow_offset, "shadow_alpha" => sizes.shadow_alpha,
-              "halo_alpha" => sizes.halo_alpha }.each { |name, value| send(dot, name, value) }
+              "halo_alpha" => sizes.halo_alpha }.each { |name, value| uniform(dot, name, value) }
           end
           %i[fresh_light fresh_body fresh_deep fresh_bounce gloss halo popped_top popped_bottom popped_rim
-             popped_crater popped_lip shadow alarm].each { send(dot, it.to_s, rgb(palette.public_send(it))) }
+             popped_crater popped_lip shadow alarm].each { uniform(dot, it.to_s, rgb(palette.public_send(it))) }
         end
         return unless (backdrop = @shaders[:backdrop])
 
-        %i[ink_top ink_bottom ink_glow ink_edge].each { send(backdrop, it.to_s, rgb(palette.public_send(it))) }
+        %i[ink_top ink_bottom ink_glow ink_edge].each { uniform(backdrop, it.to_s, rgb(palette.public_send(it))) }
       end
     end
   end

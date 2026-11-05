@@ -79,7 +79,7 @@ class EffectsTest < Minitest::Test
     floater = @effects.float("+1", 100, 200, Look::PALETTE.cream, Look::GAIN_FLOAT)
     later = @effects.now + Look::GAIN_FLOAT.life * 0.9
 
-    assert_operator floater.height(later), :<, 200
+    assert_operator floater.y_at(later), :<, 200
     assert_operator floater.alpha(later), :<, floater.alpha(@effects.now)
   end
 

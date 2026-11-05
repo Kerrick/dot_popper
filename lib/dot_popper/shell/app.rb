@@ -10,6 +10,11 @@ module DotPopper
       Look = Presentation::Look
       TOUCH_SYSTEMS = %w[iOS Android].freeze
       SMALLEST_WINDOW = [400, 320].freeze
+      # The most time one frame may pass on to the rules. A frame that took
+      # longer, because the window was dragged, the app was in the
+      # background, or the computer stalled, did not give the player that
+      # time to play, so it must not take it off the clock either.
+      LONGEST_FRAME = 0.1
 
       def initialize(env = ENV)
         @env = env
@@ -35,6 +40,7 @@ module DotPopper
       end
 
       def update(seconds)
+        seconds = seconds.clamp(0.0, LONGEST_FRAME)
         if @autopilot
           x, y = @autopilot.update(seconds, @game)
           tap(x, y) if x

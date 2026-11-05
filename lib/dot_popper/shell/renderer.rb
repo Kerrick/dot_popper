@@ -58,7 +58,7 @@ module DotPopper
         return flat_backdrop(width, height) unless @pen.shader?(:backdrop)
 
         @pen.shading(:backdrop) do |shader|
-          @pen.send(shader, "size", [width.to_f, height.to_f])
+          @pen.uniform(shader, "size", [width.to_f, height.to_f])
           G.color = [1, 1, 1, 1]
           @pen.square(width / 2.0, height / 2.0, width / 2.0, height / 2.0)
         end
