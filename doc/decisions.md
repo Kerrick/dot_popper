@@ -77,3 +77,16 @@ columns against each other, not as predictions of a person's score.
   (`DOT_POPPER_NO_SHADERS=1` forces this). Lota's CI drew the fused Windows
   build's title with Mesa's software OpenGL, shaders and all; no real Windows
   GPU has run it yet.
+
+## Showing off LÖVE's engine
+
+- **At game over the dots tumble into a pile, with Box2D.** Once time is up the
+  rules are frozen and the dots are scenery, so `Shell::Pile` hands each one to
+  a `Lota::Physics::World` as a ball of radius R, where it was and going as it
+  went, between the window's floor and sides (open at the top). It falls behind
+  the dimmed score and settles in about two seconds, and a new round or the
+  title throws the world away; nothing in it can touch the score or the clock.
+  One Box2D meter is 2 R, so a dot is a ball half a meter across, the size
+  Box2D is tuned for. Each step is at most 1/30 s. `DOT_POPPER_CALM=1` makes it
+  a slow, soft settle with no bounce. The autoplay bot waits 3.2 s at game over,
+  not 1.8 s, so captures show the pile settled.

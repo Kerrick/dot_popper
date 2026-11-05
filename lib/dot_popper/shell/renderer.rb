@@ -3,15 +3,16 @@
 module DotPopper
   module Shell
     # Draws a frame of the Show, straight to the window at its own
-    # resolution: the night behind, the edge glow, the dots, the effects
-    # over them, and the screen's words and HUD on top. Only the HUD
-    # shakes.
+    # resolution: the night behind, the edge glow, the dots (tumbling
+    # into the Pile after time's up), the effects over them, and the
+    # screen's words and HUD on top. Only the HUD shakes.
     class Renderer
       G = ::Lota::Graphics
 
-      def initialize(show, pen)
+      def initialize(show, pen, pile:)
         @show = show
         @pen = pen
+        @pile = pile
         @dots = DotPainter.new(pen:)
         @effects = EffectsPainter.new(pen:)
         @hud = HudPainter.new(pen:)
@@ -33,7 +34,7 @@ module DotPopper
           field
           unless @show.playing?
             veil(width, height, @show.finale&.dim(@show.now).to_f)
-            @effects.draw(@show.effects, layout, @show.game.round&.dots)
+            @effects.draw(@show.effects, layout, dots)
             @finale.draw(@show, layout)
           end
           hud(layout)
@@ -46,9 +47,13 @@ module DotPopper
 
       def field
         round = @show.game.round or return
-        @dots.draw(round.dots, @show.animations, @show.now, round.field.radius)
-        @effects.draw(@show.effects, @show.layout, round.dots) if @show.playing?
+        @dots.draw(dots, @show.animations, @show.now, round.field.radius)
+        @effects.draw(@show.effects, @show.layout, dots) if @show.playing?
       end
+
+      # The round's dots where they are drawn: where the rules put them, or
+      # after time's up, wherever they have tumbled to in the Pile.
+      def dots = @pile.stack || @show.game.round&.dots
 
       # The score and clock, on top of everything, through Game Over too,
       # so a round ended by a penalty is seen to reach 0. After a wrong tap

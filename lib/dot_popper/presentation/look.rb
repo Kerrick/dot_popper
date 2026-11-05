@@ -126,6 +126,13 @@ module DotPopper
         sparkle_life: 1.4
       )
 
+      # After time's up, the round's dots tumble into a pile behind the
+      # score, dimmed (Shell::Pile, with Box2D). A calm pile
+      # (DOT_POPPER_CALM) falls slowly and settles without a bounce.
+      PILE = PileLook.new(meter: 2.0, gravity: 20.0, restitution: 0.35, friction: 0.4, density: 1.0, damping: 0.05,
+                          fling: 1.0, longest_step: 1 / 30.0)
+      CALM_PILE = PILE.with(gravity: 8.0, restitution: 0.0, friction: 0.8, damping: 2.5, fling: 0.25)
+
       # Sound: the pop climbs a little with the score, up to a cap.
       class SoundLook < Data.define(:pop_climb, :pop_highest, :tick_climb, :volume); end
       SOUND = SoundLook.new(pop_climb: 0.02, pop_highest: 1.4, tick_climb: 0.12, volume: 0.8)
@@ -172,7 +179,7 @@ module DotPopper
       # each screen, how long it thinks before each tap (which grows with
       # the score, so a round ends), and how often it taps a popped dot.
       class AutopilotLook < Data.define(:title_wait, :finale_wait, :think, :tiring, :mistakes); end
-      AUTOPILOT = AutopilotLook.new(title_wait: 1.6, finale_wait: 1.8, think: 0.22..0.45, tiring: 0.07,
+      AUTOPILOT = AutopilotLook.new(title_wait: 1.6, finale_wait: 3.2, think: 0.22..0.45, tiring: 0.07,
                                     mistakes: 0.2)
     end
   end

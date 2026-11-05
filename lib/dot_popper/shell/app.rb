@@ -25,8 +25,10 @@ module DotPopper
         @speaker = Speaker.new(Look::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Look::SOUND.volume)
         @show = Presentation::Show.new(game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"))
+        @pile = Pile.new(flag?("DOT_POPPER_CALM") ? Look::CALM_PILE : Look::PILE)
+        @game.subscribe(@pile)
         @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
-        @renderer = Renderer.new(@show, @pen)
+        @renderer = Renderer.new(@show, @pen, pile: @pile)
         @renderer.prepare
         @input = Presentation::InputRouter.new
         @autopilot = Presentation::Autopilot.new(Look::AUTOPILOT) if flag?("DOT_POPPER_AUTOPLAY")
@@ -42,6 +44,7 @@ module DotPopper
         end
         @game.update(seconds)
         @show.update(seconds)
+        @pile.update(seconds)
         development(seconds)
       end
 
@@ -73,6 +76,7 @@ module DotPopper
         @pen.refresh
         @game.field = field
         @show.resize(layout, @game.field)
+        @pile.refit(@game.field)
         @renderer.prepare
       end
 
