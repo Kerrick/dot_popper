@@ -5,8 +5,8 @@ module DotPopper
     # Draws a frame of the Show, straight to the window at its own
     # resolution: the night behind, the edge glow, the dots (tumbling
     # into the Pile after time's up) over the Bloom's glow, the effects
-    # over them, and the screen's words and HUD on top. Only the HUD
-    # shakes.
+    # over them, the screen's words and HUD on top, and over everything,
+    # the gamepad's cursor when it shows. Only the HUD shakes.
     class Renderer
       G = ::Lota::Graphics
 
@@ -21,10 +21,11 @@ module DotPopper
         @hint = HintPainter.new(pen:)
         @title = TitlePainter.new(pen:, dots: @dots)
         @finale = FinalePainter.new(pen:)
+        @cursor = CursorPainter.new(pen:)
         @at_rest = Presentation::DotAnimations.new(pen.look::MOTION)
       end
 
-      def draw
+      def draw(cursor)
         width, height = G.dimensions
         layout = @show.layout
         backdrop(width, height)
@@ -42,6 +43,7 @@ module DotPopper
           @finale.draw(@show, layout) unless @show.playing?
           hud(layout)
         end
+        @cursor.draw(cursor)
       end
 
       private

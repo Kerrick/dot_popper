@@ -60,12 +60,28 @@ module DotPopper
       # dots also pops it, as the round starts.
       def tap(x, y)
         if title? && layout.mute_button.contains?(x, y) then sounds.toggle_mute
-        elsif title? && daily_reach.contains?(x, y) then game.choose(Mode.daily(today))
-        elsif finished? && finale&.daily? && share_reach.contains?(x, y) then share
+        elsif title? && daily_reach.contains?(x, y) then play_daily
+        elsif finished? && shareable? && share_reach.contains?(x, y) then share
         else
           scenery = attract.dots.top_at(x, y) if title?
           game.press(x, y)
           toy_pop(scenery, x, y) if scenery&.fresh?
+        end
+      end
+
+      # A gamepad's Start: on the title it starts the usual round, and
+      # after one it continues, as a tap on empty space would, grace and
+      # all; where it presses does not matter on either screen. In a round
+      # it does nothing, since only a press at a place may touch the score.
+      def start
+        game.press(layout.center_x, layout.center_y) unless playing?
+      end
+
+      # A gamepad's Y: the Daily button's press on the title, and Share's
+      # after a daily round. Anywhere else it does nothing.
+      def daily
+        if title? then play_daily
+        elsif finished? && shareable? then share
         end
       end
 
@@ -160,6 +176,9 @@ module DotPopper
         effects.ring(dot.x, dot.y, look::SHOCKWAVE)
         sounds.play(:pop, pan: pan(x))
       end
+
+      def play_daily = game.choose(Mode.daily(today))
+      def shareable? = finale&.daily?
 
       def share
         @clipboard.copy(words.share_text(finale.date, finale.score, finale.stats))

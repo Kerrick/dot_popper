@@ -77,6 +77,58 @@ class ShowTest < Minitest::Test
     assert @show.title?
   end
 
+  def test_a_gamepads_start_begins_the_usual_round_without_popping_a_title_dot
+    @show.start
+
+    assert @show.playing?
+    assert_equal :free, @game.state.mode.name
+    assert_equal [:start], @sounds.names
+  end
+
+  def test_start_does_nothing_in_a_round
+    @show.start
+    score = @game.round.score
+    clock = @game.round.countdown
+    @show.start
+
+    assert @show.playing?
+    assert_equal [score, clock], [@game.round.score, @game.round.countdown]
+  end
+
+  def test_start_continues_from_game_over_after_the_grace
+    @show.start
+    @game.update(20)
+    @show.start
+    assert @show.finished?, "the grace still holds"
+
+    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @show.start
+    assert @show.title?
+  end
+
+  def test_a_gamepads_y_plays_the_daily_and_then_shares_it
+    @show.daily
+    assert_equal DotPopper::Mode.daily(DAY), @game.state.mode
+
+    @show.daily
+    assert @show.playing?, "Y does nothing in a round"
+    @game.update(20)
+    @show.update(0.1)
+    @show.daily
+    assert @show.finished?
+    assert_match(/\ADot Popper Daily · 2026-11-05/, @clipboard.text)
+  end
+
+  def test_y_after_a_free_round_does_nothing
+    @show.start
+    @game.update(20)
+    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @show.daily
+
+    assert @show.finished?
+    assert_nil @clipboard.text
+  end
+
   def test_any_other_tap_reaches_the_game_at_once
     @show.tap(10, 10)
 

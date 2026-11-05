@@ -4,8 +4,9 @@ module DotPopper
   module Shell
     # The game running in Lota's window. main.rb hands each of Lota's
     # callbacks to one of these methods. Each frame, taps go to the game
-    # first, on the frame they happen; then the rules move on; then the
-    # Show catches up; then the Renderer draws it.
+    # first, on the frame they happen; then the gamepad cursor moves and
+    # the rules move on; then the Show catches up; then the Renderer
+    # draws it.
     class App
       Look = Presentation::Look
       PLAYTEST_LOG = "rounds.csv"
@@ -39,6 +40,11 @@ module DotPopper
         @renderer = Renderer.new(@show, @pen, pile: @pile, sparks: @sparks, bloom: @bloom)
         @renderer.prepare
         @input = Presentation::InputRouter.new
+        @gamepads = Gamepads.new
+        @buttons = Presentation::GamepadButtons.new
+        @trigger = Presentation::Trigger.released
+        @cursor = Presentation::GamepadCursor.centered(@show.layout.whole, look: Look::GAMEPAD,
+                                                       radius: @dot_size.radius)
         @autopilot = Presentation::Autopilot.new(Look::AUTOPILOT) if flag?("DOT_POPPER_AUTOPLAY")
         @shots = Presentation::ShotSchedule.parse(@env["DOT_POPPER_SHOTS"])
         @quit_after = Float(@env.fetch("DOT_POPPER_QUIT_AFTER", ""), exception: false)
@@ -46,6 +52,7 @@ module DotPopper
 
       def update(seconds)
         seconds = seconds.clamp(0.0, Rules::LONGEST_FRAME)
+        @cursor = @cursor.update(seconds, @gamepads.stick)
         if @autopilot
           x, y = @autopilot.update(seconds, @game, @show)
           tap(x, y) if x
@@ -57,17 +64,49 @@ module DotPopper
         development(seconds)
       end
 
-      def draw = @renderer.draw
+      def draw = @renderer.draw(@cursor)
 
       def mouse_pressed(x, y, button, istouch)
+        @cursor = @cursor.hide(x, y)
         tap = @input.mouse_pressed(x, y, button, istouch)
         tap(tap.x, tap.y) if tap
       end
 
+      def mouse_moved(x, y) = @cursor = @cursor.hide(x, y)
+
       def touch_pressed(id, x, y, devicetype, mouse)
+        @cursor = @cursor.hide
         tap = @input.touch_pressed(id, x, y, devicetype, mouse)
         tap(tap.x, tap.y) if tap
       end
+
+      # A gamepad button went down (Lota 0.1.3 and newer). Any button shows
+      # the cursor; GamepadButtons says what each one asks for.
+      def gamepad_pressed(button)
+        @cursor = @cursor.show
+        case @buttons.intent(button)
+        in :press then gamepad_tap
+        in :start then @show.start
+        in :daily then @show.daily
+        in :mute then @speaker.toggle_mute
+        in nil then nil
+        end
+      end
+
+      # A gamepad's axis moved. The right trigger presses as A does; the
+      # sticks are read each frame instead (Gamepads).
+      def gamepad_axis(axis, value)
+        return unless axis.to_s == "triggerright"
+
+        @trigger = @trigger.pull(value.to_f, Look::GAMEPAD)
+        return unless @trigger.pressed
+
+        @cursor = @cursor.show
+        gamepad_tap
+      end
+
+      # A gamepad was unplugged: let its trigger go.
+      def gamepad_removed = @trigger = Presentation::Trigger.released
 
       def key_pressed(key)
         case key
@@ -89,11 +128,17 @@ module DotPopper
         @show.resize(layout, @game.field)
         @pile.refit(@game.field)
         @renderer.prepare
+        @cursor = @cursor.refit(@show.layout.whole)
       end
 
       private
 
       def tap(x, y) = @show.tap(x, y)
+
+      def gamepad_tap
+        tap = @input.gamepad_pressed(@cursor)
+        tap(tap.x, tap.y)
+      end
 
       def open_window
         size = Look::WINDOW.size_for(*::Lota::Window.desktop_dimensions, @dot_size.radius)

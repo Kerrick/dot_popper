@@ -7,7 +7,9 @@
 #
 # Controls: tap or click a dot. F11, or Alt+Enter (Cmd+Enter on a Mac),
 # toggles fullscreen; M toggles sound, as the speaker on the title does;
-# Escape quits.
+# Escape quits. On a gamepad (Lota 0.1.3 and newer), the left stick or
+# d-pad aims, A or the right trigger presses, Start starts and continues,
+# Y plays or shares the Daily, and Back toggles sound.
 #
 # Development settings, read from the environment:
 #
@@ -35,6 +37,7 @@ end
 def Lota.update(dt) = @app.update(dt)
 def Lota.draw = @app.draw
 def Lota.mousepressed(x, y, button, istouch) = @app.mouse_pressed(x, y, button, istouch)
+def Lota.mousemoved(x, y, _dx, _dy, _istouch) = @app&.mouse_moved(x, y)
 
 def Lota.touchpressed(id, x, y, _dx, _dy, _pressure, devicetype, mouse)
   @app.touch_pressed(id, x, y, devicetype, mouse)
@@ -42,3 +45,9 @@ end
 
 def Lota.keypressed(key) = @app.key_pressed(key)
 def Lota.resize(_width, _height) = @app&.resize
+
+# Gamepads. Lota 0.1.2 binds no controllers and never calls these; from
+# 0.1.3, Lota passes the Joystick first, as LÖVE does.
+def Lota.gamepadpressed(_joystick, button) = @app&.gamepad_pressed(button)
+def Lota.gamepadaxis(_joystick, axis, value) = @app&.gamepad_axis(axis, value)
+def Lota.joystickremoved(_joystick) = @app&.gamepad_removed

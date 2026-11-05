@@ -38,4 +38,10 @@ class InputRouterTest < Minitest::Test
   def test_a_touch_without_a_position_is_ignored
     assert_nil @router.touch_pressed(1, nil, 6, :touchscreen, false)
   end
+
+  def test_a_gamepad_press_is_a_click_at_the_cursor
+    cursor = GamepadCursor.centered(layout.whole, look: Look::GAMEPAD, radius: R).at(120, 80)
+
+    assert_equal Tap.new(x: 120.0, y: 80.0, touch: false), @router.gamepad_pressed(cursor)
+  end
 end

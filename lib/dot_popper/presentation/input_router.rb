@@ -10,7 +10,8 @@ module DotPopper
     # mousepressed for it with istouch true; only the touch counts, so one
     # finger is one tap. A trackpad's touches have normalized 0 to 1
     # coordinates and are not taps either. A tap counts when the button or
-    # finger goes down, and every finger is a tap of its own.
+    # finger goes down, and every finger is a tap of its own. A gamepad's
+    # press is a click where its cursor is.
     class InputRouter < Data.define
       MOUSE_BUTTONS = [1, 2, 3].freeze
 
@@ -29,6 +30,10 @@ module DotPopper
 
         Tap.new(x: x.to_f, y: y.to_f, touch: true)
       end
+
+      # The tap for a gamepad's press at +cursor+ (GamepadCursor): a
+      # click there.
+      def gamepad_pressed(cursor) = Tap.new(x: cursor.x.to_f, y: cursor.y.to_f, touch: false)
     end
   end
 end

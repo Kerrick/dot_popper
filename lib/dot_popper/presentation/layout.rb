@@ -55,6 +55,9 @@ module DotPopper
       def center_y = safe.center_y
       def top = safe.y + margin
 
+      # The whole window, notches and all.
+      def whole = Rect.new(x: 0.0, y: 0.0, width: width.to_f, height: height.to_f)
+
       # The mute toggle, in the safe area's bottom right corner. It is
       # never smaller than a fingertip (44 units).
       def mute_button
