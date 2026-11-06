@@ -47,15 +47,16 @@ module DotPopper
     # Bigger, Smaller, Bigger, Smaller, "Your records", and Back, at 100
     # beats a minute, in quarter, quarter, a quarter's rest, eighth,
     # eighth, quarter, quarter. The rhythm says when each click starts, not
-    # how long it lasts. Bigger is the lower click and Smaller the higher,
-    # whichever dot size each names on this screen, and the last two are
-    # those buttons' own clicks. Only while the game's sound is on
+    # how long it lasts. It goes high, low, high, low, then middle and lower:
+    # Bigger is the high click and Smaller the low one, as they sound on a
+    # computer, whichever dot size each names on the screen at hand, and the
+    # last two are those buttons' own clicks. Only while the game's sound is on
     # (+sounding+) does it play, and the splash last until it has rung;
     # muted, the splash is short. +at+ is the seconds since it began.
     class Splash < Data.define(:at, :sounding)
       BEAT = 60.0 / 100
       Note = Data.define(:at, :pitch)
-      JINGLE = [[0.0, 0.9], [1.0, 1.2], [3.0, 0.9], [3.5, 1.2], [4.0, 1.0], [5.0, 0.8]]
+      JINGLE = [[0.0, 1.2], [1.0, 0.9], [3.0, 1.2], [3.5, 0.9], [4.0, 1.0], [5.0, 0.8]]
                .map { |beat, pitch| Note.new(at: beat * BEAT, pitch:) }.freeze
       FADE_IN = 0.25
       FADE_OUT = 0.3

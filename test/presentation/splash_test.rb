@@ -58,7 +58,7 @@ class SplashTest < Minitest::Test
     starts = Splash::JINGLE.map(&:at)
 
     [0.0, 0.6, 1.8, 2.1, 2.4, 3.0].zip(starts).each { |want, got| assert_in_delta want, got, 1e-9 }
-    assert_equal [0.9, 1.2, 0.9, 1.2, 1.0, 0.8], Splash::JINGLE.map(&:pitch), "Bigger low, Smaller high, then Records and Back"
+    assert_equal [1.2, 0.9, 1.2, 0.9, 1.0, 0.8], Splash::JINGLE.map(&:pitch), "high, low, high, low, middle, lower"
   end
 
   def test_each_click_sounds_once_whatever_the_frames
