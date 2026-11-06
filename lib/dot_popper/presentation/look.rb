@@ -180,15 +180,6 @@ module DotPopper
         width: 0.075, dashes: 12, color: PALETTE.fresh_light
       )
       PENALTY_SHAKE = ShakeLook.new(amplitude: 0.12, duration: 0.22, frequency: 24.0)
-      # A shake of the Game Over pile: a bright ring bursts from every dot
-      # as it is tossed, and the score rattles, so the shake is seen to
-      # land even before the dots fly.
-      SHAKE_RING = RingLook.new(
-        radius: Tween.new(from: 1.0, to: 1.7, duration: 0.32, ease: :out_cubic),
-        width: Tween.new(from: 0.16, to: 0.0, duration: 0.32, ease: :out_quad),
-        alpha: Tween.new(from: 0.8, to: 0.0, duration: 0.32, ease: :out_quad), color: PALETTE.cream
-      )
-      SHAKE_RATTLE = ShakeLook.new(amplitude: 0.18, duration: 0.3, frequency: 30.0)
       # The glow is narrow and quick, so a dot near an edge is tinted only
       # for a moment.
       PENALTY_FLASH = FlashLook.new(color: PALETTE.alarm, alpha: 0.42, duration: 0.32, band: 0.1)
@@ -263,14 +254,18 @@ module DotPopper
       # Playing with the pile (Presentation::Tilt): tilting a tablet, or
       # pushing a gamepad's right stick, turns its gravity, and a shake
       # throws the dots up. The filter's fifth of a second keeps a hand's
-      # tremor out of the dots without lagging a turn; a jolt of over half
-      # a g is a shake, past a tap on the glass. A shake throws hard: at
+      # tremor out of the dots without lagging a turn. A shake is a jolt
+      # of over 1 g and a jolt back the other way within 0.35 seconds, as a
+      # hand shakes: a single bump, such as a footstep while walking with
+      # the phone (the Android playtest), never counts. A shake throws hard: at
       # least 20 radii a second, and each ball at least 0.6 of that, so the
       # gentlest toss is twice a dot's fastest speed, and a hard shake up
       # to 108, three times what it was, because the iPhone playtest found
-      # the toss "not as much/violent as I'd expect". A calm pile turns
+      # the toss "not as much/violent as I'd expect". It makes no sound and
+      # no flash: the dots flying is the whole answer. A calm pile turns
       # slowly and never throws.
-      TILT = TiltLook.new(smoothing: 0.2, wake: 0.05, shake: 0.5, settle: 0.3, cooldown: 0.6, least_kick: 20.0,
+      TILT = TiltLook.new(smoothing: 0.2, wake: 0.05, shake: 1.0, reversal: 0.35, settle: 0.3, cooldown: 0.6,
+                          least_kick: 20.0,
                           kick: 40.0, most_kick: 108.0, shakes: true, fling: Throw.new(spread: 1.0, least: 0.6),
                           dead_zone: 0.2,
                           hint_rounds: 3, hint_alpha: 0.7,

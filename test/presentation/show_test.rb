@@ -533,22 +533,6 @@ class ShowTest < Minitest::Test
 
   def reach(sizing) = @show.sizing_reaches.to_h.fetch(sizing)
 
-  # A shake of the pile is seen: a ring from every dot, and a rattle.
-  def test_a_shake_of_the_pile_rings_every_dot_and_rattles
-    @show.shaken(@show.attract.dots) # on the title, nothing
-    assert_empty @show.effects.rings
-
-    finish_round(back_to_title: false)
-    @show.update(0.1)
-    rings = @show.effects.rings.size
-    @show.shaken(@game.round.dots)
-
-    assert_equal rings + @game.round.dots.count, @show.effects.rings.size
-    assert_equal @game.round.dots.map(&:id), @show.effects.rings.last(@game.round.dots.count).map(&:follow)
-    @show.effects.update(1 / 60.0)
-    refute_equal [0.0, 0.0], [@show.effects.shake_x, @show.effects.shake_y], "the score rattles"
-  end
-
   def hide_fresh_under_a_popped_dot_and_tap_it(started: false)
     start_and_pop(started:)
     popped = @game.round.dots.first

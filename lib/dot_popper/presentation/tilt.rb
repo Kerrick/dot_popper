@@ -9,9 +9,10 @@ module DotPopper
     # +smoothing+ is the low-pass filter's time constant in seconds, so
     # the pull follows the hand and not its tremor. Bodies that have
     # fallen asleep are woken when the pull has moved more than +wake+ (in
-    # g) since they were last woken. A shake is a jolt, the reading's
-    # change from its own +settle+-second average, of more than +shake+
-    # g; it throws every ball at +least_kick+ radii a second, and +kick+
+    # g) since they were last woken. A jolt is the reading's change from
+    # its own +settle+-second average, of more than +shake+ g, and a shake
+    # is a jolt followed within +reversal+ seconds by one the opposite
+    # way, so a single bump is not a shake; it throws every ball at +least_kick+ radii a second, and +kick+
     # more for each g past that, at most +most_kick+, and the next shake
     # counts only after
     # +cooldown+ seconds, each ball as +fling+ (a Throw) says. A calm
@@ -21,7 +22,7 @@ module DotPopper
     # +drag_tilt_hint+ with a pointer and an accelerometer,
     # +drag_hint+ with a pointer alone, or +tilt_hint+ with an
     # accelerometer alone, %s naming the device.
-    class TiltLook < Data.define(:smoothing, :wake, :shake, :settle, :cooldown, :least_kick, :kick, :most_kick,
+    class TiltLook < Data.define(:smoothing, :wake, :shake, :reversal, :settle, :cooldown, :least_kick, :kick, :most_kick,
                                  :shakes, :fling, :dead_zone, :hint_rounds, :hint_alpha, :tilt_hint, :stick_hint,
                                  :drag_hint, :drag_tilt_hint)
       # The speed, in radii a second, a jolt of +jolt+ g throws a ball:
@@ -131,23 +132,39 @@ module DotPopper
       def *(other) = Reading.new(x: x * other, y: y * other, z: z * other)
 
       def length = Math.sqrt((x * x) + (y * y) + (z * z))
+      def dot(other) = (x * other.x) + (y * other.y) + (z * other.z)
     end
 
     # Notices a shake: a reading that jumps away from its recent average
-    # by more than the look's +shake+, the high-pass part of the signal.
+    # by more than the look's +shake+, the high-pass part of the signal,
+    # and then, within the look's +reversal+ seconds, jumps as far the
+    # other way. +first+ is the jolt waiting for its reversal, or nil, and
+    # +waiting+ how much longer it waits.
     # After one, it waits out the +cooldown+ before it notices another, so
     # a single shake throws the dots once. +jolt+ is the size of the
     # shake it noticed in the last update, in g, or 0.
-    class ShakeSensor < Data.define(:average, :resting, :jolt, :look)
+    class ShakeSensor < Data.define(:average, :resting, :jolt, :first, :waiting, :look)
       def self.start(look, reading) = new(average: LowPass.new(value: reading, time_constant: look.settle),
-                                          resting: 0.0, jolt: 0.0, look:)
+                                          resting: 0.0, jolt: 0.0, first: nil, waiting: 0.0, look:)
 
       def update(seconds, reading)
-        change = (reading - average.value).length
-        settled = with(average: average.update(seconds, reading), resting: resting - seconds, jolt: 0.0)
-        return settled unless change > look.shake && resting <= 0.0
+        change = reading - average.value
+        settled = with(average: average.update(seconds, reading), resting: resting - seconds, jolt: 0.0,
+                       waiting: waiting - seconds)
+        settled = settled.with(first: nil) if settled.waiting <= 0.0
+        return settled unless change.length > look.shake && resting <= 0.0
 
-        settled.with(resting: look.cooldown, jolt: change)
+        settled.jolted(change)
+      end
+
+      # A jolt of +change+: the shake, if it reverses the jolt waiting,
+      # or else the jolt to wait on.
+      def jolted(change)
+        if first&.dot(change)&.negative?
+          with(resting: look.cooldown, jolt: [change.length, first.length].max, first: nil, waiting: 0.0)
+        else
+          with(first: change, waiting: look.reversal)
+        end
       end
 
       def shaken? = jolt.positive?

@@ -150,15 +150,40 @@ class TiltTest < Minitest::Test
 
   # Shakes.
 
-  def test_a_sharp_jolt_is_a_shake_and_holding_still_is_not
+  def test_a_jolt_and_one_back_is_a_shake_and_holding_still_is_not
     sensor = ShakeSensor.start(Look::TILT, upright(:top))
     10.times { sensor = sensor.update(1 / 60.0, upright(:top)) }
 
     refute_predicate sensor, :shaken?
     sensor = sensor.update(1 / 60.0, Reading.new(x: 2.0, y: -1.0, z: 0.5))
 
+    refute_predicate sensor, :shaken?, "one jolt is not yet a shake"
+    sensor = sensor.update(1 / 60.0, Reading.new(x: -2.0, y: 3.0, z: -0.5))
+
     assert_predicate sensor, :shaken?
     assert_operator sensor.jolt, :>, Look::TILT.shake
+  end
+
+  # The Android playtest: walking with the phone at Game Over threw the
+  # pile at every step. A footstep is a bump that settles back, never a
+  # jolt the other way, so no number of them is a shake.
+  def test_footsteps_are_never_a_shake
+    sensor = ShakeSensor.start(Look::TILT, upright(:top))
+    shakes = (6 * 60).times.count do |frame|
+      bump = (frame % 30).zero? ? Reading.new(x: 0.3, y: 1.6, z: 0.8) : Reading.still
+      sensor = sensor.update(1 / 60.0, upright(:top) + bump)
+      sensor.shaken?
+    end
+
+    assert_equal 0, shakes
+  end
+
+  def test_a_jolt_back_too_late_is_not_a_shake
+    sensor = ShakeSensor.start(Look::TILT, upright(:top)).update(1 / 60.0, Reading.new(x: 3.0, y: 1.0))
+    ((Look::TILT.reversal * 60) + 2).ceil.times { sensor = sensor.update(1 / 60.0, upright(:top)) }
+    sensor = sensor.update(1 / 60.0, Reading.new(x: -3.0, y: 1.0))
+
+    refute_predicate sensor, :shaken?
   end
 
   def test_tilting_slowly_is_not_a_shake
@@ -171,7 +196,7 @@ class TiltTest < Minitest::Test
   end
 
   def test_after_a_shake_the_sensor_waits_out_its_cooldown
-    sensor = ShakeSensor.start(Look::TILT, upright(:top)).update(1 / 60.0, Reading.new(x: 3.0, y: 1.0))
+    sensor = shaken(ShakeSensor.start(Look::TILT, upright(:top)))
 
     assert_predicate sensor, :shaken?
     shakes = 30.times.count do |i|
@@ -181,9 +206,8 @@ class TiltTest < Minitest::Test
 
     assert_equal 0, shakes
     60.times { sensor = sensor.update(1 / 60.0, upright(:top)) }
-    sensor = sensor.update(1 / 60.0, Reading.new(x: 3.0, y: 1.0))
 
-    assert_predicate sensor, :shaken?
+    assert_predicate shaken(sensor), :shaken?
   end
 
   def test_a_shake_throws_harder_the_harder_it_is_up_to_a_cap
@@ -202,15 +226,16 @@ class TiltTest < Minitest::Test
     look = Look::TILT
     gentlest = look.kick_for(look.shake + 0.01) * look.fling.least
 
-    assert_operator look.shake, :<=, 0.5
+    assert_operator look.shake, :<=, 1.0
     assert_operator gentlest, :>=, 2 * DotPopper::Rules::SPEEDS.max
     assert_operator look.most_kick, :>=, 3 * 36.0
   end
 
-  def test_a_one_g_jolt_is_a_shake_that_throws_hard
+  def test_a_hand_shake_throws_hard
     tilt = Tilt.new(Look::TILT)
     30.times { tilt.update(1 / 60.0, reading: upright(:top)) }
-    step = tilt.update(1 / 60.0, reading: upright(:top) + Reading.new(x: 1.0, y: 0.0))
+    tilt.update(1 / 60.0, reading: upright(:top) + Reading.new(x: 1.5, y: 0.0))
+    step = tilt.update(1 / 60.0, reading: upright(:top) + Reading.new(x: -1.5, y: 0.0))
 
     assert_operator step.kick, :>, 30.0
   end
@@ -283,7 +308,8 @@ class TiltTest < Minitest::Test
     [Look::TILT, Look::CALM_TILT].each do |look|
       tilt = Tilt.new(look)
       5.times { tilt.update(1 / 60.0, reading: upright(:top)) }
-      step = tilt.update(1 / 60.0, reading: Reading.new(x: 3.0, y: -1.0, z: 1.0))
+      tilt.update(1 / 60.0, reading: Reading.new(x: 3.0, y: -1.0, z: 1.0))
+      step = tilt.update(1 / 60.0, reading: Reading.new(x: -3.0, y: 3.0, z: -1.0))
 
       if look.shakes then assert_operator step.kick, :>, 0.0
       else assert_in_delta 0.0, step.kick
@@ -355,4 +381,12 @@ class TiltTest < Minitest::Test
     assert_includes walls, [0.0, 0.0, 800.0, 0.0]
     refute_includes PileWalls.new(width: 800, height: 600).segments, [0.0, 0.0, 800.0, 0.0]
   end
+
+  private
+
+  # +sensor+ after a jolt one way and, a frame later, one back: a shake.
+  def shaken(sensor)
+    sensor.update(1 / 60.0, Reading.new(x: 3.0, y: 1.0)).update(1 / 60.0, Reading.new(x: -3.0, y: 1.0))
+  end
+
 end

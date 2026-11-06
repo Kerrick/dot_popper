@@ -447,8 +447,7 @@ module DotPopper
                     accelerometer: fake ? FakeAccelerometer.new(steady: fake) : Accelerometer.new,
                     look: flag?("DOT_POPPER_CALM") ? Look::CALM_TILT : Look::TILT,
                     hint: Presentation::TiltHint.new(SaveFile.new(name: "tilt_hint.txt"), Look::TILT),
-                    device: Presentation::TiltHint.device(os, width, height), turns: @touch, pointer: true,
-                    shaken: ->(dots) { @show.shaken(dots) })
+                    device: Presentation::TiltHint.device(os, width, height), turns: @touch, pointer: true)
       end
 
       # The middle of the pile's ball nearest +x+, +y+, or that point with
