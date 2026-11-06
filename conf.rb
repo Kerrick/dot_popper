@@ -14,6 +14,13 @@ def Lota.conf(t)
   t.window.resizable = true
   t.window.minwidth = 400
   t.window.minheight = 320
+  # The game draws no stencil or depth, so it asks for neither buffer. On
+  # a screen whose scale isn't whole (an iPhone 13 mini at 2.88), LÖVE's
+  # Metal backend sizes those buffers from the width in whole units, 811
+  # by 2.88 = 2336 px, and a render pass is only as wide as its smallest
+  # buffer, so the drawable's last 2 of 2338 px went undrawn in landscape.
+  t.window.stencil = false
+  t.window.depth = false
   # DOT_POPPER_RENDERERS=opengl (or vulkan, or metal, comma-separated, in
   # the order to try) chooses the graphics renderer, to compare them on a
   # device; unset, LÖVE's own order applies.
