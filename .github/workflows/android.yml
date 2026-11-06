@@ -161,6 +161,15 @@ jobs:
           # OpenAL Soft is LGPL, so the app carries its licence and source.
           cp "$LOTA_SOURCE/ext/lota/licenses/LICENSE-LGPL-2.0-or-later.txt" \
             "$LOTA_SOURCE"/vendor/sources/android/openal-soft-*.tar.bz2 "$phone/licenses/"
+          # Lota writes NOTICES.txt for a desktop app only (lota fuse), so the
+          # phone's is written from Lota's own record of what the Android
+          # build links, in Lota's format (script/phone_notices.rb). It sits
+          # at the project's top, two folders above the game, where the
+          # Credits screen looks (Shell::NoticeFiles). It runs in Lota's
+          # bundle, which has the rice gem the record cites.
+          (cd "$LOTA_SOURCE" && BUNDLE_PATH="$RUNNER_TEMP/lota-bundle" bundle exec ruby "$GITHUB_WORKSPACE/script/phone_notices.rb" \
+            android "$LOTA_SOURCE" "$phone/NOTICES.txt")
+          head -c 600 "$phone/NOTICES.txt"; grep -c . "$phone/NOTICES.txt"
           cat > "$phone/Gemfile" <<EOF
           # frozen_string_literal: true
 
@@ -241,6 +250,15 @@ jobs:
               grep -q "lib/$abi/$lib" "$RUNNER_TEMP/libs.txt" || { echo "::error::the APK has no lib/$abi/$lib"; exit 1; }
             done
           done
+          # The notices, in the app's files (fledge.zip) with the LGPL text and
+          # OpenAL Soft's source, two folders above the game's.
+          unzip -o -q "$apk" 'assets/fledge.zip' -d "$RUNNER_TEMP/apk" || unzip -l "$apk" | grep -i fledge
+          unzip -l "$RUNNER_TEMP/apk/assets/fledge.zip" | grep -E " (NOTICES.txt|licenses/.*)$" | tee "$RUNNER_TEMP/notices.txt"
+          unzip -p "$RUNNER_TEMP/apk/assets/fledge.zip" NOTICES.txt > "$RUNNER_TEMP/NOTICES.txt"
+          grep -q "licenses/openal-soft-.*tar.bz2" "$RUNNER_TEMP/notices.txt"
+          grep -q "^OpenAL Soft 1" "$RUNNER_TEMP/NOTICES.txt"
+          grep -q "Portions of this software are copyright .* The FreeType Project" "$RUNNER_TEMP/NOTICES.txt"
+          grep -q "^==== LGPL-2.0-or-later ====" "$RUNNER_TEMP/NOTICES.txt"
           "$tools/zipalign" -c -P 16 -v 4 "$apk" | tail -1
           "$tools/apksigner" verify --print-certs "$apk" | head -3
           "$tools/aapt2" dump badging "$apk" | grep -E "package:|[sS]dkVersion|native-code" | tee "$RUNNER_TEMP/badging.txt"

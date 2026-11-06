@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "fileutils"
+require "tmpdir"
 require "dot_popper/presentation"
 require "dot_popper/shell/notice_files"
 
@@ -37,5 +39,22 @@ class NoticeFilesTest < Minitest::Test
     notices = DotPopper::Shell::NoticeFiles.new(game: File.join(FIXTURES, "bare", "game"), reach: 1).notices
 
     assert_equal DotPopper::Presentation::Notices.none, notices
+  end
+
+  # An Android or iOS app: the project's top holds NOTICES.txt (written by
+  # script/phone_notices.rb), notices/ is Fledge's, and the game is two
+  # folders down, in game/dot_popper.
+  def test_a_phone_app_finds_the_notices_at_the_projects_top
+    Dir.mktmpdir do |root|
+      game = File.join(root, "game", "dot_popper")
+      FileUtils.mkdir_p([game, File.join(root, "notices")])
+      File.write(File.join(root, "NOTICES.txt"), "Phone notices\n")
+      File.write(File.join(root, "notices", "NOTICES.txt"), "Fledge phone notices\n")
+
+      notices = DotPopper::Shell::NoticeFiles.new(game:, starts: [root]).notices
+
+      assert_equal "Phone notices\n", notices.lota
+      assert_equal ["Fledge phone notices\n"], notices.fledge
+    end
   end
 end
