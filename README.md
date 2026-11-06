@@ -198,6 +198,7 @@ To play one session by hand and watch it, set `DOT_POPPER_SCENARIO` to its name 
 | `DOT_POPPER_SHOTS=0.5,3,6.5` | Takes a screenshot at each of these times, counted in seconds of play, and saves them as `shot-1.png`, `shot-2.png`, and so on in the save folder. The game prints each file's path. |
 | `DOT_POPPER_QUIT_AFTER=20` | Quits after this many seconds of play. |
 | `DOT_POPPER_SEED=42` | Seeds the random number generator, so the same seed and the same taps produce the same dots. |
+| `DOT_POPPER_RENDERERS=opengl` | Chooses the graphics renderer to try (`opengl`, `vulkan`, or `metal`, comma-separated in order), to compare them on one device. Unset, LÖVE picks. |
 | `DOT_POPPER_PERF=1` | Every five seconds, prints how many frames a second the game drew and its longest single frame, measured before the game caps how much time one frame may pass to the rules. Useful for checking a new computer. |
 | `DOT_POPPER_NO_SHADERS=1` | Draws plain shapes without shaders. The game does this on its own when a shader fails to compile. |
 | `DOT_POPPER_CALM=1` | Turns off screen shake and the bouncing at the end of a round (see "Reduced motion"). |

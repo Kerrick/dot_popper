@@ -14,4 +14,9 @@ def Lota.conf(t)
   t.window.resizable = true
   t.window.minwidth = 400
   t.window.minheight = 320
+  # DOT_POPPER_RENDERERS=opengl (or vulkan, or metal, comma-separated, in
+  # the order to try) chooses the graphics renderer, to compare them on a
+  # device; unset, LÖVE's own order applies.
+  renderers = ENV.fetch("DOT_POPPER_RENDERERS", "").split(",").map(&:strip).reject(&:empty?)
+  t.renderers = renderers.map(&:to_sym) unless renderers.empty?
 end
