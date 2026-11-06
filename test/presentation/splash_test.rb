@@ -52,12 +52,12 @@ class SplashTest < Minitest::Test
   end
 
   # The maintainer's jingle: Bigger, Smaller, Bigger, Smaller, "Your
-  # records", Back, at 100 beats a minute, in quarter, quarter, a quarter's
+  # records", Back, at 120 beats a minute, in quarter, quarter, a quarter's
   # rest, eighth, eighth, quarter, quarter.
   def test_the_jingle_starts_its_clicks_on_the_beat
     starts = Splash::JINGLE.map(&:at)
 
-    [0.0, 0.6, 1.8, 2.1, 2.4, 3.0].zip(starts).each { |want, got| assert_in_delta want, got, 1e-9 }
+    [0.0, 0.5, 1.5, 1.75, 2.0, 2.5].zip(starts).each { |want, got| assert_in_delta want, got, 1e-9 }
     assert_equal [1.2, 0.9, 1.2, 0.9, 1.0, 0.8], Splash::JINGLE.map(&:pitch), "high, low, high, low, middle, lower"
   end
 
