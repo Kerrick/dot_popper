@@ -29,6 +29,7 @@ module DotPopper
         @android = os == "Android"
         puts "Dot Popper: a dot's radius is #{@dot_size.reason}"
         @touch ? fill_screen : open_window
+        report_screen
         random = seed ? Random.new(seed) : Random.new
         # Bests saved before they were kept by size of screen go to this
         # screen's class.
@@ -240,6 +241,7 @@ module DotPopper
         return unless @show
 
         happened("a resize")
+        report_screen
         @pen.refresh
         @sparks.refresh
         @bloom.refresh
@@ -376,6 +378,21 @@ module DotPopper
       # The window as a field of dots at the usual size; the game sizes a
       # round's dots on it as the player chose (DotSizing).
       def screen = @dot_size.field(*::Lota::Graphics.dimensions)
+
+      # One line on what the window is (Presentation::ScreenReport), to
+      # compare a real device's run with an SDL test program's on it.
+      def report_screen
+        width, height, flags = ::Lota::Window.mode
+        mode_flags = %i[fullscreen fullscreentype highdpi usedpiscale].filter_map do |name|
+          [name, flags.public_send(name)] if flags.respond_to?(name)
+        end.to_h
+        report = Presentation::ScreenReport.new(
+          units: ::Lota::Graphics.dimensions, pixels: ::Lota::Graphics.pixel_dimensions,
+          dpi_scale: ::Lota::Graphics.dpi_scale, native: ::Lota::Window.native_dpi_scale,
+          safe: ::Lota::Window.safe_area, mode: [width, height, mode_flags]
+        )
+        puts "Dot Popper: #{report}"
+      end
 
       def layout
         width, height = ::Lota::Graphics.dimensions
