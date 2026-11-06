@@ -10,8 +10,12 @@ module DotPopper
     class Renderer
       G = ::Lota::Graphics
 
-      def initialize(show, pen, pile:, sparks:, bloom:, tilting: nil)
+      # With +diagnostic+ (DOT_POPPER_DIAGNOSTIC_COLORS), each frame clears
+      # to pure blue and draws no night, so any pixel the game's drawing
+      # reaches but nothing paints shows blue (doc/ios.md).
+      def initialize(show, pen, pile:, sparks:, bloom:, tilting: nil, diagnostic: false)
         @show = show
+        @diagnostic = diagnostic
         @pen = pen
         @pile = pile
         @tilting = tilting
@@ -120,6 +124,7 @@ module DotPopper
       end
 
       def backdrop(width, height)
+        return G.clear(0, 0, 1, 1) if @diagnostic
         return flat_backdrop(width, height) unless @pen.shader?(:backdrop)
 
         @pen.shading(:backdrop) do |shader|

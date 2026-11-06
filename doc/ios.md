@@ -43,21 +43,21 @@ Dots use the whole screen, corners included. Everything else stays inside the sa
 
 ### Rotation and resizing
 
-Rotating the iPad, entering Split View, or resizing a Stage Manager window all reach the game as a `Lota.resize` call. The game then rebuilds the field and the layout, and moves every dot back inside the new field (`Dot#confine`), even in the middle of a round, so no dot is ever left off screen. The heap of dots at Game Over is refitted the same way.
+Rotating the iPad, entering Split View, or resizing a Stage Manager window all reach the game as a `Lota.resize` call. The game then rebuilds the field and the layout, and moves every dot in proportion to the new field (`Dot#refit`), even in the middle of a round: a dot 70% of the way across stays 70% of the way across, so turning a phone and back puts every dot back where it was, and no dot is ever left off screen. The heap of dots at Game Over is moved back inside the window.
 
 The rules never change with the window: the radius, the speeds, and the clock stay the same. A portrait field is just taller and narrower, and plays as the field-size table in [decisions.md](decisions.md) predicts. Fonts are rebuilt for the new size and pixel density.
 
 ### Dot size
 
-A dot's radius is 50 points, about 8 mm (see `DotSize`), and the game prints that when it starts. An iPad Pro 13-inch is 1032 × 1376 points, so a portrait field there is about 21 × 28 radii. An 11-inch iPad's is about 17 × 24.
+The standard dot's radius is 50 points, about 8 mm (see `DotSize`), and the game prints that when it starts. Unless the player chooses **Standard**, a round's dots are sized to the screen instead (README, "How big the dots are"): about 30 points on an iPhone 13 mini, 51 on an 11-inch iPad, and 61 on a 13-inch iPad Pro. An iPad Pro 13-inch is 1032 × 1376 points, so a portrait field there is about 21 × 28 radii. An 11-inch iPad's is about 17 × 24.
 
-Once a round has been played, the title's **Dot size** control appears only where sizing the dots to the screen would change them by more than a tenth. On an iPad Pro 13-inch the fitted radius is about 61 points, so its second segment reads "Bigger, less room"; on an 11-inch iPad the fitted radius is about 51 points, so the two sizes look alike and the control is left out.
+Once a round has been played, the title's **Dot size** control appears only where sizing the dots to the screen would change them by more than a tenth. On an iPad Pro 13-inch the fitted radius is about 61 points, so its first segment, **Fit the screen**, says "Bigger, less room" and its second, **Standard**, "Smaller, more room"; on an 11-inch iPad the fitted radius is about 51 points, so the two sizes look alike and the control is left out.
 
 ### Input
 
 A finger on the screen reaches the game as a `touchpressed` call with the device type `touchscreen`. SDL also generates a mouse press for each finger, marked `istouch`, and `InputRouter` ignores those, so one finger makes exactly one tap. A mouse or trackpad connected to an iPad clicks just as on a Mac. Every screen in the game can be used by tapping alone.
 
-The keyboard does less on iOS. **M** still turns sound on or off. **Escape** does nothing, because iOS apps are closed by the system, never by the app itself. **F11** and **Alt+Enter** do nothing either, since the app is always fullscreen.
+The keyboard does less on iOS. **M** still turns sound on or off, **Enter** and **Space** press the screen's main button, and **Escape** goes back from the Records screen and on from Game Over, but never quits, because iOS apps are closed by the system, never by the app itself. **F11** and **Alt+Enter** do nothing either, since the app is always fullscreen.
 
 A game controller paired with the iPad should play as it does on a computer, though nobody has tried one yet. SDL presents an iPad's accelerometer as a joystick too, but `Shell::Gamepads` keeps only joysticks that are gamepads, so the accelerometer is never one. An earlier version of the game asked Lota for the list of joysticks every frame, and on iOS that crashed the game in the Simulator; the game no longer asks, and Lota's development branch has fixed the cause. The kit's host program, `ios/host/Host/main.m`, also turns off SDL's accelerometer joystick (`SDL_ACCELEROMETER_AS_JOYSTICK=0`), so the accelerometer is never even offered as one; a paired controller still is.
 
@@ -134,6 +134,9 @@ A good run logs these lines, in this order, under the category `ruby`. Here `<da
 
 ```
 Dot Popper: a dot's radius is 50 points, about 8 mm
+Dot Popper: renderer Metal 2.1 /  / Apple iOS simulator GPU
+Dot Popper: screen 811x375 units, 2338x1080 pixels, dpi scale 2.88 (native 2.8793), safe area 49,0,711,355, mode 812x375 fullscreen desktop, usedpiscale true
+Dot Popper: dots are sized to the screen as each round starts
 Dot Popper: each round is logged in <data>/Library/Application Support/dot_popper/rounds.csv
 Dot Popper: screenshot <data>/Library/Application Support/dot_popper/shot-1.png
 Dot Popper: screenshot <data>/Library/Application Support/dot_popper/shot-2.png
@@ -141,7 +144,18 @@ Dot Popper: screenshot <data>/Library/Application Support/dot_popper/shot-3.png
 Dot Popper: screenshot <data>/Library/Application Support/dot_popper/shot-4.png
 ```
 
-After them, under the category `app`, the host program logs that the app exited with status 0. The same command run on a Mac (`bundle exec lota run .` with the same variables) printed the same six lines, except that the first said "50 logical pixels" and the paths were under `~/Library/Application Support/Lota/dot_popper`.
+After them, under the category `app`, the host program logs that the app exited with status 0. The renderer and screen lines are from an iPhone 13 mini Simulator turned landscape; the screen line comes again on every resize or turn. The same command run on a Mac (`bundle exec lota run .` with the same variables) printed the same lines, except that the first said "50 logical pixels", the renderer and screen were the Mac's, and the paths were under `~/Library/Application Support/Lota/dot_popper`.
+
+### Diagnostic colours
+
+The iPhone 13 mini playtest found a thin magenta strip at the right edge in landscape. To tell where such a strip comes from, set `DOT_POPPER_DIAGNOSTIC_COLORS=1` (in Xcode's scheme under Run > Arguments > Environment Variables, or as `SIMCTL_CHILD_DOT_POPPER_DIAGNOSTIC_COLORS=1` for `simctl launch`):
+
+- The host program paints the window, its root view and the view's layer pure green behind SDL's view (without the variable, the night's ink, #0c0b22, so nothing pink or white can show behind the game).
+- The game clears every frame to pure blue and draws no night behind the dots.
+
+Then a **green** strip is a gap that SDL's view doesn't cover; a **blue** one is part of what the game draws to that its drawing leaves bare; and a strip still **pink** (or black) is in the drawable but outside anything the game's drawing, even its clear, reaches, which is LÖVE's or Lota's to look at.
+
+In an iPhone 13 mini Simulator turned landscape, the drawable is 2338 pixels wide, Lota's dimensions 811 units at a scale of 2.88 (811.8 rounded down), and with the variable set the game's own screenshot is blue up to column 2335, but columns 2336 and 2337 stay black: not even the clear reaches them. Nothing green shows. Upright, columns 1078 and 1079 of 1080 do the same. So in the Simulator the strip lies inside the drawable, outside what LÖVE draws to; a real phone may leave those pixels a different colour.
 
 ### What a bad run logs
 

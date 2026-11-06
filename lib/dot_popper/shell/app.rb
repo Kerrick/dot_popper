@@ -29,6 +29,7 @@ module DotPopper
         @android = os == "Android"
         puts "Dot Popper: a dot's radius is #{@dot_size.reason}"
         @touch ? fill_screen : open_window
+        report_renderer
         report_screen
         random = seed ? Random.new(seed) : Random.new
         # Bests saved before they were kept by size of screen go to this
@@ -62,7 +63,8 @@ module DotPopper
         @fake_drag = Presentation::FakeDrag.parse(@env["DOT_POPPER_FAKE_DRAG"])
         @sparks = Sparks.new(Look)
         @bloom = Bloom.new(@pen, Look::BLOOM)
-        @renderer = Renderer.new(@show, @pen, pile: @pile, sparks: @sparks, bloom: @bloom, tilting: @tilting)
+        @renderer = Renderer.new(@show, @pen, pile: @pile, sparks: @sparks, bloom: @bloom, tilting: @tilting,
+                                             diagnostic: flag?("DOT_POPPER_DIAGNOSTIC_COLORS"))
         @renderer.prepare
         @input = Presentation::InputRouter.new
         @buttons = Presentation::GamepadButtons.new
@@ -387,6 +389,13 @@ module DotPopper
       # The window as a field of dots at the usual size; the game sizes a
       # round's dots on it as the player chose (DotSizing).
       def screen = @dot_size.field(*::Lota::Graphics.dimensions)
+
+      # The graphics renderer LÖVE chose, as Vulkan, OpenGL ES, or Metal,
+      # its version, and the GPU's maker and name.
+      def report_renderer
+        name, version, vendor, device = ::Lota::Graphics.renderer_info
+        puts "Dot Popper: renderer #{name} #{version} / #{vendor} / #{device}"
+      end
 
       # One line on what the window is (Presentation::ScreenReport), to
       # compare a real device's run with an SDL test program's on it.
