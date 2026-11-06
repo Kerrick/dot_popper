@@ -324,12 +324,14 @@ module DotPopper
       # DotSizing and its Rect, while the title offers it.
       def sizing_reaches = SIZINGS.map { [it, reach_of(it)] }
 
-      # Where the title's words and buttons go (TitlePlan).
+      # Where the title's words and buttons go (TitlePlan). Play is sized
+      # from dots fitted to the screen, whichever size is chosen, so the
+      # Dot size choice beside it never moves or resizes it.
       def title_plan
         goal = lifetime.goal_done? ? words.goal_done_line(lifetime.goal) : words.goal(lifetime.goal) if played?
         TitleScreen.new(layout:, type: look::TYPE, words:, measure: @measure, best: marquee.best, goal:,
                         done: lifetime.goal_done?, streak: lifetime.streak, records: records_offered?,
-                        sizing: sizing_offered?, radius: game.field.radius).plan
+                        sizing: sizing_offered?, radius: DotSize.fitted(layout.width, layout.height).radius).plan
       end
 
       # Where Game Over's words and "Copy my result" go (FinalePlan), or

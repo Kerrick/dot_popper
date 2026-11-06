@@ -34,12 +34,13 @@ class ShowTest < Minitest::Test
     assert_equal 0, @game.round.score
   end
 
-  # Play is at least a dot across, and a press reaches it a margin past
-  # its edges.
+  # Play is at least a dot fitted to the screen across, whichever size is
+  # chosen, and a press reaches it a margin past its edges.
   def test_play_is_big_and_easy_to_reach
     button = @show.title_plan.play_button
+    layout = @show.layout
 
-    assert_operator button.height, :>=, 2 * @game.field.radius
+    assert_operator button.height, :>=, 2 * DotPopper::DotSize.fitted(layout.width, layout.height).radius
     assert_operator @show.play_reach.width, :>, button.width
     assert @show.play_reach.contains?(button.x - 5, button.y - 5)
   end
@@ -242,6 +243,16 @@ class ShowTest < Minitest::Test
     @show.tap(*middle(reach(same)))
     refute @game.sizing.sized_to_screen?
     assert @show.title?
+  end
+
+  # The maintainer didn't see why Play changed size with the Dot size
+  # choice: it was sized from the chosen dots. It never moves now.
+  def test_choosing_a_dot_size_leaves_play_where_it_is
+    finish_round
+    play = @show.send(:title_plan).play_button
+    @show.toggle_sizing
+
+    assert_equal play, @show.send(:title_plan).play_button
   end
 
   def test_the_dot_size_choice_is_offered_only_once_a_round_has_finished

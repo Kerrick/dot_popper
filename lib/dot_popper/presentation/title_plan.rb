@@ -31,7 +31,7 @@ module DotPopper
     class TitleScreen < Data.define(:layout, :type, :words, :measure, :best, :goal, :done, :streak, :records,
                                     :sizing, :radius)
       # The gaps above each line, in graphics units at full size.
-      GAPS = { legend: 34, best: 24, goal: 18, streak: 10, play: 28 }.freeze
+      GAPS = { legend: 34, best: 24, best_room: 24, goal: 18, streak: 10, play: 28 }.freeze
       # How far the name shrinks on, once everything else has made room.
       NAME_SHRINKS = [1.0, 0.82, 0.66, 0.5, 0.4].freeze
 
@@ -90,10 +90,19 @@ module DotPopper
         [Block.new(name: :title, height: measure.height(:bold, title) * 1.06, width: measure.width(:bold, title, words.title)),
          Block.new(name: :legend, height: measure.height(:semibold, legend) * 2.4, gap: gap(:legend, scale),
                    width: legend_width(legend)),
-         (block(:best, :semibold, line, words.best_line(best), scale, drop: 3) if best.positive?),
+         best_block(line, scale),
          (goal_block(goal, sizes[:goal], scale) if goal),
          (block(:streak, :semibold, sizes[:goal], words.streak(streak), scale, drop: 1) if goal && streak >= 2),
          play(scale, play_height)].compact
+      end
+
+      # "Your best: 25", or none yet. While the Dot size choice shows, each
+      # size has bests of its own, so a size with none yet keeps the
+      # line's room empty: switching sizes then never moves Play.
+      def best_block(size, scale)
+        return block(:best, :semibold, size, words.best_line(best), scale, drop: 3) if best.positive?
+
+        block(:best_room, :semibold, size, "", scale, drop: 3) if sizing
       end
 
       # Play, as wide as a main button is, whatever the type's scale.
