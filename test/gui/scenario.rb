@@ -98,6 +98,9 @@ module DotPopperGui
 
     def key(name) = push(:keypressed, name.to_s, name.to_s, false)
 
+    # The mouse wheel turned +notches+, up when positive.
+    def wheel(notches) = push(:wheelmoved, 0, notches, "standard")
+
     # Lota cannot queue a Joystick yet, and its queue ends a message at
     # the first nil, so the pad's place holds a number; main.rb never
     # asks which pad pressed.

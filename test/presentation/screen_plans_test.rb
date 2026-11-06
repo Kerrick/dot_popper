@@ -130,7 +130,52 @@ class ScreenPlansTest < Minitest::Test
     end
   end
 
+  # The Licences screen: at 400x850, 850x400, 1200x800 and every other
+  # size, the heading, the window of text and Back are apart and inside
+  # the safe area, every line fits across the window, and scrolled to
+  # the end the last line is in it.
+  def test_the_licences_screen_never_overlaps_or_runs_off_screen
+    SIZES.each do |width, height|
+      screen_layout = layout(width, height)
+      show = licences_show(screen_layout)
+      show.open_licences
+      page = show.licences_layout
+      window = page.window
+      name = "#{width}x#{height}"
+      heading = Rect.new(x: window.x, y: page.heading_y - (page.heading_size / 2.0), width: window.width, height: page.heading_size)
+
+      assert_inside window, screen_layout.safe, name
+      assert_apart [heading, window, screen_layout.back_button], name
+      assert_operator window.x, :>=, screen_layout.safe.x, name
+      assert_operator window.right, :<=, screen_layout.safe.right, name
+      assert_operator window.height, :>, page.line * 2, "#{name}: room to read"
+      measure = RoughMeasure.new
+      show.licence_lines.rows.each do |row|
+        face = row.kind == :heading ? :bold : :semibold
+        size = row.kind == :heading ? LicenceLines.heading_size(page.text_size) : page.text_size
+        assert_operator measure.width(face, size, row.text), :<=, window.width + 1e-6, "#{name}: #{row.text}"
+      end
+      show.licence_key(:end)
+      assert_in_delta show.licence_lines.height - window.height, show.licences.offset, 1e-6, name
+    end
+  end
+
   private
+
+  def licences_show(screen_layout)
+    long = ["Licence text with a longer word, #{"x" * 90}, and a ruled line", "-" * 70, "", "  1. an indented item"]
+    notices = Notices.new(agpl: Array.new(40) { long.join("\n") }.join("\n\n"), ofl: "Fredoka text", lota: "Lota text",
+                          fledge: ["Fledge text"])
+    game = DotPopper::Game.new(field(screen_layout.width, screen_layout.height), random: Random.new(2))
+    show = Show.new(game:, layout: screen_layout, sounds: FakeSounds.new, radius: R, notices:, measure: RoughMeasure.new)
+    show.primary
+    game.update(30)
+    show.update(1.0)
+    game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    show.primary
+    show.open_records
+    show
+  end
 
   # A Show on each screen in turn, with every button it can offer: the
   # first title, Game Over, the title after a round with the dot-size
@@ -152,6 +197,8 @@ class ScreenPlansTest < Minitest::Test
     show.tap(*middle(show.clear_reach))
     show.update(Look::RECORDS_CLEAR.hold)
     yield "the Records screen with Undo", show
+    show.open_licences
+    yield "the Licences screen", show
   end
 
   def middle(rect) = [rect.center_x, rect.center_y]

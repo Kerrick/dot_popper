@@ -6,7 +6,7 @@ module DotPopper
     # notes on the screen's size under it, the chart of the last scores,
     # the bests and totals as rows with their labels on the left and
     # their numbers lined up on the right, a faint dotted leader between,
-    # and along the bottom, Back in one corner and "Clear my records…" or,
+    # and along the bottom, Back in one corner, quiet Licences beside it and "Clear my records…" or,
     # once they are cleared, Undo in the other. While "Clear my records…"
     # is held, the prompt says what will go, and a bar under it fills.
     # Presentation::RecordsLayout decides where each goes; this only draws,
@@ -28,6 +28,7 @@ module DotPopper
         notes.each_with_index { |line, i| pen.text(line, font, layout.center_x, plan.note_y(i), palette.soft) }
         prompt(show, plan, layout)
         back(show, layout)
+        licences(show, layout)
         corner(show, layout)
         return nothing_yet(words, layout, plan) if sheet.empty
 
@@ -71,6 +72,12 @@ module DotPopper
       # Back, in the bottom left corner.
       def back(show, layout)
         PillButton.new(pen:).draw(layout.back_button, show.words.go_back, hover: show.hover.level(:back))
+      end
+
+      # Licences, quiet in soft type, beside Back or above it.
+      def licences(show, layout)
+        PillButton.new(pen:).draw(layout.licences_button, show.words.licences, alpha: 0.8 + (0.2 * show.hover.level(:licences)),
+                                                                              color: pen.palette.soft, hover: show.hover.level(:licences))
       end
 
       # +text+ where the prompt goes, in a line or two that fit across.

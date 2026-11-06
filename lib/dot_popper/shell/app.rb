@@ -40,6 +40,8 @@ module DotPopper
                                  sizing: DotSizing.parse(sizing_store.read))
         puts "Dot Popper: dots are sized to the screen as each round starts" if @game.sizing.sized_to_screen?
         lifetime = Lifetime.new(SaveFile.new(name: "lifetime.txt"), today:, legacy:)
+        notices = NoticeFiles.new(game: ::Lota::Filesystem.source.to_s,
+                                  starts: [File.dirname(File.expand_path($PROGRAM_NAME))]).notices
         keeper = RecordKeeper.new(best: @game.best, lifetime:, folder: ->(name) { SaveFile.new(name:) })
         @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
         @speaker = Speaker.new(Look::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Look::SOUND.volume)
@@ -47,7 +49,7 @@ module DotPopper
                                        random:, calm: flag?("DOT_POPPER_CALM"),
                                        tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt"),
                                                                     times: Look::LESSON.times),
-                                       haptics: Haptics.for(os), clipboard: Clipboard.new,
+                                       haptics: Haptics.for(os), clipboard: Clipboard.new, notices:,
                                        lifetime:, keeper:, sizing_store:, input: starting_input, measure: FontMeasure.new(@pen.fonts),
                                        hint: -> { @tilting&.hint&.for(@show.input) })
         @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
@@ -83,7 +85,7 @@ module DotPopper
       def update(seconds)
         measure(seconds)
         seconds = seconds.clamp(0.0, Rules::LONGEST_FRAME)
-        moved = @cursor.update(seconds, @gamepads.stick)
+        moved = @cursor.update(seconds, read_with_stick(seconds))
         @show.input = Presentation::InputKind::GAMEPAD unless moved == @cursor
         @cursor = moved
         if @autopilot
@@ -93,6 +95,7 @@ module DotPopper
         @game.update(seconds)
         @show.update(seconds)
         point_the_mouse
+        repeat_keys
         @tilting.update(seconds)
         fake_drag
         @dragging.move(:gamepad, @cursor.x, @cursor.y) if @pad_held.any?
@@ -122,6 +125,7 @@ module DotPopper
           @cursor = @cursor.hide(x, y)
           heard(point)
         end
+        @show.drag_licences(:mouse, point.y)
         @dragging.move(:mouse, point.x, point.y)
       end
 
@@ -138,7 +142,10 @@ module DotPopper
 
       def touch_moved(id, x, y, devicetype, mouse)
         point = heard(@input.touch_moved(id, x, y, devicetype, mouse))
-        @dragging.move(id, point.x, point.y) if point
+        return unless point
+
+        @show.drag_licences(id, point.y)
+        @dragging.move(id, point.x, point.y)
       end
 
       def touch_released(id, x, y, devicetype, mouse)
@@ -176,7 +183,7 @@ module DotPopper
         in :press then gamepad_down(:a)
         in :start then @show.start
         in :share then @show.records? ? @show.clear_or_undo(:y) : @show.share
-        in :records then @show.open_records if @show.records_offered?
+        in :records then @show.records? ? @show.open_licences : (@show.open_records if @show.records_offered?)
         in :leave then @show.back
         in :mute then @speaker.toggle_mute
         in :sizing then @show.toggle_sizing
@@ -219,8 +226,13 @@ module DotPopper
         @pad_held.dup.each { gamepad_up(it) }
       end
 
+      # The mouse wheel turned +y+ notches, up when positive.
+      def wheel_moved(y) = @show.wheel_licences(y)
+
       def key_pressed(key)
         return @speaker.toggle_mute if key == :m
+        return @show.open_licences if key == :l && @show.records?
+        return if @show.licence_key(key)
         # Enter or Space presses the screen's main button, on any device;
         # Alt+Enter (Cmd+Enter on a Mac) is fullscreen's instead.
         return @show.primary if PRIMARY_KEYS.include?(key) && !(key != :space && fullscreen_chord?)
@@ -263,6 +275,26 @@ module DotPopper
       end
 
       private
+
+      # The gamepad's left stick and d-pad for the cursor, which on the
+      # Licences screen scroll it instead and leave the cursor at rest.
+      def read_with_stick(seconds)
+        stick = @gamepads.stick
+        return stick unless @show.licences?
+
+        @show.stick_licences(stick, seconds)
+        Presentation::Stick.rest
+      end
+
+      # Held arrow and Page keys go on scrolling the Licences screen, which
+      # is the only place the keyboard asks for repeats.
+      def repeat_keys
+        reading = @show.licences?
+        return if reading == @reading
+
+        @reading = reading
+        ::Lota::Keyboard.key_repeat = reading
+      end
 
       # A press at +x+, +y+, by +by+ (a finger's id, :mouse, :gamepad, or
       # the autopilot), which its release names too.

@@ -31,8 +31,9 @@ module DotPopper
                      tutor: Tutor.new(BestScore::Memory.new, times: look::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
                      lifetime: Lifetime.new(BestScore::Memory.new), sizing_store: BestScore::Memory.new,
                      input: InputKind::MOUSE, measure: RoughMeasure.new, hint: -> {},
-                     keeper: RecordKeeper.new(best: game.best, lifetime:))
+                     keeper: RecordKeeper.new(best: game.best, lifetime:), notices: Notices.none)
         @game = game
+        @notices = notices
         @measure = measure
         @hint = hint
         @lifetime = lifetime
@@ -59,6 +60,8 @@ module DotPopper
         @penalized_at = -Float::INFINITY
         @recorder = RoundStats::Recorder.new
         @records = nil
+        @licences = nil
+        @licence_drag = nil
         @keeper = keeper
         @clearing = HoldToConfirm.idle(look::RECORDS_CLEAR.hold)
         @undo = nil
@@ -138,7 +141,8 @@ module DotPopper
         case control_at(x, y)&.name
         in :play then play
         in :continue then continue_on
-        in :back then close_records
+        in :back then leave
+        in :licences then open_licences
         in :mute then sounds.toggle_mute
         in :records then open_records
         in DotSizing => sizing then choose_sizing(sizing)
@@ -146,7 +150,7 @@ module DotPopper
         in :undo then undo
         in :clear then hold_clear(by)
         in nil if by == :gamepad then primary
-        in nil then toy_tap(x, y)
+        in nil then licences? ? @licence_drag = [by, y] : toy_tap(x, y)
         end
       end
 
@@ -156,7 +160,8 @@ module DotPopper
       # these.
       def controls
         Control.apart(
-          if records? then records_controls
+          if licences? then [button(:back, layout.back_button)]
+          elsif records? then records_controls
           elsif title? then title_controls
           elsif finished? then finale_controls
           else []
@@ -178,7 +183,7 @@ module DotPopper
       # over. In a round it does nothing, since only a press at a place
       # may touch the score.
       def primary
-        if records? then close_records
+        if records? then leave
         elsif title? then play
         elsif finished? then continue_on
         end
@@ -229,7 +234,7 @@ module DotPopper
       # Says whether there was somewhere to go back from, so that elsewhere
       # the key can do its usual job.
       def back
-        if records? then close_records
+        if records? then leave
         elsif finished? then continue_on
         else return false
         end
@@ -265,13 +270,78 @@ module DotPopper
 
       def close_records
         @records = nil
+        @licences = nil
         @clearing = clearing.cancel
         sounds.play(:tick, pitch: 0.8)
+      end
+
+      # Back, from the Licences screen to the Records screen, or from the
+      # Records screen to the title.
+      def leave = licences? ? close_licences : close_records
+
+      # Whether the Licences screen is open over the Records screen.
+      def licences? = !@licences.nil?
+
+      # How far down the Licences screen is scrolled (LicenceScroll), while
+      # it is open.
+      def licences = @licences
+
+      # The Licences screen's lines (LicenceLines), laid out for the
+      # screen's size, while it is open.
+      def licence_lines = @licence_lines&.last
+
+      # Where the Licences screen's heading and its window of text go.
+      def licences_layout = LicencesLayout.new(layout:, look: look::LICENCES)
+
+      # Opens the Licences screen over the Records screen, at the top.
+      def open_licences
+        return unless records? && !licences?
+
+        @licences = LicenceScroll.at_top(content: 0.0, window: 0.0)
+        lay_out_licences
+        sounds.play(:tick)
+      end
+
+      def close_licences
+        @licences = nil
+        @licence_drag = nil
+        sounds.play(:tick, pitch: 0.8)
+      end
+
+      # Scrolls the Licences screen down by +pixels+ (up for fewer).
+      def scroll_licences(pixels) = (@licences = @licences.by(pixels) if licences?)
+
+      # A mouse wheel's notches, +notches+ of them, positive for up.
+      def wheel_licences(notches) = scroll_licences(-notches * look::LICENCES.wheel * licences_layout.line)
+
+      # A gamepad's left stick or d-pad (Stick) held for +seconds+.
+      def stick_licences(stick, seconds)
+        push = stick.shaped(look::GAMEPAD.dead_zone, look::GAMEPAD.curve)
+        scroll_licences(push.y * look::LICENCES.stick * licences_layout.line * seconds)
+      end
+
+      # A key that scrolls the Licences screen; says whether it was one.
+      def licence_key(name)
+        return false unless licences?
+
+        @licences = @licences.key(name, line: licences_layout.line)
+        %i[up down pageup pagedown home end].include?(name.to_s.to_sym)
+      end
+
+      # A finger or the mouse, +by+ (as #tap names it), dragged to +y+,
+      # drags the page along with it.
+      def drag_licences(by, y)
+        held, from = @licence_drag
+        return unless licences? && held == by
+
+        scroll_licences(from - y)
+        @licence_drag = [by, y]
       end
 
       # A gamepad's Y on the Records screen, held by +by+: Undo while it is
       # offered, or else the start of holding "Clear my records…".
       def clear_or_undo(by)
+        return if licences?
         return undo if undo_offer
 
         hold_clear(by) if clear_offered?
@@ -279,7 +349,10 @@ module DotPopper
 
       # +by+ (as #tap names it) let go. A hold of "Clear my records…" it
       # made ends, with nothing cleared, if it was let go too soon.
-      def let_go(by) = @clearing = clearing.release(by, now)
+      def let_go(by)
+        @licence_drag = nil if @licence_drag&.first == by
+        @clearing = clearing.release(by, now)
+      end
 
       # Whatever holds "Clear my records…" stops, with nothing cleared, as
       # when the window loses focus and a release may never be heard.
@@ -350,6 +423,7 @@ module DotPopper
       # size changes with it, as dots sized to the screen do.
       def resize(layout, field)
         @layout = layout
+        lay_out_licences if licences?
         @attract = field.radius == attract.field.radius ? attract.refit(field) : Attract.spawn(field, look::TITLE)
       end
 
@@ -393,8 +467,22 @@ module DotPopper
          (primary_button(:continue, plan.continue_button) if plan.continue_button)].compact
       end
 
+      # The Licences text broken into lines for this screen, and the scroll
+      # kept at the same place on it.
+      def lay_out_licences
+        page = licences_layout
+        key = [page.text_size, page.room]
+        if @licence_lines&.first != key
+          book = (@licence_book ||= LicenceBook.compose(words, @notices))
+          @licence_lines = [key, LicenceLines.set(book, size: page.text_size, room: page.room, line: look::LICENCES.line,
+                                                  measure: @measure)]
+        end
+        @licences = @licences.fitted(content: licence_lines.height, window: page.window.height)
+      end
+
       def records_controls
-        [(button(:undo, layout.undo_button) if undo_offer),
+        [(button(:licences, layout.licences_button)),
+         (button(:undo, layout.undo_button) if undo_offer),
          (button(:clear, layout.clear_records_button) if clear_offered?),
          button(:back, layout.back_button)].compact
       end
@@ -504,6 +592,7 @@ module DotPopper
 
       def title_shown(event)
         @records = nil
+        @licences = nil
         @clearing = clearing.cancel
         effects.clear
         @finale = nil

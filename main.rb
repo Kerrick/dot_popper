@@ -92,6 +92,7 @@ end
 def Lota.focus(focused) = @app&.focus(focused)
 def Lota.mousefocus(focused) = @app&.mouse_focus(focused)
 
+def Lota.wheelmoved(_x, y, *) = @app&.wheel_moved(y)
 def Lota.keypressed(key) = @app.key_pressed(key)
 def Lota.resize(_width, _height) = @app&.resize
 

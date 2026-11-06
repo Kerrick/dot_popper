@@ -121,7 +121,7 @@ module DotPopper
       def note_y(i) = heading_y + (heading_size * 0.75) + (note_size * 1.3 * (i + 0.5))
       def prompt_size = layout.scaled(Look::TYPE.prompt)
       # The prompt to go back sits over the row of "Clear my records…".
-      def prompt_y = layout.clear_records_button.y - layout.margin - (prompt_size * 0.6)
+      def prompt_y = layout.records_floor - layout.margin - (prompt_size * 0.6)
 
       # The rows' type size, and the height of a row.
       def text_size = [(row / look.line).floor, SMALLEST_TEXT].max

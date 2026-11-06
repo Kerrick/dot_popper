@@ -1,0 +1,3 @@
+Lota fixture notices
+
+Library A is MIT.

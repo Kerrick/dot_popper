@@ -776,3 +776,11 @@ CI builds a tag as that tag's version, without its `v`, in place of `fledge.yml`
 **Why:** The v0.8.2-rc.1 macOS kit said "version 0.8.1", since `fledge.yml` hadn't been bumped. The tag is what a release is. macOS's and iOS's `CFBundleShortVersionString` and Windows' file version take only numbers, so an rc's suffix has no form every platform allows, and the header's tag still tells one candidate from another. Kits.yml pins the version in CI's copy of `fledge.yml` because the shared fuse action reads it from there.
 
 **To reverse:** Drop the "Take the version from the tag" steps and the `check-build` lines from kits.yml.
+
+### Licences is a screen over Records, and finds its texts by looking upward
+
+Licences opens from a quiet pill beside Back on the Records screen (above Back on a phone too narrow for both), over Records rather than as a screen of its own: Back, Escape and B go back one step, to Records. It shows Dot Popper's notice, its LICENSE, CC0 for the sounds and icon, Fredoka's OFL.txt, then Lota's NOTICES.txt and the files at the top of Fledge's `notices/`, each only when the running build carries it. `Shell::NoticeFiles` looks for them in the game's folder and in the folders above it and above the program, up to four levels, nearest first, because the fused layouts differ: `NOTICES.txt` lands in the app's `app` folder, Fledge's `notices/` beside `app` on a computer and with the game's own files on a phone. The stick and d-pad scroll the page there instead of moving the gamepad's cursor, and Y holds nothing.
+
+**Why:** The app stores want licences readable inside the app, since players cannot open the app's folder. Searching upward finds the files without knowing the platform, and a build with none of them still shows the rest.
+
+**To reverse:** Drop the Licences pill from `Layout#records_controls` and `Show#open_licences`; the rest is unreachable and can go with it.

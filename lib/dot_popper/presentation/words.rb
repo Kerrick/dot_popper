@@ -8,7 +8,7 @@ module DotPopper
     # with no name the game made up for itself. The words that say what to
     # do are ByInputs, said as a tap, a click, or a gamepad's button,
     # whichever +input+ (InputKind) the player last used (#for): +play+,
-    # +continue+, +go_back+, the +legend+'s verbs for a bright and a
+    # +continue+, +go_back+, +licences+, the +legend+'s verbs for a bright and a
     # popped dot, and +covered+, which teaches the stacking rule on Game
     # Over, a sentence a line. +labels+ name the Records screen's sections
     # and rows, by what they count. +goals+ say each kind of DailyGoal as
@@ -18,7 +18,7 @@ module DotPopper
     class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time, :covered,
                               :share, :copied, :records, :go_back, :no_rounds, :clear, :keep_holding,
                               :hold_to_clear, :cleared, :undo, :labels, :goals, :goal_done, :goal_met,
-                              :screen_size, :legend, :input)
+                              :screen_size, :legend, :licences, :licences_title, :notice, :input)
       MINUS = "−" # a true minus sign, as wide as the plus
       # How near a round must come to the best for Game Over to say by how
       # much; further off, the gap is only a number to dwell on.
@@ -55,6 +55,7 @@ module DotPopper
       def clear = super.for(input)
       def hold_to_clear = super.for(input)
       def undo = super.for(input)
+      def licences = super.for(input)
 
       # What the Records screen says while "Clear my records…" is held:
       # on a gamepad, naming +button+, the one held ("A" or "Y").
