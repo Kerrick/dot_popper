@@ -8,7 +8,7 @@ Dot Popper is AGPL-3.0-or-later, and so is Lota, which ships inside every build.
 
 The bundled third-party code also needs a check before any store build:
 
-- **OpenAL Soft is LGPL-2.1.** On iOS it is linked statically, and the LGPL requires that users be able to relink. That means shipping the object files, or linking it dynamically. On Android it is a shared `libopenal.so`, which is fine.
+- **OpenAL Soft is LGPL-2.1.** It ships on Android (as a shared `libopenal.so`, which a user can replace) and in the desktop builds, so their notices must include its source offer. iOS doesn't use it: there, Lota links Apple's own OpenAL framework, as LÖVE does, so the iOS build contains no LGPL code.
 - **FreeType** is used under the FreeType License (not the GPL), which needs a credit line in the app.
 - **The rest is permissive:** LÖVE (zlib), SDL (zlib), Ruby (Ruby or BSD-2), Box2D (MIT), Fredoka (SIL OFL 1.1), and the CC0 sounds and icon.
 
@@ -40,7 +40,7 @@ Every store build should carry a "Licenses" or "About" screen, or file, listing 
   - An App Store Connect record for `com.kerricklong.DotPopper`, then an upload through Xcode's Organizer or `xcrun altool`/Transporter, then TestFlight.
   - A privacy manifest (`PrivacyInfo.xcprivacy`) declaring no tracking and any required-reason APIs the runtime uses, such as file timestamps.
   - App icons at every required size.
-  - The license decision above, and the OpenAL Soft relinking question.
+  - The license decision above.
   - A Release build rather than Debug.
 
 ## Mac App Store
