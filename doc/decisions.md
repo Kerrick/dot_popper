@@ -191,6 +191,14 @@ The game saves whether sound is on in `sound.txt`, and the best score in `best_s
 
 **To reverse:** In `Shell::App#load`, give the `Speaker` and `BestScore` a store that keeps nothing.
 
+### The night reaches past the last whole unit, and the game says what its window is
+
+The iPhone 13 mini playtest found a thin magenta strip at the right edge in landscape, whichever way the phone was turned. In an iPhone 13 mini Simulator (iOS 26.1), the game now prints one line as it starts and on every resize: landscape reads `screen 811x375 units, 2338x1080 pixels, dpi scale 2.88 (native 2.8793), safe area 49,0,711,355, mode 812x375 fullscreen desktop, usedpiscale true`, and portrait `374x811 units, 1080x2338 pixels, dpi scale 2.8829 (native 2.88), mode 375x812`. The window is 812 points wide but Lota's dimensions are 811 units, rounded down from 2338 ÷ 2.88 = 811.8, and the game's own screenshots show the last two columns of pixels (2336 and 2337) black in landscape, and 1078 and 1079 in portrait. Drawing the night a unit past the dimensions, and clearing each frame to the night's darkest ink (`Renderer#cover`, `Renderer#prepare`), doesn't reach them, so they lie outside what LÖVE draws to: the game can't paint them. The edge glow draws nothing at alpha 0, the bloom is off and draws only where it adds light, and the HUD stays in the safe area. The rest is for Lota and Fledge: their drawable is 2338 pixels wide, against the screen's 2340, and their viewport stops short of it. The game keeps the wider night and the clear color, which cost nothing, in case a device's viewport reaches a fraction further.
+
+**Why:** The line lets a run on the real phone be set beside the Fledge SDL test program's on the same phone, and costs one line per start or turn.
+
+**To reverse:** Drop `App#report_screen`, and `Renderer#cover` for `G.dimensions`.
+
 ### Every shader is optional
 
 If a shader fails to compile, the game prints a warning once and draws plain shapes instead. The plain shapes still keep fresh and popped dots distinct. Setting `DOT_POPPER_NO_SHADERS=1` forces this fallback.

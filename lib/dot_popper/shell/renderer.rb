@@ -28,7 +28,7 @@ module DotPopper
       end
 
       def draw(cursor)
-        width, height = G.dimensions
+        width, height = cover
         layout = @show.layout
         backdrop(width, height)
         if @show.title?
@@ -56,6 +56,17 @@ module DotPopper
       private
 
       def radius = @show.game.field.radius
+
+      # How far the night and the veils must reach to cover every pixel:
+      # a unit past Lota's dimensions. Those are whole units, rounded
+      # down, while the drawable may be a fraction of a unit wider: on an
+      # iPhone 13 mini turned landscape it is 2338 pixels at a scale of
+      # 2.88, 811.8 units, which Lota calls 811, and a night that stopped
+      # there left the last two columns of pixels undrawn.
+      def cover
+        width, height = G.dimensions
+        [width + 1, height + 1]
+      end
 
       # Game Over's lines, and under them, the first few times, how to
       # play with the pile.
@@ -100,8 +111,13 @@ module DotPopper
       public
 
       # Makes the fonts a frame may need, so the first pop or tick of a
-      # round does not stall on making one.
-      def prepare = @hud.prepare(@show.layout)
+      # round does not stall on making one, and clears each frame to the
+      # night's darkest ink, so a pixel nothing draws is never black or
+      # another color.
+      def prepare
+        G.background_color = @pen.palette.ink_edge.to_a
+        @hud.prepare(@show.layout)
+      end
 
       def backdrop(width, height)
         return flat_backdrop(width, height) unless @pen.shader?(:backdrop)
