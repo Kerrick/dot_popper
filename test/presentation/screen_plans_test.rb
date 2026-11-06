@@ -36,7 +36,21 @@ class ScreenPlansTest < Minitest::Test
         assert_apart plan.placed.rects.values + screen.bottom_row, name
         plan.placed.rects.each_value { assert_inside it, screen_layout.safe, name }
         assert_operator plan.backing.bottom, :<=, screen.bottom_row.map(&:y).min, name
+        assert_goal_fits(plan, goal == :done, screen_layout, name)
       end
+    end
+  end
+
+  # On the maintainer's Android phone in portrait, "Done today:" and its
+  # goal ran off both sides: a met goal was never broken into lines.
+  def assert_goal_fits(plan, done, screen_layout, name)
+    return unless plan[:goal]
+
+    measure = RoughMeasure.new
+    size = plan.size(:goal)
+    plan.goal_lines.each_with_index do |line, i|
+      check = done && i.zero? ? measure.height(:semibold, size) * 0.75 : 0.0
+      assert_operator measure.width(:semibold, size, line) + check, :<=, screen_layout.safe.width, "#{name}: #{line}"
     end
   end
 

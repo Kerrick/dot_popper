@@ -124,11 +124,14 @@ module DotPopper
           best: layout.type_size(type.best, scale), goal: layout.type_size(type.summary * 1.1, scale) }
       end
 
+      # Today's goal broken into lines that fit across. Once it is done, a
+      # check stands before its first line (Shell::Check, half a line's
+      # height and a quarter more of gap), so the lines leave it room.
       def goal_lines(size)
         return [] unless goal
-        return [goal] if done
 
-        Words.balance(goal, across) { measure.width(:semibold, size, it) }
+        room = done ? across - (measure.height(:semibold, size) * 0.75) : across
+        Words.balance(goal, room) { measure.width(:semibold, size, it) }
       end
 
       # How wide a line of the middle may be.
