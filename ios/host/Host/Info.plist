@@ -1,17 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Dot Popper's Info.plist, which `fledge build ios` lays over the one it
-  writes. It is Fledge 0.5.0's examples/sdl_phone/host/ios/Host/Info.plist
-  (AGPL-3.0-or-later), whose scene delegate is SDL's SDLUIKitSceneDelegate,
-  which SDL_RunApp in Host/main.m expects. The name, identifier, and
-  version are the target's build settings, which fledge.yml gives.
+  SPDX-FileCopyrightText: 2026 Kerrick Long <me@kerricklong.com>
+  SPDX-License-Identifier: AGPL-3.0-or-later
 
-  Dot Popper's additions (doc/ios.md, "What the iOS app needs"): its
-  display name, which has a space the target's name cannot; the status
-  bar hidden from launch; UIApplicationSupportsIndirectInputEvents, which
-  SDL needs to see a mouse or trackpad; an empty UILaunchScreen, so iOS
-  runs the app at the screen's own size; and every orientation on iPad.
-  UIRequiresFullScreen stays unset, so Split View and Stage Manager work.
+  Dot Popper's copy of Lota 0.2.2's iOS Info.plist (ext/lota/phone/host/ios
+  in the gem), which kits.yml lays over Lota's host in the phone project.
+  Its one change: the display name, Dot Popper, which has a space the
+  target's name cannot. Lota's notes follow.
+
+  A Lota game's Info.plist, which fledge.yml's ios host lays over the one
+  fledge build ios writes. It starts from Fledge's
+  examples/sdl_phone/host/ios/Host/Info.plist at v0.5.1: the scene's
+  delegate is SDL's SDLUIKitSceneDelegate, which SDL_RunApp in
+  Host/main.m expects. It adds what a game asks of iOS:
+
+  - UILaunchScreen, empty, so iOS runs the app at the screen's own size
+    rather than letterboxed.
+  - UIApplicationSupportsIndirectInputEvents, which SDL asks for to read a
+    mouse or trackpad ("You need UIApplicationSupportsIndirectInputEvents
+    in your Info.plist for mouse support" without it).
+  - UIStatusBarHidden, with UIViewControllerBasedStatusBarAppearance
+    false, so the status bar stays hidden, as a game's usually is.
+  - LotaAudioSessionCategory, which Host/main.m reads: the audio session's
+    category, set before SDL and OpenAL open the audio device. ambient
+    mixes with other apps' audio and the silent switch mutes it;
+    soloAmbient and playback stop other apps' audio, and playback plays
+    through the switch.
+
+  The name under the icon is the target's name; change CFBundleDisplayName
+  for another. The orientations are Fledge's: an iPhone turns to portrait
+  and both landscapes, an iPad to all four. UIRequiresFullScreen stays
+  unset, so iPadOS may show the game beside other apps.
 -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -44,6 +63,8 @@
 	<false/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>LotaAudioSessionCategory</key>
+	<string>ambient</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

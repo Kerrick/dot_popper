@@ -1,6 +1,6 @@
 # Builds Dot Popper's playtest kits (PACKAGING.md, "Playtest kits"): one
 # kit in, one results file out, per device. Each desktop kit holds the app
-# `lota fuse` builds with Lota 0.1.3's release gem (.github/actions/fuse),
+# `lota fuse` builds with Lota 0.2.2's release gem (.github/actions/fuse),
 # on its own platform's runner, as the Package workflow builds the apps:
 #
 # - Windows x64: the game, playtest.ps1, which asks the hand checks one at
@@ -14,13 +14,13 @@
 #   which works as playtest.ps1 does, and a README, tested as the Windows
 #   kit is, under Xvfb with Mesa.
 # - iPad and iPhone (experimental): the Xcode project `fledge build ios`
-#   writes, with Lota 0.1.3's experimental iOS engine built from a clone
-#   of Lota at its v0.1.3 tag, as Lota's CHANGELOG documents, and
-#   ios-results.txt to fill in. A second, fresh runner builds that
+#   writes, with Lota 0.2.2's experimental iOS engine built from a clone
+#   of Lota at its v0.2.2 tag and Lota's iOS host, by the route of Lota's
+#   doc/guide/phones.md, and ios-results.txt to fill in. A second, fresh runner builds that
 #   project for the Simulator and, unsigned, for devices, and runs the
 #   autoplay check of doc/ios.md.
 #
-# Lota documents no Android build, so there is no Android kit. A v* tag
+# The Android kit has a workflow of its own (android.yml). A v* tag
 # attaches the kits to the tag's GitHub Release.
 
 name: Kits
@@ -42,9 +42,9 @@ defaults:
     shell: bash
 
 env:
-  LOTA_VERSION: "0.1.3"
+  LOTA_VERSION: "0.2.2"
   # Only the iOS build names Fledge itself; lota fuse pins its own.
-  FLEDGE_TAG: v0.5.1
+  FLEDGE_TAG: v0.6.0
   IDENTIFIER: com.kerricklong.DotPopper
   BUNDLE_FROZEN: "true"
 
@@ -347,8 +347,8 @@ jobs:
           cmake --version
           xcodegen --version
 
-      # Lota's documented iOS path (CHANGELOG 0.1.3, "Experimental"): its
-      # source, LÖVE's and love-apple-dependencies' with it, from the tag.
+      # The iOS route of Lota's doc/guide/phones.md: its source, LÖVE's and
+      # love-apple-dependencies' with it, from the release's tag.
       - name: Clone Lota at v${{ env.LOTA_VERSION }}, with LÖVE's sources
         run: |
           lota=$RUNNER_TEMP/lota
@@ -362,42 +362,71 @@ jobs:
         run: |
           bundle install
           bundle exec rake ios:sdl3
-          echo "RICE_DIR=$(bundle exec ruby -e 'print Gem.loaded_specs.fetch("rice").full_gem_path')" >> "$GITHUB_ENV"
+          echo "RICE_DIR=$(bundle info rice --path)" >> "$GITHUB_ENV"
 
-      # The desktop's precompiled Lota gems and lockfile give way to the
-      # clone, as a path gem whose extension fledge build ios compiles for
-      # each slice; fledge.yml gains the iOS host in ios/host.
-      - name: Lay out the game for fledge build ios
+      # A gem named by its path carries its whole folder into the app, so
+      # the project names a folder of only what Lota's gem packages.
+      - name: Make a folder of Lota's packaged files
+        working-directory: ${{ env.LOTA_SOURCE }}
         run: |
-          game=$RUNNER_TEMP/game
+          mkdir -p tmp/phone
+          gem build lota.gemspec --output tmp/phone/lota.gem
+          gem unpack tmp/phone/lota.gem --target tmp/phone
+          gem specification tmp/phone/lota.gem --ruby > tmp/phone/lota/lota.gemspec
+          echo "LOTA_GEM=$LOTA_SOURCE/tmp/phone/lota" >> "$GITHUB_ENV"
+
+      # The phone project of Lota's guide: everything in it but the hosts
+      # goes into the app, so the game's copy leaves out what only the
+      # repository needs. Dot Popper's ios/host (its main.m, which paints
+      # the night's ink behind the game, and its Info.plist, with the
+      # display name) goes over Lota's iOS host from the gem.
+      - name: Lay out the phone project
+        run: |
+          phone=$RUNNER_TEMP/phone
+          game=$phone/game/dot_popper
           mkdir -p "$game"
           git archive HEAD | tar -x -C "$game"
-          rm -rf "$game/vendor/cache" "$game/Gemfile.lock" "$game/mise.toml" "$game/.ruby-version"
-          cat > "$game/Gemfile" <<EOF
+          (cd "$game" && rm -rf .github vendor android ios test doc playtest script sig Steepfile Rakefile \
+            Gemfile Gemfile.lock mise.toml .ruby-version)
+          cp -R "$LOTA_GEM/ext/lota/phone/host" "$phone/host"
+          rm -rf "$phone/host/android"
+          cp -R ios/host/. "$phone/host/ios/"
+          cat > "$phone/main.rb" <<'EOF'
+          # frozen_string_literal: true
+
+          # Written by kits.yml: starts the game's copy as its own program does.
+          load File.join(__dir__, "game", "dot_popper", "bin", "dot_popper")
+          EOF
+          cat > "$phone/Gemfile" <<EOF
           # frozen_string_literal: true
 
           # Written by kits.yml for fledge build ios.
           source "https://rubygems.org"
 
-          gem "lota", path: "$LOTA_SOURCE"
+          gem "lota", path: "$LOTA_GEM"
           gem "fledge", git: "https://github.com/setdef/Fledge", tag: "$FLEDGE_TAG", group: :development
           EOF
           ruby script/playtest_kit.rb tag-version "$GITHUB_REF_NAME" fledge.yml
           ruby -ryaml -e '
-            config = YAML.load_file("fledge.yml")
-            config.delete("installers")
-            config["name"] = ENV.fetch("APP_NAME")
-            config["ios"] = { "host" => "ios/host" }
+            source = YAML.load_file("fledge.yml")
+            program = source.fetch("programs").first
+            config = {
+              "name" => ENV.fetch("APP_NAME"),
+              "identifier" => program.fetch("identifier"),
+              "version" => source.fetch("version"),
+              "icon" => File.join("game/dot_popper", program.fetch("icon")),
+              "ios" => { "host" => "host/ios" }
+            }
             File.write(ARGV[0], "# Written by kits.yml for fledge build ios, from fledge.yml.\n" + YAML.dump(config))
-          ' "$game/fledge.yml"
-          cat "$game/Gemfile" "$game/fledge.yml"
+          ' "$phone/fledge.yml"
+          cat "$phone/Gemfile" "$phone/fledge.yml"
           version=$(ruby -ryaml -e 'print YAML.load_file("fledge.yml").fetch("version")')
           echo "APP_VERSION=$version" >> "$GITHUB_ENV"
 
       - name: fledge build ios
-        working-directory: ${{ runner.temp }}/game
+        working-directory: ${{ runner.temp }}/phone
         env:
-          BUNDLE_GEMFILE: ${{ runner.temp }}/game/Gemfile
+          BUNDLE_GEMFILE: ${{ runner.temp }}/phone/Gemfile
           BUNDLE_PATH: ${{ runner.temp }}/app-bundle
           XDG_CACHE_HOME: ${{ runner.temp }}/cache
         run: |
@@ -411,18 +440,20 @@ jobs:
 
       - name: Check the project stands on its own, and assemble the kit
         run: |
-          project=$RUNNER_TEMP/game/dist/$APP_NAME-ios
+          project=$RUNNER_TEMP/phone/dist/$APP_NAME-ios
           if grep -rIl -e "$RUNNER_TEMP" -e "$GITHUB_WORKSPACE" -e /Users/runner \
               "$project/project.yml" "$project/$APP_NAME.xcodeproj" "$project/Host" "$project/fledge/fledge.cfg"; then
             echo "::error::the project names a path on this runner"; exit 1
           fi
-          grep -q AVAudioSessionCategoryAmbient "$project/Host/main.m"
+          plutil -extract LotaAudioSessionCategory raw "$project/Host/Info.plist" | grep -qx ambient
+          plutil -extract CFBundleDisplayName raw "$project/Host/Info.plist" | grep -qx "Dot Popper"
           grep -q SDL_ACCELEROMETER_AS_JOYSTICK "$project/Host/main.m"
+          grep -q "0x0c / 255.0 green:0x0b / 255.0 blue:0x22" "$project/Host/main.m"
           grep -q 'TARGETED_DEVICE_FAMILY: "1,2"' "$project/project.yml"
           echo "symbolic links: $(find "$project" -type l | wc -l)"
           {
             echo "Dot Popper $GITHUB_REF_NAME, commit $GITHUB_SHA, version $APP_VERSION"
-            echo "Built by fledge build ios (Fledge $FLEDGE_TAG) with Lota $LOTA_VERSION's experimental iOS engine, from Lota's tag v$LOTA_VERSION ($(git -C "$LOTA_SOURCE" rev-parse --short HEAD))"
+            echo "Built by fledge build ios (Fledge $FLEDGE_TAG) with Lota $LOTA_VERSION's experimental iOS engine and host, from Lota's tag v$LOTA_VERSION ($(git -C "$LOTA_SOURCE" rev-parse --short HEAD))"
             echo "Built $(date -u +%Y-%m-%d) with $(xcodebuild -version | tr '\n' ' ')on $(sw_vers -productName) $(sw_vers -productVersion)"
             echo "Workflow run $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           } > "$RUNNER_TEMP/build.txt"
