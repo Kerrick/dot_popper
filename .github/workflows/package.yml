@@ -258,7 +258,7 @@ jobs:
           # An app started through its AUMID does not inherit this shell's
           # variables, so they go in the user's environment, which Explorer
           # reloads when told the environment changed.
-          $variables = @{ ALSOFT_DRIVERS = 'null'; DOT_POPPER_AUTOPLAY = '1'; DOT_POPPER_SEED = '7'; DOT_POPPER_QUIT_AFTER = '20'; DOT_POPPER_PERF = '1'; GALLIUM_DRIVER = 'llvmpipe' }
+          $variables = @{ ALSOFT_DRIVERS = 'null'; DOT_POPPER_AUTOPLAY = '1'; DOT_POPPER_SEED = '7'; DOT_POPPER_QUIT_AFTER = '90'; DOT_POPPER_PERF = '1'; GALLIUM_DRIVER = 'llvmpipe' }
           foreach ($name in $variables.Keys) { [Environment]::SetEnvironmentVariable($name, $variables[$name], 'User') }
           Start-Sleep -Seconds 3
 
@@ -268,28 +268,19 @@ jobs:
           if (-not $started) { throw 'Dot Popper never started from its AUMID' }
           Write-Host "started after $i s"
           $watch = [Diagnostics.Stopwatch]::StartNew()
-          $started | ForEach-Object { $_.WaitForExit(60000) | Out-Null }
+          $started | ForEach-Object { $_.WaitForExit(240000) | Out-Null }
           $left = Get-Process -Name 'Dot Popper' -ErrorAction SilentlyContinue
           Write-Host "ran $([int]$watch.Elapsed.TotalSeconds) s more; still running: $([bool]$left)"
           if ($left) { $left | Stop-Process -Force; Write-Host '::error::it did not quit by itself, so DOT_POPPER_QUIT_AFTER did not reach it' }
 
-          Write-Host '--- files under the package virtualized AppData'
+          # The game saves only when a round ends, and the autopilot's first
+          # round runs past half a minute, hence 90 s of game time. Inside
+          # the package, Windows redirects roaming AppData to the package's
+          # LocalCache; the saves must land there or in the real one.
           $data = Join-Path $env:LOCALAPPDATA "Packages\$family"
-          Get-ChildItem -LiteralPath $data -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_.FullName }
-          Write-Host '--- every save file anywhere under the user profile'
-          Get-ChildItem -LiteralPath 'C:\Users', 'C:\ProgramData' -Recurse -Force -File -ErrorAction SilentlyContinue -Include 'rounds.csv', 'best_score.txt', 'lifetime.txt' | ForEach-Object { Write-Host $_.FullName }
-          Write-Host '--- folders in the real roaming AppData'
-          Get-ChildItem -LiteralPath $env:APPDATA -Directory -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_.Name }
-
-          Write-Host '--- the same app run inside the package by Invoke-CommandInDesktopPackage, its output kept'
-          $log = Join-Path $env:RUNNER_TEMP 'package-out.txt'
-          $exe = Join-Path $package.InstallLocation 'Dot Popper.exe'
-          Invoke-CommandInDesktopPackage -PackageFamilyName $family -AppId App -Command 'cmd.exe' -Args "/c `"`"$exe`" > `"$log`" 2>&1`""
-          for ($i = 0; $i -lt 60 -and -not (Get-Process -Name 'Dot Popper' -ErrorAction SilentlyContinue); $i++) { Start-Sleep -Seconds 1 }
-          Get-Process -Name 'Dot Popper' -ErrorAction SilentlyContinue | ForEach-Object { $_.WaitForExit(60000) | Out-Null }
-          if (Test-Path $log) { Get-Content $log | Select-Object -First 40 | ForEach-Object { Write-Host $_ } } else { Write-Host 'no output file' }
-          Get-ChildItem -LiteralPath $data -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_.FullName }
-          Write-Host "real roaming dot_popper exists: $(Test-Path (Join-Path $env:APPDATA 'dot_popper'))"
+          $saves = @(Get-ChildItem -LiteralPath $data, $env:APPDATA -Recurse -Force -File -ErrorAction SilentlyContinue -Filter 'rounds.csv')
+          $saves | ForEach-Object { Write-Host "saved: $($_.FullName)" }
+          if (-not $saves) { Write-Host '::error::no rounds.csv was saved anywhere'; $left = $true }
           Remove-AppxPackage -Package $package.PackageFullName
           foreach ($name in $variables.Keys) { [Environment]::SetEnvironmentVariable($name, $null, 'User') }
           if ($left) { exit 1 }
