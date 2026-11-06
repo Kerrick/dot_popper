@@ -1,11 +1,11 @@
-Dot Popper playtest kit for iPad (experimental)
-===============================================
+Dot Popper playtest kit for iPhone and iPad (experimental)
+=========================================================
 
 @BUILD@
 
 This kit is EXPERIMENTAL. Lota 0.1.3 builds for iOS only as an
 experiment (its CHANGELOG: "Experimental: under Fledge's fledge build
-ios ..."), and no build of Dot Popper has yet run on a real iPad. Finding
+ios ..."). Finding
 out whether it signs, installs, runs, and sounds right there is the point
 of this playtest.
 
@@ -16,8 +16,9 @@ What is in the kit
   BUILD-INFO.txt names) generated, with Lota 0.1.3's iOS engine and SDL3 compiled into
   FledgeExtensions.xcframework, the Ruby runtime in FledgeRuby.xcframework,
   and the game in fledge/app. It opens in Xcode as it is.
-- ipad-results.txt: the questions. Fill it in as you play and send it
-  back. It is the one file to return (with any screenshots).
+- ios-results.txt: the questions (called ipad-results.txt in older
+  kits). Fill it in as you play and send it back. It is the one file to
+  return (with any screenshots).
 - BUILD-INFO.txt: which commits, tools and Xcode built it.
 
 What the Mac needs
@@ -51,16 +52,16 @@ DotPopper-ios/DotPopper.xcodeproj.
    com.kerricklong.DotPopper.playtest. Nothing else depends on it.
 
 A free Personal Team signs for 7 days at a time, for at most 3 apps on the
-iPad (Apple, "Choosing a membership").
+device (Apple, "Choosing a membership").
 
-3. Get the iPad ready
----------------------
+3. Get the iPhone or iPad ready
+-------------------------------
 
-1. Plug the iPad into the Mac, unlock it, tap Trust, and enter its
+1. Plug the iPhone or iPad into the Mac, unlock it, tap Trust, and enter its
    passcode.
-2. On the iPad: Settings > Privacy & Security > Developer Mode (at the
-   bottom, under Security). It appears only once the iPad has been paired
-   with a Mac running Xcode. Turn it on, restart the iPad, then tap Turn On
+2. On the device: Settings > Privacy & Security > Developer Mode (at the
+   bottom, under Security). It appears only once the device has been paired
+   with a Mac running Xcode. Turn it on, restart the device, then tap Turn On
    and enter the passcode.
 
 4. Check the scheme
@@ -75,21 +76,21 @@ Leave DOT_POPPER_AUTOPLAY out too: it makes a bot play.
 5. Run
 ------
 
-Choose the iPad as the run destination in the toolbar and press Run
+Choose the iPhone or iPad as the run destination in the toolbar and press Run
 (Command-R). Xcode builds, signs, installs and starts Dot Popper.
 
-If the iPad says "Untrusted Developer": on the iPad open Settings > General
+If the device says "Untrusted Developer": on it, open Settings > General
 > VPN & Device Management, tap your Apple ID under Developer App, tap
 Trust, and press Run again.
 
 Once installed, Dot Popper is on the Home Screen and runs without the Mac
-for 7 days. After that, plug the iPad in and press Run again; installing
+for 7 days. After that, plug the device in and press Run again; installing
 over the app keeps its scores.
 
-6. Play, and fill in ipad-results.txt
--------------------------------------
+6. Play, and fill in ios-results.txt
+------------------------------------
 
-Open ipad-results.txt on the Mac (TextEdit is fine), play on the iPad, and
+Open ios-results.txt on the Mac (TextEdit is fine), play on the device, and
 write each answer after its arrow. The game starts on its title screen:
 tap anywhere to play, and tap the bright dots.
 
@@ -98,11 +99,11 @@ If something goes wrong, send these with the results file:
 - The build or signing fails: the red messages in Xcode's Issue navigator
   (Command-5), selected and copied as text.
 - The app closes or freezes: Window > Devices and Simulators, select the
-  iPad, Open Recent Logs, and the newest DotPopper entry. Or, on the iPad,
+  device, Open Recent Logs, and the newest DotPopper entry. Or, on the device,
   Settings > Privacy & Security > Analytics & Improvements > Analytics
   Data, the newest DotPopper file, sent with its Share button.
 - It looks or sounds wrong: a screenshot (the top button and a volume
-  button together), and which way the iPad was turned.
+  button together), and which way the device was turned.
 
 The game's log: while Xcode runs the app, its console (Shift-Command-C)
 shows lines that start with "Dot Popper:". A healthy start says "a dot's
@@ -112,5 +113,5 @@ something failed and the game carried on: paste those into the last
 question.
 
 The game's saved files (scores, and rounds.csv, a line for each round):
-Window > Devices and Simulators, select the iPad, select Dot Popper under
+Window > Devices and Simulators, select the device, select Dot Popper under
 Installed Apps, click the ... (gear) button, and Download Container.

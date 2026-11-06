@@ -6,7 +6,7 @@
 #
 #   ruby script/playtest_kit.rb windows OUT [BUILD]       # playtest.ps1
 #   ruby script/playtest_kit.rb linux OUT [BUILD]         # playtest.sh
-#   ruby script/playtest_kit.rb sheet DEVICE OUT [BUILD]  # mac, ipad, or android results sheet
+#   ruby script/playtest_kit.rb sheet DEVICE OUT [BUILD]  # mac, ios, or android results sheet
 #   ruby script/playtest_kit.rb text TEMPLATE OUT [BUILD] [--crlf]
 #   ruby script/playtest_kit.rb tag-version REF FLEDGE_YML  # pins a tag's version
 #   ruby script/playtest_kit.rb check-build REF BUILD       # BUILD names it
@@ -47,7 +47,9 @@ in ["linux", out, *build]
   list = Playtest::ShellList.new(Playtest::Checklist.load(:linux))
   File.write(out, list.fill(stamp(template("playtest.sh"), build_lines(build.first))))
   File.chmod(0o755, out)
-in ["sheet", ("mac" | "ipad" | "android") => device, out, *build]
+in ["sheet", "ipad", out, *build] # the iOS list's name in older workflows
+  File.write(out, Playtest::ResultsSheet.new(Playtest::Checklist.load(:ios), build_lines(build.first)).render)
+in ["sheet", ("mac" | "ios" | "android") => device, out, *build]
   File.write(out, Playtest::ResultsSheet.new(Playtest::Checklist.load(device), build_lines(build.first)).render)
 in ["text", template, out, *rest]
   windows = rest.delete("--crlf")
@@ -66,6 +68,6 @@ in ["check-build", ref, build]
   puts "#{build} names Dot Popper #{ref} at version #{version.app}"
 else
   abort "usage: ruby script/playtest_kit.rb windows OUT [BUILD] | linux OUT [BUILD] | " \
-        "sheet mac|ipad|android OUT [BUILD] | text TEMPLATE OUT [BUILD] [--crlf] | " \
+        "sheet mac|ios|android OUT [BUILD] | text TEMPLATE OUT [BUILD] [--crlf] | " \
         "tag-version REF FLEDGE_YML | check-build REF BUILD"
 end

@@ -12,9 +12,9 @@ class PlaytestKitTest < Minitest::Test
   WINDOWS = Playtest::Checklist.load(:windows)
   MAC = Playtest::Checklist.load(:mac)
   LINUX = Playtest::Checklist.load(:linux)
-  IPAD = Playtest::Checklist.load(:ipad)
+  IOS = Playtest::Checklist.load(:ios)
   ANDROID = Playtest::Checklist.load(:android)
-  LISTS = [WINDOWS, MAC, LINUX, IPAD, ANDROID].freeze
+  LISTS = [WINDOWS, MAC, LINUX, IOS, ANDROID].freeze
 
   # Every String the presentation's settings hold, the words among them.
   def self.game_strings(value = DotPopper::Presentation::Look.constants.map { DotPopper::Presentation::Look.const_get(it) })
@@ -31,7 +31,7 @@ class PlaytestKitTest < Minitest::Test
 
   def test_the_lists_hold_the_checks_the_maintainer_asked_for
     [WINDOWS, MAC, LINUX].each { assert_equal (1..18).map(&:to_s), it.checks.map(&:id) }
-    assert_equal (1..13).map(&:to_s), IPAD.checks.map(&:id)
+    assert_equal (1..13).map(&:to_s), IOS.checks.map(&:id)
     assert_equal (1..15).map(&:to_s), ANDROID.checks.map(&:id)
     assert_equal %w[14 15 16 17 18], WINDOWS.checks.select(&:controller?).map(&:id)
   end
@@ -130,11 +130,11 @@ class PlaytestKitTest < Minitest::Test
   end
 
   def test_the_results_sheet_holds_the_build_and_every_check_with_a_blank
-    sheet = Playtest::ResultsSheet.new(IPAD, "Dot Popper v9.9.9").render
+    sheet = Playtest::ResultsSheet.new(IOS, "Dot Popper v9.9.9").render
 
     assert_includes sheet, "  Dot Popper v9.9.9"
-    IPAD.each { |check| assert_match(/^#{check.id}\. /, sheet) }
-    assert_operator sheet.scan("Note: ->").size, :==, IPAD.checks.size
+    IOS.each { |check| assert_match(/^#{check.id}\. /, sheet) }
+    assert_operator sheet.scan("Note: ->").size, :==, IOS.checks.size
     assert_includes sheet, "(too small / right / too big): ->"
     assert_includes sheet, "Pasted result:"
   end

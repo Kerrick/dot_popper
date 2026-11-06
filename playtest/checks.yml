@@ -3,7 +3,8 @@
 # renders them into each kit: the desktop list into the Windows kit's
 # playtest.ps1 and the Linux kit's playtest.sh, which ask them one at a
 # time while the game runs, and into the macOS kit's macos-results.txt;
-# the iPad list into the iPad kit's ipad-results.txt, and the Android list
+# the iOS list into the iPhone and iPad kit's ios-results.txt (called
+# ipad-results.txt in older kits), and the Android list
 # into the Android kit's android-results.txt. The results sheets
 # are filled in by hand. test/playtest_kit_test.rb checks that every check
 # has wording on every system, and that each phrase in +quotes+ is one the
@@ -30,7 +31,7 @@
 # A desktop check's try, ask, and after may differ by system: a mapping
 # of windows, mac, and linux to their words, with default for the rest.
 #
-# Desktop checks are written with a mouse's words ("Click"), the iPad's
+# Desktop checks are written with a mouse's words ("Click"), iOS's
 # and Android's with a touch screen's ("Tap"). Windows wording stays in ASCII, since
 # Windows PowerShell 5.1 reads a script without a byte order mark as ANSI.
 
@@ -167,9 +168,9 @@ desktop:
     ask: Holding A on a pile dot drags it, and the right stick rolls the pile.
     answer: yes_no
 
-ipad:
+ios:
   - id: 1
-    try: Open Dot Popper from the Home Screen. Turn the iPad to portrait, then to landscape.
+    try: Open Dot Popper from the Home Screen. Turn the iPhone or iPad to portrait, then to landscape.
     ask: The game fills the screen with no status bar, in portrait and in landscape.
     answer: yes_no
 
@@ -200,12 +201,12 @@ ipad:
         answer: yes_no
 
   - id: 6
-    ask: Rotating the iPad in the middle of a round keeps every dot on screen.
+    ask: Rotating the iPhone or iPad in the middle of a round keeps every dot on screen, each about where it was.
     answer: yes_no
 
   - id: 7
-    try: On the Game Over screen, tilt the iPad one way and another, then give it a short shake.
-    ask: Tilting at Game Over rolls the dots toward the lowest edge. (If they roll the wrong way, say in the note how you held the iPad.)
+    try: On the Game Over screen, tilt the device one way and another, then give it a short shake.
+    ask: Tilting at Game Over rolls the dots toward the lowest edge. (If they roll the wrong way, say in the note how you held the device.)
     answer: yes_no
     parts:
       - ask: A shake tosses them up.
@@ -254,7 +255,7 @@ ipad:
     answer: rating
     scale: 1 (not fun) to 5 (great)
     parts:
-      - ask: Your wife's first impression, in her own words
+      - ask: The player's first impression
         answer: describe
 
 # The Android kit's checks (experimental), for a phone. Back is Android's

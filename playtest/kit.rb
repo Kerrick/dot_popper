@@ -171,7 +171,7 @@ module Playtest
     def names?(line) = line.start_with?("Dot Popper #{ref},") && line.end_with?(", version #{app}")
   end
 
-  # A kit's results sheet, such as the iPad kit's ipad-results.txt: the
+  # A kit's results sheet, such as the iOS kit's ios-results.txt: the
   # build it tests, a few lines about the device, then each check with its
   # blanks, ready to fill in.
   class ResultsSheet < Data.define(:checklist, :build)
@@ -179,9 +179,9 @@ module Playtest
 
     # The sheet's title, and the lines about the device it asks first.
     DEVICES = {
-      ipad: ["Dot Popper iPad playtest results",
-             ["Date played: ->", "iPad or iPhone, and its model (Settings > General > About): ->",
-              "iPadOS or iOS version: ->", "Xcode version on the Mac: ->"]],
+      ios: ["Dot Popper iPhone and iPad playtest results",
+            ["Date played: ->", "iPhone or iPad, and its model (Settings > General > About): ->",
+             "iOS or iPadOS version: ->", "Xcode version on the Mac: ->"]],
       android: ["Dot Popper Android playtest results (experimental)",
                 ["Date played: ->", "Phone model (Settings > About device): ->",
                  "Android version (Settings > About device > Version): ->",
