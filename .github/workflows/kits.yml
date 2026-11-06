@@ -16,7 +16,7 @@
 # - iPad and iPhone (experimental): the Xcode project `fledge build ios`
 #   writes, with Lota 0.1.3's experimental iOS engine built from a clone
 #   of Lota at its v0.1.3 tag, as Lota's CHANGELOG documents, and
-#   ipad-results.txt to fill in. A second, fresh runner builds that
+#   ios-results.txt to fill in. A second, fresh runner builds that
 #   project for the Simulator and, unsigned, for devices, and runs the
 #   autoplay check of doc/ios.md.
 #
@@ -433,8 +433,8 @@ jobs:
           cp "$RUNNER_TEMP/build.txt" "$kit/BUILD-INFO.txt"
           echo "XcodeGen $(xcodegen --version)" >> "$kit/BUILD-INFO.txt"
           ruby script/playtest_kit.rb text playtest/README-ipad.txt "$kit/README.txt" "$RUNNER_TEMP/build.txt"
-          ruby script/playtest_kit.rb sheet ipad "$kit/ipad-results.txt" "$RUNNER_TEMP/build.txt"
-          cat "$kit/BUILD-INFO.txt" "$kit/ipad-results.txt"
+          ruby script/playtest_kit.rb sheet ios "$kit/ios-results.txt" "$RUNNER_TEMP/build.txt"
+          cat "$kit/BUILD-INFO.txt" "$kit/ios-results.txt"
           mkdir -p "$RUNNER_TEMP/out"
           (cd "$RUNNER_TEMP/kit" && zip -qry "$RUNNER_TEMP/out/dot-popper-ipad-kit.zip" dot-popper-ipad-kit)
           ls -la "$RUNNER_TEMP/out"
