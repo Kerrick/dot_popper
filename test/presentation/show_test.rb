@@ -255,6 +255,30 @@ class ShowTest < Minitest::Test
     assert_equal play, @show.send(:title_plan).play_button
   end
 
+  # The maintainer, on a controller alone, couldn't find how to quit. B
+  # on the title asks, and a second B within two seconds quits.
+  def test_b_twice_on_the_title_quits_and_once_only_asks
+    assert_equal :asked, @show.ask_to_quit
+    assert_operator @show.quit_prompt, :>, 0.0
+    @show.update(1.0)
+
+    assert_equal :quit, @show.ask_to_quit
+  end
+
+  def test_a_second_b_too_late_only_asks_again
+    @show.ask_to_quit
+    @show.update(Show::QUIT_ASK + 0.1)
+
+    assert_in_delta 0.0, @show.quit_prompt
+    assert_equal :asked, @show.ask_to_quit
+  end
+
+  def test_b_never_quits_from_a_round_or_the_records
+    finish_round(back_to_title: false)
+
+    assert_nil @show.ask_to_quit
+  end
+
   def test_the_dot_size_choice_is_offered_only_once_a_round_has_finished
     assert_nil reach(DotPopper::DotSizing::SIZED_TO_SCREEN)
     @show.tap(*middle(@show.layout.sizing_control.options.first))

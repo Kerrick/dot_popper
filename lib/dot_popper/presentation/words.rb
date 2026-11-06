@@ -18,7 +18,7 @@ module DotPopper
     class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time, :covered,
                               :share, :copied, :records, :go_back, :no_rounds, :clear, :keep_holding,
                               :hold_to_clear, :cleared, :undo, :labels, :goals, :goal_done, :goal_met,
-                              :screen_size, :legend, :credits, :credits_title, :notice, :input)
+                              :screen_size, :legend, :credits, :credits_title, :notice, :quit_again, :input)
       MINUS = "−" # a true minus sign, as wide as the plus
       # How near a round must come to the best for Game Over to say by how
       # much; further off, the gap is only a number to dwell on.

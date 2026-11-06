@@ -45,6 +45,7 @@ module DotPopper
           mouse: "Keep holding to clear your bests, totals, chart, and goal streak.",
           gamepad: "Keep holding %s to clear your bests, totals, chart, and goal streak."
         ),
+        quit_again: "Press B again to quit",
         hold_to_clear: ByInput.new(
           touch: "Press and hold to clear your bests, totals, chart, and goal streak.",
           mouse: "Press and hold to clear your bests, totals, chart, and goal streak.",

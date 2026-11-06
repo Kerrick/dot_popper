@@ -25,6 +25,7 @@ module DotPopper
         legend(show, layout, plan, intro)
         line(plan, :best, words.best_line(marquee.best), pen.palette.soft, intro)
         daily_goal(show, layout, plan, intro) if plan[:goal]
+        quit_prompt(show, layout, plan)
         line(plan, :streak, words.streak(show.lifetime.streak), pen.palette.soft, intro, size: :goal)
         hover = show.hover
         PrimaryButton.new(pen:).draw(plan.play_button, words.play, alpha: intro, hover: hover.level(:play))
@@ -56,6 +57,17 @@ module DotPopper
         rect = plan[name] or return
 
         pen.text(text, pen.fonts.semibold(plan.size(size)), rect.center_x, rect.center_y, color, alpha)
+      end
+
+      # "Press B again to quit", under the title's words, while a second B
+      # would quit.
+      def quit_prompt(show, layout, plan)
+        alpha = show.quit_prompt
+        return unless alpha.positive?
+
+        font = pen.fonts.semibold(plan.size(:goal))
+        pen.text(show.words.quit_again, font, layout.center_x, plan.backing.bottom + (font.height * 0.9),
+                 pen.palette.cream, alpha)
       end
 
       # Today's goal in the lines the plan broke it into; once it is met,

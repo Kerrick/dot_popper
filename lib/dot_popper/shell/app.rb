@@ -28,6 +28,7 @@ module DotPopper
         @dot_size = DotSize.for(os)
         @touch = DotSize.touch?(os)
         @android = os == "Android"
+        @ios = os == "iOS"
         puts "Dot Popper: a dot's radius is #{@dot_size.reason}"
         @touch ? fill_screen : open_window
         report_renderer
@@ -197,7 +198,7 @@ module DotPopper
         in :start then @show.start
         in :share then @show.records? ? @show.clear_or_undo(:y) : @show.share
         in :records then @show.records? ? @show.open_credits : (@show.open_records if @show.records_offered?)
-        in :leave then @show.back
+        in :leave then @show.back || leave_title
         in :mute then @speaker.toggle_mute
         in :sizing then @show.toggle_sizing
         in nil then nil
@@ -428,6 +429,12 @@ module DotPopper
       # edge ask twice before it leaves the game (SDL's UIKit view
       # controller), so a tap near the edge stays a tap.
       def fill_screen = ::Lota::Window.set_fullscreen(true, :desktop)
+
+      # B on the title: asks, then quits on a second press, as Escape quits
+      # from the keyboard. iOS apps are left by the system, never by the app.
+      def leave_title
+        ::Lota::Event.quit if !@ios && @show.ask_to_quit == :quit
+      end
 
       # Whether Alt or Cmd is held, which makes Enter switch fullscreen.
       def fullscreen_chord? = ::Lota::Keyboard.down?(:lalt, :ralt, :lgui, :rgui)

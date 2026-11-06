@@ -233,6 +233,30 @@ module DotPopper
       # screen, and goes on from Game Over to the title, as Continue does.
       # Says whether there was somewhere to go back from, so that elsewhere
       # the key can do its usual job.
+      QUIT_ASK = 2.0 # seconds a second B has to quit from the title
+
+      # B on the title, where a controller has no other way to quit: the
+      # first press asks, and :quit if a second comes within QUIT_ASK
+      # seconds, so a stray press never closes the game.
+      def ask_to_quit
+        return unless title? && !records?
+        return :quit if quit_asked?
+
+        @quit_asked_at = now
+        sounds.play(:tick, pitch: 0.8)
+        :asked
+      end
+
+      # How much of "Press B again to quit" shows: all of it while a second
+      # press would quit, fading out in its last third of a second.
+      def quit_prompt
+        return 0.0 unless quit_asked? && title?
+
+        ((QUIT_ASK - (now - @quit_asked_at)) / 0.3).clamp(0.0, 1.0)
+      end
+
+      def quit_asked? = @quit_asked_at && now - @quit_asked_at <= QUIT_ASK
+
       def back
         if records? then leave
         elsif finished? then continue_on
