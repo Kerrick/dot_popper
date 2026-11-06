@@ -231,7 +231,7 @@ module DotPopper
 
       def key_pressed(key)
         return @speaker.toggle_mute if key == :m
-        return @show.open_credits if key == :l && @show.records?
+        return @show.open_credits if key == :c && @show.records?
         return if @show.credits_key(key)
         # Enter or Space presses the screen's main button, on any device;
         # Alt+Enter (Cmd+Enter on a Mac) is fullscreen's instead.
