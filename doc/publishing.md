@@ -81,11 +81,13 @@ Set a variable with `gh variable set NAME --repo Kerrick/dot_popper`, and a secr
 
 - **Account:** a Microsoft Partner Center developer account, a one-time fee for individuals.
 - **Build status:** `lota fuse` makes a working NSIS installer (`-setup.exe`) and a `.zip`, unsigned.
-- **What's missing, by one of two routes:**
-  - **An MSIX package,** which the Store signs itself, so no certificate is needed. This means packaging the fused folder as MSIX with an `AppxManifest.xml` (MakeAppx, or the MSIX Packaging Tool).
-  - **The existing `.exe` installer, submitted as a Win32 app:** the Store then requires the installer, and the binaries, to be code-signed with a certificate from a trusted authority. It also needs a silent-install switch, which NSIS has (`/S`), and a versioned download URL, which GitHub releases provide.
+- **The route taken: MSIX.** The Package workflow's `msix` job wraps the fused Windows folder in an MSIX with an `AppxManifest.xml` (Windows.FullTrustApplication, `runFullTrust`). The Store signs MSIX itself, so no certificate is needed. CI checks it by signing a copy with a throwaway certificate, installing it, playing 20 seconds and removing it. The other route, the NSIS `-setup.exe` as a Win32 app, would need a purchased code-signing certificate.
 
-  MSIX avoids buying a certificate. Either way, Fledge's runtime under MSIX's virtualized filesystem needs a test.
+Steps for the maintainer:
+1. In Partner Center, reserve the name "Dot Popper" and open the product's **Product identity** page.
+2. Copy **Package/Identity/Name** (like `12345Kerrick.DotPopper`) into the repository variable `MSIX_IDENTITY_NAME`, and **Package/Identity/Publisher** (like `CN=XXXXXXXX-...`) into `MSIX_PUBLISHER` (Settings, Secrets and variables, Actions, Variables). Until then the build uses the placeholders `KerrickLong.DotPopper` and `CN=Dot Popper test`.
+3. Run the Package workflow (or push a `v0.*` tag). Download the unsigned `Dot-Popper-X.Y.Z.0.msix` from the run's `dot-popper-msix` artifact, or from the release's assets on a tag.
+4. Upload it in the submission's **Packages** section. The Store signs it.
 
 ## Homebrew
 
