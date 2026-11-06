@@ -44,8 +44,8 @@ module DotPopper
       end
 
       # Draws the block, what glows, into the glow, and adds the glow over
-      # the screen.
-      def glow(&)
+      # the screen, +fade+ of the way to full strength.
+      def glow(fade = 1.0, &)
         return unless on?
 
         G.push(:all) do
@@ -58,7 +58,7 @@ module DotPopper
           G.canvas = nil
           G.shader = nil
           G.blend_mode = %i[add premultiplied]
-          G.color = [@look.strength] * 4
+          G.color = [@look.strength * fade] * 4
           G.draw(@down, 0, 0)
         end
       end

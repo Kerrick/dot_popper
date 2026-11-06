@@ -787,7 +787,7 @@ Credits opens from a quiet pill beside Back on the Records screen (above Back on
 
 ### The setdef splash is drawn in the Shell, timed in Presentation, and leaves out what is timed
 
-For about 1.4 seconds before the title (a 0.25 s fade in, a hold, a 0.3 s fade out), setdef's logotype shows on its near-black: "setdef" in Iosevka Bold, then a block like a text cursor, in Workshop Yellow, with a faint glow on the letters only. `Presentation::Splash` is the timing and `Logotype` the measures, taken from setdef's artwork; `Shell::SplashPainter` draws them, the glow as a dozen dim copies of the letters moved a little around, so it needs no shader. A tap, click, key or gamepad button ends it and goes no further, so it can never touch the game. It is silent. The bot, the GUI director and `DOT_POPPER_NO_SPLASH` leave it out, so tests and timings are as they were.
+For about 1.4 seconds before the title (a 0.25 s fade in, a hold, a 0.3 s fade out), setdef's logotype shows on its near-black: "setdef" in Iosevka Bold, then a block like a text cursor, in Workshop Yellow, with a faint glow on the letters only. `Presentation::Splash` is the timing and `Logotype` the measures, taken from setdef's artwork; `Shell::SplashPainter` draws them, the glow as the letters blurred by the same `Shell::Bloom` the dots use, added faintly in yellow, so where there is no blur shader there is no glow. A tap, click, key or gamepad button ends it and goes no further, so it can never touch the game. It is silent. The bot, the GUI director and `DOT_POPPER_NO_SPLASH` leave it out, so tests and timings are as they were.
 
 **Why:** The game is setdef's, and the splash says so once, quickly, without making anyone wait: it is skipped by any press.
 

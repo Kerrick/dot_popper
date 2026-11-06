@@ -16,7 +16,6 @@ module DotPopper
       BLOCK_TOP = -1.57 * XHEIGHT # from the baseline, down being positive
       BLOCK_BOTTOM = 0.21 * XHEIGHT
       WIDTH = (WORD.length * ADVANCE) + BLOCK_GAP + BLOCK_WIDTH # in ems
-      GLOW = 0.14 * XHEIGHT # how far the letters' glow reaches, in ems
 
       # The size that fits a window +width+ by +height+: about as wide as
       # setdef's artwork is in its frame, narrower on a portrait screen,

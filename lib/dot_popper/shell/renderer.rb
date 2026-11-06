@@ -123,6 +123,7 @@ module DotPopper
       # another color.
       def prepare
         G.background_color = @pen.palette.ink_edge.to_a
+        @splash.refresh
         @hud.prepare(@show.layout)
       end
 
