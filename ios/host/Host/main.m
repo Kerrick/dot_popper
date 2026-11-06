@@ -51,9 +51,21 @@ static UIColor *BackdropColor(void) {
   return [UIColor colorWithRed:0x0c / 255.0 green:0x0b / 255.0 blue:0x22 / 255.0 alpha:1.0];
 }
 
-// Paints +window+, its root view, and the root view's layer.
+// Whether +view+, or a view inside it, draws with Metal: SDL's view.
+static BOOL draws_with_metal(UIView *view) {
+  if ([view.layer isKindOfClass:NSClassFromString(@"CAMetalLayer")])
+    return YES;
+  for (UIView *subview in view.subviews)
+    if (draws_with_metal(subview))
+      return YES;
+  return NO;
+}
+
+// Paints +window+, its root view, and the root view's layer, if it is
+// SDL's window. Other windows are left alone: on an iPad, iOS shows
+// windows of its own above SDL's, and one painted opaque hid the game.
 static void paint_behind(UIWindow *window) {
-  if (![window isKindOfClass:UIWindow.class])
+  if (![window isKindOfClass:UIWindow.class] || !draws_with_metal(window))
     return;
   UIColor *color = BackdropColor();
   window.backgroundColor = color;
