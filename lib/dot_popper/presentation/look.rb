@@ -50,13 +50,17 @@ module DotPopper
           mouse: "Press and hold to clear your bests, totals, chart, and goal streak.",
           gamepad: "Hold Y to clear your bests, totals, chart, and goal streak."
         ),
-        licences: ByInput.new(touch: "Licences", mouse: "Licences", gamepad: "Licences (X)"),
-        licences_title: "Licences",
+        credits: ByInput.new(touch: "Credits", mouse: "Credits", gamepad: "Credits (X)"),
+        credits_title: "Credits",
+        # The Credits screen's own words. A later line of thanks goes in
+        # as +thanks:+, which the screen leaves out while there is none.
         notice: {
+          made_by: "Made by Kerrick Long",
           copyright: "Dot Popper © 2026 Kerrick Long",
-          licence: "Dot Popper is free software. You may use it, share it, and change it under the GNU Affero " \
+          license: "Dot Popper is free software. You may use it, share it, and change it under the GNU Affero " \
                    "General Public License, version 3 or any later version (AGPL-3.0-or-later).",
           assets: "Its sounds and its icon are dedicated to the public domain under CC0-1.0.",
+          open_source: "Open-source licenses",
           font_name: "Fredoka",
           font: "The letters are Fredoka, Copyright 2016 The Fredoka Project Authors, under the SIL Open Font " \
                 "License, version 1.1.",
@@ -103,9 +107,9 @@ module DotPopper
       # longest row needs, so each label stays near its number.
       RECORDS = RecordsLook.new(heading: 48, text: 23, line: 1.6, chart: 4.2, gap: 56, column: 520, veil: 0.9)
 
-      # The Licences screen, over the Records screen: its type, the lines a
+      # The Credits screen, over the Records screen: its type, the lines a
       # wheel's notch and a stick at full tilt move it.
-      LICENCES = LicencesLook.new(text: 20, line: 1.5, column: 680, wheel: 3, stick: 14)
+      CREDITS = CreditsLook.new(text: 20, line: 1.5, column: 680, wheel: 3, stick: 14)
 
       # Clearing the records, from the Records screen: "Clear my records…"
       # is held for two seconds, never only tapped, and Undo is offered

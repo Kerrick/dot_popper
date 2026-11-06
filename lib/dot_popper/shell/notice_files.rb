@@ -2,8 +2,8 @@
 
 module DotPopper
   module Shell
-    # Finds and reads the licence texts the running build carries, for the
-    # Licences screen, and gives them as Presentation::Notices. What a
+    # Finds and reads the license texts the running build carries, for the
+    # Credits screen, and gives them as Presentation::Notices. What a
     # build lacks it leaves out, without error, and so a file it cannot read.
     #
     # +game+ is the game's own folder (Lota::Filesystem.source), which holds

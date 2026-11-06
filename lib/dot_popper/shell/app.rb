@@ -125,7 +125,7 @@ module DotPopper
           @cursor = @cursor.hide(x, y)
           heard(point)
         end
-        @show.drag_licences(:mouse, point.y)
+        @show.drag_credits(:mouse, point.y)
         @dragging.move(:mouse, point.x, point.y)
       end
 
@@ -144,7 +144,7 @@ module DotPopper
         point = heard(@input.touch_moved(id, x, y, devicetype, mouse))
         return unless point
 
-        @show.drag_licences(id, point.y)
+        @show.drag_credits(id, point.y)
         @dragging.move(id, point.x, point.y)
       end
 
@@ -183,7 +183,7 @@ module DotPopper
         in :press then gamepad_down(:a)
         in :start then @show.start
         in :share then @show.records? ? @show.clear_or_undo(:y) : @show.share
-        in :records then @show.records? ? @show.open_licences : (@show.open_records if @show.records_offered?)
+        in :records then @show.records? ? @show.open_credits : (@show.open_records if @show.records_offered?)
         in :leave then @show.back
         in :mute then @speaker.toggle_mute
         in :sizing then @show.toggle_sizing
@@ -227,12 +227,12 @@ module DotPopper
       end
 
       # The mouse wheel turned +y+ notches, up when positive.
-      def wheel_moved(y) = @show.wheel_licences(y)
+      def wheel_moved(y) = @show.wheel_credits(y)
 
       def key_pressed(key)
         return @speaker.toggle_mute if key == :m
-        return @show.open_licences if key == :l && @show.records?
-        return if @show.licence_key(key)
+        return @show.open_credits if key == :l && @show.records?
+        return if @show.credits_key(key)
         # Enter or Space presses the screen's main button, on any device;
         # Alt+Enter (Cmd+Enter on a Mac) is fullscreen's instead.
         return @show.primary if PRIMARY_KEYS.include?(key) && !(key != :space && fullscreen_chord?)
@@ -277,19 +277,19 @@ module DotPopper
       private
 
       # The gamepad's left stick and d-pad for the cursor, which on the
-      # Licences screen scroll it instead and leave the cursor at rest.
+      # Credits screen scroll it instead and leave the cursor at rest.
       def read_with_stick(seconds)
         stick = @gamepads.stick
-        return stick unless @show.licences?
+        return stick unless @show.credits?
 
-        @show.stick_licences(stick, seconds)
+        @show.stick_credits(stick, seconds)
         Presentation::Stick.rest
       end
 
-      # Held arrow and Page keys go on scrolling the Licences screen, which
+      # Held arrow and Page keys go on scrolling the Credits screen, which
       # is the only place the keyboard asks for repeats.
       def repeat_keys
-        reading = @show.licences?
+        reading = @show.credits?
         return if reading == @reading
 
         @reading = reading

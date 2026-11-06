@@ -86,10 +86,10 @@ class HoverTest < Minitest::Test
     assert_nil @show.hovered
   end
 
-  def test_the_records_screen_hovers_back_licences_and_clear_and_nothing_else
+  def test_the_records_screen_hovers_back_credits_and_clear_and_nothing_else
     finish_round
     @show.open_records
-    assert_equal %i[licences clear back], @show.controls.map(&:name)
+    assert_equal %i[credits clear back], @show.controls.map(&:name)
     @show.pointer_at(*middle(@show.back_reach))
     assert_equal :back, @show.hovered
     @show.pointer_at(*middle(@show.clear_reach))

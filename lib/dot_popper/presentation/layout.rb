@@ -124,10 +124,10 @@ module DotPopper
         Rect.new(x: safe.x + margin, y: safe.bottom - margin - height, width: [height * 2.4, room].min, height:)
       end
 
-      # The Records screen's Licences, a quiet pill beside Back, between it
+      # The Records screen's Credits, a quiet pill beside Back, between it
       # and "Clear my records…", when there is room for it there; and
       # otherwise, as on an upright phone, on a row of its own above Back.
-      def licences_button
+      def credits_button
         height = button_size
         wanted = height * 3.0
         room = clear_records_button.x - margin - back_button.right - margin
@@ -139,7 +139,7 @@ module DotPopper
       end
 
       # The top of the Records screen's buttons, whichever row they are on.
-      def records_floor = [back_button.y, licences_button.y, clear_records_button.y].min
+      def records_floor = [back_button.y, credits_button.y, clear_records_button.y].min
 
       # The size of a screen's main button, the title's Play and Game
       # Over's Continue, for dots of +radius+: at least a dot across, and

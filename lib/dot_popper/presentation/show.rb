@@ -60,8 +60,8 @@ module DotPopper
         @penalized_at = -Float::INFINITY
         @recorder = RoundStats::Recorder.new
         @records = nil
-        @licences = nil
-        @licence_drag = nil
+        @credits = nil
+        @credits_drag = nil
         @keeper = keeper
         @clearing = HoldToConfirm.idle(look::RECORDS_CLEAR.hold)
         @undo = nil
@@ -142,7 +142,7 @@ module DotPopper
         in :play then play
         in :continue then continue_on
         in :back then leave
-        in :licences then open_licences
+        in :credits then open_credits
         in :mute then sounds.toggle_mute
         in :records then open_records
         in DotSizing => sizing then choose_sizing(sizing)
@@ -150,7 +150,7 @@ module DotPopper
         in :undo then undo
         in :clear then hold_clear(by)
         in nil if by == :gamepad then primary
-        in nil then licences? ? @licence_drag = [by, y] : toy_tap(x, y)
+        in nil then credits? ? @credits_drag = [by, y] : toy_tap(x, y)
         end
       end
 
@@ -160,7 +160,7 @@ module DotPopper
       # these.
       def controls
         Control.apart(
-          if licences? then [button(:back, layout.back_button)]
+          if credits? then [button(:back, layout.back_button)]
           elsif records? then records_controls
           elsif title? then title_controls
           elsif finished? then finale_controls
@@ -270,78 +270,78 @@ module DotPopper
 
       def close_records
         @records = nil
-        @licences = nil
+        @credits = nil
         @clearing = clearing.cancel
         sounds.play(:tick, pitch: 0.8)
       end
 
-      # Back, from the Licences screen to the Records screen, or from the
+      # Back, from the Credits screen to the Records screen, or from the
       # Records screen to the title.
-      def leave = licences? ? close_licences : close_records
+      def leave = credits? ? close_credits : close_records
 
-      # Whether the Licences screen is open over the Records screen.
-      def licences? = !@licences.nil?
+      # Whether the Credits screen is open over the Records screen.
+      def credits? = !@credits.nil?
 
-      # How far down the Licences screen is scrolled (LicenceScroll), while
+      # How far down the Credits screen is scrolled (CreditsScroll), while
       # it is open.
-      def licences = @licences
+      def credits = @credits
 
-      # The Licences screen's lines (LicenceLines), laid out for the
+      # The Credits screen's lines (CreditsLines), laid out for the
       # screen's size, while it is open.
-      def licence_lines = @licence_lines&.last
+      def credits_lines = @credits_lines&.last
 
-      # Where the Licences screen's heading and its window of text go.
-      def licences_layout = LicencesLayout.new(layout:, look: look::LICENCES)
+      # Where the Credits screen's heading and its window of text go.
+      def credits_layout = CreditsLayout.new(layout:, look: look::CREDITS)
 
-      # Opens the Licences screen over the Records screen, at the top.
-      def open_licences
-        return unless records? && !licences?
+      # Opens the Credits screen over the Records screen, at the top.
+      def open_credits
+        return unless records? && !credits?
 
-        @licences = LicenceScroll.at_top(content: 0.0, window: 0.0)
-        lay_out_licences
+        @credits = CreditsScroll.at_top(content: 0.0, window: 0.0)
+        lay_out_credits
         sounds.play(:tick)
       end
 
-      def close_licences
-        @licences = nil
-        @licence_drag = nil
+      def close_credits
+        @credits = nil
+        @credits_drag = nil
         sounds.play(:tick, pitch: 0.8)
       end
 
-      # Scrolls the Licences screen down by +pixels+ (up for fewer).
-      def scroll_licences(pixels) = (@licences = @licences.by(pixels) if licences?)
+      # Scrolls the Credits screen down by +pixels+ (up for fewer).
+      def scroll_credits(pixels) = (@credits = @credits.by(pixels) if credits?)
 
       # A mouse wheel's notches, +notches+ of them, positive for up.
-      def wheel_licences(notches) = scroll_licences(-notches * look::LICENCES.wheel * licences_layout.line)
+      def wheel_credits(notches) = scroll_credits(-notches * look::CREDITS.wheel * credits_layout.line)
 
       # A gamepad's left stick or d-pad (Stick) held for +seconds+.
-      def stick_licences(stick, seconds)
+      def stick_credits(stick, seconds)
         push = stick.shaped(look::GAMEPAD.dead_zone, look::GAMEPAD.curve)
-        scroll_licences(push.y * look::LICENCES.stick * licences_layout.line * seconds)
+        scroll_credits(push.y * look::CREDITS.stick * credits_layout.line * seconds)
       end
 
-      # A key that scrolls the Licences screen; says whether it was one.
-      def licence_key(name)
-        return false unless licences?
+      # A key that scrolls the Credits screen; says whether it was one.
+      def credits_key(name)
+        return false unless credits?
 
-        @licences = @licences.key(name, line: licences_layout.line)
+        @credits = @credits.key(name, line: credits_layout.line)
         %i[up down pageup pagedown home end].include?(name.to_s.to_sym)
       end
 
       # A finger or the mouse, +by+ (as #tap names it), dragged to +y+,
       # drags the page along with it.
-      def drag_licences(by, y)
-        held, from = @licence_drag
-        return unless licences? && held == by
+      def drag_credits(by, y)
+        held, from = @credits_drag
+        return unless credits? && held == by
 
-        scroll_licences(from - y)
-        @licence_drag = [by, y]
+        scroll_credits(from - y)
+        @credits_drag = [by, y]
       end
 
       # A gamepad's Y on the Records screen, held by +by+: Undo while it is
       # offered, or else the start of holding "Clear my records…".
       def clear_or_undo(by)
-        return if licences?
+        return if credits?
         return undo if undo_offer
 
         hold_clear(by) if clear_offered?
@@ -350,7 +350,7 @@ module DotPopper
       # +by+ (as #tap names it) let go. A hold of "Clear my records…" it
       # made ends, with nothing cleared, if it was let go too soon.
       def let_go(by)
-        @licence_drag = nil if @licence_drag&.first == by
+        @credits_drag = nil if @credits_drag&.first == by
         @clearing = clearing.release(by, now)
       end
 
@@ -423,7 +423,7 @@ module DotPopper
       # size changes with it, as dots sized to the screen do.
       def resize(layout, field)
         @layout = layout
-        lay_out_licences if licences?
+        lay_out_credits if credits?
         @attract = field.radius == attract.field.radius ? attract.refit(field) : Attract.spawn(field, look::TITLE)
       end
 
@@ -467,21 +467,21 @@ module DotPopper
          (primary_button(:continue, plan.continue_button) if plan.continue_button)].compact
       end
 
-      # The Licences text broken into lines for this screen, and the scroll
+      # The Credits text broken into lines for this screen, and the scroll
       # kept at the same place on it.
-      def lay_out_licences
-        page = licences_layout
+      def lay_out_credits
+        page = credits_layout
         key = [page.text_size, page.room]
-        if @licence_lines&.first != key
-          book = (@licence_book ||= LicenceBook.compose(words, @notices))
-          @licence_lines = [key, LicenceLines.set(book, size: page.text_size, room: page.room, line: look::LICENCES.line,
+        if @credits_lines&.first != key
+          book = (@credits_book ||= CreditsBook.compose(words, @notices))
+          @credits_lines = [key, CreditsLines.set(book, size: page.text_size, room: page.room, line: look::CREDITS.line,
                                                   measure: @measure)]
         end
-        @licences = @licences.fitted(content: licence_lines.height, window: page.window.height)
+        @credits = @credits.fitted(content: credits_lines.height, window: page.window.height)
       end
 
       def records_controls
-        [(button(:licences, layout.licences_button)),
+        [(button(:credits, layout.credits_button)),
          (button(:undo, layout.undo_button) if undo_offer),
          (button(:clear, layout.clear_records_button) if clear_offered?),
          button(:back, layout.back_button)].compact
@@ -592,7 +592,7 @@ module DotPopper
 
       def title_shown(event)
         @records = nil
-        @licences = nil
+        @credits = nil
         @clearing = clearing.cancel
         effects.clear
         @finale = nil

@@ -13,8 +13,8 @@ module DotPopper
     # [:share] copy the result on Game Over, or on the Records screen,
     #   held, clear the records, and pressed again, undo that (Y)
     # [:records] open the Records screen from the title (X), and on the
-    #   Records screen, the Licences screen
-    # [:leave] leave the Licences screen, or the Records screen (B)
+    #   Records screen, the Credits screen
+    # [:leave] leave the Credits screen, or the Records screen (B)
     # [:mute] sound on or off (Back, Select, or Share), on every screen
     # [:sizing] switch how dots are sized, on the title once it offers the
     #   choice (either shoulder button)

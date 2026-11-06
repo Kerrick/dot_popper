@@ -2,59 +2,72 @@
 
 module DotPopper
   module Presentation
-    # The licence texts the running build carries, as the shell found them
-    # (Shell::NoticeFiles): the game's own licence (+agpl+) and the font's
+    # The license texts the running build carries, as the shell found them
+    # (Shell::NoticeFiles): the game's own license (+agpl+) and the font's
     # (+ofl+), Lota's notices (+lota+), and each of Fledge's (+fledge+).
-    # What a build lacks is nil, or empty, and the Licences screen skips it.
+    # What a build lacks is nil, or empty, and the Credits screen skips it.
     class Notices < Data.define(:agpl, :ofl, :lota, :fledge)
       def self.none = new
 
       def initialize(agpl: nil, ofl: nil, lota: nil, fledge: []) = super
     end
 
-    # How the Licences screen reads: the type's size, a line's height in
+    # How the Credits screen reads: the type's size, a line's height in
     # it, and the widest a column of text grows (all at a layout scale of
     # 1); the lines a mouse wheel's notch moves it; and how many lines a
     # second a gamepad's stick at full tilt does.
-    class LicencesLook < Data.define(:text, :line, :column, :wheel, :stick); end
+    class CreditsLook < Data.define(:text, :line, :column, :wheel, :stick); end
 
-    # One part of the Licences screen: a heading, a note in the game's own
-    # words, or a licence's +legal+ text, which is reflowed to fit.
-    class LicenceBlock < Data.define(:kind, :text); end
+    # One part of the Credits screen: a +heading+, a +subheading+ over one
+    # open-source project's license, a +note+ in the game's own words, or a
+    # license's +legal+ text, which is reflowed to fit.
+    class CreditsBlock < Data.define(:kind, :text); end
 
-    # What the Licences screen says, in order: Dot Popper's own notice, its
-    # licence, and the font's; then Lota's notices, then Fledge's. Each
-    # licence is shown if the build has it.
-    class LicenceBook < Data.define(:blocks)
+    # What the Credits screen says, in order: who made Dot Popper (and,
+    # when the words have it, whom to thank); its own copyright and license
+    # notice, with the license's text and the sounds' and icon's; and under
+    # "Open-source licenses", Fredoka's, then Lota's notices, then Fledge's.
+    # Each license is shown if the build has it.
+    class CreditsBook < Data.define(:blocks)
       def self.compose(words, notices)
         say = words.notice
-        blocks = [LicenceBlock.new(:heading, say.fetch(:copyright)), LicenceBlock.new(:note, say.fetch(:licence))]
-        blocks << LicenceBlock.new(:legal, notices.agpl)
-        blocks << LicenceBlock.new(:note, say.fetch(:assets))
-        blocks.push(LicenceBlock.new(:heading, say.fetch(:font_name)), LicenceBlock.new(:note, say.fetch(:font)),
-                    LicenceBlock.new(:legal, notices.ofl))
-        blocks.push(LicenceBlock.new(:heading, say.fetch(:lota)), LicenceBlock.new(:legal, notices.lota))
-        blocks.push(LicenceBlock.new(:heading, say.fetch(:fledge)), *notices.fledge.map { LicenceBlock.new(:legal, it) })
+        blocks = [CreditsBlock.new(:heading, say.fetch(:made_by)), CreditsBlock.new(:note, say[:thanks]),
+                  CreditsBlock.new(:subheading, say.fetch(:copyright)), CreditsBlock.new(:note, say.fetch(:license)),
+                  CreditsBlock.new(:legal, notices.agpl), CreditsBlock.new(:note, say.fetch(:assets)),
+                  CreditsBlock.new(:heading, say.fetch(:open_source)),
+                  CreditsBlock.new(:subheading, say.fetch(:font_name)), CreditsBlock.new(:note, say.fetch(:font)),
+                  CreditsBlock.new(:legal, notices.ofl),
+                  CreditsBlock.new(:subheading, say.fetch(:lota)), CreditsBlock.new(:legal, notices.lota),
+                  CreditsBlock.new(:subheading, say.fetch(:fledge)),
+                  *notices.fledge.map { CreditsBlock.new(:legal, it) }]
         new(blocks: bare(blocks.reject { it.text.to_s.strip.empty? }))
       end
 
       # +blocks+ with no heading left over nothing.
       def self.bare(blocks)
-        blocks.each_with_index.reject { |block, i| block.kind == :heading && !%i[note legal].include?(blocks[i + 1]&.kind) }
-              .map(&:first)
+        blocks.each_with_index.reject { |block, i| over_nothing?(block, blocks[i + 1]) }.map(&:first)
+      end
+
+      def self.over_nothing?(block, after)
+        case block.kind
+        when :heading then after.nil? || after.kind == :heading
+        when :subheading then !%i[note legal].include?(after&.kind)
+        else false
+        end
       end
     end
 
     # The book's text broken into lines for a column +room+ wide, at type
     # +size+, each with where its middle falls down the page (+y+, from the
-    # top), and the page's +height+. A heading is bold and a size larger.
+    # top), and the page's +height+. A heading is bold and a size larger, a subheading bold.
     # +measure+ is the shell's (or RoughMeasure), which says how wide words
-    # are. A licence's text is reflowed: its hard-wrapped lines are joined
+    # are. A license's text is reflowed: its hard-wrapped lines are joined
     # back into paragraphs, but a paragraph that is a list or indented
     # keeps its lines, and a ruled line is dropped. A word wider than the
     # column is broken, so nothing runs off it.
-    class LicenceLines < Data.define(:rows, :height, :size)
+    class CreditsLines < Data.define(:rows, :height, :size)
       Row = Data.define(:kind, :text, :y)
+      GAP = { heading: 1.8, subheading: 1.2, note: 0.9, legal: 0.9 }.freeze # lines left above a block
       RULE = /\A\s*[-=_*#~]{4,}\s*\z/
 
       def self.heading_size(size) = size + [(size * 0.25).round, 1].max
@@ -64,7 +77,7 @@ module DotPopper
         rows = []
         y = 0.0
         book.blocks.each_with_index do |block, i|
-          y += step * (block.kind == :heading ? 1.6 : 0.9) unless i.zero?
+          y += step * GAP.fetch(block.kind) unless i.zero?
           broken(block, room, measure, size).each_with_index do |lines, p|
             y += step * 0.6 unless p.zero?
             lines.each do |text|
@@ -78,7 +91,7 @@ module DotPopper
 
       # The block's paragraphs, each as the lines it breaks into.
       def self.broken(block, room, measure, size)
-        face = block.kind == :heading ? :bold : :semibold
+        face = %i[heading subheading].include?(block.kind) ? :bold : :semibold
         type = block.kind == :heading ? heading_size(size) : size
         width = ->(text) { measure.width(face, type, text) }
         paragraphs = block.kind == :legal ? paragraphs_of(block.text) : [[block.text]]
@@ -113,10 +126,10 @@ module DotPopper
       end
     end
 
-    # How far down the page the Licences screen is: the page's +content+
+    # How far down the page the Credits screen is: the page's +content+
     # height, the +window+ it shows through, and the +offset+ of the window
     # from the top. Every way of scrolling keeps the window on the page.
-    class LicenceScroll < Data.define(:offset, :content, :window)
+    class CreditsScroll < Data.define(:offset, :content, :window)
       def self.at_top(content:, window:) = new(offset: 0.0, content:, window:)
 
       def initialize(offset:, content:, window:) = super(offset: offset.to_f.clamp(0.0, [content - window, 0.0].max), content:, window:)
@@ -158,10 +171,10 @@ module DotPopper
       end
     end
 
-    # The Licences screen laid out in the safe area: the heading at the
+    # The Credits screen laid out in the safe area: the heading at the
     # top as the Records screen has it, Back along the bottom, and between
     # them the window the text scrolls in, as wide as +look+'s column.
-    class LicencesLayout < Data.define(:layout, :look)
+    class CreditsLayout < Data.define(:layout, :look)
       def heading_size = layout.scaled(Look::RECORDS.heading)
       def heading_y = layout.top + (heading_size * 0.6)
       def text_size = [layout.scaled(look.text), RecordsLayout::SMALLEST_TEXT].max

@@ -2,22 +2,22 @@
 
 module DotPopper
   module Shell
-    # The Licences screen, over the title's dimmed dots: the heading as
+    # The Credits screen, over the title's dimmed dots: the heading as
     # the Records screen has it, Back in the bottom left corner, and between
-    # them the licence texts, scrolled, in the same type and palette, each
+    # them the license texts, scrolled, in the same type and palette, each
     # line on whole device pixels and clipped to its window. A faint bar
     # beside the window shows where in the page it is.
-    # Presentation::LicencesLayout decides where each goes.
-    class LicencesPainter < Data.define(:pen)
+    # Presentation::CreditsLayout decides where each goes.
+    class CreditsPainter < Data.define(:pen)
       G = ::Lota::Graphics
 
       def draw(show, layout)
-        page = show.licences_layout
-        pen.text(show.words.licences_title, pen.fonts.bold(page.heading_size), layout.center_x, page.heading_y,
+        page = show.credits_layout
+        pen.text(show.words.credits_title, pen.fonts.bold(page.heading_size), layout.center_x, page.heading_y,
                  pen.palette.cream)
         window = page.window
-        text(show.licence_lines, show.licences.offset, window, page)
-        bar(show.licences, window, layout)
+        text(show.credits_lines, show.credits.offset, window, page)
+        bar(show.credits, window, layout)
         PillButton.new(pen:).draw(layout.back_button, show.words.go_back, hover: show.hover.level(:back))
       end
 
@@ -26,9 +26,10 @@ module DotPopper
       def text(lines, offset, window, page)
         pixels = pen.pixels
         G.scissor = pixels.snap(window.x), pixels.snap(window.y), pixels.snap(window.width), pixels.snap(window.height)
-        fonts = { heading: pen.fonts.bold(Presentation::LicenceLines.heading_size(lines.size)),
+        fonts = { heading: pen.fonts.bold(Presentation::CreditsLines.heading_size(lines.size)),
+                  subheading: pen.fonts.bold(lines.size),
                   note: pen.fonts.semibold(lines.size), legal: pen.fonts.semibold(lines.size) }
-        colors = { heading: pen.palette.gain, note: pen.palette.cream, legal: pen.palette.soft }
+        colors = { heading: pen.palette.cream, subheading: pen.palette.gain, note: pen.palette.cream, legal: pen.palette.soft }
         lines.visible(offset, window.height, page.line).each do |row|
           font = fonts.fetch(row.kind)
           pen.text(row.text, font, window.x + (font.width(row.text) / 2.0), window.y + row.y - offset, colors.fetch(row.kind))

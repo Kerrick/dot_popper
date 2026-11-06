@@ -130,16 +130,16 @@ class ScreenPlansTest < Minitest::Test
     end
   end
 
-  # The Licences screen: at 400x850, 850x400, 1200x800 and every other
+  # The Credits screen: at 400x850, 850x400, 1200x800 and every other
   # size, the heading, the window of text and Back are apart and inside
   # the safe area, every line fits across the window, and scrolled to
   # the end the last line is in it.
-  def test_the_licences_screen_never_overlaps_or_runs_off_screen
+  def test_the_credits_screen_never_overlaps_or_runs_off_screen
     SIZES.each do |width, height|
       screen_layout = layout(width, height)
-      show = licences_show(screen_layout)
-      show.open_licences
-      page = show.licences_layout
+      show = credits_show(screen_layout)
+      show.open_credits
+      page = show.credits_layout
       window = page.window
       name = "#{width}x#{height}"
       heading = Rect.new(x: window.x, y: page.heading_y - (page.heading_size / 2.0), width: window.width, height: page.heading_size)
@@ -150,20 +150,20 @@ class ScreenPlansTest < Minitest::Test
       assert_operator window.right, :<=, screen_layout.safe.right, name
       assert_operator window.height, :>, page.line * 2, "#{name}: room to read"
       measure = RoughMeasure.new
-      show.licence_lines.rows.each do |row|
+      show.credits_lines.rows.each do |row|
         face = row.kind == :heading ? :bold : :semibold
-        size = row.kind == :heading ? LicenceLines.heading_size(page.text_size) : page.text_size
+        size = row.kind == :heading ? CreditsLines.heading_size(page.text_size) : page.text_size
         assert_operator measure.width(face, size, row.text), :<=, window.width + 1e-6, "#{name}: #{row.text}"
       end
-      show.licence_key(:end)
-      assert_in_delta show.licence_lines.height - window.height, show.licences.offset, 1e-6, name
+      show.credits_key(:end)
+      assert_in_delta show.credits_lines.height - window.height, show.credits.offset, 1e-6, name
     end
   end
 
   private
 
-  def licences_show(screen_layout)
-    long = ["Licence text with a longer word, #{"x" * 90}, and a ruled line", "-" * 70, "", "  1. an indented item"]
+  def credits_show(screen_layout)
+    long = ["License text with a longer word, #{"x" * 90}, and a ruled line", "-" * 70, "", "  1. an indented item"]
     notices = Notices.new(agpl: Array.new(40) { long.join("\n") }.join("\n\n"), ofl: "Fredoka text", lota: "Lota text",
                           fledge: ["Fledge text"])
     game = DotPopper::Game.new(field(screen_layout.width, screen_layout.height), random: Random.new(2))
@@ -197,8 +197,8 @@ class ScreenPlansTest < Minitest::Test
     show.tap(*middle(show.clear_reach))
     show.update(Look::RECORDS_CLEAR.hold)
     yield "the Records screen with Undo", show
-    show.open_licences
-    yield "the Licences screen", show
+    show.open_credits
+    yield "the Credits screen", show
   end
 
   def middle(rect) = [rect.center_x, rect.center_y]

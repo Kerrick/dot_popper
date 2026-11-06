@@ -31,8 +31,8 @@ class GuiScenariosTest < Minitest::Test
          "a click elsewhere does nothing")
   end
 
-  def test_the_licences_screen
-    play("licences", "a click on Licences opens them", "the wheel scrolls down", "End goes to the end",
+  def test_the_credits_screen
+    play("credits", "a click on Credits opens them", "the wheel scrolls down", "End goes to the end",
          "a finger's drag moves the page along", "Escape goes back to the Records screen",
          "a gamepad's B goes back to the Records screen", "Escape again goes back to the title")
   end

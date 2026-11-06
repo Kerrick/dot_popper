@@ -25,7 +25,7 @@ module DotPopper
         @hud = HudPainter.new(pen:)
         @title = TitlePainter.new(pen:, dots: @dots)
         @records = RecordsPainter.new(pen:)
-        @licences = LicencesPainter.new(pen:)
+        @credits = CreditsPainter.new(pen:)
         @finale = FinalePainter.new(pen:)
         @tilt_hint = TiltHintPainter.new(pen:)
         @cursor = CursorPainter.new(pen:)
@@ -40,7 +40,7 @@ module DotPopper
           @dots.draw(@show.attract.dots, @at_rest, @show.now, radius)
           if @show.records?
             veil(width, height, @pen.look::RECORDS.veil)
-            (@show.licences? ? @licences : @records).draw(@show, layout)
+            (@show.credits? ? @credits : @records).draw(@show, layout)
           else
             veil(width, height, @pen.look::TITLE.dim)
             @title.draw(@show, layout)

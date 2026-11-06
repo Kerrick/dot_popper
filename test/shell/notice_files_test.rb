@@ -4,7 +4,7 @@ require "test_helper"
 require "dot_popper/presentation"
 require "dot_popper/shell/notice_files"
 
-# Finding the licence texts a build carries, from the game's folder up,
+# Finding the license texts a build carries, from the game's folder up,
 # without a window. The fixtures lay out a fused app: app/game is the
 # game, app/NOTICES.txt is Lota's, and notices/ beside app is Fledge's.
 class NoticeFilesTest < Minitest::Test
