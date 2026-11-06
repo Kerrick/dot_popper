@@ -106,15 +106,14 @@ module DotPopper
         PillButton.new(pen:).label(rect, show.words.clear, color: pen.palette.cream)
       end
 
-      # The pill's left +amount+, filled, its ends rounded as the pill's are.
+      # The pill's left +amount+, filled, inside its rounded ends from the
+      # first frame (Presentation::PillFill).
       def fill(rect, amount)
-        return if amount <= 0.0
+        outline = Presentation::PillFill.new(rect:, amount:).outline
+        return if outline.size < 6
 
-        pixels = pen.pixels
-        width = pixels.snap(rect.width * amount.clamp(0.0, 1.0))
-        corner = [rect.height, width].min / 2.0
         pen.color(pen.palette.alarm, 0.55)
-        G.rectangle(:fill, pixels.snap(rect.x), pixels.snap(rect.y), width, pixels.snap(rect.height), corner, corner, 48)
+        G.polygon(:fill, *outline)
       end
 
       # "Records cleared." beside Undo, and under Undo, a faint bar that
