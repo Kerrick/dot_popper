@@ -4,7 +4,7 @@ What each store needs, what Dot Popper already has, and what is still missing. S
 
 ## Decide first: the license
 
-Dot Popper is AGPL-3.0-or-later, and so is Lota, which ships inside every build. The App Store's and Mac App Store's terms add restrictions that the GPL family forbids, so an AGPL app on those stores is widely held to be a license conflict. Kerrick Long holds the copyright to both Dot Popper and Lota, so he can resolve it without anyone else: add an app-store exception to both licenses, or license the store builds differently.
+Dot Popper is AGPL-3.0-or-later, and so is Lota, which ships inside every build. The App Store's and Mac App Store's terms add restrictions that the GPL family forbids, so an AGPL app on those stores is widely held to be a license conflict. Kerrick Long holds the copyright to both Dot Popper and Lota, so he can resolve it without anyone else. His commercial licensing is handled on his own site, not in this repository or Lota's. Lota will never offer a switch that claims a different license or changes its license statement: `lota fuse` will write a notices file of facts, with Lota's AGPL-3.0-or-later statement always present. If a store build's notices must read differently under his authority, that is a step in Dot Popper's own build, settled with his licensing, not something Lota provides.
 
 The bundled third-party code also needs a check before any store build:
 
