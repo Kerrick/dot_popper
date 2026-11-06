@@ -25,6 +25,11 @@ on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      lota_commit:
+        description: "A Lota commit (full SHA) to build from instead, to try an engine fix"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -39,7 +44,7 @@ defaults:
 
 env:
   LOTA_REPOSITORY: https://github.com/setdef/Lota.git
-  LOTA_COMMIT: 84c0eda5690d2ec6c821c737cf3a56c0b5591e02
+  LOTA_COMMIT: ${{ inputs.lota_commit || '84c0eda5690d2ec6c821c737cf3a56c0b5591e02' }}
   NDK_REVISION: 30.0.16248370
   FLEDGE_TAG: v0.5.1
   IDENTIFIER: com.kerricklong.DotPopper
@@ -58,7 +63,7 @@ jobs:
         with:
           ruby-version: .ruby-version
 
-      - name: Clone Lota at 84c0eda, with LÖVE's sources
+      - name: Clone Lota at 84c0eda (or the commit asked for), with LÖVE's sources
         run: |
           lota=$RUNNER_TEMP/lota
           git init --quiet "$lota"
