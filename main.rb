@@ -25,6 +25,8 @@
 #   DOT_POPPER_AUTOPLAY=1       a bot plays: title, a round, game over, and
 #                               round again. It mostly taps fresh dots and
 #                               sometimes a popped one, so penalties show.
+#   DOT_POPPER_NO_SPLASH=1      leaves out setdef's splash before the title
+#                               (the bot and the GUI suite do too).
 #   DOT_POPPER_SHOTS=0.5,3,6.5  captures the screen at these seconds after
 #                               start, as shot-1.png, shot-2.png, ... in the
 #                               save folder, and prints each file's path.

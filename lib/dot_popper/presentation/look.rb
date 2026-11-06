@@ -132,13 +132,19 @@ module DotPopper
       # Sizes are graphics units at a layout scale of 1. A size that
       # animates steps through whole sizes rather than scaling glyphs.
       class Type < Data.define(:bold, :semibold, :title, :heading, :final_score, :hud_number, :hud_label,
-                               :prompt, :legend, :best, :floater, :new_best, :hint, :summary); end
+                               :prompt, :legend, :best, :floater, :new_best, :hint, :summary, :wordmark); end
 
       TYPE = Type.new(
         bold: "assets/fonts/Fredoka-Bold.ttf", semibold: "assets/fonts/Fredoka-SemiBold.ttf",
+        wordmark: "assets/fonts/Iosevka-Bold-setdef.ttf",
         title: 108, heading: 64, final_score: 136, hud_number: 35, hud_label: 12,
         prompt: 26, legend: 29, best: 26, floater: 34, new_best: 34, hint: 21, summary: 20
       )
+
+      # setdef's splash: the maker's near-black ground and its Workshop
+      # Yellow, which draws the logotype and its block.
+      SPLASH_INK = hex["#09090b"]
+      SPLASH_YELLOW = hex["#f2c24b"]
 
       # The desktop window opens at 24 × 16 radii (1200 × 800 units when
       # R is 50), at most 90% of the desktop. R is a fixed physical size,

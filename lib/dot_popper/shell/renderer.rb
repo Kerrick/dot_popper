@@ -29,10 +29,12 @@ module DotPopper
         @finale = FinalePainter.new(pen:)
         @tilt_hint = TiltHintPainter.new(pen:)
         @cursor = CursorPainter.new(pen:)
+        @splash = SplashPainter.new(pen:)
         @at_rest = Presentation::DotAnimations.new(pen.look::MOTION)
       end
 
-      def draw(cursor)
+      # The frame, with the setdef +splash+ over it while there is one.
+      def draw(cursor, splash = nil)
         width, height = cover
         layout = @show.layout
         backdrop(width, height)
@@ -55,7 +57,7 @@ module DotPopper
           finale(layout) unless @show.playing?
           hud(layout)
         end
-        @cursor.draw(cursor)
+        splash ? @splash.draw(splash) : @cursor.draw(cursor)
       end
 
       private

@@ -784,3 +784,11 @@ Credits opens from a quiet pill beside Back on the Records screen (above Back on
 **Why:** The app stores want licenses readable inside the app, since players cannot open the app's folder, and players expect a Credits screen. Searching upward finds the files without knowing the platform, and a build with none of them still shows the rest.
 
 **To reverse:** Drop the Credits pill from `Show#records_controls` and `Show#open_credits`; the rest is unreachable and can go with it.
+
+### The setdef splash is drawn in the Shell, timed in Presentation, and leaves out what is timed
+
+For about 1.4 seconds before the title (a 0.25 s fade in, a hold, a 0.3 s fade out), setdef's logotype shows on its near-black: "setdef" in Iosevka Bold, then a block like a text cursor, in Workshop Yellow, with a faint glow on the letters only. `Presentation::Splash` is the timing and `Logotype` the measures, taken from setdef's artwork; `Shell::SplashPainter` draws them, the glow as a dozen dim copies of the letters moved a little around, so it needs no shader. A tap, click, key or gamepad button ends it and goes no further, so it can never touch the game. It is silent. The bot, the GUI director and `DOT_POPPER_NO_SPLASH` leave it out, so tests and timings are as they were.
+
+**Why:** The game is setdef's, and the splash says so once, quickly, without making anyone wait: it is skipped by any press.
+
+**To reverse:** Drop `@splash` from `Shell::App` and the splash arguments of `Renderer#draw`.

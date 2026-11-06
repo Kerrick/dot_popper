@@ -20,6 +20,7 @@ module DotPopper
       def initialize(env = ENV)
         @env = env
         @elapsed = 0.0
+        @splash = Presentation::Splash.start unless Presentation::Splash.skipped?(env)
       end
 
       def load
@@ -85,6 +86,8 @@ module DotPopper
       def update(seconds)
         measure(seconds)
         seconds = seconds.clamp(0.0, Rules::LONGEST_FRAME)
+        @splash = @splash.advance(seconds) if @splash
+        @splash = nil if @splash&.over?
         moved = @cursor.update(seconds, read_with_stick(seconds))
         @show.input = Presentation::InputKind::GAMEPAD unless moved == @cursor
         @cursor = moved
@@ -105,9 +108,11 @@ module DotPopper
         development(seconds)
       end
 
-      def draw = @renderer.draw(@cursor)
+      def draw = @renderer.draw(@cursor, @splash)
 
       def mouse_pressed(x, y, button, istouch)
+        return skip_splash if @splash
+
         @cursor = @cursor.hide(x, y)
         tap = heard(@input.mouse_pressed(x, y, button, istouch))
         @show.pointer_at(tap.x, tap.y) if tap
@@ -136,6 +141,8 @@ module DotPopper
       end
 
       def touch_pressed(id, x, y, devicetype, mouse)
+        return skip_splash if @splash
+
         @cursor = @cursor.hide
         press(id, heard(@input.touch_pressed(id, x, y, devicetype, mouse)))
       end
@@ -178,6 +185,8 @@ module DotPopper
       # A gamepad button went down (Lota 0.1.3 and newer). Any button shows
       # the cursor; GamepadButtons says what each one asks for.
       def gamepad_pressed(button)
+        return skip_splash if @splash
+
         gamepad_used
         case @buttons.intent(button)
         in :press then gamepad_down(:a)
@@ -206,6 +215,7 @@ module DotPopper
       # does; the sticks are read each frame instead (Gamepads).
       def gamepad_axis(axis, value)
         return unless axis.to_s == "triggerright"
+        return skip_splash if @splash && value.to_f > 0.5
 
         was_held = @trigger.held
         @trigger = @trigger.pull(value.to_f, Look::GAMEPAD)
@@ -230,6 +240,8 @@ module DotPopper
       def wheel_moved(y) = @show.wheel_credits(y)
 
       def key_pressed(key)
+        return skip_splash if @splash
+
         return @speaker.toggle_mute if key == :m
         return @show.open_credits if key == :c && @show.records?
         return if @show.credits_key(key)
@@ -275,6 +287,10 @@ module DotPopper
       end
 
       private
+
+      # A press ends the setdef splash, and goes no further: it is never
+      # heard by the game, so it can touch nothing.
+      def skip_splash = @splash = @splash.skip
 
       # The gamepad's left stick and d-pad for the cursor, which on the
       # Credits screen scroll it instead and leave the cursor at rest.
