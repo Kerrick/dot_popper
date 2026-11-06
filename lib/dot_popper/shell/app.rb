@@ -439,10 +439,13 @@ module DotPopper
       # Whether Alt or Cmd is held, which makes Enter switch fullscreen.
       def fullscreen_chord? = ::Lota::Keyboard.down?(:lalt, :ralt, :lgui, :rgui)
 
+      # Fullscreen is borderless (:desktop), unless DOT_POPPER_FULLSCREEN
+      # asks for :exclusive, to compare how each works with a system
+      # overlay and a TV's game mode.
       def toggle_fullscreen
         fullscreen, = ::Lota::Window.fullscreen
         happened("a fullscreen switch")
-        ::Lota::Window.set_fullscreen(!fullscreen, :desktop)
+        ::Lota::Window.set_fullscreen(!fullscreen, @env["DOT_POPPER_FULLSCREEN"] == "exclusive" ? :exclusive : :desktop)
       end
 
       # The window as a field of dots at the usual size; the game sizes a
