@@ -20,8 +20,10 @@ module DotPopper
       # or nil.
       attr_reader :hint
 
+      # +shaken+ hears of each shake that tosses the dots, with the pile's
+      # dots as they were (a Stack).
       def initialize(pile:, gamepads:, accelerometer:, look:, hint:, device:, turns:, pointer: false,
-                     random: Random.new)
+                     random: Random.new, shaken: ->(_dots) {})
         @pile = pile
         @gamepads = gamepads
         @accelerometer = accelerometer
@@ -31,6 +33,7 @@ module DotPopper
         @turns = turns
         @pointer = pointer
         @random = random
+        @shaken = shaken
         @tilt = @hint = nil
       end
 
@@ -75,6 +78,8 @@ module DotPopper
         return unless step.kick.positive?
 
         @pile.throw_balls { |radius| @look.fling.velocity(step.pull, step.kick, radius, @random) }
+        dots = @pile.stack
+        @shaken.call(dots) if dots
       end
 
       # How the screen sits on the device, on a phone or tablet whose

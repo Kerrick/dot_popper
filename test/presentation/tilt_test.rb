@@ -195,6 +195,26 @@ class TiltTest < Minitest::Test
     assert_in_delta look.most_kick, look.kick_for(100.0)
   end
 
+  # The iPhone playtest found a shake "not as much/violent as I'd
+  # expect": the gentlest toss now beats a dot's fastest speed well, and
+  # a hard one throws about three times as hard as before.
+  def test_even_a_gentle_shake_tosses_the_dots_well_past_their_fastest
+    look = Look::TILT
+    gentlest = look.kick_for(look.shake + 0.01) * look.fling.least
+
+    assert_operator look.shake, :<=, 0.5
+    assert_operator gentlest, :>=, 2 * DotPopper::Rules::SPEEDS.max
+    assert_operator look.most_kick, :>=, 3 * 36.0
+  end
+
+  def test_a_one_g_jolt_is_a_shake_that_throws_hard
+    tilt = Tilt.new(Look::TILT)
+    30.times { tilt.update(1 / 60.0, reading: upright(:top)) }
+    step = tilt.update(1 / 60.0, reading: upright(:top) + Reading.new(x: 1.0, y: 0.0))
+
+    assert_operator step.kick, :>, 30.0
+  end
+
   def test_a_thrown_ball_goes_against_the_pull_within_the_spread
     fling = Look::TILT.fling
     random = Random.new(3)

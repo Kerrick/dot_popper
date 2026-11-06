@@ -206,6 +206,16 @@ module DotPopper
         true
       end
 
+      # The Game Over pile was shaken and its +dots+ (a Stack) tossed: a
+      # ring bursts from each, the score rattles, and a low tick sounds.
+      def shaken(dots)
+        return unless finished?
+
+        dots.each { effects.ring(it.x, it.y, look::SHAKE_RING, follow: it.id) }
+        effects.kick(look::SHAKE_RATTLE)
+        sounds.play(:tick, pitch: 0.6)
+      end
+
       # Switches how dots are sized (DotSizing) to the other choice, as a
       # gamepad's shoulder button does, while the title offers it.
       def toggle_sizing = choose_sizing(game.sizing.toggled)

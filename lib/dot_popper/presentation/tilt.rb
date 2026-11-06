@@ -11,8 +11,9 @@ module DotPopper
     # fallen asleep are woken when the pull has moved more than +wake+ (in
     # g) since they were last woken. A shake is a jolt, the reading's
     # change from its own +settle+-second average, of more than +shake+
-    # g; it throws every ball at +kick+ radii a second for each g past
-    # that, at most +most_kick+, and the next shake counts only after
+    # g; it throws every ball at +least_kick+ radii a second, and +kick+
+    # more for each g past that, at most +most_kick+, and the next shake
+    # counts only after
     # +cooldown+ seconds, each ball as +fling+ (a Throw) says. A calm
     # pile (+shakes+ false) never throws a ball. A stick inside +dead_zone+ is at rest. The hint shows on the
     # first +hint_rounds+ Game Overs, under the prompt, at +hint_alpha+ of
@@ -20,11 +21,17 @@ module DotPopper
     # +drag_tilt_hint+ with a pointer and an accelerometer,
     # +drag_hint+ with a pointer alone, or +tilt_hint+ with an
     # accelerometer alone, %s naming the device.
-    class TiltLook < Data.define(:smoothing, :wake, :shake, :settle, :cooldown, :kick, :most_kick, :shakes,
-                                 :fling, :dead_zone, :hint_rounds, :hint_alpha, :tilt_hint, :stick_hint,
+    class TiltLook < Data.define(:smoothing, :wake, :shake, :settle, :cooldown, :least_kick, :kick, :most_kick,
+                                 :shakes, :fling, :dead_zone, :hint_rounds, :hint_alpha, :tilt_hint, :stick_hint,
                                  :drag_hint, :drag_tilt_hint)
-      # The speed, in radii a second, a jolt of +jolt+ g throws a ball.
-      def kick_for(jolt) = ((jolt - shake) * kick).clamp(0.0, most_kick)
+      # The speed, in radii a second, a jolt of +jolt+ g throws a ball:
+      # none for a jolt no bigger than a shake, and at least +least_kick+
+      # for one that is, so even a gentle shake tosses the dots high.
+      def kick_for(jolt)
+        return 0.0 if jolt <= shake
+
+        (least_kick + ((jolt - shake) * kick)).clamp(0.0, most_kick)
+      end
     end
 
     # The way the dots are pulled, in g, on the screen: +x+ to the right,
