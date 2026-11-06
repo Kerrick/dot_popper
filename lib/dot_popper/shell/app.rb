@@ -40,7 +40,7 @@ module DotPopper
                                  sizing: DotSizing.parse(sizing_store.read))
         puts "Dot Popper: dots are sized to the screen as each round starts" if @game.sizing.sized_to_screen?
         lifetime = Lifetime.new(SaveFile.new(name: "lifetime.txt"), today:, legacy:)
-        notices = NoticeFiles.new(game: ::Lota::Filesystem.source.to_s,
+        notices = NoticeFiles.new(game: File.expand_path("../../..", __dir__),
                                   starts: [File.dirname(File.expand_path($PROGRAM_NAME))]).notices
         keeper = RecordKeeper.new(best: @game.best, lifetime:, folder: ->(name) { SaveFile.new(name:) })
         @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
