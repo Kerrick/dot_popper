@@ -27,7 +27,7 @@ Every store build should carry a "Licenses" or "About" screen, or file, listing 
 - **What's missing:**
   - A release build signed with an upload key Kerrick creates and keeps. Play App Signing holds the app key.
   - An Android App Bundle (`.aab`), which Play requires, rather than an APK. Whether `fledge build android` can make one needs asking.
-  - Either a fix for the landscape lag, or a portrait-only lock (`screenOrientation` in the host manifest) for the first release.
+  - A fix for the landscape lag. It blocks release: a portrait-only lock is not an acceptable workaround.
   - Ideally a Lota release that supports Android, so the build doesn't depend on an experiment branch.
 - **Already right:** arm64-v8a, targetSdk 36, Back handled, no permissions requested.
 
@@ -77,4 +77,4 @@ Every store build should carry a "Licenses" or "About" screen, or file, listing 
 2. **Homebrew tap:** no fees, an hour's work, and it can ship today, unsigned, with a Gatekeeper caveat.
 3. **Microsoft Store via MSIX:** a one-time fee, no certificate.
 4. **Apple Developer Program,** which unlocks the App Store, the Mac App Store, and notarized Homebrew at once.
-5. **Google Play,** once Lota's Android route is released and the landscape lag is fixed or the app is locked to portrait.
+5. **Google Play,** once Lota's Android route is released and the landscape lag is fixed.
