@@ -20,6 +20,20 @@ Every store build should carry a "Licenses" or "About" screen, or file, listing 
 - **Store art:** screenshots at each store's sizes, a 1024×1024 icon (`script/make_icon.rb` can render one), a short description, and an age rating (everyone).
 - **A real version number** for each submission, taken from the tag. The kits already do this.
 
+## Settings CI reads, and which are secret
+
+CI takes each store's values from the repository's settings on GitHub, never from its files, so nothing here is committed. Until a value is set, CI builds with an obviously fake stand-in, or leaves the build unsigned, so it can still check the build.
+
+| Name | Kind | What it is | Secret? |
+| --- | --- | --- | --- |
+| `MSIX_IDENTITY_NAME` | Variable | The package's identity name from Partner Center (Product identity). | No: every MSIX published to the Store carries it in its manifest. |
+| `MSIX_PUBLISHER` | Variable | The publisher, `CN=` and an ID, from the same page. | No, for the same reason. |
+| `ANDROID_UPLOAD_KEYSTORE` | Secret | The upload keystore, in base64. | Yes: whoever has it can upload builds as you. |
+| `ANDROID_UPLOAD_KEY_ALIAS` | Secret | The key's alias in that keystore. | Kept with the keystore. |
+| `ANDROID_UPLOAD_KEY_PASSWORD` | Secret | The keystore's and key's password. | Yes. |
+
+Set a variable with `gh variable set NAME --repo Kerrick/dot_popper`, and a secret with `gh secret set NAME --repo Kerrick/dot_popper`. Apple's signing will add certificates and an App Store Connect API key here, all as secrets, once that work is done. The Microsoft Store signs an MSIX itself, so it needs no key.
+
 ## Google Play
 
 - **Account:** a Google Play Console developer account, a one-time fee. New personal accounts must run a closed test with a minimum number of testers for a minimum number of days before production; check the current numbers.
