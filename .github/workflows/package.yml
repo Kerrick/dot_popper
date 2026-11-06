@@ -281,6 +281,14 @@ jobs:
           Write-Host '--- folders in the real roaming AppData'
           Get-ChildItem -LiteralPath $env:APPDATA -Directory -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_.Name }
 
+          Write-Host '--- the same app run inside the package by Invoke-CommandInDesktopPackage, its output kept'
+          $log = Join-Path $env:RUNNER_TEMP 'package-out.txt'
+          $exe = Join-Path $package.InstallLocation 'Dot Popper.exe'
+          Invoke-CommandInDesktopPackage -PackageFamilyName $family -AppId App -Command 'cmd.exe' -Args "/c `"`"$exe`" > `"$log`" 2>&1`""
+          for ($i = 0; $i -lt 60 -and -not (Get-Process -Name 'Dot Popper' -ErrorAction SilentlyContinue); $i++) { Start-Sleep -Seconds 1 }
+          Get-Process -Name 'Dot Popper' -ErrorAction SilentlyContinue | ForEach-Object { $_.WaitForExit(60000) | Out-Null }
+          if (Test-Path $log) { Get-Content $log | Select-Object -First 40 | ForEach-Object { Write-Host $_ } } else { Write-Host 'no output file' }
+          Get-ChildItem -LiteralPath $data -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_.FullName }
           Remove-AppxPackage -Package $package.PackageFullName
           foreach ($name in $variables.Keys) { [Environment]::SetEnvironmentVariable($name, $null, 'User') }
           if ($left) { exit 1 }
