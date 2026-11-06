@@ -252,9 +252,13 @@ jobs:
           done
           # The notices, in the app's files (fledge.zip) with the LGPL text and
           # OpenAL Soft's source, two folders above the game's.
-          unzip -o -q "$apk" 'assets/fledge.zip' -d "$RUNNER_TEMP/apk" || unzip -l "$apk" | grep -i fledge
-          unzip -l "$RUNNER_TEMP/apk/assets/fledge.zip" | grep -E " (NOTICES.txt|licenses/.*)$" | tee "$RUNNER_TEMP/notices.txt"
-          unzip -p "$RUNNER_TEMP/apk/assets/fledge.zip" NOTICES.txt > "$RUNNER_TEMP/NOTICES.txt"
+          unzip -Z1 "$apk" | grep -v "^lib/" | head -40
+          entry=$(unzip -Z1 "$apk" | grep -E "fledge.*\.zip$" | head -1) || { echo "::error::the APK has no fledge zip"; exit 1; }
+          unzip -o -q "$apk" "$entry" -d "$RUNNER_TEMP/apk"
+          bundled=$RUNNER_TEMP/apk/$entry
+          unzip -Z1 "$bundled" | grep -E "(^|/)(NOTICES.txt|licenses/.*)$" | tee "$RUNNER_TEMP/notices.txt"
+          unzip -Z1 "$bundled" | grep -E "^[^/]*NOTICES.txt$" > /dev/null || echo "::warning::NOTICES.txt is not at the zip's top"
+          unzip -p "$bundled" "$(grep -E '(^|/)NOTICES.txt$' "$RUNNER_TEMP/notices.txt" | grep -v '^notices/' | head -1)" > "$RUNNER_TEMP/NOTICES.txt"
           grep -q "licenses/openal-soft-.*tar.bz2" "$RUNNER_TEMP/notices.txt"
           grep -q "^OpenAL Soft 1" "$RUNNER_TEMP/NOTICES.txt"
           grep -q "Portions of this software are copyright .* The FreeType Project" "$RUNNER_TEMP/NOTICES.txt"
