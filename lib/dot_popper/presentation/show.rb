@@ -291,7 +291,12 @@ module DotPopper
       def credits_lines = @credits_lines&.last
 
       # Where the Credits screen's heading and its window of text go.
-      def credits_layout = CreditsLayout.new(layout:, look: look::CREDITS)
+      def credits_layout
+        page = CreditsLayout.new(layout:, look: look::CREDITS)
+        page.with(wanted: CreditsLines.widest_as_written(credits_book, size: page.text_size, measure: @measure))
+      end
+
+      def credits_book = (@credits_book ||= CreditsBook.compose(words, @notices))
 
       # Opens the Credits screen over the Records screen, at the top.
       def open_credits
@@ -473,8 +478,7 @@ module DotPopper
         page = credits_layout
         key = [page.text_size, page.room]
         if @credits_lines&.first != key
-          book = (@credits_book ||= CreditsBook.compose(words, @notices))
-          @credits_lines = [key, CreditsLines.set(book, size: page.text_size, room: page.room, line: look::CREDITS.line,
+          @credits_lines = [key, CreditsLines.set(credits_book, size: page.text_size, room: page.room, line: look::CREDITS.line,
                                                   measure: @measure)]
         end
         @credits = @credits.fitted(content: credits_lines.height, window: page.window.height)

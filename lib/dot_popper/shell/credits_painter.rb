@@ -29,7 +29,7 @@ module DotPopper
         fonts = { heading: pen.fonts.bold(Presentation::CreditsLines.heading_size(lines.size)),
                   subheading: pen.fonts.bold(lines.size),
                   note: pen.fonts.semibold(lines.size), legal: pen.fonts.mono(lines.size) }
-        colors = { heading: pen.palette.cream, subheading: pen.palette.gain, note: pen.palette.cream, legal: pen.palette.soft }
+        colors = { heading: pen.palette.cream, subheading: pen.palette.gain, note: pen.palette.cream, legal: pen.palette.cream }
         lines.visible(offset, window.height, page.line).each do |row|
           font = fonts.fetch(row.kind)
           pen.text(row.text, font, window.x + (font.width(row.text) / 2.0), window.y + row.y - offset, colors.fetch(row.kind))

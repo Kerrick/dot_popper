@@ -22,6 +22,18 @@ class CreditsTest < Minitest::Test
     assert_includes bare.map(&:text).join(" "), "CC-BY-SA-4.0", "the sounds and icon are said to be CC-BY-SA"
   end
 
+  # The maintainer may yet keep Dot Popper proprietary: then its notice is
+  # its copyright with all rights reserved, and nothing of its own
+  # licenses, while every open-source notice the build carries stays.
+  def test_a_proprietary_build_reserves_all_rights_and_keeps_the_open_source_notices
+    full = Notices.new(agpl: "AGPL TEXT", ofl: "OFL TEXT", iosevka: "IOSEVKA TEXT", lota: "LOTA TEXT", fledge: ["RUBY"])
+    texts = CreditsBook.compose(WORDS, full, licensing: :proprietary).blocks.map(&:text).join(" ")
+
+    assert_includes texts, "Dot Popper © 2026 setdef All rights reserved."
+    %w[AGPL\ TEXT CC-BY-SA-4.0 Affero].each { refute_includes texts, it.delete("\\") }
+    %w[OFL\ TEXT IOSEVKA\ TEXT LOTA\ TEXT RUBY].each { assert_includes texts, it.delete("\\") }
+  end
+
   def test_a_line_of_thanks_comes_after_who_made_it_once_the_words_have_one
     assert_equal ["Made by setdef", "Dot Popper © 2026 setdef"],
                  CreditsBook.compose(WORDS, Notices.none).blocks.first(2).map(&:text).values_at(0, 1)
@@ -52,6 +64,43 @@ class CreditsTest < Minitest::Test
     assert_operator lines.rows.size, :>, 1
     lines.rows.each { assert_match(/\A {4}\S/, it.text) }
     lines.rows.each { assert_operator RoughMeasure.new.width(:mono, 20, it.text), :<=, 300 }
+  end
+
+  # The maintainer: licenses are written to be read at their own line
+  # breaks, so where the column has room, they are.
+  HARD = "Permission is hereby granted, free of charge, to any person\nobtaining a copy of this software,\n\n" \
+         "1. Neither the Font Software nor any of its components,\n   in Original or Modified Versions, may be sold.\n"
+
+  def test_a_hard_wrapped_license_that_fits_is_shown_just_as_written
+    book = CreditsBook.new(blocks: [CreditsBlock.new(:legal, HARD)])
+    widest = CreditsLines.widest_as_written(book, size: 20, measure: RoughMeasure.new)
+    lines = CreditsLines.set(book, size: 20, room: widest, line: 1.5, measure: RoughMeasure.new)
+
+    assert_equal HARD.lines.map(&:rstrip).reject(&:empty?), lines.rows.map(&:text)
+  end
+
+  def test_a_hard_wrapped_license_too_wide_for_the_column_is_reflowed
+    book = CreditsBook.new(blocks: [CreditsBlock.new(:legal, HARD)])
+    widest = CreditsLines.widest_as_written(book, size: 20, measure: RoughMeasure.new)
+    lines = CreditsLines.set(book, size: 20, room: widest - 1, line: 1.5, measure: RoughMeasure.new)
+
+    refute_equal HARD.lines.map(&:rstrip).reject(&:empty?), lines.rows.map(&:text)
+    lines.rows.each { assert_operator RoughMeasure.new.width(:mono, 20, it.text), :<, widest }
+  end
+
+  def test_a_license_written_to_be_reflowed_does_not_widen_the_page
+    long = CreditsBook.new(blocks: [CreditsBlock.new(:legal, "word " * 60)])
+
+    assert_in_delta 0.0, CreditsLines.widest_as_written(long, size: 20, measure: RoughMeasure.new)
+  end
+
+  def test_the_page_widens_for_a_license_as_far_as_the_screen_allows
+    page = CreditsLayout.new(layout: layout(1600, 900), look: Look::CREDITS)
+    wide = page.with(wanted: page.room + 100)
+    huge = page.with(wanted: 10_000.0)
+
+    assert_in_delta page.room + 100, wide.room, 1.0
+    assert_operator huge.room, :<=, 1600
   end
 
   def test_scrolling_stays_on_the_page
