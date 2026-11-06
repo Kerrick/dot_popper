@@ -18,6 +18,7 @@ module DotPopperGui
       check(show.credits.farthest.positive?, "the page is longer than the window")
       lit = screenshot.lit_in(page)
       check(lit > 100, "the Credits screen shows its text (#{lit} light pixels)")
+      keep_screenshot("credits-top")
 
       wheel(-3)
       check(show.credits.offset.positive?, "the wheel scrolls down")
