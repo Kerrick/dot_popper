@@ -148,19 +148,16 @@ module DotPopper
       end
 
       # The name of one choice of dot size, on its segment of the title's
-      # "Dot size" control: "Fit the screen" or "Standard".
-      def sizing(sizing) = screen_size.fetch(sizing.sized_to_screen? ? :fitted : :standard)
+      # "Dot size" control, by what it does on this screen next to the
+      # other, as the +preview+ (SizingPreview) sees it: on a phone,
+      # fitting the dots to the screen gives "Smaller dots" and the fixed
+      # size "Bigger dots"; on a big monitor, the other way about. A
+      # player chooses what they see, not how the size is worked out.
+      def sizing(sizing, preview) = screen_size.fetch(effect_of(sizing, preview))
 
-      # What one choice of dot size does on this screen, next to the
-      # other, as the +preview+ (SizingPreview) sees it, under its name:
-      # on a phone, fitting the dots makes them "Smaller, more room", and
-      # the standard ones are "Bigger, less room"; on a big monitor, the
-      # other way about.
-      def sizing_note(sizing, preview)
-        effect = preview.effect
-        effect = { smaller: :bigger, bigger: :smaller }.fetch(effect, effect) unless sizing.sized_to_screen?
-        screen_size.fetch(effect)
-      end
+      # What else that choice does, under its name: "More room" for the
+      # smaller dots, "Less room" for the bigger.
+      def sizing_note(sizing, preview) = screen_size.fetch(:"#{effect_of(sizing, preview)}_note")
 
       # The control's label: "Dot size".
       def sizing_label = screen_size.fetch(:choice)
@@ -259,6 +256,13 @@ module DotPopper
         elsif score == best && best.positive? then ", tying my best!"
         else ""
         end
+      end
+
+      # :smaller or :bigger: what +sizing+ does to the dots here, next to
+      # the other choice; :alike where the two hardly differ.
+      def effect_of(sizing, preview)
+        effect = preview.effect
+        sizing.sized_to_screen? ? effect : { smaller: :bigger, bigger: :smaller }.fetch(effect, effect)
       end
     end
   end

@@ -9,22 +9,25 @@ class SizingPreviewTest < Minitest::Test
   FITTED = DotPopper::DotSizing::SIZED_TO_SCREEN
 
   def preview(fitted, standard: 50) = SizingPreview.new(standard:, fitted:, look: Look::SIZING)
+  def named(sizing, fitted) = Look::WORDS.sizing(sizing, preview(fitted))
   def note(sizing, fitted) = Look::WORDS.sizing_note(sizing, preview(fitted))
 
-  # The first choice, the default, fits the screen; the second is the
-  # standard size.
-  def test_the_choices_are_named_the_same_on_every_screen
-    assert_equal ["Fit the screen", "Standard"], DotPopper::Presentation::Show::SIZINGS.map { Look::WORDS.sizing(it) }
+  # The maintainer: "Standard" is poorly named when it isn't the
+  # standard. Each choice is named for what a player sees it do here,
+  # next to the other, so on a phone the default reads "Smaller"
+  # and on a big monitor "Bigger".
+  def test_each_choice_is_named_for_what_it_does_here
+    assert_equal ["Smaller", "Bigger"], [named(FITTED, 30), named(STANDARD, 30)]
+    assert_equal ["Smaller", "Bigger"], [named(FITTED, 44.9), named(STANDARD, 44.9)]
+    assert_equal ["Bigger", "Smaller"], [named(FITTED, 55.1), named(STANDARD, 55.1)]
+    assert_equal ["Bigger", "Smaller"], [named(FITTED, 97), named(STANDARD, 97)]
   end
 
-  # Under its name, each says what it does on this screen.
-  def test_each_choice_says_what_it_does_here
-    assert_equal "Smaller, more room", note(FITTED, 30)
-    assert_equal "Smaller, more room", note(FITTED, 44.9)
-    assert_equal "Bigger, less room", note(FITTED, 55.1)
-    assert_equal "Bigger, less room", note(FITTED, 97)
-    assert_equal "Bigger, less room", note(STANDARD, 30), "on a phone, standard dots are the bigger ones"
-    assert_equal "Smaller, more room", note(STANDARD, 97)
+  # Under its name, each says what else it does: smaller dots leave more
+  # room.
+  def test_each_choice_says_how_much_room_it_leaves
+    assert_equal ["More room", "Less room"], [note(FITTED, 30), note(STANDARD, 30)]
+    assert_equal ["Less room", "More room"], [note(FITTED, 97), note(STANDARD, 97)]
   end
 
   # Within a tenth either way the two look alike, and the title leaves

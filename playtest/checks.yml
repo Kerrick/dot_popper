@@ -92,13 +92,13 @@ desktop:
   - id: 8
     try: >-
       After a round, look at the title screen for a "Dot size" choice. If it
-      is there, click its second option, "Standard", then play a round.
+      is there, click its other option ("Bigger" or "Smaller"), then play a round.
     ask: >-
       Picking the second option changes the size of the drifting dots on the
       title, and the next round's dots match. If the title shows no "Dot size"
       choice, answer ns, for not shown.
     answer: yes_no_not_shown
-    quotes: [Dot size, Standard]
+    quotes: [Dot size, Bigger, Smaller]
 
   - id: 9
     try:
@@ -218,10 +218,10 @@ ios:
     quotes: [Continue]
 
   - id: 9
-    try: After a round, look at the title screen for a "Dot size" choice. If it is there, tap its second option, "Standard", then play a round.
+    try: After a round, look at the title screen for a "Dot size" choice. If it is there, tap its other option ("Bigger" or "Smaller"), then play a round.
     ask: The Dot size choice changes the next round's dots. If the title shows no "Dot size" choice, write "not shown".
     answer: yes_no_not_shown
-    quotes: [Dot size, Standard]
+    quotes: [Dot size, Bigger, Smaller]
 
   - id: 10
     try: On the Game Over screen, tap "Copy my result". Then open Notes and paste.
@@ -337,10 +337,10 @@ android:
     quotes: [Continue]
 
   - id: 11
-    try: After a round, look at the title screen for a "Dot size" choice. If it is there, tap its second option, "Standard", then play a round.
+    try: After a round, look at the title screen for a "Dot size" choice. If it is there, tap its other option ("Bigger" or "Smaller"), then play a round.
     ask: The Dot size choice changes the next round's dots. If the title shows no "Dot size" choice, write "not shown".
     answer: yes_no_not_shown
-    quotes: [Dot size, Standard]
+    quotes: [Dot size, Bigger, Smaller]
 
   - id: 12
     try: On the Game Over screen, tap "Copy my result". Then paste it into a message or a note.

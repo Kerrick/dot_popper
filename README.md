@@ -34,12 +34,12 @@ With dots that fit the screen, every screen plays about the same, so their round
 
 The dots are sized to fit the screen, so every screen, from a phone to a big monitor, has about the same room for dots as the desktop window, and plays about as hard. The dots never get smaller than 60 points across, so they stay easy to tap on a phone. The size is worked out when each round starts, and if you resize the window or turn the phone during a round, the dots keep their size until it ends. Each dot stays as far across and down the screen as it was, so turning a phone and back puts the dots back where they were.
 
-Once you have finished a round, the title screen may also show a **Dot size** control with two segments, the chosen one filled. Each segment shows a small dot at the size it gives, its name, and under it what it does on this screen, so you can see the difference before you choose. Tap a segment to choose it:
+Once you have finished a round, the title screen may also show a **Dot size** control with two segments, the chosen one filled. Each is named for what it does on this screen, next to the other: **Smaller** (with **More room** under it) or **Bigger** (with **Less room**), with a small dot at the size it gives, so you can see the difference before you choose. Tap a segment to choose it:
 
-- **Fit the screen** is the usual game, as described above. On a phone it says **Smaller, more room**, and on a big monitor **Bigger, less room**. In a resizable window, the dots grow and shrink with the window.
-- **Standard** is the spec's fixed size: a dot is the same size on every screen, with a radius of 50 points (or logical pixels on a computer). So a phone holds fewer dots than a big monitor, gets crowded sooner, and is harder to score on. On a phone it says **Bigger, less room**, and on a big monitor **Smaller, more room**. In a window you resize, the dots keep their size and a bigger window gives them more room.
+- The default fits the dots to the screen, the usual game as described above. On a phone it is the **Smaller** one, and on a big monitor the **Bigger** one. In a resizable window, the dots grow and shrink with the window.
+- The other is the spec's fixed size: a dot is the same size on every screen, with a radius of 50 points (or logical pixels on a computer). So a phone holds fewer dots than a big monitor, gets crowded sooner, and is harder to score on, but its dots are bigger to hit. In a window you resize, the dots keep their size and a bigger window gives them more room.
 
-A player who never chose plays with dots that fit the screen. One who chose Standard keeps it.
+Choosing never moves the Play button. A player who never chose plays with dots that fit the screen. One who chose the fixed size keeps it.
 
 The control only shows where the two sizes differ by more than a tenth. On a screen about the desktop window's size, they look alike, so the control is left out, and the game keeps your choice for when you play on another screen or resize the window. The title's dots change size as soon as you switch, and the game remembers your choice. The Records screen says what fitting the dots means: "Dots are sized to fit this screen, so scores compare across devices."
 
