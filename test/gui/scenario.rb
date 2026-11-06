@@ -256,11 +256,14 @@ module DotPopperGui
 
     # A point well inside +dot+ where it is the top dot of +stack+, its
     # middle if it can be, or nil where others cover all of it.
+    # Game Over's words and buttons, Continue among them, stand over the
+    # pile, so a point under one of them doesn't show the dot either.
     def visible_point(stack, dot)
       ring = (0...16).map { Math::PI * it / 8 }
       offsets = [[0.0, 0.0]] + [0.3, 0.6].flat_map { |out| ring.map { [Math.cos(it) * out, Math.sin(it) * out] } }
+      covers = show.finale_plan&.placed&.rects&.values.to_a
       offsets.map { |dx, dy| [dot.x + (dx * dot.radius), dot.y + (dy * dot.radius)] }
-             .find { |x, y| stack.top_at(x, y)&.id == dot.id }
+             .find { |x, y| stack.top_at(x, y)&.id == dot.id && covers.none? { it.contains?(x, y) } }
     end
 
     # Checks the score and time pill is drawn: its words are light.
