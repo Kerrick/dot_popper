@@ -43,23 +43,39 @@ module DotPopper
     end
 
     # How the setdef splash plays: it fades in, holds, and fades out, and
-    # a press ends it. It makes no sound. +at+ is the seconds since it began.
-    class Splash < Data.define(:at)
+    # a press ends it. Over it plays a jingle: the clicks of pressing
+    # Bigger, Smaller, Bigger, Smaller, "Your records", and Back, at 100
+    # beats a minute, in quarter, quarter, a quarter's rest, eighth,
+    # eighth, quarter, quarter. The rhythm says when each click starts, not
+    # how long it lasts. Bigger is the lower click and Smaller the higher,
+    # whichever dot size each names on this screen, and the last two are
+    # those buttons' own clicks. Only while the game's sound is on
+    # (+sounding+) does it play, and the splash last until it has rung;
+    # muted, the splash is short. +at+ is the seconds since it began.
+    class Splash < Data.define(:at, :sounding)
+      BEAT = 60.0 / 100
+      Note = Data.define(:at, :pitch)
+      JINGLE = [[0.0, 0.9], [1.0, 1.2], [3.0, 0.9], [3.5, 1.2], [4.0, 1.0], [5.0, 0.8]]
+               .map { |beat, pitch| Note.new(at: beat * BEAT, pitch:) }.freeze
       FADE_IN = 0.25
-      HOLD = 0.85
       FADE_OUT = 0.3
-      TOTAL = FADE_IN + HOLD + FADE_OUT
+      SILENT = 1.4 # long enough to read the name
+      SOUNDING = JINGLE.last.at + 0.4 # the last click, with room for it to ring
       SKIPPED_BY = %w[DOT_POPPER_AUTOPLAY DOT_POPPER_SCENARIO DOT_POPPER_NO_SPLASH].freeze
 
-      def self.start = new(at: 0.0)
+      def self.start(sounding: false) = new(at: 0.0, sounding:)
 
       # Whether the environment (+env+) asks for no splash: the bot, the GUI
       # director, and a plain request leave it out.
       def self.skipped?(env) = SKIPPED_BY.any? { !env.fetch(it, "").empty? }
 
       def advance(seconds) = with(at: at + seconds)
-      def skip = with(at: TOTAL)
-      def over? = at >= TOTAL
+
+      # The jingle's notes that start from now until +seconds+ later.
+      def notes(seconds) = !sounding || over? ? [] : JINGLE.select { it.at >= at && it.at < at + seconds }
+      def total = sounding ? SOUNDING : SILENT
+      def skip = with(at: total)
+      def over? = at >= total
 
       # How much of the mark shows, 0 to 1.
       def mark = at < FADE_IN ? at / FADE_IN : fade_out
@@ -70,7 +86,7 @@ module DotPopper
 
       private
 
-      def fade_out = ((TOTAL - at) / FADE_OUT).clamp(0.0, 1.0)
+      def fade_out = ((total - at) / FADE_OUT).clamp(0.0, 1.0)
     end
   end
 end

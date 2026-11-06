@@ -46,6 +46,7 @@ module DotPopper
         keeper = RecordKeeper.new(best: @game.best, lifetime:, folder: ->(name) { SaveFile.new(name:) })
         @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
         @speaker = Speaker.new(Look::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Look::SOUND.volume)
+        @splash = @splash.with(sounding: !@speaker.muted?) if @splash
         @show = Presentation::Show.new(game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"),
                                        tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt"),
@@ -86,7 +87,10 @@ module DotPopper
       def update(seconds)
         measure(seconds)
         seconds = seconds.clamp(0.0, Rules::LONGEST_FRAME)
-        @splash = @splash.advance(seconds) if @splash
+        if @splash
+          @splash.notes(seconds).each { @speaker.play(:tick, pitch: it.pitch) }
+          @splash = @splash.advance(seconds)
+        end
         @splash = nil if @splash&.over?
         moved = @cursor.update(seconds, read_with_stick(seconds))
         @show.input = Presentation::InputKind::GAMEPAD unless moved == @cursor

@@ -5,21 +5,21 @@ require_relative "presentation_helper"
 class SplashTest < Minitest::Test
   include PresentationTest
 
-  def test_it_fades_in_holds_and_fades_out_in_about_one_and_a_half_seconds
-    assert_in_delta 1.4, Splash::TOTAL, 0.05
+  def test_muted_it_fades_in_holds_and_fades_out_in_about_one_and_a_half_seconds
+    assert_in_delta 1.4, Splash.start.total, 0.05
     splash = Splash.start
     assert_equal [0.0, 1.0], [splash.mark, splash.ground]
     assert_in_delta 0.5, splash.advance(Splash::FADE_IN / 2).mark, 1e-9
     held = splash.advance(Splash::FADE_IN + 0.3)
     assert_equal [1.0, 1.0], [held.mark, held.ground]
-    middle = splash.advance(Splash::TOTAL - (Splash::FADE_OUT / 2))
+    middle = splash.advance(Splash.start.total - (Splash::FADE_OUT / 2))
     assert_in_delta 0.5, middle.mark, 1e-9
     assert_in_delta 0.5, middle.ground, 1e-9
   end
 
   def test_it_is_over_after_its_total_time_and_a_skip_ends_it
-    refute_predicate Splash.start.advance(Splash::TOTAL - 0.01), :over?
-    assert_predicate Splash.start.advance(Splash::TOTAL), :over?
+    refute_predicate Splash.start.advance(Splash.start.total - 0.01), :over?
+    assert_predicate Splash.start.advance(Splash.start.total), :over?
     assert_predicate Splash.start.skip, :over?
     assert_equal 0.0, Splash.start.skip.mark
   end
@@ -49,5 +49,36 @@ class SplashTest < Minitest::Test
     assert_in_delta 0.78, wide.width / 1200, 0.01
     assert_operator Logotype.fit(400, 850).width, :<=, 400 * 0.7
     assert_operator Logotype.fit(1200, 300).block_height, :<=, 300 * 0.6
+  end
+
+  # The maintainer's jingle: Bigger, Smaller, Bigger, Smaller, "Your
+  # records", Back, at 100 beats a minute, in quarter, quarter, a quarter's
+  # rest, eighth, eighth, quarter, quarter.
+  def test_the_jingle_starts_its_clicks_on_the_beat
+    starts = Splash::JINGLE.map(&:at)
+
+    [0.0, 0.6, 1.8, 2.1, 2.4, 3.0].zip(starts).each { |want, got| assert_in_delta want, got, 1e-9 }
+    assert_equal [0.9, 1.2, 0.9, 1.2, 1.0, 0.8], Splash::JINGLE.map(&:pitch), "Bigger low, Smaller high, then Records and Back"
+  end
+
+  def test_each_click_sounds_once_whatever_the_frames
+    [1 / 60.0, 1 / 144.0, 0.1].each do |frame|
+      splash = Splash.start(sounding: true)
+      heard = []
+      until splash.over?
+        heard.concat(splash.notes(frame))
+        splash = splash.advance(frame)
+      end
+
+      assert_equal Splash::JINGLE, heard
+    end
+  end
+
+  # The maintainer: the splash lengthens only when it plays the jingle.
+  def test_with_sound_it_lasts_until_the_last_click_has_rung_and_muted_it_is_short_and_silent
+    assert_operator Splash.start(sounding: true).total, :>, Splash::JINGLE.last.at
+    assert_in_delta 1.4, Splash.start(sounding: false).total, 0.05
+    assert_empty Splash.start(sounding: false).notes(10.0)
+    assert_empty Splash.start(sounding: true).advance(0.7).skip.notes(1.0), "a press silences the rest"
   end
 end
