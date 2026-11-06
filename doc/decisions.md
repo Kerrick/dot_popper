@@ -707,7 +707,7 @@ The title and Game Over no longer put each line at its own fraction of the scree
 
 ### Dot Popper builds its own apps and kits, with `lota fuse`
 
-Every desktop app is built one way: `lota fuse`, with Lota 0.1.3's release gem for the platform from `vendor/cache`, checked against the release's `SHA256SUMS`, on that platform's own runner. The Package workflow builds the apps on every push to `trunk`, now for Linux x86_64 on `ubuntu-24.04` too, and the Kits workflow builds a playtest kit per device on `v*` tags and by hand. Neither runs `fledge build` for a desktop app any more.
+Every desktop app is built one way: `lota fuse`, with Lota 0.2.2's release gem for the platform from `vendor/cache`, checked against the release's `SHA256SUMS`, on that platform's own runner. The Package workflow builds the apps on every push to `trunk`, now for Linux x86_64 on `ubuntu-24.04` too, and the Kits workflow builds a playtest kit per device on `v*` tags and by hand. Neither runs `fledge build` for a desktop app any more.
 
 **Why:** Lota's maintainer stopped building Dot Popper's kits, and the maintainer asked that Dot Popper build its own artifacts with Lota, using only released tools. `lota fuse` is Lota's documented way to share a game, and it did everything the Fledge build did, so there was no reason to keep a second way.
 

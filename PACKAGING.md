@@ -67,13 +67,13 @@ Pushing a tag that starts with `v0.` makes the Package workflow attach the apps,
 CI runs, on each platform's runner (`.github/actions/fuse`):
 
 ```console
-$ gem install --local vendor/cache/lota-0.1.3-PLATFORM.gem
+$ gem install --local vendor/cache/lota-0.2.2-PLATFORM.gem
 $ lota fuse . --identifier com.kerricklong.DotPopper --app-version VERSION --icon icons/icon --out DIR
 ```
 
-The first line installs Lota's release gem for the platform from `vendor/cache`, after checking its SHA-256 against the `SHA256SUMS` of [Lota's v0.1.3 release](https://github.com/setdef/Lota/releases/tag/v0.1.3). `lota fuse` ships that very gem file in the app. `VERSION` is the tag's version without its `v` when CI builds a tag, and `fledge.yml`'s `version:` otherwise, as for a build by hand. A release candidate builds its base version (`v0.8.2-rc.1` builds 0.8.2), since macOS, iOS, and Windows take only numbers there; the kit's header names the tag beside it, and the Kits workflow checks that it does (`script/playtest_kit.rb check-build`).
+The first line installs Lota's release gem for the platform from `vendor/cache`, after checking its SHA-256 against the `SHA256SUMS` of [Lota's v0.2.2 release](https://github.com/setdef/Lota/releases/tag/v0.2.2). `lota fuse` ships that very gem file in the app. `VERSION` is the tag's version without its `v` when CI builds a tag, and `fledge.yml`'s `version:` otherwise, as for a build by hand. A release candidate builds its base version (`v0.8.2-rc.1` builds 0.8.2), since macOS, iOS, and Windows take only numbers there; the kit's header names the tag beside it, and the Kits workflow checks that it does (`script/playtest_kit.rb check-build`).
 
-`lota fuse` reads the game's name ("Dot Popper", from `conf.rb`'s `t.window.title`) and its save folder's name (`t.identity`, `dot_popper`) without opening a window. It copies the game into `DIR/fuse-project/game/dot_popper`, leaving out `.git`, `.bundle`, and `vendor/cache`, and writes a Gemfile that asks for Lota 0.1.3 and Fledge v0.5.0, a `fledge.yml`, and an entry script that starts the game fused. It then runs `fledge build` in that project. The game's own Gemfile doesn't reach the app, so `lota fuse` warns that only Lota's gem ships, which is all the game needs.
+`lota fuse` reads the game's name ("Dot Popper", from `conf.rb`'s `t.window.title`) and its save folder's name (`t.identity`, `dot_popper`) without opening a window. It copies the game into `DIR/fuse-project/game/dot_popper`, leaving out `.git`, `.bundle`, and `vendor/cache`, and writes a Gemfile from the game's own, with Fledge v0.6.0, a `fledge.yml`, and an entry script that starts the game fused. It then runs `fledge build` in that project. Since Lota 0.2.2, `lota fuse` honors the game's `Gemfile` and `Gemfile.lock`: it ships the gems the lockfile locks, at those versions, and refuses a game whose lockfile is missing, doesn't lock the platform it builds for, or locks another version of Lota. Dot Popper's Gemfile asks only for Lota outside its development and test groups, so Lota's gem is all that ships. `lota fuse` also writes Lota's notices, `NOTICES.txt`, into the app's `app` folder, two folders above the game's (`Contents/Resources/app` on macOS), where the Credits screen finds them.
 
 "Fused" is LÖVE's term for a game shipped as a standalone app. A fused game saves its files in a folder named after the game alone, as shipped LÖVE games do, where a development run under `lota run` saves into a `Lota` folder.
 
@@ -100,7 +100,7 @@ Everything in the repository is copied into the app's `game/dot_popper` folder, 
 You need Ruby 4.0.9, the version in `.ruby-version`, and Git. Each platform can build only its own app, so build the macOS app on a Mac, the Windows app on Windows, and the Linux app on Linux.
 
 ```console
-$ gem install --local vendor/cache/lota-0.1.3-arm64-darwin.gem
+$ gem install --local vendor/cache/lota-0.2.2-arm64-darwin.gem
 $ lota fuse . --identifier com.kerricklong.DotPopper --app-version 0.8.1 --icon icons/icon
 dist/Dot Popper-arm64-darwin.tar.gz
 dist/Dot Popper-arm64-darwin.dmg
@@ -201,7 +201,7 @@ On the maintainer's Mac, the kit is unpacked into `/Users/Shared/dot-popper-kits
 
 These have been verified on CI's runners:
 
-- `lota fuse` builds the Windows, macOS, and Linux apps from Lota 0.1.3's release gems, and each app plays itself with no Ruby on its `PATH` (Windows and Linux with Mesa's software OpenGL).
+- `lota fuse` builds the Windows, macOS, and Linux apps from Lota 0.2.2's release gems, and each app plays itself with no Ruby on its `PATH` (Windows and Linux with Mesa's software OpenGL).
 - The Windows kit's `playtest.ps1`, run from a downloaded, unzipped kit in Windows PowerShell 5.1 with answers on standard input, asks every check, restarts the game for check 2, captures the game's frame-rate output, collects `%APPDATA%\dot_popper`, and writes one complete `dot-popper-results.txt`. The Linux kit's `playtest.sh` does the same under Xvfb.
 - The iPad kit is built from Lota's v0.2.2 tag, with Lota's iOS host, and Fledge v0.6.0, builds on a fresh Mac for the Simulator and, unsigned, for devices, and plays itself to the end in an iPad Simulator.
 - The Android kit's APK, built from Lota's v0.2.2 tag by its phone guide, installs on an `x86_64` emulator of API 33 (a 320 × 640 dp screen, drawn by LÖVE's Vulkan renderer on SwiftShader), plays itself for 45 seconds and exits with status 0, prints a radius of 50 dp, ignores Back during a round and at Game Over, and leaves the app on Back from the title ([run 42266401142](https://github.com/Kerrick/dot_popper/actions/runs/42266401142)).

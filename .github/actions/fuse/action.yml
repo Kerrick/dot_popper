@@ -1,5 +1,5 @@
 # Fuses Dot Popper with `lota fuse` on this runner's platform (PACKAGING.md),
-# as Lota 0.1.3's README documents: Lota's gem for the platform, from
+# as Lota 0.2.2's README documents: Lota's gem for the platform, from
 # vendor/cache and checked against the SHA256SUMS of Lota's release, is
 # installed, and lota fuse builds the app into $RUNNER_TEMP/fuse. It also
 # writes $RUNNER_TEMP/build.txt, the lines a kit names its build by, and
