@@ -497,18 +497,23 @@ jobs:
           xcodebuild -version
 
       # On a runner with no Lota, Fledge, or bundle, as the maintainer's
-      # Mac has none.
+      # Mac has none. Debug is what testers install; Release, for devices,
+      # is what the App Store gets. Each app must carry the privacy
+      # manifest at its top level.
       - name: Unpack the kit and build it for the Simulator and, unsigned, for devices
         run: |
           ditto -x -k "$RUNNER_TEMP/download/dot-popper-ipad-kit.zip" "$RUNNER_TEMP/unpacked"
           cd "$RUNNER_TEMP/unpacked/dot-popper-ipad-kit/$APP_NAME-ios"
           mkdir -p "$RUNNER_TEMP/simulator"
-          for sdk in iphonesimulator iphoneos; do
-            log=$RUNNER_TEMP/simulator/xcodebuild-$sdk.log
-            xcodebuild -project "$APP_NAME.xcodeproj" -scheme "$APP_NAME" -configuration Debug -sdk "$sdk" \
+          for build in Debug:iphonesimulator Debug:iphoneos Release:iphoneos; do
+            configuration=${build%%:*} sdk=${build#*:}
+            log=$RUNNER_TEMP/simulator/xcodebuild-$configuration-$sdk.log
+            xcodebuild -project "$APP_NAME.xcodeproj" -scheme "$APP_NAME" -configuration "$configuration" -sdk "$sdk" \
               -derivedDataPath "$RUNNER_TEMP/derived" build CODE_SIGNING_ALLOWED=NO > "$log" 2>&1 \
               || { tail -80 "$log"; exit 1; }
             grep -E "BUILD" "$log" | tail -2
+            manifest=$RUNNER_TEMP/derived/Build/Products/$configuration-$sdk/$APP_NAME.app/PrivacyInfo.xcprivacy
+            plutil -lint "$manifest" || { echo "::error::the $configuration $sdk app has no PrivacyInfo.xcprivacy"; exit 1; }
           done
 
       # doc/ios.md, "Checking a run in the Simulator".
