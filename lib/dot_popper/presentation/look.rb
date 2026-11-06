@@ -23,8 +23,8 @@ module DotPopper
 
       WORDS = Words.new(
         title: "Dot Popper",
-        play: ByInput.new(touch: "Tap anywhere to play", mouse: "Click anywhere to play", gamepad: "Press A to play"),
-        continue: ByInput.new(touch: "Tap to continue", mouse: "Click to continue", gamepad: "Press A to continue"),
+        play: ByInput.new(touch: "Play", mouse: "Play", gamepad: "Play (A)"),
+        continue: ByInput.new(touch: "Continue", mouse: "Continue", gamepad: "Continue (A)"),
         time_up: "Time's up!", new_best: "New best!", best: "Your best", score: "SCORE", time: "TIME",
         covered: ByInput.new(
           touch: ["New dots appear under the popped ones.", "Wait for the bright dot to slide out, then tap it."].freeze,
@@ -36,8 +36,7 @@ module DotPopper
                             gamepad: ["Pop a bright dot", "Hit a popped dot"].freeze),
         share: "Copy my result", copied: "Copied! Paste it anywhere.",
         records: "Your records",
-        go_back: ByInput.new(touch: "Tap anywhere to go back", mouse: "Click anywhere to go back",
-                             gamepad: "Press B to go back"),
+        go_back: ByInput.new(touch: "Back", mouse: "Back", gamepad: "Back (B)"),
         no_rounds: "Play a round, and your records will appear here.",
         clear: ByInput.new(touch: "Clear my records…", mouse: "Clear my records…",
                            gamepad: "Hold Y to clear my records…"),
@@ -249,7 +248,7 @@ module DotPopper
         sparkle_life: 1.4
       )
 
-      # Game Over's words, from "Time's up!" to "Tap to continue", sit on a
+      # Game Over's words, from "Time's up!" to the Continue button, sit on a
       # soft dark backing, 60% at its middle, so they read over the pile;
       # its edges feather out, so the pile still shows around them.
       FINALE_BACKING = ScrimLook.new(alpha: 0.6, feather: 40, layers: 10, pad: 18)

@@ -6,8 +6,8 @@ module DotPopper
     # fingers, and throw them. Presentation::PileGrabs decides what each
     # press is; this tells it where the pointers are and carries out what
     # it says on the Pile: each held ball is steered toward its pointer
-    # every frame, a ball let go flies off, and a click goes on to the
-    # title through the Show, as a press did before.
+    # every frame, a ball let go flies off, and a click goes to the Show,
+    # which presses a button there, or, for a gamepad's A, Continue.
     #
     # Lota 0.1.3 binds MouseJoint.new but none of its setters, so a joint
     # could never follow the pointer; a held ball is instead given the
@@ -42,7 +42,7 @@ module DotPopper
       def release(key, x, y)
         case @grabs.release(key, x, y, now:)
         in Presentation::Fling => fling then let_go(fling)
-        in Presentation::Click => click then @show.tap(click.x, click.y)
+        in Presentation::Click => click then @show.tap(click.x, click.y, by: key)
         in nil then nil
         end
       end

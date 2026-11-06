@@ -122,45 +122,80 @@ module DotPopper
       def playing? = game.state.is_a?(Game::Playing)
       def finished? = game.state.is_a?(Game::GameOver)
 
-      # A tap anywhere, by +by+ (a finger's id, :mouse, or :gamepad), which
-      # #let_go names when it lets go. A tap on one of the screen's buttons
-      # (#controls) presses it: on the title, the mute button, "Your
-      # records", and the dot-size choice; "Copy my result" on Game Over;
-      # and on the Records screen, Undo, or "Clear my records…", which a
-      # press starts holding. On the Records screen a tap anywhere else
-      # goes back. Every other tap goes to the game at once. A tap on one
-      # of the title's fresh dots also pops it, as the round starts.
+      # A tap at +x+, +y+, by +by+ (a finger's id, :mouse, or :gamepad),
+      # which #let_go names when it lets go. In a round, every tap goes to
+      # the game at once. Elsewhere a tap presses the screen's button under
+      # it (#controls): on the title, Play, the mute button, "Your records",
+      # and the dot-size choice; on Game Over, Continue and "Copy my
+      # result"; and on the Records screen, Back, Undo, or "Clear my
+      # records…", which a press starts holding. Empty space does nothing,
+      # but a tap on one of the title's fresh dots pops it, for fun, and a
+      # gamepad's A, which aims at no button, presses the screen's main one
+      # (#primary).
       def tap(x, y, by: :tap)
+        return game.press(x, y) if playing?
+
         case control_at(x, y)&.name
+        in :play then play
+        in :continue then continue_on
+        in :back then close_records
         in :mute then sounds.toggle_mute
         in :records then open_records
         in DotSizing => sizing then choose_sizing(sizing)
         in :share then share
         in :undo then undo
         in :clear then hold_clear(by)
-        in nil if records? then close_records
-        in nil
-          scenery = attract.dots.top_at(x, y) if title?
-          game.press(x, y)
-          toy_pop(scenery, x, y) if scenery&.fresh?
+        in nil if by == :gamepad then primary
+        in nil then toy_tap(x, y)
         end
       end
 
-      # The buttons this screen offers, each where a press reaches it
-      # (Control), in the order a press looks for them. Taps and the
-      # mouse's hover both go by these.
+      # The buttons this screen offers (Control), each where it is drawn
+      # and where a press reaches it, no two reaching the same point, so a
+      # press reaches one button. Taps and the mouse's hover both go by
+      # these.
       def controls
-        if records?
-          [(Control.new(name: :undo, reach: undo_reach) if undo_offer),
-           (Control.new(name: :clear, reach: clear_reach) if clear_offered?)].compact
-        elsif title? then title_controls
-        elsif finished? && (reach = share_reach) then [Control.new(name: :share, reach:)]
-        else []
+        Control.apart(
+          if records? then records_controls
+          elsif title? then title_controls
+          elsif finished? then finale_controls
+          else []
+          end
+        )
+      end
+
+      # The button a press at +x+, +y+ reaches (Control), or nil; on an
+      # edge two reaches share, the one drawn nearer.
+      def control_at(x, y) = controls.select { it.reach.contains?(x, y) }.min_by { it.distance(x, y) }
+
+      # Where a press reaches the button named +name+ on this screen, or
+      # nil when it is not offered.
+      def reach_of(name) = controls.find { it.name == name }&.reach
+
+      # Presses this screen's main button, as Enter, Space, a gamepad's
+      # Start, or its A aimed at no button do: Play on the title, Back on
+      # the Records screen, and Continue on Game Over, once its grace is
+      # over. In a round it does nothing, since only a press at a place
+      # may touch the score.
+      def primary
+        if records? then close_records
+        elsif title? then play
+        elsif finished? then continue_on
         end
       end
 
-      # The button a press at +x+, +y+ reaches (Control), or nil.
-      def control_at(x, y) = controls.find { it.reach.contains?(x, y) }
+      # The title's Play: a round starts.
+      def play
+        return unless title? && !records?
+
+        game.press(layout.center_x, layout.center_y)
+      end
+
+      # Game Over's Continue: back to the title, once the game will hear a
+      # press (Rules::GAME_OVER_GRACE).
+      def continue_on
+        game.press(layout.center_x, layout.center_y) if finished?
+      end
 
       # The mouse moved to +x+, +y+, without a button held or with one.
       def pointer_at(x, y) = @pointer = [x, y]
@@ -181,28 +216,23 @@ module DotPopper
       def hover = @hover
 
       # Whether a press at +x+, +y+ waits to be let go before it counts: on
-      # Game Over, anywhere but "Copy my result", since it may become a
-      # drag of the pile (PileGrabs). Everywhere else a press counts the
-      # moment it goes down.
+      # Game Over, anywhere but its buttons, since it may become a drag of
+      # the pile (PileGrabs). Everywhere else a press counts the moment it
+      # goes down.
       def waits_for_release?(x, y) = finished? && control_at(x, y).nil?
 
-      # A gamepad's Start: on the title it starts the usual round, and
-      # after one it continues, as a tap on empty space would, grace and
-      # all; where it presses does not matter on either screen. In a round
-      # it does nothing, since only a press at a place may touch the score.
-      def start
-        return close_records if records?
+      # A gamepad's Start: the screen's main button (#primary).
+      def start = primary
 
-        game.press(layout.center_x, layout.center_y) unless playing?
-      end
-
-      # Escape, or a gamepad's B: leaves the Records screen. Says whether
-      # there was one to leave, so that elsewhere the key can do its usual
-      # job.
+      # Escape, Android's Back, or a gamepad's B: leaves the Records
+      # screen, and goes on from Game Over to the title, as Continue does.
+      # Says whether there was somewhere to go back from, so that elsewhere
+      # the key can do its usual job.
       def back
-        return false unless records?
-
-        close_records
+        if records? then close_records
+        elsif finished? then continue_on
+        else return false
+        end
         true
       end
 
@@ -267,8 +297,8 @@ module DotPopper
 
       # Where a press reaches "Clear my records…" and Undo on the Records
       # screen, as the title's buttons do.
-      def clear_reach = within_safe(layout.clear_records_button.reach(2 * @radius))
-      def undo_reach = within_safe(layout.undo_button.reach(2 * @radius))
+      def clear_reach = reach_of(:clear)
+      def undo_reach = reach_of(:undo)
 
       # The gamepad button that holds "Clear my records…", for its words.
       def holding_button = clearing.by == :y ? "Y" : "A"
@@ -285,24 +315,31 @@ module DotPopper
       end
 
       # Where a tap reaches "Copy my result", where it is drawn: never
-      # less than a dot's width. Nil without one.
-      def share_reach = finale_plan&.share_button&.reach(2 * @radius)
+      # less than a dot's width, short of where Continue's reach begins.
+      # Nil without one.
+      def share_reach = reach_of(:share)
 
-      # Where a tap reaches "Your records": never less than a dot's width,
-      # and never past the safe area's bottom.
-      def records_reach = within_safe(title_plan.records_button.reach(2 * @radius))
+      # Where a tap reaches Game Over's Continue and the title's Play.
+      def continue_reach = reach_of(:continue)
+      def play_reach = reach_of(:play)
+
+      # Where a tap reaches "Your records": never less than a dot's width
+      # where it has room, and never past the safe area's bottom.
+      def records_reach = reach_of(:records)
+
+      # Where a tap reaches the Records screen's Back.
+      def back_reach = reach_of(:back)
 
       # Where a tap reaches each segment of the dot-size choice, as a
-      # DotSizing and its Rect: never less than a dot's width, and never
-      # past the safe area's bottom.
-      def sizing_reaches = SIZINGS.zip(title_plan.sizing_control.options.map { within_safe(it.reach(2 * @radius)) })
+      # DotSizing and its Rect, while the title offers it.
+      def sizing_reaches = SIZINGS.map { [it, reach_of(it)] }
 
       # Where the title's words and buttons go (TitlePlan).
       def title_plan
         goal = lifetime.goal_done? ? words.goal_done_line(lifetime.goal) : words.goal(lifetime.goal) if played?
         TitleScreen.new(layout:, type: look::TYPE, words:, measure: @measure, best: marquee.best, goal:,
                         done: lifetime.goal_done?, streak: lifetime.streak, records: records_offered?,
-                        sizing: sizing_offered?).plan
+                        sizing: sizing_offered?, radius: game.field.radius).plan
       end
 
       # Where Game Over's words and "Copy my result" go (FinalePlan), or
@@ -314,7 +351,7 @@ module DotPopper
         return unless finale
 
         FinaleScreen.new(layout:, type: look::TYPE, words:, measure: @measure, scrim: look::FINALE_BACKING, finale:,
-                         below: hud_bottom, hint: @hint.call)
+                         below: hud_bottom, hint: @hint.call, radius: game.round&.field&.radius || @radius)
       end
 
       # The window changed size. The title's dots are respawned if their
@@ -350,11 +387,32 @@ module DotPopper
       private
 
       def title_controls
+        plan = title_plan
         buttons = [Control.new(name: :mute, reach: layout.mute_button)]
-        buttons << Control.new(name: :records, reach: records_reach) if records_offered?
-        buttons.concat(sizing_reaches.map { |sizing, reach| Control.new(name: sizing, reach:) }) if sizing_offered?
+        buttons << button(:records, plan.records_button) if records_offered?
+        buttons.concat(SIZINGS.zip(plan.sizing_control.options).map { button(*it) }) if sizing_offered?
+        buttons << primary_button(:play, plan.play_button) if plan.play_button
         buttons
       end
+
+      def finale_controls
+        plan = finale_plan or return []
+        [(button(:share, plan.share_button) if plan.share_button),
+         (primary_button(:continue, plan.continue_button) if plan.continue_button)].compact
+      end
+
+      def records_controls
+        [(button(:undo, layout.undo_button) if undo_offer),
+         (button(:clear, layout.clear_records_button) if clear_offered?),
+         button(:back, layout.back_button)].compact
+      end
+
+      # A button drawn at +frame+, which a press reaches within a dot's
+      # width, short of the safe area's bottom.
+      def button(name, frame) = Control.new(name:, frame:, reach: within_safe(frame.reach(2 * @radius)))
+
+      # A screen's main button, which a press reaches more generously.
+      def primary_button(name, frame) = Control.new(name:, frame:, reach: layout.primary_reach(frame, game.field.radius))
 
       def hold_clear(by)
         @clearing = clearing.press(by, now)
@@ -460,8 +518,17 @@ module DotPopper
         @marquee = Marquee.new(look: look::TITLE, best: event.best, at: now)
       end
 
-      # The title's dot, popped by the tap that started the round: its
-      # droplets, its ring, and its bloop, but no score.
+      # A tap on the title away from its buttons: a fresh dot there pops
+      # for fun, with no score; anywhere else, nothing happens.
+      def toy_tap(x, y)
+        return unless title? && !records?
+
+        dot = attract.dots.top_at(x, y)
+        toy_pop(dot, x, y) if dot&.fresh?
+      end
+
+      # One of the title's dots, popped by a tap: its droplets, its ring,
+      # and its bloop, but no score.
       def toy_pop(dot, x, y)
         effects.burst(x, y, look::POP_BURST, palette.confetti)
         effects.ring(dot.x, dot.y, look::SHOCKWAVE)

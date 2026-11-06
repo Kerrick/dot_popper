@@ -6,8 +6,8 @@ module DotPopper
     # FinalePlan puts it: "Time's up!", "You met today's goal!" if the
     # round did, the score counting up, a new best or how far short of the
     # best it fell, a quiet line of the round's facts, a lifetime record
-    # it set, "Copy my result", and, once a tap will be heard, the prompt
-    # to go on. On the first Game Overs after a wrong tap with the bright
+    # it set, the Continue button, faint until a press will be heard, and
+    # "Copy my result" under it. On the first Game Overs after a wrong tap with the bright
     # dot hidden, the stacking rule comes first. Every line sits on a
     # soft, dark backing, so they read over the pile without hiding it.
     class FinalePainter < Data.define(:pen)
@@ -37,8 +37,8 @@ module DotPopper
           PillButton.new(pen:).draw(button, copied ? words.copied : words.share, alpha: shown,
                                     color: copied ? palette.gain : palette.cream, hover: show.hover.level(:share))
         end
-        pen.text(words.continue, pen.fonts.bold(plan.size(:continue)), layout.center_x, plan[:continue].center_y,
-                 palette.cream, finale.prompt(now))
+        PrimaryButton.new(pen:).draw(plan.continue_button, words.continue, alpha: [shown * 0.35, finale.prompt(now)].max,
+                                     hover: show.hover.level(:continue))
       end
 
       private

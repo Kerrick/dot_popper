@@ -110,10 +110,10 @@ desktop:
     quotes: [Copy my result]
 
   - id: 10
-    try: On the title screen, click "Your records" in the bottom left corner. Then click anywhere.
-    ask: '"Your records" opens your records, and "Click anywhere to go back" takes you back to the title.'
+    try: On the title screen, click "Your records" in the bottom left corner. Then click Back.
+    ask: '"Your records" opens your records, and Back takes you back to the title. A click elsewhere on that screen does nothing.'
     answer: yes_no
-    quotes: [Your records, Click anywhere to go back]
+    quotes: [Your records, Back]
 
   - id: 11
     ask: Text looks sharp, not blurry, at your display scale.
@@ -122,11 +122,10 @@ desktop:
   - id: 12
     try: >-
       On the Game Over screen, hold the mouse button down on a dot in the pile,
-      drag it, and let go. Then, on another Game Over, click once without
-      dragging.
-    ask: Holding and dragging a pile dot throws it, and a plain click ("Click to continue") goes to the title.
+      drag it, and let go. Click once on empty space. Then click Continue.
+    ask: Holding and dragging a pile dot throws it, a click on empty space does nothing, and Continue goes to the title.
     answer: yes_no
-    quotes: [Click to continue]
+    quotes: [Continue]
 
   - id: 13
     ask: Overall, how does Dot Popper feel to play?
@@ -158,9 +157,9 @@ desktop:
   - id: 17
     group: controller
     try: On the title screen, press X. Then press B.
-    ask: X opens "Your records", and B goes back to the title (the screen says "Press B to go back").
+    ask: X opens "Your records", and B goes back to the title (the screen's button says "Back (B)").
     answer: yes_no
-    quotes: [Your records, Press B to go back]
+    quotes: [Your records, Back (B)]
 
   - id: 18
     group: controller
@@ -213,10 +212,10 @@ ios:
         answer: yes_no
 
   - id: 8
-    try: On the Game Over screen, drag a dot in the pile with your finger, and let go while moving. Then, on another Game Over, tap once without dragging.
-    ask: Dragging a pile dot with a finger throws it, and a tap ("Tap to continue") goes to the title.
+    try: On the Game Over screen, drag a dot in the pile with your finger, and let go while moving. Tap once on empty space. Then tap Continue.
+    ask: Dragging a pile dot with a finger throws it, a tap on empty space does nothing, and Continue goes to the title.
     answer: yes_no
-    quotes: [Tap to continue]
+    quotes: [Continue]
 
   - id: 9
     try: After a round, look at the title screen for a "Dot size" choice. If it is there, tap its second option, "Standard", then play a round.
@@ -313,7 +312,7 @@ android:
         answer: yes_no
       - ask: during a round, it does nothing, and the round carries on
         answer: yes_no
-      - ask: at Game Over, it does nothing
+      - ask: at Game Over, it goes on to the title, as Continue does
         answer: yes_no
       - ask: on the title screen, it leaves the app
         answer: yes_no
@@ -332,10 +331,10 @@ android:
         answer: yes_no
 
   - id: 10
-    try: On the Game Over screen, drag a dot in the pile with your finger, and let go while moving. Then, on another Game Over, tap once without dragging.
-    ask: Dragging a pile dot with a finger throws it, and a tap ("Tap to continue") goes to the title.
+    try: On the Game Over screen, drag a dot in the pile with your finger, and let go while moving. Tap once on empty space. Then tap Continue.
+    ask: Dragging a pile dot with a finger throws it, a tap on empty space does nothing, and Continue goes to the title.
     answer: yes_no
-    quotes: [Tap to continue]
+    quotes: [Continue]
 
   - id: 11
     try: After a round, look at the title screen for a "Dot size" choice. If it is there, tap its second option, "Standard", then play a round.

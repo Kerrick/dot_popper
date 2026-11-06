@@ -31,8 +31,9 @@ module DotPopperGui
       check(show.records.empty && show.undo_offer, "holding a gamepad's Y clears the records too")
       pad(:y)
       check(!show.records.empty, "a press of Y undoes")
-      click(layout.center_x, layout.center_y)
-      check(!show.records? && show.title?, "a click elsewhere goes back")
+      back = show.back_reach
+      click(back.center_x, back.center_y)
+      check(!show.records? && show.title?, "a click on Back goes back")
     end
 
     private

@@ -191,8 +191,9 @@ module DotPopperGui
     # its buttons.
     def start_round(how = method(:click))
       check(show.title?, "the title is showing")
-      how.call(layout.center_x, layout.center_y)
-      check(show.playing?, "a press on the title starts a round")
+      play = show.play_reach
+      how.call(play.center_x, play.center_y)
+      check(show.playing?, "a press on Play starts a round")
     end
 
     # Waits for the fresh dot to come out from under the popped ones, and
@@ -218,12 +219,13 @@ module DotPopperGui
       check(show.finished?, "the round ends when its clock runs out")
     end
 
-    # Waits out Game Over's grace and clicks away from "Copy my result".
+    # Waits out Game Over's grace and presses Continue.
     def continue_to_title(how = method(:click))
       wait_for("Game Over ready for a press") { game.state.ready? }
-      how.call(layout.safe.x + (layout.safe.width * 0.12), layout.safe.y + (layout.safe.height * 0.5))
+      button = show.continue_reach
+      how.call(button.center_x, button.center_y)
       wait_for("the title again", within: 5) { show.title? }
-      check(show.title?, "a press after Game Over goes back to the title")
+      check(show.title?, "Continue goes back to the title")
     end
 
     # A whole round, played quickly: one pop, then the clock runs out.

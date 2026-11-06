@@ -3,7 +3,7 @@
 module DotPopper
   module Shell
     # The title screen: the name, a legend that teaches the rule with one
-    # dot of each kind, the best score, the prompt, the mute button, and,
+    # dot of each kind, the best score, the Play button, the mute button, and,
     # once a round has been played, today's goal, "Your records", and,
     # where it changes something, the choice of how dots are sized, each
     # where the Show's TitlePlan puts it. From the name to the prompt, the
@@ -26,10 +26,8 @@ module DotPopper
         line(plan, :best, words.best_line(marquee.best), pen.palette.soft, intro)
         daily_goal(show, layout, plan, intro) if plan[:goal]
         line(plan, :streak, words.streak(show.lifetime.streak), pen.palette.soft, intro, size: :goal)
-        prompt = pen.fonts.bold(plan.size(:prompt))
-        pen.text(words.play, prompt, layout.center_x, plan[:prompt].center_y, pen.palette.cream,
-                 intro * marquee.prompt(now))
         hover = show.hover
+        PrimaryButton.new(pen:).draw(plan.play_button, words.play, alpha: intro, hover: hover.level(:play))
         MuteButton.new(pen:).draw(plan.mute_button, show.sounds.muted?, hover: hover.level(:mute))
         return unless show.records_offered?
 

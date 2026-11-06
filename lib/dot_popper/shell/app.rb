@@ -219,11 +219,15 @@ module DotPopper
 
       def key_pressed(key)
         return @speaker.toggle_mute if key == :m
-        # Escape leaves the Records screen first, on any device.
+        # Enter or Space presses the screen's main button, on any device;
+        # Alt+Enter (Cmd+Enter on a Mac) is fullscreen's instead.
+        return @show.primary if PRIMARY_KEYS.include?(key) && !(key != :space && fullscreen_chord?)
+        # Escape, which Android's Back arrives as, goes back from the
+        # Records screen or Game Over first, on any device.
         return if key == :escape && @show.back
-        # Android's Back arrives as Escape. On the title it leaves the app,
-        # as Back on an app's first screen does; anywhere else it does
-        # nothing, so a stray edge swipe never throws a round away.
+        # On the title Android's Back leaves the app, as Back on an app's
+        # first screen does; in a round it does nothing, so a stray edge
+        # swipe never throws a round away.
         return ::Lota::Event.quit if key == :escape && @android && @show.title?
         # A tablet's keyboard neither quits the app nor takes it out of
         # fullscreen: iOS apps are left by the system, never by the app.
@@ -232,9 +236,11 @@ module DotPopper
         case key
         when :escape then ::Lota::Event.quit
         when :f11 then toggle_fullscreen
-        when :return, :kpenter then toggle_fullscreen if ::Lota::Keyboard.down?(:lalt, :ralt, :lgui, :rgui)
+        when :return, :kpenter then toggle_fullscreen if fullscreen_chord?
         end
       end
+
+      PRIMARY_KEYS = %i[return kpenter space].freeze
 
       # The window changed size, or moved to a screen of another density.
       def resize
@@ -368,6 +374,9 @@ module DotPopper
       # edge ask twice before it leaves the game (SDL's UIKit view
       # controller), so a tap near the edge stays a tap.
       def fill_screen = ::Lota::Window.set_fullscreen(true, :desktop)
+
+      # Whether Alt or Cmd is held, which makes Enter switch fullscreen.
+      def fullscreen_chord? = ::Lota::Keyboard.down?(:lalt, :ralt, :lgui, :rgui)
 
       def toggle_fullscreen
         fullscreen, = ::Lota::Window.fullscreen

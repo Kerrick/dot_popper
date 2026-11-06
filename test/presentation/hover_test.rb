@@ -46,14 +46,16 @@ class HoverTest < Minitest::Test
   def test_the_title_hovers_the_buttons_it_offers_where_taps_reach_them
     mute = @show.layout.mute_button
     assert_equal :mute, @show.control_at(mute.center_x, mute.center_y).name
-    assert_nil @show.control_at(*middle(@show.records_reach)), "a first title offers no records"
+    assert_nil @show.records_reach, "a first title offers no records"
+    assert_nil @show.control_at(*middle(@show.layout.records_button))
 
     finish_round
     assert_equal :records, @show.control_at(*middle(@show.records_reach)).name
     assert_equal :records, @show.control_at(@show.records_reach.x + 1, @show.records_reach.bottom - 1).name,
                  "the whole reach, not only the drawn pill"
     assert_equal STANDARD, @show.control_at(*middle(@show.sizing_reaches.to_h.fetch(STANDARD))).name
-    assert_nil @show.control_at(@show.layout.center_x, @show.layout.center_y)
+    assert_equal :play, @show.control_at(*middle(@show.play_reach)).name
+    assert_nil @show.control_at(5, 5)
   end
 
   def test_the_mouse_over_a_button_lights_it_and_moving_away_dims_it
@@ -63,7 +65,7 @@ class HoverTest < Minitest::Test
     @show.update(LOOK.seconds)
     assert_in_delta 1.0, @show.hover.level(:records)
 
-    @show.pointer_at(@show.layout.center_x, @show.layout.center_y)
+    @show.pointer_at(5, 5)
     assert_nil @show.hovered
     @show.update(LOOK.seconds)
     assert_in_delta 0.0, @show.hover.level(:records)
@@ -84,23 +86,27 @@ class HoverTest < Minitest::Test
     assert_nil @show.hovered
   end
 
-  def test_the_records_screen_hovers_clear_then_undo_and_nothing_else
+  def test_the_records_screen_hovers_back_and_clear_and_nothing_else
     finish_round
     @show.open_records
-    assert_equal [:clear], @show.controls.map(&:name)
+    assert_equal %i[clear back], @show.controls.map(&:name)
+    @show.pointer_at(*middle(@show.back_reach))
+    assert_equal :back, @show.hovered
     @show.pointer_at(*middle(@show.clear_reach))
     assert_equal :clear, @show.hovered
-    @show.pointer_at(*middle(@show.records_reach))
+    @show.pointer_at(*middle(@show.title_plan.play_button))
     assert_nil @show.hovered, "the title's buttons are covered"
   end
 
   def test_game_over_hovers_copy_my_result_and_a_round_hovers_nothing
-    @show.tap(10, 10)
+    press_main
     assert_empty @show.controls
     @game.update(20)
     @show.update(0.1)
     @show.pointer_at(*middle(@show.share_reach))
     assert_equal :share, @show.hovered
+    @show.pointer_at(*middle(@show.continue_reach))
+    assert_equal :continue, @show.hovered
   end
 
   private
@@ -108,9 +114,9 @@ class HoverTest < Minitest::Test
   def middle(rect) = [rect.center_x, rect.center_y]
 
   def finish_round
-    @show.tap(10, 10)
+    press_main
     @game.update(20)
     @game.update(DotPopper::Rules::GAME_OVER_GRACE)
-    @show.tap(10, 10)
+    press_main
   end
 end

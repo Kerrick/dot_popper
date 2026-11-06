@@ -11,6 +11,18 @@ module DotPopper
 
       def contains?(px, py) = px.between?(x, right) && py.between?(y, bottom)
 
+      # Whether this rectangle and +other+ share more than an edge.
+      def overlaps?(other) = x < other.right && other.x < right && y < other.bottom && other.y < bottom
+
+      # The rectangle with any of its edges moved in to +left+, +top+,
+      # +right+, or +bottom+; an edge already inside stays where it is.
+      def cut(left: x, top: y, right: self.right, bottom: self.bottom)
+        new_x = [x, left].max
+        new_y = [y, top].max
+        Rect.new(x: new_x, y: new_y, width: [[self.right, right].min - new_x, 0.0].max,
+                 height: [[self.bottom, bottom].min - new_y, 0.0].max)
+      end
+
       # The rectangle grown by +amount+ on every side, or shrunk when negative.
       def inset(amount) = Rect.new(x: x + amount, y: y + amount, width: width - (2 * amount), height: height - (2 * amount))
 
@@ -103,6 +115,29 @@ module DotPopper
         Rect.new(x: safe.right - margin - width, y: safe.bottom - margin - height, width:, height:)
       end
 
+      # The Records screen's Back, in the bottom left corner, where "Your
+      # records" was pressed, across from "Clear my records…" and never
+      # into it.
+      def back_button
+        height = button_size
+        room = safe.width - (3 * margin) - clear_records_button.width
+        Rect.new(x: safe.x + margin, y: safe.bottom - margin - height, width: [height * 2.4, room].min, height:)
+      end
+
+      # The size of a screen's main button, the title's Play and Game
+      # Over's Continue, for dots of +radius+: at least a dot across, and
+      # a button's height, so it is the biggest thing to press; nearly the
+      # whole width of a phone, and wide enough for its word elsewhere.
+      def primary_size(radius)
+        height = [2.0 * radius, button_size].max
+        room = safe.width - (2 * margin)
+        [[room, [height * 4.5, [room * 0.9, 340.0].min].max].min, height]
+      end
+
+      # Where a press reaches a main button drawn at +rect+: a dot's width
+      # at least, and a margin more on every side.
+      def primary_reach(rect, radius) = rect.reach(2.0 * radius).inset(-margin)
+
       # Undo, once the records are cleared, at the same corner.
       def undo_button
         height = button_size
@@ -136,9 +171,14 @@ module DotPopper
 
       private
 
+      # The choice a row above the buttons, with room between for each to
+      # be reached a good way past its edge: up to a standard dot's width
+      # around it, as far as a short screen allows. (The Android playtest
+      # found a tap on Standard's lower half opening "Your records".)
       def stacked_choice(height, segment, label)
         segment = [segment, (safe.width / 2.0) - margin].min
-        y = mute_button.y - margin - height
+        apart = [margin, [(2 * Rules::RADIUS) - height, safe.height * 0.05].min].max
+        y = mute_button.y - apart - height
         tall = height * 0.7
         Segmented.new(label: Rect.new(x: center_x - (label / 2.0), y: y - tall, width: label, height: tall),
                       options: segments(center_x - segment, y, segment, height))

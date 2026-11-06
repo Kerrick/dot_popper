@@ -8,7 +8,7 @@ Dot Popper is written in Ruby, on [Lota](https://github.com/setdef/Lota). Lota r
 
 ## How to play
 
-On the title screen, tap anywhere to start a round. During a round, tap or click the fresh dot whenever it is uncovered. Any mouse button works, and a press counts the moment it goes down, not when it is released. When the round ends, the game shows your score and ignores taps for a moment, so that a tap aimed at a dot in the last instant doesn't skip past it. Tap again after that to return to the title screen.
+On the title screen, tap **Play** to start a round. During a round, tap or click the fresh dot whenever it is uncovered. Any mouse button works, and a press counts the moment it goes down, not when it is released. When the round ends, the game shows your score and a **Continue** button, which ignores taps for a moment, so that a tap aimed at a dot in the last instant doesn't skip past the score. Tap **Continue** after that to return to the title screen. Outside a round, a tap away from the buttons does nothing, except to play with the dots: on the title, a tap on a bright dot pops it for fun, and at Game Over the dots are yours to drag about (see "Playing with the pile").
 
 A fresh dot and a popped dot differ in more than colour. A fresh dot is light and shiny, with a thin bright rim at its edge, which is exactly where a tap reaches it. A popped dot is dark and matte, with a crater in its centre. Because they differ in lightness and in shape, players can tell them apart in greyscale and with colour blindness.
 
@@ -16,7 +16,7 @@ The game also helps a new player understand a mistake. The first two times a rou
 
 When time runs out, the dots tumble to the bottom of the screen in a heap behind your score. Under the score, a line sums up the round: how many dots you popped, how many popped dots you tapped by mistake, and the longest you had to wait for a fresh dot. If the round beat one of your lifetime records, such as the most pops in a row without a wrong tap, one more line names the most impressive of them, for example "New record: 18 pops in a row without a wrong tap".
 
-Under that line, a **Copy my result** button copies two short lines to the clipboard, ready to paste into a message: your score, whether it set or tied your best, any lifetime record the round set, and how many pops and wrong taps the round had and how long it lasted. A tap on the button only copies; a tap anywhere else continues.
+Under **Continue**, a **Copy my result** button copies two short lines to the clipboard, ready to paste into a message: your score, whether it set or tied your best, any lifetime record the round set, and how many pops and wrong taps the round had and how long it lasted. A tap on it only copies.
 
 ### Today's goal
 
@@ -24,7 +24,7 @@ Once you have finished a round, the title screen also shows a goal for the day, 
 
 ### Your records
 
-Once you have finished a round, the title screen shows a **Your records** button in its bottom left corner. It opens a screen with your best score and your other bests (your longest round, the most pops in a row without a wrong tap, your fastest pop, and the longest wait that still ended in a pop), your totals across every round, how many days in a row you have met the daily goal and the most you ever have, and a bar chart of your last 20 scores, with the highest that counts toward the bests shown labelled. Tap anywhere to go back to the title. Nothing on this screen affects a round.
+Once you have finished a round, the title screen shows a **Your records** button in its bottom left corner. It opens a screen with your best score and your other bests (your longest round, the most pops in a row without a wrong tap, your fastest pop, and the longest wait that still ended in a pop), your totals across every round, how many days in a row you have met the daily goal and the most you ever have, and a bar chart of your last 20 scores, with the highest that counts toward the bests shown labelled. **Back**, in the bottom left corner, goes back to the title. Nothing on this screen affects a round.
 
 To start your records again, press and hold **Clear my records…** in the screen's bottom right corner for two seconds. While you hold it, the screen says what will go: your bests, totals, chart, and goal streak (with today's goal counted as not yet met). Let go sooner and nothing changes. Once they are cleared, the screen shows "Records cleared." with an **Undo** button for ten seconds, which puts everything back exactly as it was. Playing a round ends the chance to undo. Clearing keeps your settings (sound and dot size), the playtest log, and how often the game has explained the stacking rule and the pile. Afterward the title shows no best score or daily goal until you finish another round, as for a new player, but it keeps **Your records** and the dot-size choice.
 
@@ -48,34 +48,34 @@ The control only shows where the two sizes differ by more than a tenth. On a scr
 | Action | Touch or mouse | Keyboard |
 | --- | --- | --- |
 | Pop a dot | Tap or click it | |
-| Start a round, or continue after one | Tap or click anywhere (after a round, the game goes on as you let go) | |
+| Start a round, or continue after one | **Play** on the title, **Continue** at Game Over | **Enter** or **Space** (and **Escape** at Game Over) |
 | Copy your result | **Copy my result** on the Game Over screen | |
 | See your records | **Your records** on the title screen | |
 | Choose how big the dots are | The **Dot size** control on the title screen | |
-| Leave the Records screen | Tap or click anywhere | **Escape** |
+| Leave the Records screen | **Back** | **Escape**, **Enter** or **Space** |
 | Clear your records | Hold **Clear my records…** on the Records screen for two seconds | |
 | Turn sound on or off | The speaker button on the title screen | **M** |
 | Roll the dots about on the Game Over screen | Tilt the iPad or phone, or shake it | |
 | Throw a dot about on the Game Over screen | Drag it with a finger or the mouse, and let go | |
-
-The words on screen follow whatever you last played with. With a finger they say "Tap", with a mouse they say "Click", and with a controller they name its button ("Press A to play"). A phone or tablet starts out saying "Tap", and a computer starts out saying "Click".
 | Toggle fullscreen (desktop only) | | **F11**, or **Alt+Enter** (**Cmd+Enter** on a Mac) |
-| Quit (desktop only) | Close the window | **Escape**, except on the Records screen |
+| Quit (desktop only) | Close the window | **Escape** on the title screen |
 
-On a phone or tablet the game always fills the screen, and only **M**, and **Escape** on the Records screen, do anything on an attached keyboard. On Android, the Back button or gesture leaves the Records screen, leaves the app from the title screen, and does nothing during a round or at Game Over, so a stray swipe from the screen's edge never ends a round.
+The words on screen follow whatever you last played with. With a finger they say "Tap", with a mouse they say "Click", and with a controller the buttons name the controller's button that presses them ("Play (A)"). A phone or tablet starts out saying "Tap", and a computer starts out saying "Click".
+
+On a phone or tablet the game always fills the screen, and only **M**, **Enter** and **Space**, and **Escape** on the Records screen and at Game Over, do anything on an attached keyboard. On Android, the Back button or gesture leaves the Records screen, goes on from Game Over to the title, leaves the app from the title screen, and does nothing during a round, so a stray swipe from the screen's edge never ends a round.
 
 ### Playing with a controller
 
 Any controller your computer or iPad recognizes as a gamepad works, such as an Xbox or PlayStation controller, and an Xbox Elite controller's back paddles work when they are mapped to **A**. This needs Lota 0.1.3 or newer, which the game uses.
 
 - The left stick or the d-pad moves a cursor around the screen. At full tilt it crosses the window from corner to corner in about a second, however big the window is, and it takes about a third of a second to get up to that speed. A gentle tilt moves it slowly, for aiming, and letting go stops it at once.
-- **A** (cross on a PlayStation controller) or the right trigger presses wherever the cursor is, exactly as a click there would.
+- **A** (cross on a PlayStation controller) or the right trigger presses wherever the cursor is, exactly as a click there would. With the cursor on no button, outside a round, it presses the screen's main button: **Play**, **Continue**, or **Back**.
 - **Start** starts a round from the title screen, and continues after one ends.
 - **Y** (triangle) copies your result on the Game Over screen. On the Records screen, holding **Y** for two seconds clears your records (as does holding **A** with the cursor on **Clear my records…**), and a press of **Y** while **Undo** shows undoes it.
-- **X** (square) opens the Records screen from the title, once it is offered. **B** (circle) or **Start** goes back to the title from it, as does a press of **A** anywhere.
+- **X** (square) opens the Records screen from the title, once it is offered. **B** (circle) or **Start** goes back to the title from it, as does **A** on **Back** or on no button. **B** also goes on from Game Over.
 - Either shoulder button (**LB** or **RB**, or **L1** or **R1**) switches the dot size on the title screen, while it is shown.
 - **Back** turns sound on or off, on every screen.
-- On the Game Over screen, holding **A** on a dot picks it up. Move the cursor to drag the dot, and let go of **A** to throw it. A quick press of **A** that drags nothing continues as you let go, just like a click does.
+- On the Game Over screen, holding **A** on a dot picks it up. Move the cursor to drag the dot, and let go of **A** to throw it. A quick press of **A** that drags nothing continues as you let go.
 - The right stick tilts the pile of dots on the Game Over screen, so they roll the way you push it. Let go, and they fall down again.
 
 The cursor appears when you use the controller and hides when you move the mouse or touch the screen. On an iPad, a controller paired in the iPad's Bluetooth settings works the same way, from the first iPad build made after controllers were turned on there.
@@ -84,7 +84,7 @@ The cursor appears when you use the controller and hides when you move the mouse
 
 When a round ends, its dots tumble into a pile. The round is over by then, so nothing you do to them changes your score. On a phone or tablet, tilting the device rolls the dots toward whichever side is lowest, as if they were marbles in a box, and a shake tosses them high, with a bright ring bursting from each dot and the score rattling. A lid keeps them on the screen. Holding the device upright drops them exactly as they always fell, and on a computer without a controller they always fall straight down.
 
-You can also pick up a dot with a finger or the mouse and drag it about. It follows the pointer, pushes the other dots out of its way, and flies off at the pointer's speed when you let go. Each finger holds a dot of its own. A press that stays still and lets go quickly is still a tap, and goes back to the title as before, but on the Game Over screen it does so when you let go rather than when you press, so a drag never ends Game Over by mistake. During a round, every tap still counts the moment it lands. For the first three rounds, a line under **Tap to continue** says how to play with the pile: how to drag the dots, and, on a phone or tablet, how to tilt them too, or, with a controller, how to push the stick. Nobody has tried it on a real iPad yet, so please report how it feels.
+You can also pick up a dot with a finger or the mouse and drag it about. It follows the pointer, pushes the other dots out of its way, and flies off at the pointer's speed when you let go. Each finger holds a dot of its own. A press that stays still and lets go quickly is a tap, which on the Game Over screen does nothing unless it is on a button, so neither a drag nor a stray tap ever ends Game Over by mistake. During a round, every tap still counts the moment it lands. For the first three rounds, a line above **Continue** says how to play with the pile: how to drag the dots, and, on a phone or tablet, how to tilt them too, or, with a controller, how to push the stick. Nobody has tried it on a real iPad yet, so please report how it feels.
 
 ### Reduced motion
 
@@ -151,7 +151,7 @@ Running `bundle exec rake` with no task name runs the tests and then [Steep](htt
 bundle exec rake test:gui
 ```
 
-`rake test` checks every layer but never runs the game itself. `rake test:gui` does: it starts the real game with `bundle exec lota run`, once for each of eight short scripted sessions, and each one opens a window, plays, checks what happens as it goes, and quits. The sessions are a whole round from the title back to the title (with a few pops, a wrong tap on a popped dot over the fresh one, and the lesson it brings), resizing the window and switching to fullscreen during a round and on Game Over, the Records screen, clearing the records by a held press and undoing it (and a press let go too soon, which changes nothing), choosing the dot size in a narrow window, dragging and throwing the Game Over pile by mouse, by a pretend gamepad and with a pretend tilt, the words changing between "Click", "Tap" and "Press A", and the whole round again drawn without shaders. Each session checks the rules' numbers, the screens, the save files, and a few pixels of the window. A session that fails prints `FAILED` and the reason, and exits with status 1.
+`rake test` checks every layer but never runs the game itself. `rake test:gui` does: it starts the real game with `bundle exec lota run`, once for each of eight short scripted sessions, and each one opens a window, plays, checks what happens as it goes, and quits. The sessions are a whole round from the title back to the title by its buttons (with a few pops, a wrong tap on a popped dot over the fresh one, the lesson it brings, and a click on Game Over's empty space, which must not go on), resizing the window and switching to fullscreen during a round and on Game Over, the Records screen, clearing the records by a held press and undoing it (and a press let go too soon, which changes nothing), choosing the dot size in a narrow window, dragging and throwing the Game Over pile by mouse, by a pretend gamepad and with a pretend tilt, the words changing between "Click", "Tap" and "Press A", and the whole round again drawn without shaders. Each session checks the rules' numbers, the screens, the save files, and a few pixels of the window. A session that fails prints `FAILED` and the reason, and exits with status 1.
 
 The presses don't move the real mouse pointer. Each session pushes them onto Lota's event queue, and the game's clock moves on by a fixed step each frame instead of real time. So a run plays the same on a fast or a busy computer, and a session takes seconds, not as long as a player would. Every session uses a fixed seed, date and window size, saves in a fresh folder that it removes afterward, so your own records are left alone, and plays no sound (`ALSOFT_DRIVERS=null`).
 
@@ -194,7 +194,7 @@ To play one session by hand and watch it, set `DOT_POPPER_SCENARIO` to its name 
 
 | Variable | Effect |
 | --- | --- |
-| `DOT_POPPER_AUTOPLAY=1` | A bot plays the game. It mostly taps fresh dots, but now and then it taps a popped dot that covers one, so that penalties appear too. It starts each round by tapping one of the title screen's dots, and copies every other result. On its second visit to the title, it opens the Records screen for three seconds first. |
+| `DOT_POPPER_AUTOPLAY=1` | A bot plays the game. It mostly taps fresh dots, but now and then it taps a popped dot that covers one, so that penalties appear too. It presses the buttons a player would: **Play** to start each round, **Continue** to go on, and **Copy my result** on every other Game Over. On its second visit to the title, it opens the Records screen for three seconds first and leaves by **Back**. |
 | `DOT_POPPER_SHOTS=0.5,3,6.5` | Takes a screenshot at each of these times, counted in seconds of play, and saves them as `shot-1.png`, `shot-2.png`, and so on in the save folder. The game prints each file's path. |
 | `DOT_POPPER_QUIT_AFTER=20` | Quits after this many seconds of play. |
 | `DOT_POPPER_SEED=42` | Seeds the random number generator, so the same seed and the same taps produce the same dots. |

@@ -84,19 +84,18 @@ class WordsTest < Minitest::Test
   end
 
   # What to do is said for the hand the player last used: "tap" for a
-  # finger, "click" for a mouse, and a gamepad's button by name.
+  # finger, "click" for a mouse, and a gamepad's button by name. The
+  # main buttons name the gamepad's button that presses them.
   def test_the_prompts_name_the_press_the_player_is_making
     said = [InputKind::TOUCH, InputKind::MOUSE, InputKind::GAMEPAD].map do |kind|
       words = Look::WORDS.for(kind)
       [words.play, words.continue, words.go_back, words.covered.last]
     end
 
-    assert_equal [["Tap anywhere to play", "Tap to continue", "Tap anywhere to go back",
-                   "Wait for the bright dot to slide out, then tap it."],
-                  ["Click anywhere to play", "Click to continue", "Click anywhere to go back",
-                   "Wait for the bright dot to slide out, then click it."],
-                  ["Press A to play", "Press A to continue", "Press B to go back",
-                   "Wait for the bright dot to slide out, then pop it."]], said
+    assert_equal [["Play", "Continue", "Back", "Wait for the bright dot to slide out, then tap it."],
+                  ["Play", "Continue", "Back", "Wait for the bright dot to slide out, then click it."],
+                  ["Play (A)", "Continue (A)", "Back (B)", "Wait for the bright dot to slide out, then pop it."]], said
+    refute(said.flatten.any? { it.include?("anywhere") }, "no press goes anywhere")
   end
 
   # Holding "Clear my records…" says what will go, and on a gamepad
@@ -114,7 +113,7 @@ class WordsTest < Minitest::Test
   def test_a_computer_starts_with_the_mouse_and_a_phone_with_a_finger
     assert_equal InputKind::MOUSE, InputKind.starting(touch: false)
     assert_equal InputKind::TOUCH, InputKind.starting(touch: true)
-    assert_equal "Click anywhere to play", Look::WORDS.play
+    assert_equal "Click a bright dot", Look::WORDS.legend.first
   end
 
   def test_the_round_in_one_line

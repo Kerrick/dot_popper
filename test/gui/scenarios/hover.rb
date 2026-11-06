@@ -17,7 +17,7 @@ module DotPopperGui
       wait(DotPopper::Presentation::Look::HOVER.seconds * 2)
       check_close 1.0, show.hover.level(:records), "Your records is lit"
       keep_screenshot("hover-records")
-      move(layout.center_x, layout.center_y)
+      move(layout.safe.x + 20, layout.top + 20)
       check(show.hovered.nil? && !app.pointing_hand?, "moving away clears the hover and the hand")
       wait(DotPopper::Presentation::Look::HOVER.seconds * 2)
       check_close 0.0, show.hover.level(:records), "Your records dims again"
@@ -25,6 +25,11 @@ module DotPopperGui
       check(app.pointing_hand?, "the hand is back over Your records")
       touch_move(reach.center_x, reach.center_y)
       check(show.title? && show.hovered.nil? && !app.pointing_hand?, "a finger over it leaves no hover and no hand")
+      play = show.play_reach
+      move(play.center_x - 30, play.center_y)
+      move(play.center_x, play.center_y)
+      check_equal :play, show.hovered, "the mouse over Play hovers it"
+      check(app.pointing_hand?, "the pointer is the pointing hand over Play")
     end
   end
 end

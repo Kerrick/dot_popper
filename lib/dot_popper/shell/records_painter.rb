@@ -6,8 +6,8 @@ module DotPopper
     # notes on the screen's size under it, the chart of the last scores,
     # the bests and totals as rows with their labels on the left and
     # their numbers lined up on the right, a faint dotted leader between,
-    # the prompt to go back, and under it, in the corner, "Clear my
-    # records…" or, once they are cleared, Undo. While "Clear my records…"
+    # and along the bottom, Back in one corner and "Clear my records…" or,
+    # once they are cleared, Undo in the other. While "Clear my records…"
     # is held, the prompt says what will go, and a bar under it fills.
     # Presentation::RecordsLayout decides where each goes; this only draws,
     # on whole device pixels.
@@ -27,6 +27,7 @@ module DotPopper
         font = pen.fonts.semibold(plan.note_size)
         notes.each_with_index { |line, i| pen.text(line, font, layout.center_x, plan.note_y(i), palette.soft) }
         prompt(show, plan, layout)
+        back(show, layout)
         corner(show, layout)
         return nothing_yet(words, layout, plan) if sheet.empty
 
@@ -55,9 +56,8 @@ module DotPopper
         sheet.notes.flat_map { |note| Presentation::Words.balance(note, room) { font.width(it) } }
       end
 
-      # The prompt to go back, or while "Clear my records…" is held, what
-      # holding it will clear; and for a moment after a press let go too
-      # soon, that it must be held.
+      # While "Clear my records…" is held, what holding it will clear; and
+      # for a moment after a press let go too soon, that it must be held.
       def prompt(show, plan, layout)
         words = show.words
         clearing = show.clearing
@@ -65,10 +65,12 @@ module DotPopper
         ago = clearing.let_go_ago(show.now)
         if clearing.held? then say(words.keep_holding(show.holding_button), plan, layout, 1.0)
         elsif ago && ago < hint then say(words.hold_to_clear, plan, layout, ((hint - ago) / 0.5).clamp(0.0, 1.0))
-        else
-          pen.text(words.go_back, pen.fonts.bold(plan.prompt_size), layout.center_x, plan.prompt_y, pen.palette.cream,
-                   show.marquee.prompt(show.now))
         end
+      end
+
+      # Back, in the bottom left corner.
+      def back(show, layout)
+        PillButton.new(pen:).draw(layout.back_button, show.words.go_back, hover: show.hover.level(:back))
       end
 
       # +text+ where the prompt goes, in a line or two that fit across.

@@ -81,14 +81,15 @@ class ClearingRecordsTest < Minitest::Test
 
     assert_nil @show.undo_offer
     assert @show.records.empty
-    @show.tap(*middle(@show.undo_reach))
-    refute @show.records?, "where Undo was is an ordinary tap, which goes back"
+    assert_nil @show.undo_reach
+    @show.tap(*middle(@show.layout.undo_button))
+    assert @show.records?, "where Undo was is empty space, which does nothing"
   end
 
   def test_a_round_ends_the_offer
     clear_by(:mouse)
     @show.close_records
-    @show.tap(10, 10)
+    press_main
     @show.open_records
 
     assert_nil @show.undo_offer
@@ -143,12 +144,12 @@ class ClearingRecordsTest < Minitest::Test
   def middle(rect) = [rect.center_x, rect.center_y]
 
   def finish_round
-    @show.tap(10, 10)
+    press_main
     fresh = @game.round.dots.find(&:fresh?)
     clear_around!(@game.round, fresh)
     @show.tap(fresh.x, fresh.y)
     @game.update(20)
     @game.update(DotPopper::Rules::GAME_OVER_GRACE)
-    @show.tap(10, 10)
+    press_main
   end
 end

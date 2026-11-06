@@ -5,10 +5,10 @@ module DotPopper
     # A player for development runs (DOT_POPPER_AUTOPLAY): it goes from
     # the title to a round, taps fresh dots where they show, sometimes taps
     # a popped one by mistake, slows as its score grows so the round ends,
-    # and taps through game over back to the title. Given the Show, it
-    # starts a round by popping one of the title's dots, copies every
-    # other result, and on its second visit to the title looks at the
-    # Records screen for a while first. The first time the title offers
+    # and goes from Game Over back to the title. Given the Show, it presses
+    # the buttons a player would: Play to start a round, Continue to go
+    # on, "Copy my result" on every other Game Over, and on its second
+    # visit to the title, "Your records", and Back after a while. The first time the title offers
     # the choice of dot size, it taps the other one, so a run shows the
     # title's dots change. It sees only what a player sees: the dots and
     # the screen.
@@ -80,14 +80,14 @@ module DotPopper
         middle(show.sizing_reaches.reject { |sizing, _| sizing == show.game.sizing }.first.last)
       end
 
-      # Opens "Your records" once it is offered, and taps to go back after
+      # Opens "Your records" once it is offered, and presses Back after
       # +records_wait+; the title's own wait then starts again.
       def browse(show)
         if show.records?
           return if @waited < @look.records_wait
 
           @waited = 0.0
-          return center(show.game.field)
+          return middle(show.back_reach)
         end
         return unless show.records_offered? && @waited >= @look.title_wait / 2
 
@@ -96,32 +96,18 @@ module DotPopper
         middle(show.records_reach)
       end
 
-      # A tap on one of the title's fresh dots, which pops it as the round
-      # starts, or the middle. A dot behind one of the title's buttons
-      # would press the button instead, so it is passed over.
-      def start(game, show)
-        return center(game.field) unless show
+      # Play's middle; without the Show, the middle of the screen, which
+      # the game itself takes as a start.
+      def start(game, show) = show ? middle(show.play_reach) : center(game.field)
 
-        dots = show.attract.dots
-        toy = dots.find { it.fresh? && dots.top_at(it.x, it.y) == it && !on_button?(show, it.x, it.y) }
-        toy ? [toy.x, toy.y] : center(game.field)
-      end
-
-      def on_button?(show, x, y)
-        buttons = [show.layout.mute_button]
-        buttons << show.records_reach if show.records_offered?
-        buttons.concat(show.sizing_reaches.map(&:last)) if show.sizing_offered?
-        buttons.any? { it.contains?(x, y) }
-      end
-
-      # Copies every other result first, then goes on once the game will
-      # hear.
+      # Copies every other result first, then presses Continue once the
+      # game will hear.
       def finish(game, show)
-        if show && @finales.even? && !@shared && @waited >= @look.finale_wait / 2
+        if show && @finales.even? && !@shared && @waited >= @look.finale_wait / 2 && show.share_reach
           @shared = true
           return middle(show.share_reach)
         end
-        press_once(@look.finale_wait) { center(game.field) } if game.state.ready?
+        press_once(@look.finale_wait) { show ? middle(show.continue_reach) : center(game.field) } if game.state.ready?
       end
 
       def middle(rect) = [rect.center_x, rect.center_y]

@@ -2,8 +2,9 @@
 
 module DotPopperGui
   # The Records screen, offered once a round has finished: opened from
-  # the title by a click and by a gamepad's X, and left by a click, by
-  # Escape, which must not quit the game from there, and by B.
+  # the title by a click and by a gamepad's X, and left by a click on
+  # Back, by Escape, which must not quit the game from there, and by B. A
+  # click elsewhere on it does nothing.
   class RecordsScenario < Scenario
     scenario :records
 
@@ -15,8 +16,11 @@ module DotPopperGui
       lit = screenshot.lit_in(DotPopper::Presentation::Rect.new(x: layout.center_x - 200, y: layout.top,
                                                                 width: 400, height: layout.safe.height * 0.5))
       check(lit > 100, "the Records screen shows its words (#{lit} light pixels)")
-      click(layout.center_x, layout.center_y)
-      closed("a click")
+      click(layout.safe.x + 20, layout.top + 20)
+      check(show.records?, "a click elsewhere does nothing")
+      back = show.back_reach
+      click(back.center_x, back.center_y)
+      closed("a click on Back")
       open_by_click
       key(:escape)
       closed("Escape")

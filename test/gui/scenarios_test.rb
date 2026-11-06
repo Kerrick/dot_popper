@@ -18,7 +18,7 @@ class GuiScenariosTest < Minitest::Test
 
   def test_a_round_from_title_to_title
     play("round", "screens come in order", "hidden under it is outlined", "Game Over teaches the stacking rule",
-         "rounds.csv logs the score")
+         "a click on empty space at Game Over does nothing", "Continue goes back to the title", "rounds.csv logs the score")
   end
 
   def test_resizing_a_round_and_the_pile
@@ -27,7 +27,8 @@ class GuiScenariosTest < Minitest::Test
   end
 
   def test_the_records_screen
-    play("records", "a click goes back", "Escape goes back", "a gamepad's B goes back")
+    play("records", "a click on Back goes back", "Escape goes back", "a gamepad's B goes back",
+         "a click elsewhere does nothing")
   end
 
   def test_clearing_the_records_and_undoing_it

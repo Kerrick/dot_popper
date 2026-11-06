@@ -26,6 +26,7 @@ module DotPopperGui
       expect(pops: POPS, slips: 1)
       run_out_the_clock
       game_over
+      click_empty_space
       continue_to_title
       check_equal(%i[RoundStarted RoundEnded TitleShown], story & %i[RoundStarted RoundEnded TitleShown],
                   "the screens come in order: title, round, Game Over, title")
@@ -86,6 +87,17 @@ module DotPopperGui
                                                                 width: 240, height: 200))
       check(lit > 100, "Game Over shows its heading and score (#{lit} light pixels)")
       check_saves(score)
+    end
+
+    # A click on Game Over away from its buttons is the pile's alone: it
+    # never goes on to the title.
+    def click_empty_space
+      x = layout.safe.x + (layout.safe.width * 0.06)
+      y = layout.safe.y + (layout.safe.height * 0.3)
+      check(show.control_at(x, y).nil?, "the place clicked is empty space")
+      click(x, y)
+      wait(0.3)
+      check(show.finished?, "a click on empty space at Game Over does nothing")
     end
 
     def check_saves(score)

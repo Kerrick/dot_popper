@@ -92,7 +92,7 @@ over the app keeps its scores.
 
 Open ios-results.txt on the Mac (TextEdit is fine), play on the device, and
 write each answer after its arrow. The game starts on its title screen:
-tap anywhere to play, and tap the bright dots.
+tap Play, and tap the bright dots.
 
 If something goes wrong, send these with the results file:
 
