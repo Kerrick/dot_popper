@@ -21,9 +21,16 @@ def Lota.conf(t)
   # buffer, so the drawable's last 2 of 2338 px went undrawn in landscape.
   t.window.stencil = false
   t.window.depth = false
-  # DOT_POPPER_RENDERERS=opengl (or vulkan, or metal, comma-separated, in
-  # the order to try) chooses the graphics renderer, to compare them on a
-  # device; unset, LÖVE's own order applies.
-  renderers = ENV.fetch("DOT_POPPER_RENDERERS", "").split(",").map(&:strip).reject(&:empty?)
-  t.renderers = renderers.map(&:to_sym) unless renderers.empty?
+  # Which graphics renderers to try, in order. LÖVE tries Vulkan first, but
+  # gives up, rather than trying OpenGL, when a computer has Vulkan but no
+  # GPU it can use (old graphics, virtual machines, remote desktops), so on
+  # Windows and Linux OpenGL comes first, as most tested and most widely
+  # supported; this game gains nothing from Vulkan on a computer. Android
+  # keeps Vulkan first: a blind playtest found OpenGL ES stuttered there on
+  # battery. Apple's systems have Metal alone. DOT_POPPER_RENDERERS=opengl
+  # (or vulkan, or metal, comma-separated, in order) overrides this, to
+  # compare them on a device.
+  chosen = ENV.fetch("DOT_POPPER_RENDERERS", "").split(",").map(&:strip).reject(&:empty?).map(&:to_sym)
+  chosen = %i[opengl vulkan] if chosen.empty? && RUBY_PLATFORM.match?(/mingw|mswin|linux/) && !RUBY_PLATFORM.include?("android")
+  t.renderers = chosen unless chosen.empty?
 end
