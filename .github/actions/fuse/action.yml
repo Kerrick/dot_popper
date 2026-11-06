@@ -43,23 +43,17 @@ runs:
         ruby -S lota --version
 
     # lota fuse installs every gem the lockfile locks, the development
-    # group's too, and steep's json compiles there. On Windows the
-    # compiler and make must be MSYS2's, as RubyInstaller's devkit sets
-    # them up (ridk enable): mkmf writes MSYS paths such as /C/..., which the
-    # runner's own C:\mingw64 make, first on the PATH, cannot read. ridk is
-    # a .cmd, which PowerShell runs and Git's bash does not.
+    # group's too, and steep's json compiles there. On Windows that build
+    # must use the MSYS2 make and compiler that RubyInstaller enables for a
+    # gem's extension: mkmf writes MSYS paths such as /C/... into the
+    # Makefile, which the runner's own C:\mingw64 make, ahead of them on the
+    # PATH, cannot follow. So the step leaves C:\mingw64 off its PATH.
     - name: lota fuse
-      if: runner.os != 'Windows'
       shell: bash
       run: |
+        if [ "$RUNNER_OS" = Windows ]; then
+          PATH=$(printf '%s' "$PATH" | tr ':' '\n' | grep -vix '/c/mingw64/bin' | paste -sd: -)
+          echo "make: $(command -v make || echo none); gcc: $(command -v gcc || echo none)"
+        fi
         ruby -S lota fuse . --identifier "$IDENTIFIER" --app-version "$APP_VERSION" --icon icons/icon --out "$RUNNER_TEMP/fuse"
         ls -la "$RUNNER_TEMP/fuse"
-
-    - name: lota fuse, in RubyInstaller's devkit
-      if: runner.os == 'Windows'
-      shell: pwsh
-      run: |
-        ridk enable
-        ruby -S lota fuse . --identifier $env:IDENTIFIER --app-version $env:APP_VERSION --icon icons/icon --out "$env:RUNNER_TEMP/fuse"
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-        Get-ChildItem "$env:RUNNER_TEMP/fuse"
