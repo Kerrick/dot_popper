@@ -2,11 +2,11 @@
 
 This page describes the game's side of an iOS or iPadOS build: what the app needs, what the game does differently there, and how to tell a good run from a bad one.
 
-The app itself isn't built in this repository. It is built with Lota's experimental iOS engine, which first shipped, marked experimental, in Lota 0.1.3, and with Fledge's `fledge build ios` command, which generates an Xcode project. The desktop builds and CI don't use it.
+The app itself isn't built in this repository. It is built by the iOS route of Lota's phone guide (`doc/guide/phones.md`, at Lota's `v0.2.2` tag), with Lota's experimental iOS engine and Lota's iOS host, and with Fledge's `fledge build ios` command, which generates an Xcode project. The desktop builds and CI don't use it.
 
 ## Where things stand
 
-- **Dot Popper builds its own kit.** The [Kits workflow](../.github/workflows/kits.yml) builds `dot-popper-ipad-kit.zip` on every `v*` tag and by hand, from Lota's `v0.1.3` tag and Fledge's release, with the host in `ios/host` (PACKAGING.md, "The iPad and iPhone kit"). The project targets iPhone and iPad. Earlier kits, built by a Lota agent from Lota's experiment branches, are retired.
+- **Dot Popper builds its own kit.** The [Kits workflow](../.github/workflows/kits.yml) builds `dot-popper-ipad-kit.zip` on every `v*` tag and by hand, from Lota's `v0.2.2` tag and Fledge v0.6.0, with Lota's iOS host and Dot Popper's two changes to it in `ios/host` (PACKAGING.md, "The iPad and iPhone kit"). The project targets iPhone and iPad. Earlier kits, built by a Lota agent from Lota's experiment branches, are retired.
 - **It runs in the Simulator.** A fresh runner builds the kit's project for the Simulator and, unsigned, for devices, and the autoplay bot plays it to the end in an iPad Pro 13-inch Simulator with exit status 0, with all four shaders, the fonts, the pile at Game Over, and the save folder working.
 - **It hasn't run on a real iPad or iPhone.** Nobody has yet signed it, installed it, or played it on hardware. See "What is still unverified" at the end.
 
@@ -22,12 +22,12 @@ The bundle identifier is `com.kerricklong.DotPopper`, set in `fledge.yml`.
 
 | Setting | Value | Why |
 | --- | --- | --- |
-| Lota | 0.1.3, built with its experimental iOS engine from a clone of its `v0.1.3` tag | Earlier Lota releases neither build for iOS nor call `Lota.touchpressed` for a touchscreen |
+| Lota | 0.2.2, built with its experimental iOS engine from a clone of its `v0.2.2` tag, with the iOS host its gem carries | Lota before 0.1.3 neither builds for iOS nor calls `Lota.touchpressed` for a touchscreen; 0.2.2 is the first release whose guide documents the phone route and ships the host |
 | `t.highdpi` | `true`, already set in `conf.rb` | Without it, LÖVE, and so Lota, draws at 1× on a Retina iPad, and everything looks blurry |
 | Orientations | All four on iPad (`UISupportedInterfaceOrientations~ipad`); portrait and both landscapes on iPhone | The field is the whole window and rebuilds itself whenever the window changes size. Because `conf.rb` makes the window resizable, SDL allows every orientation that Info.plist allows |
 | Multitasking | Leave `UIRequiresFullScreen` unset | Split View and Stage Manager resize the window, which the game handles exactly as it handles a rotation |
 | Status bar | Hidden: set `UIStatusBarHidden` to `true` in Info.plist for the launch screen; the game hides it itself after launch | See "Fullscreen and the safe area" |
-| Audio session | `AVAudioSessionCategoryAmbient`, set by the host program before `SDL_RunApp` | See "Sound" |
+| Audio session | `AVAudioSessionCategoryAmbient`, which Lota's host program sets before `SDL_RunApp` from its `Info.plist`'s `LotaAudioSessionCategory`, `ambient` | See "Sound" |
 | Entitlements | None | The game uses no network, iCloud, Game Center, camera, or microphone, and saves only in the app's own container |
 | `UIApplicationSupportsIndirectInputEvents` | `true` | SDL needs it to see a mouse or trackpad on an iPad. The game treats clicks as taps |
 
@@ -59,13 +59,13 @@ A finger on the screen reaches the game as a `touchpressed` call with the device
 
 The keyboard does less on iOS. **M** still turns sound on or off, **Enter** and **Space** press the screen's main button, and **Escape** goes back from the Records screen and on from Game Over, but never quits, because iOS apps are closed by the system, never by the app itself. **F11** and **Alt+Enter** do nothing either, since the app is always fullscreen.
 
-A game controller paired with the iPad should play as it does on a computer, though nobody has tried one yet. SDL presents an iPad's accelerometer as a joystick too, but `Shell::Gamepads` keeps only joysticks that are gamepads, so the accelerometer is never one. An earlier version of the game asked Lota for the list of joysticks every frame, and on iOS that crashed the game in the Simulator; the game no longer asks, and Lota's development branch has fixed the cause. The kit's host program, `ios/host/Host/main.m`, also turns off SDL's accelerometer joystick (`SDL_ACCELEROMETER_AS_JOYSTICK=0`), so the accelerometer is never even offered as one; a paired controller still is.
+A game controller paired with the iPad should play as it does on a computer, though nobody has tried one yet. SDL presents an iPad's accelerometer as a joystick too, but `Shell::Gamepads` keeps only joysticks that are gamepads, so the accelerometer is never one. An earlier version of the game asked Lota for the list of joysticks every frame, and on iOS that crashed the game in the Simulator; the game no longer asks, and Lota's development branch has fixed the cause. Lota's host program, which the kit uses, also turns off SDL's accelerometer joystick (`SDL_ACCELEROMETER_AS_JOYSTICK=0`), so the accelerometer is never even offered as one; a paired controller still is.
 
 ### Sound
 
 The game synthesizes its sounds when it starts, so it needs no MP3 or AAC decoder (Lota's iOS build has none). Audio plays through Apple's `OpenAL.framework`, as in LÖVE's iOS build.
 
-The audio session should use the Ambient category. Ambient audio mixes with music from other apps and goes quiet when the iPad is in silent mode, which suits a casual game. The game can't choose this itself, for two reasons. Lota doesn't apply LÖVE's `t.audio.mixwithsystem` setting yet, so the session keeps iOS's default category, SoloAmbient, which stops other apps' music. And LÖVE's own setting wouldn't help, because it chooses the Playback category (`setAudioMixWithOthers` in LÖVE's `common/ios.mm`), which keeps playing even in silent mode. So the host program's `main.m` sets the category before it calls `SDL_RunApp`:
+The audio session should use the Ambient category. Ambient audio mixes with music from other apps and goes quiet when the iPad is in silent mode, which suits a casual game. The game can't choose this itself, for two reasons. Lota doesn't apply LÖVE's `t.audio.mixwithsystem` setting yet, so the session keeps iOS's default category, SoloAmbient, which stops other apps' music. And LÖVE's own setting wouldn't help, because it chooses the Playback category (`setAudioMixWithOthers` in LÖVE's `common/ios.mm`), which keeps playing even in silent mode. So the host program's `main.m` sets the category before it calls `SDL_RunApp`, as Lota's host does from its `Info.plist`'s `LotaAudioSessionCategory`, whose `ambient` it ships with:
 
 ```objc
 @import AVFoundation;
@@ -73,7 +73,7 @@ The audio session should use the Ambient category. Ambient audio mixes with musi
 [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryAmbient error:nil];
 ```
 
-The kit's host program already does this. If no audio device is available, the game prints a warning and plays on without sound.
+Lota's host program, which the kit uses, already does this. If no audio device is available, the game prints a warning and plays on without sound.
 
 ### Haptics
 

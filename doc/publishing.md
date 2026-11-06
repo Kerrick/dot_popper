@@ -37,7 +37,7 @@ Set a variable with `gh variable set NAME --repo Kerrick/dot_popper`, and a secr
 ## Google Play
 
 - **Account:** a Google Play Console developer account, a one-time fee. New personal accounts must run a closed test with a minimum number of testers for a minimum number of days before production; check the current numbers.
-- **Build status:** the Android build is experimental, made from Lota's unreleased commit `84c0eda`, and it is a debug APK. Landscape runs at about 15 fps on the Nord.
+- **Build status:** the Android build is experimental, made by the phone route Lota 0.2.2 documents, and it is a debug APK. Landscape runs at about 15 fps on the Nord.
 - **What's missing:**
   - **An upload key.** The Android workflow already builds the App Bundle Play requires (`.aab`, the artifact `dot-popper-play-bundle`) and signs it once the key is in the repository's secrets. Play App Signing holds the app's own key. To make the upload key, keep the keystore somewhere safe and off GitHub, then add the secrets:
 
@@ -57,7 +57,7 @@ Set a variable with `gh variable set NAME --repo Kerrick/dot_popper`, and a secr
 ## Apple App Store (iPhone and iPad)
 
 - **Account:** the Apple Developer Program, a yearly fee. The free Personal Team can't publish.
-- **Build status:** the Xcode project from the iOS kit builds, signs, installs, and plays on a real iPad Pro and iPhone 13 mini, from Lota 0.1.3's experimental iOS path.
+- **Build status:** the Xcode project from the iOS kit builds, signs, installs, and plays on a real iPad Pro and iPhone 13 mini, from Lota 0.2.2's experimental iOS route and host.
 - **What's missing:**
   - Signing with an Apple Distribution certificate and an App Store provisioning profile.
   - An App Store Connect record for `com.kerricklong.DotPopper`, then an upload through Xcode's Organizer or `xcrun altool`/Transporter, then TestFlight.
