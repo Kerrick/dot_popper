@@ -28,7 +28,7 @@ module DotPopper
         G.scissor = pixels.snap(window.x), pixels.snap(window.y), pixels.snap(window.width), pixels.snap(window.height)
         fonts = { heading: pen.fonts.bold(Presentation::CreditsLines.heading_size(lines.size)),
                   subheading: pen.fonts.bold(lines.size),
-                  note: pen.fonts.semibold(lines.size), legal: pen.fonts.semibold(lines.size) }
+                  note: pen.fonts.semibold(lines.size), legal: pen.fonts.mono(lines.size) }
         colors = { heading: pen.palette.cream, subheading: pen.palette.gain, note: pen.palette.cream, legal: pen.palette.soft }
         lines.visible(offset, window.height, page.line).each do |row|
           font = fonts.fetch(row.kind)

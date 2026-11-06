@@ -10,14 +10,14 @@ class CreditsTest < Minitest::Test
   WORDS = Look::WORDS
 
   def test_the_book_is_in_order_and_skips_what_the_build_lacks
-    full = Notices.new(agpl: "AGPL", ofl: "OFL", lota: "LOTA", fledge: %w[ONE TWO])
+    full = Notices.new(agpl: "AGPL", ofl: "OFL", iosevka: "IOS", lota: "LOTA", fledge: %w[ONE TWO])
     texts = CreditsBook.compose(WORDS, full).blocks.reject { it.kind == :note }.map(&:text)
 
     assert_equal ["Made by Kerrick Long", "Dot Popper © 2026 Kerrick Long", "AGPL", "Open-source licenses", "Fredoka", "OFL",
-                  "Lota", "LOTA", "Fledge", "ONE", "TWO"], texts
+                  "Iosevka", "IOS", "Lota", "LOTA", "Fledge", "ONE", "TWO"], texts
 
     bare = CreditsBook.compose(WORDS, Notices.none).blocks
-    assert_equal ["Dot Popper © 2026 Kerrick Long", "Fredoka"], bare.select { it.kind == :subheading }.map(&:text),
+    assert_equal ["Dot Popper © 2026 Kerrick Long", "Fredoka", "Iosevka"], bare.select { it.kind == :subheading }.map(&:text),
                  "a heading with nothing under it goes"
     assert_includes bare.map(&:text).join(" "), "CC0-1.0", "the sounds and icon are said to be CC0"
   end
@@ -33,7 +33,7 @@ class CreditsTest < Minitest::Test
   def test_hard_wrapped_text_is_reflowed_and_lists_keep_their_lines
     text = "one two\nthree four\n\n----------\n\n  1. item a\n  2. item b\n"
 
-    assert_equal [["one two three four"], ["1. item a", "2. item b"]], CreditsLines.paragraphs_of(text)
+    assert_equal [["one two three four"], ["  1. item a", "  2. item b"]], CreditsLines.paragraphs_of(text)
   end
 
   def test_no_line_is_wider_than_the_room_and_a_long_word_is_broken
@@ -41,8 +41,17 @@ class CreditsTest < Minitest::Test
     lines = CreditsLines.set(book, size: 20, room: 300, line: 1.5, measure: RoughMeasure.new)
 
     assert_operator lines.rows.size, :>, 3
-    lines.rows.each { assert_operator RoughMeasure.new.width(:semibold, 20, it.text), :<=, 300 }
+    lines.rows.each { assert_operator RoughMeasure.new.width(:mono, 20, it.text), :<=, 300 }
     assert_in_delta 30.0 * lines.rows.size, lines.height, 1e-9
+  end
+
+  def test_a_wrapped_line_keeps_its_indentation_on_every_piece
+    book = CreditsBook.new(blocks: [CreditsBlock.new(:legal, "    12. #{"word " * 20}")])
+    lines = CreditsLines.set(book, size: 20, room: 300, line: 1.5, measure: RoughMeasure.new)
+
+    assert_operator lines.rows.size, :>, 1
+    lines.rows.each { assert_match(/\A {4}\S/, it.text) }
+    lines.rows.each { assert_operator RoughMeasure.new.width(:mono, 20, it.text), :<=, 300 }
   end
 
   def test_scrolling_stays_on_the_page

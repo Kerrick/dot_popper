@@ -792,3 +792,11 @@ For about 1.4 seconds before the title (a 0.25 s fade in, a hold, a 0.3 s fade o
 **Why:** The game is setdef's, and the splash says so once, quickly, without making anyone wait: it is skipped by any press.
 
 **To reverse:** Drop `@splash` from `Shell::App` and the splash arguments of `Renderer#draw`.
+
+### License texts are set in Iosevka, wrapped with their indentation kept
+
+On the Credits screen the license bodies are in Iosevka Regular, a monospace face, while headings, "Made by" and the summaries stay in Fredoka. A monospace face keeps the texts' columns and numbered clauses as their authors set them. Each line is wrapped to the window's width and every piece of it keeps the line's leading indentation, so a long clause continues under itself and nothing ever scrolls sideways. Iosevka's own OFL, with its copyright line, is among the open-source licenses.
+
+**Why:** The license texts are written to be read as plain text, with indents that carry meaning; Fredoka's proportional letters lose them.
+
+**To reverse:** Set `legal` blocks in the semibold face again in `CreditsLines.broken` and `CreditsPainter`.

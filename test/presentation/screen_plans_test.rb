@@ -151,7 +151,7 @@ class ScreenPlansTest < Minitest::Test
       assert_operator window.height, :>, page.line * 2, "#{name}: room to read"
       measure = RoughMeasure.new
       show.credits_lines.rows.each do |row|
-        face = row.kind == :heading ? :bold : :semibold
+        face = { heading: :bold, legal: :mono }.fetch(row.kind, :semibold)
         size = row.kind == :heading ? CreditsLines.heading_size(page.text_size) : page.text_size
         assert_operator measure.width(face, size, row.text), :<=, window.width + 1e-6, "#{name}: #{row.text}"
       end

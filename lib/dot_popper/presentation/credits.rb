@@ -4,12 +4,12 @@ module DotPopper
   module Presentation
     # The license texts the running build carries, as the shell found them
     # (Shell::NoticeFiles): the game's own license (+agpl+) and the font's
-    # (+ofl+), Lota's notices (+lota+), and each of Fledge's (+fledge+).
+    # (+ofl+), Iosevka's (+iosevka+), Lota's notices (+lota+), and each of Fledge's (+fledge+).
     # What a build lacks is nil, or empty, and the Credits screen skips it.
-    class Notices < Data.define(:agpl, :ofl, :lota, :fledge)
+    class Notices < Data.define(:agpl, :ofl, :iosevka, :lota, :fledge)
       def self.none = new
 
-      def initialize(agpl: nil, ofl: nil, lota: nil, fledge: []) = super
+      def initialize(agpl: nil, ofl: nil, iosevka: nil, lota: nil, fledge: []) = super
     end
 
     # How the Credits screen reads: the type's size, a line's height in
@@ -26,7 +26,7 @@ module DotPopper
     # What the Credits screen says, in order: who made Dot Popper (and,
     # when the words have it, whom to thank); its own copyright and license
     # notice, with the license's text and the sounds' and icon's; and under
-    # "Open-source licenses", Fredoka's, then Lota's notices, then Fledge's.
+    # "Open-source licenses", Fredoka's, Iosevka's, then Lota's notices, then Fledge's.
     # Each license is shown if the build has it.
     class CreditsBook < Data.define(:blocks)
       def self.compose(words, notices)
@@ -37,6 +37,8 @@ module DotPopper
                   CreditsBlock.new(:heading, say.fetch(:open_source)),
                   CreditsBlock.new(:subheading, say.fetch(:font_name)), CreditsBlock.new(:note, say.fetch(:font)),
                   CreditsBlock.new(:legal, notices.ofl),
+                  CreditsBlock.new(:subheading, say.fetch(:mono_name)), CreditsBlock.new(:note, say.fetch(:mono)),
+                  CreditsBlock.new(:legal, notices.iosevka),
                   CreditsBlock.new(:subheading, say.fetch(:lota)), CreditsBlock.new(:legal, notices.lota),
                   CreditsBlock.new(:subheading, say.fetch(:fledge)),
                   *notices.fledge.map { CreditsBlock.new(:legal, it) }]
@@ -91,21 +93,28 @@ module DotPopper
 
       # The block's paragraphs, each as the lines it breaks into.
       def self.broken(block, room, measure, size)
-        face = %i[heading subheading].include?(block.kind) ? :bold : :semibold
+        face = { heading: :bold, subheading: :bold, legal: :mono }.fetch(block.kind, :semibold)
         type = block.kind == :heading ? heading_size(size) : size
         width = ->(text) { measure.width(face, type, text) }
         paragraphs = block.kind == :legal ? paragraphs_of(block.text) : [[block.text]]
-        paragraphs.map { |lines| lines.flat_map { fit(it, room, &width) } }
+        paragraphs.map { |lines| lines.flat_map { block.kind == :legal ? hang(it, room, &width) : fit(it, room, &width) } }
       end
 
       # +text+'s lines, each paragraph as the lines to wrap on their own.
       def self.paragraphs_of(text)
-        text.gsub("\r\n", "\n").split(/\n\s*\n/).filter_map do |chunk|
+        text.gsub("\r\n", "\n").gsub("\t", "        ").split(/\n\s*\n/).filter_map do |chunk|
           lines = chunk.lines.map(&:rstrip).grep_v(RULE)
           next if lines.empty?
 
-          lines.any? { it.match?(/\A\s|\A[-*•]\s|\A\d+[.)]\s/) } ? lines.map(&:strip) : [lines.join(" ").split.join(" ")]
+          lines.any? { it.match?(/\A\s|\A[-*•]\s|\A\d+[.)]\s/) } ? lines : [lines.join(" ").split.join(" ")]
         end
+      end
+
+      # +line+ in lines no wider than +room+, each keeping the line's leading
+      # indentation, so a continuation lines up with the line it continues.
+      def self.hang(line, room, &width)
+        indent = line[/\A */]
+        fit(line.strip, room - width.call(indent), &width).map { indent + it }
       end
 
       # +text+ in lines no wider than +room+, a word too wide broken.

@@ -7,7 +7,7 @@ module DotPopper
     # build lacks it leaves out, without error, and so a file it cannot read.
     #
     # +game+ is the game's own folder (the folder main.rb is in), which holds
-    # LICENSE and assets/fonts/OFL.txt, fused or run from the repository.
+    # LICENSE and assets/fonts/OFL.txt and Iosevka-LICENSE.md, fused or run from the repository.
     # The rest is looked for in the game's folder and the folders above it,
     # and above each of +starts+ (the folder of the running program), at
     # most +reach+ up, nearest first, since where an app puts it depends on
@@ -35,6 +35,7 @@ module DotPopper
 
       def notices
         Presentation::Notices.new(agpl: read(@game, "LICENSE"), ofl: read(@game, "assets", "fonts", "OFL.txt"),
+                                  iosevka: read(@game, "assets", "fonts", "Iosevka-LICENSE.md"),
                                   lota: lota, fledge: fledge)
       end
 

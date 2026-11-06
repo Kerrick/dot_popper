@@ -27,6 +27,7 @@ module DotPopperGui
       check(show.credits.offset < before, "and back up")
       key(:pagedown)
       check(show.credits.offset > before, "Page Down scrolls a page")
+      keep_screenshot("credits-license")
       key(:end)
       check_close(show.credits.farthest, show.credits.offset, "End goes to the end", within: 1e-6)
       key(:home)
