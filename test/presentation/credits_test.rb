@@ -13,21 +13,21 @@ class CreditsTest < Minitest::Test
     full = Notices.new(agpl: "AGPL", ofl: "OFL", iosevka: "IOS", lota: "LOTA", fledge: %w[ONE TWO])
     texts = CreditsBook.compose(WORDS, full).blocks.reject { it.kind == :note }.map(&:text)
 
-    assert_equal ["Made by Kerrick Long", "Dot Popper © 2026 Kerrick Long", "AGPL", "Open-source licenses", "Fredoka", "OFL",
+    assert_equal ["Made by setdef", "Dot Popper © 2026 setdef", "AGPL", "Open-source licenses", "Fredoka", "OFL",
                   "Iosevka", "IOS", "Lota", "LOTA", "Fledge", "ONE", "TWO"], texts
 
     bare = CreditsBook.compose(WORDS, Notices.none).blocks
-    assert_equal ["Dot Popper © 2026 Kerrick Long", "Fredoka", "Iosevka"], bare.select { it.kind == :subheading }.map(&:text),
+    assert_equal ["Dot Popper © 2026 setdef", "Fredoka", "Iosevka"], bare.select { it.kind == :subheading }.map(&:text),
                  "a heading with nothing under it goes"
     assert_includes bare.map(&:text).join(" "), "CC0-1.0", "the sounds and icon are said to be CC0"
   end
 
   def test_a_line_of_thanks_comes_after_who_made_it_once_the_words_have_one
-    assert_equal ["Made by Kerrick Long", "Dot Popper © 2026 Kerrick Long"],
+    assert_equal ["Made by setdef", "Dot Popper © 2026 setdef"],
                  CreditsBook.compose(WORDS, Notices.none).blocks.first(2).map(&:text).values_at(0, 1)
     thanks = WORDS.with(notice: WORDS.notice.merge(thanks: "Thanks to Ada."))
 
-    assert_equal ["Made by Kerrick Long", "Thanks to Ada."], CreditsBook.compose(thanks, Notices.none).blocks.first(2).map(&:text)
+    assert_equal ["Made by setdef", "Thanks to Ada."], CreditsBook.compose(thanks, Notices.none).blocks.first(2).map(&:text)
   end
 
   def test_hard_wrapped_text_is_reflowed_and_lists_keep_their_lines

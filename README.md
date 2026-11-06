@@ -242,7 +242,7 @@ The first line of `rounds.csv` names the columns. When a new version of the game
 
 ## License
 
-Dot Popper is copyright 2026 Kerrick Long. Like Lota, it is licensed under the [AGPL-3.0-or-later](LICENSE).
+Dot Popper is copyright 2026 setdef. Like Lota, it is licensed under the [AGPL-3.0-or-later](LICENSE).
 
 The game's sounds are synthesised in code when it starts, and its icon is drawn by `script/make_icon.rb`. Both are released under [CC0-1.0](LICENSES/CC0-1.0.txt), so anyone may reuse them without conditions. The Fredoka font is by the Fredoka Project Authors, under the [SIL Open Font License 1.1](assets/fonts/OFL.txt).
 

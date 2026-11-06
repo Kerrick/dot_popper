@@ -191,7 +191,7 @@ jobs:
             "  <Identity Name=`"$env:MSIX_IDENTITY_NAME`" Publisher=`"$env:MSIX_PUBLISHER`" Version=`"$version`" ProcessorArchitecture=`"x64`" />"
             '  <Properties>'
             '    <DisplayName>Dot Popper</DisplayName>'
-            '    <PublisherDisplayName>Kerrick Long</PublisherDisplayName>'
+            '    <PublisherDisplayName>setdef</PublisherDisplayName>'
             '    <Logo>Assets\StoreLogo.png</Logo>'
             '  </Properties>'
             '  <Dependencies>'

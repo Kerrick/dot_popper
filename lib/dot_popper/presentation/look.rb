@@ -55,8 +55,8 @@ module DotPopper
         # The Credits screen's own words. A later line of thanks goes in
         # as +thanks:+, which the screen leaves out while there is none.
         notice: {
-          made_by: "Made by Kerrick Long",
-          copyright: "Dot Popper © 2026 Kerrick Long",
+          made_by: "Made by setdef",
+          copyright: "Dot Popper © 2026 setdef",
           license: "Dot Popper is free software. You may use it, share it, and change it under the GNU Affero " \
                    "General Public License, version 3 or any later version (AGPL-3.0-or-later).",
           assets: "Its sounds and its icon are dedicated to the public domain under CC0-1.0.",

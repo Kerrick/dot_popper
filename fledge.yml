@@ -6,8 +6,8 @@
 # Lota's callbacks, so it is not the program to build.
 name: Dot Popper
 version: "0.8.6"
-publisher: Kerrick Long
-copyright: © 2026 Kerrick Long
+publisher: setdef
+copyright: © 2026 setdef
 installers: [dmg, nsis]
 programs:
   - path: bin/dot_popper
