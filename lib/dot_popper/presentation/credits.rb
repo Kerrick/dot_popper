@@ -182,7 +182,7 @@ module DotPopper
       def room = [layout.safe.width - (layout.margin * 2), layout.scaled(look.column)].min
 
       def window
-        top = heading_y + (heading_size * 0.8)
+        top = heading_y + (heading_size * 0.8) + (layout.margin * 0.5)
         Rect.new(x: layout.center_x - (room / 2.0), y: top, width: room, height: [bottom - top, 0.0].max)
       end
 
