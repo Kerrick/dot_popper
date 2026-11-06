@@ -216,7 +216,7 @@ jobs:
           # The unsigned package is the Store's; the check below signs a copy.
           # It is packed from a folder without Mesa (a player's GPU does the
           # drawing); the check's copy is packed again with it.
-          $makeappx = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits0\bin0.*\x64\makeappx.exe" | Sort-Object { [version]$_.Directory.Parent.Name } | Select-Object -Last 1
+          $makeappx = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.*\x64\makeappx.exe" | Sort-Object { [version]$_.Directory.Parent.Name } | Select-Object -Last 1
           $out = Join-Path $env:RUNNER_TEMP 'msix'
           New-Item -ItemType Directory -Force -Path $out | Out-Null
           & $makeappx.FullName pack /d $root /p "$out\Dot-Popper-$version.msix" /o
