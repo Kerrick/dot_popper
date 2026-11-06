@@ -6,8 +6,9 @@
 
 # The Android kit's program (experimental; PACKAGING.md, "The Android
 # kit"), from Lota's spike (setdef/Lota spike/android/android_kit at
-# 84c0eda). android.yml puts it beside bin/dot_popper and names it in the
-# build's fledge.yml, and it runs bin/dot_popper unchanged. Only with
+# 84c0eda). android.yml makes it the phone project's main.rb, beside the
+# game's copy in game/dot_popper (Lota's doc/guide/phones.md), and it runs
+# that copy's bin/dot_popper unchanged. Only with
 # DOT_POPPER_KIT_PROBE=1, which the emulator runs pass as an intent extra
 # and a launch from the launcher never has, it also logs what Lota's
 # window reports on frames 60 and 600, each touch and key the game
@@ -80,4 +81,4 @@ if ENV["DOT_POPPER_KIT_PROBE"] == "1"
   end
 end
 
-load File.expand_path("dot_popper", __dir__)
+load File.join(__dir__, "game", "dot_popper", "bin", "dot_popper")

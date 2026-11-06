@@ -1,18 +1,19 @@
 # Builds Dot Popper's EXPERIMENTAL Android kit (PACKAGING.md, "The Android
 # kit"), for a phone such as a OnePlus Nord N30 5G (Android 13,
-# arm64-v8a). No released Lota builds for Android, so this follows the
-# recipe of Lota's spike workflow (.github/workflows/android-spike.yml) at
-# Lota's unreleased commit 84c0eda, pinned by its full SHA because the
-# experiment/android-spike branch may be rewritten:
+# arm64-v8a), by the route of Lota's doc/guide/phones.md at v0.2.2:
 #
-# 1. rake android:deps builds LÖVE's libraries for arm64-v8a and x86_64
-#    with NDK r30, OpenAL Soft among them as a shared libopenal.so;
-# 2. Fledge's examples/sdl_phone/sdl3/build.sh builds SDL3, whose Java
-#    classes go into the host;
-# 3. a folder of only the files lota.gemspec ships becomes a path gem,
-#    since Fledge carries a path gem's whole folder into the app;
-# 4. fledge build android (Fledge v0.5.1) writes a Gradle project with
-#    android/host laid over it, and Gradle builds the debug APK.
+# 1. rake android:deps, in a clone of Lota at v0.2.2, builds LÖVE's
+#    libraries and SDL3 for arm64-v8a and x86_64 with NDK r30, OpenAL Soft
+#    as a shared libopenal.so and SDL3 as libSDL3.so;
+# 2. the files Lota's gem packages, built and unpacked from the clone,
+#    become a path gem, since Fledge carries a path gem's whole folder
+#    into the app;
+# 3. a phone project, laid out as the guide lays it out, holds the game in
+#    game/dot_popper, the kit's program (android/android_kit) as main.rb,
+#    and Lota's Android host from the gem in host/android, with Dot
+#    Popper's two changed files (android/host) over it;
+# 4. fledge build android (Fledge v0.6.0) writes the Gradle project, and
+#    Gradle builds the debug APK and the release App Bundle.
 #
 # A second job installs the kit's APK on an x86_64 emulator of API 33
 # (Android 13, as on the Nord) and checks a bot's 45-second run and what
@@ -26,10 +27,10 @@ on:
     tags: ["v*"]
   workflow_dispatch:
     inputs:
-      lota_commit:
-        description: "A Lota commit (full SHA) to build from instead, to try an engine fix"
+      lota_ref:
+        description: "A Lota tag or commit (full SHA) to build from, to try an engine fix"
         required: false
-        default: ""
+        default: "v0.2.2"
 
 permissions:
   contents: read
@@ -44,10 +45,11 @@ defaults:
 
 env:
   LOTA_REPOSITORY: https://github.com/setdef/Lota.git
-  LOTA_COMMIT: ${{ inputs.lota_commit || '84c0eda5690d2ec6c821c737cf3a56c0b5591e02' }}
+  LOTA_REF: ${{ inputs.lota_ref || 'v0.2.2' }}
   NDK_REVISION: 30.0.16248370
-  FLEDGE_TAG: v0.5.1
+  FLEDGE_TAG: v0.6.0
   IDENTIFIER: com.kerricklong.DotPopper
+  APP_NAME: Dot Popper
 
 jobs:
   build:
@@ -63,17 +65,17 @@ jobs:
         with:
           ruby-version: .ruby-version
 
-      - name: Clone Lota at 84c0eda (or the commit asked for), with LÖVE's sources
+      - name: Clone Lota at ${{ env.LOTA_REF }}, with LÖVE's sources
         run: |
           lota=$RUNNER_TEMP/lota
           git init --quiet "$lota"
           git -C "$lota" remote add origin "$LOTA_REPOSITORY"
-          git -C "$lota" fetch --quiet --depth 1 origin "$LOTA_COMMIT"
+          git -C "$lota" fetch --quiet --depth 1 origin "$LOTA_REF"
           git -C "$lota" -c advice.detachedHead=false checkout --quiet FETCH_HEAD
           git -C "$lota" submodule update --init --depth 1 vendor/love
-          [ "$(git -C "$lota" rev-parse HEAD)" = "$LOTA_COMMIT" ]
           git -C "$lota" log --oneline -1
           echo "LOTA_SOURCE=$lota" >> "$GITHUB_ENV"
+          echo "LOTA_COMMIT=$(git -C "$lota" rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Use Java 21, and install ccache, Ninja, and the NDK
         run: |
@@ -105,26 +107,15 @@ jobs:
             ${{ runner.temp }}/lota/vendor/sources/android
           key: android-deps-${{ env.LOTA_COMMIT }}-${{ env.NDK_REVISION }}
 
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ runner.temp }}/sdl3
-          key: android-sdl3-fledge-${{ env.FLEDGE_TAG }}-${{ env.NDK_REVISION }}
-
-      - name: Install Lota's bundle, and evaluate its engine's Android source list
+      # rake android:deps skips the build when its recipe and the NDK have
+      # not changed, as with a cache from the same Lota commit.
+      - name: Build LÖVE's libraries and SDL3 for arm64-v8a and x86_64 with rake android:deps
         working-directory: ${{ env.LOTA_SOURCE }}
         env:
           BUNDLE_PATH: ${{ runner.temp }}/lota-bundle
         run: |
           bundle install --quiet
-          bundle exec rake android:sources
-          git diff --stat -- ext/lota/engine/sources_android.cmake
-          echo "RICE_DIR=$(bundle exec ruby -e 'print Gem.loaded_specs.fetch("rice").full_gem_path')" >> "$GITHUB_ENV"
-
-      - name: Build LÖVE's libraries for arm64-v8a and x86_64 with rake android:deps
-        working-directory: ${{ env.LOTA_SOURCE }}
-        env:
-          BUNDLE_PATH: ${{ runner.temp }}/lota-bundle
-        run: |
+          echo "RICE_DIR=$(bundle info rice --path)" >> "$GITHUB_ENV"
           time bundle exec rake android:deps || { tail -80 tmp/android/deps/build.log; exit 1; }
           for abi in arm64-v8a x86_64; do
             echo "== $abi"; ls -la "tmp/android/deps/$abi/lib"
@@ -132,55 +123,45 @@ jobs:
               | grep -E "Machine|NEEDED|SONAME"
           done
 
-      - name: Build SDL3 shared with Fledge's script
-        run: |
-          git clone --quiet --depth 1 --branch "$FLEDGE_TAG" https://github.com/setdef/Fledge "$RUNNER_TEMP/fledge"
-          if [ ! -f "$RUNNER_TEMP/sdl3/x86_64/lib/libSDL3.so" ]; then
-            "$RUNNER_TEMP/fledge/examples/sdl_phone/sdl3/build.sh" android "$RUNNER_TEMP/sdl3" > "$RUNNER_TEMP/sdl3.log" 2>&1 \
-              || { tail -60 "$RUNNER_TEMP/sdl3.log"; exit 1; }
-          fi
-          ls -la "$RUNNER_TEMP"/sdl3/*/lib/libSDL3.so
-          grep -h "SDL_MAJOR_VERSION\|SDL_MINOR_VERSION\|SDL_MICRO_VERSION" "$RUNNER_TEMP/sdl3/x86_64/include/SDL3/SDL_version.h" | head -3
-          # Neither SDL's Java nor MainActivity asks Android for audio focus,
-          # so the game's sound plays alongside another app's music.
-          if grep -l "requestAudioFocus" "$RUNNER_TEMP"/sdl3/work/SDL3-*/android-project/app/src/main/java/org/libsdl/app/*.java; then
-            echo "::warning::SDL's Java requests audio focus, which may stop other apps' music"
-          else
-            echo "SDL's Java requests no audio focus"
-          fi
-
-      # Fledge carries a path gem's whole folder into the app, so the app
-      # gets a folder with only what lota.gemspec packages.
+      # A gem named by its path carries its whole folder into the app, so
+      # the project names a folder of only what Lota's gem packages.
       - name: Make a folder of Lota's packaged files
         working-directory: ${{ env.LOTA_SOURCE }}
         run: |
-          gem=$RUNNER_TEMP/lota-gem
-          mkdir -p "$gem"
-          git ls-files -z -- exe lib sig README.rdoc CHANGELOG.md LICENSE LICENSES lota.gemspec \
-            ext/lota/extconf.rb ext/lota/CMakeLists.txt ext/lota/cmake ext/lota/engine ext/lota/native ext/lota/phone \
-            ext/lota/preload | xargs -0 -I{} cp --parents {} "$gem/"
-          cp ext/lota/engine/sources_android.cmake "$gem/ext/lota/engine/"
-          git -C "$gem" init --quiet && git -C "$gem" add --all
-          du -sh "$gem"
-          echo "LOTA_GEM=$gem" >> "$GITHUB_ENV"
+          mkdir -p tmp/phone
+          gem build lota.gemspec --output tmp/phone/lota.gem
+          gem unpack tmp/phone/lota.gem --target tmp/phone
+          gem specification tmp/phone/lota.gem --ruby > tmp/phone/lota/lota.gemspec
+          du -sh tmp/phone/lota
+          echo "LOTA_GEM=$LOTA_SOURCE/tmp/phone/lota" >> "$GITHUB_ENV"
 
-      # The desktop's precompiled Lota gems and lockfile give way to the
-      # folder above, as a path gem whose extension fledge build android
-      # compiles for each ABI; fledge.yml names the kit's program,
-      # android/android_kit, and the host in android/host, which gains
-      # SDL's Java classes.
-      - name: Lay out the game for fledge build android
+      # The phone project of Lota's guide: everything in it but the hosts
+      # goes into the app, so the game's copy leaves out what only the
+      # repository needs. Dot Popper's android/host (its manifest, which
+      # traps Back, and a MainActivity that takes the emulator checks'
+      # settings) goes over Lota's host, which brings SDL's Java classes.
+      - name: Lay out the phone project
         run: |
-          game=$RUNNER_TEMP/game
-          mkdir -p "$game"
+          phone=$RUNNER_TEMP/phone
+          game=$phone/game/dot_popper
+          mkdir -p "$game" "$phone/licenses"
           git archive HEAD | tar -x -C "$game"
-          rm -rf "$game/vendor/cache" "$game/Gemfile.lock" "$game/mise.toml" "$game/.ruby-version"
-          cp android/android_kit "$game/bin/android_kit"
-          java=$game/android/host/src/main/java/org/libsdl/app
-          mkdir -p "$java"
-          cp "$RUNNER_TEMP"/sdl3/work/SDL3-*/android-project/app/src/main/java/org/libsdl/app/*.java "$java/"
-          ls "$java"
-          cat > "$game/Gemfile" <<EOF
+          (cd "$game" && rm -rf .github vendor android ios test doc playtest script sig Steepfile Rakefile \
+            Gemfile Gemfile.lock mise.toml .ruby-version)
+          cp android/android_kit "$phone/main.rb"
+          cp -R "$LOTA_GEM/ext/lota/phone/host" "$phone/host"
+          rm -rf "$phone/host/ios"
+          cp -R android/host/. "$phone/host/android/"
+          ls "$phone/host/android/src/main/java/org/libsdl/app"
+          # Neither SDL's Java nor MainActivity asks Android for audio focus,
+          # so the game's sound plays alongside another app's music.
+          if grep -rl "requestAudioFocus" "$phone/host/android/src/main/java"; then
+            echo "::warning::the host's Java requests audio focus, which may stop other apps' music"
+          fi
+          # OpenAL Soft is LGPL, so the app carries its licence and source.
+          cp "$LOTA_SOURCE/ext/lota/licenses/LICENSE-LGPL-2.0-or-later.txt" \
+            "$LOTA_SOURCE"/vendor/sources/android/openal-soft-*.tar.bz2 "$phone/licenses/"
+          cat > "$phone/Gemfile" <<EOF
           # frozen_string_literal: true
 
           # Written by android.yml for fledge build android.
@@ -190,32 +171,36 @@ jobs:
           gem "fledge", git: "https://github.com/setdef/Fledge", tag: "$FLEDGE_TAG", group: :development
           EOF
           ruby -ryaml -e '
-            config = YAML.load_file("fledge.yml")
-            config.delete("installers")
-            config.fetch("programs").first["path"] = "bin/android_kit"
-            config["android"] = { "host" => "android/host" }
+            program = YAML.load_file("fledge.yml").fetch("programs").first
+            config = {
+              "name" => ENV.fetch("APP_NAME"),
+              "identifier" => program.fetch("identifier"),
+              "version" => YAML.load_file("fledge.yml").fetch("version"),
+              "icon" => File.join("game/dot_popper", program.fetch("icon")),
+              "android" => { "host" => "host/android" }
+            }
             File.write(ARGV[0], "# Written by android.yml for fledge build android, from fledge.yml.\n" + YAML.dump(config))
-          ' "$game/fledge.yml"
-          cat "$game/Gemfile" "$game/fledge.yml"
+          ' "$phone/fledge.yml"
+          cat "$phone/Gemfile" "$phone/fledge.yml"
           version=$(ruby -ryaml -e 'print YAML.load_file("fledge.yml").fetch("version")')
           echo "APP_VERSION=$version" >> "$GITHUB_ENV"
 
       - name: fledge build android, and Gradle's debug APK
-        working-directory: ${{ runner.temp }}/game
+        working-directory: ${{ runner.temp }}/phone
         env:
-          BUNDLE_GEMFILE: ${{ runner.temp }}/game/Gemfile
+          BUNDLE_GEMFILE: ${{ runner.temp }}/phone/Gemfile
           BUNDLE_PATH: ${{ runner.temp }}/app-bundle
           XDG_CACHE_HOME: ${{ runner.temp }}/cache
         run: |
           bundle config set --local build.lota \
-            "--with-lota-source=$LOTA_SOURCE --with-lota-sdl3=$RUNNER_TEMP/sdl3 --with-lota-android-deps=$LOTA_SOURCE/tmp/android/deps --with-rice-dir=$RICE_DIR"
+            "--with-lota-source=$LOTA_SOURCE --with-lota-android-deps=$LOTA_SOURCE/tmp/android/deps --with-rice-dir=$RICE_DIR"
           bundle lock --add-platform ruby
           bundle install --quiet
           bundle exec fledge --version
           mkdir -p "$RUNNER_TEMP/out"
           time bundle exec fledge build android 2> >(tee "$RUNNER_TEMP/out/fledge.log" >&2)
           ccache --show-stats | head -12 || true
-          cd "dist/Dot Popper-android"
+          cd "dist/$APP_NAME-android"
           time ./gradlew --no-daemon --quiet assembleDebug
           find . -name "*.apk" -exec ls -la {} +
           cp build/outputs/apk/debug/*.apk "$RUNNER_TEMP/out/DotPopper-debug.apk"
@@ -271,7 +256,7 @@ jobs:
         run: |
           {
             echo "Dot Popper $GITHUB_REF_NAME, commit $GITHUB_SHA, version $APP_VERSION"
-            echo "EXPERIMENTAL: built by fledge build android (Fledge $FLEDGE_TAG) with Lota's unreleased commit ${LOTA_COMMIT:0:7} (experiment/android-spike)"
+            echo "EXPERIMENTAL: built by fledge build android (Fledge $FLEDGE_TAG) with Lota $LOTA_REF (${LOTA_COMMIT:0:7}), by Lota's doc/guide/phones.md"
             echo "NDK $NDK_REVISION; minSdk 26, targetSdk 36; arm64-v8a and x86_64; built $(date -u +%Y-%m-%d)"
             echo "Workflow run $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           } > "$RUNNER_TEMP/build.txt"
@@ -304,7 +289,6 @@ jobs:
           name: ci-results-android-build-logs
           path: |
             ${{ runner.temp }}/lota/tmp/android/deps/build.log
-            ${{ runner.temp }}/sdl3.log
             ${{ runner.temp }}/out/fledge.log
             ${{ runner.temp }}/cache/**/*.log
           if-no-files-found: warn

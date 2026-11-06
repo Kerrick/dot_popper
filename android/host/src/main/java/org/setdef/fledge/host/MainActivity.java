@@ -24,26 +24,38 @@ import org.libsdl.app.SDLActivity;
 import org.setdef.fledge.FledgeRuby;
 
 /**
- * A Lota game's screen on Android: Fledge's SDL host (examples/sdl_phone,
- * its ADR 025), which loads libSDL3.so first, whose JNI_OnLoad registers
- * SDL's Java methods, then OpenAL Soft, Ruby, and the app's extensions,
- * and runs the app's Ruby program from SDL's main on a thread with
- * FledgeRuby's 64 MB stack, which SDLThread waits for, so the game ends
- * when Ruby does; with the methods of love-android's GameActivity that
- * LÖVE's engine calls through JNI (vendor/love/src/common/android.cpp)
- * without checking that they exist: setImmersiveMode from every
- * love.window.setMode, getDPIScale for the window's scale, and the rest.
+ * A Lota game's screen on Android, in place of the MainActivity that
+ * fledge build android writes, under the same name, so Fledge's manifest
+ * and Gradle files find it (Fledge's ADR 025, and its
+ * examples/sdl_phone/host/android). It is SDL's Activity: it loads
+ * libSDL3.so first, whose JNI_OnLoad registers SDL's Java methods, then
+ * OpenAL Soft's libopenal.so, Fledge's Ruby, and libfledgeext.so, which
+ * holds Lota's engine and extension, and runs the app's Ruby program from
+ * SDL's main function, on a thread with FledgeRuby's 64 MB stack that
+ * SDL's thread waits for, so the game ends when Ruby does.
  *
- * Dot Popper's copy (experimental; PACKAGING.md, "The Android kit") is
- * Lota's spike host (setdef/Lota spike/android/host/android at 84c0eda),
- * unchanged.
+ * LÖVE's engine calls methods of love-android's GameActivity through JNI
+ * (vendor/love/src/common/android.cpp) without checking that they exist:
+ * setImmersiveMode from every love.window.setMode, getDPIScale for the
+ * window's scale, and the others below. This class has them, as
+ * GameActivity does.
  *
- * In a debuggable build only, each string extra of the launching intent
- * named lota.env.NAME sets the environment variable NAME before Ruby
- * starts, so a test can pass a game its settings with am start --es.
+ * SDL's own Java classes (org.libsdl.app, beside this one) are SDL
+ * 3.4.10's, unchanged: SDLActivity refuses a libSDL3.so of another
+ * release, and rake android:deps builds 3.4.10's (tasks/android_build.rb).
+ *
+ * Dot Popper's copy (PACKAGING.md, "The Android kit") is Lota 0.2.2's
+ * (ext/lota/phone/host/android in the gem) with one addition: in a
+ * debuggable build only, each string extra of the launching intent named
+ * lota.env.NAME sets the environment variable NAME before Ruby starts, so
+ * the emulator checks can pass the game its settings with am start --es.
  */
 public class MainActivity extends SDLActivity {
     private static final String ENV_PREFIX = "lota.env.";
+
+    // The meta-data in AndroidManifest.xml that asks SDL to send Back to
+    // the game as a key and do nothing else (SDL's SDL_HINT_ANDROID_TRAP_BACK_BUTTON).
+    private static final String TRAP_BACK = "SDL_ENV.SDL_ANDROID_TRAP_BACK_BUTTON";
 
     private Vibrator vibrator;
     private boolean shortEdgesMode;
@@ -87,17 +99,16 @@ public class MainActivity extends SDLActivity {
     }
 
     /**
-     * SDL traps Back in onBackPressed when the manifest sets
-     * SDL_ENV.SDL_ANDROID_TRAP_BACK_BUTTON, but an app that targets API 36
-     * gets predictive back, where the system's own callback takes Back and
-     * closes the activity without calling onBackPressed (an emulator of API
-     * 36 did, after the game had its escape key). So when the manifest asks
-     * for the trap, a callback that does nothing takes Back's place, and the
-     * game alone decides, from the key SDL still sends. Before Android 16,
-     * without android:enableOnBackInvokedCallback, the system ignores the
-     * callback and calls onBackPressed, where SDL traps Back itself.
-     * Whether a back gesture on Android 16, rather than a Back key, still
-     * sends the game its key was not tried.
+     * SDL traps Back in onBackPressed when the manifest's meta-data sets
+     * TRAP_BACK to 1, but an app that targets API 36 gets predictive back,
+     * where the system's own callback takes Back and closes the activity
+     * without calling onBackPressed (an API 36 emulator did, after the game
+     * had its escape key). So when the manifest asks for the trap, a
+     * callback that does nothing takes Back's place, and the game alone
+     * decides what Back does, from the key SDL still sends. Without the
+     * meta-data, Back reaches the game as the key escape and then closes
+     * the app, as in LÖVE. Whether a back gesture on Android 16, rather
+     * than a Back key, still sends the game its key has not been tried.
      */
     private void trapPredictiveBack() {
         if (Build.VERSION.SDK_INT < 33) {
@@ -105,7 +116,7 @@ public class MainActivity extends SDLActivity {
         }
         try {
             Bundle meta = getPackageManager().getApplicationInfo(getPackageName(), PackageManager.GET_META_DATA).metaData;
-            if (meta == null || !"1".equals(String.valueOf(meta.get("SDL_ENV.SDL_ANDROID_TRAP_BACK_BUTTON")))) {
+            if (meta == null || !"1".equals(String.valueOf(meta.get(TRAP_BACK)))) {
                 return;
             }
         } catch (PackageManager.NameNotFoundException e) {
@@ -113,6 +124,7 @@ public class MainActivity extends SDLActivity {
         }
         getOnBackInvokedDispatcher().registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, () -> {});
     }
+
 
     private void setEnvironmentFromIntent(String tag) {
         Bundle extras = getIntent().getExtras();
