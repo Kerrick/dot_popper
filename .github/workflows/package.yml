@@ -277,7 +277,7 @@ jobs:
           $data = Join-Path $env:LOCALAPPDATA "Packages\$family"
           Get-ChildItem -LiteralPath $data -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_.FullName }
           Write-Host '--- every save file anywhere under the user profile'
-          Get-ChildItem -LiteralPath $env:USERPROFILE -Recurse -Force -File -ErrorAction SilentlyContinue -Include 'best_score.txt', 'lifetime.txt', 'sound.txt', 'taught.txt' | ForEach-Object { Write-Host $_.FullName }
+          Get-ChildItem -LiteralPath 'C:\Users', 'C:\ProgramData' -Recurse -Force -File -ErrorAction SilentlyContinue -Include 'rounds.csv', 'best_score.txt', 'lifetime.txt' | ForEach-Object { Write-Host $_.FullName }
           Write-Host '--- folders in the real roaming AppData'
           Get-ChildItem -LiteralPath $env:APPDATA -Directory -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_.Name }
 
@@ -289,6 +289,7 @@ jobs:
           Get-Process -Name 'Dot Popper' -ErrorAction SilentlyContinue | ForEach-Object { $_.WaitForExit(60000) | Out-Null }
           if (Test-Path $log) { Get-Content $log | Select-Object -First 40 | ForEach-Object { Write-Host $_ } } else { Write-Host 'no output file' }
           Get-ChildItem -LiteralPath $data -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_.FullName }
+          Write-Host "real roaming dot_popper exists: $(Test-Path (Join-Path $env:APPDATA 'dot_popper'))"
           Remove-AppxPackage -Package $package.PackageFullName
           foreach ($name in $variables.Keys) { [Environment]::SetEnvironmentVariable($name, $null, 'User') }
           if ($left) { exit 1 }
