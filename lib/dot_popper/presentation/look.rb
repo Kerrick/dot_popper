@@ -59,7 +59,8 @@ module DotPopper
           copyright: "Dot Popper © 2026 setdef",
           license: "Dot Popper is free software. You may use it, share it, and change it under the GNU Affero " \
                    "General Public License, version 3 or any later version (AGPL-3.0-or-later).",
-          assets: "Its sounds and its icon are dedicated to the public domain under CC0-1.0.",
+          assets: "Its sounds and its icon are © 2026 setdef, licensed under Creative Commons " \
+                  "Attribution-ShareAlike 4.0 International (CC-BY-SA-4.0).",
           open_source: "Open-source licenses",
           font_name: "Fredoka",
           font: "The letters are Fredoka, Copyright 2016 The Fredoka Project Authors, under the SIL Open Font " \

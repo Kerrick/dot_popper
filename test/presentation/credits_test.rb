@@ -19,7 +19,7 @@ class CreditsTest < Minitest::Test
     bare = CreditsBook.compose(WORDS, Notices.none).blocks
     assert_equal ["Dot Popper © 2026 setdef", "Fredoka", "Iosevka"], bare.select { it.kind == :subheading }.map(&:text),
                  "a heading with nothing under it goes"
-    assert_includes bare.map(&:text).join(" "), "CC0-1.0", "the sounds and icon are said to be CC0"
+    assert_includes bare.map(&:text).join(" "), "CC-BY-SA-4.0", "the sounds and icon are said to be CC-BY-SA"
   end
 
   def test_a_line_of_thanks_comes_after_who_made_it_once_the_words_have_one

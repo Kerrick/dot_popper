@@ -89,7 +89,7 @@ Lota isn't on RubyGems.org, so its gems come from `vendor/cache`, and `Gemfile.l
 
 ### The icon
 
-`script/make_icon.rb` draws the icon in code. It is released under CC0 (see `LICENSES/ICONS.md`).
+`script/make_icon.rb` draws the icon in code. It is licensed under CC-BY-SA-4.0 (see `LICENSES/ICONS.md`).
 
 ### What goes into the app
 

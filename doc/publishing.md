@@ -10,7 +10,7 @@ The bundled third-party code also needs a check before any store build:
 
 - **OpenAL Soft is LGPL-2.1.** It ships on Android (as a shared `libopenal.so`, which a user can replace) and in the desktop builds, so their notices must include its source offer. iOS doesn't use it: there, Lota links Apple's own OpenAL framework, as LÖVE does, so the iOS build contains no LGPL code.
 - **FreeType** is used under the FreeType License (not the GPL), which needs a credit line in the app.
-- **The rest is permissive:** LÖVE (zlib), SDL (zlib), Ruby (Ruby or BSD-2), Box2D (MIT), Fredoka (SIL OFL 1.1), and the CC0 sounds and icon.
+- **The rest is permissive:** LÖVE (zlib), SDL (zlib), Ruby (Ruby or BSD-2), Box2D (MIT), Fredoka and Iosevka (SIL OFL 1.1). Dot Popper's own sounds and icon are setdef's, under CC-BY-SA-4.0, credited on its Credits screen.
 
 Every store build should carry a "Licenses" or "About" screen, or file, listing these.
 

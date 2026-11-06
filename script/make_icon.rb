@@ -4,7 +4,7 @@
 # Draws Dot Popper's icon from code and writes the files fledge.yml's
 # `icon: icons/icon` names: icons/icon-SIZE.png (16 to 1024), icons/icon.ico
 # (16 to 256, PNG entries), and on macOS icons/icon.icns (with iconutil).
-# The icon is CC0-1.0 (LICENSES/ICONS.md). Run it from the
+# The icon is CC-BY-SA-4.0 (LICENSES/ICONS.md). Run it from the
 # repository's root: ruby script/make_icon.rb
 #
 # Design: the game's central picture in its own palette (the
