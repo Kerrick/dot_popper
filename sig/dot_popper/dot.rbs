@@ -34,7 +34,11 @@ module DotPopper
 
     def confine: (Field field) -> Dot
 
+    def refit: (Field from, Field to) -> Dot
+
     private
+
+    def share: (Float position, Float low, Float high, Float new_low, Float new_high) -> Float
 
     def bounce: (Float position, Float velocity, Float low, Float high) -> [Float, Float]
   end

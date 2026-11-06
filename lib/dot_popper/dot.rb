@@ -45,7 +45,24 @@ module DotPopper
     # The same dot, back inside a field that has changed size.
     def confine(field) = with(x: x.clamp(field.min_x, field.max_x), y: y.clamp(field.min_y, field.max_y))
 
+    # The same dot moved from field +from+ to field +to+, as a window is
+    # resized or a phone turned: as far across and down the new field's
+    # room as it was across the old one's, so a dot 70% of the way across
+    # stays 70% of the way across, then confined to it. Its velocity, in
+    # radii per second, is unchanged.
+    def refit(from, to)
+      with(x: share(x, from.min_x, from.max_x, to.min_x, to.max_x),
+           y: share(y, from.min_y, from.max_y, to.min_y, to.max_y)).confine(to)
+    end
+
     private
+
+    # +position+ moved from the span +low+..+high+ to +new_low+..+new_high+
+    # in proportion; from a span of none, to the new one's middle.
+    def share(position, low, high, new_low, new_high)
+      fraction = high > low ? (position - low) / (high - low) : 0.5
+      new_low + (fraction * (new_high - new_low))
+    end
 
     # Unfolding the path onto a line twice the span long gives the exact
     # position however many edges a long frame crosses: the first half of

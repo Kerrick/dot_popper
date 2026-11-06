@@ -18,7 +18,7 @@ module DotPopper
 
       def update(seconds) = with(dots: dots.map_dots { it.move(seconds, field) })
 
-      def refit(field) = with(field:, dots: dots.map_dots { it.confine(field) })
+      def refit(field) = with(field:, dots: dots.map_dots { it.refit(self.field, field) })
     end
   end
 end

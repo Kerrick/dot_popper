@@ -151,4 +151,26 @@ class RoundTest < Minitest::Test
 
     assert_equal [350.0, 250.0], [round.dots.first.x, round.dots.first.y]
   end
+
+  # Turning a tall phone and back leaves the dots where they were, not
+  # bunched into the narrow side (the iPhone playtest).
+  def test_turning_keeps_each_dot_where_it_was_in_proportion
+    portrait = field(375, 812)
+    landscape = field(812, 375)
+    near_corner = dot(50 + (0.7 * 275), 50 + (0.2 * 712), velocity_x: 60, velocity_y: -90)
+    round = DotPopper::Round.new(portrait, random: Random.new(1), dots: DotPopper::Stack.new([near_corner]))
+
+    round.field = landscape
+    turned = round.dots.first
+
+    assert_in_delta 50 + (0.7 * 712), turned.x, 1e-9, "70% across stays 70% across"
+    assert_in_delta 50 + (0.2 * 275), turned.y, 1e-9
+    assert_equal [60.0, -90.0], [turned.velocity_x, turned.velocity_y], "velocities stay in radii per second"
+
+    round.field = portrait
+    back = round.dots.first
+
+    assert_in_delta near_corner.x, back.x, 1e-9, "turning back puts it back"
+    assert_in_delta near_corner.y, back.y, 1e-9
+  end
 end

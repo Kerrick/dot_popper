@@ -2,8 +2,8 @@
 
 require "test_helper"
 
-# Thousands of random rounds on random fields, each a random run of taps
-# and clock ticks, checking after every step what must always be true of
+# Thousands of random rounds on random fields, each a random run of taps,
+# clock ticks, and resizes or turns of the window, checking after every step what must always be true of
 # the rules. A failure names the seed that found it; RULES_FUZZ_SEED
 # replays one.
 class RulesFuzzTest < Minitest::Test
@@ -49,7 +49,11 @@ class RulesFuzzTest < Minitest::Test
     STEPS.times do
       break if round.over?
 
-      random.rand < 0.6 ? tap(round, random, where) : tick(round, random, where)
+      case random.rand
+      when ...0.6 then tap(round, random, where)
+      when ...0.93 then tick(round, random, where)
+      else resize(round, random, where)
+      end
       check_round(round, where)
     end
   end
@@ -89,6 +93,32 @@ class RulesFuzzTest < Minitest::Test
 
     assert_equal ids, round.dots.map(&:id), "#{where}: a tick changed the dots"
     assert_in_delta [remaining - seconds, 0].max, round.countdown.remaining, EPSILON, "#{where}: the clock"
+  end
+
+  # A resize, or half the time a phone's turn, keeps every dot, its order,
+  # whether it is popped, and its velocity, and moves each in proportion
+  # across the field's room, and it touches neither score nor clock.
+  def resize(round, random, where)
+    old = round.field
+    before = round.dots.to_a
+    kept = [round.score, round.countdown]
+    round.field = random.rand < 0.5 ? DotPopper::Field.new(old.height, old.width, old.radius) : random_field(random)
+    after = round.dots.to_a
+
+    assert_equal kept, [round.score, round.countdown], "#{where}: a resize changed the score or clock"
+    assert_equal before.map { [it.id, it.popped?, it.velocity_x, it.velocity_y] },
+                 after.map { [it.id, it.popped?, it.velocity_x, it.velocity_y] }, "#{where}: a resize changed a dot"
+    before.zip(after).each { |was, now| check_proportion(was, now, old, round.field, where) }
+  end
+
+  def check_proportion(was, now, old, new, where)
+    [[was.x, now.x, old.min_x, old.max_x, new.min_x, new.max_x],
+     [was.y, now.y, old.min_y, old.max_y, new.min_y, new.max_y]].each do |from, to, low, high, new_low, new_high|
+      next unless high > low && new_high > new_low
+
+      assert_in_delta (from - low) / (high - low), (to - new_low) / (new_high - new_low), 1e-6,
+                      "#{where}: dot #{was.id} moved out of proportion"
+    end
   end
 
   def check_round(round, where)

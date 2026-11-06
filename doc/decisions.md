@@ -19,13 +19,15 @@ Each entry says what was decided, why, and what it would take to reverse it. The
 
 **To reverse:** If Lota gains a way to report physical density, `DotSize.for` could compute an exact size from it. Because every other distance is a multiple of R, nothing else would need to change.
 
-### A window resized during a round keeps every dot on screen
+### A window resized during a round keeps every dot where it was, in proportion
 
-When the window changes size mid-round, the round in progress switches to the new field, and any dot left outside it is moved to the field's edge. The next round starts on the new field as usual. The same happens when a tablet is rotated, and the heap of dots at the end of a round is refitted the same way.
+When the window changes size mid-round, or a phone or tablet is turned, the round in progress switches to the new field, and each dot moves in proportion: a dot 70% of the way across the old field's room (from `min_x` to `max_x`, the span its centre may take) is 70% of the way across the new one's, and the same down. It is then confined to the field, which only matters for a field narrower than a dot. Velocities are in radii per second and don't change, nor does the radius. The next round starts on the new field as usual. The title's drifting dots move the same way. The heap of dots at the end of a round is a Box2D pile under gravity, and is still only moved back inside the window (`Shell::Pile#refit`).
 
-**Why:** The spec sizes the field when the game starts and doesn't mention resizing. Leaving dots outside the window would make them impossible to tap, and freezing the old size would leave part of the window empty.
+At first, a resize moved only the dots left outside the new field to its edge. The maintainer's iPhone playtest found the flaw: on a tall phone, "rotating 'bunched up' all the dots and rotating it back left them all 'bunched up'". Turning a 375 × 812 field to 812 × 375 squeezed every dot into the bottom 375 units, and turning it back left them there. In proportion, turning back puts each dot back where it was. `RulesFuzzTest` now resizes and turns the field at random during its rounds, and checks that every dot keeps its id, order, state and velocity, stays on the field, and moves in proportion, and that the score and clock don't change.
 
-**To reverse:** Change `Game#field=` (which `Shell::App#resize` calls) to keep the old field until the next round.
+**Why:** The spec sizes the field when the game starts and doesn't mention resizing; this was a decision from earlier, not the spec's. Leaving dots outside the window would make them impossible to tap, and freezing the old size would leave part of the window empty. Moving every dot in proportion keeps the picture the player was reading, gaps and overlaps alike, as near as the new shape allows.
+
+**To reverse:** In `Round#field=`, map the dots with `confine(field)` instead of `refit(old, field)`, which puts back the edge-only behaviour; or change `Game#screen=` (which `Shell::App#resize` calls) to keep the old field until the next round.
 
 ### The Game Over screen ignores taps for 0.9 seconds
 

@@ -115,4 +115,19 @@ class DotTest < Minitest::Test
 
     assert_equal [350.0, 250.0], [lost.x, lost.y]
   end
+
+  def test_refitting_keeps_a_dot_as_far_across_the_room_as_it_was
+    moved = dot(50 + (0.7 * 700), 300, velocity_x: 40).refit(field(800, 600), field(400, 1000))
+
+    assert_in_delta 50 + (0.7 * 300), moved.x, 1e-9
+    assert_in_delta 50 + (0.5 * 900), moved.y, 1e-9
+    assert_equal 40.0, moved.velocity_x
+  end
+
+  # A field narrower than a dot has no room across, so a dot there goes
+  # to the new field's middle; one outside the old room is confined.
+  def test_refitting_from_no_room_or_from_outside_still_lands_on_the_field
+    assert_equal 200.0, dot(30, 300).refit(field(60, 600), field(400, 600)).x
+    assert_equal [350.0, 250.0], dot(780, 590).refit(field(400, 300), field(400, 300)).then { [it.x, it.y] }
+  end
 end

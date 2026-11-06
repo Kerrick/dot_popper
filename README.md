@@ -32,7 +32,7 @@ With dots that fit the screen, every screen plays about the same, so their round
 
 ### How big the dots are
 
-The dots are sized to fit the screen, so every screen, from a phone to a big monitor, has about the same room for dots as the desktop window, and plays about as hard. The dots never get smaller than 60 points across, so they stay easy to tap on a phone. The size is worked out when each round starts, and if you resize the window during a round, the dots keep their size until it ends.
+The dots are sized to fit the screen, so every screen, from a phone to a big monitor, has about the same room for dots as the desktop window, and plays about as hard. The dots never get smaller than 60 points across, so they stay easy to tap on a phone. The size is worked out when each round starts, and if you resize the window or turn the phone during a round, the dots keep their size until it ends. Each dot stays as far across and down the screen as it was, so turning a phone and back puts the dots back where they were.
 
 Once you have finished a round, the title screen may also show a **Dot size** control with two segments, the chosen one filled. Each segment shows a small dot at the size it gives, its name, and under it what it does on this screen, so you can see the difference before you choose. Tap a segment to choose it:
 

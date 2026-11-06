@@ -45,12 +45,14 @@ module DotPopper
       end
     end
 
-    # Fits the round to a window that changed size, keeping every dot on
+    # Fits the round to a window that changed size, or a phone turned,
+    # keeping every dot where it was in proportion (Dot#refit), and so on
     # screen.
     def field=(field)
+      old = @field
       @field = field
       @spawner = Spawner.for(field, tries: @spawner.tries)
-      @dots = dots.map_dots { it.confine(field) }
+      @dots = dots.map_dots { it.refit(old, field) }
     end
 
     private
