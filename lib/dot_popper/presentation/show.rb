@@ -20,8 +20,9 @@ module DotPopper
     # methods), and +hint+ gives Game Over's line on playing with the
     # pile, or nil.
     class Show
-      # The dot-size choices in the order the title draws their segments.
-      SIZINGS = [DotSizing::STANDARD, DotSizing::SIZED_TO_SCREEN].freeze
+      # The dot-size choices in the order the title draws their segments:
+      # the default, dots sized to the screen, first.
+      SIZINGS = [DotSizing::SIZED_TO_SCREEN, DotSizing::STANDARD].freeze
 
       attr_reader :game, :effects, :animations, :hud, :attract, :layout, :marquee, :finale, :sounds, :now, :look,
                   :lifetime, :input, :words, :clearing

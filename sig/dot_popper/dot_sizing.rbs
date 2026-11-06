@@ -10,6 +10,8 @@ module DotPopper
 
     SIZED_TO_SCREEN: DotSizing
 
+    DEFAULT: DotSizing
+
     def self.parse: (String? text) -> DotSizing
 
     def sized_to_screen?: () -> bool

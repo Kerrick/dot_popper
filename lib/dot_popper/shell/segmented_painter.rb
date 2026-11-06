@@ -4,29 +4,34 @@ module DotPopper
   module Shell
     # A labelled segmented control, on whole device pixels: the title's
     # "Dot size". Its segments share one pill, each with a fresh dot drawn
-    # at the size its option gives, then its option's name, and the chosen
-    # one is filled, so the choices, what each does, and which is chosen
-    # all show at a glance. The label sits to the left on the segments'
+    # at the size its option gives, then its option's name with what it
+    # does here in smaller type under it, and the chosen one is filled, so
+    # the choices, what each does, and which is chosen all show at a glance. The label sits to the left on the segments'
     # row, or above them when it has a row of its own. A segment the
     # mouse is over brightens and is outlined (Presentation::Hover).
     class SegmentedPainter < Data.define(:pen, :dots)
       G = ::Lota::Graphics
 
-      # +choices+ are [name, chosen?, icon radius, hover] quadruples, one
-      # for each of the +control+'s options; +hover+ runs from 0 to 1.
+      # +choices+ are [name, note, chosen?, icon radius, hover], one for
+      # each of the +control+'s options; +hover+ runs from 0 to 1.
       def draw(control, label, choices, alpha: 1.0)
         return if alpha <= 0.0
 
         frame = snapped(control.frame)
-        widest = choices.map(&:last).max
+        widest = choices.map { it[3] }.max
         room = control.options.first.width - (frame.height * 0.5) - (widest * 2) - gap(frame.height)
-        font = fit(choices.map(&:first), room, frame.height)
+        font = fit(choices.map(&:first), room, frame.height * NAME)
+        note = fit(choices.map { it[1] }, room, frame.height * NOTE)
         label(label, font, control, alpha)
         backing(frame, alpha)
-        control.options.zip(choices).each do |option, (name, chosen, icon, hover)|
-          segment(snapped(option), name, chosen, icon, font, alpha, hover)
+        control.options.zip(choices).each do |option, (name, words, chosen, icon, hover)|
+          segment(snapped(option), [name, words], chosen, icon, [font, note], alpha, hover)
         end
       end
+
+      # The name's and the note's type, as shares of a segment's height.
+      NAME = 0.36
+      NOTE = 0.27
 
       private
 
@@ -51,9 +56,9 @@ module DotPopper
       end
 
       # The chosen segment is a lighter pill inside the frame, with its
-      # name in ink; the other's name is cream on the frame's dark. The
-      # icon and the name are centred together.
-      def segment(rect, name, chosen, icon, font, alpha, hover)
+      # words in ink; the other's are cream on the frame's dark. The icon
+      # and the words are centred together, the note under the name.
+      def segment(rect, (name, note), chosen, icon, (font, small), alpha, hover)
         palette = pen.palette
         inner = snapped(rect.inset(pen.pixels.snap(rect.height * 0.08)))
         corner = inner.height / 2.0
@@ -65,10 +70,14 @@ module DotPopper
         pixels = pen.pixels
         radius = pixels.whole(icon)
         gap = gap(rect.height)
-        left = rect.center_x - (((radius * 2) + gap + font.width(name)) / 2.0)
+        words = [font.width(name), small.width(note)].max
+        left = rect.center_x - (((radius * 2) + gap + words) / 2.0)
         dots.icon(pixels.snap(left + radius), pixels.snap(rect.center_y), radius, fresh: true, opacity: alpha)
-        pen.text(name, font, left + (radius * 2) + gap + (font.width(name) / 2.0), rect.center_y,
-                 chosen ? palette.ink_bottom : palette.cream, alpha)
+        x = left + (radius * 2) + gap + (words / 2.0)
+        top = rect.center_y - ((font.height + small.height) / 2.0)
+        pen.text(name, font, x, top + (font.height / 2.0), chosen ? palette.ink_bottom : palette.cream, alpha)
+        pen.text(note, small, x, top + font.height + (small.height / 2.0), chosen ? palette.ink_bottom : palette.soft,
+                 alpha * (chosen ? 0.8 : 1.0))
       end
 
       # The mouse over a segment: the other choice's segment takes the
@@ -95,10 +104,10 @@ module DotPopper
                                height: pixels.snap(rect.height))
       end
 
-      # One size for every name, shrunk by whole sizes until the longest
-      # fits its segment.
-      def fit(names, room, height)
-        size = (height * 0.4).round
+      # One size for every name, from +size+ units and shrunk by whole
+      # sizes until the longest fits its segment.
+      def fit(names, room, size)
+        size = size.round
         size -= 1 while size > 10 && names.any? { pen.fonts.semibold(size).width(it) > room }
         pen.fonts.semibold(size)
       end

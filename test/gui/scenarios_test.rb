@@ -36,7 +36,8 @@ class GuiScenariosTest < Minitest::Test
   end
 
   def test_choosing_the_dot_size_on_a_narrow_window
-    play("dot_size", "the next round's dots are sized to the window", window: "400x850")
+    play("dot_size", "the first round's dots are sized to the window", "the next round's dots are the standard size",
+         window: "400x850")
   end
 
   def test_dragging_and_tilting_the_pile

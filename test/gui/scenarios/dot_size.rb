@@ -2,8 +2,9 @@
 
 module DotPopperGui
   # The choice of dot size on a narrow window (DOT_POPPER_WINDOW=400x850),
-  # where the two sizes differ: the second segment chosen with a click,
-  # remembered, and the next round played with dots sized to the window.
+  # where the two sizes differ: a new player's first round with dots sized
+  # to the window, then the second segment, Standard, chosen with a click,
+  # remembered, and the next round played with the standard dots.
   class DotSizeScenario < Scenario
     scenario :dot_size
 
@@ -11,18 +12,23 @@ module DotPopperGui
 
     def play
       check_equal([400, 850], L::Graphics.dimensions, "the window opens at DOT_POPPER_WINDOW's size")
-      quick_round
-      check(show.sizing_offered?, "the title offers the dot size on a narrow window")
-      check(!game.sizing.sized_to_screen?, "standard dots to begin with")
-      _, second = show.sizing_reaches.last
-      click(second.center_x, second.center_y)
-      check(game.sizing.sized_to_screen?, "a click on the second segment sizes dots to the screen")
-      check_equal(game.sizing.to_text, File.read(saved("dot_size.txt")), "dot_size.txt remembers the choice")
+      check(game.sizing.sized_to_screen?, "a new player's dots are sized to the screen")
+      check(!File.exist?(saved("dot_size.txt")), "nothing is saved before the player chooses")
       start_round
-      check_close(fitted_radius, round.field.radius, "the next round's dots are sized to the window")
+      check_close(fitted_radius, round.field.radius, "the first round's dots are sized to the window")
       check_close(fitted_radius, fresh_dot.radius, "its fresh dot has that radius")
       wait(0.5)
       check_fresh_pixel(fresh_dot)
+      run_out_the_clock
+      continue_to_title
+      check(show.sizing_offered?, "the title offers the dot size on a narrow window")
+      sizing, second = show.sizing_reaches.last
+      check_equal(DotPopper::DotSizing::STANDARD, sizing, "the second segment is Standard")
+      click(second.center_x, second.center_y)
+      check(!game.sizing.sized_to_screen?, "a click on the second segment picks the standard size")
+      check_equal(game.sizing.to_text, File.read(saved("dot_size.txt")), "dot_size.txt remembers the choice")
+      start_round
+      check_close(R::RADIUS, round.field.radius, "the next round's dots are the standard size")
     end
 
     private

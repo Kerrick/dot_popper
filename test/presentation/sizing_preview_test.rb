@@ -9,18 +9,22 @@ class SizingPreviewTest < Minitest::Test
   FITTED = DotPopper::DotSizing::SIZED_TO_SCREEN
 
   def preview(fitted, standard: 50) = SizingPreview.new(standard:, fitted:, look: Look::SIZING)
-  def label(sizing, fitted) = Look::WORDS.sizing(sizing, preview(fitted))
+  def note(sizing, fitted) = Look::WORDS.sizing_note(sizing, preview(fitted))
 
-  def test_the_first_choice_is_always_standard
-    [30, 50, 97].each { assert_equal "Standard", label(STANDARD, it) }
+  # The first choice, the default, fits the screen; the second is the
+  # standard size.
+  def test_the_choices_are_named_the_same_on_every_screen
+    assert_equal ["Fit the screen", "Standard"], DotPopper::Presentation::Show::SIZINGS.map { Look::WORDS.sizing(it) }
   end
 
-  # The second choice is named by what it does on this screen.
-  def test_the_second_choice_says_what_fitting_does_here
-    assert_equal "Smaller, more room", label(FITTED, 30)
-    assert_equal "Smaller, more room", label(FITTED, 44.9)
-    assert_equal "Bigger, less room", label(FITTED, 55.1)
-    assert_equal "Bigger, less room", label(FITTED, 97)
+  # Under its name, each says what it does on this screen.
+  def test_each_choice_says_what_it_does_here
+    assert_equal "Smaller, more room", note(FITTED, 30)
+    assert_equal "Smaller, more room", note(FITTED, 44.9)
+    assert_equal "Bigger, less room", note(FITTED, 55.1)
+    assert_equal "Bigger, less room", note(FITTED, 97)
+    assert_equal "Bigger, less room", note(STANDARD, 30), "on a phone, standard dots are the bigger ones"
+    assert_equal "Smaller, more room", note(STANDARD, 97)
   end
 
   # Within a tenth either way the two look alike, and the title leaves

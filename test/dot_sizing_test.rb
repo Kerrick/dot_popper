@@ -27,7 +27,16 @@ class DotSizingTest < Minitest::Test
     assert_equal DotSizing::SIZED_TO_SCREEN, DotSizing::STANDARD.toggled
     assert_equal DotSizing::STANDARD, DotSizing::SIZED_TO_SCREEN.toggled
     assert_equal DotSizing::SIZED_TO_SCREEN, DotSizing.parse("#{DotSizing::SIZED_TO_SCREEN.to_text}\n")
-    assert_equal DotSizing::STANDARD, DotSizing.parse(nil)
-    assert_equal DotSizing::STANDARD, DotSizing.parse("huge")
+    assert_equal DotSizing::STANDARD, DotSizing.parse("#{DotSizing::STANDARD.to_text}\n")
+  end
+
+  # A player who never chose gets dots sized to the screen; one who chose
+  # the standard size ("same", written only by a choice) keeps it.
+  def test_a_player_who_never_chose_gets_dots_sized_to_the_screen
+    assert_equal DotSizing::SIZED_TO_SCREEN, DotSizing::DEFAULT
+    assert_equal DotSizing::DEFAULT, DotSizing.parse(nil)
+    assert_equal DotSizing::DEFAULT, DotSizing.parse("")
+    assert_equal DotSizing::DEFAULT, DotSizing.parse("huge")
+    assert_equal DotSizing::STANDARD, DotSizing.parse("same")
   end
 end

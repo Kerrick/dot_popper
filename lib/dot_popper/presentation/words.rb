@@ -148,10 +148,19 @@ module DotPopper
       end
 
       # The name of one choice of dot size, on its segment of the title's
-      # "Dot size" control, said by what it does on this screen, as the
-      # +preview+ (SizingPreview) sees it: "Standard", and for dots sized
-      # to the screen "Smaller, more room" or "Bigger, less room".
-      def sizing(sizing, preview) = screen_size.fetch(sizing.sized_to_screen? ? preview.effect : :standard)
+      # "Dot size" control: "Fit the screen" or "Standard".
+      def sizing(sizing) = screen_size.fetch(sizing.sized_to_screen? ? :fitted : :standard)
+
+      # What one choice of dot size does on this screen, next to the
+      # other, as the +preview+ (SizingPreview) sees it, under its name:
+      # on a phone, fitting the dots makes them "Smaller, more room", and
+      # the standard ones are "Bigger, less room"; on a big monitor, the
+      # other way about.
+      def sizing_note(sizing, preview)
+        effect = preview.effect
+        effect = { smaller: :bigger, bigger: :smaller }.fetch(effect, effect) unless sizing.sized_to_screen?
+        screen_size.fetch(effect)
+      end
 
       # The control's label: "Dot size".
       def sizing_label = screen_size.fetch(:choice)

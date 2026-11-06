@@ -79,7 +79,7 @@ module DotPopper
           played: "Played on a screen about %d dots wide and %d dots tall.",
           fitted_here: "Dots are sized to fit this screen, so scores compare across devices.",
           fitted_played: "Played with dots sized to the screen.",
-          choice: "Dot size", standard: "Standard", smaller: "Smaller, more room", bigger: "Bigger, less room",
+          choice: "Dot size", fitted: "Fit the screen", standard: "Standard", smaller: "Smaller, more room", bigger: "Bigger, less room",
           alike: "About the same"
         }.freeze
       )

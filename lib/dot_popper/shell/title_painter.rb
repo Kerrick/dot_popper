@@ -39,13 +39,15 @@ module DotPopper
 
       private
 
-      # The choice of dot size, each segment named by what it does here
-      # and showing a dot at the size it gives, in true proportion.
+      # The choice of dot size, each segment named, saying what it does
+      # here, and showing a dot at the size it gives, in true proportion.
       def sizing_choice(show, control, alpha)
         preview = show.sizing_preview
+        words = show.words
         height = control.options.first.height
         choices = Presentation::Show::SIZINGS.map do
-          [show.words.sizing(it, preview), it == show.game.sizing, preview.icon(it, height), show.hover.level(it)]
+          [words.sizing(it), words.sizing_note(it, preview), it == show.game.sizing, preview.icon(it, height),
+           show.hover.level(it)]
         end
         SegmentedPainter.new(pen:, dots:).draw(control, show.words.sizing_label, choices, alpha:)
       end

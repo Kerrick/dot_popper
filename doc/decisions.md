@@ -119,11 +119,25 @@ The spec's rule stays the default, and it changes only when the player chooses. 
 
 **To reverse:** Remove the button from `TitlePainter` and the tap from `Show#tap`, and delete `dot_size.txt`. With the saved choice gone, `DotSizing.parse` returns `STANDARD`, which is the spec's rule. The fitted bests stay in the saved files but are no longer shown.
 
+**Later:** After the iPhone playtest, the maintainer made dots sized to the screen the default. See the next entry.
+
+### Dots fit the screen unless the player chooses Standard
+
+This is the maintainer's call, after his iPhone 13 mini playtest of v0.8.3. A new player, and anyone without a saved choice, now plays with dots sized to the screen (`DotSizing::DEFAULT`). The spec's fixed 50-unit radius, about 8 mm, is the other choice, **Standard**. The title's "Dot size" control lists them in that order. Each segment has its name, **Fit the screen** or **Standard**, and under it, in smaller type, what it does on this screen next to the other: on a phone, fitting reads **Smaller, more room** and Standard **Bigger, less room**; on a big monitor, the other way about. The control is still hidden where the two sizes are within a tenth of each other.
+
+`dot_size.txt` is written only when the player taps a segment, and only when the choice changes, in every version since the choice was added. So a file that says `same` always records a player who switched to fitted dots and back to the standard ones, an explicit choice, and it is kept. A missing, empty, or unreadable file means the player never chose, and gets the default.
+
+**Why:** On the iPhone 13 mini, an upright field of about 7.5 × 16 R, the maintainer rated the game 2 out of 5 on the standard dots ("WAY harder on this device until I turn on smaller dots. Like, unenjoyable so.") and 4 out of 5 on the fitted ones ("far more enjoyable"). The dots then "felt mostly fine (on the small side)", at the 30-unit floor, 60 points across. The simulation agrees (see "What the simulation found"): on an upright phone the model player averages 6.0 points with standard dots and 21.6 with fitted ones, and fitted scores on every screen fall between 20.3 and 23.6, against 6.0 to 76.8 with standard dots. A default should suit the player who never opens the settings, and the standard size made the first rounds on a phone the unfair kind of hard (Juul, Koster).
+
+**What it changes for players who never chose:** their rounds now count among the fitted bests, not the small, medium, or large ones, so a desktop player who had bests in "medium" starts a fresh set. The old bests stay in `best_score.txt` and show again with Standard. In a 1200 × 800 window the two sizes are alike, so the control is hidden there; resizing the window brings it back.
+
+**To reverse:** Set `DotSizing::DEFAULT` to `STANDARD`, and put `STANDARD` first in `Show::SIZINGS`.
+
 ### What the simulation found
 
 These results are from 2026-11-05, with 60 rounds per device for each choice of dot size (`bundle exec ruby script/simulate.rb 60`). "R" is the radius in graphics units, "Area" is the field's size in square radii, and "Penalties" counts wrong taps per round.
 
-With the standard dot size (the default, and the spec's rule):
+With the standard dot size (the spec's rule):
 
 | Device | R | Area (R²) | Mean score | 90th percentile | Mean round (s) | Penalties |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -134,7 +148,7 @@ With the standard dot size (the default, and the spec's rule):
 | 27-inch 1440p monitor, fullscreen | 50 | 1475 | 62.8 | 84 | 73.3 | 7.4 |
 | 32-inch 6K monitor, fullscreen | 50 | 2035 | 76.8 | 103 | 87.6 | 7.2 |
 
-With dots sized to the screen:
+With dots sized to the screen (the default since the iPhone playtest):
 
 | Device | R | Area (R²) | Mean score | 90th percentile | Mean round (s) | Penalties |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -584,6 +598,8 @@ The title's "Dot size" control no longer names its options from a designer's vie
 **Why:** "Same everywhere" and "Fit the screen" only make sense to someone comparing devices, which most players never do (Pinker's curse of knowledge). A player sees one screen, so the labels say what happens on it (Podmajersky), and the dot icons preview each option before it is chosen (Tidwell's Preview pattern; Saffer's "bring the data forward"). A choice that changes nothing visible is noise, so it is hidden until it matters, and the cross-device reason moves to the Records screen, where scores are compared (Lidwell's progressive disclosure).
 
 **To reverse:** Have `Show#sizing_offered?` return `records_offered?`, and name the segments with fixed words again in `Words#sizing`.
+
+**Later:** With fitted dots the default ("Dots fit the screen unless the player chooses Standard"), the first segment is **Fit the screen** and the second **Standard**, and each says what it does here in a second line (`Words#sizing_note`).
 
 ### A fresh dot's edge is its hit circle
 
