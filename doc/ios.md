@@ -16,7 +16,7 @@ The app's program is `bin/dot_popper`, the same launcher the desktop builds use 
 
 `bin/dot_popper` finds the game in the folder above itself (`File.expand_path("..", __dir__)`), so the whole folder must ship beside it, including `conf.rb`, `main.rb`, `lib/`, and `assets/` (the Fredoka fonts and the four GLSL shaders). Every asset is read through Lota's filesystem by a path relative to that folder, never through the working directory. The only code that reads `$PROGRAM_NAME` is the `DOT_POPPER_SMOKE` build check, which CI uses on desktop builds and which is never set on iOS.
 
-The bundle identifier is `com.kerricklong.DotPopper`, set in `fledge.yml`.
+The bundle identifier is `com.setdef.DotPopper`, set in `fledge.yml`.
 
 ## What the iOS app needs
 
@@ -98,14 +98,14 @@ As a fused app, the game saves into `Library/Application Support/dot_popper` ins
 In the Simulator, this command prints the container's path:
 
 ```sh
-xcrun simctl get_app_container "$UDID" com.kerricklong.DotPopper data
+xcrun simctl get_app_container "$UDID" com.setdef.DotPopper data
 ```
 
 On a device, Xcode can download the container: choose Window > Devices and Simulators, select the iPad and then the app, and choose Download Container from the gear menu.
 
 ### Output
 
-The game's `puts` and `warn` lines go to the app's standard output and standard error. Fledge's iOS runtime forwards both to the system's unified log, under the subsystem `com.kerricklong.DotPopper` and the category `ruby`. The host program logs the app's exit status under the category `app`.
+The game's `puts` and `warn` lines go to the app's standard output and standard error. Fledge's iOS runtime forwards both to the system's unified log, under the subsystem `com.setdef.DotPopper` and the category `ruby`. The host program logs the app's exit status under the category `app`.
 
 **Leave `OS_ACTIVITY_DT_MODE` unset**, with any value, `NO` included, both in Xcode's scheme and in the environment `simctl launch` passes. When it is set, the system copies every log entry back to standard error. With Fledge 0.4.0's runtime, that standard error is forwarded to the log again, so the app freezes in a loop of its own output and draws nothing (see step 4 of Fledge's `doc/contributors/device-test.md`, and section 5 of its ADR 011). The kit's host program detects the variable and, when it is set, leaves the game's output on its own streams, but the safest course is to keep it out of the scheme.
 
@@ -120,10 +120,10 @@ With the app built for the Simulator and installed on a booted iPad Simulator wh
 ```sh
 SIMCTL_CHILD_DOT_POPPER_AUTOPLAY=1 SIMCTL_CHILD_DOT_POPPER_SEED=7 \
 SIMCTL_CHILD_DOT_POPPER_QUIT_AFTER=45 SIMCTL_CHILD_DOT_POPPER_SHOTS=3,12,25,38 \
-  xcrun simctl launch "$UDID" com.kerricklong.DotPopper
+  xcrun simctl launch "$UDID" com.setdef.DotPopper
 sleep 60
 xcrun simctl spawn "$UDID" log show --last 2m --info --style compact \
-  --predicate 'subsystem == "com.kerricklong.DotPopper"'
+  --predicate 'subsystem == "com.setdef.DotPopper"'
 ```
 
 This starts the autoplay bot with a fixed seed, takes four screenshots, quits after 45 seconds of play, and then prints the app's log.

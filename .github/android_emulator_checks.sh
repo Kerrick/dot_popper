@@ -9,7 +9,7 @@ set -uo pipefail
 apk=$1
 out=$2
 here=$(cd "$(dirname "$0")" && pwd)
-package=com.kerricklong.DotPopper
+package=com.setdef.DotPopper
 status=0
 
 # The bot plays for 45 seconds. Back during its first round and at its

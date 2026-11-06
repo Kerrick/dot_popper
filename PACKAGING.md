@@ -68,7 +68,7 @@ CI runs, on each platform's runner (`.github/actions/fuse`):
 
 ```console
 $ gem install --local vendor/cache/lota-0.2.2-PLATFORM.gem
-$ lota fuse . --identifier com.kerricklong.DotPopper --app-version VERSION --icon icons/icon --out DIR
+$ lota fuse . --identifier com.setdef.DotPopper --app-version VERSION --icon icons/icon --out DIR
 ```
 
 The first line installs Lota's release gem for the platform from `vendor/cache`, after checking its SHA-256 against the `SHA256SUMS` of [Lota's v0.2.2 release](https://github.com/setdef/Lota/releases/tag/v0.2.2). `lota fuse` ships that very gem file in the app. `VERSION` is the tag's version without its `v` when CI builds a tag, and `fledge.yml`'s `version:` otherwise, as for a build by hand. A release candidate builds its base version (`v0.8.2-rc.1` builds 0.8.2), since macOS, iOS, and Windows take only numbers there; the kit's header names the tag beside it, and the Kits workflow checks that it does (`script/playtest_kit.rb check-build`).
@@ -101,7 +101,7 @@ You need Ruby 4.0.9, the version in `.ruby-version`, and Git. Each platform can 
 
 ```console
 $ gem install --local vendor/cache/lota-0.2.2-arm64-darwin.gem
-$ lota fuse . --identifier com.kerricklong.DotPopper --app-version 0.8.1 --icon icons/icon
+$ lota fuse . --identifier com.setdef.DotPopper --app-version 0.8.1 --icon icons/icon
 dist/Dot Popper-arm64-darwin.tar.gz
 dist/Dot Popper-arm64-darwin.dmg
 Built the app for arm64-darwin only. Run lota fuse on each platform you ship for.
@@ -191,7 +191,7 @@ This kit is **experimental**, as Lota's phone route is. The [Android workflow](.
 
 `android/host` holds the two files Dot Popper changes over Lota's host. `AndroidManifest.xml` adds one line, which sets `SDL_ENV.SDL_ANDROID_TRAP_BACK_BUTTON` in its `<application>` meta-data, so Back reaches the game as Escape and Android does not close the app at once; Lota's `MainActivity` also registers an `OnBackInvokedCallback` on API 33 and newer when the manifest sets it, which takes Back's place under predictive back. The game then does what README.md says: Back leaves Your records for the title, leaves the app from the title, and does nothing during a round or at Game Over. `MainActivity.java` is Lota's, with one addition: a debuggable build takes environment variables as intent extras (below). `android/android_kit`, the spike's program, runs the game's `bin/dot_popper` unchanged; only when `DOT_POPPER_KIT_PROBE=1` is passed, as the emulator runs do, it also logs each key and touch with the state it arrives in, and the game's events.
 
-The APK's id is `com.kerricklong.DotPopper`, with minSdk 26 and targetSdk 36 (Fledge's Gradle template; the job checks both), code for `arm64-v8a` and `x86_64`, libraries aligned for 16 KB pages. It is a debug build, signed with a debug key Gradle makes fresh on each CI run, so installing a newer kit over an older one fails with `INSTALL_FAILED_UPDATE_INCOMPATIBLE`: `adb uninstall com.kerricklong.DotPopper` first. Being debuggable, it takes environment variables as intent extras, `am start --es lota.env.NAME VALUE`, which a launch from the app drawer never has. Sound is Lota's OpenAL Soft through OpenSL ES, on the media volume. Neither SDL's Java nor the host asks Android for audio focus (the job checks), so the game's sound plays alongside another app's music; the hand check asks whether it does.
+The APK's id is `com.setdef.DotPopper`, with minSdk 26 and targetSdk 36 (Fledge's Gradle template; the job checks both), code for `arm64-v8a` and `x86_64`, libraries aligned for 16 KB pages. It is a debug build, signed with a debug key Gradle makes fresh on each CI run, so installing a newer kit over an older one fails with `INSTALL_FAILED_UPDATE_INCOMPATIBLE`: `adb uninstall com.setdef.DotPopper` first. Being debuggable, it takes environment variables as intent extras, `am start --es lota.env.NAME VALUE`, which a launch from the app drawer never has. Sound is Lota's OpenAL Soft through OpenSL ES, on the media volume. Neither SDL's Java nor the host asks Android for audio focus (the job checks), so the game's sound plays alongside another app's music; the hand check asks whether it does.
 
 A second job, on a fresh runner, unzips the kit, installs its APK on an `x86_64` emulator of API 33 (Android 13, as on a OnePlus Nord N30 5G), and runs [`.github/android_emulator_checks.sh`](.github/android_emulator_checks.sh), which drives [`.github/android_emulator.rb`](.github/android_emulator.rb) (the spike's driver, with two options added). Every run passes `--es lota.env.ALSOFT_DRIVERS null`. The first starts the bot with `DOT_POPPER_AUTOPLAY=1`, `DOT_POPPER_SEED=7`, and `DOT_POPPER_QUIT_AFTER=45`, presses Back 3 seconds into its first round and 1 second into its first Game Over, and requires the log to say "a dot's radius is 50 dp, about 8 mm", both Backs to arrive as Escape in `Playing` and `GameOver`, the game to carry on to the title, and the app to end with "exited with status 0". The second starts on the title, presses Back, and requires the app to leave by itself with status 0. Its logcat, the game's lines, and screenshots are the `ci-results-android-emulator` artifact.
 

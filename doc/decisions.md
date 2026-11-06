@@ -800,3 +800,11 @@ On the Credits screen the license bodies are in Iosevka Regular, a monospace fac
 **Why:** The license texts are written to be read as plain text, with indents that carry meaning; Fredoka's proportional letters lose them.
 
 **To reverse:** Set `legal` blocks in the semibold face again in `CreditsLines.broken` and `CreditsPainter`.
+
+### The app identifier is com.setdef.DotPopper
+
+Every build now uses the identifier `com.setdef.DotPopper`, which was `com.kerricklong.DotPopper`: the macOS and iOS bundle ID, the Android application ID, and the Linux desktop entry's name, all taken from `fledge.yml` and the workflows' `IDENTIFIER`. The MSIX identity's placeholder is now `setdef.DotPopper`, which was `KerrickLong.DotPopper`. The save folder's name, `t.identity`, stays `dot_popper`.
+
+**Why:** setdef is the maker a player or a store sees, and an identifier can't change once a store knows the app, so it changed before any store submission. To the system, test builds already installed under the old identifier are a separate app. They stay beside the new one until someone removes them, and on iOS and Android their saves don't carry over, since each app's files live under its identifier there. On a computer the save folder is named by `t.identity`, so both builds share it.
+
+**To reverse:** Before any store has the app, change the identifier back in `fledge.yml`, the workflows' `IDENTIFIER`, `MSIX_IDENTITY_NAME`'s default, and the docs.

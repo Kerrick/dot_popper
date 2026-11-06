@@ -12,5 +12,5 @@ installers: [dmg, nsis]
 programs:
   - path: bin/dot_popper
     kind: windowed
-    identifier: com.kerricklong.DotPopper
+    identifier: com.setdef.DotPopper
     icon: icons/icon

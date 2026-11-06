@@ -32,7 +32,7 @@ defaults:
 env:
   BUNDLE_FROZEN: "true"
   LOTA_VERSION: "0.2.2"
-  IDENTIFIER: com.kerricklong.DotPopper
+  IDENTIFIER: com.setdef.DotPopper
   # The bot plays, sounds go nowhere, and the save folder is a test's own.
   PLAY_ENV: ALSOFT_DRIVERS=null DOT_POPPER_AUTOPLAY=1 DOT_POPPER_SEED=7 DOT_POPPER_QUIT_AFTER=20 DOT_POPPER_PERF=1 DOT_POPPER_SAVE_AS=ci-play
 
@@ -129,7 +129,7 @@ jobs:
     timeout-minutes: 30
     env:
       # Placeholders until the maintainer copies them from Partner Center.
-      MSIX_IDENTITY_NAME: ${{ vars.MSIX_IDENTITY_NAME || 'KerrickLong.DotPopper' }}
+      MSIX_IDENTITY_NAME: ${{ vars.MSIX_IDENTITY_NAME || 'setdef.DotPopper' }}
       MSIX_PUBLISHER: ${{ vars.MSIX_PUBLISHER || 'CN=Dot Popper test' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

@@ -39,7 +39,7 @@ Way 1: install with adb from a computer (recommended: it gives you a log)
 6. If an earlier kit's Dot Popper is installed, remove it first. Each CI
    run signs with a new debug key, so Android refuses to install over it
    (INSTALL_FAILED_UPDATE_INCOMPATIBLE):
-     adb uninstall com.kerricklong.DotPopper
+     adb uninstall com.setdef.DotPopper
    This also deletes the old build's scores.
 7. Install:   adb install DotPopper-debug.apk
    If Play Protect asks about an app from an unknown developer, choose
@@ -71,7 +71,7 @@ the title it leaves the app; during a round and at Game Over it does
 nothing, so a stray swipe never throws a round away.
 
 To watch the game's own lines while it runs (Way 1):
-  adb logcat -s com.kerricklong.DotPopper:V SDL:V
+  adb logcat -s com.setdef.DotPopper:V SDL:V
 
 If it closes at launch
 ----------------------
@@ -83,5 +83,5 @@ Send dot-popper-logcat.txt with android-results.txt. A screenshot of
 anything that looks wrong helps too (power and volume down together, or
 adb exec-out screencap -p > dot-popper-1.png).
 
-To remove the app:  adb uninstall com.kerricklong.DotPopper
+To remove the app:  adb uninstall com.setdef.DotPopper
 or long-press its icon > App info > Uninstall.

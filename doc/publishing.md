@@ -60,7 +60,7 @@ Set a variable with `gh variable set NAME --repo Kerrick/dot_popper`, and a secr
 - **Build status:** the Xcode project from the iOS kit builds, signs, installs, and plays on a real iPad Pro and iPhone 13 mini, from Lota 0.2.2's experimental iOS route and host.
 - **What's missing:**
   - Signing with an Apple Distribution certificate and an App Store provisioning profile.
-  - An App Store Connect record for `com.kerricklong.DotPopper`, then an upload through Xcode's Organizer or `xcrun altool`/Transporter, then TestFlight.
+  - An App Store Connect record for `com.setdef.DotPopper`, then an upload through Xcode's Organizer or `xcrun altool`/Transporter, then TestFlight.
   - A privacy manifest (`PrivacyInfo.xcprivacy`) declaring no tracking and any required-reason APIs the runtime uses, such as file timestamps.
   - App icons at every required size.
   - The license decision above.
@@ -71,7 +71,7 @@ Set a variable with `gh variable set NAME --repo Kerrick/dot_popper`, and a secr
 - **Account:** the same Apple Developer Program.
 - **Build status:** `lota fuse` makes a working, unsigned `.app` for arm64.
 - **What's missing:**
-  - **The App Sandbox** (entitlement `com.apple.security.app-sandbox`). Dot Popper writes only to its own Application Support folder, which a sandboxed app gets inside its container, and reads the clipboard only to write to it. Tested on 2026-11-06: v0.8.6's app, signed locally with only that entitlement, started, played a round, quit cleanly, and saved to `~/Library/Containers/com.kerricklong.DotPopper/Data/Library/Application Support/`, so Lota and Fledge's runtime need nothing more for the sandbox. Copy my result and sound weren't checked under it; the clipboard needs no entitlement, and audio output doesn't either.
+  - **The App Sandbox** (entitlement `com.apple.security.app-sandbox`). Dot Popper writes only to its own Application Support folder, which a sandboxed app gets inside its container, and reads the clipboard only to write to it. Tested on 2026-11-06: v0.8.6's app, signed locally with only that entitlement, started, played a round, quit cleanly, and saved to `~/Library/Containers/com.setdef.DotPopper/Data/Library/Application Support/`, so Lota and Fledge's runtime need nothing more for the sandbox. Copy my result and sound weren't checked under it; the clipboard needs no entitlement, and audio output doesn't either.
   - Signing with "Apple Distribution" or "3rd Party Mac Developer" identities, and an installer package (`productbuild`) signed for the store.
   - An App Store Connect record; the same identifier can serve both stores.
   - The license decision above.
@@ -85,7 +85,7 @@ Set a variable with `gh variable set NAME --repo Kerrick/dot_popper`, and a secr
 
 Steps for the maintainer:
 1. In Partner Center, reserve the name "Dot Popper" and open the product's **Product identity** page.
-2. Copy **Package/Identity/Name** (like `12345Kerrick.DotPopper`) into the repository variable `MSIX_IDENTITY_NAME`, and **Package/Identity/Publisher** (like `CN=XXXXXXXX-...`) into `MSIX_PUBLISHER` (Settings, Secrets and variables, Actions, Variables). Until then the build uses the placeholders `KerrickLong.DotPopper` and `CN=Dot Popper test`.
+2. Copy **Package/Identity/Name** (like `12345setdef.DotPopper`) into the repository variable `MSIX_IDENTITY_NAME`, and **Package/Identity/Publisher** (like `CN=XXXXXXXX-...`) into `MSIX_PUBLISHER` (Settings, Secrets and variables, Actions, Variables). Until then the build uses the placeholders `setdef.DotPopper` and `CN=Dot Popper test`.
 3. Run the Package workflow (or push a `v0.*` tag). Download the unsigned `Dot-Popper-X.Y.Z.0.msix` from the run's `dot-popper-msix` artifact, or from the release's assets on a tag.
 4. Upload it in the submission's **Packages** section. The Store signs it.
 

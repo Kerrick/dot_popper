@@ -48,7 +48,7 @@ env:
   LOTA_REF: ${{ inputs.lota_ref || 'v0.2.2' }}
   NDK_REVISION: 30.0.16248370
   FLEDGE_TAG: v0.6.0
-  IDENTIFIER: com.kerricklong.DotPopper
+  IDENTIFIER: com.setdef.DotPopper
   APP_NAME: Dot Popper
 
 jobs:

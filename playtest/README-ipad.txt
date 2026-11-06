@@ -47,9 +47,9 @@ DotPopper-ios/DotPopper.xcodeproj.
 2. In the project navigator select DotPopper (the blue icon), then the
    DotPopper target, then Signing & Capabilities. Turn on "Automatically
    manage signing" and choose your Personal Team.
-3. The Bundle Identifier is com.kerricklong.DotPopper. If Xcode says it is
+3. The Bundle Identifier is com.setdef.DotPopper. If Xcode says it is
    not available, change it to one of your own, such as
-   com.kerricklong.DotPopper.playtest. Nothing else depends on it.
+   com.setdef.DotPopper.playtest. Nothing else depends on it.
 
 A free Personal Team signs for 7 days at a time, for at most 3 apps on the
 device (Apple, "Choosing a membership").
