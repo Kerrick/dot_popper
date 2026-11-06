@@ -46,11 +46,19 @@ runs:
     # group's too, and steep's json compiles there. On Windows the
     # compiler and make must be MSYS2's, as RubyInstaller's devkit sets
     # them up (ridk exec): mkmf writes MSYS paths such as /C/..., which the
-    # runner's own C:\mingw64 make, first on the PATH, cannot read.
+    # runner's own C:\mingw64 make, first on the PATH, cannot read. ridk is
+    # a .cmd, which PowerShell runs and Git's bash does not.
     - name: lota fuse
+      if: runner.os != 'Windows'
       shell: bash
       run: |
-        run=()
-        [ "$RUNNER_OS" = Windows ] && run=(ridk exec)
-        "${run[@]}" ruby -S lota fuse . --identifier "$IDENTIFIER" --app-version "$APP_VERSION" --icon icons/icon --out "$RUNNER_TEMP/fuse"
+        ruby -S lota fuse . --identifier "$IDENTIFIER" --app-version "$APP_VERSION" --icon icons/icon --out "$RUNNER_TEMP/fuse"
         ls -la "$RUNNER_TEMP/fuse"
+
+    - name: lota fuse, in RubyInstaller's devkit
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        ridk exec ruby -S lota fuse . --identifier $env:IDENTIFIER --app-version $env:APP_VERSION --icon icons/icon --out "$env:RUNNER_TEMP/fuse"
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        Get-ChildItem "$env:RUNNER_TEMP/fuse"
