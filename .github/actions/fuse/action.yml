@@ -42,8 +42,15 @@ runs:
         gem install --local "$gem_file"
         ruby -S lota --version
 
+    # lota fuse installs every gem the lockfile locks, the development
+    # group's too, and steep's json compiles there. On Windows the
+    # compiler and make must be MSYS2's, as RubyInstaller's devkit sets
+    # them up (ridk exec): mkmf writes MSYS paths such as /C/..., which the
+    # runner's own C:\mingw64 make, first on the PATH, cannot read.
     - name: lota fuse
       shell: bash
       run: |
-        ruby -S lota fuse . --identifier "$IDENTIFIER" --app-version "$APP_VERSION" --icon icons/icon --out "$RUNNER_TEMP/fuse"
+        run=()
+        [ "$RUNNER_OS" = Windows ] && run=(ridk exec)
+        "${run[@]}" ruby -S lota fuse . --identifier "$IDENTIFIER" --app-version "$APP_VERSION" --icon icons/icon --out "$RUNNER_TEMP/fuse"
         ls -la "$RUNNER_TEMP/fuse"
