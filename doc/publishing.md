@@ -25,8 +25,17 @@ Every store build should carry a "Licenses" or "About" screen, or file, listing 
 - **Account:** a Google Play Console developer account, a one-time fee. New personal accounts must run a closed test with a minimum number of testers for a minimum number of days before production; check the current numbers.
 - **Build status:** the Android build is experimental, made from Lota's unreleased commit `84c0eda`, and it is a debug APK. Landscape runs at about 15 fps on the Nord.
 - **What's missing:**
-  - A release build signed with an upload key Kerrick creates and keeps. Play App Signing holds the app key.
-  - An Android App Bundle (`.aab`), which Play requires, rather than an APK. Whether `fledge build android` can make one needs asking.
+  - **An upload key.** The Android workflow already builds the App Bundle Play requires (`.aab`, the artifact `dot-popper-play-bundle`) and signs it once the key is in the repository's secrets. Play App Signing holds the app's own key. To make the upload key, keep the keystore somewhere safe and off GitHub, then add the secrets:
+
+    ```sh
+    keytool -genkeypair -v -keystore dot-popper-upload.jks -alias upload \
+      -keyalg RSA -keysize 2048 -validity 10000
+    gh secret set ANDROID_UPLOAD_KEYSTORE --repo Kerrick/dot_popper < <(base64 -i dot-popper-upload.jks)
+    gh secret set ANDROID_UPLOAD_KEY_ALIAS --repo Kerrick/dot_popper --body upload
+    gh secret set ANDROID_UPLOAD_KEY_PASSWORD --repo Kerrick/dot_popper
+    ```
+
+    Use one password for the keystore and the key.
   - A fix for the landscape lag. It blocks release: a portrait-only lock is not an acceptable workaround.
   - Ideally a Lota release that supports Android, so the build doesn't depend on an experiment branch.
 - **Already right:** arm64-v8a, targetSdk 36, Back handled, no permissions requested.

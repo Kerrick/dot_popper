@@ -219,6 +219,32 @@ jobs:
           time ./gradlew --no-daemon --quiet assembleDebug
           find . -name "*.apk" -exec ls -la {} +
           cp build/outputs/apk/debug/*.apk "$RUNNER_TEMP/out/DotPopper-debug.apk"
+          # Google Play takes an App Bundle, not an APK. Fledge's Gradle
+          # project leaves a release unsigned, for the next step to sign.
+          time ./gradlew --no-daemon --quiet bundleRelease
+          cp build/outputs/bundle/release/*.aab "$RUNNER_TEMP/out/DotPopper-release.aab"
+
+      # With the maintainer's upload key in the repository's secrets
+      # (ANDROID_UPLOAD_KEYSTORE, the keystore in base64, and
+      # ANDROID_UPLOAD_KEY_ALIAS and ANDROID_UPLOAD_KEY_PASSWORD), the
+      # bundle is signed for upload to Google Play, which signs the app
+      # itself (Play App Signing). Without them it stays unsigned.
+      - name: Sign the App Bundle for Google Play
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_UPLOAD_KEYSTORE }}
+          ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+        run: |
+          aab=$RUNNER_TEMP/out/DotPopper-release.aab
+          if [ -z "$KEYSTORE" ]; then
+            echo "::notice::No upload key in the secrets, so the App Bundle is unsigned"
+            exit 0
+          fi
+          echo "$KEYSTORE" | base64 --decode > "$RUNNER_TEMP/upload.jks"
+          jarsigner -keystore "$RUNNER_TEMP/upload.jks" -storepass:env PASSWORD -keypass:env PASSWORD \
+            -sigalg SHA256withRSA -digestalg SHA-256 "$aab" "$ALIAS"
+          rm -f "$RUNNER_TEMP/upload.jks"
+          jarsigner -verify "$aab" | tail -1
 
       - name: Check the APK
         run: |
@@ -262,6 +288,13 @@ jobs:
         with:
           name: dot-popper-android-kit
           path: ${{ runner.temp }}/out/dot-popper-android-kit.zip
+          if-no-files-found: error
+          compression-level: 0
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dot-popper-play-bundle
+          path: ${{ runner.temp }}/out/DotPopper-release.aab
           if-no-files-found: error
           compression-level: 0
 
