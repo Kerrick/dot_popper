@@ -44,10 +44,20 @@ runs:
 
     # lota fuse installs every gem the lockfile locks, the development
     # group's too, and steep's json compiles there. On Windows that build
-    # must use the MSYS2 make and compiler that RubyInstaller enables for a
-    # gem's extension: mkmf writes MSYS paths such as /C/... into the
-    # Makefile, which the runner's own C:\mingw64 make, ahead of them on the
-    # PATH, cannot follow. So the step leaves C:\mingw64 off its PATH.
+    # needs RubyInstaller's MSYS2 make and compiler, as lota fuse's error
+    # says (ridk install), which the runner's MSYS2 lacks; RubyInstaller
+    # enables them for a gem's extension. ridk is a .cmd, which PowerShell
+    # runs and Git's bash does not.
+    - name: Install RubyInstaller's MSYS2 development tools
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        ridk install 3
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    # mkmf writes MSYS paths such as /C/... into the Makefile, which the
+    # runner's own C:\mingw64 make, ahead of MSYS2's on the PATH, cannot
+    # follow, so the step leaves C:\mingw64 off its PATH.
     - name: lota fuse
       shell: bash
       run: |
