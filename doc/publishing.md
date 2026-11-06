@@ -71,7 +71,7 @@ Set a variable with `gh variable set NAME --repo Kerrick/dot_popper`, and a secr
 - **Account:** the same Apple Developer Program.
 - **Build status:** `lota fuse` makes a working, unsigned `.app` for arm64.
 - **What's missing:**
-  - **The App Sandbox** (entitlement `com.apple.security.app-sandbox`). Dot Popper writes only to its own Application Support folder, which a sandboxed app gets inside its container, and reads the clipboard only to write to it. Lota and Fledge's runtime need testing under the sandbox.
+  - **The App Sandbox** (entitlement `com.apple.security.app-sandbox`). Dot Popper writes only to its own Application Support folder, which a sandboxed app gets inside its container, and reads the clipboard only to write to it. Tested on 2026-11-06: v0.8.6's app, signed locally with only that entitlement, started, played a round, quit cleanly, and saved to `~/Library/Containers/com.kerricklong.DotPopper/Data/Library/Application Support/`, so Lota and Fledge's runtime need nothing more for the sandbox. Copy my result and sound weren't checked under it; the clipboard needs no entitlement, and audio output doesn't either.
   - Signing with "Apple Distribution" or "3rd Party Mac Developer" identities, and an installer package (`productbuild`) signed for the store.
   - An App Store Connect record; the same identifier can serve both stores.
   - The license decision above.
