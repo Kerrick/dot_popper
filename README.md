@@ -12,7 +12,9 @@ Dot Popper is an arcade game for one player, on Mac, Windows, and Linux. One bri
 
 A round starts with 10 seconds on the clock. Each pop gives you a point and a second. A click on a popped dot takes away 2 points and 2 seconds. After 20 pops, 20 dull dots crowd the screen, and the bright one can be under any of them. Wait for it to slide out, or take a chance.
 
-![A round in progress: score 19, 10 seconds left, one bright orange dot among the popped purple dots](doc/images/round.png)
+![A round in progress: score 23, 7 seconds left, and the bright orange dot half hidden under a popped purple dot](doc/images/round.png)
+
+*The bright dot, sliding out from under a popped one.*
 
 Dot Popper is free and open source. [Download it](#install) from the releases page.
 

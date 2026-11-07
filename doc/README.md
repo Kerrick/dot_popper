@@ -93,12 +93,14 @@ The game reads these from its environment. `main.rb` lists them all.
 | `DOT_POPPER_FAKE_TILT=0.6,0` | Stands in for a tablet's accelerometer, to roll the pile at Game Over |
 | `DOT_POPPER_CALM=1` | Turns off the screen shake, and makes the pile settle gently. Players use this one too |
 
-The screenshots in the README came from one run:
+The screenshots in the README came from bot runs like this one, which saves a screenshot every half second from 12 to 34 seconds in:
 
 ```console
-$ DOT_POPPER_AUTOPLAY=1 DOT_POPPER_NO_SPLASH=1 DOT_POPPER_SAVE_AS=readme_shots \
-  DOT_POPPER_SEED=7 DOT_POPPER_SHOTS=1.5,20,38 DOT_POPPER_QUIT_AFTER=39 bundle exec lota run
+$ DOT_POPPER_AUTOPLAY=1 DOT_POPPER_NO_SPLASH=1 DOT_POPPER_SAVE_AS=readme_cover DOT_POPPER_SEED=7 \
+  DOT_POPPER_SHOTS=$(ruby -e "puts (12..34).step(0.5).to_a.join(%q(,))") DOT_POPPER_QUIT_AFTER=35 bundle exec lota run
 ```
+
+The seed repeats the same rounds, but the game times each screenshot by the clock, not by the frame, so two runs catch slightly different moments. Take many, and choose the one that shows the bright dot under a popped one.
 
 ## Tests
 
