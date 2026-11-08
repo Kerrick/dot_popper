@@ -883,3 +883,11 @@ Players didn't see "Copy my result" under Continue. "Share my score" now ends th
 **Why:** Proximity and enclosure (Johnson's Gestalt chapters) make the button read as part of the score. Motion as the score lands draws the eye at the moment a player is proudest, and the stronger cue on a new best matches that moment. An outline instead of a fill keeps Continue the one obvious way on.
 
 **To reverse:** In `FinaleScreen#blocks`, move `share` back after `continue(scale)`, leave `:share` out of the backing again, and draw it with `PillButton` at the finale's arrival alpha instead of `ShareButton` and `Finale#share_cue`.
+
+## Continue stays off the pile's bottom row
+
+Game Over's words now end a radius above the window's floor, where that is higher than a margin above the safe area's bottom (`FinaleScreen#room`). So the filled Continue, the lowest block, never covers more than the upper half of a dot lying on the floor. Moving "Share my score" above Continue had put Continue last, and on any landscape window short enough for the words to fill the room, it covered up to 87% of the bottom row's height under the middle of the screen (as much as 19% even at 1200 × 800). On a 1200 × 450 window, the GUI suite's resizing scenario found the bright dot left in the pile hidden behind it. Before, the outlined share pill had been lowest, and the pile showed through it. On the shortest windows this costs a line: the hint, or the round's facts, goes sooner. `ScreenPlansTest` checks Continue's bottom at every window size and combination of lines.
+
+**Why:** The pile shows how the round ended, and the stacking order must stay visible. A bright dot lying on the floor under a solid button is no longer distinguishable from a popped one. Half a dot shows its fill or its ring plainly. Reserving a whole dot's width would have cost landscape phones "Time's up!" and the best line as well.
+
+**To reverse:** In `FinaleScreen#room`, end the room a margin above the safe area's bottom again.

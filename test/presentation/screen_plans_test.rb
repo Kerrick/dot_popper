@@ -77,6 +77,9 @@ class ScreenPlansTest < Minitest::Test
           assert_inside rect, screen_layout.safe, name
         end
         assert_operator plan.backing.width, :<=, screen_layout.safe.width, name
+        # The filled Continue leaves the lower half of the pile's bottom
+        # row clear: on a short window it once hid the bright dot there.
+        assert_operator plan.continue_button.bottom, :<=, height - radius, "#{name}: Continue clears the pile's floor"
       end
     end
   end

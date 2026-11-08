@@ -17,7 +17,8 @@ module DotPopper
 
     # Game Over's words for +finale+ (Finale), stacked as one group
     # between the HUD, whose bottom is at +below+, and the safe area's
-    # bottom: the stacking rule when it is taught, "Time's up!", "You met
+    # bottom, or higher, so the pile's dots lying on the window's floor
+    # show at least their lower half under Continue: the stacking rule when it is taught, "Time's up!", "You met
     # today's goal!" when the round did, the score, the best or how far
     # short of it the round fell, the round's facts, a record it set,
     # "Share my score", closing the score's group, +hint+, how to play
@@ -48,12 +49,16 @@ module DotPopper
       end
 
       # From a margin under the HUD to a margin above the safe area's
-      # bottom.
+      # bottom, or to the middle of the pile's bottom row, a radius above
+      # the window's floor, if that is higher. Continue, the lowest block,
+      # is filled, and on a short window it would otherwise hide whatever
+      # lies on the floor under the middle of the screen.
       def room
         margin = layout.margin
         safe = layout.safe
         top = below + margin
-        Rect.new(x: safe.x + margin, y: top, width: safe.width - (2 * margin), height: safe.bottom - margin - top)
+        bottom = [safe.bottom - margin, layout.height - radius].min
+        Rect.new(x: safe.x + margin, y: top, width: safe.width - (2 * margin), height: bottom - top)
       end
 
       # The best line's face and size, and what it says.
