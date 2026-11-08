@@ -847,3 +847,9 @@ The maintainer saw "Press B again to quit" drawn behind the Play button. It was 
 The maintainer's idea: setdef's block blinks like an old amber terminal's cursor, in time with the jingle. It lights in 0.03 s and fades in 0.1 s, like a phosphor. He wanted to see two versions before choosing, so `DOT_POPPER_SPLASH_BLINK` picks one. `notes`, the default, lights the block on each note for half the time until the next, and leaves it lit after the last. `beat` lights it for the first half of every beat at 120 beats a minute. Muted, there are no notes to follow, so both blink on the beat.
 
 **To reverse:** Drop `Splash#block`, and draw the block at `splash.mark` in `SplashPainter`.
+
+## The gamepad cursor gathers speed in 0.08 s, not 0.3 s
+
+Release-candidate players said the gamepad cursor's "friction feels like bad delay". The cause was the ramp: the cursor took 0.3 s to reach its speed, so it lagged behind the stick on every push. Swink's *Game Feel* puts "feels direct" below about 100 ms, so the ramp is now 0.08 s. Letting go already stopped the cursor dead, and the squared stick curve still handles fine aiming, so nothing else changed. The d-pad and stick go through the same path with no other smoothing.
+
+**To reverse:** Set `ramp:` back to `0.3` in `Look::GAMEPAD` (and its comment).

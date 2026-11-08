@@ -14,12 +14,12 @@ class GamepadCursorTest < Minitest::Test
   end
 
   def test_a_full_tilt_gathers_speed_over_the_ramp_and_shows_it
-    moved = @cursor.update(0.1, Stick.new(x: 1, y: 0))
+    moved = @cursor.update(0.04, Stick.new(x: 1, y: 0))
 
-    assert_in_delta 400 + (@cursor.top_speed * 0.1 * (0.1 / LOOK.ramp)), moved.x
+    assert_in_delta 400 + (@cursor.top_speed * 0.04 * (0.04 / LOOK.ramp)), moved.x
     assert_in_delta 300.0, moved.y
     assert moved.visible
-    ramped = 3.times.reduce(@cursor) { |cursor, _| cursor.update(0.1, Stick.new(x: 1, y: 0)) }
+    ramped = 2.times.reduce(@cursor) { |cursor, _| cursor.update(0.04, Stick.new(x: 1, y: 0)) }
 
     assert_in_delta 1.0, ramped.pace
     assert_in_delta ramped.x + (@cursor.top_speed * 0.1), ramped.update(0.1, Stick.new(x: 1, y: 0)).x

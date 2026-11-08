@@ -331,10 +331,10 @@ module DotPopper
       # the window corner to corner in a second, whatever the window's
       # size, and never slower than 16 R/s, nearly three times the fastest
       # dot (6 R/s), which crosses a small 24 R window in 1.5 s. It gathers
-      # that speed over 0.3 s; the squared curve leaves half a tilt at a
-      # quarter of it, for aiming. The reticle is thin and open in the
+      # that speed over 0.08 s, quick enough to feel direct; the squared
+      # curve leaves half a tilt at a quarter of it, for aiming. The reticle is thin and open in the
       # middle, so it never hides the dot under it.
-      GAMEPAD = GamepadLook.new(dead_zone: 0.2, curve: 2.0, speed: 16.0, crossing: 1.0, ramp: 0.3, trigger_press: 0.5,
+      GAMEPAD = GamepadLook.new(dead_zone: 0.2, curve: 2.0, speed: 16.0, crossing: 1.0, ramp: 0.08, trigger_press: 0.5,
                                 trigger_release: 0.3, ring: 0.3, ticks: 0.42..0.6, line: 0.04, pip: 4)
 
       PATCHES = {
