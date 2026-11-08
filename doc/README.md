@@ -83,7 +83,7 @@ The game reads these from its environment. `main.rb` lists them all.
 | `DOT_POPPER_NO_SPLASH=1` | Skips setdef's splash screen |
 | `DOT_POPPER_SAVE_AS=test` | Saves in a folder of this name, so a run starts with no records |
 | `DOT_POPPER_SEED=42` | Makes the dots' randomness repeatable |
-| `DOT_POPPER_TODAY=2026-11-07` | Plays as if it were that date, for the daily goal and its streak |
+| `DOT_POPPER_TODAY=2026-11-07` | Plays as if it were that date, for the daily goal and its streak, and for which holiday look is in season (try `2026-10-31`, `2026-12-25` or `2027-02-14` with `DOT_POPPER_PAID=1`) |
 | `DOT_POPPER_WINDOW=400x850` | Opens the window at this size, to check a narrow screen |
 | `DOT_POPPER_SHOTS=0.5,3,6.5` | Saves a screenshot at each of these seconds after start, in the save folder |
 | `DOT_POPPER_QUIT_AFTER=20` | Quits after this many seconds |
