@@ -5,8 +5,11 @@
 
   Dot Popper's copy of Lota 0.2.2's iOS Info.plist (ext/lota/phone/host/ios
   in the gem), which kits.yml lays over Lota's host in the phone project.
-  Its one change: the display name, Dot Popper, which has a space the
-  target's name cannot. Lota's notes follow.
+  Its changes: the display name, Dot Popper, which has a space the
+  target's name cannot; and NSPrincipalClass, DotPopperApplication, the
+  UIApplication in Host/main.m that shows the system's share sheet when
+  the game opens a dotpopper-share: URL. SDL_RunApp passes UIApplicationMain
+  no class of its own, so UIKit takes this one. Lota's notes follow.
 
   A Lota game's Info.plist, which fledge.yml's ios host lays over the one
   fledge build ios writes. It starts from Fledge's
@@ -53,6 +56,8 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>NSPrincipalClass</key>
+	<string>DotPopperApplication</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UILaunchScreen</key>

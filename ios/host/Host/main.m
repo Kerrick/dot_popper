@@ -14,12 +14,16 @@
 // delegate.
 //
 // Dot Popper's copy (doc/ios.md) is Lota 0.2.2's (ext/lota/phone/host/ios
-// in the gem), which kits.yml lays it over in the phone project, with one
-// addition: the colour behind SDL's view, on its window and the window's
+// in the gem), which kits.yml lays it over in the phone project, with two
+// additions. The colour behind SDL's view, on its window and the window's
 // root view, as each window becomes key: the night's ink (#0c0b22), so
 // nothing pink or white can show behind the game, or, with
 // DOT_POPPER_DIAGNOSTIC_COLORS set, pure green, so that a strip the game
-// does not cover shows as green (doc/ios.md, "Diagnostic colours").
+// does not cover shows as green (doc/ios.md, "Diagnostic colours"). And
+// the system's share sheet, for Share my score: the game opens a
+// dotpopper-share: URL (SheetSharing), and DotPopperApplication, the
+// app's UIApplication (Info.plist's NSPrincipalClass), shows the sheet
+// in its place rather than send the URL anywhere.
 // Lota's host already sets the audio session to Ambient (Info.plist's
 // LotaAudioSessionCategory) and SDL_ACCELEROMETER_AS_JOYSTICK=0.
 @import FledgeRuby;
@@ -84,6 +88,94 @@ static void watch_windows(void) {
     }];
   }
 }
+
+// The scheme the game opens to share a result, SheetSharing::SCHEME, and
+// the query item that holds the text.
+static NSString *const ShareScheme = @"dotpopper-share";
+static NSString *const ShareTextItem = @"text";
+
+// The text +url+ shares, or nil if it is not a share URL.
+static NSString *shared_text(NSURL *url) {
+  if ([url.scheme caseInsensitiveCompare:ShareScheme] != NSOrderedSame)
+    return nil;
+  NSURLComponents *parts = [NSURLComponents componentsWithURL:url resolvingAgainstBaseURL:NO];
+  for (NSURLQueryItem *item in parts.queryItems)
+    if ([item.name isEqualToString:ShareTextItem])
+      return item.value;
+  return nil;
+}
+
+// The controller on top of the key window, which presents the sheet:
+// SDL's, unless something is already over it.
+static UIViewController *top_controller(void) {
+  for (UIScene *scene in UIApplication.sharedApplication.connectedScenes) {
+    if (![scene isKindOfClass:UIWindowScene.class])
+      continue;
+    for (UIWindow *window in ((UIWindowScene *)scene).windows) {
+      if (!window.isKeyWindow)
+        continue;
+      UIViewController *top = window.rootViewController;
+      while (top.presentedViewController != nil)
+        top = top.presentedViewController;
+      return top;
+    }
+  }
+  return nil;
+}
+
+// Shows the system's share sheet for +text+ over the game, which plays on
+// behind it. A sheet already up is left as it is. On an iPad the sheet is
+// a popover, centred, with no arrow, since the game's button is not a
+// view to point at.
+static void present_share_sheet(NSString *text) {
+  UIViewController *top = top_controller();
+  if (top == nil || [top isKindOfClass:UIActivityViewController.class])
+    return;
+  UIActivityViewController *sheet = [[UIActivityViewController alloc] initWithActivityItems:@[ text ]
+                                                                      applicationActivities:nil];
+  UIPopoverPresentationController *popover = sheet.popoverPresentationController;
+  if (popover != nil) {
+    CGRect bounds = top.view.bounds;
+    popover.sourceView = top.view;
+    popover.sourceRect = CGRectMake(CGRectGetMidX(bounds), CGRectGetMidY(bounds), 0, 0);
+    popover.permittedArrowDirections = 0;
+  }
+  [top presentViewController:sheet animated:YES completion:nil];
+  os_log(app_log, "showed the share sheet");
+}
+
+// The app's UIApplication. SDL_OpenURL asks it canOpenURL: and then
+// openURL:options:completionHandler: (SDL's src/misc/ios/SDL_sysurl.m at
+// release-3.4.10), so a share URL is caught here, on the main thread the
+// game runs on, and never leaves the app: no other app is asked, nothing
+// needs registering, and the game keeps its focus. canOpenURL: answers
+// NO when there is nothing to share or nowhere to show the sheet, so the
+// game falls back on its own preview.
+@interface DotPopperApplication : UIApplication
+@end
+
+@implementation DotPopperApplication
+
+- (BOOL)canOpenURL:(NSURL *)url {
+  if (shared_text(url) != nil)
+    return top_controller() != nil;
+  return [super canOpenURL:url];
+}
+
+- (void)openURL:(NSURL *)url
+              options:(NSDictionary<UIApplicationOpenExternalURLOptionsKey, id> *)options
+    completionHandler:(void (^)(BOOL success))completion {
+  NSString *text = shared_text(url);
+  if (text == nil) {
+    [super openURL:url options:options completionHandler:completion];
+    return;
+  }
+  present_share_sheet(text);
+  if (completion != nil)
+    completion(YES);
+}
+
+@end
 
 // SDL's main function: runs the app's Ruby program on the calling thread,
 // the main thread, and logs its exit status.
