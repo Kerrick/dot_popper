@@ -4,8 +4,10 @@ module DotPopper
   module Shell
     # Draws a frame of the Show, straight to the window at its own
     # resolution: the night behind, the edge glow, the dots (tumbling
-    # into the Pile after time's up) over the Bloom's glow, the effects
-    # over them, the screen's words and HUD on top, the share preview over
+    # into the Pile after time's up) over the Bloom's glow, the rings and
+    # outlines that follow them, which after time's up are the pile's and
+    # dim with it, under Game Over's card and buttons, the numbers that
+    # float up, the screen's words and HUD on top, the share preview over
     # those when it is open, and over everything, the gamepad's cursor
     # when it shows. Only the HUD shakes. The Tutorial is drawn as a round
     # is, from its own dots and HUD, with its spotlight, hand and skip
@@ -56,8 +58,8 @@ module DotPopper
           @effects.flash(@show.effects, width, height)
           glow
           field
-          veil(width, height, @show.finale&.dim(@show.now).to_f) unless @show.playing?
           @effects.scene(@show.effects, dots)
+          veil(width, height, @show.finale&.dim(@show.now).to_f) unless @show.playing?
           @effects.words(@show.effects, layout)
           @finale.draw(@show, layout) unless @show.playing?
           lead_in = @show.lead_in
