@@ -98,7 +98,7 @@ width, height = device.fetch("screen")[/(\d+)x(\d+)\s*\z/].split("x").map(&:to_i
 adb("shell", "settings", "put", "secure", "immersive_mode_confirmations", "confirmed")
 adb("logcat", "-G", "16M", allow_failure: true)
 say adb("install", "-r", "-g", apk).lines.last.to_s.strip
-adb("logcat", "-c")
+adb("logcat", "-b", "main,system,crash,events", "-c")
 extras = envs.flat_map { |name, value| ["--es", "lota.env.#{name}", value] }
 say adb("shell", "am", "start", "-W", "-n", "#{package}/org.setdef.fledge.host.MainActivity", *extras).strip
 
@@ -175,7 +175,7 @@ loop do
   sleep 0.25
 end
 
-File.write(File.join(out, "logcat.txt"), adb("logcat", "-d", "-v", "threadtime"))
+File.write(File.join(out, "logcat.txt"), adb("logcat", "-d", "-b", "main,system,crash,events", "-v", "threadtime"))
 lines = app_lines(package)
 File.write(File.join(out, "app.txt"), lines.join("\n") + "\n")
 if pull
@@ -190,7 +190,7 @@ if pull
     end
   end
 end
-crashes = File.read(File.join(out, "logcat.txt")).lines.grep(/FATAL|Fatal signal|AndroidRuntime|DEBUG\s*:|libc\s*:/)
+crashes = File.read(File.join(out, "logcat.txt")).lines.grep(/FATAL|Fatal signal|AndroidRuntime|DEBUG\s*:|libc\s*:|SDL\s*: activity finished|wm_relaunch\w*: .*#{Regexp.escape(package)}/)
 say "crash lines:\n#{crashes.first(80).join}" unless crashes.empty?
 missing = expects.reject { |pattern| lines.any? { pattern.match?(it) } }
 missing.each { say "missing: #{it.source}" }
