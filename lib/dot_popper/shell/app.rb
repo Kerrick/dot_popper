@@ -139,7 +139,6 @@ module DotPopper
         dress
         point_the_mouse
         repeat_keys
-        follow_typing
         @tilting.update(seconds)
         fake_drag
         @dragging.move(:gamepad, @cursor.x, @cursor.y) if @pad_held.any?
@@ -299,7 +298,6 @@ module DotPopper
 
       def key_pressed(key)
         return skip_splash if @splash
-        return if @show.group_panel.editing? && @show.group_panel.key(key)
 
         return @speaker.toggle_mute if key == :m
         return @show.how_to_play if key == :h
@@ -328,9 +326,6 @@ module DotPopper
       end
 
       PRIMARY_KEYS = %i[return kpenter space].freeze
-
-      # Text the keyboard typed, for the Friend group screen's fields.
-      def text_input(text) = @show.group_panel.type(text)
 
       # The window changed size, or moved to a screen of another density.
       def resize
@@ -366,20 +361,10 @@ module DotPopper
         Presentation::Stick.rest
       end
 
-      # The system's text input, and a phone's keyboard, are on only while
-      # a Friend group field is being typed in.
-      def follow_typing
-        editing = @show.group_panel.editing?
-        return if editing == @typing
-
-        @typing = editing
-        ::Lota::Keyboard.text_input = editing
-      end
-
       # Held arrow and Page keys go on scrolling the Credits screen, which
       # is the only place the keyboard asks for repeats.
       def repeat_keys
-        reading = @show.credits? || @show.group_panel.editing?
+        reading = @show.credits?
         return if reading == @reading
 
         @reading = reading

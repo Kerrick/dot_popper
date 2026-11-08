@@ -40,7 +40,7 @@ If you know LÖVE, [Why Ruby](why_ruby.md) sets Dot Popper's code beside the Lua
 
 ## The friend-group server
 
-`server/` is a small Rack and SQLite app with its own `Gemfile`, separate from the game's. It uses the game's own `lib/dot_popper/trophy.rb` for the trophy's rules. `bundle exec rake` in that folder runs its tests, and `bundle exec rackup` runs it, keeping its data in the SQLite file `DOT_POPPER_DB` names. `bin/moderate` lists reported names and answers them.
+`server/` is a small Rack and SQLite app with its own `Gemfile`, separate from the game's. It uses the game's own `lib/dot_popper/trophy.rb` for the trophy's rules. `bundle exec rake` in that folder runs its tests, and `bundle exec rackup` runs it, keeping its data in the SQLite file `DOT_POPPER_DB` names.  It holds no names or text: a member is one of eight marks (`lib/dot_popper/groups/mark.rb`), and a group's code is seven digits.
 
 The game looks for the server at `Groups::Settings::SERVER_URL`, which is `nil` until one is deployed: with no address, no Group button appears and the game connects to nothing. Run the game with `DOT_POPPER_SERVER=http://localhost:9292` to try a local server.
 

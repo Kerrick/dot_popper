@@ -301,7 +301,7 @@ module DotPopper
       # and Copy in the share preview. In a round it does nothing, since
       # only a press at a place may touch the score.
       def primary
-        if group_open? then @groups.stop_editing
+        if group_open? then leave
         elsif sharing? then copy_result
         elsif offer? || records? then leave
         elsif title? then play

@@ -28,7 +28,7 @@ class SessionTest < Minitest::Test
   def pump = @session.update(quiet: true)
 
   def group(trophy: { "score" => 5 }, news: [])
-    { "code" => "ABC234", "trophy" => trophy, "news" => news, "members" => [] }
+    { "code" => "2345678", "trophy" => trophy, "news" => news, "members" => [{ "mark" => 4, "holder" => false, "me" => true }] }
   end
 
   def answer(status, body)
@@ -37,7 +37,7 @@ class SessionTest < Minitest::Test
   end
 
   def joined
-    @session.join("Kai", "ABC234")
+    @session.join(4, "2345678")
     pump
     answer(201, { "token" => "t", "id" => 1 })
     pump
@@ -55,8 +55,35 @@ class SessionTest < Minitest::Test
     joined
 
     assert_predicate @session, :member?
-    assert_equal "Kai", @session.name
+    assert_equal 4, @session.mark
+    assert_equal 4, new_session.mark
     assert_equal "t", new_session.token
+  end
+
+  def test_a_player_gives_the_server_only_a_token_and_a_mark
+    @session.join(4, "2345678")
+    pump
+
+    job = @worker.started.first.first
+
+    assert_equal [:player, :post, "/v1/players", {}], [job.kind, job.verb, job.path, job.body]
+    answer(201, { "token" => "t", "id" => 1 })
+    pump
+
+    assert_equal({ code: "2345678", mark: 4 }, @worker.started.first.first.body)
+    refute_respond_to @session, :name
+    refute_respond_to @session, :report
+    refute_respond_to @session, :block
+  end
+
+  def test_the_server_may_give_another_mark_when_the_one_asked_for_is_worn
+    joined
+    answer_mark = group.merge("members" => [{ "mark" => 2, "holder" => false, "me" => true }])
+    @session.refresh
+    pump
+    answer(200, { "group" => answer_mark })
+
+    assert_equal 2, @session.mark
   end
 
   def test_nothing_is_sent_while_a_round_is_in_play
@@ -148,12 +175,12 @@ class SessionTest < Minitest::Test
 
   def test_a_theft_is_told_once_even_across_launches
     joined
-    news = [{ "id" => 9, "thief" => "Sam", "score" => 12 }]
+    news = [{ "id" => 9, "thief" => 6, "score" => 12 }]
     @session.refresh
     pump
     answer(200, { "group" => group(news:) })
 
-    assert_equal ["Sam", 12], @session.next_message.then { [it.who, it.score] }
+    assert_equal [6, 12], @session.next_message.then { [it.who, it.score] }
 
     @session = new_session
     @worker.started.clear

@@ -18,10 +18,10 @@ class GroupPanelTest < Minitest::Test
   end
 
   def group(news: [], members: nil)
-    members ||= [{ "id" => 1, "name" => "Kai", "holder" => true, "blocked" => false, "me" => true },
-                 { "id" => 2, "name" => "Sam", "holder" => false, "blocked" => false, "me" => false }]
-    { "code" => "ABC234", "members" => members, "news" => news,
-      "trophy" => { "holder_id" => 1, "holder_name" => "Kai", "score" => 20, "standing" => 18, "days_held" => 2 } }
+    members ||= [{ "mark" => 0, "holder" => true, "me" => true },
+                 { "mark" => 1, "holder" => false, "me" => false }]
+    { "code" => "2345678", "members" => members, "news" => news,
+      "trophy" => { "holder_id" => 1, "holder_mark" => 0, "score" => 20, "standing" => 18, "days_held" => 2 } }
   end
 
   def setup
@@ -45,6 +45,8 @@ class GroupPanelTest < Minitest::Test
     @show.tap(reach.center_x, reach.center_y)
   end
 
+  def tap_code(digits) = digits.each_char { tap_control([:group_digit, it]) }
+
   def tick(seconds = 0.016) = @show.update(seconds)
 
   def reply(status, body)
@@ -55,10 +57,8 @@ class GroupPanelTest < Minitest::Test
   def join!(news: [])
     panel.open
     tick
-    tap_control(:group_name)
-    panel.type("Kai")
-    tap_control(:group_code)
-    panel.type("abc234")
+    tap_control([:group_mark, 3])
+    tap_code("2345678")
     tap_control(:group_join)
     tick
     reply(201, { "token" => "t", "id" => 1 })
@@ -90,20 +90,20 @@ class GroupPanelTest < Minitest::Test
     assert_kind_of DotPopper::Game::Title, @game.state
   end
 
-  def test_typing_is_uppercased_for_codes_and_limited
+  def test_a_code_is_tapped_in_digits_and_limited
     panel.open
     tick
-    tap_control(:group_code)
-    panel.type("abc234xx")
+    tap_code("234567890")
 
-    assert_equal "ABC234", panel.code
+    assert_equal "2345678", panel.code
+    tap_control(:group_erase)
+
+    assert_equal "234567", panel.code
   end
 
   def test_create_needs_paid_and_says_so
     panel.open
     tick
-    tap_control(:group_name)
-    panel.type("Kai")
     tap_control(:group_create)
 
     assert_equal GroupWords.needs_paid, panel.note
@@ -115,20 +115,20 @@ class GroupPanelTest < Minitest::Test
     build
     panel.open
     tick
-    tap_control(:group_name)
-    panel.type("Kai")
     tap_control(:group_create)
     tick
 
     assert_equal 1, @worker.started.size
   end
 
-  def test_join_needs_a_name_and_a_code
+  def test_join_needs_a_whole_code
     panel.open
     tick
+    tap_code("234")
     tap_control(:group_join)
 
-    assert_equal GroupWords.need_name, panel.note
+    assert_equal GroupWords.need_code, panel.note
+    assert_empty @worker.started
   end
 
   def test_a_member_sees_the_trophy_the_code_and_buttons_for_others
@@ -136,18 +136,48 @@ class GroupPanelTest < Minitest::Test
     plan = @show.group_plan
 
     assert(plan.lines.any? { it.text.include?("Beat 18") })
-    assert(plan.lines.any? { it.text.include?("ABC234") })
-    assert_empty plan.rows.first.actions
-    assert_equal [[:group_report, 2], [:group_block, 2]], plan.rows.last.actions.map(&:name)
+    assert_equal [0, 1], plan.rows.map(&:mark)
+    assert_equal [true, false], plan.rows.map(&:holder)
+    assert_equal [true, false], plan.rows.map(&:me)
   end
 
-  def test_blocking_sends_it_and_report_says_so
-    join!
-    tap_control([:group_report, 2])
+  def test_joining_sends_the_picked_dot_and_the_code_and_nothing_typed
+    panel.open
+    tick
+    tap_control([:group_mark, 5])
+    tap_code("2345678")
+    tap_control(:group_join)
+    tick
     tick
 
-    assert_equal "/v1/members/2/report", @worker.started.first.first.path
-    assert_equal GroupWords.reported, panel.note
+    assert_equal({}, @worker.started.first.first.body)
+    reply(201, { "token" => "t", "id" => 1 })
+    tick
+
+    assert_equal({ code: "2345678", mark: 5 }, @worker.started.first.first.body)
+  end
+
+  def test_the_door_has_no_field_for_text_and_the_screen_offers_no_report_or_block
+    panel.open
+    tick
+    names = @show.group_plan.controls.map(&:first)
+
+    assert_nil @show.group_plan.lines.find { it.text.match?(/name/i) }
+    refute_respond_to panel, :type
+    refute_respond_to panel, :editing?
+    assert_equal Array.new(8) { [:group_mark, it] }, names.select { it.is_a?(Array) && it.first == :group_mark }
+    assert_equal 10, names.count { it.is_a?(Array) && it.first == :group_digit }
+    join!
+    refute(@show.group_plan.controls.map(&:first).any? { it.to_s.match?(/report|block/) })
+  end
+
+  def test_a_theft_message_names_no_one_and_shows_the_thiefs_dot
+    join!(news: [{ "id" => 9, "thief" => 4, "score" => 21 }])
+    panel.close
+    tick
+
+    assert_equal 4, panel.banner.mark
+    assert_equal "A friend took your trophy with 21.", panel.banner.text
   end
 
   def test_leave_takes_a_long_press
@@ -175,7 +205,7 @@ class GroupPanelTest < Minitest::Test
   end
 
   def test_group_rows_fit_a_small_phones_screen_in_columns_and_above_the_floor
-    members = Array.new(8) { { "id" => it + 2, "name" => "Friend#{it}", "holder" => false, "blocked" => false, "me" => false } }
+    members = Array.new(8) { { "mark" => it, "holder" => it.zero?, "me" => it == 3 } }
     build(width: 844, height: 390)
     panel.open
     tick
@@ -187,8 +217,23 @@ class GroupPanelTest < Minitest::Test
     assert_operator plan.rows.map { it.rect.x }.uniq.size, :>, 1
   end
 
+  def test_the_door_fits_every_size_with_nothing_overlapping
+    [[1200, 800], [800, 600], [800, 500], [400, 850], [850, 400], [844, 390]].each do |width, height|
+      build(width:, height:)
+      panel.open
+      tick
+      plan = @show.group_plan
+      rects = plan.actions.map(&:rect) + [plan.code_box]
+      body = rects - [@show.layout.back_button, @show.layout.clear_records_button]
+
+      assert(body.all? { it.bottom <= @show.layout.records_floor && it.x >= 0 && it.right <= width }, "inside at #{width}x#{height}")
+      assert(rects.combination(2).none? { |a, b| a.x < b.right - 0.5 && b.x < a.right - 0.5 && a.y < b.bottom - 0.5 && b.y < a.bottom - 0.5 }, "no overlap at #{width}x#{height}")
+      assert(plan.actions.select { it.name.is_a?(Array) }.all? { it.rect.width >= 30 && it.rect.height >= 30 }, "pressable at #{width}x#{height}")
+    end
+  end
+
   def test_a_message_waits_for_launch_or_game_over_and_shows_once
-    join!(news: [{ "id" => 9, "thief" => "Sam", "score" => 21 }])
+    join!(news: [{ "id" => 9, "thief" => 1, "score" => 21 }])
     tick
 
     assert_nil panel.banner, "not while the group screen covers it"
@@ -196,7 +241,7 @@ class GroupPanelTest < Minitest::Test
     panel.close
     tick
 
-    assert_includes panel.banner.text, "Sam took your trophy"
+    assert_includes panel.banner.text, "took your trophy"
     tick(8.0)
 
     assert_nil panel.banner

@@ -29,7 +29,7 @@ module DotPopper
       # The Session for a game whose server is at +url+, or Session.off.
       def self.at(url, store:) = url ? new(store:, worker: Worker.new(Link.new(url))) : off
 
-      attr_reader :group, :error, :token, :name
+      attr_reader :group, :error, :token, :mark
 
       def initialize(store:, worker:, clock: -> { Time.now }, available: true)
         @store = store
@@ -55,13 +55,12 @@ module DotPopper
       # a token there is nothing to look up and nothing is sent.
       def refresh = known? ? ask(Job.new(kind: :group, verb: :get, path: "/v1/group")) : nil
 
-      def create(name) = as_player(name, Job.new(kind: :group, verb: :post, path: "/v1/groups", body: {}))
-      def join(name, code) = as_player(name, Job.new(kind: :group, verb: :post, path: "/v1/groups/join", body: { code: }))
+      # Makes a group, or joins the one with +code+ (digits), wearing +mark+
+      # (Groups::Mark) if no one there does, else the first that is free.
+      def create(mark) = as_player(Job.new(kind: :group, verb: :post, path: "/v1/groups", body: { mark: }))
+      def join(mark, code) = as_player(Job.new(kind: :group, verb: :post, path: "/v1/groups/join", body: { code:, mark: }))
       def leave = ask(Job.new(kind: :left, verb: :delete, path: "/v1/groups/mine"))
       def delete_everything = ask(Job.new(kind: :deleted, verb: :delete, path: "/v1/players/me"))
-      def block(id) = member_action(id, :post, "block")
-      def unblock(id) = member_action(id, :delete, "block")
-      def report(id) = member_action(id, :post, "report")
 
       # A round just ended. Only one played by a member, with dots sized
       # to the screen, counts; if it cannot be sent now, the best such
@@ -103,19 +102,13 @@ module DotPopper
         nil
       end
 
-      # Makes +job+ on behalf of a player called +name+, making them
-      # known to the server first if they are not, or telling it a new
-      # name if it has changed.
-      def as_player(name, job)
+      # Makes +job+ on behalf of this player, making them known to the
+      # server first if they are not. A player is only a token: they give
+      # the server no name or anything else.
+      def as_player(job)
         @error = nil
-        @wanted_name = name
-        if !known? then ask(Job.new(kind: :player, verb: :post, path: "/v1/players", body: { name: }, then: job))
-        elsif name != @name then ask(Job.new(kind: :renamed, verb: :put, path: "/v1/players/me", body: { name: }, then: job))
-        else ask(job)
-        end
+        known? ? ask(job) : ask(Job.new(kind: :player, verb: :post, path: "/v1/players", body: {}, then: job))
       end
-
-      def member_action(id, verb, what) = ask(Job.new(kind: :group, verb:, path: "/v1/members/#{id}/#{what}"))
 
       def send_pending
         return unless @pending && belongs?
@@ -144,7 +137,6 @@ module DotPopper
       def apply(job, reply)
         case job.kind
         when :player then adopt(reply.body)
-        when :renamed then keep_name
         when :group then look_at(reply.body["group"])
         when :left then look_at(nil)
         when :deleted then forget_identity
@@ -154,11 +146,6 @@ module DotPopper
 
       def adopt(body)
         @token = body["token"]
-        keep_name
-      end
-
-      def keep_name
-        @name = @wanted_name
         save
       end
 
@@ -167,6 +154,9 @@ module DotPopper
         remember_membership(!group.nil?)
         return unless group
 
+        wearing = group["members"].find { it["me"] }
+        remember_mark(wearing["mark"]) if wearing
+
         group["news"].reject { @told.include?(it["id"]) }.each do |news|
           next if @messages.any? { it.id == news["id"] }
 
@@ -174,6 +164,13 @@ module DotPopper
         end
         drop_stale_pending
         send_pending
+      end
+
+      def remember_mark(mark)
+        return if @mark == mark
+
+        @mark = mark
+        save
       end
 
       def remember_membership(member)
@@ -207,7 +204,7 @@ module DotPopper
 
       def forget_identity
         @token = nil
-        @name = nil
+        @mark = nil
         @group = nil
         @was_member = false
         @pending = nil
@@ -218,19 +215,20 @@ module DotPopper
 
       def today = Trophy.day(@clock.call)
 
-      # Saved one per line: token, name, unsent score and its day, and
+      # Saved one per line: token, mark, unsent score and its day, and
       # the thefts already told, and whether they were last in a group.
       def load_saved
-        token, name, pending, told, member = @store.read.to_s.split("\n", -1)
+        token, mark, pending, told, member = @store.read.to_s.split("\n", -1)
         @token = token unless token.to_s.empty?
-        @name = name unless name.to_s.empty?
+        @mark = Integer(mark, exception: false)
+        @mark = nil unless Mark.valid?(@mark)
         @pending, @pending_day = pending.to_s.split.map(&:to_i)
         @told = told.to_s.split.map(&:to_i)
         @was_member = member == "1"
       end
 
       def save
-        @store.write([@token.to_s, @name.to_s, (@pending ? "#{@pending} #{@pending_day}" : ""), @told.join(" "), (@was_member ? "1" : "")].join("\n"))
+        @store.write([@token.to_s, @mark.to_s, (@pending ? "#{@pending} #{@pending_day}" : ""), @told.join(" "), (@was_member ? "1" : "")].join("\n"))
       end
     end
   end

@@ -6,22 +6,22 @@ require "sqlite3"
 
 module DotPopperServer
   # Everything the server keeps, in one SQLite file: players by a hash of
-  # their token, their one group each, the groups' trophies, thefts not
-  # yet told, blocks, and reports. A player's deletion takes all of it
-  # with them. SQLite takes one writer at a time, and the monitor keeps a
+  # their token, their one group each and the mark they wear in it, the
+  # groups' trophies, and thefts not yet told. There is no name, no text,
+  # nothing a player supplies: a member is only a mark, chosen from
+  # DotPopper::Groups::Mark. A player's deletion takes all of it with them.
+  # SQLite takes one writer at a time, and the monitor keeps a
   # connection's transactions from interleaving across threads.
   class Store
-    MAX_MEMBERS = 8
-    CODE_LETTERS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
-    CODE_LENGTH = 6
+    MAX_MEMBERS = DotPopper::Groups::Mark::COUNT
+    CODE_DIGITS = "0123456789"
+    CODE_LENGTH = 7
     JOIN_TRIES_AN_HOUR = 20
-    REPORTS_TO_HIDE = 2
     SECONDS_AN_HOUR = 3600
 
     SCHEMA = <<~SQL
       CREATE TABLE IF NOT EXISTS players (
-        id INTEGER PRIMARY KEY, token_hash TEXT NOT NULL UNIQUE, name TEXT NOT NULL,
-        name_hidden INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL
+        id INTEGER PRIMARY KEY, token_hash TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL
       );
       CREATE TABLE IF NOT EXISTS groups (
         id INTEGER PRIMARY KEY, code TEXT NOT NULL UNIQUE, holder_id INTEGER REFERENCES players(id) ON DELETE SET NULL,
@@ -29,24 +29,14 @@ module DotPopperServer
       );
       CREATE TABLE IF NOT EXISTS members (
         player_id INTEGER PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
-        group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE
+        group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+        mark INTEGER NOT NULL, UNIQUE (group_id, mark)
       );
       CREATE TABLE IF NOT EXISTS thefts (
         id INTEGER PRIMARY KEY, group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
         thief_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
         victim_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE, score INTEGER NOT NULL,
         seen INTEGER NOT NULL DEFAULT 0
-      );
-      CREATE TABLE IF NOT EXISTS blocks (
-        blocker_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-        blocked_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-        PRIMARY KEY (blocker_id, blocked_id)
-      );
-      CREATE TABLE IF NOT EXISTS reports (
-        reporter_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-        reported_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-        name TEXT NOT NULL, at INTEGER NOT NULL, handled INTEGER NOT NULL DEFAULT 0,
-        PRIMARY KEY (reporter_id, reported_id)
       );
       CREATE TABLE IF NOT EXISTS join_tries (player_id INTEGER NOT NULL, at INTEGER NOT NULL);
       CREATE INDEX IF NOT EXISTS join_tries_by_player ON join_tries (player_id, at);
@@ -75,11 +65,10 @@ module DotPopperServer
 
     def today = DotPopper::Trophy.day(@clock.call)
 
-    def create_player(name)
+    def create_player
       token = SecureRandom.hex(32)
       @lock.synchronize do
-        @db.execute("INSERT INTO players (token_hash, name, created_at) VALUES (?, ?, ?)",
-                    [hash_of(token), name, @clock.call.to_i])
+        @db.execute("INSERT INTO players (token_hash, created_at) VALUES (?, ?)", [hash_of(token), @clock.call.to_i])
         { id: @db.last_insert_row_id, token: }
       end
     end
@@ -91,11 +80,9 @@ module DotPopperServer
       @lock.synchronize { @db.get_first_row("SELECT * FROM players WHERE token_hash = ?", [hash_of(token)]) }
     end
 
-    def rename(player_id, name) = write("UPDATE players SET name = ? WHERE id = ?", [name, player_id])
-
-    # Deletes the player and everything about them: their membership,
-    # thefts they took part in, blocks, and reports by or about them. A
-    # trophy they held falls vacant, and a group left with nobody goes.
+    # Deletes the player and everything about them: their membership and
+    # the thefts they took part in. A trophy they held falls vacant, and a
+    # group left with nobody goes.
     def delete_player(player_id)
       transaction do
         group_id = group_id_of(player_id)
@@ -104,32 +91,35 @@ module DotPopperServer
       end
     end
 
-    def create_group(player_id)
+    # A new group with this player in it, wearing +mark+ (any member's
+    # first is free, so it is theirs if it is a mark at all).
+    def create_group(player_id, mark = nil)
       transaction do
         refuse!("already_in_group", 409) if group_id_of(player_id)
         @db.execute("INSERT INTO groups (code) VALUES (?)", [fresh_code])
-        @db.execute("INSERT INTO members (player_id, group_id) VALUES (?, ?)", [player_id, @db.last_insert_row_id])
+        add_member(player_id, @db.last_insert_row_id, mark)
         view(player_id)
       end
     end
 
     # A try counts whether or not the code turns out right, so it is
-    # written before the transaction that a wrong code rolls back.
-    def join_group(player_id, code)
+    # written before the transaction that a wrong code rolls back. The
+    # player wears +mark+ if no one in the group does, or else the first
+    # mark that is free.
+    def join_group(player_id, code, mark = nil)
       @lock.synchronize { limit_tries(player_id) }
       transaction do
         refuse!("already_in_group", 409) if group_id_of(player_id)
         group = @db.get_first_row("SELECT id FROM groups WHERE code = ?", [normalize_code(code)])
         refuse!("no_such_group", 404) unless group
         refuse!("group_full", 409) if count_members(group["id"]) >= MAX_MEMBERS
-        @db.execute("INSERT INTO members (player_id, group_id) VALUES (?, ?)", [player_id, group["id"]])
+        add_member(player_id, group["id"], mark)
         view(player_id)
       end
     end
 
-    # Leaving keeps the player's name for any other device but takes them
-    # out of the group, gives up a trophy they held, and forgets any
-    # thefts told to or by them there.
+    # Leaving takes the player out of the group, gives up a trophy they
+    # held, and forgets any thefts told to or by them there.
     def leave_group(player_id)
       transaction do
         group_id = group_id_of(player_id) or refuse!("not_in_group", 404)
@@ -148,12 +138,11 @@ module DotPopperServer
         group_id = group_id_of(player_id) or return nil
         group = @db.get_first_row("SELECT * FROM groups WHERE id = ?", [group_id])
         trophy = trophy_of(group)
-        blocked = blocked_by(player_id)
-        members = @db.execute(<<~SQL, [group_id]).map { member_view(it, trophy, blocked, player_id) }
-          SELECT players.* FROM players JOIN members ON members.player_id = players.id
-          WHERE members.group_id = ? ORDER BY players.id
+        members = @db.execute(<<~SQL, [group_id]).map { member_view(it, trophy, player_id) }
+          SELECT players.id, members.mark FROM players JOIN members ON members.player_id = players.id
+          WHERE members.group_id = ? ORDER BY members.mark
         SQL
-        { code: group["code"], members:, trophy: trophy_view(trophy, members), news: news_for(player_id, blocked) }
+        { code: group["code"], members:, trophy: trophy_view(trophy, members), news: news_for(player_id) }
       end
     end
 
@@ -176,48 +165,6 @@ module DotPopperServer
 
       marks = (["?"] * ids.size).join(", ")
       write("UPDATE thefts SET seen = 1 WHERE victim_id = ? AND id IN (#{marks})", [player_id, *ids])
-    end
-
-    def block(blocker_id, blocked_id)
-      with_member(blocker_id, blocked_id) do
-        @db.execute("INSERT OR IGNORE INTO blocks (blocker_id, blocked_id) VALUES (?, ?)", [blocker_id, blocked_id])
-      end
-    end
-
-    def unblock(blocker_id, blocked_id)
-      write("DELETE FROM blocks WHERE blocker_id = ? AND blocked_id = ?", [blocker_id, blocked_id])
-    end
-
-    # Records a report of a member's name and blocks them for the reporter
-    # at once. Reports from REPORTS_TO_HIDE people hide the name from
-    # everyone straight away, so an offensive name goes before anyone has
-    # to look at the queue; see #reports and bin/moderate.
-    def report(reporter_id, reported_id)
-      with_member(reporter_id, reported_id) do
-        name = @db.get_first_value("SELECT name FROM players WHERE id = ?", [reported_id])
-        @db.execute("INSERT OR IGNORE INTO reports (reporter_id, reported_id, name, at) VALUES (?, ?, ?, ?)",
-                    [reporter_id, reported_id, name, @clock.call.to_i])
-        @db.execute("INSERT OR IGNORE INTO blocks (blocker_id, blocked_id) VALUES (?, ?)", [reporter_id, reported_id])
-        count = @db.get_first_value("SELECT COUNT(*) FROM reports WHERE reported_id = ? AND handled = 0", [reported_id])
-        @db.execute("UPDATE players SET name_hidden = 1 WHERE id = ?", [reported_id]) if count >= REPORTS_TO_HIDE
-      end
-    end
-
-    # The reports nobody has handled yet, oldest first.
-    def reports
-      @lock.synchronize do
-        @db.execute("SELECT reported_id, name, COUNT(*) AS reports, MIN(at) AS first_at FROM reports " \
-                    "WHERE handled = 0 GROUP BY reported_id ORDER BY first_at")
-      end
-    end
-
-    # A moderator's answer to a report: +hide+ takes the name away from
-    # everyone, and leaving it marks the reports handled.
-    def handle_report(reported_id, hide:)
-      transaction do
-        @db.execute("UPDATE players SET name_hidden = ? WHERE id = ?", [hide ? 1 : 0, reported_id])
-        @db.execute("UPDATE reports SET handled = 1 WHERE reported_id = ?", [reported_id])
-      end
     end
 
     private
@@ -244,12 +191,20 @@ module DotPopperServer
 
     def refuse!(reason, status) = raise(Refused.new(reason, status))
 
-    def with_member(player_id, other_id)
-      transaction do
-        group_id = group_id_of(player_id)
-        refuse!("not_in_group", 404) unless group_id && group_id == group_id_of(other_id) && player_id != other_id
-        yield
-      end
+    def add_member(player_id, group_id, wanted)
+      @db.execute("INSERT INTO members (player_id, group_id, mark) VALUES (?, ?, ?)",
+                  [player_id, group_id, mark_for(group_id, wanted)])
+    end
+
+    # +wanted+ if it is a mark and no one in the group wears it, else the
+    # first mark that is free. Anything that is not a mark is refused,
+    # never kept or shown.
+    def mark_for(group_id, wanted)
+      refuse!("bad_mark", 422) unless wanted.nil? || DotPopper::Groups::Mark.valid?(wanted)
+      taken = @db.execute("SELECT mark FROM members WHERE group_id = ?", [group_id]).map { it["mark"] }
+      return wanted if wanted && !taken.include?(wanted)
+
+      DotPopper::Groups::Mark.free(taken) or refuse!("group_full", 409)
     end
 
     def limit_tries(player_id)
@@ -262,12 +217,12 @@ module DotPopperServer
 
     def fresh_code
       loop do
-        code = Array.new(CODE_LENGTH) { CODE_LETTERS[SecureRandom.random_number(CODE_LETTERS.size)] }.join
+        code = Array.new(CODE_LENGTH) { CODE_DIGITS[SecureRandom.random_number(CODE_DIGITS.size)] }.join
         return code unless @db.get_first_value("SELECT 1 FROM groups WHERE code = ?", [code])
       end
     end
 
-    def normalize_code(code) = code.to_s.upcase.gsub(/[^A-Z0-9]/, "")
+    def normalize_code(code) = code.to_s.gsub(/[^0-9]/, "")
 
     def trophy_of(group)
       return DotPopper::Trophy.vacant unless group["holder_id"]
@@ -285,41 +240,25 @@ module DotPopperServer
                   [group_id, player_id, trophy.holder, score])
     end
 
-    def blocked_by(player_id)
-      @db.execute("SELECT blocked_id FROM blocks WHERE blocker_id = ?", [player_id]).map { it["blocked_id"] }
-    end
-
-    def shown_name(row, blocked)
-      return "Someone" if blocked.include?(row["id"])
-      return "Player #{row["id"] % 1000}" if row["name_hidden"] == 1
-
-      row["name"]
-    end
-
-    def member_view(row, trophy, blocked, viewer)
-      { id: row["id"], name: shown_name(row, blocked), holder: row["id"] == trophy.holder,
-        blocked: blocked.include?(row["id"]), me: row["id"] == viewer }
+    def member_view(row, trophy, viewer)
+      { mark: row["mark"], holder: row["id"] == trophy.holder, me: row["id"] == viewer }
     end
 
     def trophy_view(trophy, members)
       holder = members.find { it[:holder] }
-      { holder_id: trophy.holder, holder_name: holder && holder[:name], score: trophy.score,
+      { holder_id: trophy.holder, holder_mark: holder && holder[:mark], score: trophy.score,
         standing: trophy.standing(today), days_held: trophy.days_held(today) }
     end
 
-    # The thefts not yet told to +player_id+, by anyone they have not
-    # blocked: one message per theft, and only to the one it was taken
-    # from.
-    def news_for(player_id, blocked)
+    # The thefts not yet told to +player_id+: one message per theft, and
+    # only to the one it was taken from. The thief is known by their mark.
+    def news_for(player_id)
       rows = @db.execute(<<~SQL, [player_id])
-        SELECT thefts.id, thefts.score, thefts.thief_id, players.name, players.name_hidden, players.id AS pid
-        FROM thefts JOIN players ON players.id = thefts.thief_id
+        SELECT thefts.id, thefts.score, members.mark
+        FROM thefts JOIN members ON members.player_id = thefts.thief_id AND members.group_id = thefts.group_id
         WHERE thefts.victim_id = ? AND thefts.seen = 0 ORDER BY thefts.id
       SQL
-      rows.reject { blocked.include?(it["thief_id"]) }.map do |row|
-        { id: row["id"], thief: shown_name({ "id" => row["pid"], "name" => row["name"], "name_hidden" => row["name_hidden"] }, blocked),
-          score: row["score"] }
-      end
+      rows.map { { id: it["id"], thief: it["mark"], score: it["score"] } }
     end
   end
 end

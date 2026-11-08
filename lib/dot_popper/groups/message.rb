@@ -2,7 +2,8 @@
 
 module DotPopper
   module Groups
-    # One thing to tell the player, once: :stolen when +who+ took their
+    # One thing to tell the player, once: :stolen when the member wearing
+    # mark +who+ (Groups::Mark) took their
     # trophy with +score+, or :taken when this player took it. +id+ is
     # the theft the server should stop telling them of, or nil.
     class Message < Data.define(:kind, :who, :score, :id)
