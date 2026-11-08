@@ -16,8 +16,8 @@ module DotPopper
       G = ::Lota::Graphics
       SEGMENTS = 64
 
-      def draw(stack, animations, now, radius, opacity: 1.0)
-        paint { stack.bottom_up.each { |dot| one(dot.x, dot.y, radius, animations.pose(dot, now), opacity) } }
+      def draw(stack, animations, now, radius)
+        paint { stack.bottom_up.each { |dot| one(dot.x, dot.y, radius, animations.pose(dot, now), 1.0) } }
       end
 
       # What of the dots glows, for Bloom: the fresh dots alone. The glow

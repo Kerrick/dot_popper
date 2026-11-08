@@ -699,6 +699,8 @@ Each of the last 20 scores now keeps the size class it was played in (`LifetimeS
 
 ### The words name the press the player is making
 
+*Later: the legend, the stacking lesson and the pile hint have no words now (see "The title's legend is the tutorial's signs, not sentences" and the entries after it). The buttons still name a gamepad's, and the tutorial's guide is drawn as the hand in use.*
+
 Every line that says what to do follows the input the player used last (`Presentation::InputKind`, which `Show#input=` sets from each `Tap` that `InputRouter` makes and from each gamepad button or stick push). With a finger the line says "Tap", with a mouse it says "Click", and with a gamepad it names the button: "Press A to play", "Press A to continue", and "Press B to go back". The title's legend says "Pop a bright dot" and "Hit a popped dot" with a gamepad, because "Press A on a bright dot" reads worse. The stacking lesson ends "then pop it". Game Over's hint says "Hold A on a dot to drag it, or push the right stick to roll them." Phones and tablets start out with touch, and computers start out with the mouse. `Words#for(kind)` gives the words for one kind of input. Each phrase that varies is a `ByInput`, so painters read `words.play` as before.
 
 The words that count mistakes are now the same for every input: "2 mistakes" in the round's summary, the shared result, and the Records screen, and "without a mistake" in the daily goals. A total over a lifetime of rounds may mix taps and clicks, so it shouldn't name either.
