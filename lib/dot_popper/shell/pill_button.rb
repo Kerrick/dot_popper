@@ -9,6 +9,7 @@ module DotPopper
     # its backing and outline brighten.
     class PillButton < Data.define(:pen)
       G = ::Lota::Graphics
+      LABEL = 0.4 # the word's size, in the button's height
 
       def draw(rect, text, alpha: 1.0, color: pen.palette.cream, hover: 0.0)
         return if alpha <= 0.0
@@ -40,7 +41,7 @@ module DotPopper
       private
 
       def fit(text, room, height)
-        size = (height * 0.4).round
+        size = (height * LABEL).round
         size -= 1 while size > 10 && pen.fonts.semibold(size).width(text) > room
         pen.fonts.semibold(size)
       end

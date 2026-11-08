@@ -116,11 +116,17 @@ class ScreenPlansTest < Minitest::Test
     measure = RoughMeasure.new
     size = plan.size(:message)
     height = measure.height(:semibold, size)
-    room = plan[:message].width - (2 * plan.bubble)
-    plan.lines.each do |line|
-      wide = ShareGlyphs.width(line, height) { measure.width(:semibold, size, it) }
-      assert_operator wide, :<=, room + 1e-6, "#{name}: #{line}"
+    room = plan[:message].width - (2 * plan.side)
+    wides = plan.lines.map do |line|
+      ShareGlyphs.width(line, height) { measure.width(:semibold, size, it) }.tap do |wide|
+        assert_operator wide, :<=, room + 1e-6, "#{name}: #{line}"
+      end
     end
+    # The widest line has the same padding at its right as at its left,
+    # unless the buttons below are what the bubble is as wide as.
+    spare = room - wides.max
+    buttons = plan.copy.right - plan.close.x
+    assert_operator [spare.abs, plan[:message].width - buttons].min, :<=, 1e-6, "#{name}: even side padding"
   end
 
   def test_short_of_room_the_title_lets_the_streak_go_before_the_goal_and_the_best

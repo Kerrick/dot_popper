@@ -9,8 +9,8 @@ module DotPopper
     # is set in; the message broken into +lines+ that fit across it; the
     # +card+ behind them all; the +close+ and +copy+ buttons, side by side
     # in the buttons row, Copy on the right; and the +bubble+'s padding
-    # around the message's lines.
-    class SharePlan < Data.define(:placed, :sizes, :lines, :card, :close, :copy, :bubble)
+    # around the message's lines (and +side+ at its sides).
+    class SharePlan < Data.define(:placed, :sizes, :lines, :card, :close, :copy, :bubble, :side)
       def [](name) = placed[name]
       def size(name) = sizes.fetch(name)
     end
@@ -29,13 +29,14 @@ module DotPopper
       LINE = 1.2 # the message's lines apart, in a line's height
       BUTTON = 3.4 # Close's and Copy's widest, in their height
       FACTS = " · " # what sets the round's facts apart in their line
+      SIDE = 1.5 # the bubble's side padding, in its padding above
       KEEP = " " # a space no line breaks at
 
       def plan
         placed = Column.new(room:).fit(layout.type_scales) { blocks(sizes(it), it) }
         sizes = sizes(placed.scale)
         close, copy = buttons(placed[:buttons])
-        SharePlan.new(placed:, sizes:, lines: wrapped(sizes[:message]), card: card(placed), close:, copy:, bubble:)
+        SharePlan.new(placed:, sizes:, lines: wrapped(sizes[:message]), card: card(placed), close:, copy:, bubble:, side:)
       end
 
       # The card's inside, from a margin and its padding inside the safe
@@ -49,6 +50,11 @@ module DotPopper
 
       # The message bubble's padding around its lines.
       def bubble = look.bubble * layout.ui
+
+      # The message bubble's padding at its left and right: roomier than
+      # above and below, since a line's last letter has no more to its
+      # right than the line above has.
+      def side = bubble * SIDE
 
       private
 
@@ -72,7 +78,7 @@ module DotPopper
         height = measure.height(:semibold, size)
         widest = wrapped(size).map { |line| ShareGlyphs.width(line, height) { measure.width(:semibold, size, it) } }.max
         buttons = (layout.button_size * BUTTON * 2) + layout.margin
-        [[widest + (2 * bubble), buttons].max, room.width].min
+        [[widest + (2 * side), buttons].max, room.width].min
       end
 
       # What Copy does, or, with a check before it, that it has.
@@ -96,7 +102,7 @@ module DotPopper
       # line of facts set apart by " · " breaks only after a "·", so "1
       # mistake" stays whole.
       def wrapped(size)
-        across = room.width - (2 * bubble)
+        across = room.width - (2 * side)
         height = measure.height(:semibold, size)
         lines.flat_map do |line|
           kept = line.include?(FACTS) ? line.split(FACTS).map { it.tr(" ", KEEP) }.join("#{KEEP}· ") : line

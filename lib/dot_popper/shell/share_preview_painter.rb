@@ -26,7 +26,8 @@ module DotPopper
           message(show, plan, shown)
           note(show, plan, preview.confirmation(now, look), shown)
           PillButton.new(pen:).draw(plan.close, show.words.close, alpha: shown, hover: show.hover.level(:close))
-          PrimaryButton.new(pen:).draw(plan.copy, show.words.copy, alpha: shown, hover: show.hover.level(:copy))
+          PrimaryButton.new(pen:).draw(plan.copy, show.words.copy, alpha: shown, hover: show.hover.level(:copy),
+                                         ratio: PillButton::LABEL)
         end
       end
 
@@ -68,7 +69,7 @@ module DotPopper
         font = pen.fonts.semibold(plan.size(:message))
         step = font.height * Presentation::ShareScreen::LINE
         plan.lines.each_with_index do |line, i|
-          runs(line, font, x + bubble, y + bubble + (font.height / 2.0) + (step * i), alpha)
+          runs(line, font, x + plan.side, y + bubble + (font.height / 2.0) + (step * i), alpha)
         end
       end
 

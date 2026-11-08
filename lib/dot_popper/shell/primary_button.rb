@@ -10,8 +10,9 @@ module DotPopper
     # dot's light, and outlines it in cream.
     class PrimaryButton < Data.define(:pen)
       G = ::Lota::Graphics
+      LABEL = 0.36 # the word's size, in the button's height
 
-      def draw(rect, text, alpha: 1.0, hover: 0.0)
+      def draw(rect, text, alpha: 1.0, hover: 0.0, ratio: LABEL)
         return if alpha <= 0.0
 
         palette = pen.palette
@@ -23,7 +24,7 @@ module DotPopper
         pen.color(palette.fresh_body.mix(palette.fresh_light, 0.15 + (0.45 * hover)), alpha)
         G.rectangle(:fill, x, y, width, height, corner, corner, 48)
         edge(x, y, width, height, corner, alpha, hover)
-        font = fit(text, width - height, height)
+        font = fit(text, width - height, height, ratio)
         pen.text(text, font, x + (width / 2.0), y + (height / 2.0), palette.ink_bottom, alpha)
       end
 
@@ -40,8 +41,8 @@ module DotPopper
 
       # The word in bold, as big as a third of the button's height allows,
       # shrunk by whole sizes until it fits.
-      def fit(text, room, height)
-        size = [(height * 0.36).round, 40].min
+      def fit(text, room, height, ratio)
+        size = [(height * ratio).round, 40].min
         size -= 1 while size > 12 && pen.fonts.bold(size).width(text) > room
         pen.fonts.bold(size)
       end
