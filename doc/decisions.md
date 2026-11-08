@@ -1118,3 +1118,11 @@ In the tutorial, a tap on a bright dot no longer turns it into a popped dot, wit
 **Why:** `Vibrator.vibrate` asks the system's vibrator service and waits for its answer: 1 to 5.5 ms a pop on the Nord, so at 120 Hz nearly every pop cost a frame. Handed to its own thread, it costs the game's thread nothing measurable, and the buzz still starts within a millisecond or two.
 
 **To reverse:** Call `vibrator.vibrate` directly in `vibrate` again.
+
+## The title and Game Over are laid out again only when they change
+
+`Show#title_plan` and `#finale_plan` keep the last plan of each kind and lay out again only when the screen (`TitleScreen` or `FinaleScreen`, values) differs from the last one.
+
+**Why:** Laying out the title measures every line at every size it tries, about 0.7 to 1 ms on the Nord, and a frame asks for the plan more than once (to draw, and for the buttons a tap or the mouse can reach). It changes only when the window, the words, or the records do.
+
+**To reverse:** Make both methods return `screen.plan` directly.

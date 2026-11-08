@@ -345,6 +345,29 @@ class ShowTest < Minitest::Test
     assert_equal play, @show.send(:title_plan).play_button
   end
 
+  # Laying the title out took a millisecond a frame on a phone, twice a
+  # frame; it is laid out again only when something on it changes.
+  def test_the_title_is_laid_out_again_only_when_it_changes
+    plan = @show.title_plan
+
+    assert_same plan, @show.title_plan
+    finish_round
+
+    refute_same plan, @show.title_plan, "a played round brings the records and the goal"
+    assert_same @show.title_plan, @show.title_plan
+    wider = @show.title_plan
+    @show.resize(layout(400, 850), field(400, 850))
+
+    refute_equal wider.play_button, @show.title_plan.play_button
+  end
+
+  def test_game_over_is_laid_out_again_only_when_it_changes
+    finish_round(back_to_title: false)
+    plan = @show.finale_plan
+
+    assert_same plan, @show.finale_plan
+  end
+
   # The maintainer, on a controller alone, couldn't find how to quit. B
   # on the title asks, and a second B within two seconds quits.
   def test_b_twice_on_the_title_quits_and_once_only_asks

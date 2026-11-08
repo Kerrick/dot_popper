@@ -42,6 +42,7 @@ module DotPopper
         @lead_in = nil
         @notices = notices
         @measure = measure
+        @plans = {}
         @lifetime = lifetime
         @layout = layout
         @sounds = sounds
@@ -518,14 +519,25 @@ module DotPopper
       # Dot size choice beside it never moves or resizes it.
       def title_plan
         goal = lifetime.goal_done? ? words.goal_done_line(lifetime.goal) : words.goal(lifetime.goal) if played?
-        TitleScreen.new(layout:, type: look::TYPE, words:, measure: @measure, best: marquee.best, goal:,
-                        done: lifetime.goal_done?, streak: lifetime.streak, records: records_offered?,
-                        sizing: sizing_offered?, radius: DotSize.fitted(layout.width, layout.height).radius).plan
+        planned(TitleScreen.new(layout:, type: look::TYPE, words:, measure: @measure, best: marquee.best, goal:,
+                                done: lifetime.goal_done?, streak: lifetime.streak, records: records_offered?,
+                                sizing: sizing_offered?, radius: DotSize.fitted(layout.width, layout.height).radius))
       end
 
       # Where Game Over's words and "Share my score" go (FinalePlan), or
       # nil away from Game Over.
-      def finale_plan = finale_screen&.plan
+      def finale_plan = finale_screen&.then { planned(it) }
+
+      # The plan of +screen+ (a TitleScreen or a FinaleScreen), laid out
+      # again only when the screen differs from the last of its kind, since
+      # laying one out measures every line, a millisecond a frame on a
+      # phone, and each frame asks for it more than once.
+      def planned(screen)
+        last = @plans[screen.class]
+        return last.last if last&.first == screen
+
+        (@plans[screen.class] = [screen, screen.plan]).last
+      end
 
       # Game Over's words to lay out (FinaleScreen), or nil away from it.
       def finale_screen
