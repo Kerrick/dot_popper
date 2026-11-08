@@ -1102,3 +1102,19 @@ In the tutorial, a tap on a bright dot no longer turns it into a popped dot, wit
 **Why:** On the maintainer's OnePlus Nord (OpenGL ES, 60 Hz) every frame reached the screen 16.7 ms after the last (SurfaceFlinger's frame times), yet Lota's `dt` swung 7.5 ms, 25 ms, 7.5 ms, and so on: 52 to 67 of every 300 frames measured over 20 ms, and the longest in each 5 s 26 to 28 ms. So the dots moved unevenly on an even screen, which is the "not buttery smooth" he felt. Lota steps its timer before it clears the screen, and on Android the clear is where a frame waits for a free buffer, a wait that ends in step with the screen, but after the timer has been read. A frame starts to draw right after that wait, so the time between draws is even: stepping the timer after the clear instead gave 0 to 3 frames over 20 ms in 300, the longest 20 to 22 ms. Measuring between draws gets the same in the game's own code, through `Lota::Timer.time`, without replacing Lota's loop.
 
 **To reverse:** Make `Lota.update` in main.rb call `@app.update(dt)` again. Do that once Lota's own loop steps the timer after the clear, or paces frames by when they are shown.
+
+## On Android, the game asks for the screen's fastest refresh rate
+
+`MainActivity.preferFastestRefresh` sets the window's `preferredDisplayModeId` to the fastest mode at the screen's present resolution. On the Nord that is 120 Hz, where OxygenOS otherwise holds a game's SurfaceView at 60 (its `overrideWindowRefreshRate` puts every SurfaceView app it doesn't list at 60), and the game, drawing with vsync, then draws 120 frames a second. The system still decides: battery saver (on OxygenOS, `power_save_screen_refresh_rate`), the player's own refresh rate setting, and the maker's rules can each hold it slower.
+
+**Why:** Measured on the Nord with the bot playing, OpenGL ES: 120 frames a second at 120 Hz, the longest frame in each 5 s of a round 10.3 to 12.9 ms (one refresh is 8.3 ms), and SurfaceFlinger showing a new frame at every refresh. A frame of a round takes the game about 3 ms (0.4 ms to move on, 2.7 ms to draw), so 120 holds with room; 90 was not needed. The rules are timed in seconds, not frames (`Rules::LONGEST_FRAME` caps a frame), the pile's physics steps by the seconds it is given, and the particles and tilt are timed in seconds, so nothing plays faster at 120. The cost is battery: 120 Hz refreshes the panel twice as often and draws twice the frames, so a round uses more power than at 60, which is why the system's battery saver still wins. The Records screen draws in about 10 ms, so it runs at 85 to 100 frames a second; the first Game Over and the first title after a round each take one long frame (30 to 80 ms) while their fonts are made.
+
+**To reverse:** Remove `preferFastestRefresh()` from `onCreate`. To cap it at 90 instead, pick the fastest mode at or under 90 Hz.
+
+## On Android, a buzz no longer holds up the frame
+
+`MainActivity.vibrate`, which LÖVE calls on the game's thread for each pop and wrong tap, now starts the buzz on a thread of its own, one buzz after another in order.
+
+**Why:** `Vibrator.vibrate` asks the system's vibrator service and waits for its answer: 1 to 5.5 ms a pop on the Nord, so at 120 Hz nearly every pop cost a frame. Handed to its own thread, it costs the game's thread nothing measurable, and the buzz still starts within a millisecond or two.
+
+**To reverse:** Call `vibrator.vibrate` directly in `vibrate` again.

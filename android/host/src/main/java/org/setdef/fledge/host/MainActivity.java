@@ -19,9 +19,12 @@ import android.system.ErrnoException;
 import android.system.Os;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 import android.view.DisplayCutout;
 import android.view.WindowManager;
 import android.window.OnBackInvokedDispatcher;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.libsdl.app.SDLActivity;
 import org.setdef.fledge.FledgeRuby;
 
@@ -47,13 +50,15 @@ import org.setdef.fledge.FledgeRuby;
  * release, and rake android:deps builds 3.4.10's (tasks/android_build.rb).
  *
  * Dot Popper's copy (PACKAGING.md, "The Android kit") is Lota 0.2.2's
- * (ext/lota/phone/host/android in the gem) with two additions. In a
+ * (ext/lota/phone/host/android in the gem) with four changes. In a
  * debuggable build only, each string extra of the launching intent named
  * lota.env.NAME sets the environment variable NAME before Ruby starts, so
  * the emulator checks can pass the game its settings with am start --es.
- * And Share my score opens Android's share sheet: the game opens a
+ * Share my score opens Android's share sheet: the game opens a
  * dotpopper-share: URL (SheetSharing), and startActivity, below, starts
- * the sheet in its place.
+ * the sheet in its place. The window asks for the screen's fastest
+ * refresh rate (preferFastestRefresh). And vibrate buzzes from a thread
+ * of its own, so the game's thread never waits for the vibrator.
  */
 public class MainActivity extends SDLActivity {
     private static final String ENV_PREFIX = "lota.env.";
@@ -68,6 +73,11 @@ public class MainActivity extends SDLActivity {
     private static final String TRAP_BACK = "SDL_ENV.SDL_ANDROID_TRAP_BACK_BUTTON";
 
     private Vibrator vibrator;
+    // Where each buzz is started: Vibrator.vibrate asks the system's
+    // vibrator service and waits for it, 1 to 5 ms on a OnePlus Nord, and
+    // LÖVE calls vibrate on the game's own thread, so every pop cost the
+    // game a frame at 120 Hz. One thread keeps the buzzes in order.
+    private final ExecutorService buzzer = Executors.newSingleThreadExecutor();
     private boolean shortEdgesMode;
 
     @Override
@@ -82,6 +92,7 @@ public class MainActivity extends SDLActivity {
         }
         super.onCreate(savedInstanceState);
         trapPredictiveBack();
+        preferFastestRefresh();
         // SPDX-SnippetBegin
         // SPDX-SnippetCopyrightText: 2006-2024 LOVE Development Team
         // SPDX-License-Identifier: Zlib
@@ -133,6 +144,31 @@ public class MainActivity extends SDLActivity {
             return;
         }
         getOnBackInvokedDispatcher().registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, () -> {});
+    }
+
+    /**
+     * Asks Android for the screen's fastest refresh rate at its present
+     * resolution, such as 120 Hz on a OnePlus Nord N30, where a game's
+     * window otherwise gets 60. The game draws with vsync, so it then draws
+     * a frame for every refresh. The system still decides: the player's
+     * own refresh rate setting, battery saver, and the maker's own rules
+     * can each hold the screen slower.
+     */
+    private void preferFastestRefresh() {
+        Display display = getWindowManager().getDefaultDisplay();
+        Display.Mode current = display.getMode();
+        Display.Mode fastest = current;
+        for (Display.Mode mode : display.getSupportedModes()) {
+            boolean sameSize = mode.getPhysicalWidth() == current.getPhysicalWidth()
+                && mode.getPhysicalHeight() == current.getPhysicalHeight();
+            if (sameSize && mode.getRefreshRate() > fastest.getRefreshRate()) {
+                fastest = mode;
+            }
+        }
+        WindowManager.LayoutParams attr = getWindow().getAttributes();
+        attr.preferredDisplayModeId = fastest.getModeId();
+        getWindow().setAttributes(attr);
+        Log.i(getPackageName(), "asked for " + fastest.getRefreshRate() + " Hz");
     }
 
     /**
@@ -189,11 +225,11 @@ public class MainActivity extends SDLActivity {
     // love-android's GameActivity (app/src/main/java/org/love2d/android/GameActivity.java at 1c89bb0b2e,
     // lines 203-303), the methods src/common/android.cpp calls, without androidx: vibrate,
     // hasBackgroundMusic, getDPIScale, getSafeArea, setImmersiveMode, getImmersiveMode, and
-    // hasRecordAudioPermission.
+    // hasRecordAudioPermission. vibrate hands the buzz to the buzzer's thread.
     public void vibrate(double seconds) {
         if (vibrator != null) {
             long duration = (long) (seconds * 1000.);
-            vibrator.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE));
+            buzzer.execute(() -> vibrator.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE)));
         }
     }
 
