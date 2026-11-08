@@ -21,7 +21,9 @@ module DotPopperGui
   # The scenario prints a line for each check that passes. The run quits
   # with status 0 once the scenario ends, and with 1 on the first failed
   # check or any error, the game's own included, in place of Lota's
-  # error screen, which would wait for a player.
+  # error screen, which would wait for a player. A quit the game asks for
+  # while the scenario plays is counted (+quits+) and held back, so a
+  # scenario can press Quit and check it asked, and play on.
   class Director
     class << self
       attr_reader :current
@@ -34,10 +36,13 @@ module DotPopperGui
       end
     end
 
+    attr_reader :quits
+
     def initialize(name, scenario)
       @name = name
       @scenario = scenario
       @step = Scenario::STEP
+      @quits = 0
     end
 
     # The game has loaded: the scenario starts on the first frame.
@@ -69,6 +74,15 @@ module DotPopperGui
       nil # Lota exits with 1
     end
 
+    # The game asked Lota to quit: held back, and counted, while the
+    # scenario plays; the director's own quit, once it ends, goes through.
+    def quit_asked
+      return false unless @fiber
+
+      @quits += 1
+      true
+    end
+
     def say(line) = puts("gui: #{line}")
 
     # What the director adds to Lota's callbacks, in front of main.rb's.
@@ -83,6 +97,9 @@ module DotPopperGui
       def update(_dt) = Director.current.frame { @app.update(it) }
 
       def errorhandler(error) = Director.current.failed(error)
+
+      # A truthy answer keeps the game running (Lota::Callbacks.dispatch).
+      def quit(*) = Director.current.quit_asked
     end
   end
 end

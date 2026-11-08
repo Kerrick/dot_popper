@@ -26,6 +26,17 @@ class GuiScenariosTest < Minitest::Test
          "the pile's dots are all inside the shrunk window")
   end
 
+  def test_full_screen_and_quit_on_the_title_by_the_mouse_alone
+    play("window_buttons", "Full screen is drawn", "a click on Full screen fills the screen",
+         "the button now says Window", "a click on Window puts the window back",
+         "a click on Quit asks Lota to quit at once")
+  end
+
+  def test_full_screen_and_quit_as_icons_on_the_smallest_window
+    play("window_buttons", "Quit is drawn", "a click on Full screen fills the screen",
+         "a click on Quit asks Lota to quit at once", window: "400x320")
+  end
+
   def test_the_records_screen
     play("records", "a click on Back goes back", "Escape goes back", "a gamepad's B goes back",
          "a click elsewhere does nothing")
