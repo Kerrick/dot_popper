@@ -69,6 +69,16 @@ class GuiScenariosTest < Minitest::Test
     play("words", "makes it Tap", "makes it Click", "makes it Press A")
   end
 
+  def test_sharing_shows_the_result_and_copies_only_on_copy
+    play("share", "Share my score is drawn", "opening the preview leaves the clipboard alone",
+         "a click on Copy copies exactly the text shown", "Escape closes the preview", "Y again copies",
+         "a gamepad's B closes the preview", "a tap beside the card closes", "Continue goes back to the title")
+  end
+
+  def test_sharing_on_an_upright_phone_sized_window
+    play("share", "a tap on Copy copies", window: "400x850")
+  end
+
   def test_a_round_without_shaders
     play("round", "screens come in order", DOT_POPPER_NO_SHADERS: "1")
   end
