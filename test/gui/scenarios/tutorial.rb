@@ -72,9 +72,12 @@ module DotPopperGui
       keep_screenshot(name("1-tap"))
       shot = screenshot
       bright = dot(T::BRIGHT)
-      # Up and to the left of its middle, away from the hand.
-      x = bright.x - (bright.radius * 0.4)
-      y = bright.y - (bright.radius * 0.1)
+      # Left of its middle, clear of the hand: a fingertip's pad and dark
+      # edge reach 0.4 of a radius and two device pixels around the point
+      # it taps, so a small dot on a 1x screen needs more than half a
+      # radius, and the dot's pale ring starts past 0.65.
+      x = bright.x - (bright.radius * 0.55)
+      y = bright.y
       check(shot.fresh?(x, y), "the bright dot shows under the spotlight (#{shot.describe(x, y)})")
       corner = shot.lightness(layout.width * 0.1, layout.height * 0.9)
       check(corner < shot.lightness(x, y) * 0.3, "everything but the bright dot dims")
