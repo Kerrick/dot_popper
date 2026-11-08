@@ -79,10 +79,9 @@ class TutorialTest < Minitest::Test
     assert_equal :points, @tutorial.beat
     assert_equal %i[pop], @sounds.names
     assert_equal [Look::HAPTICS.pop], @haptics.buzzes
-    assert bright.popped?
-    following = next_dot
-    assert following.fresh?
-    assert_equal bright.id, @tutorial.dots.top_at(following.x, following.y).id, "it is born under the popped dot"
+    assert_equal 1, @effects.take_sprays.size, "it bursts at once"
+    assert bright.fresh?, "still bright as its numbers fly out of it"
+    assert_nil next_dot, "and nothing is born under it yet"
     assert_equal [0, 10], shown
 
     play_for(SCRIPT.gap + (SCRIPT.flight / 2))
@@ -97,8 +96,13 @@ class TutorialTest < Minitest::Test
     assert_equal Anchor.hud(:time), @tutorial.spotlight.to
     assert_in_delta 0.0, @tutorial.rate, 1e-9, "time holds still meanwhile"
 
+    assert bright.fresh?, "the stopped clock holds it at its pop's instant"
     play_for(SCRIPT.hold + STEP)
     assert_equal :peek, @tutorial.beat
+    assert bright.popped?, "as time flows, it shows it is popped"
+    following = next_dot
+    assert following.fresh?
+    assert_equal bright.id, @tutorial.dots.top_at(following.x, following.y).id, "and one is born under it"
     play_for(SCRIPT.resume / 2)
     assert_operator @tutorial.rate, :>, 0.0, "then it runs on by itself"
   end
@@ -172,15 +176,17 @@ class TutorialTest < Minitest::Test
     tap_on(next_dot)
 
     assert_equal :runs, @tutorial.beat
-    assert_equal [Tutorial::BRIGHT, Tutorial::NEXT, Tutorial::LAST], @tutorial.dots.map(&:id)
-    assert_equal [true, true, false], @tutorial.dots.map(&:popped?), "a new bright dot goes in under them all"
-    last = @tutorial.dots.to_a.last
-    assert_includes DotPopper::Rules::SPEEDS.map { it * R }, last.velocity_x.abs, "at one of the game's speeds"
+    assert next_dot.fresh?, "it bursts still bright"
     play_for(SCRIPT.gap + SCRIPT.quick + STEP)
     assert_equal [1, 10], shown, "two pops, less what the guide's tap cost"
-    still = @tutorial.dots.to_a.last
+    assert_equal [Tutorial::BRIGHT, Tutorial::NEXT], @tutorial.dots.map(&:id), "nothing is born while time stands"
     play_for(SCRIPT.linger)
     assert_equal :ending, @tutorial.beat
+    assert_equal [Tutorial::BRIGHT, Tutorial::NEXT, Tutorial::LAST], @tutorial.dots.map(&:id)
+    assert_equal [true, true, false], @tutorial.dots.map(&:popped?), "as it flows, a bright dot goes in under them all"
+    last = @tutorial.dots.to_a.last
+    assert_includes DotPopper::Rules::SPEEDS.map { it * R }, last.velocity_x.abs, "at one of the game's speeds"
+    still = last
     now = @tutorial.dots.to_a.last
     assert_operator Math.hypot(now.x - still.x, now.y - still.y), :<, 0.1, "time held still till then"
     assert_equal Anchor.hud(:time), @tutorial.spotlight.to, "the light moves to the clock"
@@ -219,12 +225,23 @@ class TutorialTest < Minitest::Test
   def test_the_next_dot_waits_for_its_beat
     play_for(SCRIPT.drift + 0.5)
     tap_on(bright)
+    play_until { @tutorial.beat == :peek }
     following = next_dot
     x = following.x - (following.radius * 0.9)
     @tutorial.tap(x, following.y)
 
-    assert_equal :points, @tutorial.beat
+    assert_equal :peek, @tutorial.beat
     assert next_dot.fresh?
+  end
+
+  def test_the_bursting_dot_takes_no_second_tap_while_its_numbers_fly
+    play_for(SCRIPT.drift + 0.5)
+    tap_on(bright)
+    tap_on(bright)
+
+    assert_equal %i[pop], @sounds.names
+    play_until { @tutorial.beat == :peek }
+    assert_equal [1, 11], shown, "one pop, one point and one second"
   end
 
   def test_a_resized_window_keeps_the_dots_on_it

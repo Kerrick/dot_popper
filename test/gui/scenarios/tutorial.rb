@@ -84,11 +84,13 @@ module DotPopperGui
       check(corner < shot.lightness(x, y) * 0.3, "everything but the bright dot dims")
       how.call(bright.x, bright.y)
       check_equal(:points, tutorial.beat, "a tap on the bright dot pops it")
-      check(dot(T::BRIGHT).popped?, "the dot is popped")
+      check(dot(T::BRIGHT).fresh? && dot(T::NEXT).nil?, "it bursts still bright, with nothing under it yet")
     end
 
     def points_and_time
-      wait(0.45)
+      wait(0.1)
+      keep_screenshot(name("2-burst"))
+      wait(0.35)
       keep_screenshot(name("2-points"))
       wait_for("the point to land", within: 120) { shown == [1, 10] }
       check_equal([1, 10], shown, "the point lands in the score")
@@ -97,6 +99,10 @@ module DotPopperGui
       keep_screenshot(name("2-time"))
       check_equal([1, 11], shown, "the stopwatch lands in the time")
       check(game.round.nil?, "nothing is scored for real")
+      wait_for("time to flow again", within: 120) { tutorial.beat == :peek }
+      check(dot(T::BRIGHT).popped? && dot(T::NEXT)&.fresh?, "as it does, the dot is popped, and one born under it")
+      wait(0.3)
+      keep_screenshot(name("2-popped"))
     end
 
     def wait_for_the_bright_dot
@@ -113,7 +119,7 @@ module DotPopperGui
       keep_screenshot(name("3-clear"))
       bright = dot(T::NEXT)
       how.call(bright.x, bright.y)
-      check(dot(T::NEXT).popped?, "a tap on the clear bright dot pops it")
+      check_equal(:runs, tutorial.beat, "a tap on the clear bright dot pops it")
     end
 
     # A tap on the popped dot, on its side away from the bright one: its
@@ -136,8 +142,10 @@ module DotPopperGui
     # the two wrong taps left, and only the clock starts.
     def now_it_runs
       wait_for("the last pop's numbers", within: 120) { shown == [1, 8] }
-      check_equal([true, true, false], tutorial.dots.map(&:popped?), "its pop spawns a bright dot under them")
+      check_equal([true, false], tutorial.dots.map(&:popped?), "it bursts still bright as its numbers land")
       wait_for("the light on the clock", within: 300) { tutorial.nil? || tutorial.beat == :ending }
+      check_equal([true, true, false], (tutorial || round).dots.map(&:popped?),
+                  "as time flows, its pop spawns a bright dot under them")
       scene = tutorial&.dots&.map(&:id)
       keep_screenshot(name("4-handover")) if scene
       wait_for("the round", within: 300) { show.playing? }

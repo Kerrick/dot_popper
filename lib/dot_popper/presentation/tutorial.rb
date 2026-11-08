@@ -48,9 +48,14 @@ module DotPopper
     # 1. A bright dot drifts, time eases to a stop, a spotlight finds it,
     #    and the guide, the player's own hand or pointer drawn faintly
     #    (GhostHand), taps it, over and over, until the player does.
-    # 2. Its pop holds time still while "+1" flies into the HUD's score,
-    #    and a stopwatch into its time, each ticking up as it lands.
-    # 3. A new bright dot is born under the popped one. As it peeks out,
+    # 2. Its pop bursts from the dot while it still looks bright, and
+    #    holds time still at that instant while "+1" flies out of it into
+    #    the HUD's score, and a stopwatch into its time, each ticking up as
+    #    it lands. Only as time flows again does it take its popped look
+    #    (#settle), so the reward is seen to come from the bright dot.
+    # 3. A new bright dot is born under the popped one, as time flows
+    #    again: in play it would be born at the pop, which the stopped
+    #    clock has held at that instant until now. As it peeks out,
     #    time stops again, and the guide taps the popped dot, once: the
     #    game's own penalty plays, its shudder, the dashed outline of the
     #    bright dot under it, and its cost out of the score and the time,
@@ -58,9 +63,10 @@ module DotPopper
     #    flows slowly until the bright dot is clear, and moves to it and
     #    taps. A tap of the player's on the popped dot costs the same, and
     #    the beat goes on.
-    # 4. Its pop spawns the next bright dot under them all, as a pop in
-    #    play does, its numbers fly in, and the spotlight moves to the
-    #    clock as time flows again (#over?). The Show then hands the scene
+    # 4. Its pop bursts, still bright, and its numbers fly in; as the
+    #    spotlight moves to the clock and time flows again, it takes its
+    #    popped look and spawns the next bright dot under them all, as a
+    #    pop in play does (#over?). The Show then hands the scene
     #    to the round, whose LeadIn lets the clock run.
     #
     # Every wrong tap here, the guide's too, costs what it does in play
@@ -144,7 +150,7 @@ module DotPopper
         dot = dots.top_at(x, y)
         if dot.nil? then @effects.ring(x, y, @look::TOUCH_RIPPLE)
         elsif dot.popped? then slip(dot, x, y)
-        elsif dot.id == BRIGHT then pop_bright(dot, x, y)
+        elsif dot.id == BRIGHT then pop_bright(dot, x, y) unless beat == :points
         elsif SLIDING.include?(beat) then pop_next(dot, x, y)
         end
       end
@@ -215,19 +221,15 @@ module DotPopper
       end
 
       # Beat 2: the pop holds time still, and its point and second fly to
-      # where they count. A new bright dot is born under it, as in play.
+      # where they count, out of the dot as it bursts, still bright.
       def pop_bright(dot, x, y)
-        popped = pop(dot, x, y)
-        following = Dot.new(id: NEXT, x: popped.x - (@script.born * radius), y: popped.y,
-                            velocity_x: -popped.velocity_x, velocity_y: popped.velocity_y, radius:).confine(field)
-        @dots = dots.slide_under(following)
-        spawned(following)
+        burst(dot, x, y)
         enter(:points)
         stop_time
         @ghost = ghost.gone(now)
-        @spotlight = spotlight.toward(Anchor.hud(:score), now)
         points = now + @script.gap
         seconds = points + @script.flight + @script.gap
+        cue(points) { @spotlight = spotlight.toward(Anchor.hud(:score), now) } # the light leaves with the point
         fly_in(x, y, :score, points, @script.flight)
         fly_in(x, y, :time, seconds, @script.flight)
         cue(points + @script.flight) { land(points: 1) }
@@ -236,8 +238,15 @@ module DotPopper
         cue(seconds + @script.flight + @script.hold) { resume }
       end
 
-      # Beat 3: time flows, and the new dot slides out.
+      # Beat 3: time flows, and the pop takes effect: the dot shows it is
+      # popped, and a new bright dot is born under it, as in play, and
+      # slides out.
       def resume
+        popped = settle(BRIGHT)
+        following = Dot.new(id: NEXT, x: popped.x - (@script.born * radius), y: popped.y,
+                            velocity_x: -popped.velocity_x, velocity_y: popped.velocity_y, radius:).confine(field)
+        @dots = dots.slide_under(following)
+        spawned(following)
         enter(:peek)
         @time = @time.toward(1.0, now, @script.resume)
         @spotlight = spotlight.toward(nil, now)
@@ -284,19 +293,15 @@ module DotPopper
         @ghost = ghost.tapping(Anchor.dot(NEXT), now)
       end
 
-      # Beat 4: the pop spawns the next bright dot under every dot, as a
-      # pop in play does, and its numbers fly in.
+      # Beat 4: the pop bursts, still bright, and its numbers fly in.
       def pop_next(dot, x, y)
         @cues.clear # the guide's tap on the popped dot, should it not have landed
-        pop(dot, x, y)
-        last = Spawner.for(field).spawn(@random, id: LAST, above: dots.to_a).dot
-        @dots = dots.slide_under(last)
-        spawned(last)
+        burst(dot, x, y)
         enter(:runs)
         stop_time
         @ghost = ghost.gone(now)
-        @spotlight = spotlight.toward(nil, now)
         flying = now + @script.gap
+        cue(flying) { @spotlight = spotlight.toward(nil, now) }
         fly_in(x, y, :score, flying, @script.quick)
         fly_in(x, y, :time, flying, @script.quick)
         landing = flying + @script.quick
@@ -304,22 +309,36 @@ module DotPopper
         cue(landing + @script.linger) { hand_over }
       end
 
-      # The light moves to the clock, and time flows again: the round goes
+      # The light moves to the clock, and time flows again, so the pop
+      # takes effect: the dot shows it is popped, and spawns the next
+      # bright dot under every dot, as a pop in play does. The round goes
       # on from here.
       def hand_over
+        settle(NEXT)
+        last = Spawner.for(field).spawn(@random, id: LAST, above: dots.to_a).dot
+        @dots = dots.slide_under(last)
+        spawned(last)
         enter(:ending)
         @time = @time.toward(1.0, now, @script.handover)
         @spotlight = spotlight.toward(Anchor.hud(:time), now)
       end
 
-      def pop(dot, x, y)
-        popped = dot.pop
-        @dots = dots.replace(popped)
-        animations.pop(dot.id, now)
+      # A pop's burst, its shockwave, its sound and its buzz, at the
+      # instant of the tap, over the dot still bright; time stops there, and
+      # the dot takes its popped look as it flows again (#settle).
+      def burst(dot, x, y)
         @effects.burst(x, y, @look::POP_BURST, @look::PALETTE.confetti)
         @effects.ring(dot.x, dot.y, @look::SHOCKWAVE, follow: dot.id)
         @sounds.play(:pop, pitch: 1.0 + (hud.score * @look::SOUND.pop_climb), pan: pan(x))
         @haptics.buzz(@look::HAPTICS.pop)
+      end
+
+      # The dot +id+ popped, as the burst at the stopped instant said it
+      # was, with its squash and its change to the popped look.
+      def settle(id)
+        popped = dots.find { it.id == id }.pop
+        @dots = dots.replace(popped)
+        animations.pop(id, now)
         popped
       end
 
