@@ -891,3 +891,11 @@ Game Over's words now end a radius above the window's floor, where that is highe
 **Why:** The pile shows how the round ended, and the stacking order must stay visible. A bright dot lying on the floor under a solid button is no longer distinguishable from a popped one. Half a dot shows its fill or its ring plainly. Reserving a whole dot's width would have cost landscape phones "Time's up!" and the best line as well.
 
 **To reverse:** In `FinaleScreen#room`, end the room a margin above the safe area's bottom again.
+
+## On a phone, "Share my score" opens the system's share sheet
+
+On iOS and Android, Share my score hands the result's text to the system's share sheet (`UIActivityViewController`; a chooser over `ACTION_SEND`, `text/plain`), and no in-game preview opens. Computers keep the preview. Lota binds only what LÖVE has, and LÖVE has no share call, but it can open a URL (`Lota::System.open_url`, `SDL_OpenURL`). So `Presentation::SheetSharing` opens `dotpopper-share://score?text=…`, and each host catches that URL before it leaves the app: on iOS, `DotPopperApplication` (`ios/host/Host/main.m`, Info.plist's `NSPrincipalClass`) overrides `canOpenURL:` and `openURL:options:completionHandler:`, which SDL calls; on Android, `MainActivity#startActivity` (`android/host`), which SDL's `openURL` calls to start its `ACTION_VIEW` intent, starts the chooser in its place. If the host won't take the URL, `open_url` returns false and the preview opens instead.
+
+**Why:** Players on a phone expect the phone's own sheet, which reaches Messages, chats and notes in one tap. Catching the URL in the host, rather than registering a URL scheme and an activity for it, means no other app can send the game that URL, no round trip through the system and no disambiguation dialog, and the game keeps its focus. All the native code lives in the host files Dot Popper already owns, since a gem can't add to the host. The text is percent-encoded as RFC 3986's unreserved characters, so a space is `%20` and a plus `%2B`, which iOS's and Android's parsers both decode alike.
+
+**To reverse:** Pass `InGameSharing.new` as the Show's `sharing:` in `Shell::App#load` (or drop `SheetSharing` and `UrlOpener`), then remove `DotPopperApplication` and `NSPrincipalClass` from `ios/host`, and `startActivity` from `android/host`'s `MainActivity`.

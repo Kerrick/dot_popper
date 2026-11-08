@@ -23,7 +23,7 @@ Dot Popper is free and open source. [Download it](#install) from the releases pa
 - **A goal for each day.** Dot Popper sets one goal each day for a single round, the same for every player that day, such as "score 10 points in a round without a single mistake" or "pop a bright dot that has been on screen for at least 3 seconds." Meet it on days in a row, and the game counts your streak on the title screen.
 - **Records.** On the Records screen, the game keeps your best score, your longest round, your most pops in a row without a mistake, your fastest pop, and a chart of your last 20 rounds, with totals for every round you have played.
 - **A pile to play with.** When time runs out, the dots tumble into a heap at the bottom of the screen. Grab one and throw it while you read your score.
-- **A score to share.** Click Share my score, and the game shows the words it would share. Click Copy, and they go on the clipboard, ready to paste into a chat. Nothing is copied until you click Copy:
+- **A score to share.** Click Share my score, and the game shows the words it would share. Click Copy, and they go on the clipboard, ready to paste into a chat. Nothing is copied until you click Copy. On an iPhone, iPad or Android phone, Share my score opens the phone's own share sheet with the same words instead:
 
   ```text
   Dot Popper: 24 points

@@ -81,7 +81,15 @@ iOS gets no vibration. On iOS, LÖVE's `vibrate` ignores the length it is given 
 
 ### Share my score
 
-On the Game Over screen, Share my score opens a preview of the result, and only its Copy button copies it, with `Lota::System.clipboard_text=`, which SDL turns into a write to `UIPasteboard` on iOS. Writing to the pasteboard needs no permission. If the copy fails, the game prints a warning and carries on.
+On the Game Over screen, Share my score opens the system's share sheet (`UIActivityViewController`) with the result's text, over the game, which plays on behind it. On an iPad the sheet is a popover in the middle of the screen, with no arrow. Lota has no share API, so the game and the host meet through a URL:
+
+1. `Presentation::SheetSharing`, the Show's `sharing:` on iOS and Android, opens `dotpopper-share://score?text=<the text, percent-encoded>` with `Lota::System.open_url`, which is LÖVE's `openURL` and so `SDL_OpenURL`.
+2. On iOS, SDL asks `UIApplication` `canOpenURL:` and then `openURL:options:completionHandler:` (SDL 3.4.10's `src/misc/ios/SDL_sysurl.m`). The app's `UIApplication` is `DotPopperApplication`, in `ios/host/Host/main.m`, named by Info.plist's `NSPrincipalClass` (SDL_RunApp passes `UIApplicationMain` no class of its own). It catches a `dotpopper-share` URL, reads its `text`, and presents the sheet from the key window's top view controller, on the main thread the game runs on. Logged under the category `app` as "showed the share sheet".
+3. The URL never leaves the app: no URL scheme is registered (`CFBundleURLTypes`), no other app is asked, and the game never loses focus or goes to the background.
+
+If there is no window to present from, `canOpenURL:` answers NO, `open_url` returns false, and the game opens its own preview instead, whose Copy button copies with `Lota::System.clipboard_text=` (a write to `UIPasteboard`, which needs no permission). Computers always use the preview. The bot taps "Share my score" on every second Game Over; in the Simulator the sheet then stays up while the bot plays on beneath it, since its taps go straight to the game.
+
+`DOT_POPPER_AUTOPLAY=1` with `xcrun simctl io booted screenshot` after the "showed the share sheet" line shows the sheet; on an iPhone it rises from the bottom, on an iPad it floats in the middle.
 
 ### Files the game writes
 
