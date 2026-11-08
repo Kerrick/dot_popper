@@ -26,6 +26,8 @@
 #                               round again. It mostly taps fresh dots and
 #                               sometimes a popped one, so penalties show.
 #   DOT_POPPER_NO_SPLASH=1      leaves out setdef's splash before the title
+#   DOT_POPPER_SPLASH_BLINK=beat  blinks the splash's block on the beat,
+#                               not with the jingle's notes
 #                               (the bot and the GUI suite do too).
 #   DOT_POPPER_SHOTS=0.5,3,6.5  captures the screen at these seconds after
 #                               start, as shot-1.png, shot-2.png, ... in the

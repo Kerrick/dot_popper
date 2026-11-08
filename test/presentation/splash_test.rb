@@ -81,4 +81,33 @@ class SplashTest < Minitest::Test
     assert_empty Splash.start(sounding: false).notes(10.0)
     assert_empty Splash.start(sounding: true).advance(0.7).skip.notes(1.0), "a press silences the rest"
   end
+
+  # The maintainer's idea: the block blinks like an amber terminal's
+  # cursor, with the jingle's notes, or steadily on the beat, to compare.
+  def test_with_the_notes_the_block_lights_on_each_note_and_stays_lit_after_the_last
+    splash = Splash.start(sounding: true)
+    Splash::JINGLE.each_cons(2) do |note, after|
+      assert_in_delta 1.0, splash.with(at: note.at + Splash::LIGHTS).block, 1e-9, "lit just after #{note.at}"
+      assert_in_delta 0.0, splash.with(at: after.at - 0.01).block, 1e-9, "dark just before #{after.at}"
+    end
+    assert_in_delta 1.0, splash.with(at: Splash::JINGLE.last.at + 0.3).block, 1e-9
+    assert_in_delta 0.5, splash.with(at: Splash::LIGHTS / 2).block, 1e-9
+  end
+
+  def test_on_the_beat_and_muted_it_blinks_for_the_first_half_of_every_beat
+    [Splash.start(sounding: true, blink: :beat), Splash.start].each do |splash|
+      [0, 1, 2].each do |beat|
+        start = beat * Splash::BEAT
+        assert_in_delta 1.0, splash.with(at: start + 0.1).block, 1e-9
+        assert_in_delta 0.5, splash.with(at: start + (Splash::BEAT / 2) + (Splash::FADES / 2)).block, 1e-9
+        assert_in_delta 0.0, splash.with(at: start + Splash::BEAT - 0.01).block, 1e-9
+      end
+    end
+  end
+
+  def test_the_environment_chooses_the_blink
+    assert_equal :notes, Splash.blink({})
+    assert_equal :beat, Splash.blink("DOT_POPPER_SPLASH_BLINK" => "beat")
+    assert_equal :notes, Splash.blink("DOT_POPPER_SPLASH_BLINK" => "disco")
+  end
 end

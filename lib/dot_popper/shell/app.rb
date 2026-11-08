@@ -20,7 +20,7 @@ module DotPopper
       def initialize(env = ENV)
         @env = env
         @elapsed = 0.0
-        @splash = Presentation::Splash.start unless Presentation::Splash.skipped?(env)
+        @splash = Presentation::Splash.start(blink: Presentation::Splash.blink(env)) unless Presentation::Splash.skipped?(env)
       end
 
       def load

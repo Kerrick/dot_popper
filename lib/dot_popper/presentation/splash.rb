@@ -53,7 +53,14 @@ module DotPopper
     # last two are those buttons' own clicks. Only while the game's sound is on
     # (+sounding+) does it play, and the splash last until it has rung;
     # muted, the splash is short. +at+ is the seconds since it began.
-    class Splash < Data.define(:at, :sounding)
+    #
+    # The block blinks like an amber terminal's cursor, lighting quickly
+    # and fading a little slower, as a phosphor does. +blink+ says to what:
+    # :notes lights it on each note, for half the time until the next,
+    # and leaves it lit after the last; :beat lights it for the first half
+    # of every beat. Muted, there are no notes to follow, so it blinks on
+    # the beat either way.
+    class Splash < Data.define(:at, :sounding, :blink)
       BEAT = 60.0 / 120
       Note = Data.define(:at, :pitch)
       JINGLE = [[0.0, 1.2], [1.0, 0.9], [3.0, 1.2], [3.5, 0.9], [4.0, 1.0], [5.0, 0.8]]
@@ -63,8 +70,15 @@ module DotPopper
       SILENT = 1.4 # long enough to read the name
       SOUNDING = JINGLE.last.at + 0.4 # the last click, with room for it to ring
       SKIPPED_BY = %w[DOT_POPPER_AUTOPLAY DOT_POPPER_SCENARIO DOT_POPPER_NO_SPLASH].freeze
+      BLINKS = %i[notes beat].freeze
+      LIGHTS = 0.03 # seconds the block takes to light
+      FADES = 0.1 # and to go dark
 
-      def self.start(sounding: false) = new(at: 0.0, sounding:)
+      def self.start(sounding: false, blink: :notes) = new(at: 0.0, sounding:, blink:)
+
+      # The blink DOT_POPPER_SPLASH_BLINK asks for in +env+ (notes or
+      # beat), to compare the two; :notes otherwise.
+      def self.blink(env) = BLINKS.find { it.to_s == env.fetch("DOT_POPPER_SPLASH_BLINK", "") } || :notes
 
       # Whether the environment (+env+) asks for no splash: the bot, the GUI
       # director, and a plain request leave it out.
@@ -85,7 +99,25 @@ module DotPopper
       # which shows the title under it.
       def ground = fade_out
 
+      # How lit the block is, 0 to 1, before the mark's fade: rising over
+      # LIGHTS from the start of a lit span, and falling over FADES from
+      # its end.
+      def block
+        span = lit.reverse_each.find { |from, _| from <= at } or return 0.0
+        from, to = span
+        at < to ? ((at - from) / LIGHTS).clamp(0.0, 1.0) : (1 - ((at - to) / FADES)).clamp(0.0, 1.0)
+      end
+
       private
+
+      # When the block is lit, as [from, to] seconds.
+      def lit
+        if sounding && blink == :notes
+          JINGLE.each_cons(2).map { |note, after| [note.at, (note.at + after.at) / 2.0] } << [JINGLE.last.at, Float::INFINITY]
+        else
+          (0..(total / BEAT).ceil).map { [it * BEAT, (it + 0.5) * BEAT] }
+        end
+      end
 
       def fade_out = ((total - at) / FADE_OUT).clamp(0.0, 1.0)
     end

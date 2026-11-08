@@ -841,3 +841,9 @@ No combination gave both. He chose the working overlay. Windows now allows both 
 The maintainer saw "Press B again to quit" drawn behind the Play button. It was placed under the title's backing, which ends at the line above Play. The title's plan now places it: a gap under Play, or, where the bottom row leaves no room there, a gap above the name. On the smallest windows, where neither has room, it stands in for today's goal, the best, or the legend, and that line fades out while it shows. It shows for only two seconds, so it takes no room from the other lines, and Play never moves.
 
 **To reverse:** Drop `TitlePlan#quit_line` and `#quit_over`, and draw the prompt in `TitlePainter#quit_prompt` where it was.
+
+## The splash's block blinks like a terminal cursor
+
+The maintainer's idea: setdef's block blinks like an old amber terminal's cursor, in time with the jingle. It lights in 0.03 s and fades in 0.1 s, like a phosphor. He wanted to see two versions before choosing, so `DOT_POPPER_SPLASH_BLINK` picks one. `notes`, the default, lights the block on each note for half the time until the next, and leaves it lit after the last. `beat` lights it for the first half of every beat at 120 beats a minute. Muted, there are no notes to follow, so both blink on the beat.
+
+**To reverse:** Drop `Splash#block`, and draw the block at `splash.mark` in `SplashPainter`.
