@@ -18,8 +18,10 @@
   Android applies when a wallpaper's colours or the system font change,
   and to a just-installed app, sometimes after its first launch has begun.
   SDL's onConfigurationChanged passes the language and dark theme on.
-  Density stays off the list, as in SDL's own manifest, since the game's
-  sizes in dp come from it. Lota's notes follow.
+  Display size (density) is on the list too, though not in SDL's own
+  manifest: the game keeps drawing at the density it started with, since
+  LÖVE reads the dpi scale once and the window's pixels don't change, and
+  takes up the new size at its next launch. Lota's notes follow.
 
   A Lota game's manifest, in place of the one fledge build android writes
   (Fledge's lib/fledge/templates/android/src/main/AndroidManifest.xml at
@@ -47,7 +49,7 @@
         <activity
             android:name="org.setdef.fledge.host.MainActivity"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
-            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation|uiMode|fontScale|fontWeightAdjustment|locale|layoutDirection|grammaticalGender|mcc|mnc|touchscreen|colorMode|assetsPaths"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation|uiMode|fontScale|fontWeightAdjustment|locale|layoutDirection|grammaticalGender|mcc|mnc|touchscreen|colorMode|assetsPaths|density"
             android:launchMode="singleInstance"
             android:exported="true">
             <intent-filter>
