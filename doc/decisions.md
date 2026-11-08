@@ -1129,7 +1129,7 @@ In the tutorial, a tap on a bright dot no longer turns it into a popped dot, wit
 
 ### The splash's block cursor is one Iosevka cell, with a set gap
 
-The maintainer's decision on setdef's mark, after three blind rounds, in em of the Iosevka Bold font size: "block cursor width: 0.50em, exactly one Iosevka cell; height: 0.95em, from 0.14em below the baseline to 0.81em above it; gap between the f and the cursor: 0.5em / 7 (about 0.0714em), counted from the end of the f's 0.5em cell." `Logotype` now gives every measure in plain ems (`BLOCK_WIDTH = 0.5`, `BLOCK_TOP = -0.81`, `BLOCK_BOTTOM = 0.14`, `BLOCK_GAP = 0.5 / 7`), measured from the f's full cell, not from the letters' tighter 0.46em step, which stays as it was (letter spacing is undecided, as is the amber).
+The maintainer's decision on setdef's mark, after three blind rounds, in em of the Iosevka Bold font size: "block cursor width: 0.50em, exactly one Iosevka cell; height: 0.95em, from 0.14em below the baseline to 0.81em above it; gap between the f and the cursor: 0.5em / 7 (about 0.0714em), counted from the end of the f's 0.5em cell." `Logotype` now gives every measure in plain ems (`BLOCK_WIDTH = 0.5`, `BLOCK_TOP = -0.81`, `BLOCK_BOTTOM = 0.14`, `BLOCK_GAP = 0.5 / 7`), measured from the f's full cell. The maintainer's blind rounds used Iosevka Bold's natural spacing (a 0.5em step per letter, no tracking), so the letters now step a full cell too, in place of the tighter 0.46em they had, and the cursor's cell starts 3.0em after the word begins. The amber is still undecided.
 
 **Why:** Three rounds of eyeballing the artwork's x-height proportions did not settle it; plain numbers in the font's own unit can be checked and kept.
 

@@ -11,7 +11,7 @@ module DotPopper
     class Logotype < Data.define(:size)
       WORD = "setdef"
       CELL = 0.5 # Iosevka's cell, an em's half
-      ADVANCE = 0.46 # a letter's step, a little tighter than the cell
+      ADVANCE = CELL # a letter's step: Iosevka's own, no tracking
       BLOCK_GAP = CELL / 7 # from the end of the last letter's full cell
       BLOCK_WIDTH = CELL
       BLOCK_TOP = -0.81 # from the baseline, down being positive
