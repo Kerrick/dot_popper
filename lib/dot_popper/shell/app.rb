@@ -20,6 +20,8 @@ module DotPopper
       def initialize(env = ENV)
         @env = env
         @elapsed = 0.0
+        @uptime = 0.0
+        @chatter = Presentation::Chatter.quiet(Look::CHATTER)
         @splash = Presentation::Splash.start(blink: Presentation::Splash.blink(env)) unless Presentation::Splash.skipped?(env)
       end
 
@@ -87,6 +89,7 @@ module DotPopper
 
       def update(seconds)
         measure(seconds)
+        @uptime += seconds
         seconds = seconds.clamp(0.0, Rules::LONGEST_FRAME)
         if @splash
           @splash.notes(seconds).each { @speaker.play(:tick, pitch: it.pitch) }
@@ -116,6 +119,7 @@ module DotPopper
       def draw = @renderer.draw(@cursor, @splash)
 
       def mouse_pressed(x, y, button, istouch)
+        return if chattered?(x, y, button, istouch)
         return skip_splash if @splash
 
         @cursor = @cursor.hide(x, y)
@@ -140,6 +144,8 @@ module DotPopper
       end
 
       def mouse_released(x, y, button, istouch)
+        return if released_chatter?(button, istouch)
+
         point = @input.mouse_released(x, y, button, istouch) or return
         @show.let_go(:mouse)
         @dragging.release(:mouse, point.x, point.y)
@@ -168,11 +174,12 @@ module DotPopper
 
       # The window lost focus or got it back. A finger or button let go
       # meanwhile is never heard, so the pile's dots are let go now, and
-      # so is "Clear my records…".
+      # so is "Clear my records…", and no release is waited for to drop.
       def focus(focused)
         return if focused
 
         @dragging.drop
+        @chatter = @chatter.let_go
         @show.let_go_of_everything
         @show.pointer_gone
       end
@@ -320,6 +327,24 @@ module DotPopper
       # A press at +x+, +y+, by +by+ (a finger's id, :mouse, :gamepad, or
       # the autopilot), which its release names too.
       def tap(x, y, by = :autopilot) = @show.tap(x, y, by:)
+
+      # Whether a mouse press is its switch chattering (Presentation::
+      # Chatter), to be dropped, wherever it lands, as its release will
+      # be. Its clock is the frames' time, unclamped: the real time in
+      # play, and the scenario's in the GUI suite.
+      def chattered?(x, y, button, istouch)
+        return false if istouch
+
+        @chatter, chatter = @chatter.press(button, x.to_f, y.to_f, at: @uptime)
+        chatter
+      end
+
+      def released_chatter?(button, istouch)
+        return false if istouch
+
+        @chatter, chatter = @chatter.release(button)
+        chatter
+      end
 
       # Tells the Show what made +tap+, if anything did, so its words name
       # that press. Returns +tap+.

@@ -316,6 +316,16 @@ module DotPopper
       GRAB = GrabLook.new(slop: 0.25, hold: 0.15, follow: 0.05, fastest: 60.0, fling: 40.0, window: 0.1)
       CALM_GRAB = GRAB.with(follow: 0.12, fastest: 20.0, fling: 6.0)
 
+      # A worn mouse's double click (Presentation::Chatter): a press of a
+      # button within 0.06 s of its last press, and within 8 units of it,
+      # is dropped. A switch's bounce is under 0.02 s, and a failing one
+      # chatters at 0.05 to 0.08; a hand clicking twice as fast as it can
+      # takes 0.1 or more, and the fastest jitter-clicking near 0.07, so
+      # no press a player makes is lost. 8 units is MouseTravel's line
+      # between a jitter and a nudge: the hand on a chattering mouse has
+      # not moved it.
+      CHATTER = ChatterLook.new(seconds: 0.06, reach: 8.0)
+
       # Sound: the pop climbs a little with the score, up to a cap. A pop
       # or a wrong tap is heard where it is across the screen, leaning at
       # most 60% to a side.
