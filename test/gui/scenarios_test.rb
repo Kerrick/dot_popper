@@ -79,6 +79,27 @@ class GuiScenariosTest < Minitest::Test
     play("share", "a tap on Copy copies", window: "400x850")
   end
 
+  def test_the_tutorial_played_through_with_a_mouse
+    play("tutorial", "the first Play opens the tutorial", "a tap on the popped dot shows its cost",
+         "nothing real is lost", "a tap on the clear bright dot pops it", "the round starts with its whole clock",
+         "the tutorial told the rules nothing", "tutorial.txt remembers", DOT_POPPER_TUTORIAL: "1")
+  end
+
+  def test_the_tutorial_by_touch_on_an_upright_phone_sized_window
+    play("tutorial", "the point lands in the score", "the clock is lit", window: "400x850", DOT_POPPER_TUTORIAL: "1",
+                                                                         DOT_POPPER_GUI_INPUT: "touch")
+  end
+
+  def test_the_tutorial_skipped_by_escape_and_by_a_tap
+    play("tutorial_skip", "Escape skips it", "the skip button is drawn", "a tap on the skip button skips it",
+         DOT_POPPER_TUTORIAL: "1")
+  end
+
+  def test_the_tutorial_skipped_by_a_gamepads_b
+    play("tutorial", "a gamepad's B skips it", DOT_POPPER_TUTORIAL: "1", DOT_POPPER_GUI_INPUT: "gamepad",
+                                               DOT_POPPER_FAKE_GAMEPAD: "1")
+  end
+
   def test_a_round_without_shaders
     play("round", "screens come in order", DOT_POPPER_NO_SHADERS: "1")
   end
