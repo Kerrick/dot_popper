@@ -7,17 +7,28 @@ module DotPopper
   class Round
     attr_reader :field, :dots, :score, :countdown, :elapsed, :spawns
 
+    # A round that goes on from where it was left before its clock first
+    # ran, as the tutorial leaves it: +dots+ (a Stack) as they are, its
+    # fresh dot under the rest, the +score+ they made, and +seconds+ on
+    # the clock. From there it is a round like any other: its clock runs
+    # from its first update, each pop spawns a dot under every dot there,
+    # and a tap reaches only the topmost.
+    def self.resume(field, dots:, score:, seconds:, random: Random.new, spawn_tries: Rules::SPAWN_TRIES)
+      new(field, random:, dots:, score:, seconds:, spawn_tries:)
+    end
+
     # +spawn_tries+ is how hard a spawn works for a touch target (Spawner);
     # 0 turns the rule off, as the simulator does to measure it.
-    def initialize(field, random: Random.new, dots: nil, spawn_tries: Rules::SPAWN_TRIES)
+    def initialize(field, random: Random.new, dots: nil, score: Rules::LOWEST_SCORE,
+                   seconds: Rules::STARTING_SECONDS, spawn_tries: Rules::SPAWN_TRIES)
       @field = field
       @random = random
       @spawner = Spawner.for(field, tries: spawn_tries)
       @spawns = []
       @next_id = 0
-      @score = 0
+      @score = score
       @elapsed = 0.0
-      @countdown = Countdown.new(remaining: Rules::STARTING_SECONDS)
+      @countdown = Countdown.new(remaining: seconds)
       @dots = dots || Stack.new.slide_under(spawn(Stack.new))
       @next_id = @dots.map(&:id).max.to_i + 1
     end

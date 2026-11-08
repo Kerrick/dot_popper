@@ -173,4 +173,56 @@ class RoundTest < Minitest::Test
     assert_in_delta near_corner.x, back.x, 1e-9, "turning back puts it back"
     assert_in_delta near_corner.y, back.y, 1e-9
   end
+  # The tutorial's state, as Round.resume carries it into the round: two
+  # popped dots on top, and the fresh one born under both.
+  def resumed
+    first = dot(300, 300, popped: true, id: 0)
+    second = dot(340, 300, popped: true, id: 1)
+    fresh = dot(500, 300, velocity_x: 60, id: 2)
+    DotPopper::Round.resume(field, dots: DotPopper::Stack.new(dots: [first, second, fresh]), score: 2, seconds: 12.0,
+                                   random: Random.new(1))
+  end
+
+  def test_a_resumed_round_starts_from_the_dots_score_and_clock_it_is_given
+    round = resumed
+
+    assert_equal [0, 1, 2], round.dots.map(&:id)
+    assert_equal [true, true, false], round.dots.map(&:popped?)
+    assert_equal 2, round.score
+    assert_in_delta 12.0, round.countdown.remaining
+    assert_in_delta 0.0, round.elapsed
+    refute round.over?
+  end
+
+  def test_a_resumed_rounds_clock_runs_from_its_first_update_and_its_dots_go_on_moving
+    round = resumed
+    round.update(0.5)
+
+    assert_in_delta 11.5, round.countdown.remaining
+    assert_in_delta 0.5, round.elapsed
+    assert_in_delta 530.0, round.dots.to_a.last.x
+  end
+
+  def test_a_resumed_round_plays_by_the_usual_rules
+    round = resumed
+
+    missed = round.tap_at(300, 300)
+    assert_instance_of Events::Penalized, missed, "a tap reaches only the topmost dot"
+    assert_equal [0, 10.0], [round.score, round.countdown.remaining]
+
+    popped = round.tap_at(500, 300)
+    assert_instance_of Events::Popped, popped
+    assert_equal [1, 11.0], [round.score, round.countdown.remaining]
+    assert_equal 3, popped.spawned.id, "its new dot takes the next id"
+    assert_equal [0, 1, 2, 3], round.dots.map(&:id), "and goes in under every dot there"
+    assert round.dots.to_a.last.fresh?
+  end
+
+  def test_a_resumed_round_ends_when_its_clock_runs_out
+    round = resumed
+    round.update(12.5)
+
+    assert round.over?
+    assert_in_delta 12.0, round.elapsed
+  end
 end

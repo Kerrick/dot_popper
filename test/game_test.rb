@@ -193,4 +193,28 @@ class GameTest < Minitest::Test
       @game.press(fresh.x, fresh.y)
     end
   end
+  def test_the_title_resumes_a_round_from_where_the_tutorial_left_it
+    dots = DotPopper::Stack.new(dots: [dot(300, 300, popped: true, id: 0), dot(500, 300, id: 1)])
+    @game.resume(field: field, dots:, score: 1, seconds: 11.0)
+
+    assert_instance_of Game::Playing, @game.state
+    assert_equal [1, 11.0], [@game.round.score, @game.round.countdown.remaining]
+    assert_equal dots, @game.round.dots
+    started = @heard.last
+    assert_instance_of Events::RoundStarted, started
+    assert_same @game.round, started.round
+
+    @game.update(20)
+    assert_instance_of Game::GameOver, @game.state
+    assert_equal 1, @game.state.score
+    assert_equal 1, @game.best.of(@game.size_class), "it counts toward the bests as any round does"
+  end
+
+  def test_only_the_title_resumes_a_round
+    @game.press(0, 0)
+    round = @game.round
+    @game.resume(field: field, dots: DotPopper::Stack.new(dots: [dot(500, 300)]), score: 5, seconds: 11.0)
+
+    assert_same round, @game.round
+  end
 end

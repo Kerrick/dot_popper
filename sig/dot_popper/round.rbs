@@ -20,7 +20,9 @@ module DotPopper
 
     @next_id: Integer
 
-    def initialize: (Field field, ?random: Random, ?dots: Stack?, ?spawn_tries: Integer) -> void
+    def self.resume: (Field field, dots: Stack, score: Integer, seconds: number, ?random: Random, ?spawn_tries: Integer) -> Round
+
+    def initialize: (Field field, ?random: Random, ?dots: Stack?, ?score: Integer, ?seconds: number, ?spawn_tries: Integer) -> void
 
     def over?: () -> bool
 

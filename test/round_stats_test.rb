@@ -100,4 +100,22 @@ class RoundStatsTest < Minitest::Test
     clear_around!(@game.round, fresh)
     @game.press(fresh.x, fresh.y)
   end
+  def test_a_resumed_round_counts_the_pops_it_carries_without_a_wait
+    game = Game.new(field, random: Random.new(9))
+    recorder = RoundStats::Recorder.new
+    game.subscribe(recorder)
+    dots = DotPopper::Stack.new(dots: [dot(300, 300, popped: true), dot(340, 300, popped: true), dot(500, 300)])
+    game.resume(field: field, dots:, score: 2, seconds: 12.0)
+
+    stats = recorder.stats
+    assert_equal [2, 2, 2, 2], [stats.pops, stats.score, stats.run, stats.longest_run]
+    assert_empty stats.waits
+    assert_nil stats.fastest_pop
+
+    game.update(1.5)
+    fresh = game.round.dots.to_a.last
+    game.press(fresh.x, fresh.y)
+    assert_equal [3, 3, 3], [recorder.stats.pops, recorder.stats.score, recorder.stats.longest_run]
+    assert_equal [1.5], recorder.stats.waits.map { it.round(6) }, "the first wait runs from the clock starting"
+  end
 end

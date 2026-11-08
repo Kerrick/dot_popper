@@ -44,9 +44,13 @@ module DotPopper
 
     def start_round: (?Integer seed) -> Playing
 
+    def resume: (field: Field, dots: Stack, score: Integer, seconds: number) -> self
+
     def finish: (Round round, Integer seed, SizeClass size_class) -> GameOver
 
     private
+
+    def begin_round: (Round round, Integer seed) -> Playing
 
     def advance: (state next_state) -> self
 

@@ -20,6 +20,8 @@ module DotPopper
 
     def self.start: () -> RoundStats
 
+    def self.opening: (Round round) -> RoundStats
+
     def self.new: (pops: Integer, slips: Integer, softened: Integer, waits: Array[Float], fresh_since: number, duration: number, ?score: Integer, ?run: Integer, ?longest_run: Integer) -> instance
 
     def initialize: (pops: Integer, slips: Integer, softened: Integer, waits: Array[Float], fresh_since: number, duration: number, ?score: Integer, ?run: Integer, ?longest_run: Integer) -> void

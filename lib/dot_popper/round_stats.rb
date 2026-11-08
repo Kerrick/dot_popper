@@ -11,6 +11,15 @@ module DotPopper
   class RoundStats < Data.define(:pops, :slips, :softened, :waits, :fresh_since, :duration, :score, :run, :longest_run)
     def self.start = new(pops: 0, slips: 0, softened: 0, waits: [], fresh_since: 0.0, duration: 0.0)
 
+    # The stats of +round+ as it starts: none for a round begun afresh;
+    # for one that goes on from the tutorial (Round.resume), a pop for
+    # each of its popped dots, in a row, and its score. Those pops came
+    # before the clock ran, so none has a wait.
+    def self.opening(round)
+      pops = round.dots.count(&:popped?)
+      start.with(pops:, score: round.score, run: pops, longest_run: pops)
+    end
+
     def initialize(pops:, slips:, softened:, waits:, fresh_since:, duration:, score: 0, run: 0, longest_run: 0)
       super(pops:, slips:, softened:, waits: waits.dup.freeze, fresh_since: fresh_since.to_f, duration: duration.to_f,
             score:, run:, longest_run:)
@@ -57,7 +66,7 @@ module DotPopper
         case event
         when Events::RoundStarted
           @round = event.round
-          @stats = RoundStats.start
+          @stats = RoundStats.opening(event.round)
         when Events::Popped, Events::Penalized, Events::RoundEnded
           @stats = stats.record(event, at: @round&.elapsed || 0.0)
         end

@@ -75,9 +75,19 @@ module DotPopper
     # same taps give the same dots, whatever else uses randomness
     # meanwhile.
     def start_round(seed = @random.rand(LARGEST_SEED))
-      round = Round.new(field, random: Random.new(seed))
-      announce(Events::RoundStarted.new(round:, seed:))
-      Playing.new(round:, seed:, size_class:)
+      begin_round(Round.new(field, random: Random.new(seed)), seed)
+    end
+
+    # From the title, the round that goes on from where the tutorial left
+    # its +dots+, +score+ and +seconds+, on its +field+ (Round.resume). The
+    # clock was never running before, so nothing was scored or timed
+    # outside Playing; from here the round counts as any other does. Its
+    # new dots are drawn from a seed of its own, as #start_round's are.
+    def resume(field:, dots:, score:, seconds:)
+      return self unless state.is_a?(Title)
+
+      seed = @random.rand(LARGEST_SEED)
+      advance(begin_round(Round.resume(field, dots:, score:, seconds:, random: Random.new(seed)), seed))
     end
 
     # The round's score counts among the bests of +size_class+, the class
@@ -90,6 +100,11 @@ module DotPopper
     end
 
     private
+
+    def begin_round(round, seed)
+      announce(Events::RoundStarted.new(round:, seed:))
+      Playing.new(round:, seed:, size_class:)
+    end
 
     def advance(next_state)
       @state = next_state
