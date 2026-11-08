@@ -67,7 +67,7 @@ module DotPopper
       # to the screen, counts; if it cannot be sent now, the best such
       # round waits and is sent with the next contact.
       def round_finished(score:, sized_to_screen:)
-        return unless member? && Trophy.counts?(sized_to_screen:) && score.positive?
+        return unless belongs? && Trophy.counts?(sized_to_screen:) && score.positive?
 
         @pending = [score, @pending.to_i].max
         @pending_day = today
@@ -93,6 +93,10 @@ module DotPopper
 
       private
 
+      # Whether this player is in a group, as far as is known: after a
+      # launch with no network the group is unknown, but its rounds count.
+      def belongs? = member? || @was_member
+
       def ask(job)
         @running += 1
         @waiting << job
@@ -114,7 +118,7 @@ module DotPopper
       def member_action(id, verb, what) = ask(Job.new(kind: :group, verb:, path: "/v1/members/#{id}/#{what}"))
 
       def send_pending
-        return unless @pending && member?
+        return unless @pending && belongs?
 
         ask(Job.new(kind: :round, verb: :post, path: "/v1/rounds", body: { score: @pending, sized_to_screen: true }))
       end
@@ -129,6 +133,7 @@ module DotPopper
         @running -= 1
         return @error = :offline if reply.offline?
         return forget_identity if reply.status == 401
+        return left_meanwhile if job.kind == :round && reply.status == 404
         return @error = reply.error&.to_sym || :failed unless reply.ok?
 
         @error = nil
@@ -159,6 +164,7 @@ module DotPopper
 
       def look_at(group)
         @group = group
+        remember_membership(!group.nil?)
         return unless group
 
         group["news"].reject { @told.include?(it["id"]) }.each do |news|
@@ -168,6 +174,21 @@ module DotPopper
         end
         drop_stale_pending
         send_pending
+      end
+
+      def remember_membership(member)
+        return if @was_member == member
+
+        @was_member = member
+        save
+      end
+
+      # The server says this player is in no group, so a waiting round
+      # has nowhere to go.
+      def left_meanwhile
+        @pending = nil
+        @was_member = false
+        save
       end
 
       def finish_round(body)
@@ -188,6 +209,7 @@ module DotPopper
         @token = nil
         @name = nil
         @group = nil
+        @was_member = false
         @pending = nil
         @messages.clear
         @told = []
@@ -197,17 +219,18 @@ module DotPopper
       def today = Trophy.day(@clock.call)
 
       # Saved one per line: token, name, unsent score and its day, and
-      # the thefts already told.
+      # the thefts already told, and whether they were last in a group.
       def load_saved
-        token, name, pending, told = @store.read.to_s.split("\n", -1)
+        token, name, pending, told, member = @store.read.to_s.split("\n", -1)
         @token = token unless token.to_s.empty?
         @name = name unless name.to_s.empty?
         @pending, @pending_day = pending.to_s.split.map(&:to_i)
         @told = told.to_s.split.map(&:to_i)
+        @was_member = member == "1"
       end
 
       def save
-        @store.write([@token.to_s, @name.to_s, (@pending ? "#{@pending} #{@pending_day}" : ""), @told.join(" ")].join("\n"))
+        @store.write([@token.to_s, @name.to_s, (@pending ? "#{@pending} #{@pending_day}" : ""), @told.join(" "), (@was_member ? "1" : "")].join("\n"))
       end
     end
   end

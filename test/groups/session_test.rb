@@ -115,6 +115,27 @@ class SessionTest < Minitest::Test
     assert_empty @worker.started
   end
 
+  def test_a_round_after_a_launch_with_no_network_still_counts
+    joined
+    @session = new_session
+    @session.round_finished(score: 10, sized_to_screen: true)
+    pump
+
+    assert_equal [:round], @worker.started.map { it.first.kind }
+  end
+
+  def test_a_waiting_round_is_dropped_if_the_player_has_left_the_group
+    joined
+    @session = new_session
+    @session.round_finished(score: 10, sized_to_screen: true)
+    pump
+    answer(404, { "error" => "not_in_group" })
+    @session.round_finished(score: 11, sized_to_screen: true)
+    pump
+
+    assert_empty @worker.started
+  end
+
   def test_a_round_that_takes_the_trophy_is_told_once
     joined
     @session.round_finished(score: 10, sized_to_screen: true)
