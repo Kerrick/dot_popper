@@ -117,8 +117,8 @@ module DotPopper
         Rect.new(x: safe.x + margin, y: safe.bottom - margin - height, width: height * 3.8, height:)
       end
 
-      # The title's "How to play": a quiet pill with the Tutorial's guide
-      # on it, beside the mute button, as tall as it. It takes the room
+      # The title's "How to play": a quiet pill with the help sign on it,
+      # beside the mute button, as tall as it. It takes the room
       # between "Your records" and the mute button, up to HOW_TO_PLAY
       # buttons' heights across; where that is less than HOW_TO_PLAY_LEAST,
       # as on a small phone held upright, it takes a row of its own above

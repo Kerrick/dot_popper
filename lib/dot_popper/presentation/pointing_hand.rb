@@ -2,8 +2,7 @@
 
 module DotPopper
   module Presentation
-    # The hand the Tutorial's guide draws for a touchscreen, and "How to
-    # play" draws on its button: the familiar sign for "tap here", a
+    # The hand the Tutorial's guide draws for a touchscreen: the familiar sign for "tap here", a
     # gloved hand with its index finger out and the other fingers curled
     # into a fist, the thumb across them, and a cuff at the wrist. It is
     # made of rounded rectangles and capsules, in units of the finger's

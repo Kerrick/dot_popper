@@ -2,7 +2,7 @@
 
 module DotPopperGui
   # "How to play" on the title: drawn beside the mute button with the
-  # guide on it, as the hand in use draws it, and pressed, the tutorial at
+  # help sign on it, and pressed, the tutorial at
   # once, though the director never opens it on a Play. It plays as a
   # first Play's does: the guide taps the bright dot, and the player's tap
   # pops it. Skipped, a round starts; back on the title, H opens it again.
@@ -16,7 +16,7 @@ module DotPopperGui
 
     def play
       check(show.title?, "the game opens on the title")
-      touch(layout.safe.x + 4, layout.safe.y + 4) if hand == "touch" # a finger in hand, so the guide is one
+      touch(layout.safe.x + 4, layout.safe.y + 4) if hand == "touch" # a finger in hand, so the tutorial's guide is one
       wait(0.6)
       reach = show.reach_of(:how_to_play)
       check(reach, "the title offers How to play")

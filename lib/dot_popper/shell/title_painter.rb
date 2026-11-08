@@ -11,15 +11,9 @@ module DotPopper
     # further.
     class TitlePainter < Data.define(:pen, :dots)
       G = ::Lota::Graphics
-      DOT = 0.17 # the guide's dot's radius, in the button's height
-      # The hand's size, as the radius GhostPainter draws it for, in the
-      # button's height: a pointer is drawn smaller for its dot than a
-      # pointing hand or a reticle, so it is drawn for a larger one here.
-      HAND = { touch: 0.26, mouse: 0.42, gamepad: 0.32 }.freeze
-      # Where the hand's tip is, from the icon's middle, in the button's
-      # height: up and to the left, more so for the pointing hand, which
-      # reaches furthest down and to the right.
-      TIP = { touch: [-0.2, -0.2], mouse: [-0.08, -0.12], gamepad: [-0.08, -0.12] }.freeze
+      HELP = 0.3 # the help sign's ring's radius, in the button's height
+      HELP_MARK = 0.42 # its question mark's size, in the button's height
+      HELP_LINE = 0.035 # its ring's width, in the button's height, at least a device pixel
 
       def draw(show, layout)
         now = show.now
@@ -41,7 +35,7 @@ module DotPopper
         MuteButton.new(pen:).draw(plan.mute_button, show.sounds.muted?, hover: hover.level(:mute))
         PillButton.new(pen:).draw(plan.how_to_play_button, words.how_to_play, alpha: intro,
                                   hover: hover.level(:how_to_play),
-                                  icon: ->(x, y, size) { guide(show.input, x, y, size, intro) })
+                                  icon: ->(x, y, size) { help(x, y, size, intro) })
         return unless show.records_offered?
 
         PillButton.new(pen:).draw(plan.records_button, words.records, alpha: intro, hover: hover.level(:records))
@@ -50,19 +44,17 @@ module DotPopper
 
       private
 
-      # "How to play"'s icon: the Tutorial's guide, drawn as the hand in
-      # use (GhostPainter), tapping a small bright dot, in a square +size+
-      # across around +x+, +y+. The tapped point sits up and to the left,
-      # since the hand reaches in from below and to the right, and the
-      # hand never turns, wherever the button is.
-      def guide(input, x, y, size, alpha)
-        across, down = TIP.fetch(input.name)
-        tip_x = x + (size * across)
-        tip_y = y + (size * down)
-        dots.icon(tip_x, tip_y, size * DOT, fresh: true, opacity: alpha)
-        pose = Presentation::GhostPose.new(x: tip_x, y: tip_y, press: 1.0, since_press: nil, alpha:)
-        GhostPainter.new(pen:).draw(pose, input, size * HAND.fetch(input.name),
-                                    screen: [Float::INFINITY, Float::INFINITY])
+      # "How to play"'s icon: the help sign, a question mark in a thin
+      # ring, in a square +size+ across around +x+, +y+, the same for every
+      # input. The ring and the mark sit on whole device pixels.
+      def help(x, y, size, alpha)
+        pixels = pen.pixels
+        width = [(size * HELP_LINE * pixels.scale).round, 1].max
+        pen.color(pen.palette.cream, alpha)
+        G.line_width = pixels.line_width(width)
+        G.circle(:line, pixels.line_at(x, width), pixels.line_at(y, width), pixels.snap(size * HELP), 48)
+        mark = pen.fonts.semibold(Presentation::Pixels.font_size(size * HELP_MARK))
+        pen.text("?", mark, x, y, pen.palette.cream, alpha)
       end
 
       # The choice of dot size, each segment named, saying what it does
