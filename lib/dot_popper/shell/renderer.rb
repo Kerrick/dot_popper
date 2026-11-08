@@ -79,12 +79,17 @@ module DotPopper
 
       def radius = @show.game.field.radius
 
-      # The Tutorial: its dots and the effects of its taps, its HUD, never
-      # shaken, and its spotlight, hand and skip button over them all.
+      # The Tutorial, drawn as the round it opens is: its dots over their
+      # glow and the effects of its taps, its HUD, never shaken, and its
+      # spotlight, guide and skip button over them all.
       def tutorial(width, height, layout)
         scene = @show.tutorial
         @effects.flash(@show.effects, width, height)
-        @dots.draw(scene.dots, scene.animations, scene.now, scene.radius, opacity: scene.opacity)
+        @bloom.glow do
+          @dots.glow(scene.dots, scene.animations, scene.now, scene.radius)
+          @effects.droplets
+        end
+        @dots.draw(scene.dots, scene.animations, scene.now, scene.radius)
         @effects.scene(@show.effects, scene.dots)
         @effects.words(@show.effects, layout)
         pill = @hud.bounds(scene.hud, layout)

@@ -39,6 +39,7 @@ module DotPopper
         @game = game
         @tutorial_flag = tutorial_flag
         @tutorial = nil
+        @handing_over = nil
         @lead_in = nil
         @notices = notices
         @measure = measure
@@ -99,10 +100,10 @@ module DotPopper
       # Tutorial is not playing over it.
       def title? = game.state.is_a?(Game::Title) && !tutorial?
 
-      # Whether the Tutorial is playing (#tutorial). It is the
-      # presentation's alone, as the Records screen is: the game stays on
-      # its title meanwhile, so nothing in it is a round's, and no tap
-      # there reaches the game.
+      # Whether the Tutorial is playing (#tutorial). The game stays on its
+      # title meanwhile, so its clock is not running, and no tap there
+      # reaches the game; once it ends, the round goes on from where it
+      # left its dots, score and time.
       def tutorial? = !@tutorial.nil?
 
       # Whether the Records screen is open over the title. It is the
@@ -573,7 +574,7 @@ module DotPopper
         effects.clear
         effects.scale_to(field.radius)
         @tutorial = Tutorial.new(field:, center: [layout.center_x, layout.center_y], effects:, sounds:,
-                                 haptics: @haptics, look:)
+                                 haptics: @haptics, look:, now:, random: @random)
       end
 
       # A tap in the Tutorial: its skip button, or the scene's.
@@ -583,14 +584,16 @@ module DotPopper
         @tutorial.tap(x, y)
       end
 
-      # The Tutorial moves on, and once it is over, the round starts, its
-      # clock lit as it starts to run (LeadIn).
+      # The Tutorial moves on, and once it is over, the round goes on from
+      # exactly where it left its dots, score and time (Game#resume), and
+      # only its clock starts, lit as it starts to run (LeadIn).
       def follow_tutorial(seconds)
         @tutorial.update(seconds)
         return unless @tutorial.over?
 
-        @tutorial = nil
-        start_round
+        @handing_over, @tutorial = @tutorial, nil
+        scene = @handing_over
+        game.resume(field: scene.field, dots: scene.dots, score: scene.score, seconds: scene.seconds)
         @lead_in = LeadIn.new(at: now, look: look::TUTORIAL.lead)
       end
 
@@ -695,13 +698,22 @@ module DotPopper
 
       def within_safe(reach) = reach.with(height: [reach.height, layout.safe.bottom - reach.y].min)
 
+      # A round begins: afresh, its dot growing in, or, from the Tutorial,
+      # with the scene's dots as they were drawn, their animations, its
+      # effects still playing, and its HUD, so nothing on screen jumps.
       def round_started(event)
+        scene, @handing_over = @handing_over, nil
         @scale = event.round.field.radius
-        effects.clear
         effects.scale_to(@scale)
-        animations.clear
-        @hud = Hud.blank(look::HUD, words)
-        event.round.dots.each { animations.spawn(it.id, now) }
+        if scene
+          @animations = scene.animations
+          @hud = scene.hud.with(words:)
+        else
+          effects.clear
+          animations.clear
+          @hud = Hud.blank(look::HUD, words)
+          event.round.dots.each { animations.spawn(it.id, now) }
+        end
         @finale = nil
         @preview = nil
         @hid_fresh = false

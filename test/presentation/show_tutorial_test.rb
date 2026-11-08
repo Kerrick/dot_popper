@@ -3,8 +3,8 @@
 require_relative "presentation_helper"
 
 # The Tutorial as the Show plays it: opened by a first Play over the
-# title, outside the rules, and ended by its last beat or a skip with the
-# real round, as a Play would start it.
+# title, before the clock runs, and ended by its last beat, which the
+# round goes on from, or by a skip, which starts a round as Play does.
 class ShowTutorialTest < Minitest::Test
   include PresentationTest
 
@@ -31,14 +31,32 @@ class ShowTutorialTest < Minitest::Test
     assert_equal "seen", @store.read, "it is seen from the moment it opens"
   end
 
-  def test_nothing_in_it_reaches_the_rules_or_the_records
-    play_through
+  def test_the_round_goes_on_from_its_dots_score_and_time_with_only_the_clock_starting
+    play_through(hand_over: false)
+    scene = @show.tutorial
+    update_for(0.1) while @show.tutorial?
 
     assert @show.playing?
-    assert_equal 0, @game.round.score
-    assert_in_delta DotPopper::Rules::STARTING_SECONDS, @game.round.countdown.remaining, 0.05
+    round = @game.round
+    assert_equal scene.dots.map(&:id), round.dots.map(&:id), "the same dots, in the same order"
+    assert_equal [true, true, false], round.dots.map(&:popped?)
+    assert_equal 2, round.score
+    assert_operator round.countdown.remaining, :<=, 12.0
+    assert_operator round.countdown.remaining, :>, 11.9, "the clock has only just started"
+    assert_equal [2, 12], [@show.hud.score, @show.hud.seconds], "the HUD shows the same numbers"
+    assert_same scene.animations, @show.animations, "and the dots are drawn as they were"
     assert_equal 0, @lifetime.stats.rounds
     assert_equal [DotPopper::Events::RoundStarted], @events.uniq - [DotPopper::Events::TitleShown]
+  end
+
+  def test_the_round_it_goes_on_into_counts_as_any_round_does
+    play_through
+    update_for(0.1) until @show.finished?
+
+    assert_equal 1, @lifetime.stats.rounds
+    assert_operator @show.stats.pops, :>=, 2, "its two pops are the round's"
+    assert_equal @game.round.score, @show.stats.score
+    assert_equal @game.round.score, @best.of(@game.size_class)
   end
 
   def test_its_end_starts_the_round_with_the_clock_lit_and_its_first_second_ticking
@@ -54,14 +72,18 @@ class ShowTutorialTest < Minitest::Test
     assert_nil @show.lead_in
   end
 
-  def test_its_skip_button_starts_the_round_at_once
+  def test_its_skip_button_starts_a_fresh_round_at_once
     press_main
+    update_for(2.0)
+    @show.tutorial.tap(*@show.tutorial.dots.first.then { [it.x, it.y] })
     reach = @show.skip_reach
     @show.tap(reach.center_x, reach.center_y)
 
     refute @show.tutorial?
     assert @show.playing?
     assert_nil @show.lead_in
+    assert_equal [0, 1], [@game.round.score, @game.round.dots.size], "nothing of the tutorial's comes with it"
+    assert_in_delta DotPopper::Rules::STARTING_SECONDS, @game.round.countdown.remaining
   end
 
   def test_escape_or_a_gamepads_b_skips_it
@@ -139,14 +161,14 @@ class ShowTutorialTest < Minitest::Test
   end
 
   # Plays the whole tutorial, tapping each bright dot as it is shown.
-  def play_through
+  def play_through(hand_over: true)
     press_main
     [Tutorial::BRIGHT, Tutorial::NEXT].each do |id|
       update_for(0.1) until %i[aim aim_next].include?(@show.tutorial.beat) && !tapped?(id)
       dot = @show.tutorial.dots.find { it.id == id }
       @show.tap(dot.x, dot.y)
     end
-    update_for(0.1) while @show.tutorial?
+    update_for(0.1) while @show.tutorial? if hand_over
   end
 
   def tapped?(id) = @show.tutorial.dots.find { it.id == id }.popped?

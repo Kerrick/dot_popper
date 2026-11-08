@@ -5,8 +5,8 @@ module DotPopper
     # How the Tutorial's ghost hand moves, in seconds and radii: one tap's
     # loop, how long it glides from one dot to another and fades in or
     # out, where it rests between taps (+rest+, an [x, y] offset from the
-    # dot, down and to the right), and where it hovers over a dot it will
-    # not tap (+hover+), bobbing by +bob+.
+    # dot, down and to the right), and where it waits beside a dot it will
+    # not tap again (+hover+), bobbing by +bob+.
     class GhostLook < Data.define(:loop, :glide, :fade, :rest, :hover, :bob); end
 
     # Where the ghost hand is at one moment, and how it is pressing:
@@ -24,7 +24,7 @@ module DotPopper
     end
 
     # The ghost hand that shows the player what to do, without a word: it
-    # taps a dot over and over (+mode+ :tap), hovers over one and holds
+    # taps a dot over and over (+mode+ :tap), waits beside one, holding
     # back (:hover), or fades away (:gone). +to+ is the dot's Anchor, and
     # since +at+ it glides there from where the hand was before
     # (+before+, the GhostHand it was), or fades in if it was nowhere.
@@ -96,7 +96,7 @@ module DotPopper
         end
       end
 
-      # Over the dot, never touching it, bobbing a little as if unsure.
+      # Beside the dot, never touching it, bobbing a little as it waits.
       def hover_pose(x, y, elapsed, radius)
         hover_x, hover_y = look.hover
         bob = Math.sin([elapsed, 0.0].max * 2 * Math::PI / look.loop) * look.bob

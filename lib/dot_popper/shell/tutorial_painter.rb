@@ -3,8 +3,8 @@
 module DotPopper
   module Shell
     # What the Tutorial draws over its dots and the HUD, with no word: the
-    # dim around its spotlight, the soft ✕ over the popped dot, the numbers
-    # flying to and from the HUD, the ghost hand, and the skip button; and,
+    # dim around its spotlight, the numbers flying to and from the HUD, the
+    # guide (GhostPainter), and the skip button; and,
     # in the round's first moments, its LeadIn's light on the clock. The
     # HUD itself is never dimmed, and the number the spotlight is on is
     # haloed. Text and lines sit on whole device pixels.
@@ -20,15 +20,14 @@ module DotPopper
 
       # What goes under the HUD, which is never dimmed, so its numbers
       # always show where they live: the dim around the Tutorial's (+scene+)
-      # spotlight and the ✕, with the HUD at +pill+ and its numbers'
-      # middles at +spots+.
+      # spotlight, with the HUD at +pill+ and its numbers' middles at
+      # +spots+.
       def under_hud(scene, pill, spots)
         spotlight(scene.spotlight, scene.now, scene.dots, spots, scene.radius, pill)
-        cross(scene.crossed, scene.cross, scene.radius)
       end
 
       # What goes over the HUD: a halo on the number the spotlight is on,
-      # the numbers in flight, the ghost hand, and the skip button.
+      # the numbers in flight, the guide, and the skip button.
       def over_hud(show, scene, layout, pill, spots)
         now = scene.now
         light = scene.spotlight
@@ -114,25 +113,6 @@ module DotPopper
           G.polygon(:fill, x + (inner * Math.cos(a)), y + (inner * Math.sin(a)), x + (outer * Math.cos(a)),
                     y + (outer * Math.sin(a)), x + (outer * Math.cos(b)), y + (outer * Math.sin(b)),
                     x + (inner * Math.cos(b)), y + (inner * Math.sin(b)))
-        end
-      end
-
-      # A soft ✕ over the popped dot: don't.
-      def cross(dot, amount, radius)
-        return unless dot && amount.positive?
-
-        pixels = pen.pixels
-        x = pixels.snap(dot.x)
-        y = pixels.snap(dot.y)
-        half = radius * 0.4
-        [[pen.palette.shadow, 0.55, 0.24], [pen.palette.alarm, 0.9, 0.13]].each do |color, strength, width|
-          pen.color(color, strength * amount)
-          line = pixels.whole(radius * width)
-          G.line_width = line
-          [[-1, -1, 1, 1], [-1, 1, 1, -1]].each do |x1, y1, x2, y2|
-            G.line(x + (x1 * half), y + (y1 * half), x + (x2 * half), y + (y2 * half))
-            [[x1, y1], [x2, y2]].each { |dx, dy| G.circle(:fill, x + (dx * half), y + (dy * half), line / 2.0, 16) }
-          end
         end
       end
 

@@ -3,9 +3,8 @@
 module DotPopper
   module Presentation
     # A number that eases from +from+ to +to+ over +duration+ seconds from
-    # +at+, and rests there: how fast the Tutorial's time flows, how much
-    # of its ✕ shows, how much of its dots. Easing in and out, it never
-    # snaps from one value to the next.
+    # +at+, and rests there: how fast the Tutorial's time flows. Easing in
+    # and out, it never snaps from one value to the next.
     class Level < Data.define(:from, :to, :at, :duration)
       # A level that stays at +value+.
       def self.steady(value) = new(from: value, to: value, at: 0.0, duration: 0.0)

@@ -579,21 +579,21 @@ The hint that explains the stacking rule no longer appears during a round. It ap
 
 ### The first Play opens a tutorial with no words
 
-On a fresh install, the first Play opens a tutorial of about 20 seconds before the round. It has four beats. A bright dot drifts, time eases to a stop in 0.15 s, a spotlight dims everything else, and a ghost hand taps the dot over and over until the player does. The pop holds time still while "+1" flies into the HUD's score and a small stopwatch with "+1" into its time, each counting up as it lands, with a chime and a tick. A new bright dot is born under the popped one; as it peeks out, time stops again, a soft ✕ marks the popped dot, and the hand hovers over it without tapping. Time then flows slowly until the bright dot is clear, and the hand moves to it and taps. A tap on the popped dot shows its cost, "−2" leaping out of the score and the time with the game's penalty sound, shudder and dashed outline, and the beat goes on. The last pop's numbers fly in, the dots fade, the HUD shows 0 and 10, and the real round starts while a halo lights the clock as it starts to run. The ghost hand is the player's own: a fingertip, a mouse pointer, or a gamepad's reticle with its A button. A ⏭ button in the top right corner, Escape, and a gamepad's B skip it, and start the round at once. It never shakes the screen, and muted it teaches as fully, since every lesson is drawn.
+On a fresh install, the first Play opens a tutorial of about 20 seconds: the first round's opening, before its clock runs. It has four beats. A bright dot drifts, time eases to a stop in 0.15 s, a spotlight dims everything else, and the tutorial's guide taps the dot over and over until the player does. The pop holds time still while "+1" flies into the HUD's score and a small stopwatch with "+1" into its time, each counting up as it lands, with a chime and a tick. A new bright dot is born under the popped one. As it peeks out, time stops again, and the guide taps the popped dot once, showing what that costs (see "The tutorial's guide shows a wrong tap's cost, with no ✕"). The guide then waits to one side while time flows slowly until the bright dot is clear, and moves to it and taps. A tap of the player's on the popped dot shows the same cost, and the beat goes on. The last pop spawns a new bright dot under both, as any pop does, its numbers fly in, the light moves to the clock, and the round goes on from there (see "The tutorial hands its dots, score and time to the first round"). The guide is the player's own hand: a fingertip, a mouse pointer, or a gamepad's reticle with its A button. A ⏭ button in the top right corner, Escape, and a gamepad's B skip it, and start a fresh round at once. It never shakes the screen, and muted it teaches as fully, since every lesson is drawn.
 
-It is the only teaching that has no words. The title's legend and Game Over's lesson are unchanged.
-
-**Why:** In playtests, one player ignored the title's words and asked how to play, and another never noticed that pops add a second. Players don't read, and someone who can't read English should still understand the game. So the tutorial uses only numbers, the clock's digits, and drawn shapes. It stops time so the player can look at the one thing that matters, and it uses the real dot drawing, the slowest real speed, the real HUD and the real pop and penalty effects, so what it teaches is what the game does. Each step on is the player's own tap, so they learn by doing, and a wrong tap is safe.
+**Why:** How to play must never depend on reading. In playtests, one player ignored the title's words and asked how to play, and another never noticed that pops add a second. The maintainer's goal is that "a person who can't read English should understand and enjoy it", so the tutorial uses only numbers, the clock's digits, and drawn shapes. It stops time so the player can look at the one thing that matters, and it uses the real dot drawing, the slowest real speed, the real HUD and the real pop and penalty effects, so what it teaches is what the game does. Each step on is the player's own tap, so they learn by doing, and a wrong tap is safe.
 
 **To reverse:** Construct `Show` without `tutorial_flag:` in `Shell::App#load`.
 
 ### The tutorial is a scene of its own, not a round
 
-`Presentation::Tutorial` is a scripted scene the Show plays over the title, as it holds the Records screen. The game stays on its title until the tutorial ends; then the Show starts the round exactly as Play does. Its dots are the rules' own `Dot` and `Stack`, but its score and clock are only the HUD's numbers, so nothing in it is scored, logged, or counted toward bests, records or the daily goal.
+*Replaced: the tutorial is now the first round's opening, and the round goes on from it (see "The tutorial hands its dots, score and time to the first round").*
 
-**Why:** The rules say the clock never waits in Playing and nothing touches the score or clock outside it. A tutorial that stops time can't be a round, and a round that taught would put practice taps into the records.
+`Presentation::Tutorial` was a scripted scene the Show played over the title. When it ended, its dots faded, its HUD went back to 0 and 10, and the Show started a fresh round, as Play does, so nothing in it was scored, logged, or counted.
 
-**To reverse:** Remove the tutorial's branch from `Show#play`.
+**Why:** It read the rule "nothing touches the score or clock outside Playing" as forbidding any carry-over. The maintainer found that its ending taught something that never happens in the game: two dots fade away, a new one appears, and the HUD drops from 2 and 12 to 0 and 10.
+
+**To reverse:** See the entry that replaced it.
 
 ### The tutorial's flag survives clearing the records
 
@@ -951,3 +951,19 @@ Dot Popper's Android activity now declares that it handles dark theme (`uiMode`)
 **Why:** A player who switches on dark theme from Quick Settings, or whose phone does that at sunset, mid-round, shouldn't lose the round and the app.
 
 **To reverse:** Cut `android:configChanges` in `android/host/src/main/AndroidManifest.xml` back to `orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation`.
+
+### The tutorial hands its dots, score and time to the first round
+
+When the tutorial ends, the first round begins from exactly where it left things: its three dots where they are, going as they go, the two popped ones on top and the bright one under them, the score at 2 and the clock at 12. Only the clock starts, with the lit TIME and the tick the tutorial already had. Nothing fades, nothing resets, and no dot is added. `Round.resume(field, dots:, score:, seconds:)` starts a round from a given state, and `Game#resume` starts it from the title; from there the round plays by the usual rules (a new dot spawns under every dot, a tap reaches only the topmost, the clock runs from its first update), and its score, best, records and daily goal count as any round's. `RoundStats` counts each carried popped dot as a pop with no wait, so the score and the pops agree. Skipping the tutorial still starts a fresh round at 0 and 10.
+
+**Why:** This is not an exception to "nothing affects the score or the timer outside Playing". It is that rule applied: the clock is paused whenever the game isn't running, and the tutorial is a time when it isn't. The tutorial's two pops are pops by the usual rules, made while the clock was still, so the round keeps them, and the clock simply starts. The old ending taught something the game never does, a field emptied and a score taken back, which the maintainer saw at once. A demonstration should show what really happens (Hodent, on teaching by the game's own feedback), and an ending that carries straight on asks the player to unlearn nothing.
+
+**To reverse:** In `Show#follow_tutorial`, call `start_round` instead of `game.resume`, and in `Show#round_started` treat every round as fresh.
+
+### The tutorial's guide shows a wrong tap's cost, with no ✕
+
+The soft pink ✕ that marked the popped dot in the tutorial is gone. Instead, as the bright dot peeks out, the guide taps the popped dot once, and the game's own penalty plays: the dot's shudder and alarm ring, the dashed outline of the bright dot under it, the edge's glow, the bonk, and "−2" and "−2" with the stopwatch leaping out of SCORE and TIME. Then the guide lifts and waits up and to the left of the popped dot while the bright one slides clear, and only then moves to it and taps. The guide's tap lands before the player's turn, under the spotlight, with the guide plainly pressing, and it doesn't buzz a phone, so it can't be mistaken for the player's own. Neither the guide's wrong tap nor the player's own wrong tap in the tutorial changes the numbers: the "−2" shows the cost, and the score and time stay as they were.
+
+**Why:** Symbols and colours are not universal (Westland & Maggio on colour). On ballots and checkboxes in the UK and the US an X marks the voter's choice, "X marks the spot" means "here", in parts of Scandinavia a ✓ means wrong, and in China and on East Asian stock tickers red and pink mean good, or up. The game's own penalty needs no translation, since the player will see it again in every round, and showing a consequence teaches better than a sign forbidding it (Hodent). The demonstration is only illustrative, so it costs nothing. Since a wrong tap there costs nothing either, every player carries the same 2 points and 12 seconds into the first round, and the tutorial stays a safe place to try a tap.
+
+**To reverse:** In `Tutorial#show_the_cost`, hover the guide over the popped dot (`ghost.hovering`) instead of tapping it, and drop the cue that calls `guide_slips`.

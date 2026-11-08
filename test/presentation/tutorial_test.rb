@@ -103,21 +103,39 @@ class TutorialTest < Minitest::Test
     assert_operator @tutorial.rate, :>, 0.0, "then it runs on by itself"
   end
 
-  def test_time_stops_as_the_bright_dot_peeks_out_and_the_hand_holds_back_from_the_popped_one
+  def test_as_the_bright_dot_peeks_out_the_guide_taps_the_popped_one_and_its_cost_plays
     to_the_peek
     assert_equal :warn, @tutorial.beat
     assert_equal Anchor.dot(Tutorial::BRIGHT), @tutorial.spotlight.to
-    play_for(SCRIPT.cross + SCRIPT.stop)
+    play_for(SCRIPT.stop)
     assert_in_delta 0.0, @tutorial.rate
-    assert_in_delta 1.0, @tutorial.cross
-    assert_equal Tutorial::BRIGHT, @tutorial.crossed.id
     assert_operator Math.hypot(bright.x - next_dot.x, bright.y - next_dot.y), :<, 2 * R, "it has only peeked out"
-    poses = 30.times.map do
+    assert_empty @tutorial.flights
+
+    pressed = nil
+    play_until do
+      pose = @tutorial.ghost_pose
+      pressed ||= pose if pose&.press == 1.0
+      @tutorial.flights.any?
+    end
+    assert pressed && near?(pressed, bright), "the guide presses the popped dot"
+    assert_equal %w[−2 −2], @tutorial.flights.map(&:text), "and its cost leaps out of the score and the time"
+    assert_equal [nil, :stopwatch], @tutorial.flights.map(&:icon)
+    assert_equal [1, 11], shown, "but the numbers stay: the guide's tap takes nothing"
+    assert_equal :bonk, @sounds.names.last
+    assert_equal 1, @effects.reveals.size, "the bright dot under it is outlined"
+    assert_equal 1, @effects.rings.count { it.look == Look::ALARM_RING }
+    assert_operator @tutorial.animations.pose(bright, @tutorial.now + 0.05).alarm, :>, 0.0, "it shudders"
+    assert_equal [Look::HAPTICS.pop], @haptics.buzzes, "only the player's own taps buzz"
+    assert_in_delta 0.0, @effects.shake_x
+
+    poses = 40.times.map do
       play_for(STEP * 2)
       @tutorial.ghost_pose
     end
-    assert(poses.all? { it.press.zero? }, "the hand never taps the popped dot")
-    assert(poses.last.then { near?(it, bright) }, "it hovers over it")
+    assert(poses.last(20).all? { it.press.zero? }, "then it lifts, and taps no more")
+    assert(poses.last.then { !near?(it, bright) && !near?(it, next_dot) }, "and waits to one side")
+    assert_equal 1, @effects.reveals.size, "once"
 
     play_until { @tutorial.beat == :slide }
     play_for(SCRIPT.resume)
@@ -130,41 +148,47 @@ class TutorialTest < Minitest::Test
       play_for(STEP * 2)
       pose = @tutorial.ghost_pose
       pose.press == 1.0 && near?(pose, next_dot)
-    end, "the hand moves to the clear bright dot and taps it")
+    end, "the guide moves to the clear bright dot and taps it")
   end
 
-  def test_a_tap_on_the_popped_dot_shows_its_cost_and_the_beat_goes_on
+  def test_a_tap_on_the_popped_dot_shows_its_cost_takes_nothing_and_the_beat_goes_on
     to_the_peek
     tap_on(bright)
 
     assert_equal :warn, @tutorial.beat, "the beat goes on"
-    assert_equal [0, 9], shown, "the score and time drop, the score no lower than 0"
+    assert_equal [1, 11], shown, "the numbers stay"
     assert_equal %w[−2 −2], @tutorial.flights.map(&:text)
     assert_equal [Anchor.hud(:score), Anchor.hud(:time)], @tutorial.flights.map(&:from)
-    assert_equal [nil, :stopwatch], @tutorial.flights.map(&:icon)
     assert_equal :bonk, @sounds.names.last
+    assert_equal Look::HAPTICS.penalty, @haptics.buzzes.last, "the player's own tap buzzes"
     assert_equal 1, @effects.reveals.size, "the bright dot under it is outlined"
-    assert_equal 1, @effects.rings.count { it.look == Look::ALARM_RING }
     assert_in_delta 0.0, @effects.shake_x
     assert_in_delta 0.0, @effects.shake_y
   end
 
-  def test_the_last_pop_flies_in_then_the_scene_clears_for_the_round
+  def test_the_last_pop_spawns_a_dot_under_them_all_and_hands_the_scene_over_as_it_is
     to_the_peek
     play_until { @tutorial.beat == :aim_next }
     tap_on(next_dot)
 
     assert_equal :runs, @tutorial.beat
-    assert_equal 2, @tutorial.dots.count(&:popped?)
+    assert_equal [Tutorial::BRIGHT, Tutorial::NEXT, Tutorial::LAST], @tutorial.dots.map(&:id)
+    assert_equal [true, true, false], @tutorial.dots.map(&:popped?), "a new bright dot goes in under them all"
+    last = @tutorial.dots.to_a.last
+    assert_includes DotPopper::Rules::SPEEDS.map { it * R }, last.velocity_x.abs, "at one of the game's speeds"
     play_for(SCRIPT.gap + SCRIPT.quick + STEP)
     assert_equal [2, 12], shown
+    still = @tutorial.dots.to_a.last
     play_for(SCRIPT.linger)
     assert_equal :ending, @tutorial.beat
-    assert_equal [0, 10], shown, "the HUD shows the round's start"
-    assert_equal Anchor.hud(:time), @tutorial.spotlight.to
-    play_for(SCRIPT.dissolve)
+    now = @tutorial.dots.to_a.last
+    assert_operator Math.hypot(now.x - still.x, now.y - still.y), :<, 0.1, "time held still till then"
+    assert_equal Anchor.hud(:time), @tutorial.spotlight.to, "the light moves to the clock"
+    play_for(SCRIPT.handover)
     assert @tutorial.over?
-    assert_in_delta 0.0, @tutorial.opacity
+    assert_in_delta 1.0, @tutorial.rate, 1e-9, "and time flows as the game's does"
+    assert_equal [2, 12], [@tutorial.score, @tutorial.seconds], "what it leaves the round"
+    assert_equal 3, @tutorial.dots.size, "no dot fades or is added"
   end
 
   def test_a_tap_on_empty_space_only_ripples
