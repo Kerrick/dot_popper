@@ -74,7 +74,12 @@ class ShowTest < Minitest::Test
                  Show.new(game: @game, layout:, sounds: @sounds, radius: R, input: InputKind::TOUCH).words.continue
   end
 
-  def test_on_game_over_copy_my_result_copies_it_and_does_not_continue
+  RESULT = "Dot Popper: 1 point\n🟡 1 pop · ⚫ 0 mistakes · ⏱ 11 seconds\n" \
+           "Played on a screen about 8 dots wide and 6 dots tall."
+
+  # "Share my score" only shows the result: the clipboard changes only
+  # when the player presses Copy, and then to exactly what was shown.
+  def test_share_my_score_shows_the_result_and_only_copy_copies_it
     start_and_pop
     @game.update(20)
     @game.update(DotPopper::Rules::GAME_OVER_GRACE)
@@ -82,9 +87,91 @@ class ShowTest < Minitest::Test
     @show.tap(*middle(@show.share_reach))
 
     assert @show.finished?
-    assert_equal "Dot Popper: 1 point\n🟡 1 pop · ⚫ 0 mistakes · ⏱ 11 seconds\n" \
-                 "Played on a screen about 8 dots wide and 6 dots tall.", @clipboard.text
-    assert @show.finale.copied?(@show.now)
+    assert @show.sharing?
+    assert_equal RESULT, @show.share_preview.text
+    assert_nil @clipboard.text, "opening the preview copies nothing"
+    refute @show.share_preview.copied?
+
+    @show.tap(*middle(@show.copy_reach))
+
+    assert_equal RESULT, @clipboard.text
+    assert @show.share_preview.copied?
+    assert @show.sharing?, "the preview stays open to say it was copied"
+    assert @show.finished?
+  end
+
+  def test_the_share_preview_closes_by_close_by_back_and_by_a_tap_beside_it
+    finish_round(back_to_title: false)
+    @show.share
+    @show.tap(*middle(@show.close_reach))
+    refute @show.sharing?, "Close closes it"
+
+    @show.share
+    assert @show.back, "Escape and B close it"
+    refute @show.sharing?
+    assert @show.finished?, "and go no further than Game Over"
+
+    @show.share
+    card = @show.share_plan.card
+    @show.tap(card.x + 2, card.y + 2)
+    assert @show.sharing?, "a tap on the card, away from its buttons, does nothing"
+    @show.tap(card.x - 5, card.y - 5)
+    refute @show.sharing?, "a tap beside the card closes it"
+    assert_nil @clipboard.text
+  end
+
+  # In the preview, the main button is Copy: Enter, Space, Start, a
+  # gamepad's A aimed at nothing, and Y again all copy.
+  def test_in_the_share_preview_the_main_button_and_y_copy
+    finish_round(back_to_title: false)
+    @show.share
+    @show.primary
+    assert_match(/\ADot Popper: 1 point\n/, @clipboard.text)
+    @clipboard.copy(nil)
+    @show.share
+    assert_match(/\ADot Popper: 1 point\n/, @clipboard.text)
+    @clipboard.copy(nil)
+    @show.tap(0, 0, by: :gamepad)
+    assert_match(/\ADot Popper: 1 point\n/, @clipboard.text)
+    assert @show.sharing?
+  end
+
+  # The preview is the presentation's alone: the game stays on Game
+  # Over, its grace runs as ever, nothing under the preview takes a
+  # press, and once it closes, Continue goes on as before.
+  def test_the_share_preview_leaves_game_over_and_continue_as_they_were
+    finish_round(back_to_title: false)
+    continue = middle(@show.continue_reach)
+    @show.share
+    assert_equal %i[close copy], @show.controls.map(&:name).sort, "only the preview's buttons take a press"
+    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    assert @game.state.ready?, "the grace runs on under the preview"
+    @show.primary
+    assert @show.finished?, "the main button copies there, and goes nowhere"
+    refute @show.waits_for_release?(*continue), "no press under the preview drags the pile"
+
+    @show.close_share
+    @show.tap(*continue)
+    assert @show.title?
+    refute @show.sharing?
+  end
+
+  # A phone's own share sheet can take the preview's place (Show's
+  # +sharing+): offered the result, it opens no preview.
+  def test_a_system_share_sheet_can_stand_in_for_the_preview
+    sheet = Class.new do
+      attr_reader :offered
+
+      def offer(text, _now) = (@offered = text) && nil
+    end.new
+    show = Show.new(game: @game, layout:, sounds: @sounds, radius: R, clipboard: @clipboard, sharing: sheet)
+    press_main(show)
+    @game.update(20)
+    show.share
+
+    assert_match(/\ADot Popper: 0 points\n/, sheet.offered)
+    refute show.sharing?
+    assert_nil @clipboard.text
   end
 
   def test_each_finished_round_is_added_to_the_lifetime_stats
@@ -168,7 +255,7 @@ class ShowTest < Minitest::Test
     refute @show.waits_for_release?(*middle(@show.continue_reach))
   end
 
-  def test_copy_my_result_takes_taps_where_its_plan_draws_it
+  def test_share_my_score_takes_taps_where_its_plan_draws_it
     finish_round(back_to_title: false)
     button = @show.finale_plan.share_button
 
@@ -176,10 +263,12 @@ class ShowTest < Minitest::Test
     assert reach.contains?(button.center_x, button.center_y)
     assert_operator reach.height, :>=, button.height
     refute reach.overlaps?(@show.continue_reach), "a press reaches one button"
-    assert_operator @show.finale_plan.backing.bottom, :<=, button.y, "the backing ends above the buttons"
+    assert_operator @show.finale_plan.backing.bottom, :<=, @show.finale_plan.continue_button.y,
+                    "the backing ends above Continue"
+    assert_operator @show.finale_plan.backing.bottom, :>=, button.bottom, "and holds Share my score, with the score"
   end
 
-  def test_the_share_buttons_place_on_the_title_copies_nothing
+  def test_the_share_buttons_place_on_the_title_shares_nothing
     finish_round(back_to_title: false)
     place = middle(@show.share_reach)
     @game.update(DotPopper::Rules::GAME_OVER_GRACE)
@@ -189,6 +278,7 @@ class ShowTest < Minitest::Test
 
     @show.tap(*place)
 
+    refute @show.sharing?
     assert_nil @clipboard.text
   end
 
@@ -385,19 +475,23 @@ class ShowTest < Minitest::Test
     assert @show.title?
   end
 
-  def test_a_gamepads_y_copies_the_result_on_game_over_and_nothing_else
+  def test_a_gamepads_y_shares_the_result_on_game_over_and_nothing_else
     @show.share
     assert @show.title?, "Y does nothing on the title"
+    refute @show.sharing?
 
     @show.start
     @show.share
     assert @show.playing?, "Y does nothing in a round"
-    assert_nil @clipboard.text
+    refute @show.sharing?
 
     @game.update(20)
     @show.update(0.1)
     @show.share
     assert @show.finished?
+    assert @show.sharing?
+    assert_nil @clipboard.text
+    @show.share
     assert_match(/\ADot Popper: 0 points\n/, @clipboard.text)
   end
 

@@ -7,8 +7,9 @@ module DotPopper
     # a popped one by mistake, slows as its score grows so the round ends,
     # and goes from Game Over back to the title. Given the Show, it presses
     # the buttons a player would: Play to start a round, Continue to go
-    # on, "Copy my result" on every other Game Over, and on its second
-    # visit to the title, "Your records", and Back after a while. The first time the title offers
+    # on, "Share my score" on every other Game Over, then Copy in the
+    # share preview, and Close, a moment apart, and on its second visit to
+    # the title, "Your records", and Back after a while. The first time the title offers
     # the choice of dot size, it taps the other one, so a run shows the
     # title's dots change. It sees only what a player sees: the dots and
     # the screen.
@@ -28,6 +29,7 @@ module DotPopper
         @browsed = false
         @resized = false
         @shared = false
+        @pressed_at = 0.0
       end
 
       # Where to press this frame, as [x, y], or nil.
@@ -100,14 +102,25 @@ module DotPopper
       # the game itself takes as a start.
       def start(game, show) = show ? middle(show.play_reach) : center(game.field)
 
-      # Copies every other result first, then presses Continue once the
-      # game will hear.
+      # Shares and copies every other result first, then presses Continue
+      # once the game will hear.
       def finish(game, show)
+        return in_preview(show) if show&.sharing?
+
         if show && @finales.even? && !@shared && @waited >= @look.finale_wait / 2 && show.share_reach
           @shared = true
+          @pressed_at = @waited
           return middle(show.share_reach)
         end
         press_once(@look.finale_wait) { show ? middle(show.continue_reach) : center(game.field) } if game.state.ready?
+      end
+
+      # In the share preview, a moment after each press: Copy, then Close.
+      def in_preview(show)
+        return if @waited - @pressed_at < @look.finale_wait / 4
+
+        @pressed_at = @waited
+        middle(show.share_preview.copied? ? show.close_reach : show.copy_reach)
       end
 
       def middle(rect) = [rect.center_x, rect.center_y]

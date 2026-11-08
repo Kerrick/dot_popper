@@ -6,8 +6,7 @@ module DotPopper
     # arriving, the score counting up, and the prompt to go on, which
     # shows only from +ready_at+, once a press would be heard. A new best
     # is celebrated once, when it has finished counting. +stats+ are the
-    # round's RoundStats, for the line of facts under the score.
-    # +copied_at+ is when the result was last copied to share. +record+
+    # round's RoundStats, for the line of facts under the score. +record+
     # is the most impressive lifetime record the round set
     # (LifetimeStats::Record), or nil, and +goal_met+ whether it was the
     # first round to meet today's goal, which is celebrated once, also when
@@ -17,13 +16,10 @@ module DotPopper
     # Overs after a wrong tap with the bright dot hidden beneath, or nil.
     # +first+ says the round was the first of its SizeClass, which set the
     # best without beating one.
-    class Finale < Data.define(:look, :score, :best, :new_best, :at, :stats, :record, :goal_met, :copied_at,
-                               :ready_at, :celebrated, :goal_celebrated, :screen, :lesson, :first)
-      COPIED_FOR = 1.6 # seconds "Copy my result" says "Copied!"
-
+    class Finale < Data.define(:look, :score, :best, :new_best, :at, :stats, :record, :goal_met, :ready_at,
+                               :celebrated, :goal_celebrated, :screen, :lesson, :first)
       def initialize(look:, score:, best:, new_best:, at:, stats: RoundStats.start, record: nil, goal_met: false,
-                     copied_at: nil, ready_at: nil, celebrated: false, goal_celebrated: false, screen: nil, lesson: nil,
-                     first: false)
+                     ready_at: nil, celebrated: false, goal_celebrated: false, screen: nil, lesson: nil, first: false)
         super
       end
 
@@ -34,8 +30,8 @@ module DotPopper
       # faded in.
       def afterword(now) = counted?(now) ? look.prompt.at(now - at - look.tally.duration) : 0.0
 
-      def copy(now) = with(copied_at: now)
-      def copied?(now) = !copied_at.nil? && now - copied_at < COPIED_FOR
+      # How "Share my score" comes in (ShareCue), once the score lands.
+      def share_cue(now) = ShareCue.at(now - at - look.tally.duration, look.share, best: new_best?)
 
       def new_best? = new_best
 
@@ -51,6 +47,35 @@ module DotPopper
 
       def celebration_due?(now) = new_best? && !celebrated && counted?(now)
       def celebrate = with(celebrated: true)
+    end
+
+    # How "Share my score" comes in (FinaleLook's +share+): it rises
+    # +lift+ units into place along +arrive+, bouncing a little past it,
+    # and as it settles a ring spreads out from its edge and fades,
+    # +ring_reach+ units at most and +ring_alpha+ bright. On a new best it
+    # waits +best_delay+ more, for the celebration, rises further, and
+    # rings brighter and wider.
+    class ShareCueLook < Data.define(:arrive, :lift, :best_lift, :best_delay, :ring, :ring_reach, :ring_alpha,
+                                     :best_ring_reach, :best_ring_alpha); end
+
+    # Where "Share my score" is in its arrival: how much of it shows
+    # (+alpha+), how far below its place it is (+drop+, in units), and its
+    # ring's distance out from the button's edge (+ring+, in units) and
+    # opacity (+ring_alpha+, 0 for no ring).
+    class ShareCue < Data.define(:alpha, :drop, :ring, :ring_alpha)
+      # The cue +elapsed+ seconds after the score landed, negative before
+      # then, by +look+ (ShareCueLook); +best+ for a new best.
+      def self.at(elapsed, look, best: false)
+        elapsed -= look.best_delay if best
+        return new(alpha: 0.0, drop: 0.0, ring: 0.0, ring_alpha: 0.0) unless elapsed.positive?
+
+        ringing = elapsed - (look.arrive.duration * 0.4)
+        spread = look.ring.progress(ringing)
+        new(alpha: (elapsed / (look.arrive.duration * 0.5)).clamp(0.0, 1.0),
+            drop: (1 - look.arrive.progress(elapsed)) * (best ? look.best_lift : look.lift),
+            ring: spread * (best ? look.best_ring_reach : look.ring_reach),
+            ring_alpha: ringing.positive? ? (1 - spread) * (best ? look.best_ring_alpha : look.ring_alpha) : 0.0)
+      end
     end
   end
 end

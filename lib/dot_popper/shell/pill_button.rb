@@ -3,9 +3,10 @@
 module DotPopper
   module Shell
     # A button drawn as a pill with its word in it, on whole device
-    # pixels: Game Over's "Copy my result". Its word shrinks, by whole
-    # sizes, to fit. +hover+, from 0 to 1, is how lit the mouse over it
-    # has made it (Presentation::Hover): its backing and outline brighten.
+    # pixels: a quiet button, as "Your records" or the share preview's
+    # Close. Its word shrinks, by whole sizes, to fit. +hover+, from 0 to
+    # 1, is how lit the mouse over it has made it (Presentation::Hover):
+    # its backing and outline brighten.
     class PillButton < Data.define(:pen)
       G = ::Lota::Graphics
 

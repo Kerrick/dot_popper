@@ -6,10 +6,11 @@ module DotPopper
     # FinalePlan puts it: "Time's up!", "You met today's goal!" if the
     # round did, the score counting up, a new best or how far short of the
     # best it fell, a quiet line of the round's facts, a lifetime record
-    # it set, the Continue button, faint until a press will be heard, and
-    # "Copy my result" under it. On the first Game Overs after a wrong tap with the bright
-    # dot hidden, the stacking rule comes first. Every line sits on a
-    # soft, dark backing, so they read over the pile without hiding it.
+    # it set, "Share my score", rising in as the score lands, and the
+    # Continue button, faint until a press will be heard. On the first
+    # Game Overs after a wrong tap with the bright dot hidden, the
+    # stacking rule comes first. Every line above Continue sits on a soft,
+    # dark backing, so they read over the pile without hiding it.
     class FinalePainter < Data.define(:pen)
       def draw(show, layout)
         finale = show.finale or return
@@ -33,9 +34,8 @@ module DotPopper
         line(plan, :summary, words.summary(finale.stats), palette.soft, shown * 0.8)
         line(plan, :record, words.record(finale.record), palette.gain, finale.afterword(now)) if finale.record && finale.counted?(now)
         if (button = plan.share_button)
-          copied = finale.copied?(now)
-          PillButton.new(pen:).draw(button, copied ? words.copied : words.share, alpha: shown,
-                                    color: copied ? palette.gain : palette.cream, hover: show.hover.level(:share))
+          ShareButton.new(pen:).draw(button, words.share, cue: finale.share_cue(now), ui: layout.ui,
+                                     hover: show.hover.level(:share))
         end
         PrimaryButton.new(pen:).draw(plan.continue_button, words.continue, alpha: [shown * 0.35, finale.prompt(now)].max,
                                      hover: show.hover.level(:continue))

@@ -1,0 +1,72 @@
+# frozen_string_literal: true
+
+require_relative "presentation_helper"
+
+# Sharing a result: "Share my score" comes in once the score lands, a
+# little more strongly on a new best, and the preview it opens holds
+# exactly the text Copy will copy, its emoji drawn as shapes.
+class ShareTest < Minitest::Test
+  include PresentationTest
+
+  CUE = Look::FINALE.share
+
+  def test_a_line_of_the_result_breaks_into_words_and_shapes
+    assert_equal [:fresh, " 27 pops · ", :popped, " 1 mistake · ", :clock, " 38 seconds"],
+                 ShareGlyphs.runs("🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds")
+    assert_equal ["Dot Popper: 25 points"], ShareGlyphs.runs("Dot Popper: 25 points")
+    assert_in_delta 8 + (2 * ShareGlyphs::WIDTH * 20), ShareGlyphs.width("🟡 ab ⚫", 20) { it.length * 2.0 }
+  end
+
+  def test_the_preview_keeps_the_text_and_when_it_was_copied
+    preview = SharePreview.open("Dot Popper: 3 points\nPlayed with dots sized to the screen.", 2.0)
+
+    assert_equal ["Dot Popper: 3 points", "Played with dots sized to the screen."], preview.lines
+    refute preview.copied?
+    assert_in_delta 0.0, preview.confirmation(5.0, Look::SHARE_PREVIEW)
+    copied = preview.copy(3.0)
+    assert copied.copied?
+    assert_in_delta 1.0, copied.confirmation(5.0, Look::SHARE_PREVIEW)
+    assert_in_delta 1.0, copied.arrival(5.0, Look::SHARE_PREVIEW)
+    assert_in_delta 0.0, copied.arrival(2.0, Look::SHARE_PREVIEW)
+  end
+
+  def test_in_the_game_sharing_opens_the_preview
+    preview = InGameSharing.new.offer("Dot Popper: 3 points", 4.0)
+
+    assert_equal SharePreview.open("Dot Popper: 3 points", 4.0), preview
+  end
+
+  def test_share_my_score_rises_into_place_once_the_score_has_landed
+    before = ShareCue.at(-0.1, CUE)
+    assert_in_delta 0.0, before.alpha
+    assert_in_delta 0.0, before.ring_alpha
+
+    rising = ShareCue.at(0.05, CUE)
+    assert_operator rising.alpha, :>, 0.0
+    assert_operator rising.drop, :>, 0.0, "it starts below its place"
+
+    settled = ShareCue.at(5.0, CUE)
+    assert_in_delta 1.0, settled.alpha
+    assert_in_delta 0.0, settled.drop, 1e-9
+    assert_in_delta 0.0, settled.ring_alpha, 1e-9, "the ring has faded"
+  end
+
+  def test_on_a_new_best_it_comes_a_little_later_and_more_strongly
+    plain = ShareCue.at(0.05, CUE)
+    best = ShareCue.at(0.05 + CUE.best_delay, CUE, best: true)
+    assert_operator best.drop, :>, plain.drop
+
+    ringing = CUE.arrive.duration * 0.6
+    plain_ring = ShareCue.at(ringing, CUE)
+    best_ring = ShareCue.at(ringing + CUE.best_delay, CUE, best: true)
+    assert_operator best_ring.ring_alpha, :>, plain_ring.ring_alpha
+    assert_operator best_ring.ring, :>, plain_ring.ring
+  end
+
+  def test_the_finale_starts_the_cue_when_the_score_has_counted
+    finale = Finale.new(look: Look::FINALE, score: 9, best: 12, new_best: false, at: 1.0)
+
+    assert_in_delta 0.0, finale.share_cue(1.0 + Look::FINALE.tally.duration).alpha
+    assert_in_delta 1.0, finale.share_cue(1.0 + Look::FINALE.tally.duration + 2.0).alpha
+  end
+end

@@ -34,7 +34,11 @@ module DotPopper
         legend: ByInput.new(touch: ["Tap a bright dot", "Tap a popped dot"].freeze,
                             mouse: ["Click a bright dot", "Click a popped dot"].freeze,
                             gamepad: ["Pop a bright dot", "Hit a popped dot"].freeze),
-        share: "Copy my result", copied: "Copied! Paste it anywhere.",
+        share: ByInput.new(touch: "Share my score", mouse: "Share my score", gamepad: "Share my score (Y)"),
+        share_heading: "Share your score", share_note: "Copy it, then paste it anywhere.",
+        copied: "Copied! Paste it anywhere.",
+        copy: ByInput.new(touch: "Copy", mouse: "Copy", gamepad: "Copy (A)"),
+        close: ByInput.new(touch: "Close", mouse: "Close", gamepad: "Close (B)"),
         records: "Your records",
         go_back: ByInput.new(touch: "Back", mouse: "Back", gamepad: "Back (B)"),
         no_rounds: "Play a round, and your records will appear here.",
@@ -258,7 +262,8 @@ module DotPopper
       # Game over: how the round dims, how the score counts up, and the
       # celebration of a new best. Its sparkles may outlive a pop's
       # droplets, because no round is in play behind them.
-      class FinaleLook < Data.define(:dim, :arrive, :tally, :prompt, :sparkles, :goal_sparkles, :sparkle_life); end
+      class FinaleLook < Data.define(:dim, :arrive, :tally, :prompt, :sparkles, :goal_sparkles, :sparkle_life,
+                                     :share); end
       FINALE = FinaleLook.new(
         dim: Tween.new(from: 0.0, to: 0.62, duration: 0.5, ease: :out_cubic),
         arrive: Tween.new(from: 0.0, to: 1.0, duration: 0.45, ease: :out_back),
@@ -268,8 +273,22 @@ module DotPopper
                             gravity: 4.0, alpha: 0.9, spin: 7.0..1.0, sprite: :twinkle),
         goal_sparkles: Burst.new(count: 22, speed: 1.5..4.0, life: 0.6..1.0, size: 0.08..0.16, drag: 2.0,
                                  gravity: 2.5, alpha: 0.85, spin: 6.0..1.0, sprite: :twinkle),
-        sparkle_life: 1.4
+        sparkle_life: 1.4,
+        # "Share my score" rises into place as the score lands, rings
+        # once, and rises further and rings brighter on a new best.
+        share: ShareCueLook.new(arrive: Tween.new(from: 0.0, to: 1.0, duration: 0.5, ease: :out_back), lift: 12,
+                                best_lift: 28, best_delay: 0.15,
+                                ring: Tween.new(from: 0.0, to: 1.0, duration: 0.8, ease: :out_cubic),
+                                ring_reach: 10, ring_alpha: 0.45, best_ring_reach: 18, best_ring_alpha: 0.9)
       )
+
+      # The share preview, over Game Over: it comes in quickly, lifting
+      # into place; "Copied!" fades in. The card is at most +width+ units
+      # across at a layout scale of 1, padded by +pad+, with its message
+      # padded by +bubble+, and the screen behind it veiled by +veil+.
+      SHARE_PREVIEW = SharePreviewLook.new(arrive: Tween.new(from: 0.0, to: 1.0, duration: 0.22, ease: :out_cubic),
+                                           confirm: Tween.new(from: 0.0, to: 1.0, duration: 0.25, ease: :out_cubic),
+                                           lift: 14, width: 680, pad: 24, bubble: 14, veil: 0.6)
 
       # Game Over's words, from "Time's up!" to the Continue button, sit on a
       # soft dark backing, 60% at its middle, so they read over the pile;

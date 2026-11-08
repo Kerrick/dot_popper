@@ -8,7 +8,8 @@ module DotPopper
     # with no name the game made up for itself. The words that say what to
     # do are ByInputs, said as a tap, a click, or a gamepad's button,
     # whichever +input+ (InputKind) the player last used (#for): +play+,
-    # +continue+, +go_back+, +credits+, the +legend+'s verbs for a bright and a
+    # +continue+, +go_back+, +credits+, +share+ and the share preview's
+    # +copy+ and +close+, the +legend+'s verbs for a bright and a
     # popped dot, and +covered+, which teaches the stacking rule on Game
     # Over, a sentence a line. +labels+ name the Records screen's sections
     # and rows, by what they count. +goals+ say each kind of DailyGoal as
@@ -16,8 +17,8 @@ module DotPopper
     # says how big a screen is, in dots, with %d for its width and height,
     # and names the choices of dot size (DotSizing) by what they do here.
     class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time, :covered,
-                              :share, :copied, :records, :go_back, :no_rounds, :clear, :keep_holding,
-                              :hold_to_clear, :cleared, :undo, :labels, :goals, :goal_done, :goal_met,
+                              :share, :share_heading, :share_note, :copied, :copy, :close, :records, :go_back,
+                              :no_rounds, :clear, :keep_holding, :hold_to_clear, :cleared, :undo, :labels, :goals, :goal_done, :goal_met,
                               :screen_size, :legend, :credits, :credits_title, :notice, :quit_again, :input)
       MINUS = "−" # a true minus sign, as wide as the plus
       # How near a round must come to the best for Game Over to say by how
@@ -56,6 +57,9 @@ module DotPopper
       def hold_to_clear = super.for(input)
       def undo = super.for(input)
       def credits = super.for(input)
+      def share = super.for(input)
+      def copy = super.for(input)
+      def close = super.for(input)
 
       # What the Records screen says while "Clear my records…" is held:
       # on a gamepad, naming +button+, the one held ("A" or "Y").
@@ -111,10 +115,11 @@ module DotPopper
           end
       end
 
-      # What "Copy my result" puts on the clipboard: the score, whether it
-      # set or tied the player's +best+, the lifetime +record+ it set, if
-      # any, what the round was made of, and the +screen+ it was played on
-      # (#played_on), since a score depends on that.
+      # What "Share my score" offers to share, and its Copy puts on the
+      # clipboard: the score, whether it set or tied the player's +best+,
+      # the lifetime +record+ it set, if any, what the round was made of,
+      # and the +screen+ it was played on (#played_on), since a score
+      # depends on that.
       #
       #   Dot Popper: 25 points, a new best!
       #   New record: 18 pops in a row without a mistake

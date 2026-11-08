@@ -6,7 +6,7 @@ module DotPopper
     # line's Rect by name (Stacked), the font size each is set in, the
     # stacking rule broken into lines, and the backing behind them all.
     # A line the screen had no room for, or that is not shown, has no
-    # Rect; Continue is the Rect named :continue, and "Copy my result" the
+    # Rect; Continue is the Rect named :continue, and "Share my score" the
     # one named :share.
     class FinalePlan < Data.define(:placed, :sizes, :lesson_lines, :backing)
       def [](name) = placed[name]
@@ -20,19 +20,24 @@ module DotPopper
     # bottom: the stacking rule when it is taught, "Time's up!", "You met
     # today's goal!" when the round did, the score, the best or how far
     # short of it the round fell, the round's facts, a record it set,
-    # +hint+, how to play with the pile, when there is one, the Continue
-    # button, as big as Layout's primary_size for dots of +radius+, and
-    # "Copy my result" under it. Short of room, the type shrinks first;
-    # then the hint goes, then the record, the facts, the goal, the best,
-    # "Time's up!", "Copy my result", and last the lesson. The score and
-    # Continue always stay. The backing (+scrim+, a ScrimLook) is drawn
-    # around the words, above the buttons, which need none, so it hides
-    # no more of the pile than it must. Sizes are measured with +measure+
-    # (RoughMeasure's methods).
+    # "Share my score", closing the score's group, +hint+, how to play
+    # with the pile, when there is one, and the Continue button, as big as
+    # Layout's primary_size for dots of +radius+. Short of room, the type
+    # shrinks first; then the hint goes, then the record, the facts, the
+    # goal, the best, "Time's up!", "Share my score", and last the lesson.
+    # The score and Continue always stay. The backing (+scrim+, a
+    # ScrimLook) is drawn around everything above Continue, so "Share my
+    # score" reads as part of the score, and Continue, which needs none,
+    # stands apart on the pile; it hides no more of the pile than it must.
+    # Sizes are measured with +measure+ (RoughMeasure's methods).
     class FinaleScreen < Data.define(:layout, :type, :words, :measure, :scrim, :finale, :below, :hint, :radius)
       # The gaps above each line, in graphics units at full size.
-      GAPS = { heading: 26, goal: 12, score: 4, best: 4, summary: 14, record: 8, continue: 22, share: 14,
-               hint: 8 }.freeze
+      GAPS = { heading: 26, goal: 12, score: 4, best: 4, summary: 14, record: 8, share: 16, continue: 22,
+               hint: 10 }.freeze
+      # "Share my score"'s share glyph and the room around its words, in
+      # the button's height.
+      SHARE_GLYPH = 0.62
+      SHARE_SIDES = 1.1
 
       def initialize(layout:, type:, words:, measure:, scrim:, finale:, below:, hint: nil, radius: Rules::RADIUS) = super
 
@@ -68,9 +73,9 @@ module DotPopper
          line(:best, *best_line(sizes[:best]), scale, drop: 5),
          line(:summary, :semibold, sizes[:summary], words.summary(finale.stats), scale, drop: 3),
          (line(:record, :semibold, sizes[:summary], words.record(finale.record), scale, drop: 2) if finale.record),
+         share(scale),
          (line(:hint, :semibold, sizes[:summary], hint, scale, drop: 1) if hint),
-         continue(scale),
-         share].compact
+         continue(scale)].compact
       end
 
       # A line of +text+, with room for a check mark before it if +mark+,
@@ -87,11 +92,21 @@ module DotPopper
         Block.new(name: :continue, height:, width:, gap: gap(:continue, scale))
       end
 
-      # "Copy my result", as tall as a button at any type scale.
-      def share
+      # "Share my score" and its glyph, as tall as a button at any type
+      # scale, and as wide as its words need.
+      def share(scale)
         height = layout.button_size
-        Block.new(name: :share, height:, width: height * 4.6, gap: gap(:share, 1.0), drop: 7)
+        Block.new(name: :share, height:, width: share_width(height), gap: gap(:share, scale), drop: 7)
       end
+
+      def share_width(height)
+        words_width = measure.width(:semibold, FinaleScreen.share_size(height), words.share)
+        [words_width + (height * (SHARE_GLYPH + SHARE_SIDES)), height * 4.2].max
+      end
+
+      # The size "Share my score"'s words are set in, on a button +height+
+      # tall.
+      def self.share_size(height) = (height * 0.4).round
 
       # The stacking rule, its lines 1.05 lines apart.
       def lesson_block(size, scale)
@@ -118,10 +133,10 @@ module DotPopper
         finale.lesson.flat_map { |sentence| Words.balance(sentence, room) { measure.width(:bold, size, it) } }
       end
 
-      # Around every line above the buttons, and never past the safe area
+      # Around every line above Continue, and never past the safe area
       # once padded.
       def backing(placed)
-        bounds = placed.with(rects: placed.rects.except(:continue, :share)).bounds
+        bounds = placed.with(rects: placed.rects.except(:continue)).bounds
         most = layout.safe.width - (2 * (scrim.pad + scrim.feather) * layout.ui)
         width = [bounds.width, most].min
         bounds.with(x: layout.center_x - (width / 2.0), width:)

@@ -98,7 +98,7 @@ class HoverTest < Minitest::Test
     assert_nil @show.hovered, "the title's buttons are covered"
   end
 
-  def test_game_over_hovers_copy_my_result_and_a_round_hovers_nothing
+  def test_game_over_hovers_share_my_score_and_a_round_hovers_nothing
     press_main
     assert_empty @show.controls
     @game.update(20)
@@ -107,6 +107,11 @@ class HoverTest < Minitest::Test
     assert_equal :share, @show.hovered
     @show.pointer_at(*middle(@show.continue_reach))
     assert_equal :continue, @show.hovered
+    @show.share
+    @show.pointer_at(*middle(@show.copy_reach))
+    assert_equal :copy, @show.hovered
+    @show.pointer_at(*middle(@show.close_reach))
+    assert_equal :close, @show.hovered
   end
 
   private

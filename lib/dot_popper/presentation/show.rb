@@ -18,7 +18,9 @@ module DotPopper
     # words follow it. +keeper+ (RecordKeeper) clears the records, from
     # the Records screen, and puts them back. +measure+ sizes the screens' words (RoughMeasure's
     # methods), and +hint+ gives Game Over's line on playing with the
-    # pile, or nil.
+    # pile, or nil. +sharing+ (InGameSharing's methods) offers Game
+    # Over's result to share, and +clipboard+ takes it when the player
+    # copies it.
     class Show
       # The dot-size choices in the order the title draws their segments:
       # the default, dots sized to the screen, first.
@@ -31,7 +33,8 @@ module DotPopper
                      tutor: Tutor.new(BestScore::Memory.new, times: look::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
                      lifetime: Lifetime.new(BestScore::Memory.new), sizing_store: BestScore::Memory.new,
                      input: InputKind::MOUSE, measure: RoughMeasure.new, hint: -> {},
-                     keeper: RecordKeeper.new(best: game.best, lifetime:), notices: Notices.none)
+                     keeper: RecordKeeper.new(best: game.best, lifetime:), notices: Notices.none,
+                     sharing: InGameSharing.new)
         @game = game
         @notices = notices
         @measure = measure
@@ -56,6 +59,8 @@ module DotPopper
         @finale = nil
         @tutor = tutor
         @clipboard = clipboard
+        @sharing = sharing
+        @preview = nil
         @hid_fresh = false
         @penalized_at = -Float::INFINITY
         @recorder = RoundStats::Recorder.new
@@ -129,12 +134,13 @@ module DotPopper
       # which #let_go names when it lets go. In a round, every tap goes to
       # the game at once. Elsewhere a tap presses the screen's button under
       # it (#controls): on the title, Play, the mute button, "Your records",
-      # and the dot-size choice; on Game Over, Continue and "Copy my
-      # result"; and on the Records screen, Back, Undo, or "Clear my
-      # records…", which a press starts holding. Empty space does nothing,
-      # but a tap on one of the title's fresh dots pops it, for fun, and a
-      # gamepad's A, which aims at no button, presses the screen's main one
-      # (#primary).
+      # and the dot-size choice; on Game Over, Continue and "Share my
+      # score", and over it, the share preview's Copy and Close; and on the
+      # Records screen, Back, Undo, or "Clear my records…", which a press
+      # starts holding. Empty space does nothing, but a tap on one of the
+      # title's fresh dots pops it, for fun, and a tap away from the share
+      # preview's card closes it. A gamepad's A, which aims at no button,
+      # presses the screen's main one (#primary).
       def tap(x, y, by: :tap)
         return game.press(x, y) if playing?
 
@@ -147,9 +153,12 @@ module DotPopper
         in :records then open_records
         in DotSizing => sizing then choose_sizing(sizing)
         in :share then share
+        in :copy then copy_result
+        in :close then close_share
         in :undo then undo
         in :clear then hold_clear(by)
         in nil if by == :gamepad then primary
+        in nil if sharing? then (close_share unless share_plan.card.contains?(x, y))
         in nil then credits? ? @credits_drag = [by, y] : toy_tap(x, y)
         end
       end
@@ -163,6 +172,7 @@ module DotPopper
           if credits? then [button(:back, layout.back_button)]
           elsif records? then records_controls
           elsif title? then title_controls
+          elsif sharing? then share_controls
           elsif finished? then finale_controls
           else []
           end
@@ -179,11 +189,12 @@ module DotPopper
 
       # Presses this screen's main button, as Enter, Space, a gamepad's
       # Start, or its A aimed at no button do: Play on the title, Back on
-      # the Records screen, and Continue on Game Over, once its grace is
-      # over. In a round it does nothing, since only a press at a place
-      # may touch the score.
+      # the Records screen, Continue on Game Over, once its grace is over,
+      # and Copy in the share preview. In a round it does nothing, since
+      # only a press at a place may touch the score.
       def primary
-        if records? then leave
+        if sharing? then copy_result
+        elsif records? then leave
         elsif title? then play
         elsif finished? then continue_on
         end
@@ -222,9 +233,9 @@ module DotPopper
 
       # Whether a press at +x+, +y+ waits to be let go before it counts: on
       # Game Over, anywhere but its buttons, since it may become a drag of
-      # the pile (PileGrabs). Everywhere else a press counts the moment it
-      # goes down.
-      def waits_for_release?(x, y) = finished? && control_at(x, y).nil?
+      # the pile (PileGrabs). Everywhere else, the share preview over Game
+      # Over too, a press counts the moment it goes down.
+      def waits_for_release?(x, y) = finished? && !sharing? && control_at(x, y).nil?
 
       # A gamepad's Start: the screen's main button (#primary).
       def start = primary
@@ -253,12 +264,13 @@ module DotPopper
 
       def quit_asked? = @quit_asked_at && now - @quit_asked_at <= QUIT_ASK
 
-      # Escape, Android's Back, or a gamepad's B: leaves the Records
-      # screen, and goes on from Game Over to the title, as Continue does.
-      # Says whether there was somewhere to go back from, so that elsewhere
-      # the key can do its usual job.
+      # Escape, Android's Back, or a gamepad's B: closes the share
+      # preview, leaves the Records screen, and goes on from Game Over to
+      # the title, as Continue does. Says whether there was somewhere to go
+      # back from, so that elsewhere the key can do its usual job.
       def back
-        if records? then leave
+        if sharing? then close_share
+        elsif records? then leave
         elsif finished? then continue_on
         else return false
         end
@@ -395,21 +407,59 @@ module DotPopper
       # The gamepad button that holds "Clear my records…", for its words.
       def holding_button = clearing.by == :y ? "Y" : "A"
 
-      # A gamepad's Y, or a tap on "Copy my result": on Game Over, copies
-      # the round's result to share. Anywhere else it does nothing.
+      # A gamepad's Y, or a tap on "Share my score": on Game Over, offers
+      # the round's result to share (+sharing+), which in the game opens
+      # the share preview, and copies nothing yet. In the preview, Y
+      # copies, as Copy does. Anywhere else it does nothing.
       def share
+        return copy_result if sharing?
         return unless finished? && finale
 
-        @clipboard.copy(words.share_text(finale.score, finale.stats, best: finale.best, new_best: finale.new_best?,
-                                         record: finale.record, screen: finale.screen, first: finale.first))
-        @finale = finale.copy(now)
+        @preview = @sharing.offer(share_text, now)
         sounds.play(:tick)
       end
 
-      # Where a tap reaches "Copy my result", where it is drawn: never
+      # Whether the share preview is open over Game Over. It is the
+      # presentation's alone: the game stays on Game Over meanwhile, its
+      # grace counting as ever, and no tap there reaches the game.
+      def sharing? = !@preview.nil?
+
+      # What the share preview shows (SharePreview), while it is open.
+      def share_preview = @preview
+
+      # Where the share preview's card, words and buttons go (SharePlan),
+      # or nil while it is closed.
+      def share_plan
+        return unless sharing?
+
+        ShareScreen.new(layout:, type: look::TYPE, words:, measure: @measure, look: look::SHARE_PREVIEW,
+                        lines: @preview.lines).plan
+      end
+
+      # The share preview's Copy, the one press that writes the clipboard:
+      # it copies exactly the text the preview shows.
+      def copy_result
+        return unless sharing?
+
+        @clipboard.copy(@preview.text)
+        @preview = @preview.copy(now)
+        sounds.play(:tick, pitch: 1.3)
+      end
+
+      # Closes the share preview, back to Game Over as it was.
+      def close_share
+        @preview = nil
+        sounds.play(:tick, pitch: 0.8)
+      end
+
+      # Where a tap reaches "Share my score", where it is drawn: never
       # less than a dot's width, short of where Continue's reach begins.
-      # Nil without one.
+      # Nil without one, and while the share preview covers it.
       def share_reach = reach_of(:share)
+
+      # Where a tap reaches the share preview's Copy and Close.
+      def copy_reach = reach_of(:copy)
+      def close_reach = reach_of(:close)
 
       # Where a tap reaches Game Over's Continue and the title's Play.
       def continue_reach = reach_of(:continue)
@@ -436,7 +486,7 @@ module DotPopper
                         sizing: sizing_offered?, radius: DotSize.fitted(layout.width, layout.height).radius).plan
       end
 
-      # Where Game Over's words and "Copy my result" go (FinalePlan), or
+      # Where Game Over's words and "Share my score" go (FinalePlan), or
       # nil away from Game Over.
       def finale_plan = finale_screen&.plan
 
@@ -488,6 +538,11 @@ module DotPopper
         buttons.concat(SIZINGS.zip(plan.sizing_control.options).map { button(*it) }) if sizing_offered?
         buttons << primary_button(:play, plan.play_button) if plan.play_button
         buttons
+      end
+
+      def share_controls
+        plan = share_plan
+        [button(:close, plan.close), button(:copy, plan.copy)]
       end
 
       def finale_controls
@@ -574,6 +629,7 @@ module DotPopper
         @hud = Hud.blank(look::HUD, words)
         event.round.dots.each { animations.spawn(it.id, now) }
         @finale = nil
+        @preview = nil
         @hid_fresh = false
         @undo = nil # the round's records would be lost to an undo
         sounds.play(:start)
@@ -609,6 +665,12 @@ module DotPopper
         @haptics.buzz(look::HAPTICS.penalty)
       end
 
+      # The finished round's result, as Words#share_text says it.
+      def share_text
+        words.share_text(finale.score, finale.stats, best: finale.best, new_best: finale.new_best?,
+                         record: finale.record, screen: finale.screen, first: finale.first)
+      end
+
       def round_ended(event)
         result = lifetime.record(stats, event.size_class)
         lesson = @tutor.lesson(words.covered) if @hid_fresh
@@ -624,6 +686,7 @@ module DotPopper
         @clearing = clearing.cancel
         effects.clear
         @finale = nil
+        @preview = nil
         @marquee = Marquee.new(look: look::TITLE, best: event.best, at: now)
       end
 

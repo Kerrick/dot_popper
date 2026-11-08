@@ -81,6 +81,48 @@ class ScreenPlansTest < Minitest::Test
     end
   end
 
+  # The share preview, at every size, with the longest results a round
+  # can give, and in each input's words: its blocks are apart and inside
+  # the card, the card is inside the safe area, every line of the result
+  # fits across its bubble, and Close and Copy are side by side, a
+  # fingertip tall at least.
+  def test_the_share_preview_never_overlaps_or_runs_off_screen
+    stats = DotPopper::RoundStats.start.with(pops: 128, slips: 11, duration: 141.0)
+    record = DotPopper::LifetimeStats::Record.new(kind: :longest_wait, value: 12.3)
+    screen = format(WORDS.screen_size.fetch(:played), 38, 21)
+    SIZES.each do |width, height|
+      screen_layout = layout(width, height)
+      [InputKind::MOUSE, InputKind::GAMEPAD].product([nil, record], [nil, screen]) do |input, held, played|
+        words = WORDS.for(input)
+        text = words.share_text(128, stats, best: 128, new_best: true, record: held, screen: played)
+        plan = ShareScreen.new(layout: screen_layout, type: Look::TYPE, words:, measure: RoughMeasure.new,
+                               look: Look::SHARE_PREVIEW, lines: text.split("\n")).plan
+        name = "#{width}x#{height} #{input.name}, record #{!held.nil?}, screen #{!played.nil?}"
+
+        assert plan.placed.fits?, name
+        %i[message note buttons].each { assert plan[it], "#{name}: #{it} always shows" }
+        rects = plan.placed.rects.except(:buttons).values + [plan.close, plan.copy]
+        assert_apart rects, name
+        rects.each { assert_within it, plan.card, name }
+        assert_within plan.card, screen_layout.safe, name
+        assert_operator plan.close.right, :<=, plan.copy.x, "#{name}: Close is left of Copy"
+        [plan.close, plan.copy].each { assert_operator it.height, :>=, 44.0, name }
+        assert_lines_fit(plan, name)
+      end
+    end
+  end
+
+  def assert_lines_fit(plan, name)
+    measure = RoughMeasure.new
+    size = plan.size(:message)
+    height = measure.height(:semibold, size)
+    room = plan[:message].width - (2 * plan.bubble)
+    plan.lines.each do |line|
+      wide = ShareGlyphs.width(line, height) { measure.width(:semibold, size, it) }
+      assert_operator wide, :<=, room + 1e-6, "#{name}: #{line}"
+    end
+  end
+
   def test_short_of_room_the_title_lets_the_streak_go_before_the_goal_and_the_best
     plan = TitleScreen.new(layout: layout(400, 320), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
                            best: 75, goal: GOAL, streak: 5, records: true, sizing: true).plan
@@ -104,8 +146,9 @@ class ScreenPlansTest < Minitest::Test
     plan = FinaleScreen.new(layout: layout(1200, 800), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
                             scrim: Look::FINALE_BACKING, finale: finale(goal_met: true), below: 80).plan
 
-    assert_equal %i[heading goal score best summary continue share], plan.placed.rects.keys
-    assert_operator plan.backing.bottom, :<=, plan.continue_button.y, "the buttons stand on the pile, not the backing"
+    assert_equal %i[heading goal score best summary share continue], plan.placed.rects.keys
+    assert_operator plan.backing.bottom, :<=, plan.continue_button.y, "Continue stands on the pile, not the backing"
+    assert_operator plan.backing.bottom, :>=, plan.share_button.bottom, "Share my score is backed with the score"
     assert_in_delta 1.0, plan.placed.scale
   end
 
@@ -192,6 +235,9 @@ class ScreenPlansTest < Minitest::Test
     game.update(30)
     show.update(1.0)
     yield "Game Over", show
+    show.share
+    yield "the share preview", show
+    show.close_share
     game.update(DotPopper::Rules::GAME_OVER_GRACE)
     show.primary
     yield "the title after a round", show
@@ -219,6 +265,14 @@ class ScreenPlansTest < Minitest::Test
               other.bottom <= one.y + slack
       assert apart, "#{name}: #{one.to_h} overlaps #{other.to_h}"
     end
+  end
+
+  # +rect+ wholly inside +outer+, across as well as down.
+  def assert_within(rect, outer, name)
+    slack = 1e-6
+    inside = rect.x >= outer.x - slack && rect.right <= outer.right + slack && rect.y >= outer.y - slack &&
+             rect.bottom <= outer.bottom + slack
+    assert inside, "#{name}: #{rect.to_h} is not inside #{outer.to_h}"
   end
 
   def assert_inside(rect, safe, name)

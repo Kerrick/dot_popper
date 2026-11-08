@@ -102,12 +102,12 @@ desktop:
 
   - id: 9
     try:
-      windows: On the Game Over screen, click "Copy my result". Then open Notepad and paste (Ctrl+V).
-      mac: On the Game Over screen, click "Copy my result". Then open TextEdit and paste (Command+V).
-      linux: On the Game Over screen, click "Copy my result". Then open a text editor and paste (Ctrl+V).
-    ask: The pasted result reads sensibly.
+      windows: On the Game Over screen, click "Share my score", then "Copy". Then open Notepad and paste (Ctrl+V).
+      mac: On the Game Over screen, click "Share my score", then "Copy". Then open TextEdit and paste (Command+V).
+      linux: On the Game Over screen, click "Share my score", then "Copy". Then open a text editor and paste (Ctrl+V).
+    ask: The pasted result matches what the game showed, and reads sensibly.
     answer: paste
-    quotes: [Copy my result]
+    quotes: [Share my score, Copy]
 
   - id: 10
     try: On the title screen, click "Your records" in the bottom left corner. Then click Back.
@@ -224,10 +224,10 @@ ios:
     quotes: [Dot size, Bigger, Smaller]
 
   - id: 10
-    try: On the Game Over screen, tap "Copy my result". Then open Notes and paste.
-    ask: The pasted result reads sensibly.
+    try: On the Game Over screen, tap "Share my score", then "Copy". Then open Notes and paste.
+    ask: The pasted result matches what the game showed, and reads sensibly.
     answer: paste
-    quotes: [Copy my result]
+    quotes: [Share my score, Copy]
 
   - id: 11
     group: controller
@@ -343,10 +343,10 @@ android:
     quotes: [Dot size, Bigger, Smaller]
 
   - id: 12
-    try: On the Game Over screen, tap "Copy my result". Then paste it into a message or a note.
-    ask: The pasted result reads sensibly.
+    try: On the Game Over screen, tap "Share my score", then "Copy". Then paste it into a message or a note.
+    ask: The pasted result matches what the game showed, and reads sensibly.
     answer: paste
-    quotes: [Copy my result]
+    quotes: [Share my score, Copy]
 
   - id: 13
     try: In the middle of a round, go to the Home screen, wait a few seconds, and open Dot Popper again.
