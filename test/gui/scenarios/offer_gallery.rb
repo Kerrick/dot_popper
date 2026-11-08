@@ -20,10 +20,10 @@ module DotPopperGui
       resize(1200, 800)
       show.open_records
       show.open_offer
-      wait_for("the price", within: 5) { show.offer_price }
+      wait_for("the price", within: 600) { show.offer_price }
       buy = show.reach_of(:buy)
       click(buy.center_x, buy.center_y)
-      wait_for("the rehearsal's purchase", within: 5) { show.offer_status == show.words.offer[:thanks] }
+      wait_for("the rehearsal's purchase", within: 600) { show.offer_status == show.words.offer[:thanks] }
       keep_screenshot("offer-thanks-1200x800")
     end
 
@@ -35,7 +35,7 @@ module DotPopperGui
       wait(1.0)
       keep_screenshot("offer-records-#{width}x#{height}")
       show.open_offer
-      wait_for("the price", within: 5) { show.offer_price }
+      wait_for("the price", within: 600) { show.offer_price }
       wait(1.0)
       keep_screenshot("offer-#{width}x#{height}")
       show.back

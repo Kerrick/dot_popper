@@ -104,7 +104,7 @@ module DotPopper
         looks: { title: "Looks", locked: "Looks come with the full game", classic: "Classic", halloween: "Halloween", winter: "Winter", valentine: "Hearts" }.freeze,
         offer: {
           entry: "Paid version", heading: "The paid version",
-          includes: ["Achievements to earn", "Themes to choose from", "Create friend groups"].freeze,
+          includes: ["Achievements to earn", "Looks to choose from", "Create friend groups"].freeze,
           note: "Rounds stay free and unlimited, and what you've earned comes with it.",
           buy: "Buy for %s", retry: "Try again", restore: "Restore Purchases",
           loading: "Asking the store…", busy: "One moment…", pending: "Waiting for approval.",

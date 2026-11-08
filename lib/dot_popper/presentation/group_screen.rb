@@ -101,7 +101,7 @@ module DotPopper
         top = blurb.last.y + line_height
         label = GroupLine.new(text: GroupWords.mark_label, y: top, kind: :note)
         marks = mark_buttons(x0, top + (line_height * 0.8), room)
-        box, digits = code_pad(x1, wide ? top : marks.map { it.rect.bottom }.max + margin, room, wide)
+        box, digits = code_pad(x1, wide ? marks.first.rect.y : marks.map { it.rect.bottom }.max + margin, room, wide)
         join, create = join_buttons(x0, wide ? marks.map { it.rect.bottom }.max + margin : digits.map { it.rect.bottom }.max + margin, room)
         below = [join.rect.bottom, *digits.map { it.rect.bottom }].max + (margin * 0.5)
         alert = alert_text ? wrapped(alert_text, below + (size * 0.5), :alert, span) : []
@@ -160,6 +160,7 @@ module DotPopper
         group = panel.groups.group
         y = under_heading
         lines = wrapped(GroupWords.trophy_line(group["trophy"]), y, :text)
+        lines += wrapped(GroupWords.code_line(group["code"]), lines.last.y + line_height, :text) if group["code"]
         extra = alert_text || (GroupWords.standard_note if standard_dots)
         lines += wrapped(extra, lines.last.y + line_height, alert_text ? :alert : :note) if extra
         rows = member_rows(group["members"], lines.last.y + (line_height * 0.8))
