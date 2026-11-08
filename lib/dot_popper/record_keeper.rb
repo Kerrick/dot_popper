@@ -3,8 +3,10 @@
 module DotPopper
   # Clears the player's records, and brings them back: the BestScore and
   # the Lifetime, the two stores that hold every best, total, chart bar,
-  # and goal streak. Nothing else is a record, so the playtest log, the
-  # settings, and what the game has taught stay as they are.
+  # and goal streak, and the Achievements, the feats earned, which are
+  # records of what the player did as much as a best is. Nothing else is
+  # a record, so the playtest log, the settings, what the game has taught,
+  # and whether the paid version was bought stay as they are.
   #
   # Clearing copies each store's text, exactly, to a backup named for
   # when it happened (best_score-20261105-093000.txt), through +folder+,
@@ -15,10 +17,10 @@ module DotPopper
   # copies are written, then the stores are emptied.
   class RecordKeeper
     NOTE = "cleared.txt"
-    BACKUP = /\A(?:best_score|lifetime)-\d{8}-\d{6}\.txt\z/
+    BACKUP = /\A(?:best_score|lifetime|achievements)-\d{8}-\d{6}\.txt\z/
 
-    def initialize(best:, lifetime:, folder: Folder.new, clock: -> { Time.now })
-      @kept = { "best_score" => best, "lifetime" => lifetime }
+    def initialize(best:, lifetime:, achievements: nil, folder: Folder.new, clock: -> { Time.now })
+      @kept = { "best_score" => best, "lifetime" => lifetime, "achievements" => achievements }.compact
       @folder = folder
       @clock = clock
       @cleared = !folder.call(NOTE).read.to_s.empty?

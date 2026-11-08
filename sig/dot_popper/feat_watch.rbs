@@ -1,0 +1,59 @@
+module DotPopper
+  class FeatWatch
+    @round: Round?
+
+    @targets: Hash[Float, TouchTarget]
+
+    @found: Array[Feat::id]
+
+    @sharp: Integer
+
+    @run: Integer
+
+    @slipped: bool
+
+    @low: bool
+
+    @early: Integer
+
+    @last_pop: Float?
+
+    @covered: bool
+
+    @tapped: bool
+
+    def initialize: () -> void
+
+    def earned: () -> Array[Feat::id]
+
+    def call: (event event) -> void
+
+    private
+
+    def reset: () -> void
+
+    def begin_round: (Round round) -> void
+
+    def popped: (Events::Popped event, Round round) -> void
+
+    def penalized: (Round round) -> void
+
+    def ended: (Events::RoundEnded event) -> void
+
+    def sharp: (Dot dot, Array[Dot] above) -> void
+
+    def waited: (Float seconds) -> void
+
+    def streak: () -> void
+
+    def early: (Round round) -> void
+
+    def clock: (Round round) -> void
+
+    def appeared: (Dot dot, Array[Dot] above, Round round) -> void
+
+    def target: (Float radius) -> TouchTarget
+
+    def find: (Feat::id id) -> void
+  end
+end

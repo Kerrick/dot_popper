@@ -22,7 +22,7 @@ module DotPopper
 
     @cleared: bool
 
-    def initialize: (best: _Kept, lifetime: _Kept, ?folder: folder | Folder, ?clock: ^() -> Time) -> void
+    def initialize: (best: _Kept, lifetime: _Kept, ?achievements: _Kept?, ?folder: folder | Folder, ?clock: ^() -> Time) -> void
 
     def cleared?: () -> bool
 

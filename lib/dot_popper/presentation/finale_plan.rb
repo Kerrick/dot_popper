@@ -32,7 +32,7 @@ module DotPopper
     # Sizes are measured with +measure+ (RoughMeasure's methods).
     class FinaleScreen < Data.define(:layout, :type, :words, :measure, :scrim, :finale, :below, :radius)
       # The gaps above each line, in graphics units at full size.
-      GAPS = { heading: 26, goal: 12, score: 4, best: 4, summary: 14, record: 8, share: 16, continue: 22 }.freeze
+      GAPS = { heading: 26, goal: 12, score: 4, best: 4, summary: 14, record: 8, feat: 8, share: 16, continue: 22 }.freeze
       # "Share my score"'s share glyph and the room around its words, in
       # the button's height.
       SHARE_GLYPH = 0.62
@@ -75,6 +75,7 @@ module DotPopper
          line(:best, *best_line(sizes[:best]), scale, drop: 5),
          line(:summary, :semibold, sizes[:summary], words.summary(finale.stats), scale, drop: 3),
          (line(:record, :semibold, sizes[:summary], words.record(finale.record), scale, drop: 2) if finale.record),
+         (line(:feat, :semibold, sizes[:summary], FeatWords.earned(finale.feats), scale, drop: 2.5) if finale.feats.any?),
          share(scale),
          continue(scale)].compact
       end

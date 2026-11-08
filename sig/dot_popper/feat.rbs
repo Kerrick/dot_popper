@@ -1,0 +1,37 @@
+module DotPopper
+  module Feat
+    type id = Symbol
+
+    IDS: Array[id]
+
+    SHARP: Float
+
+    SHARP_TRIO: Integer
+
+    SHARP_TRIO_BELOW: Float
+
+    PATIENCE: Float
+
+    BLINK: Float
+
+    STEADY: Integer
+
+    UNSHAKEN: Integer
+
+    SHAKE_OFF: Integer
+
+    BRINK: Float
+
+    BACK: Float
+
+    FAST_START: Integer
+
+    FAST_START_SECONDS: Float
+
+    BIG_SCORE: Integer
+
+    LONG_HAUL: Float
+
+    def self.known?: (Symbol id) -> bool
+  end
+end

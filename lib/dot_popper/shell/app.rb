@@ -52,7 +52,8 @@ module DotPopper
         lifetime = Lifetime.new(SaveFile.new(name: "lifetime.txt"), today:, legacy:)
         notices = NoticeFiles.new(game: File.expand_path("../../..", __dir__),
                                   starts: [File.dirname(File.expand_path($PROGRAM_NAME))]).notices
-        keeper = RecordKeeper.new(best: @game.best, lifetime:, folder: ->(name) { SaveFile.new(name:) })
+        achievements = Achievements.new(SaveFile.new(name: "achievements.txt"))
+        keeper = RecordKeeper.new(best: @game.best, lifetime:, achievements:, folder: ->(name) { SaveFile.new(name:) })
         entitlement = Entitlement.new(SaveFile.new(name: "entitlement.txt"), forced: Entitlement.forced?(@env))
         wardrobe = Presentation::Wardrobe.new(SaveFile.new(name: "looks.txt"), themes: Look::THEMES, entitlement:, today:)
         @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
@@ -65,7 +66,7 @@ module DotPopper
                                                                     times: Look::LESSON.times),
                                        haptics: Haptics.for(os), clipboard: Clipboard.new, notices:,
                                        sharing: Presentation::SheetSharing.for(os, opener: UrlOpener.new),
-                                       lifetime:, keeper:, sizing_store:, input: starting_input, measure: FontMeasure.new(@pen.fonts),
+                                       lifetime:, achievements:, keeper:, sizing_store:, input: starting_input, measure: FontMeasure.new(@pen.fonts),
                                        window: @window,
                                        tutorial_flag: Presentation::TutorialFlag.new(
                                          SaveFile.new(name: "tutorial.txt"), mode: Presentation::TutorialFlag.mode(@env)

@@ -32,6 +32,7 @@ module DotPopper
         best_line(show, plan, now, shown)
         line(plan, :summary, words.summary(finale.stats), palette.soft, shown * 0.8)
         line(plan, :record, words.record(finale.record), palette.gain, finale.afterword(now)) if finale.record && finale.counted?(now)
+        line(plan, :feat, Presentation::FeatWords.earned(finale.feats), palette.gain, finale.afterword(now)) if finale.feats.any? && finale.counted?(now)
         if (button = plan.share_button)
           ShareButton.new(pen:).draw(button, words.share, cue: finale.share_cue(now), ui: layout.ui,
                                      hover: show.hover.level(:share))

@@ -1256,3 +1256,14 @@ The maintainer's decision, before any paid feature is built: Dot Popper's own co
 **Share text.** Unchanged: a bonus pop is a pop, and a new emoji would need a drawn glyph in the share preview. Reconsider if players want to brag about bonuses; `RoundStats#bonuses` is ready.
 
 **To reverse or tune.** Change `Rules::BONUS` (streak, points, seconds), or pass `bonus: nil` to `Round`; restore the goals' targets in `DailyGoal::LIST` (50, 30, 30 to 40, 30, 25). Rerun `ruby script/simulate.rb bonus 400 6,8,10 2,3,4 3,4,5` on the Linux machine.
+## Feats: eleven, for skill only, shown with the paid version
+
+Built from "Achievements: a few, and only for skill" above. `Feat` lists eleven, each rewarding what the game asks of a player and none for time spent (Ferrara, Nguyen): **Sharpshooter** (pop a dot with under 10% of it showing), **Sharp trio** (three pops under 25% in a round), **Patience** (3 s waiting for a dot that spawned covered, tapping nothing), **Blink** (a pop within 0.4 s of the last), **Steady hand** / **Unshaken** (20 / 40 pops in a row), **Shake it off** (10 in a row after a mistake), **Back from the brink** (clock at 2 s or less, then back to 10), **Fast start** (15 pops in the first 10 s), **Big score** (75), **Long haul** (a 90 s round). Nothing shows during a round; a new feat gets one quiet line at Game Over after the score has counted.
+
+**Sharpshooter's 10%** was measured (`Visibility`, the share of a dot's disc no dot above it covers): with the real rules, a model that taps the moment a fingertip-sized (44-unit) target fits pops with 31% to 50% showing and never under 10%, while one that taps any sliver (not humanly aimable) does so on over half its pops. Under a tenth means a crescent a few units wide: deliberate. The other numbers (20, 40, 75, 90 s, 15 in 10 s, 0.4 s) are educated guesses against a 0.5 s-per-pop model that never loses; **playtest them and change the constants in `Feat`.**
+
+**Detection** is Lota-free: `FeatWatch` listens to the game's existing events and reads the round for the dots, clock and elapsed time. Progress is `achievements.txt` (`id=day`), written at the end of a round, earned whether or not the player has paid. Free players see the feat list locked under "Feats come with the full game" (never "trial" or "demo"); the earned ones appear on purchase, and no Game Over line is shown while free. Only `Entitlement#paid?` is asked.
+
+**Clear my records** clears feats too (and Undo restores them, with a backup `achievements-<stamp>.txt`): they are records of what the player did, as bests are. To reverse, drop `achievements:` from `RecordKeeper.new` in `Shell::App`.
+
+Records layout: the feats take a third column where three fit, else sit under the shorter column. Marks are dots in the game's own shape (filled orange earned, ring unearned) with the figure each asks on the right, so no feat needs its sentence read. Words live in `FeatWords`, apart from `Words`.

@@ -14,6 +14,7 @@ module DotPopper
     class RecordsPainter < Data.define(:pen)
       G = ::Lota::Graphics
       DIM = 0.3 # how much of a bar shows when its round counts elsewhere
+      MARK = 1.1 # the room a feat's mark takes before its label, in rows' type
 
       def draw(show, layout)
         sheet = show.records or return
@@ -46,8 +47,8 @@ module DotPopper
       def widest(sheet, size)
         label = pen.fonts.semibold(size)
         value = pen.fonts.bold(size)
-        sections = [sheet.bests, sheet.totals, sheet.goal]
-        rows = sections.flat_map(&:rows).map { label.width(it.label) + value.width(it.value) + (size * 2) }
+        sections = [sheet.bests, sheet.totals, sheet.goal, sheet.feats].compact
+        rows = sections.flat_map(&:rows).map { label.width(it.label) + value.width(it.value) + (size * 2) + (it.mark ? size * MARK : 0) }
         titles = sections.map(&:title) + [Presentation::Words.last_rounds(sheet.scores.size)]
         (rows + titles.map { value.width(it) }).max
       end
@@ -183,7 +184,8 @@ module DotPopper
 
       def fits?(placed, size)
         row = placed.item
-        pen.fonts.semibold(size).width(row.label) + pen.fonts.bold(size).width(row.value) + (size * 1.5) <= placed.width
+        pen.fonts.semibold(size).width(row.label) + pen.fonts.bold(size).width(row.value) + (size * 1.5) +
+          (row.mark ? size * MARK : 0) <= placed.width
       end
 
       def place(placed, sheet, size)
@@ -193,11 +195,31 @@ module DotPopper
         in Presentation::RecordRow => row
           label = pen.fonts.semibold(size)
           value = pen.fonts.bold(size)
-          left(row.label, label, placed.x, placed.y, palette.soft)
-          right(row.value, value, placed.right, placed.y, palette.cream)
-          leader(placed.x + label.width(row.label), placed.right - value.width(row.value), placed.y, size)
+          start = placed.x + (row.mark ? size * MARK : 0)
+          mark(row.mark, placed.x, placed.y, size) if row.mark
+          left(row.label, label, start, placed.y, row.mark == :earned ? palette.cream : palette.soft)
+          right(row.value, value, placed.right, placed.y, row.mark == :earned || !row.mark ? palette.cream : palette.soft)
+          leader(start + label.width(row.label), placed.right - value.width(row.value), placed.y, size)
         in :chart then chart(sheet, placed, size)
         in Presentation::ChartNote => note then chart_note(note.text, placed, size)
+        end
+      end
+
+      # A feat's mark, a small dot in the game's own shape: filled in the
+      # fresh dot's orange when earned, a ring while there is more to do,
+      # and a fainter one while the paid version has yet to show them.
+      def mark(kind, x, y, size)
+        pixels = pen.pixels
+        radius = size * 0.28
+        centre_x = x + radius
+        centre_y = y + (size * 0.05)
+        if kind == :earned
+          pen.color(pen.palette.fresh_body, 1.0)
+          G.circle(:fill, centre_x, centre_y, radius, 24)
+        else
+          pen.color(pen.palette.soft, kind == :locked ? 0.4 : 0.8)
+          G.line_width = pixels.line_width(1.5)
+          G.circle(:line, centre_x, centre_y, radius - 0.5, 24)
         end
       end
 

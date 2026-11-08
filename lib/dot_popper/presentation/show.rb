@@ -19,7 +19,10 @@ module DotPopper
     # the Records screen, and puts them back. +measure+ sizes the screens' words (RoughMeasure's
     # methods). +sharing+ (InGameSharing's methods) offers Game
     # Over's result to share, in a preview or a phone's own sheet, and
-    # +clipboard+ takes it when the player copies it. +tutorial_flag+
+    # +clipboard+ takes it when the player copies it. +achievements+
+    # (Achievements) keeps the feats a round earns, as it ends, and the
+    # Records screen lists them once the +entitlement+ says the paid
+    # version was bought. +tutorial_flag+
     # (TutorialFlag) says whether Play opens the Tutorial first. +window+
     # (NoWindowControl's methods) is the desktop's window, which the
     # title's "Full screen" and Quit switch and close where it offers them.
@@ -35,7 +38,8 @@ module DotPopper
                      tutor: Tutor.new(BestScore::Memory.new, times: look::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
                      lifetime: Lifetime.new(BestScore::Memory.new), sizing_store: BestScore::Memory.new,
                      input: InputKind::MOUSE, measure: RoughMeasure.new,
-                     keeper: RecordKeeper.new(best: game.best, lifetime:), notices: Notices.none,
+                     achievements: Achievements.new(BestScore::Memory.new),
+                     keeper: RecordKeeper.new(best: game.best, lifetime:, achievements:), notices: Notices.none,
                      sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never, window: NoWindowControl.new,
                      entitlement: Entitlement.free, wardrobe: Wardrobe.plain(look::THEMES))
         @game = game
@@ -44,6 +48,8 @@ module DotPopper
         @entitlement = entitlement
         @wardrobe = wardrobe
         @looks = false
+        @achievements = achievements
+        @feat_watch = FeatWatch.new
         @tutorial = nil
         @handing_over = nil
         @lead_in = nil
@@ -629,6 +635,7 @@ module DotPopper
 
       # Hears one of the rules' events (Game#subscribe).
       def call(event)
+        @feat_watch.call(event)
         case event
         when Events::RoundStarted then round_started(event)
         when Events::Popped then popped(event)
@@ -773,7 +780,8 @@ module DotPopper
       def records_sheet
         size_class = game.size_class
         RecordsSheet.build(lifetime.stats, best: game.best.of(size_class), words:, streak: lifetime.streak,
-                           size_class:, field: game.field, sizing: game.sizing)
+                           size_class:, field: game.field, sizing: game.sizing, achievements: @achievements,
+                           paid: @entitlement.paid?)
       end
 
       # Where the HUD's pill ends, at the safe area's top.
@@ -878,9 +886,11 @@ module DotPopper
       def round_ended(event)
         result = lifetime.record(stats, event.size_class)
         @wardrobe.round_played
+        feats = @achievements.award(@feat_watch.earned, day: lifetime.today.iso8601)
+        feats = [] unless @entitlement.paid? # kept, and shown once the paid version is bought
         lesson = @tutor.lesson(@slip) if @slip&.among(event.round.dots)
         @finale = Finale.new(look: look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now,
-                             stats:, record: result.records.first, goal_met: result.goal_met, lesson:,
+                             stats:, record: result.records.first, goal_met: result.goal_met, lesson:, feats:,
                              first: event.first, screen: words.played_on(event.round.field, sized: event.size_class == SizeClass::FITTED))
         sounds.play(event.new_best ? :new_best : :game_over)
       end
