@@ -9,6 +9,7 @@ module DotPopper
 end
 
 require_relative "dot_popper/rules"
+require_relative "dot_popper/entitlement"
 require_relative "dot_popper/events"
 require_relative "dot_popper/field"
 require_relative "dot_popper/size_class"

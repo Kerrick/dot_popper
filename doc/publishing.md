@@ -4,7 +4,7 @@ What each store needs, what Dot Popper already has, and what is still missing. S
 
 ## Decide first: the license
 
-Dot Popper is all rights reserved from after v0.9.9 on; `LICENSE` says so, and its Credits screen too. Lota, which ships inside every build, stays AGPL-3.0-or-later, and the App Store's and Mac App Store's terms add restrictions that the GPL family forbids, so a build for those stores depends on the commercial license Kerrick Long, who holds the copyright to both, gives himself. That is handled on his own site, not in this repository or Lota's. Before a store build, confirm it, and that built apps no longer carry Fledge 0.6.0's AGPL notices (Lota 0.3.0 fixes that).
+Dot Popper is all rights reserved from after v0.9.9 on; `LICENSE` says so, and its Credits screen too. Lota, which ships inside every build, stays AGPL-3.0-or-later, and the App Store's and Mac App Store's terms add restrictions that the GPL family forbids, but setdef owns Lota, Fledge and Dot Popper, so the game ships Lota under setdef's own rights, not under the AGPL. Say so wherever a store page or document describes Lota's license. The third-party code inside Lota still binds the game: every build must carry `NOTICES.txt` and Fledge's `notices/` unmodified in substance, OpenAL Soft must stay a separately replaceable library with its source in `sources/`, and `bundle licenses` should be checked before each release. Before a store build, confirm it, and that built apps no longer carry Fledge 0.6.0's AGPL notices (Lota 0.3.0 fixes that).
 
 The bundled third-party code also needs a check before any store build:
 

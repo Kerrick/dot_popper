@@ -36,10 +36,12 @@ module DotPopper
                      lifetime: Lifetime.new(BestScore::Memory.new), sizing_store: BestScore::Memory.new,
                      input: InputKind::MOUSE, measure: RoughMeasure.new,
                      keeper: RecordKeeper.new(best: game.best, lifetime:), notices: Notices.none,
-                     sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never, window: NoWindowControl.new)
+                     sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never, window: NoWindowControl.new,
+                     entitlement: Entitlement.free)
         @game = game
         @window = window
         @tutorial_flag = tutorial_flag
+        @entitlement = entitlement
         @tutorial = nil
         @handing_over = nil
         @lead_in = nil

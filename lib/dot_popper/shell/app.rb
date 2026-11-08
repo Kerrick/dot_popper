@@ -66,7 +66,9 @@ module DotPopper
                                        window: @window,
                                        tutorial_flag: Presentation::TutorialFlag.new(
                                          SaveFile.new(name: "tutorial.txt"), mode: Presentation::TutorialFlag.mode(@env)
-                                       ))
+                                       ),
+                                       entitlement: Entitlement.new(SaveFile.new(name: "entitlement.txt"),
+                                                                    forced: Entitlement.forced?(@env)))
         @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
                                         archive: ->(name) { SaveFile.new(name:) }))
         puts "Dot Popper: each round is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"

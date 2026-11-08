@@ -26,6 +26,7 @@
 #                               round again. It mostly taps fresh dots and
 #                               sometimes a popped one, so penalties show.
 #   DOT_POPPER_NO_SPLASH=1      leaves out setdef's splash before the title
+#   DOT_POPPER_PAID=1           plays as if the paid version were bought
 #   DOT_POPPER_NO_TUTORIAL=1    never opens the tutorial on a first Play (the
 #                               bot and the GUI suite leave it out too)
 #   DOT_POPPER_TUTORIAL=1       opens the tutorial on every Play, seen or not

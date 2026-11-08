@@ -1,0 +1,12 @@
+module DotPopper
+  class Entitlement
+    PAID: String
+    FORCED_BY: String
+
+    def self.free: () -> Entitlement
+    def self.forced?: (untyped env) -> bool
+    def initialize: (untyped store, ?forced: bool) -> void
+    def paid?: () -> bool
+    def unlock!: () -> untyped
+  end
+end
