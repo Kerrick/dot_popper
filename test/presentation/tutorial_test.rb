@@ -155,6 +155,53 @@ class TutorialTest < Minitest::Test
     end, "the guide moves to the clear bright dot and taps it")
   end
 
+  # The maintainer: the guide "lingered there just a little too long", and
+  # "should wiggle a left-and-right 'no' instead of just hover-bobbing".
+  # It wags once it reaches its place, settles, and goes on to the bright
+  # dot soon after, with no idle wait.
+  def test_after_the_cost_the_guide_wags_its_finger_no_then_goes_on_soon
+    to_the_peek
+    started = @tutorial.now
+    turns = []
+    play_until(within: 900) do
+      turns << [@tutorial.now - started, @tutorial.ghost_pose&.turn.to_f]
+      @tutorial.beat == :aim_next
+    end
+    wag = SCRIPT.ghost.wag
+    arrives = (GhostHand::LIFTED * SCRIPT.ghost.loop) + SCRIPT.ghost.glide
+    wagging = turns.select { |at, _| at.between?(arrives, arrives + wag.time) }.map(&:last)
+
+    assert_operator wagging.max, :>, wag.angle * 0.8, "it wags one way"
+    assert_operator wagging.min, :<, -wag.angle * 0.8, "and the other"
+    assert_operator wagging.each_cons(2).count { |a, b| a.negative? != b.negative? }, :>=, 3, "back and forth"
+    assert(turns.select { |at, _| at < arrives || at > arrives + wag.time }.all? { |_, turn| turn.abs < 1e-9 })
+    waited = @tutorial.now - started
+    assert_operator waited, :>=, arrives + SCRIPT.ghost.waiting, "only once it has wagged and settled"
+    assert_operator waited, :<, arrives + SCRIPT.ghost.waiting + 0.4, "and soon after"
+  end
+
+  def test_a_calm_guide_wags_gentler
+    calm = Tutorial.new(field: @field, center: [600.0, 400.0], effects: @effects, sounds: @sounds, haptics: @haptics,
+                        look: Look, calm: true)
+    assert_equal Look::CALM_WAG, calm.ghost.look.wag
+    assert_operator Look::CALM_WAG.angle, :<, SCRIPT.ghost.wag.angle
+  end
+
+  # On an upright phone the first dot freezes near a side wall, where the
+  # new bright dot, going back across, would meet it and slide along
+  # beside the popped one, never clear. There they part up and down, the
+  # new one going down, away from where the guide waits.
+  def test_near_a_side_wall_the_dots_part_up_and_down
+    field = DotPopper::Field.new(400, 850, R)
+    @tutorial = Tutorial.new(field:, center: [200.0, 425.0], effects: Effects.new(radius: R), sounds: @sounds,
+                             haptics: @haptics, look: Look)
+    to_the_peek
+    play_until(within: 900) { @tutorial.beat == :aim_next }
+
+    assert_operator next_dot.y, :>, bright.y + (SCRIPT.clear * R * 0.9), "it slid out below"
+    assert_operator @tutorial.now, :<, 7.0, "with no long wait"
+  end
+
   def test_a_tap_on_the_popped_dot_costs_what_it_does_in_play_and_the_beat_goes_on
     to_the_peek
     tap_on(bright)
@@ -190,7 +237,7 @@ class TutorialTest < Minitest::Test
     now = @tutorial.dots.to_a.last
     assert_operator Math.hypot(now.x - still.x, now.y - still.y), :<, 0.1, "time held still till then"
     assert_equal Anchor.hud(:time), @tutorial.spotlight.to, "the light moves to the clock"
-    play_for(SCRIPT.handover)
+    play_for(SCRIPT.handover + STEP)
     assert @tutorial.over?
     assert_in_delta 1.0, @tutorial.rate, 1e-9, "and time flows as the game's does"
     assert_equal [1, 10], [@tutorial.score, @tutorial.seconds], "what it leaves the round"

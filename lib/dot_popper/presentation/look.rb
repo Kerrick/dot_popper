@@ -143,18 +143,24 @@ module DotPopper
       # once every 1.6 s, resting down and to the right of the dot, where
       # it hides none of it. Once it has tapped the popped dot to show the
       # cost, it waits well above it, its whole hand clear of both
-      # dots, and on screen wherever they are. In the round, the clock's spotlight fades in
-      # 0.6 s, so the round's dots are never hidden; its halo lasts past
-      # the first tick.
+      # dots, and on screen wherever they are, and wags its finger, "no":
+      # twice side to side in 0.8 s, 12° each way about the wrist, then
+      # holds still 0.25 s. Time stays stopped 1.35 s, while the cost's
+      # "−2"s float and the hand reaches its place, then flows at 0.6 while
+      # it wags. In the round, the clock's spotlight fades in 0.6 s, so the
+      # round's dots are never hidden; its halo lasts past the first tick.
       TUTORIAL = TutorialLook.new(
-        drift: 1.0, stop: 0.15, resume: 0.5, slow: 0.35, start: [-0.27, -0.12].freeze, born: 0.1, peek: 0.8,
-        clear: 2.3, warn: 1.8, flight: 0.6, quick: 0.45, gap: 0.15, hold: 0.45, linger: 0.35, handover: 0.35,
+        drift: 1.0, stop: 0.15, resume: 0.5, slow: 0.6, start: [-0.27, -0.12].freeze, born: 0.1, peek: 0.8,
+        clear: 2.3, warn: 1.35, flight: 0.6, quick: 0.45, gap: 0.15, hold: 0.45, linger: 0.35, handover: 0.35,
         longest: 5.0,
         spotlight: SpotlightLook.new(dim: 0.62, move: 0.35, feather: 0.9, dot: 1.5),
-        ghost: GhostLook.new(loop: 1.6, glide: 0.5, fade: 0.25, rest: [0.75, 0.9].freeze, hover: [-1.0, -4.2].freeze,
-                             bob: 0.1),
+        ghost: GhostLook.new(loop: 1.6, glide: 0.5, fade: 0.25, rest: [0.75, 0.9].freeze, hover: [-0.2, -4.6].freeze,
+                             wag: WagLook.new(cycles: 2, time: 0.8, angle: 0.21), settle: 0.25),
         lead: LeadLook.new(dim: 0.6, halo: 1.3, fade: 0.4)
       )
+      # A calm tutorial's guide (DOT_POPPER_CALM) wags gentler: half as
+      # far, and slower.
+      CALM_WAG = WagLook.new(cycles: 2, time: 1.0, angle: 0.1)
 
       # The rounded face, Fredoka (SIL Open Font License; assets/fonts).
       # Sizes are graphics units at a layout scale of 1. A size that

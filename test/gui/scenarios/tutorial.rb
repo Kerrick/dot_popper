@@ -112,8 +112,9 @@ module DotPopperGui
       check_equal([0, 9], shown, "the guide's tap costs the point there was and two seconds")
       wait(0.2)
       keep_screenshot(name("3-cost"))
-      wait(0.9)
-      keep_screenshot(name("3-wait"))
+      wag = tutorial.ghost.look.wag
+      wait_for("the guide's finger-wag", within: 300) { tutorial.ghost_pose&.turn.to_f.abs > wag.angle * 0.8 }
+      keep_screenshot(name("3-wag"))
       too_soon
       wait_for("the bright dot clear", within: 900) { tutorial.beat == :aim_next }
       wait(0.7)

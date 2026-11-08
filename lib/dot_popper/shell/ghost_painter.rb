@@ -16,6 +16,7 @@ module DotPopper
       RING = 0.4 # seconds a press's ring lasts
       RIPPLE = 0.45 # seconds a tap's ripple lasts, before the hand lifts away
       HAND = 3.0 # the pointing hand's picture's side, in the dot's radius
+      WAG = 2.0 # how far the pointer and the reticle slide as the guide wags, in radii to a radian
 
       # A pointer's outline, its tip at 0, 0, in twentieths of its height.
       ARROW = [[0, 0], [0, 17], [4, 13], [7, 20], [10, 19], [7, 12], [12, 12]].freeze
@@ -29,8 +30,8 @@ module DotPopper
 
         case input.name
         in :touch then hand(pose, radius, screen)
-        in :mouse then pointer(pose, radius)
-        in :gamepad then gamepad(pose, radius)
+        in :mouse then pointer(swayed(pose, radius), radius)
+        in :gamepad then gamepad(swayed(pose, radius), radius)
         end
       end
 
@@ -38,12 +39,17 @@ module DotPopper
 
       def palette = pen.palette
 
+      # The pointer and the reticle have no wrist to turn about, so as the
+      # guide wags, they slide side to side as far as a fingertip would.
+      def swayed(pose, radius) = pose.with(x: pose.x + (Math.sin(pose.turn) * radius * WAG))
+
       # The pointing hand emoji (Presentation::PointingHand), upright, its
       # fingertip on the point it taps and the hand below it, mirrored
       # where the right edge would cut it off. It is the smallest of its
       # PNGs with at least the pixels it needs, drawn a little smaller with
       # its mipmaps. As it presses, it sinks a little smaller, as if pushed
-      # into the glass, and a ripple spreads from its fingertip.
+      # into the glass, and a ripple spreads from its fingertip; as it
+      # wags, it turns about its wrist.
       def hand(pose, radius, screen)
         pixels = pen.pixels
         x = pixels.snap(pose.x)
@@ -56,7 +62,7 @@ module DotPopper
         scale = side / sprite.height
         (tip_x, tip_y), (wrist_x, wrist_y) = art::TIP_AT, art::WRIST_AT
         G.color = [1, 1, 1, pose.alpha]
-        G.draw(sprite, x + (across * (wrist_x - tip_x) * side), y + ((wrist_y - tip_y) * side), 0,
+        G.draw(sprite, x + (across * (wrist_x - tip_x) * side), y + ((wrist_y - tip_y) * side), pose.turn,
                across * scale, scale, wrist_x * sprite.width, wrist_y * sprite.height)
       end
 

@@ -57,6 +57,7 @@ module DotPopper
         @input = input
         @words = look::WORDS.for(input)
         @random = random
+        @calm = calm
         @effects = Effects.new(radius:, random:, calm:)
         @animations = DotAnimations.new(look::MOTION)
         @hud = Hud.blank(look::HUD, words)
@@ -599,7 +600,7 @@ module DotPopper
         effects.clear
         effects.scale_to(field.radius)
         @tutorial = Tutorial.new(field:, center: [layout.center_x, layout.center_y], effects:, sounds:,
-                                 haptics: @haptics, look:, now:, random: @random)
+                                 haptics: @haptics, look:, now:, random: @random, calm: @calm)
       end
 
       # A tap in the Tutorial: its skip button, or the scene's.

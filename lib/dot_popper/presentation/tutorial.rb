@@ -10,7 +10,7 @@ module DotPopper
     # +stop+ and starts again in +resume+, or at +slow+ while the bright
     # dot slides clear. The next dot is +born+ under the first, a little
     # to its left; time stops as it peeks out, +peek+ away, while the
-    # guide taps the popped dot and then waits, +warn+ in all, and stops
+    # guide taps the popped dot and lifts away, +warn+ in all, and stops
     # again once it is +clear+ of the first. A pop's numbers wait +gap+
     # and fly into the HUD in +flight+, or +quick+ on the last pop; time
     # holds +hold+ after they land. The last pop's numbers +linger+, and
@@ -87,7 +87,7 @@ module DotPopper
 
       attr_reader :field, :dots, :animations, :hud, :spotlight, :ghost, :beat, :now
 
-      def initialize(field:, center:, effects:, sounds:, haptics:, look:, now: 0.0, random: Random.new)
+      def initialize(field:, center:, effects:, sounds:, haptics:, look:, now: 0.0, random: Random.new, calm: false)
         @field = field
         @effects = effects
         @sounds = sounds
@@ -95,6 +95,8 @@ module DotPopper
         @look = look
         @random = random
         @script = look::TUTORIAL
+        @guide = calm ? @script.ghost.with(wag: look::CALM_WAG) : @script.ghost
+        @waited_out = Float::INFINITY
         @now = now
         @since = now
         @beat = :drift
@@ -102,7 +104,7 @@ module DotPopper
         @cues = []
         @flights = []
         @spotlight = Spotlight.off(@script.spotlight)
-        @ghost = GhostHand.none(@script.ghost)
+        @ghost = GhostHand.none(@guide)
         @hud = Hud.blank(look::HUD, look::WORDS).showing(Rules::LOWEST_SCORE, Rules::STARTING_SECONDS.to_i, now)
         @animations = DotAnimations.new(look::MOTION)
         @dots = Stack.new.slide_under(first_dot(*center))
@@ -196,7 +198,7 @@ module DotPopper
         in :drift then aim_at_bright if waited >= @script.drift
         in :peek then show_the_cost if apart >= @script.peek || waited >= @script.longest
         in :warn then let_it_slide if waited >= @script.warn
-        in :slide then aim_at_next if apart >= @script.clear || waited >= @script.longest
+        in :slide then aim_at_next if (apart >= @script.clear && now >= @waited_out) || waited >= @script.longest
         in :ending then enter(:over) if waited >= @script.handover
         else nil
         end
@@ -242,36 +244,63 @@ module DotPopper
       # popped, and a new bright dot is born under it, as in play, and
       # slides out.
       def resume
-        popped = settle(BRIGHT)
-        following = Dot.new(id: NEXT, x: popped.x - (@script.born * radius), y: popped.y,
-                            velocity_x: -popped.velocity_x, velocity_y: popped.velocity_y, radius:).confine(field)
-        @dots = dots.slide_under(following)
+        popped, following = parting(settle(BRIGHT))
+        @dots = dots.replace(popped).slide_under(following)
         spawned(following)
         enter(:peek)
         @time = @time.toward(1.0, now, @script.resume)
         @spotlight = spotlight.toward(nil, now)
       end
 
+      # The popped dot and the bright one born under it, a little apart,
+      # as they part: across, the new one going back the way the popped
+      # one came, or, where a side wall is too near for both to get clear
+      # that way, as on an upright phone, down, the popped one rising.
+      # Either way they part away from where the guide waits, above.
+      def parting(popped)
+        born = @script.born * radius
+        x, y, across, down = popped.to_h.values_at(:x, :y, :velocity_x, :velocity_y)
+        if room_across?(popped) then x, across = x - born, -across
+        else
+          popped = popped.with(velocity_y: -down.abs)
+          y, down = y + born, down.abs
+        end
+        [popped, Dot.new(id: NEXT, x:, y:, velocity_x: across, velocity_y: down, radius:).confine(field)]
+      end
+
+      # Whether both dots have room to get clear of each other across,
+      # each going its own way, before either meets a wall.
+      def room_across?(popped)
+        reach = @script.clear * radius / 2.0
+        ahead, behind = [field.max_x - popped.x, popped.x - field.min_x]
+        ahead, behind = behind, ahead if popped.velocity_x.negative?
+        ahead >= reach && behind >= reach
+      end
+
       # ...and as it peeks out, the guide taps the popped dot over it, once,
       # and the cost plays as its press lands, before the player's turn.
-      # Then it lifts, and waits to one side.
+      # Then it lifts, waits to one side and wags its finger, "no", and
+      # only once it has, and settled, may it go on to the bright dot.
       def show_the_cost
         enter(:warn)
         stop_time
         @spotlight = spotlight.toward(Anchor.dot(BRIGHT), now)
         @ghost = ghost.tapping(Anchor.dot(BRIGHT), now)
-        loop = @script.ghost.loop
-        cue(now + (GhostHand::PRESSED * loop)) { guide_slips }
-        cue(now + (GhostHand::LIFTED * loop)) { @ghost = ghost.hovering(waiting_place, now) }
+        lifted = now + (GhostHand::LIFTED * @guide.loop)
+        cue(now + (GhostHand::PRESSED * @guide.loop)) { guide_slips }
+        cue(lifted) { @ghost = ghost.hovering(waiting_place, now) }
+        @waited_out = lifted + @guide.glide + @guide.waiting
       end
 
-      # Where the guide waits: well above and a little left of the popped
-      # dot, so the whole hand, which reaches down and to the right, stays
-      # clear of both dots, and on screen however near an edge they are.
+      # Where the guide waits: well above the popped dot, the hand's middle
+      # over it, so the whole hand, which hangs below its fingertip, stays
+      # clear of both dots, and on screen however near an edge they are,
+      # with half a radius more beside it, for its thumb as it wags.
       def waiting_place
         dot = dots.find { it.id == BRIGHT }
-        across, down = @script.ghost.hover
-        Anchor.at((dot.x + (across * radius)).clamp(field.min_x, field.max_x),
+        across, down = @guide.hover
+        side = radius / 2.0
+        Anchor.at((dot.x + (across * radius)).clamp(field.min_x + side, field.max_x - side),
                   (dot.y + (down * radius)).clamp(field.min_y, field.max_y))
       end
 

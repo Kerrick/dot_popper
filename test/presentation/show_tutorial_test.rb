@@ -34,7 +34,7 @@ class ShowTutorialTest < Minitest::Test
   def test_the_round_goes_on_from_its_dots_score_and_time_with_only_the_clock_starting
     play_through(hand_over: false)
     scene = @show.tutorial
-    update_for(0.1) while @show.tutorial?
+    update_for(STEP) while @show.tutorial?
 
     assert @show.playing?
     round = @game.round
@@ -221,7 +221,7 @@ class ShowTutorialTest < Minitest::Test
       @show.tap(dot.x, dot.y)
       slip(slips) if id == Tutorial::BRIGHT
     end
-    update_for(0.1) while @show.tutorial? if hand_over
+    update_for(STEP) while @show.tutorial? if hand_over
   end
 
   def tapped?(id) = @show.tutorial.dots.find { it.id == id }.popped?
