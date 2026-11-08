@@ -588,12 +588,12 @@ class ShowTest < Minitest::Test
     @game.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
     hide_fresh_under_a_popped_dot_and_tap_it
+    popped = @game.round.dots.first
+    fresh = @game.round.dots.find(&:fresh?)
     @game.update(20)
-    assert_equal Look::WORDS.covered, @show.finale.lesson
+    assert_equal Slip.new(popped: popped.id, bright: fresh.id), @show.finale.lesson, "the wrong tap is the lesson"
     assert_equal "1", store.read
-    @show.input = InputKind::GAMEPAD
-    assert_equal "Wait for the bright dot to slide out, then pop it.", @show.finale.lesson.last,
-                 "the lesson follows the hand the player picks up"
+    refute @show.finale_plan.placed.key?(:lesson), "with no word"
 
     @game.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
@@ -601,6 +601,50 @@ class ShowTest < Minitest::Test
     hide_fresh_under_a_popped_dot_and_tap_it(started: true)
     @game.update(20)
     assert_nil @show.finale.lesson, "it has been taught as often as it is"
+  end
+
+  # On the pile, the wrong tap's penalty replays as it played, after the
+  # score has counted, a few times: the popped dot's shudder and alarm
+  # ring, and the dashed outline of the bright dot under it, which
+  # pulses. The screen never shakes, and Continue works as ever.
+  def test_game_overs_lesson_replays_the_wrong_tap_on_the_pile
+    hide_fresh_under_a_popped_dot_and_tap_it
+    popped = @game.round.dots.first
+    fresh = @game.round.dots.find(&:fresh?)
+    @game.update(20)
+    @show.update(Look::LESSON.every)
+    @show.effects.update(Look::REVEAL.duration)
+    @sounds.played.clear
+
+    @show.update(Look::FINALE.tally.duration)
+    assert_equal [fresh.id], @show.effects.reveals.map(&:follow), "the bright dot is outlined"
+    assert_includes @show.effects.rings.map { [it.look, it.follow] }, [Look::ALARM_RING, popped.id]
+    assert_includes @show.effects.rings.map { [it.look, it.follow] }, [Look::SPAWN_RIPPLE, fresh.id], "and pulses"
+    assert_operator @show.animations.pose(popped, @show.now + 0.05).alarm, :>, 0.0, "the popped dot shudders"
+    assert_in_delta 0.0, @show.effects.shake_x
+    assert_empty @sounds.played, "quietly"
+
+    (Look::LESSON.replays * 2).times { @show.update(Look::LESSON.every) }
+    assert_equal Look::LESSON.replays, @show.finale.replayed, "a few times, and no more"
+    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    press_main
+    assert @show.title?, "Continue works as ever"
+  end
+
+  # Once the bright dot it hid has been popped, the pile can't show which
+  # it was, so Game Over shows nothing, and that Game Over doesn't count.
+  def test_a_wrong_tap_whose_bright_dot_was_popped_later_teaches_nothing
+    store = DotPopper::BestScore::Memory.new
+    @show = Show.new(game: @game, layout:, sounds: @sounds, radius: R, random: Random.new(3),
+                     tutor: Tutor.new(store, times: 2))
+    hide_fresh_under_a_popped_dot_and_tap_it
+    fresh = @game.round.dots.find(&:fresh?)
+    clear_around!(@game.round, fresh)
+    @show.tap(fresh.x, fresh.y)
+    @game.update(20)
+
+    assert_nil @show.finale.lesson
+    assert_nil store.read
   end
 
   def test_a_wrong_tap_with_the_fresh_dot_elsewhere_reveals_nothing

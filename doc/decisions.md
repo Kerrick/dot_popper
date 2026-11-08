@@ -571,6 +571,8 @@ The math lives in `presentation/tilt.rb` and is tested. SDL reports the accelero
 
 ### The stacking rule is taught on Game Over, not in play
 
+*Later: the note's words are gone, and Game Over replays the wrong tap on the pile instead (see "Game Over teaches the stacking rule by replaying the wrong tap").*
+
 The hint that explains the stacking rule no longer appears during a round. It appears on Game Over instead, after a round in which the player tapped a popped dot while the bright dot was hidden underneath it. It shows on the first two such Game Overs and never again. The note is two short lines between the score pill and "Time's up!", which moves down a little to make room: "New dots appear under the popped ones. Wait for the bright dot to slide out, then tap it." On a narrow screen, a line that would not fit is broken evenly. `taught.txt` now counts how many times the note has shown. A player whose file says `taught`, from an older version, already saw the hint, so it does not show again. In play, the dashed outline of the hidden bright dot is unchanged.
 
 **Why:** Players don't read during intense action (Johnson, Hodent), so a sentence that appeared mid-round mostly went unread and covered the field. A penalty is also the wrong trigger for reading (Saffer). Game Over is calm, and it follows the mistake closely enough that the note still makes sense. Showing it only after a mistake caused by a hidden dot means it explains something the player just saw. Showing it twice gives a player who taps through quickly a second chance.
@@ -975,3 +977,11 @@ The title's two sentences, "Click a bright dot: +1 point, +1 second" and "Click 
 **Why:** How to play must never depend on reading, and the maintainer's goal is that a person who can't read English should understand and enjoy the game. Reading is a learned skill, and recognizing something already seen is far easier than recalling it (Johnson, *Designing with the Mind in Mind*): a player who has watched "+1" and the stopwatch fly into the HUD recognizes them at once on the title, so the legend stays as a reminder without a sentence. It also omits needless words (Strunk).
 
 **To reverse:** Give `Words` its `legend` back, and draw the two sentences in `TitlePainter#legend`, measured by `TitleScreen#legend_width`.
+
+### Game Over teaches the stacking rule by replaying the wrong tap
+
+Game Over's two sentences, "New dots appear under the popped ones. Wait for the bright dot to slide out, then tap it.", are gone. Under the same conditions as before (a round in which the player tapped a popped dot with the bright one hidden under it, on at most two Game Overs, counted in `taught.txt` as before), that wrong tap replays on the pile, in the game's own penalty look: the popped dot that was hit shudders and its alarm ring flashes, the dashed outline of the bright dot it hid draws over everything, and that bright dot pulses with a soft ring. It replays once the score has counted up, then twice more 2.4 s apart (`Look::LESSON`), and then the pile is left in peace. It makes no sound, the screen never shakes, every mark is a thin outline that hides no dot, and Continue works as before. The effects follow the two dots by id wherever the pile throws them. If the bright dot was popped later in the round, nothing on the pile shows which dot it was, so Game Over shows nothing, and that Game Over isn't counted (`Slip#among`). There is no ✕, for the reasons in "The tutorial's guide shows a wrong tap's cost, with no ✕".
+
+**Why:** How to play must never depend on reading. Failure is the moment a player is ready to learn (Juul, *The Art of Failure*), and showing the consequence where it happened teaches better than a sentence about it (Hodent, *The Gamer's Brain*). The player already saw this penalty in the round, and the tutorial showed it too, so the replay needs no words to be read as "that's what happened, and that's the dot you couldn't see".
+
+**To reverse:** Give `Words` its `covered` lines back, pass them to `Tutor#lesson` in `Show#round_ended`, lay them out again in `FinaleScreen#blocks`, and drop `Show#replay_slip`.

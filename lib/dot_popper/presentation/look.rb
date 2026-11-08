@@ -26,11 +26,6 @@ module DotPopper
         play: ByInput.new(touch: "Play", mouse: "Play", gamepad: "Play (A)"),
         continue: ByInput.new(touch: "Continue", mouse: "Continue", gamepad: "Continue (A)"),
         time_up: "Time's up!", new_best: "New best!", best: "Your best", score: "SCORE", time: "TIME",
-        covered: ByInput.new(
-          touch: ["New dots appear under the popped ones.", "Wait for the bright dot to slide out, then tap it."].freeze,
-          mouse: ["New dots appear under the popped ones.", "Wait for the bright dot to slide out, then click it."].freeze,
-          gamepad: ["New dots appear under the popped ones.", "Wait for the bright dot to slide out, then pop it."].freeze
-        ),
         share: ByInput.new(touch: "Share my score", mouse: "Share my score", gamepad: "Share my score (Y)"),
         share_heading: "Share your score", share_note: "Copy it, then paste it anywhere.",
         copied: "Copied! Paste it anywhere.",
@@ -131,8 +126,10 @@ module DotPopper
       HOVER = HoverLook.new(seconds: 0.12, fill: hex["#2b2766", 0.9], edge: hex["#fff4de"])
 
       # The stacking rule, taught on the first two Game Overs after a wrong
-      # tap that had the bright dot hidden under the popped one.
-      LESSON = LessonLook.new(times: 2, alpha: 1.0)
+      # tap that had the bright dot hidden under the popped one: the tap's
+      # penalty replays on the pile three times, 2.4 s apart, slowly
+      # enough to watch, and then the pile is left in peace.
+      LESSON = LessonLook.new(times: 2, every: 2.4, replays: 3)
 
       # The tutorial on a first Play (Presentation::Tutorial), which says
       # nothing in words. Its dots move at the game's slowest speed, and

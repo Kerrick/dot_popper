@@ -3,12 +3,12 @@
 module DotPopper
   module Presentation
     # Where Game Over's words go, worked out by FinaleScreen#plan: each
-    # line's Rect by name (Stacked), the font size each is set in, the
-    # stacking rule broken into lines, and the backing behind them all.
+    # line's Rect by name (Stacked), the font size each is set in, and the
+    # backing behind them all.
     # A line the screen had no room for, or that is not shown, has no
     # Rect; Continue is the Rect named :continue, and "Share my score" the
     # one named :share.
-    class FinalePlan < Data.define(:placed, :sizes, :lesson_lines, :backing)
+    class FinalePlan < Data.define(:placed, :sizes, :backing)
       def [](name) = placed[name]
       def size(name) = sizes.fetch(name)
       def share_button = placed[:share]
@@ -18,14 +18,14 @@ module DotPopper
     # Game Over's words for +finale+ (Finale), stacked as one group
     # between the HUD, whose bottom is at +below+, and the safe area's
     # bottom, or higher, so the pile's dots lying on the window's floor
-    # show at least their lower half under Continue: the stacking rule when it is taught, "Time's up!", "You met
+    # show at least their lower half under Continue: "Time's up!", "You met
     # today's goal!" when the round did, the score, the best or how far
     # short of it the round fell, the round's facts, a record it set,
     # "Share my score", closing the score's group, +hint+, how to play
     # with the pile, when there is one, and the Continue button, as big as
     # Layout's primary_size for dots of +radius+. Short of room, the type
     # shrinks first; then the hint goes, then the record, the facts, the
-    # goal, the best, "Time's up!", "Share my score", and last the lesson.
+    # goal, the best, "Time's up!", and last "Share my score".
     # The score and Continue always stay. The backing (+scrim+, a
     # ScrimLook) is drawn around everything above Continue, so "Share my
     # score" reads as part of the score, and Continue, which needs none,
@@ -45,7 +45,7 @@ module DotPopper
       def plan
         placed = Column.new(room:).fit(layout.type_scales) { blocks(sizes(it), it) }
         sizes = sizes(placed.scale)
-        FinalePlan.new(placed:, sizes:, lesson_lines: lesson_lines(sizes[:lesson]), backing: backing(placed))
+        FinalePlan.new(placed:, sizes:, backing: backing(placed))
       end
 
       # From a margin under the HUD to a margin above the safe area's
@@ -71,8 +71,7 @@ module DotPopper
       private
 
       def blocks(sizes, scale)
-        [(lesson_block(sizes[:lesson], scale) if finale.lesson),
-         line(:heading, :bold, sizes[:heading], words.time_up, scale, drop: 6),
+        [line(:heading, :bold, sizes[:heading], words.time_up, scale, drop: 6),
          (line(:goal, :bold, sizes[:goal], words.goal_met, scale, drop: 4, mark: true) if finale.goal_met),
          line(:score, :bold, sizes[:score], finale.score.to_s, scale, depth: 1.06),
          line(:best, *best_line(sizes[:best]), scale, drop: 5),
@@ -113,29 +112,12 @@ module DotPopper
       # tall.
       def self.share_size(height) = (height * 0.4).round
 
-      # The stacking rule, its lines 1.05 lines apart.
-      def lesson_block(size, scale)
-        lines = lesson_lines(size)
-        line = measure.height(:bold, size)
-        Block.new(name: :lesson, height: (line * 1.05 * (lines.size - 1)) + line, gap: 0.0, drop: 8,
-                  width: lines.map { measure.width(:bold, size, it) }.max)
-      end
-
       def gap(name, scale) = GAPS.fetch(name) * layout.ui * scale
 
       def sizes(scale)
         size = ->(nominal) { layout.type_size(nominal, scale) }
-        { lesson: size[type.hint], heading: size[type.heading], goal: size[type.best], score: size[type.final_score],
+        { heading: size[type.heading], goal: size[type.best], score: size[type.final_score],
           best: size[finale.new_best? ? type.new_best : type.best], summary: size[type.summary] }
-      end
-
-      # The stacking rule, a sentence a line, each broken evenly if it
-      # would not fit across.
-      def lesson_lines(size)
-        return [] unless finale.lesson
-
-        room = layout.safe.width - (layout.margin * 3)
-        finale.lesson.flat_map { |sentence| Words.balance(sentence, room) { measure.width(:bold, size, it) } }
       end
 
       # Around every line above Continue, and never past the safe area

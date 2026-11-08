@@ -66,7 +66,7 @@ module DotPopper
         @clipboard = clipboard
         @sharing = sharing
         @preview = nil
-        @hid_fresh = false
+        @slip = nil
         @penalized_at = -Float::INFINITY
         @recorder = RoundStats::Recorder.new
         @records = nil
@@ -87,13 +87,12 @@ module DotPopper
       def palette = look::PALETTE
 
       # The player pressed with +kind+ (InputKind): from now on the words
-      # say what to do with it, the lesson on Game Over too.
+      # say what to do with it.
       def input=(kind)
         return if kind == input
 
         @input = kind
         @words = look::WORDS.for(kind)
-        @finale = finale.with(lesson: words.covered) if finale&.lesson
       end
 
       # Whether the title is showing: the game is on its title, and the
@@ -716,7 +715,7 @@ module DotPopper
         end
         @finale = nil
         @preview = nil
-        @hid_fresh = false
+        @slip = nil
         @undo = nil # the round's records would be lost to an undo
         @lead_in = nil
         sounds.play(:start)
@@ -741,7 +740,7 @@ module DotPopper
         effects.ring(event.dot.x, event.dot.y, look::ALARM_RING, follow: event.dot.id)
         hidden = game.round.dots.fresh_beneath(event.dot, event.x, event.y)
         effects.reveal(hidden, look::REVEAL) if hidden
-        @hid_fresh ||= !hidden.nil?
+        @slip = Slip.new(popped: event.dot.id, bright: hidden.id) if hidden
         effects.kick(look::PENALTY_SHAKE)
         effects.light(look::PENALTY_FLASH)
         # The floor can keep the score from falling; say only what was lost.
@@ -760,7 +759,7 @@ module DotPopper
 
       def round_ended(event)
         result = lifetime.record(stats, event.size_class)
-        lesson = @tutor.lesson(words.covered) if @hid_fresh
+        lesson = @tutor.lesson(@slip) if @slip&.among(event.round.dots)
         @finale = Finale.new(look: look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now,
                              stats:, record: result.records.first, goal_met: result.goal_met, lesson:,
                              first: event.first, screen: words.played_on(event.round.field, sized: event.size_class == SizeClass::FITTED))
@@ -820,11 +819,30 @@ module DotPopper
 
       def follow_finale
         @finale = finale.ready(now) if game.state.ready?
+        replay_slip if finale.lesson && finale.counted?(now) &&
+                       look::LESSON.replay_due?(finale.replayed, now - finale.at - look::FINALE.tally.duration)
         goal_burst if finale.goal_due?(now)
         return unless finale.celebration_due?(now)
 
         @finale = finale.celebrate
         celebrate
+      end
+
+      # The stacking rule, taught with no word: the wrong tap the round
+      # ended up teaching (Slip) replays on the pile as it played, the
+      # popped dot's shudder and alarm ring and the dashed outline of the
+      # bright dot under it, and the bright dot pulses gently. Its effects
+      # follow both dots wherever the pile has them, are only outlines, so
+      # they hide no dot, and the screen never shakes.
+      def replay_slip
+        slip = finale.lesson
+        @finale = finale.replay
+        dots = game.round.dots
+        popped, bright = [slip.popped, slip.bright].map { |id| dots.find { it.id == id } }
+        animations.wobble(popped.id, now)
+        effects.ring(popped.x, popped.y, look::ALARM_RING, follow: popped.id)
+        effects.reveal(bright, look::REVEAL)
+        effects.ring(bright.x, bright.y, look::SPAWN_RIPPLE, follow: bright.id)
       end
 
       # A small burst of twinkles where "You met today's goal!" appears.

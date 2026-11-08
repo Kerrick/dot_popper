@@ -73,18 +73,14 @@ class WordsTest < Minitest::Test
     assert_equal "New record: your fastest pop, 0.3 seconds after the dot appeared", record[:fastest_pop, 0.31]
   end
 
-  # What to do is said for the hand the player last used: "tap" for a
-  # finger, "click" for a mouse, and a gamepad's button by name. The
-  # main buttons name the gamepad's button that presses them.
+  # The main buttons name the gamepad's button that presses them.
   def test_the_prompts_name_the_press_the_player_is_making
     said = [InputKind::TOUCH, InputKind::MOUSE, InputKind::GAMEPAD].map do |kind|
       words = Look::WORDS.for(kind)
-      [words.play, words.continue, words.go_back, words.covered.last]
+      [words.play, words.continue, words.go_back]
     end
 
-    assert_equal [["Play", "Continue", "Back", "Wait for the bright dot to slide out, then tap it."],
-                  ["Play", "Continue", "Back", "Wait for the bright dot to slide out, then click it."],
-                  ["Play (A)", "Continue (A)", "Back (B)", "Wait for the bright dot to slide out, then pop it."]], said
+    assert_equal [%w[Play Continue Back], %w[Play Continue Back], ["Play (A)", "Continue (A)", "Back (B)"]], said
     refute(said.flatten.any? { it.include?("anywhere") }, "no press goes anywhere")
   end
 

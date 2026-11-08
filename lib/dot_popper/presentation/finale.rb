@@ -12,14 +12,16 @@ module DotPopper
     # first round to meet today's goal, which is celebrated once, also when
     # the score has counted. +screen+ says what screen the round was
     # played on, for the result to share (Words#played_on), or is nil.
-    # +lesson+ is the stacking rule's lines (Tutor), on the first Game
-    # Overs after a wrong tap with the bright dot hidden beneath, or nil.
+    # +lesson+ is the wrong tap to teach the stacking rule from (Slip,
+    # from the Tutor), on the first Game Overs after a wrong tap with the
+    # bright dot hidden beneath, or nil, and +replayed+ how many times it
+    # has replayed.
     # +first+ says the round was the first of its SizeClass, which set the
     # best without beating one.
     class Finale < Data.define(:look, :score, :best, :new_best, :at, :stats, :record, :goal_met, :ready_at,
-                               :celebrated, :goal_celebrated, :screen, :lesson, :first)
+                               :celebrated, :goal_celebrated, :screen, :lesson, :replayed, :first)
       def initialize(look:, score:, best:, new_best:, at:, stats: RoundStats.start, record: nil, goal_met: false,
-                     ready_at: nil, celebrated: false, goal_celebrated: false, screen: nil, lesson: nil, first: false)
+                     ready_at: nil, celebrated: false, goal_celebrated: false, screen: nil, lesson: nil, replayed: 0, first: false)
         super
       end
 
@@ -47,6 +49,9 @@ module DotPopper
 
       def celebration_due?(now) = new_best? && !celebrated && counted?(now)
       def celebrate = with(celebrated: true)
+
+      # The finale once its lesson has replayed once more.
+      def replay = with(replayed: replayed + 1)
     end
 
     # How "Share my score" comes in (FinaleLook's +share+): it rises

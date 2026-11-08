@@ -9,13 +9,12 @@ module DotPopper
     # do are ByInputs, said as a tap, a click, or a gamepad's button,
     # whichever +input+ (InputKind) the player last used (#for): +play+,
     # +continue+, +go_back+, +credits+, +share+ and the share preview's
-    # +copy+ and +close+, and +covered+, which teaches the stacking rule
-    # on Game Over, a sentence a line. +labels+ name the Records screen's sections
+    # +copy+ and +close+. +labels+ name the Records screen's sections
     # and rows, by what they count. +goals+ say each kind of DailyGoal as
     # the end of "Today's goal: ...", with %d for its target. +screen_size+
     # says how big a screen is, in dots, with %d for its width and height,
     # and names the choices of dot size (DotSizing) by what they do here.
-    class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time, :covered,
+    class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time,
                               :share, :share_heading, :share_note, :copied, :copy, :close, :records, :go_back,
                               :no_rounds, :clear, :keep_holding, :hold_to_clear, :cleared, :undo, :labels, :goals, :goal_done, :goal_met,
                               :screen_size, :credits, :credits_title, :notice, :quit_again, :input)
@@ -50,7 +49,6 @@ module DotPopper
       def play = super.for(input)
       def continue = super.for(input)
       def go_back = super.for(input)
-      def covered = super.for(input)
       def clear = super.for(input)
       def hold_to_clear = super.for(input)
       def undo = super.for(input)

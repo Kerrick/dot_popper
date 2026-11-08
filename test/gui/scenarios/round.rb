@@ -3,7 +3,8 @@
 module DotPopperGui
   # A whole round, as a first-time player has it: the title, a round
   # with a few pops and one tap too soon on a popped dot over the fresh
-  # one, its reveal and Game Over's lesson, the clock running out, and
+  # one, its reveal and Game Over's lesson, replayed on the pile with no
+  # word, the clock running out, and
   # back to the title. The score and the clock are worked out alongside,
   # from the rules' numbers, and the save files checked once it is over.
   # With DOT_POPPER_NO_SHADERS=1, the same round draws without shaders.
@@ -81,8 +82,14 @@ module DotPopperGui
       check_equal(score, ended.score, "Game Over's score")
       check_close(R::STARTING_SECONDS + POPS - (R::PENALTY_SECONDS * 1), ended.round.elapsed,
                   "the round lasted the time it was given")
-      check_equal(words.covered, show.finale.lesson, "Game Over teaches the stacking rule")
-      wait(1.5)
+      lesson = show.finale.lesson
+      fresh = ended.round.dots.find(&:fresh?)
+      check(lesson && lesson.bright == fresh.id, "Game Over teaches the stacking rule from the wrong tap")
+      wait_for("the wrong tap replayed on the pile", within: 300) { show.finale.replayed.positive? }
+      check_equal([fresh.id], show.effects.reveals.map(&:follow), "the bright dot it hid is outlined on the pile")
+      wait(0.15)
+      keep_screenshot("game-over-lesson")
+      wait(1.2)
       lit = screenshot.lit_in(DotPopper::Presentation::Rect.new(x: layout.center_x - 120, y: layout.center_y - 160,
                                                                 width: 240, height: 200))
       check(lit > 100, "Game Over shows its heading and score (#{lit} light pixels)")

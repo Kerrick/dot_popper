@@ -276,7 +276,7 @@ class ScreenPlansTest < Minitest::Test
 
   def finale(lesson: false, goal_met: false, new_best: false, record: false)
     Finale.new(look: Look::FINALE, score: 128, best: new_best ? 128 : 140, new_best:, at: 0.0, goal_met:,
-               lesson: (WORDS.covered if lesson),
+               lesson: (Slip.new(popped: 1, bright: 2) if lesson),
                record: (DotPopper::LifetimeStats::Record.new(kind: :longest_run, value: 31) if record))
   end
 

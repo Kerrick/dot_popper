@@ -7,10 +7,10 @@ module DotPopper
     # round did, the score counting up, a new best or how far short of the
     # best it fell, a quiet line of the round's facts, a lifetime record
     # it set, "Share my score", rising in as the score lands, and the
-    # Continue button, faint until a press will be heard. On the first
-    # Game Overs after a wrong tap with the bright dot hidden, the
-    # stacking rule comes first. Every line above Continue sits on a soft,
-    # dark backing, so they read over the pile without hiding it.
+    # Continue button, faint until a press will be heard. Every line
+    # above Continue sits on a soft, dark backing, so they read over the
+    # pile without hiding it. The stacking rule is taught on the pile
+    # itself, with no word (Show#replay_slip).
     class FinalePainter < Data.define(:pen)
       def draw(show, layout)
         finale = show.finale or return
@@ -21,7 +21,6 @@ module DotPopper
         arrival = finale.arrival(now)
         shown = arrival.clamp(0.0, 1.0)
         ScrimPainter.new(pen:).draw(plan.backing, pen.look::FINALE_BACKING, layout, alpha: shown)
-        lesson(plan, layout, shown) if plan[:lesson]
         if (heading = plan[:heading])
           pen.text(words.time_up, pen.fonts.bold(plan.size(:heading)), layout.center_x,
                    heading.center_y - ((1 - arrival) * 30), palette.soft, shown)
@@ -48,18 +47,6 @@ module DotPopper
         rect = plan[name] or return
 
         pen.text(text, pen.fonts.semibold(plan.size(:summary)), rect.center_x, rect.center_y, color, alpha)
-      end
-
-      # The stacking rule, in the lines the plan broke it into, in the
-      # hint's size and bold, since it is the one thing on this screen the
-      # player has not seen before.
-      def lesson(plan, layout, alpha)
-        font = pen.fonts.bold(plan.size(:lesson))
-        step = font.height * 1.05
-        top = plan[:lesson].y + (font.height / 2.0)
-        plan.lesson_lines.each_with_index do |line, i|
-          pen.text(line, font, layout.center_x, top + (step * i), pen.palette.cream, alpha * pen.look::LESSON.alpha)
-        end
       end
 
       # "You met today's goal!", with a check, between "Time's up!" and the
