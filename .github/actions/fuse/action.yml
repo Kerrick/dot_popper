@@ -65,5 +65,12 @@ runs:
           PATH=$(printf '%s' "$PATH" | tr ':' '\n' | grep -vix '/c/mingw64/bin' | paste -sd: -)
           echo "make: $(command -v make || echo none); gcc: $(command -v gcc || echo none)"
         fi
-        ruby -S lota fuse . --identifier "$IDENTIFIER" --app-version "$APP_VERSION" --icon icons/icon --out "$RUNNER_TEMP/fuse"
+        # lota fuse ships all of the folder it is given, as a fused LÖVE game
+        # does, so it gets a copy without what only the repository needs.
+        stage=$RUNNER_TEMP/game
+        mkdir -p "$stage"
+        git archive HEAD | tar -x -C "$stage"
+        (cd "$stage" && rm -rf .github android ios test doc playtest script sig server Steepfile Rakefile \
+          mise.toml INSIPIRATION.md PACKAGING.md README.md)
+        (cd "$stage" && ruby -S lota fuse . --identifier "$IDENTIFIER" --app-version "$APP_VERSION" --icon icons/icon --out "$RUNNER_TEMP/fuse")
         ls -la "$RUNNER_TEMP/fuse"

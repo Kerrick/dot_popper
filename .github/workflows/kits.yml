@@ -386,8 +386,8 @@ jobs:
           game=$phone/game/dot_popper
           mkdir -p "$game"
           git archive HEAD | tar -x -C "$game"
-          (cd "$game" && rm -rf .github vendor android ios test doc playtest script sig Steepfile Rakefile \
-            Gemfile Gemfile.lock mise.toml .ruby-version)
+          (cd "$game" && rm -rf .github vendor android ios test doc playtest script sig server Steepfile Rakefile \
+            Gemfile Gemfile.lock mise.toml .ruby-version INSIPIRATION.md PACKAGING.md README.md)
           cp -R "$LOTA_GEM/ext/lota/phone/host" "$phone/host"
           rm -rf "$phone/host/android"
           cp -R ios/host/. "$phone/host/ios/"
