@@ -17,6 +17,7 @@ module DotPopper
 
       def initialize(look, shaders: true)
         @look = look
+        @palette = look::PALETTE
         @fonts = FontBook.new(look::TYPE)
         @hands = HandSprites.new
         @square = G::Image.new(::Lota::Image::ImageData.new(2, 2, :rgba8, ("\xFF".b * 16)))
@@ -26,7 +27,35 @@ module DotPopper
         refresh
       end
 
-      def palette = look::PALETTE
+      attr_reader :palette
+
+      # Puts on the look whose colors are +palette+ (Presentation::Wardrobe):
+      # the shaders are given its colors and the hover's lit colors follow
+      # it. Says whether it was a change, so the caller can redraw what it
+      # keeps, such as the clear color. A palette already worn changes nothing.
+      def wear(palette)
+        return false if palette.equal?(@palette)
+
+        @palette = palette
+        @lit = nil
+        paint_shaders
+        true
+      end
+
+      # What a button the mouse is over is lit with (Presentation::HoverLook):
+      # the night's glow behind it and cream around it, in the worn palette.
+      def lit
+        @lit ||= look::HOVER.with(fill: palette.ink_glow.with_alpha(look::HOVER.fill.a), edge: palette.cream)
+      end
+
+      # +color+ as the worn palette has it: one of the ordinary palette's
+      # colors, which Look gives to rings and flashes, becomes the worn
+      # palette's color for the same job; any other color stays.
+      def themed(color)
+        ordinary = look::PALETTE.to_h
+        job = ordinary.key(color)
+        job ? palette.public_send(job) : color
+      end
 
       # Reads the screen's size and density again, after a resize.
       def refresh
@@ -95,6 +124,13 @@ module DotPopper
       def configure
         if (dot = @shaders[:dot])
           look::DOT.to_h.except(:legend).each { |name, value| uniform(dot, name.to_s, value) }
+        end
+        paint_shaders
+      end
+
+      # Gives the shaders the worn palette's colors.
+      def paint_shaders
+        if (dot = @shaders[:dot])
           %i[fresh_light fresh_body fresh_deep fresh_bounce fresh_rim gloss halo popped_top popped_bottom popped_rim
              popped_crater popped_lip shadow alarm].each { uniform(dot, it.to_s, rgb(palette.public_send(it))) }
         end

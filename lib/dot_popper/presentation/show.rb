@@ -37,11 +37,13 @@ module DotPopper
                      input: InputKind::MOUSE, measure: RoughMeasure.new,
                      keeper: RecordKeeper.new(best: game.best, lifetime:), notices: Notices.none,
                      sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never, window: NoWindowControl.new,
-                     entitlement: Entitlement.free)
+                     entitlement: Entitlement.free, wardrobe: Wardrobe.plain(look::THEMES))
         @game = game
         @window = window
         @tutorial_flag = tutorial_flag
         @entitlement = entitlement
+        @wardrobe = wardrobe
+        @looks = false
         @tutorial = nil
         @handing_over = nil
         @lead_in = nil
@@ -89,7 +91,44 @@ module DotPopper
       # The numbers of the round in play, or of the one just finished.
       def stats = @recorder.stats
 
-      def palette = look::PALETTE
+      # The colors of the look being worn (Wardrobe), which only changes
+      # between rounds.
+      def palette = @wardrobe.palette
+
+      # Whether the Looks screen is open over the Records screen, and what
+      # it shows: every look the player can wear, and the one worn.
+      def looks? = @looks
+      def looks = @wardrobe.choices
+      def worn = @wardrobe.worn
+
+      # Whether the Records screen offers Looks: the paid version is
+      # bought, and there is a look besides the ordinary one to choose.
+      def looks_offered? = records? && !credits? && !looks? && @wardrobe.offered?
+
+      # Where the Looks screen's cards go (LooksLayout).
+      def looks_layout = LooksLayout.new(layout:, themes: looks, look: look::LOOKS)
+
+      def open_looks
+        return unless looks_offered?
+
+        @looks = true
+        sounds.play(:tick)
+      end
+
+      def close_looks
+        @looks = false
+        sounds.play(:tick, pitch: 0.8)
+      end
+
+      # Wears +theme+ from now on, and the whole screen takes its colors at
+      # once, so the choice is seen before it is left.
+      def wear(theme)
+        return unless looks?
+        return sounds.play(:tick, pitch: 0.8) if theme == worn
+
+        @wardrobe.wear(theme)
+        sounds.play(:tick, pitch: 1.2)
+      end
 
       # The player pressed with +kind+ (InputKind): from now on the words
       # say what to do with it.
@@ -169,6 +208,8 @@ module DotPopper
         in :continue then continue_on
         in :back then leave
         in :credits then open_credits
+        in :looks then open_looks
+        in Theme => theme then wear(theme)
         in :mute then sounds.toggle_mute
         in :how_to_play then how_to_play
         in :fullscreen then window.toggle_fullscreen
@@ -194,6 +235,7 @@ module DotPopper
         Control.apart(
           if tutorial? then [Control.new(name: :skip, reach: layout.skip_button)]
           elsif credits? then [button(:back, layout.back_button)]
+          elsif looks? then looks_controls
           elsif records? then records_controls
           elsif title? then title_controls
           elsif sharing? then share_controls
@@ -352,6 +394,7 @@ module DotPopper
 
       def close_records
         @records = nil
+        @looks = false
         @credits = nil
         @clearing = clearing.cancel
         sounds.play(:tick, pitch: 0.8)
@@ -359,7 +402,12 @@ module DotPopper
 
       # Back, from the Credits screen to the Records screen, or from the
       # Records screen to the title.
-      def leave = credits? ? close_credits : close_records
+      def leave
+        if credits? then close_credits
+        elsif looks? then close_looks
+        else close_records
+        end
+      end
 
       # Whether the Credits screen is open over the Records screen.
       def credits? = !@credits.nil?
@@ -602,7 +650,7 @@ module DotPopper
         effects.clear
         effects.scale_to(field.radius)
         @tutorial = Tutorial.new(field:, center: [layout.center_x, layout.center_y], effects:, sounds:,
-                                 haptics: @haptics, look:, now:, random: @random, calm: @calm)
+                                 haptics: @haptics, look:, now:, random: @random, calm: @calm, palette:)
       end
 
       # A tap in the Tutorial: its skip button, or the scene's.
@@ -672,8 +720,13 @@ module DotPopper
         @credits = @credits.fitted(content: credits_lines.height, window: page.window.height)
       end
 
+      def looks_controls
+        looks_layout.cards.map { button(it.theme, it.rect) } << button(:back, layout.back_button)
+      end
+
       def records_controls
         [(button(:credits, layout.credits_button)),
+         (button(:looks, layout.looks_button) if looks_offered?),
          (button(:undo, layout.undo_button) if undo_offer),
          (button(:clear, layout.clear_records_button) if clear_offered?),
          button(:back, layout.back_button)].compact
@@ -792,6 +845,7 @@ module DotPopper
 
       def round_ended(event)
         result = lifetime.record(stats, event.size_class)
+        @wardrobe.round_played
         lesson = @tutor.lesson(@slip) if @slip&.among(event.round.dots)
         @finale = Finale.new(look: look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now,
                              stats:, record: result.records.first, goal_met: result.goal_met, lesson:,
@@ -800,7 +854,9 @@ module DotPopper
       end
 
       def title_shown(event)
+        @wardrobe.refresh
         @records = nil
+        @looks = false
         @credits = nil
         @clearing = clearing.cancel
         effects.clear

@@ -87,12 +87,13 @@ module DotPopper
 
       attr_reader :field, :dots, :animations, :hud, :spotlight, :ghost, :beat, :now
 
-      def initialize(field:, center:, effects:, sounds:, haptics:, look:, now: 0.0, random: Random.new, calm: false)
+      def initialize(field:, center:, effects:, sounds:, haptics:, look:, palette: look::PALETTE, now: 0.0, random: Random.new, calm: false)
         @field = field
         @effects = effects
         @sounds = sounds
         @haptics = haptics
         @look = look
+        @palette = palette
         @random = random
         @script = look::TUTORIAL
         @guide = calm ? @script.ghost.with(wag: look::CALM_WAG) : @script.ghost
@@ -356,7 +357,7 @@ module DotPopper
       # instant of the tap, over the dot still bright; time stops there, and
       # the dot takes its popped look as it flows again (#settle).
       def burst(dot, x, y)
-        @effects.burst(x, y, @look::POP_BURST, @look::PALETTE.confetti)
+        @effects.burst(x, y, @look::POP_BURST, @palette.confetti)
         @effects.ring(dot.x, dot.y, @look::SHOCKWAVE, follow: dot.id)
         @sounds.play(:pop, pitch: 1.0 + (hud.score * @look::SOUND.pop_climb), pan: pan(x))
         @haptics.buzz(@look::HAPTICS.pop)
@@ -391,7 +392,7 @@ module DotPopper
       # A pop's point (+to+ :score) or second (:time), flying from where
       # the dot was tapped into the HUD.
       def fly_in(x, y, to, born, duration)
-        palette = @look::PALETTE
+        palette = @palette
         score = to == :score
         @flights << Flight.new(text: Words.points(score ? Rules::POP_POINTS : Rules::POP_SECONDS),
                                icon: (:stopwatch unless score), color: score ? palette.cream : palette.gain,
@@ -415,7 +416,7 @@ module DotPopper
       # (+from+).
       def fly_out(from, lost)
         score = from == :score
-        @flights << Flight.new(text: Words.points(-lost), icon: (:stopwatch unless score), color: @look::PALETTE.alarm,
+        @flights << Flight.new(text: Words.points(-lost), icon: (:stopwatch unless score), color: @palette.alarm,
                                from: Anchor.hud(from), to: Anchor.hud(from, below: 1.6), born: now,
                                duration: @look::LOSS_FLOAT.life)
       end

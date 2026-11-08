@@ -28,12 +28,12 @@ module DotPopper
         return if alpha <= 0.0
 
         band = [width, height].min * effects.flash.band
-        return flat_flash(effects.flash.color, alpha, width, height, band) unless pen.shader?(:edge)
+        return flat_flash(pen.themed(effects.flash.color), alpha, width, height, band) unless pen.shader?(:edge)
 
         pen.shading(:edge) do |shader|
           pen.uniform(shader, "size", [width.to_f, height.to_f])
           pen.uniform(shader, "band", band)
-          pen.color(effects.flash.color, alpha)
+          pen.color(pen.themed(effects.flash.color), alpha)
           pen.square(width / 2.0, height / 2.0, width / 2.0, height / 2.0)
         end
       end
@@ -46,7 +46,7 @@ module DotPopper
           next if width <= 0.0
 
           x, y = ring.center(dots)
-          pen.color(ring.look.color, ring.alpha(now))
+          pen.color(pen.themed(ring.look.color), ring.alpha(now))
           G.line_width = width
           G.circle(:line, x, y, ring.radius(now), 64)
         end
@@ -59,7 +59,7 @@ module DotPopper
           x, y = reveal.center(dots)
           radius = reveal.radius(now)
           alpha = reveal.alpha(now)
-          [[pen.palette.shadow, reveal.width * 2.2, alpha * 0.5], [reveal.look.color, reveal.width, alpha]]
+          [[pen.palette.shadow, reveal.width * 2.2, alpha * 0.5], [pen.themed(reveal.look.color), reveal.width, alpha]]
             .each do |color, width, strength|
             pen.color(color, strength)
             G.line_width = width

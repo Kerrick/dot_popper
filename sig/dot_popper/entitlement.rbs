@@ -3,9 +3,12 @@ module DotPopper
     PAID: String
     FORCED_BY: String
 
+    @store: BestScore::_Store
+    @forced: bool
+
     def self.free: () -> Entitlement
     def self.forced?: (untyped env) -> bool
-    def initialize: (untyped store, ?forced: bool) -> void
+    def initialize: (BestScore::_Store store, ?forced: bool) -> void
     def paid?: () -> bool
     def unlock!: () -> untyped
   end

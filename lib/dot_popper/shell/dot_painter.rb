@@ -37,6 +37,17 @@ module DotPopper
         paint { one(x, y, radius, fresh ? Presentation::Pose::FRESH : Presentation::Pose::STILL, opacity) }
       end
 
+      # One plain dot in the colors of +palette+, whichever look is worn,
+      # as the Looks screen shows each look's pair.
+      def swatch(x, y, radius, palette, fresh:)
+        G.push do
+          G.translate(x, y)
+          pen.color(palette.shadow, pen.look::DOT.shadow_alpha)
+          G.circle(:fill, 0, radius * pen.look::DOT.shadow_offset, radius, SEGMENTS)
+          fresh ? flat_fresh(radius, 1.0, palette) : flat_popped(radius, 1.0, palette)
+        end
+      end
+
       private
 
       def paint(&)
@@ -71,8 +82,7 @@ module DotPopper
 
       # The bright rim is the whole disc, and the body is drawn inside it,
       # so the dot's edge is its hit circle.
-      def flat_fresh(radius, opacity)
-        palette = pen.palette
+      def flat_fresh(radius, opacity, palette = pen.palette)
         inner = radius - [radius * pen.look::DOT.rim, pen.pixels.line_width(2)].max
         pen.color(palette.fresh_rim, opacity)
         G.circle(:fill, 0, 0, radius, SEGMENTS)
@@ -84,8 +94,7 @@ module DotPopper
         G.ellipse(:fill, -radius * 0.36, -radius * 0.46, radius * 0.24, radius * 0.13, 32)
       end
 
-      def flat_popped(radius, opacity)
-        palette = pen.palette
+      def flat_popped(radius, opacity, palette = pen.palette)
         pen.color(palette.popped_rim, opacity)
         G.circle(:fill, 0, 0, radius, SEGMENTS)
         pen.color(palette.popped_top, opacity)

@@ -45,7 +45,8 @@
 #   DOT_POPPER_SAVE_AS=test     saves in a folder of this name instead, so
 #                               a run starts from nothing.
 #   DOT_POPPER_TODAY=2026-11-07 plays as if it were that date, for its
-#                               daily goal and the goal's streak.
+#                               daily goal and the goal's streak, and for
+#                               which holiday look is in season.
 #   DOT_POPPER_FAKE_TILT=0.6,0  stands in for an accelerometer that reads
 #                               this x,y, in g, in the device's portrait
 #                               axes, so the game-over pile rolls as on a

@@ -19,7 +19,7 @@ module DotPopper
         return if alpha <= 0.0
 
         pixels = pen.pixels
-        lit = pen.look::HOVER
+        lit = pen.lit
         x, y, width, height = [rect.x, rect.y, rect.width, rect.height].map { pixels.snap(it) }
         corner = height / 2.0
         fill = pen.palette.pill.mix(lit.fill, hover)

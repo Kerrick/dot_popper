@@ -21,6 +21,60 @@ module DotPopper
         confetti: [hex["#ffbf52"], hex["#ff8fb8"], hex["#7df0c6"], hex["#b9a6ff"], hex["#fff4de"]].freeze
       )
 
+      # The looks the game can wear, the ordinary one first (Wardrobe), each
+      # the ordinary palette with some colors changed. Each keeps a fresh
+      # dot light, glossy and warm-bright against a dark, matte, sunken
+      # popped one, so the two read apart in grayscale and not by hue
+      # alone, and a popped dot's rim shows against what lies under it, so
+      # the stack's order stays visible; test/presentation/theme_test.rb
+      # holds every one to the ordinary look's own contrast. A holiday
+      # theme appears from its season's first day to its last.
+      THEMES = [
+        Theme.new(key: :classic, palette: PALETTE),
+        Theme.new(
+          key: :halloween, season: Season.new(from: [10, 17], to: [11, 2]),
+          palette: PALETTE.with(
+            ink_top: hex["#2a1340"], ink_bottom: hex["#0e0616"], ink_glow: hex["#44206a"], ink_edge: hex["#050209"],
+            fresh_light: hex["#ffe3b0"], fresh_body: hex["#ff9d2e"], fresh_deep: hex["#e8590c"],
+            fresh_bounce: hex["#ffc070"], fresh_rim: hex["#fff1d6"], halo: hex["#ff8a1f"],
+            popped_top: hex["#2f3f33"], popped_bottom: hex["#223028"], popped_rim: hex["#6c9878"],
+            popped_crater: hex["#0e1812"], popped_lip: hex["#3d5a46"],
+            shadow: hex["#050208"], alarm: hex["#ff4fa8"],
+            cream: hex["#fff1dc"], soft: hex["#c8b4e8"], gain: hex["#a6ff6e"], urgent: hex["#ff6a8d"],
+            pill: hex["#0e0616", 0.62],
+            confetti: [hex["#ff9d2e"], hex["#b57bff"], hex["#a6ff6e"], hex["#ffe3b0"], hex["#fff1dc"]].freeze
+          )
+        ),
+        Theme.new(
+          key: :winter, season: Season.new(from: [12, 15], to: [1, 2]),
+          palette: PALETTE.with(
+            ink_top: hex["#123450"], ink_bottom: hex["#07182a"], ink_glow: hex["#1f5078"], ink_edge: hex["#030a14"],
+            fresh_light: hex["#f4fdff"], fresh_body: hex["#b4ebff"], fresh_deep: hex["#4fb8ee"],
+            fresh_bounce: hex["#d4f5ff"], fresh_rim: hex["#ffffff"], halo: hex["#8fdcff"],
+            popped_top: hex["#2a4258"], popped_bottom: hex["#1e3347"], popped_rim: hex["#7a9fc0"],
+            popped_crater: hex["#16283a"], popped_lip: hex["#5a7f9e"],
+            shadow: hex["#030a14"], alarm: hex["#ff5a6e"],
+            cream: hex["#f4fbff"], soft: hex["#b4cce6"], gain: hex["#8dffc4"], urgent: hex["#ff7a8a"],
+            pill: hex["#07182a", 0.62],
+            confetti: [hex["#b4ebff"], hex["#ff5a6e"], hex["#8dffc4"], hex["#ffd98c"], hex["#ffffff"]].freeze
+          )
+        ),
+        Theme.new(
+          key: :valentine, season: Season.new(from: [2, 7], to: [2, 14]),
+          palette: PALETTE.with(
+            ink_top: hex["#3c1233"], ink_bottom: hex["#190616"], ink_glow: hex["#5e1c4d"], ink_edge: hex["#0a0309"],
+            fresh_light: hex["#ffe3ec"], fresh_body: hex["#ff8fb0"], fresh_deep: hex["#e6457a"],
+            fresh_bounce: hex["#ffb3cb"], fresh_rim: hex["#fff1f5"], halo: hex["#ff7aa2"],
+            popped_top: hex["#46283f"], popped_bottom: hex["#35202f"], popped_rim: hex["#9c6e8c"],
+            popped_crater: hex["#160a12"], popped_lip: hex["#68405f"],
+            shadow: hex["#0a0309"], alarm: hex["#6fe3ff"],
+            cream: hex["#fff0f4"], soft: hex["#dcb6d2"], gain: hex["#9dffd0"], urgent: hex["#ffc857"],
+            pill: hex["#190616", 0.62],
+            confetti: [hex["#ff8fb0"], hex["#ffe3ec"], hex["#ffc857"], hex["#b9a6ff"], hex["#fff0f4"]].freeze
+          )
+        )
+      ].freeze
+
       WORDS = Words.new(
         title: "Dot Popper",
         play: ByInput.new(touch: "Play", mouse: "Play", gamepad: "Play (A)"),
@@ -44,6 +98,8 @@ module DotPopper
         ),
         quit_again: "Press B again to quit",
         full_screen: "Full screen", windowed: "Window", quit: "Quit",
+        # The Looks screen: its button's word and heading, and each look's name.
+        looks: { title: "Looks", classic: "Classic", halloween: "Halloween", winter: "Winter", valentine: "Hearts" }.freeze,
         hold_to_clear: ByInput.new(
           touch: "Press and hold to clear your bests, totals, chart, and goal streak.",
           mouse: "Press and hold to clear your bests, totals, chart, and goal streak.",
@@ -108,6 +164,11 @@ module DotPopper
       # the title's dots dim behind it. A column is only as wide as its
       # longest row needs, so each label stays near its number.
       RECORDS = RecordsLook.new(heading: 48, text: 23, line: 1.6, chart: 4.2, gap: 56, column: 520, veil: 0.9)
+
+      # The Looks screen, over the Records screen: its heading's size, the
+      # gap between cards in margins, a card's height in its width, and the
+      # widest a card grows (in units at a scale of 1).
+      LOOKS = LooksLook.new(heading: 48, gap: 1.0, ratio: 0.78, widest: 260)
 
       # The Credits screen, over the Records screen: its type, the lines a
       # wheel's notch and a stick at full tilt move it.

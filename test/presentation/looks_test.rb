@@ -1,0 +1,146 @@
+# frozen_string_literal: true
+
+require_relative "presentation_helper"
+
+# The Looks screen: offered on the Records screen once the paid version
+# is bought and there is a look to choose, a card for each look, and the
+# choice shown at once.
+class LooksTest < Minitest::Test
+  include PresentationTest
+
+  SIZES = [[1200, 800], [800, 500], [400, 320], [400, 850], [850, 400]].freeze
+
+  def setup
+    @sounds = FakeSounds.new
+    @day = Date.new(2026, 10, 31)
+    @paid = DotPopper::BestScore::Memory.new
+  end
+
+  def test_looks_are_offered_only_to_a_paid_player_with_a_look_to_choose
+    show(paid: false)
+    open_records
+
+    refute @show.looks_offered?
+    assert_nil @show.reach_of(:looks)
+
+    show(paid: true)
+    open_records
+
+    assert @show.looks_offered?
+    assert @show.reach_of(:looks)
+
+    @day = Date.new(2026, 11, 8)
+    show(paid: true)
+    open_records
+
+    refute @show.looks_offered?, "nothing earned, and none in season"
+  end
+
+  def test_a_round_in_season_wears_the_theme_and_keeps_it_to_choose_after_the_season
+    show(paid: true)
+
+    assert_equal :halloween, @show.worn.key
+    assert_same Look::THEMES[1].palette, @show.palette
+
+    @day = Date.new(2027, 3, 1)
+    @wardrobe.refresh
+    open_records
+
+    assert_predicate @show.worn, :ordinary?
+    assert_equal [:classic, :halloween], @show.looks.map(&:key)
+    assert @show.looks_offered?
+  end
+
+  def test_choosing_a_look_wears_it_at_once_and_leaving_goes_back_to_the_records
+    show(paid: true)
+    open_records
+    @show.open_looks
+
+    assert_predicate @show, :looks?
+    cards = @show.looks_layout.cards
+
+    assert_equal [:classic, :halloween], cards.map { it.theme.key }
+    classic = cards.first
+    @show.tap(classic.rect.center_x, classic.rect.center_y)
+
+    assert_predicate @show.worn, :ordinary?
+    assert_same Look::PALETTE, @show.palette
+    assert @show.looks?, "choosing does not leave"
+
+    @show.back
+
+    refute @show.looks?
+    assert @show.records?
+    @show.back
+
+    refute @show.records?
+  end
+
+  def test_a_tap_on_a_card_of_a_look_not_offered_does_nothing_and_play_cannot_start_under_looks
+    show(paid: true)
+    open_records
+    @show.open_looks
+    before = @show.palette
+    @show.tap(1, 1)
+
+    assert_same before, @show.palette
+    assert_nil @show.play_reach
+  end
+
+  def test_the_cards_fit_their_room_apart_from_each_other_and_from_back_at_every_size
+    SIZES.each do |width, height|
+      plan = LooksLayout.new(layout: layout(width, height), themes: Look::THEMES, look: Look::LOOKS)
+      rects = plan.cards.map(&:rect)
+      back = layout(width, height).back_button
+      whole = layout(width, height).safe
+
+      assert_equal Look::THEMES.size, rects.size, "#{width}x#{height}"
+      rects.each do |rect|
+        assert_operator rect.x, :>=, whole.x, "#{width}x#{height}"
+        assert_operator rect.right, :<=, whole.right, "#{width}x#{height}"
+        assert_operator rect.y, :>=, plan.heading_y, "#{width}x#{height}"
+        assert_operator rect.bottom, :<=, back.y, "#{width}x#{height}"
+        assert_operator rect.width, :>=, 90, "#{width}x#{height}: a card is big enough to read"
+      end
+      rects.combination(2) { |one, other| refute one.overlaps?(other), "#{width}x#{height}" }
+    end
+  end
+
+  def test_the_looks_button_stays_clear_of_the_other_records_buttons_at_every_size
+    SIZES.each do |width, height|
+      page = layout(width, height)
+      others = [page.back_button, page.credits_button, page.clear_records_button]
+
+      others.each { refute page.looks_button.overlaps?(it), "#{width}x#{height}" }
+      assert_operator page.looks_button.x, :>=, page.safe.x, "#{width}x#{height}"
+      assert_operator page.looks_button.right, :<=, page.safe.right, "#{width}x#{height}"
+      assert_operator page.looks_button.y, :>, page.safe.y, "#{width}x#{height}"
+    end
+  end
+
+  private
+
+  def show(paid:)
+    @paid.write("paid") if paid
+    entitlement = DotPopper::Entitlement.new(@paid)
+    store = DotPopper::BestScore::Memory.new
+    wardrobe = Wardrobe.new(store, themes: Look::THEMES, entitlement:, today: -> { @day })
+    @game = DotPopper::Game.new(field, random: Random.new(2), best: DotPopper::BestScore.new(DotPopper::BestScore::Memory.new))
+    @wardrobe = wardrobe
+    @show = Show.new(game: @game, layout: layout, sounds: @sounds, radius: R, entitlement:, wardrobe:,
+                     lifetime: DotPopper::Lifetime.new(DotPopper::BestScore::Memory.new, today: -> { @day }))
+    finish_round
+  end
+
+  def open_records = @show.open_records
+
+  def finish_round
+    press_main
+    fresh = @game.round.dots.find(&:fresh?)
+    clear_around!(@game.round, fresh)
+    @show.tap(fresh.x, fresh.y)
+    @game.update(20)
+    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    press_main
+  end
+end

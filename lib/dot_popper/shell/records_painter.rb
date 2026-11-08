@@ -20,7 +20,8 @@ module DotPopper
         words = show.words
         palette = pen.palette
         plan = Presentation::RecordsLayout.new(layout:, sheet:, look: pen.look::RECORDS,
-                                               widest: widest(sheet, layout.scaled(pen.look::RECORDS.text)))
+                                               widest: widest(sheet, layout.scaled(pen.look::RECORDS.text)),
+                                               looks: show.looks_offered?)
         notes = note_lines(sheet, plan, layout)
         plan = plan.with(note_lines: notes.size)
         pen.text(words.records, pen.fonts.bold(plan.heading_size), layout.center_x, plan.heading_y, palette.cream)
@@ -29,6 +30,7 @@ module DotPopper
         prompt(show, plan, layout)
         back(show, layout)
         credits(show, layout)
+        looks(show, layout) if show.looks_offered?
         corner(show, layout)
         return nothing_yet(words, layout, plan) if sheet.empty
 
@@ -78,6 +80,26 @@ module DotPopper
       def credits(show, layout)
         PillButton.new(pen:).draw(layout.credits_button, show.words.credits, alpha: 0.8 + (0.2 * show.hover.level(:credits)),
                                                                               color: pen.palette.soft, hover: show.hover.level(:credits))
+      end
+
+      # Looks, quiet like Credits, with a bright dot and a popped one over
+      # it for its icon.
+      def looks(show, layout)
+        hover = show.hover.level(:looks)
+        PillButton.new(pen:).draw(layout.looks_button, show.words.looks.fetch(:title), alpha: 0.8 + (0.2 * hover),
+                                                                                       color: pen.palette.soft, hover:,
+                                                                                       icon: ->(x, y, size) { pair(x, y, size) })
+      end
+
+      # A ring over a disc, in the quiet pills' colors: the bright dot and
+      # the popped one drawn as shapes alone.
+      def pair(x, y, size)
+        radius = pen.pixels.whole(size * 0.2)
+        pen.color(pen.palette.soft)
+        G.circle(:fill, pen.pixels.snap(x - (radius * 0.5)), pen.pixels.snap(y), radius, 32)
+        G.line_width = pen.pixels.line_width(2)
+        pen.color(pen.palette.cream)
+        G.circle(:line, pen.pixels.snap(x + (radius * 0.6)), pen.pixels.snap(y), radius, 32)
       end
 
       # +text+ where the prompt goes, in a line or two that fit across.

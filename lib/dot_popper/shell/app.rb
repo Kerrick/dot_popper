@@ -53,7 +53,10 @@ module DotPopper
         notices = NoticeFiles.new(game: File.expand_path("../../..", __dir__),
                                   starts: [File.dirname(File.expand_path($PROGRAM_NAME))]).notices
         keeper = RecordKeeper.new(best: @game.best, lifetime:, folder: ->(name) { SaveFile.new(name:) })
+        entitlement = Entitlement.new(SaveFile.new(name: "entitlement.txt"), forced: Entitlement.forced?(@env))
+        wardrobe = Presentation::Wardrobe.new(SaveFile.new(name: "looks.txt"), themes: Look::THEMES, entitlement:, today:)
         @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
+        @pen.wear(wardrobe.palette)
         @speaker = Speaker.new(Look::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Look::SOUND.volume)
         @splash = @splash.with(sounding: !@speaker.muted?) if @splash
         @show = Presentation::Show.new(game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,
@@ -67,8 +70,7 @@ module DotPopper
                                        tutorial_flag: Presentation::TutorialFlag.new(
                                          SaveFile.new(name: "tutorial.txt"), mode: Presentation::TutorialFlag.mode(@env)
                                        ),
-                                       entitlement: Entitlement.new(SaveFile.new(name: "entitlement.txt"),
-                                                                    forced: Entitlement.forced?(@env)))
+                                       entitlement:, wardrobe:)
         @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
                                         archive: ->(name) { SaveFile.new(name:) }))
         puts "Dot Popper: each round is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"
@@ -124,6 +126,7 @@ module DotPopper
         end
         @game.update(seconds)
         @show.update(seconds)
+        dress
         point_the_mouse
         repeat_keys
         @tilting.update(seconds)
@@ -288,6 +291,7 @@ module DotPopper
 
         return @speaker.toggle_mute if key == :m
         return @show.how_to_play if key == :h
+        return @show.open_looks if key == :l && @show.records?
         return @show.open_credits if key == :c && @show.records?
         return if @show.credits_key(key)
         # Enter or Space presses the screen's main button, on any device;
@@ -355,6 +359,12 @@ module DotPopper
 
         @reading = reading
         ::Lota::Keyboard.key_repeat = reading
+      end
+
+      # Puts on the Show's look if it has changed (Presentation::Wardrobe),
+      # which is only ever between rounds.
+      def dress
+        @renderer.prepare if @pen.wear(@show.palette)
       end
 
       # A press at +x+, +y+, by +by+ (a finger's id, :mouse, :gamepad, or

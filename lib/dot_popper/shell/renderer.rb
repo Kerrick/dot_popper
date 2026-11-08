@@ -30,6 +30,7 @@ module DotPopper
         @title = TitlePainter.new(pen:, dots: @dots)
         @records = RecordsPainter.new(pen:)
         @credits = CreditsPainter.new(pen:)
+        @looks = LooksPainter.new(pen:, dots: @dots)
         @finale = FinalePainter.new(pen:)
         @share = SharePreviewPainter.new(pen:, dots: @dots)
         @cursor = CursorPainter.new(pen:)
@@ -49,7 +50,7 @@ module DotPopper
           @dots.draw(@show.attract.dots, @at_rest, @show.now, radius)
           if @show.records?
             veil(width, height, @pen.look::RECORDS.veil)
-            (@show.credits? ? @credits : @records).draw(@show, layout)
+            records_screen.draw(@show, layout)
           else
             veil(width, height, @pen.look::TITLE.dim)
             @title.draw(@show, layout)
@@ -78,6 +79,15 @@ module DotPopper
       private
 
       def radius = @show.game.field.radius
+
+      # The screen open over the title's dimmed dots: Credits, Looks, or
+      # the Records screen they were opened from.
+      def records_screen
+        if @show.credits? then @credits
+        elsif @show.looks? then @looks
+        else @records
+        end
+      end
 
       # The Tutorial, drawn as the round it opens is: its dots over their
       # glow and the effects of its taps, its HUD, never shaken, and its

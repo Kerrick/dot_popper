@@ -11,7 +11,7 @@ module DotPopper
 
       def draw(rect, hover: 0.0)
         pixels = pen.pixels
-        lit = pen.look::HOVER
+        lit = pen.lit
         size = rect.width
         x = pixels.snap(rect.center_x)
         y = pixels.snap(rect.center_y)

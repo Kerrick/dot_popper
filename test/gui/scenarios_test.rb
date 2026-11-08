@@ -48,6 +48,12 @@ class GuiScenariosTest < Minitest::Test
          "a gamepad's B goes back to the Records screen", "Escape again goes back to the title")
   end
 
+  def test_choosing_a_holiday_look_from_the_paid_version
+    play("looks", "a paid player wears the theme in season", "the Records screen offers Looks once a look is earned",
+         "a click on the ordinary look's card wears it at once", "Escape leaves Looks for the Records screen",
+         DOT_POPPER_PAID: "1", DOT_POPPER_TODAY: "2026-10-31")
+  end
+
   def test_clearing_the_records_and_undoing_it
     play("clearing", "letting go too soon clears nothing", "Undo restores every file exactly",
          "the playtest log is untouched", "a press of Y undoes")

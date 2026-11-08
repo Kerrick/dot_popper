@@ -85,6 +85,7 @@ module DotPopper
       HOW_TO_PLAY_LEAST = 3.1 # ...and the least it is drawn at in the bottom row
       FULL_SCREEN = 3.8 # "Full screen"'s width, in its heights, as wide as "How to play"
       QUIT = 2.4 # "Quit"'s width, in its heights
+      LOOKS = 3.0 # the Records screen's "Looks" width, in its height
 
       # The scale for text and the HUD: 1 on a mid-sized window, smaller on
       # a phone, a little larger on a big screen.
@@ -189,8 +190,31 @@ module DotPopper
         end
       end
 
+      # The Records screen's Looks, a quiet pill of the same kind, offered
+      # once there is a look to choose. It follows Credits along the bottom
+      # row when there is room for both, and otherwise takes the row above
+      # Back, beside Credits if that is there too and has room, or over it.
+      def looks_button
+        height = button_size
+        width = height * LOOKS
+        credits = credits_button
+        if credits.y == back_button.y
+          x = credits.right + margin
+          return Rect.new(x:, y: credits.y, width:, height:) if clear_records_button.x - margin - x >= width
+
+          return Rect.new(x: back_button.x, y: back_button.y - margin - height, width: [width, safe.width - (2 * margin)].min, height:)
+        end
+
+        x = credits.right + margin
+        return Rect.new(x:, y: credits.y, width:, height:) if x + width <= safe.right - margin
+
+        Rect.new(x: credits.x, y: credits.y - margin - height, width: [width, safe.width - (2 * margin)].min, height:)
+      end
+
       # The top of the Records screen's buttons, whichever row they are on.
-      def records_floor = [back_button.y, credits_button.y, clear_records_button.y].min
+      def records_floor(looks: false)
+        [back_button.y, credits_button.y, clear_records_button.y, (looks_button.y if looks)].compact.min
+      end
 
       # The size of a screen's main button, the title's Play and Game
       # Over's Continue, for dots of +radius+: at least a dot across, and
