@@ -24,14 +24,14 @@ For example, a player takes the trophy with 30 on Monday. On Wednesday the score
 
 - A player has no account, login, email, or password. On first use the server issues a long random token, and it stores only a hash of that token. The game sends the token with every request.
 - **The server accepts no text from players.** Players have no names, and groups have no names. Nothing a player types is stored or shown to anyone else. A field that would hold free text doesn't exist.
-- Within a group, each member appears as one of 8 dot looks. A look is one member's alone within the group. A player picks one that is free when joining, or the server assigns one. The game draws the looks; the server only keeps which of the 8 each member has.
+- Within a group, each member appears as one of 8 dot looks. A look is one member's alone within the group. A player picks one when joining, and if it's taken the server assigns one that's free. Accept only a whole number from 0 to 7. The game draws the looks; the server only keeps which of the 8 each member has.
 - A player can delete everything about themselves at any time. That removes the player, their membership, and every record of a theft they took part in. A trophy they held falls vacant, and a group left with nobody goes too. This must work from inside the game, with no contact with us (Apple's guideline 5.1.1(v)).
 
 ## Groups
 
 - A player is in at most one group.
 - A group holds at most 8 players. A full group refuses new members.
-- The server gives each new group a short join code: 6 characters from an alphabet with no look-alike letters or digits, such as `ABCDEFGHJKMNPQRSTUVWXYZ23456789`. Accept a code in either case. Players share the code themselves, in their own chat.
+- The server gives each new group a join code of 7 digits, which players enter on an on-screen keypad. Accept digits only. Players share the code themselves, in their own chat.
 - A player can try at most 20 join codes an hour, counting wrong codes, so that codes can't be guessed.
 - Any player may leave. Leaving gives up the trophy if they held it, and removes their part in the group's thefts. An empty group goes.
 - A group has no owner. A creator who leaves costs the group nothing.
