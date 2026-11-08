@@ -22,7 +22,7 @@ module DotPopper
         @elapsed = 0.0
         @uptime = 0.0
         @chatter = Presentation::Chatter.quiet(Look::CHATTER)
-        @splash = Presentation::Splash.start(blink: Presentation::Splash.blink(env)) unless Presentation::Splash.skipped?(env)
+        @splash = Presentation::Splash.start unless Presentation::Splash.skipped?(env)
       end
 
       def load

@@ -5,8 +5,8 @@ require_relative "presentation_helper"
 class SplashTest < Minitest::Test
   include PresentationTest
 
-  def test_muted_it_fades_in_holds_and_fades_out_in_about_one_and_a_half_seconds
-    assert_in_delta 1.4, Splash.start.total, 0.05
+  def test_muted_it_fades_in_holds_and_fades_out_in_about_two_and_a_third_seconds
+    assert_in_delta 2.3, Splash.start.total, 0.05
     splash = Splash.start
     assert_equal [0.0, 1.0], [splash.mark, splash.ground]
     assert_in_delta 0.5, splash.advance(Splash::FADE_IN / 2).mark, 1e-9
@@ -77,13 +77,14 @@ class SplashTest < Minitest::Test
   # The maintainer: the splash lengthens only when it plays the jingle.
   def test_with_sound_it_lasts_until_the_last_click_has_rung_and_muted_it_is_short_and_silent
     assert_operator Splash.start(sounding: true).total, :>, Splash::JINGLE.last.at
-    assert_in_delta 1.4, Splash.start(sounding: false).total, 0.05
+    assert_in_delta 2.3, Splash.start(sounding: false).total, 1e-9
+    assert_in_delta 3.5, Splash.start(sounding: true).total, 1e-9
     assert_empty Splash.start(sounding: false).notes(10.0)
     assert_empty Splash.start(sounding: true).advance(0.7).skip.notes(1.0), "a press silences the rest"
   end
 
   # The maintainer's idea: the block blinks like an amber terminal's
-  # cursor, with the jingle's notes, or steadily on the beat, to compare.
+  # cursor, with the jingle's notes, or on the beat when muted.
   def test_with_the_notes_each_note_flips_the_block_and_the_last_leaves_it_dark
     splash = Splash.start(sounding: true)
     Splash::JINGLE.each_slice(2) do |on, off|
@@ -99,27 +100,34 @@ class SplashTest < Minitest::Test
     assert_in_delta 0.5, splash.with(at: Splash::LIGHTS / 2).block, 1e-9
   end
 
-  def test_on_the_beat_and_muted_it_is_lit_for_a_beat_and_dark_for_the_next
-    [Splash.start(sounding: true, blink: :beat), Splash.start].each do |splash|
-      [0, 2].each do |start|
-        lit = start * Splash::BEAT
-        assert_in_delta 1.0, splash.with(at: lit + Splash::LIGHTS).block, 1e-9
-        assert_in_delta 1.0, splash.with(at: lit + Splash::BEAT - 0.01).block, 1e-9, "lit the whole beat"
-        assert_in_delta 0.5, splash.with(at: lit + Splash::BEAT + (Splash::FADES / 2)).block, 1e-9
-        assert_in_delta 0.0, splash.with(at: lit + Splash::BEAT + Splash::FADES).block, 1e-9
-        assert_in_delta 0.0, splash.with(at: lit + (2 * Splash::BEAT) - 0.01).block, 1e-9, "dark the whole next beat"
-      end
+  def test_muted_it_is_lit_for_a_beat_and_dark_for_the_next
+    splash = Splash.start
+    [0, 2].each do |start|
+      lit = start * Splash::BEAT
+      assert_in_delta 1.0, splash.with(at: lit + Splash::LIGHTS).block, 1e-9
+      assert_in_delta 1.0, splash.with(at: lit + Splash::BEAT - 0.01).block, 1e-9, "lit the whole beat"
+      assert_in_delta 0.5, splash.with(at: lit + Splash::BEAT + (Splash::FADES / 2)).block, 1e-9
+      assert_in_delta 0.0, splash.with(at: lit + Splash::BEAT + Splash::FADES).block, 1e-9
+      assert_in_delta 0.0, splash.with(at: lit + (2 * Splash::BEAT) - 0.01).block, 1e-9, "dark the whole next beat"
+    end
+  end
+
+  # The maintainer: the fade to the title hid the cursor's own fade, so the
+  # splash holds the block dark for a beat or so before the fade out starts.
+  def test_the_block_is_dark_for_at_least_four_tenths_of_a_second_before_the_fade_out
+    [true, false].each do |sounding|
+      splash = Splash.start(sounding:)
+      fade_starts = splash.total - Splash::FADE_OUT
+      dark_from = (0.0..fade_starts).step(0.01).select { |t| splash.with(at: t).block.positive? }.max + 0.01
+      assert_operator fade_starts - dark_from, :>=, 0.4 - 1e-6, "sounding: #{sounding}"
+      assert_in_delta 1.0, splash.with(at: fade_starts).mark, 1e-9
+      assert_equal 0.0, splash.with(at: fade_starts + 0.1).block
+      assert_equal 0.0, splash.with(at: splash.total - 0.01).block, "no light during the fade out"
     end
   end
 
   def test_the_shortest_dark_span_outlasts_the_fade
     gaps = Splash::JINGLE.each_slice(2).each_cons(2).map { |(_, off), (on, _)| on.at - off.at }
     assert_operator gaps.min, :>, Splash::FADES
-  end
-
-  def test_the_environment_chooses_the_blink
-    assert_equal :notes, Splash.blink({})
-    assert_equal :beat, Splash.blink("DOT_POPPER_SPLASH_BLINK" => "beat")
-    assert_equal :notes, Splash.blink("DOT_POPPER_SPLASH_BLINK" => "disco")
   end
 end

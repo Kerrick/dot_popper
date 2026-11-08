@@ -51,35 +51,34 @@ module DotPopper
     # Bigger is the high click and Smaller the low one, as they sound on a
     # computer, whichever dot size each names on the screen at hand, and the
     # last two are those buttons' own clicks. Only while the game's sound is on
-    # (+sounding+) does it play, and the splash last until it has rung;
+    # (+sounding+) does it play, and the splash lasts until it has rung;
     # muted, the splash is short. +at+ is the seconds since it began.
     #
     # The block blinks like an amber terminal's cursor, lighting quickly
-    # and fading a little slower, as a phosphor does. +blink+ says to what:
-    # :notes flips it on each note, lit from the first until the second,
-    # dark until the third, and so on, so the last note leaves it dark;
-    # :beat flips it on every beat, lit for the first, dark for the next.
-    # Muted, there are no notes to follow, so it blinks on the beat either
-    # way.
-    class Splash < Data.define(:at, :sounding, :blink)
+    # and fading a little slower, as a phosphor does. Sounding, each note
+    # flips it: lit from the first until the second, dark until the third,
+    # and so on, so the last note leaves it dark. Muted, there are no notes
+    # to follow, so it blinks on the beat: lit, dark, lit, dark. Either way
+    # the last thing seen before the fade out is the block, dark and held
+    # dark for about half a second, so that the fade to the title is not
+    # mistaken for the cursor fading: the splash stays that long.
+    class Splash < Data.define(:at, :sounding)
       BEAT = 60.0 / 120
       Note = Data.define(:at, :pitch)
       JINGLE = [[0.0, 1.2], [1.0, 0.9], [3.0, 1.2], [3.5, 0.9], [4.0, 1.0], [5.0, 0.8]]
                .map { |beat, pitch| Note.new(at: beat * BEAT, pitch:) }.freeze
       FADE_IN = 0.25
       FADE_OUT = 0.3
-      SILENT = 1.4 # long enough to read the name
-      SOUNDING = JINGLE.last.at + 0.4 # the last click, with room for it to ring
+      # Muted: four beats of blinking, the last of them dark, then the fade out.
+      SILENT = (4 * BEAT) + FADE_OUT
+      # The last click, then two beats: the block goes dark at once, and
+      # holds dark for the second beat's worth before the fade out.
+      SOUNDING = JINGLE.last.at + (2 * BEAT)
       SKIPPED_BY = %w[DOT_POPPER_AUTOPLAY DOT_POPPER_SCENARIO DOT_POPPER_NO_SPLASH].freeze
-      BLINKS = %i[notes beat].freeze
       LIGHTS = 0.03 # seconds the block takes to light
       FADES = 0.1 # and to go dark
 
-      def self.start(sounding: false, blink: :notes) = new(at: 0.0, sounding:, blink:)
-
-      # The blink DOT_POPPER_SPLASH_BLINK asks for in +env+ (notes or
-      # beat), to compare the two; :notes otherwise.
-      def self.blink(env) = BLINKS.find { it.to_s == env.fetch("DOT_POPPER_SPLASH_BLINK", "") } || :notes
+      def self.start(sounding: false) = new(at: 0.0, sounding:)
 
       # Whether the environment (+env+) asks for no splash: the bot, the GUI
       # director, and a plain request leave it out.
@@ -113,10 +112,10 @@ module DotPopper
 
       # When the block is lit, as [from, to] seconds.
       def lit
-        if sounding && blink == :notes
+        if sounding
           JINGLE.each_slice(2).map { |on, off| [on.at, off.at] }
         else
-          (0..(total / BEAT).ceil).step(2).map { [it * BEAT, (it + 1) * BEAT] }
+          (0...4).step(2).map { [it * BEAT, (it + 1) * BEAT] }
         end
       end
 
