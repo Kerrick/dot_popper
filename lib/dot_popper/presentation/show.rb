@@ -41,7 +41,8 @@ module DotPopper
                      achievements: Achievements.new(BestScore::Memory.new),
                      keeper: RecordKeeper.new(best: game.best, lifetime:, achievements:), notices: Notices.none,
                      sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never, window: NoWindowControl.new,
-                     entitlement: Entitlement.free, wardrobe: Wardrobe.plain(look::THEMES))
+                     entitlement: Entitlement.free, wardrobe: Wardrobe.plain(look::THEMES),
+                     groups: Groups::Session.off)
         @game = game
         @window = window
         @tutorial_flag = tutorial_flag
@@ -50,6 +51,7 @@ module DotPopper
         @looks = false
         @achievements = achievements
         @feat_watch = FeatWatch.new
+        @groups = GroupPanel.new(groups:, entitlement:, sounds:)
         @tutorial = nil
         @handing_over = nil
         @lead_in = nil
@@ -161,6 +163,29 @@ module DotPopper
       # no tap there reaches the game.
       def records? = !@records.nil?
 
+      # The Friend group screen's state and the theft messages (GroupPanel).
+      def group_panel = @groups
+
+      # Whether the Friend group screen is open over the title.
+      def group_open? = @groups.open?
+
+      # Where the Friend group screen's parts go, while it is open.
+      def group_plan
+        GroupScreen.new(layout:, look: look::GROUPS, measure: @measure, panel: @groups,
+                        standard_dots: !game.sizing.sized_to_screen?, back_text: words.go_back).plan
+      end
+
+      # Whether the title offers the way in to groups: where there is a
+      # server, once a round has finished, or for someone in a group.
+      def group_offered? = @groups.available? && (records_offered? || @groups.member?)
+
+      # The title's way in to groups.
+      def group_button = GroupScreen.button(layout, labelled: layout.safe.width >= 480)
+
+      # Where a theft's message goes: under the HUD at Game Over, and at
+      # the top of the title, clear of the Group button's row.
+      def banner_y = finished? ? hud_bottom + layout.margin : layout.top + layout.button_size + layout.margin
+
       # What the Records screen shows, while it is open.
       def records = @records
 
@@ -222,12 +247,15 @@ module DotPopper
         in :fullscreen then window.toggle_fullscreen
         in :quit then window.quit
         in :records then open_records
+        in :group_open then @groups.open
         in DotSizing => sizing then choose_sizing(sizing)
         in :share then share
         in :copy then copy_result
         in :close then close_share
         in :undo then undo
         in :clear then hold_clear(by)
+        in Symbol | Array => name if group_open? then @groups.press(name, by, now)
+        in nil if group_open? then @groups.tap_away
         in nil if by == :gamepad then primary
         in nil if sharing? then (close_share unless share_plan.card.contains?(x, y))
         in nil then credits? ? @credits_drag = [by, y] : toy_tap(x, y)
@@ -242,6 +270,7 @@ module DotPopper
         Control.apart(
           if tutorial? then [Control.new(name: :skip, reach: layout.skip_button)]
           elsif credits? then [button(:back, layout.back_button)]
+          elsif group_open? then group_controls
           elsif looks? then looks_controls
           elsif records? then records_controls
           elsif title? then title_controls
@@ -266,7 +295,8 @@ module DotPopper
       # and Copy in the share preview. In a round it does nothing, since
       # only a press at a place may touch the score.
       def primary
-        if sharing? then copy_result
+        if group_open? then @groups.stop_editing
+        elsif sharing? then copy_result
         elsif records? then leave
         elsif title? then play
         elsif finished? then continue_on
@@ -276,7 +306,7 @@ module DotPopper
       # The title's Play: a round starts, or on a first Play, the Tutorial
       # (TutorialFlag), which is seen from then on.
       def play
-        return unless title? && !records?
+        return unless title? && !records? && !group_open?
         return open_tutorial if @tutorial_flag.due?(played: records_offered?)
 
         start_round
@@ -286,7 +316,7 @@ module DotPopper
       # at once, whether it was seen or not, handing over into a round as
       # it does on a first Play.
       def how_to_play
-        open_tutorial if title? && !records?
+        open_tutorial if title? && !records? && !group_open?
       end
 
       # The Tutorial's skip button, Escape, or a gamepad's B: the round
@@ -340,7 +370,7 @@ module DotPopper
       # first press asks, and :quit if a second comes within QUIT_ASK
       # seconds, so a stray press never closes the game.
       def ask_to_quit
-        return unless title? && !records?
+        return unless title? && !records? && !group_open?
         return :quit if quit_asked?
 
         @quit_asked_at = now
@@ -364,6 +394,7 @@ module DotPopper
       # back from, so that elsewhere the key can do its usual job.
       def back
         if tutorial? then skip_tutorial
+        elsif group_open? then leave
         elsif sharing? then close_share
         elsif records? then leave
         elsif finished? then continue_on
@@ -410,6 +441,8 @@ module DotPopper
       # Back, from the Credits screen to the Records screen, or from the
       # Records screen to the title.
       def leave
+        return @groups.close if group_open?
+
         if credits? then close_credits
         elsif looks? then close_looks
         else close_records
@@ -494,11 +527,15 @@ module DotPopper
       def let_go(by)
         @credits_drag = nil if @credits_drag&.first == by
         @clearing = clearing.release(by, now)
+        @groups.let_go(by, now)
       end
 
       # Whatever holds "Clear my records…" stops, with nothing cleared, as
       # when the window loses focus and a release may never be heard.
-      def let_go_of_everything = @clearing = clearing.cancel
+      def let_go_of_everything
+        @clearing = clearing.cancel
+        @groups.cancel_hold
+      end
 
       # Where a press reaches "Clear my records…" and Undo on the Records
       # screen, as the title's buttons do.
@@ -623,6 +660,7 @@ module DotPopper
 
       def update(seconds)
         @now += seconds
+        @groups.update(now, quiet: !playing?, showing: (title? && !records?) || finished?)
         clear_records if clearing.done?(now)
         @undo = nil unless @undo&.open?(now)
         @hover = hover.at(hovered).update(seconds, look::HOVER)
@@ -693,9 +731,12 @@ module DotPopper
         sounds.play(:tick)
       end
 
+      def group_controls = group_plan.controls.map { |name, frame| button(name, frame) }
+
       def title_controls
         plan = title_plan
         buttons = [Control.new(name: :mute, reach: layout.mute_button)]
+        buttons << button(:group_open, group_button) if group_offered?
         buttons << button(:how_to_play, plan.how_to_play_button)
         buttons << button(:records, plan.records_button) if records_offered?
         if (window_buttons = plan.window_buttons)
@@ -809,6 +850,8 @@ module DotPopper
           @hud = Hud.blank(look::HUD, words)
           event.round.dots.each { animations.spawn(it.id, now) }
         end
+        @tutorial_round = !scene.nil?
+        @groups.round_started
         @finale = nil
         @preview = nil
         @slip = nil
@@ -885,6 +928,7 @@ module DotPopper
 
       def round_ended(event)
         result = lifetime.record(stats, event.size_class)
+        @groups.round_finished(score: event.score, sized_to_screen: event.size_class == SizeClass::FITTED && !@tutorial_round)
         @wardrobe.round_played
         feats = @achievements.award(@feat_watch.earned, day: lifetime.today.iso8601)
         feats = [] unless @entitlement.paid? # kept, and shown once the paid version is bought
@@ -899,6 +943,7 @@ module DotPopper
         @wardrobe.refresh
         @records = nil
         @looks = false
+        @groups.close if group_open?
         @credits = nil
         @clearing = clearing.cancel
         effects.clear
@@ -910,7 +955,7 @@ module DotPopper
       # A tap on the title away from its buttons: a fresh dot there pops
       # for fun, with no score; anywhere else, nothing happens.
       def toy_tap(x, y)
-        return unless title? && !records?
+        return unless title? && !records? && !group_open?
 
         dot = attract.dots.top_at(x, y)
         toy_pop(dot, x, y) if dot&.fresh?

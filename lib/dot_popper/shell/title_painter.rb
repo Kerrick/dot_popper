@@ -38,6 +38,7 @@ module DotPopper
                                   hover: hover.level(:how_to_play),
                                   icon: ->(x, y, size) { help(x, y, size, intro) })
         WindowButtonsPainter.new(pen:).draw(plan.window_buttons, show, intro) if plan.window_buttons
+        group_button(show, intro) if show.group_offered?
         return unless show.records_offered?
 
         PillButton.new(pen:).draw(plan.records_button, words.records, alpha: intro, hover: hover.level(:records))
@@ -45,6 +46,15 @@ module DotPopper
       end
 
       private
+
+      # The way in to friend groups, in the top left corner: a trophy,
+      # with its word where the screen has room.
+      def group_button(show, alpha)
+        rect = show.group_button
+        text = Presentation::GroupWords.button if rect.width > rect.height
+        PillButton.new(pen:).draw(rect, text, alpha:, hover: show.hover.level(:group_open),
+                                  icon: ->(x, y, size) { TrophyIcon.new(pen:).draw(x, y, size * 0.72, alpha) })
+      end
 
       # "How to play"'s icon: the help sign, a question mark in a thin
       # ring, in a square +size+ across around +x+, +y+, the same for every

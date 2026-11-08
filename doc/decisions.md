@@ -1267,3 +1267,26 @@ Built from "Achievements: a few, and only for skill" above. `Feat` lists eleven,
 **Clear my records** clears feats too (and Undo restores them, with a backup `achievements-<stamp>.txt`): they are records of what the player did, as bests are. To reverse, drop `achievements:` from `RecordKeeper.new` in `Shell::App`.
 
 Records layout: the feats take a third column where three fit, else sit under the shorter column. Marks are dots in the game's own shape (filled orange earned, ring unearned) with the figure each asks on the right, so no feat needs its sentence read. Words live in `FeatWords`, apart from `Words`.
+## Friend groups, as built
+
+The design is the section "Friend groups with a trophy to steal" above; these are the calls made while building it.
+
+**A holder's own rounds change nothing.** The score falls until someone else beats it, so the trophy is always stealable and nobody has to play to defend it (Nguyen: friendly pressure; Elias, Garfield and Gutschera: a metagame must not end). *To reverse:* drop `player != holder` in `Trophy#beaten_by?`, and let the higher score stand.
+
+**One message per theft, told to the person it was taken from.** It shows on the title at launch or at Game Over, one per moment, for seven seconds, and never interrupts a round. The thief sees their own win at Game Over. Other members see who holds it on the Group screen. Nobody is reminded of anything.
+
+**One group per player, of at most eight, with no group names.** Fewer screens, and no second kind of user content. *To reverse:* remove `members.player_id`'s primary key and add a picker. A group has no owner, so a creator who leaves costs nothing.
+
+**A round with no score, or from the tutorial, does not count.** The tutorial's clock waits, so its points are not a contest. A round played offline waits and is sent at next contact, for up to two days, the best one only.
+
+**Identity.** No login: a random token the server keeps only a hash of, and a display name of up to 16 Latin letters, in a text field the system keyboard fills. Holding Delete my data removes the player, their scores, thefts, blocks, and reports from the server (Apple 5.1.1(v)); Leave group gives up any trophy.
+
+**Apple's guideline 1.2, as read on 2026-11-08.** Names are the only user content. It requires filtering, reporting with timely responses, blocking, and published contact information. *Filtering:* `server/lib/dot_popper_server/name_check.rb` refuses links, non-Latin scripts, and a word list (`server/data/blocked_names.txt`), folding look-alike digits. *Reporting:* Report on a member's row. *Timely response:* a report blocks that name for the reporter at once; two reporters hide it from everyone with no human needed; `server/bin/moderate` lists reports, and hides or keeps a name. *Blocking:* Block, per viewer; a blocked member shows as "Someone" and their thefts are not told. *Contact:* the Group screen links the GitHub issues (`GroupWords::CONTACT`), which the maintainer may want to change to an e-mail address before submitting.
+
+**Friends-only trust.** The server decides the trophy but believes a client's score and that a creator has paid: there is no store receipt to check yet. When Paid is real, checking the receipt is one new line in `App#create_group`.
+
+**The network.** `Net::HTTP` runs on one low-priority thread, starting with the first request, so a player with no group has no thread and loads no networking code. Nothing is handed to it during a round. Every failure is quiet: the screen says it can't reach the group, and rounds play as ever. Fledge's 0.8.0 runtimes were inspected: `net/http` and `openssl` are in all five, with `socket` compiled or built in, and each carries certificate authorities (`libexec/cert.pem`, or `etc/ssl/cert.pem` on Windows). It has not been run on a phone or on Windows.
+
+**A trophy, with its word, marks the way in** (Hodent: an icon and a label beat either alone), from the title's top left, where nothing else sits.
+
+**To deploy:** run `server/` behind HTTPS, set `Groups::Settings::SERVER_URL`, and update the privacy statements as `doc/publishing.md` says. Until then, no build shows groups or connects to anything.

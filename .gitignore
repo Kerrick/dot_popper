@@ -2,6 +2,7 @@
 /vendor/bundle/
 /dist/
 /tmp/
+/server/*.sqlite3*
 .DS_Store
 # Bundler caches the Fledge git checkout here (cache_all); CI fetches it.
 /vendor/cache/Fledge-*/

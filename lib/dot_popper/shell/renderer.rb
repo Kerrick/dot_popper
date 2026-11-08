@@ -32,6 +32,7 @@ module DotPopper
         @credits = CreditsPainter.new(pen:)
         @looks = LooksPainter.new(pen:, dots: @dots)
         @finale = FinalePainter.new(pen:)
+        @group = GroupPainter.new(pen:)
         @share = SharePreviewPainter.new(pen:, dots: @dots)
         @cursor = CursorPainter.new(pen:)
         @splash = SplashPainter.new(pen:)
@@ -51,6 +52,9 @@ module DotPopper
           if @show.records?
             veil(width, height, @pen.look::RECORDS.veil)
             records_screen.draw(@show, layout)
+          elsif @show.group_open?
+            veil(width, height, @pen.look::GROUPS.veil)
+            @group.draw(@show, layout)
           else
             veil(width, height, @pen.look::TITLE.dim)
             @title.draw(@show, layout)
@@ -72,11 +76,16 @@ module DotPopper
           hud(layout)
           @tutorial.lead_in_over(lead_in, @show.now, pill) if lead_in
           @share.draw(@show, layout, width, height)
+          banner(layout) unless @show.playing?
         end
+        banner(layout) if @show.title? && !@show.group_open? && !@show.records?
         splash ? @splash.draw(splash) : @cursor.draw(cursor)
       end
 
       private
+
+      # A theft's message, for the few seconds it shows.
+      def banner(layout) = @group.banner(@show.group_panel.banner, @show.now, layout, @show.banner_y)
 
       def radius = @show.game.field.radius
 

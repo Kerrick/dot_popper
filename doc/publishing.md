@@ -16,7 +16,7 @@ Every store build should carry a "Licenses" or "About" screen, or file, listing 
 
 ## What every store needs from Kerrick
 
-- **A privacy policy URL.** Dot Popper collects nothing: it keeps its saves on the device and makes no network calls. A one-page policy saying so, hosted anywhere public, satisfies all five.
+- **A privacy policy URL.** While `Groups::Settings::SERVER_URL` is nil, Dot Popper collects nothing: it keeps its saves on the device and makes no network calls, and a one-page policy saying so satisfies all five. **Before setting a server URL**, the policy and the stores' forms must say, for players who create or join a friend group only: a display name (Apple: "Other User Content"; linked to no identity) and scores ("Gameplay Content") go to the group server, and can be deleted in the app. `ios/host/Host/PrivacyInfo.xcprivacy` must then declare those two collected data types, and Google's Data safety form the same; neither is used for tracking.
 - **Store art:** screenshots at each store's sizes, a 1024×1024 icon (`script/make_icon.rb` can render one), a short description, and an age rating (everyone).
 - **A real version number** for each submission, taken from the tag. The kits already do this.
 

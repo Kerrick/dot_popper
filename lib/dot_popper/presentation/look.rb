@@ -172,6 +172,9 @@ module DotPopper
       # widest a card grows (in units at a scale of 1).
       LOOKS = LooksLook.new(heading: 48, gap: 1.0, ratio: 0.78, widest: 260)
 
+      # The Friend group screen, opened from the title.
+      GROUPS = GroupLook.new(heading: 44, text: 20, column: 560, veil: 0.9)
+
       # The Credits screen, over the Records screen: its type, the lines a
       # wheel's notch and a stick at full tilt move it.
       CREDITS = CreditsLook.new(text: 20, line: 1.5, column: 680, wheel: 3, stick: 14)

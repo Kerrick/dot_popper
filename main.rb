@@ -27,6 +27,11 @@
 #                               sometimes a popped one, so penalties show.
 #   DOT_POPPER_NO_SPLASH=1      leaves out setdef's splash before the title
 #   DOT_POPPER_PAID=1           plays as if the paid version were bought
+#   DOT_POPPER_SERVER=http://localhost:9292
+#                               talks to this friend-group server instead
+#                               of Groups::Settings::SERVER_URL.
+#   DOT_POPPER_GROUP_SCREEN=1   opens the Friend group screen at launch,
+#                               to check how it looks.
 #   DOT_POPPER_NO_TUTORIAL=1    never opens the tutorial on a first Play (the
 #                               bot and the GUI suite leave it out too)
 #   DOT_POPPER_TUTORIAL=1       opens the tutorial on every Play, seen or not
@@ -101,6 +106,7 @@ def Lota.mousefocus(focused) = @app&.mouse_focus(focused)
 
 def Lota.wheelmoved(_x, y, *) = @app&.wheel_moved(y)
 def Lota.keypressed(key) = @app.key_pressed(key)
+def Lota.textinput(text) = @app&.text_input(text)
 def Lota.resize(_width, _height) = @app&.resize
 
 # Gamepads, from Lota 0.1.3. Lota passes the Joystick first, as LÖVE
