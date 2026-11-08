@@ -1126,3 +1126,12 @@ In the tutorial, a tap on a bright dot no longer turns it into a popped dot, wit
 **Why:** Laying out the title measures every line at every size it tries, about 0.7 to 1 ms on the Nord, and a frame asks for the plan more than once (to draw, and for the buttons a tap or the mouse can reach). It changes only when the window, the words, or the records do.
 
 **To reverse:** Make both methods return `screen.plan` directly.
+=======
+### The splash's block cursor is one Iosevka cell, with a set gap
+
+The maintainer's decision on setdef's mark, after three blind rounds, in em of the Iosevka Bold font size: "block cursor width: 0.50em, exactly one Iosevka cell; height: 0.95em, from 0.14em below the baseline to 0.81em above it; gap between the f and the cursor: 0.5em / 7 (about 0.0714em), counted from the end of the f's 0.5em cell." `Logotype` now gives every measure in plain ems (`BLOCK_WIDTH = 0.5`, `BLOCK_TOP = -0.81`, `BLOCK_BOTTOM = 0.14`, `BLOCK_GAP = 0.5 / 7`), measured from the f's full cell, not from the letters' tighter 0.46em step, which stays as it was (letter spacing is undecided, as is the amber).
+
+**Why:** Three rounds of eyeballing the artwork's x-height proportions did not settle it; plain numbers in the font's own unit can be checked and kept.
+
+**To reverse:** Change the constants in `Logotype`; the tests state the same numbers.
+>>>>>>> 54466cd (fix(splash): size the block cursor in ems, as the maintainer decided)

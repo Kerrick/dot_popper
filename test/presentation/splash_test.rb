@@ -36,11 +36,14 @@ class SplashTest < Minitest::Test
     assert_in_delta 600, left + (mark.width / 2.0), 1e-9
     assert_equal %w[s e t d e f], mark.letters(left).map(&:first)
     block_left, block_width = mark.block(left)
-    assert_in_delta 1.03 / 1.78, block_width / mark.block_height, 1e-9
-    assert_operator block_left, :>, mark.letters(left).last.last
+    assert_in_delta 50, block_width, 1e-9
+    assert_in_delta 95, mark.block_height, 1e-9
+    f_cell_end = mark.letters(left).last.last + 50
+    assert_in_delta 50.0 / 7, block_left - f_cell_end, 1e-9
     baseline = mark.baseline(400)
     assert_in_delta 400, mark.block_top(baseline) + (mark.block_height / 2.0), 1e-9
-    assert_in_delta 1.57 * 0.52 * 100, baseline - mark.block_top(baseline), 1e-9
+    assert_in_delta 81, baseline - mark.block_top(baseline), 1e-9
+    assert_in_delta 14, mark.block_top(baseline) + mark.block_height - baseline, 1e-9
   end
 
   def test_it_is_sized_in_whole_units_to_the_window_and_fits_a_phone

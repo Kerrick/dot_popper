@@ -4,18 +4,20 @@ module DotPopper
   module Presentation
     # setdef's logotype, the maker's mark, shown before the title: the
     # word "setdef" in Iosevka Bold, then a solid block like a text
-    # cursor. All its measures are fractions of +size+, the font's size
-    # (an em), taken from setdef's own artwork, where the letters' x-height
-    # is the unit; the block is as wide and tall as that artwork has it.
+    # cursor. All its measures are ems of +size+, the font's size. The
+    # block's are the maintainer's decision (doc/decisions.md): one
+    # Iosevka cell wide, 0.95em tall, from 0.14em below the baseline to
+    # 0.81em above it, and 0.5em / 7 past the end of the "f"'s cell.
     class Logotype < Data.define(:size)
       WORD = "setdef"
-      XHEIGHT = 0.52 # Iosevka's, in an em
-      ADVANCE = 0.46 # a letter's step, a little tighter than Iosevka's 0.5
-      BLOCK_GAP = 0.16 * XHEIGHT # past the last letter's cell
-      BLOCK_WIDTH = 1.03 * XHEIGHT
-      BLOCK_TOP = -1.57 * XHEIGHT # from the baseline, down being positive
-      BLOCK_BOTTOM = 0.21 * XHEIGHT
-      WIDTH = (WORD.length * ADVANCE) + BLOCK_GAP + BLOCK_WIDTH # in ems
+      CELL = 0.5 # Iosevka's cell, an em's half
+      ADVANCE = 0.46 # a letter's step, a little tighter than the cell
+      BLOCK_GAP = CELL / 7 # from the end of the last letter's full cell
+      BLOCK_WIDTH = CELL
+      BLOCK_TOP = -0.81 # from the baseline, down being positive
+      BLOCK_BOTTOM = 0.14
+      BLOCK_LEFT = ((WORD.length - 1) * ADVANCE) + CELL + BLOCK_GAP # from the first letter's start
+      WIDTH = BLOCK_LEFT + BLOCK_WIDTH # in ems
 
       # The size that fits a window +width+ by +height+: about as wide as
       # setdef's artwork is in its frame, narrower on a portrait screen,
@@ -37,7 +39,7 @@ module DotPopper
 
       # The block's left edge and its width, then its top (from the
       # +baseline+) and its height.
-      def block(left) = [left + (((WORD.length * ADVANCE) + BLOCK_GAP) * size), BLOCK_WIDTH * size]
+      def block(left) = [left + (BLOCK_LEFT * size), BLOCK_WIDTH * size]
       def block_top(baseline) = baseline + (BLOCK_TOP * size)
       def block_height = (BLOCK_BOTTOM - BLOCK_TOP) * size
     end
