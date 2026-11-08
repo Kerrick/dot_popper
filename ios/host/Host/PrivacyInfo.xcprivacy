@@ -7,10 +7,12 @@
   (doc/ios.md). It is in the host's Host folder, which project.yml takes
   as the target's sources, so Xcode bundles it at the app's top level.
   The game tracks no one and collects no data. The APIs with required
-  reasons below (FileTimestamp C617.1, SystemBootTime 35F9.1, DiskSpace
-  E174.1, UserDefaults CA92.1) come from a reading of Apple's categories,
-  not of the engine's, Ruby's, or Fledge's source, so App Store Connect's
-  validation is the authority (doc/publishing.md).
+  reasons below (FileTimestamp C617.1, SystemBootTime 35F9.1) are the two
+  that Lota's audit of what the iOS app links (LÖVE, SDL, the prebuilt
+  libraries, Lota's host, Fledge's runtime) found, and the two that
+  Fledge's template declares. This file replaces Fledge's whole, so it
+  keeps both. App Store Connect's validation is the final authority
+  (doc/publishing.md).
 -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -37,22 +39,6 @@
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
 				<string>35F9.1</string>
-			</array>
-		</dict>
-		<dict>
-			<key>NSPrivacyAccessedAPIType</key>
-			<string>NSPrivacyAccessedAPICategoryDiskSpace</string>
-			<key>NSPrivacyAccessedAPITypeReasons</key>
-			<array>
-				<string>E174.1</string>
-			</array>
-		</dict>
-		<dict>
-			<key>NSPrivacyAccessedAPIType</key>
-			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
-			<key>NSPrivacyAccessedAPITypeReasons</key>
-			<array>
-				<string>CA92.1</string>
 			</array>
 		</dict>
 	</array>
