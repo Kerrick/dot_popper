@@ -83,8 +83,10 @@ The first time you press Play, a short tutorial with no words shows you how, in 
 | Throw a dot, after a round | Drag it and let go | Hold A on a dot, move, and let go. The right stick rolls the whole pile |
 | Change the dot size, from the title | Click the Dot size choice | Either shoulder button |
 | Turn the sound off or on | Press M, or click the speaker in the corner of the title | Back (also called View or Select) |
-| Switch to fullscreen and back | F11, or Alt+Enter (Cmd+Enter on a Mac) | |
-| Quit | Escape, on the title or during a round | B twice, on the title |
+| Switch to fullscreen and back | Click Full screen (Window, in fullscreen) on the title, or press F11, or Alt+Enter (Cmd+Enter on a Mac) | Aim at Full screen on the title, and press A |
+| Quit | Click Quit on the title, or press Escape, on the title or during a round | B twice, on the title |
+
+On a Mac, Windows or Linux, Full screen and Quit sit above How to play and the speaker on the title, so the mouse alone can fill the screen and leave the game, even in fullscreen, where the window's own buttons are gone. From the Records screen or Game Over, click Back or Continue to get to the title. On a very small window, they show only their icons, in the title's top right corner.
 
 ## Good to know
 
