@@ -251,7 +251,17 @@ module DotPopper
         @ghost = ghost.tapping(Anchor.dot(BRIGHT), now)
         loop = @script.ghost.loop
         cue(now + (GhostHand::PRESSED * loop)) { guide_slips }
-        cue(now + (GhostHand::LIFTED * loop)) { @ghost = ghost.hovering(Anchor.dot(BRIGHT), now) }
+        cue(now + (GhostHand::LIFTED * loop)) { @ghost = ghost.hovering(waiting_place, now) }
+      end
+
+      # Where the guide waits: well above and a little left of the popped
+      # dot, so the whole hand, which reaches down and to the right, stays
+      # clear of both dots, and on screen however near an edge they are.
+      def waiting_place
+        dot = dots.find { it.id == BRIGHT }
+        across, down = @script.ghost.hover
+        Anchor.at((dot.x + (across * radius)).clamp(field.min_x, field.max_x),
+                  (dot.y + (down * radius)).clamp(field.min_y, field.max_y))
       end
 
       def guide_slips

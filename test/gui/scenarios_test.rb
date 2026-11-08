@@ -66,7 +66,7 @@ class GuiScenariosTest < Minitest::Test
   end
 
   def test_the_words_follow_the_input
-    play("words", "makes it Tap", "makes it Click", "makes it Press A")
+    play("words", "makes it touch", "makes it the mouse", "makes it Press A")
   end
 
   def test_sharing_shows_the_result_and_copies_only_on_copy
@@ -81,7 +81,8 @@ class GuiScenariosTest < Minitest::Test
 
   def test_the_tutorial_played_through_with_a_mouse
     play("tutorial", "the first Play opens the tutorial", "a tap on the popped dot shows its cost",
-         "nothing real is lost", "a tap on the clear bright dot pops it", "the round starts with its whole clock",
+         "nothing real is lost", "a tap on the clear bright dot pops it", "the round goes on with the tutorial's dots",
+         "and its 12 seconds",
          "the tutorial told the rules nothing", "tutorial.txt remembers", DOT_POPPER_TUTORIAL: "1")
   end
 
