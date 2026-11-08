@@ -1,0 +1,32 @@
+# Words that may not appear in a display name, lowercase, in Latin
+# letters, matched anywhere in a name with digits and separators folded
+# away. A starting list for a small invited game: add to it as reports
+# come in.
+asshole
+bastard
+bitch
+bollock
+cock
+cunt
+dick
+fuck
+nigga
+nigger
+faggot
+fag
+kike
+spic
+chink
+wank
+retard
+rape
+nazi
+hitler
+whore
+slut
+twat
+piss
+shit
+penis
+vagina
+porn
