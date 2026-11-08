@@ -5,11 +5,13 @@ module DotPopper
     # Where the title's words go, worked out by TitleScreen#plan: each
     # line's Rect by name (Stacked), the Play button's as :play, the font
     # size each is set in, today's goal broken into lines, the faint
-    # backing behind them, and the bottom row's buttons, which the words
-    # keep above. A line the screen had no room for, or that is not
-    # shown, has no Rect.
+    # backing behind them, the bottom row's buttons, which the words
+    # keep above, and where "Press B again to quit" goes while it shows
+    # (+quit_line+), with the name of the line it stands in for there, if
+    # any (+quit_over+). A line the screen had no room for, or that is
+    # not shown, has no Rect.
     class TitlePlan < Data.define(:placed, :sizes, :goal_lines, :backing, :records_button, :sizing_control,
-                                  :mute_button)
+                                  :mute_button, :quit_line, :quit_over)
       def [](name) = placed[name]
       def size(name) = sizes.fetch(name)
       def play_button = placed[:play]
@@ -53,7 +55,7 @@ module DotPopper
         end
         TitlePlan.new(placed:, sizes:, goal_lines: goal_lines(sizes[:goal]), backing: backing(placed, sizes),
                       records_button: layout.records_button, sizing_control: layout.sizing_control,
-                      mute_button: layout.mute_button)
+                      mute_button: layout.mute_button, **quit_line(placed, sizes))
       end
 
       # The middle of the screen, from the safe area's top margin down to
@@ -166,6 +168,26 @@ module DotPopper
         room = layout.safe.width - (layout.margin * 2)
         size -= 1 while size > layout.look.least && legend_width(size) > room
         size
+      end
+
+      # "Press B again to quit", in the goal's type: a gap under Play, or
+      # a gap above the name. It shows only for a moment, so it takes no
+      # room from the others; where neither has room for it, it stands in
+      # for a line that is already there: today's goal, the best, or, on
+      # the smallest windows, the legend.
+      def quit_line(placed, sizes)
+        size = sizes[:goal]
+        height = measure.height(:semibold, size)
+        width = measure.width(:semibold, size, words.quit_again)
+        gap = gap(:goal, placed.scale)
+        line = ->(y) { Rect.new(x: layout.center_x - (width / 2.0), y:, width:, height:) }
+        below = placed[:play].bottom + gap
+        above = placed[:title].y - gap - height
+        return { quit_line: line[below], quit_over: nil } if below + height + gap <= bottom_row.map(&:y).min
+        return { quit_line: line[above], quit_over: nil } if above >= layout.safe.y
+
+        over = %i[goal best legend].find { placed.key?(it) }
+        { quit_line: line[placed[over].center_y - (height / 2.0)], quit_over: over }
       end
 
       # From near the name's top to the bottom of the line above Play, as

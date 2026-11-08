@@ -229,10 +229,6 @@ module DotPopper
       # A gamepad's Start: the screen's main button (#primary).
       def start = primary
 
-      # Escape, Android's Back, or a gamepad's B: leaves the Records
-      # screen, and goes on from Game Over to the title, as Continue does.
-      # Says whether there was somewhere to go back from, so that elsewhere
-      # the key can do its usual job.
       QUIT_ASK = 2.0 # seconds a second B has to quit from the title
 
       # B on the title, where a controller has no other way to quit: the
@@ -257,6 +253,10 @@ module DotPopper
 
       def quit_asked? = @quit_asked_at && now - @quit_asked_at <= QUIT_ASK
 
+      # Escape, Android's Back, or a gamepad's B: leaves the Records
+      # screen, and goes on from Game Over to the title, as Continue does.
+      # Says whether there was somewhere to go back from, so that elsewhere
+      # the key can do its usual job.
       def back
         if records? then leave
         elsif finished? then continue_on

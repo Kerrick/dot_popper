@@ -37,6 +37,9 @@ class ScreenPlansTest < Minitest::Test
         plan.placed.rects.each_value { assert_inside it, screen_layout.safe, name }
         assert_operator plan.backing.bottom, :<=, screen.bottom_row.map(&:y).min, name
         assert_goal_fits(plan, goal == :done, screen_layout, name)
+        others = plan.placed.rects.except(plan.quit_over).values + screen.bottom_row
+        others.each { assert_apart [plan.quit_line, it], "#{name}: quit" }
+        assert_inside plan.quit_line, screen_layout.safe, "#{name}: quit"
       end
     end
   end

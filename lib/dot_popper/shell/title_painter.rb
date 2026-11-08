@@ -22,10 +22,10 @@ module DotPopper
         title = pen.fonts.bold(plan.size(:title))
         Lettering.new(pen:).candy(words.title, title, layout.center_x,
                                   plan[:title].y + (title.height / 2.0) - ((1 - intro) * 24), intro)
-        legend(show, layout, plan, intro)
-        line(plan, :best, words.best_line(marquee.best), pen.palette.soft, intro)
-        daily_goal(show, layout, plan, intro) if plan[:goal]
-        quit_prompt(show, layout, plan)
+        legend(show, layout, plan, under_quit(show, plan, :legend, intro))
+        line(plan, :best, words.best_line(marquee.best), pen.palette.soft, under_quit(show, plan, :best, intro))
+        daily_goal(show, layout, plan, under_quit(show, plan, :goal, intro)) if plan[:goal]
+        quit_prompt(show, plan)
         line(plan, :streak, words.streak(show.lifetime.streak), pen.palette.soft, intro, size: :goal)
         hover = show.hover
         PrimaryButton.new(pen:).draw(plan.play_button, words.play, alpha: intro, hover: hover.level(:play))
@@ -59,14 +59,18 @@ module DotPopper
         pen.text(text, pen.fonts.semibold(plan.size(size)), rect.center_x, rect.center_y, color, alpha)
       end
 
-      # "Press B again to quit", under the title's words, while a second B
+      # How much of the line +name+ shows, +alpha+ of it, less as "Press B
+      # again to quit" shows in its place, where the plan puts it there.
+      def under_quit(show, plan, name, alpha) = plan.quit_over == name ? alpha * (1 - show.quit_prompt) : alpha
+
+      # "Press B again to quit", where the plan puts it, while a second B
       # would quit.
-      def quit_prompt(show, layout, plan)
+      def quit_prompt(show, plan)
         alpha = show.quit_prompt
         return unless alpha.positive?
 
-        font = pen.fonts.semibold(plan.size(:goal))
-        pen.text(show.words.quit_again, font, layout.center_x, plan.backing.bottom + (font.height * 0.9),
+        rect = plan.quit_line
+        pen.text(show.words.quit_again, pen.fonts.semibold(plan.size(:goal)), rect.center_x, rect.center_y,
                  pen.palette.cream, alpha)
       end
 

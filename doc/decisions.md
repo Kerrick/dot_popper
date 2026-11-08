@@ -835,3 +835,9 @@ On Windows, in fullscreen, the Xbox button opened the Xbox Game Bar's overlay ou
 No combination gave both. He chose the working overlay. Windows now allows both renderers, and LÖVE's own order puts Vulkan first on x64 (and OpenGL first on ARM64, whatever a game lists). LÖVE falls back to OpenGL only when Vulkan can't be created at all, and Lota matches LÖVE there on purpose, so a Windows PC with a Vulkan driver but no usable GPU (a virtual machine, a remote desktop) may fail to start. That's the risk the Linux choice above avoids, and it was judged rare on Windows. `DOT_POPPER_RENDERERS=opengl` still starts the game there. Fullscreen stays borderless, which matched exclusive on both counts and has the better Alt+Tab. `DOT_POPPER_FULLSCREEN=exclusive` stays as a switch for testing.
 
 **To reverse:** In `conf.rb`, match `mingw|mswin` again along with `linux` for the OpenGL-only list.
+
+## "Press B again to quit" goes where there's room
+
+The maintainer saw "Press B again to quit" drawn behind the Play button. It was placed under the title's backing, which ends at the line above Play. The title's plan now places it: a gap under Play, or, where the bottom row leaves no room there, a gap above the name. On the smallest windows, where neither has room, it stands in for today's goal, the best, or the legend, and that line fades out while it shows. It shows for only two seconds, so it takes no room from the other lines, and Play never moves.
+
+**To reverse:** Drop `TitlePlan#quit_line` and `#quit_over`, and draw the prompt in `TitlePainter#quit_prompt` where it was.
