@@ -878,7 +878,7 @@ The maintainer saw "Press B again to quit" drawn behind the Play button. It was 
 
 ## The splash's block blinks like a terminal cursor
 
-The maintainer's idea: setdef's block blinks like an old amber terminal's cursor, in time with the jingle. It lights in 0.03 s and fades in 0.1 s, like a phosphor. He wanted to see two versions before choosing, so `DOT_POPPER_SPLASH_BLINK` picks one. `notes`, the default, lights the block on each note for half the time until the next, and leaves it lit after the last. `beat` lights it for the first half of every beat at 120 beats a minute. Muted, there are no notes to follow, so both blink on the beat.
+The maintainer's idea: setdef's block blinks like an old amber terminal's cursor, in time with the jingle. It lights in 0.03 s and fades in 0.1 s, like a phosphor. He wanted to see two versions before choosing, so `DOT_POPPER_SPLASH_BLINK` picks one. `notes`, the default, flips the block on each note: lit from the first until the second, dark until the third, and so on, so the sixth note leaves it dark. `beat` flips it on every beat at 120 beats a minute: lit for one, dark for the next, a period of a second. His first version lit it for half the time between flips, which blinked at double the speed he expected; a note or beat should flip the cursor, not blink it fully on and off. The shortest dark span, between the fourth and fifth notes, is 0.25 s, still longer than the 0.1 s fade, so each fade finishes before the next light. Muted, there are no notes to follow, so both blink on the beat.
 
 **To reverse:** Drop `Splash#block`, and draw the block at `splash.mark` in `SplashPainter`.
 

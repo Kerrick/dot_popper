@@ -84,25 +84,37 @@ class SplashTest < Minitest::Test
 
   # The maintainer's idea: the block blinks like an amber terminal's
   # cursor, with the jingle's notes, or steadily on the beat, to compare.
-  def test_with_the_notes_the_block_lights_on_each_note_and_stays_lit_after_the_last
+  def test_with_the_notes_each_note_flips_the_block_and_the_last_leaves_it_dark
     splash = Splash.start(sounding: true)
-    Splash::JINGLE.each_cons(2) do |note, after|
-      assert_in_delta 1.0, splash.with(at: note.at + Splash::LIGHTS).block, 1e-9, "lit just after #{note.at}"
-      assert_in_delta 0.0, splash.with(at: after.at - 0.01).block, 1e-9, "dark just before #{after.at}"
+    Splash::JINGLE.each_slice(2) do |on, off|
+      assert_in_delta 1.0, splash.with(at: on.at + Splash::LIGHTS).block, 1e-9, "lit just after #{on.at}"
+      assert_in_delta 1.0, splash.with(at: off.at - 0.01).block, 1e-9, "still lit just before #{off.at}"
+      assert_in_delta 0.0, splash.with(at: off.at + Splash::FADES).block, 1e-9, "dark once #{off.at} has faded"
     end
-    assert_in_delta 1.0, splash.with(at: Splash::JINGLE.last.at + 0.3).block, 1e-9
+    Splash::JINGLE.each_slice(2).each_cons(2) do |(_, off), (on, _)|
+      assert_in_delta 0.0, splash.with(at: on.at - 0.01).block, 1e-9, "dark just before #{on.at}"
+      assert_in_delta 1.0, splash.with(at: on.at + Splash::LIGHTS).block, 1e-9
+    end
+    assert_in_delta 0.0, splash.with(at: Splash::SOUNDING).block, 1e-9, "dark after the last note"
     assert_in_delta 0.5, splash.with(at: Splash::LIGHTS / 2).block, 1e-9
   end
 
-  def test_on_the_beat_and_muted_it_blinks_for_the_first_half_of_every_beat
+  def test_on_the_beat_and_muted_it_is_lit_for_a_beat_and_dark_for_the_next
     [Splash.start(sounding: true, blink: :beat), Splash.start].each do |splash|
-      [0, 1, 2].each do |beat|
-        start = beat * Splash::BEAT
-        assert_in_delta 1.0, splash.with(at: start + 0.1).block, 1e-9
-        assert_in_delta 0.5, splash.with(at: start + (Splash::BEAT / 2) + (Splash::FADES / 2)).block, 1e-9
-        assert_in_delta 0.0, splash.with(at: start + Splash::BEAT - 0.01).block, 1e-9
+      [0, 2].each do |start|
+        lit = start * Splash::BEAT
+        assert_in_delta 1.0, splash.with(at: lit + Splash::LIGHTS).block, 1e-9
+        assert_in_delta 1.0, splash.with(at: lit + Splash::BEAT - 0.01).block, 1e-9, "lit the whole beat"
+        assert_in_delta 0.5, splash.with(at: lit + Splash::BEAT + (Splash::FADES / 2)).block, 1e-9
+        assert_in_delta 0.0, splash.with(at: lit + Splash::BEAT + Splash::FADES).block, 1e-9
+        assert_in_delta 0.0, splash.with(at: lit + (2 * Splash::BEAT) - 0.01).block, 1e-9, "dark the whole next beat"
       end
     end
+  end
+
+  def test_the_shortest_dark_span_outlasts_the_fade
+    gaps = Splash::JINGLE.each_slice(2).each_cons(2).map { |(_, off), (on, _)| on.at - off.at }
+    assert_operator gaps.min, :>, Splash::FADES
   end
 
   def test_the_environment_chooses_the_blink

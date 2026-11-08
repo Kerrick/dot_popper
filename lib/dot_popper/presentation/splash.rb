@@ -56,10 +56,11 @@ module DotPopper
     #
     # The block blinks like an amber terminal's cursor, lighting quickly
     # and fading a little slower, as a phosphor does. +blink+ says to what:
-    # :notes lights it on each note, for half the time until the next,
-    # and leaves it lit after the last; :beat lights it for the first half
-    # of every beat. Muted, there are no notes to follow, so it blinks on
-    # the beat either way.
+    # :notes flips it on each note, lit from the first until the second,
+    # dark until the third, and so on, so the last note leaves it dark;
+    # :beat flips it on every beat, lit for the first, dark for the next.
+    # Muted, there are no notes to follow, so it blinks on the beat either
+    # way.
     class Splash < Data.define(:at, :sounding, :blink)
       BEAT = 60.0 / 120
       Note = Data.define(:at, :pitch)
@@ -113,9 +114,9 @@ module DotPopper
       # When the block is lit, as [from, to] seconds.
       def lit
         if sounding && blink == :notes
-          JINGLE.each_cons(2).map { |note, after| [note.at, (note.at + after.at) / 2.0] } << [JINGLE.last.at, Float::INFINITY]
+          JINGLE.each_slice(2).map { |on, off| [on.at, off.at] }
         else
-          (0..(total / BEAT).ceil).map { [it * BEAT, (it + 0.5) * BEAT] }
+          (0..(total / BEAT).ceil).step(2).map { [it * BEAT, (it + 1) * BEAT] }
         end
       end
 
