@@ -29,6 +29,12 @@ module DotPopper
         if self.seconds && seconds < self.seconds && seconds.positive? && seconds <= look.urgent_below && block_given?
           yield seconds
         end
+        showing(score, seconds, now)
+      end
+
+      # The HUD showing +score+ and +seconds+ at time +now+, as the Tutorial
+      # sets them; a number that changed bumps.
+      def showing(score, seconds, now)
         with(score:, seconds:, now:,
              score_changed: self.score && score != self.score ? now : score_changed,
              seconds_changed: self.seconds && seconds != self.seconds ? now : seconds_changed)

@@ -137,6 +137,24 @@ module DotPopper
       # tap that had the bright dot hidden under the popped one.
       LESSON = LessonLook.new(times: 2, alpha: 1.0)
 
+      # The tutorial on a first Play (Presentation::Tutorial), which says
+      # nothing in words. Its dots move at the game's slowest speed, and
+      # time eases to a stop in 0.15 s, never in a snap. The dim around its
+      # spotlight leaves what it lights clear by half a dot; the ghost hand
+      # taps once every 1.6 s, resting down and to the right of the dot,
+      # where it hides none of it. In the round, the clock's spotlight
+      # fades in 0.6 s, as the first dot grows in, so the round's dots are
+      # never hidden; its halo lasts past the first tick.
+      TUTORIAL = TutorialLook.new(
+        drift: 1.0, stop: 0.15, resume: 0.5, slow: 0.35, start: [-1.1, -1.2].freeze, born: 0.1, peek: 0.8,
+        clear: 2.3, warn: 1.6, flight: 0.6, quick: 0.45, gap: 0.15, hold: 0.45, linger: 0.35, dissolve: 0.4,
+        cross: 0.25, longest: 5.0,
+        spotlight: SpotlightLook.new(dim: 0.62, move: 0.35, feather: 0.9, dot: 1.5),
+        ghost: GhostLook.new(loop: 1.6, glide: 0.5, fade: 0.25, rest: [0.75, 0.9].freeze, hover: [0.55, 0.7].freeze,
+                             bob: 0.1),
+        lead: LeadLook.new(dim: 0.6, halo: 1.3, fade: 0.4)
+      )
+
       # The rounded face, Fredoka (SIL Open Font License; assets/fonts).
       # Sizes are graphics units at a layout scale of 1. A size that
       # animates steps through whole sizes rather than scaling glyphs.

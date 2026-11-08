@@ -99,6 +99,14 @@ module DotPopper
         Rect.new(x: safe.right - margin - size, y: safe.bottom - margin - size, width: size, height: size)
       end
 
+      # The Tutorial's skip button, in the safe area's top right corner,
+      # level with the HUD and clear of it, where the tutorial's dots never
+      # go. It is never smaller than a fingertip (44 units).
+      def skip_button
+        size = button_size
+        Rect.new(x: safe.right - margin - size, y: top, width: size, height: size)
+      end
+
       # The title's "Your records" button, in the safe area's bottom left
       # corner, across from the mute button and as tall as it.
       def records_button

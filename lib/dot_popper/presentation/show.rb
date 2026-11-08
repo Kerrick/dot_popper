@@ -20,22 +20,26 @@ module DotPopper
     # methods), and +hint+ gives Game Over's line on playing with the
     # pile, or nil. +sharing+ (InGameSharing's methods) offers Game
     # Over's result to share, in a preview or a phone's own sheet, and
-    # +clipboard+ takes it when the player copies it.
+    # +clipboard+ takes it when the player copies it. +tutorial_flag+
+    # (TutorialFlag) says whether Play opens the Tutorial first.
     class Show
       # The dot-size choices in the order the title draws their segments:
       # the default, dots sized to the screen, first.
       SIZINGS = [DotSizing::SIZED_TO_SCREEN, DotSizing::STANDARD].freeze
 
       attr_reader :game, :effects, :animations, :hud, :attract, :layout, :marquee, :finale, :sounds, :now, :look,
-                  :lifetime, :input, :words, :clearing
+                  :lifetime, :input, :words, :clearing, :tutorial, :lead_in
 
       def initialize(game:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false,
                      tutor: Tutor.new(BestScore::Memory.new, times: look::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
                      lifetime: Lifetime.new(BestScore::Memory.new), sizing_store: BestScore::Memory.new,
                      input: InputKind::MOUSE, measure: RoughMeasure.new, hint: -> {},
                      keeper: RecordKeeper.new(best: game.best, lifetime:), notices: Notices.none,
-                     sharing: InGameSharing.new)
+                     sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never)
         @game = game
+        @tutorial_flag = tutorial_flag
+        @tutorial = nil
+        @lead_in = nil
         @notices = notices
         @measure = measure
         @hint = hint
@@ -91,7 +95,15 @@ module DotPopper
         @finale = finale.with(lesson: words.covered) if finale&.lesson
       end
 
-      def title? = game.state.is_a?(Game::Title)
+      # Whether the title is showing: the game is on its title, and the
+      # Tutorial is not playing over it.
+      def title? = game.state.is_a?(Game::Title) && !tutorial?
+
+      # Whether the Tutorial is playing (#tutorial). It is the
+      # presentation's alone, as the Records screen is: the game stays on
+      # its title meanwhile, so nothing in it is a round's, and no tap
+      # there reaches the game.
+      def tutorial? = !@tutorial.nil?
 
       # Whether the Records screen is open over the title. It is the
       # presentation's alone: the game stays on its title meanwhile, and
@@ -143,6 +155,7 @@ module DotPopper
       # presses the screen's main one (#primary).
       def tap(x, y, by: :tap)
         return game.press(x, y) if playing?
+        return tutorial_tap(x, y) if tutorial?
 
         case control_at(x, y)&.name
         in :play then play
@@ -169,7 +182,8 @@ module DotPopper
       # these.
       def controls
         Control.apart(
-          if credits? then [button(:back, layout.back_button)]
+          if tutorial? then [Control.new(name: :skip, reach: layout.skip_button)]
+          elsif credits? then [button(:back, layout.back_button)]
           elsif records? then records_controls
           elsif title? then title_controls
           elsif sharing? then share_controls
@@ -200,12 +214,26 @@ module DotPopper
         end
       end
 
-      # The title's Play: a round starts.
+      # The title's Play: a round starts, or on a first Play, the Tutorial
+      # (TutorialFlag), which is seen from then on.
       def play
         return unless title? && !records?
+        return open_tutorial if @tutorial_flag.due?(played: records_offered?)
 
-        game.press(layout.center_x, layout.center_y)
+        start_round
       end
+
+      # The Tutorial's skip button, Escape, or a gamepad's B: the round
+      # starts at once, as a Play would start it.
+      def skip_tutorial
+        return unless tutorial?
+
+        @tutorial = nil
+        start_round
+      end
+
+      # Where a tap reaches the Tutorial's skip button, where it is drawn.
+      def skip_reach = reach_of(:skip)
 
       # Game Over's Continue: back to the title, once the game will hear a
       # press (Rules::GAME_OVER_GRACE).
@@ -269,7 +297,8 @@ module DotPopper
       # the title, as Continue does. Says whether there was somewhere to go
       # back from, so that elsewhere the key can do its usual job.
       def back
-        if sharing? then close_share
+        if tutorial? then skip_tutorial
+        elsif sharing? then close_share
         elsif records? then leave
         elsif finished? then continue_on
         else return false
@@ -503,6 +532,7 @@ module DotPopper
       # size changes with it, as dots sized to the screen do.
       def resize(layout, field)
         @layout = layout
+        @tutorial&.refit(Field.new(field.width, field.height, @tutorial.field.radius))
         lay_out_credits if credits?
         @attract = field.radius == attract.field.radius ? attract.refit(field) : Attract.spawn(field, look::TITLE)
       end
@@ -513,8 +543,9 @@ module DotPopper
         @undo = nil unless @undo&.open?(now)
         @hover = hover.at(hovered).update(seconds, look::HOVER)
         effects.update(seconds)
+        follow_tutorial(seconds) if tutorial?
         @attract = attract.update(seconds) if title?
-        @hud = hud.read(game.round, now) { tick(it) if playing? } if game.round
+        follow_round if game.round
         follow_finale if finished?
       end
 
@@ -531,6 +562,48 @@ module DotPopper
       end
 
       private
+
+      def start_round = game.press(layout.center_x, layout.center_y)
+
+      # Plays the Tutorial on the field a round would start on, and sizes
+      # the effects to its dots.
+      def open_tutorial
+        @tutorial_flag.seen!
+        field = game.field
+        effects.clear
+        effects.scale_to(field.radius)
+        @tutorial = Tutorial.new(field:, center: [layout.center_x, layout.center_y], effects:, sounds:,
+                                 haptics: @haptics, look:)
+      end
+
+      # A tap in the Tutorial: its skip button, or the scene's.
+      def tutorial_tap(x, y)
+        return skip_tutorial if control_at(x, y)&.name == :skip
+
+        @tutorial.tap(x, y)
+      end
+
+      # The Tutorial moves on, and once it is over, the round starts, its
+      # clock lit as it starts to run (LeadIn).
+      def follow_tutorial(seconds)
+        @tutorial.update(seconds)
+        return unless @tutorial.over?
+
+        @tutorial = nil
+        start_round
+        @lead_in = LeadIn.new(at: now, look: look::TUTORIAL.lead)
+      end
+
+      # The HUD reads the round. While the Tutorial's lead-in lights the
+      # clock, its first second down ticks, as the urgent ones do.
+      def follow_round
+        before = hud.seconds
+        @hud = hud.read(game.round, now) { tick(it) if playing? }
+        @lead_in = nil if @lead_in&.over?(now)
+        return unless @lead_in && playing? && before && hud.seconds < before && now - @penalized_at >= 0.1
+
+        sounds.play(:tick)
+      end
 
       def title_controls
         plan = title_plan
@@ -633,6 +706,7 @@ module DotPopper
         @preview = nil
         @hid_fresh = false
         @undo = nil # the round's records would be lost to an undo
+        @lead_in = nil
         sounds.play(:start)
       end
 
