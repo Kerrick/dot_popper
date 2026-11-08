@@ -10,10 +10,10 @@ ruby file: ".ruby-version"
 gem "lota", "~> 0.2.2"
 
 # Fledge packages the game for people who don't have Ruby (PACKAGING.md).
-# It is pinned to v0.6.0, the release Lota 0.2.2's lota fuse builds with.
+# It is pinned to v0.7.0, the release Lota 0.2.2's lota fuse builds with.
 # In the development group, so fledge build leaves it out of the app.
 group :development do
-  gem "fledge", git: "https://github.com/setdef/Fledge", tag: "v0.6.0"
+  gem "fledge", git: "https://github.com/setdef/Fledge", tag: "v0.7.0"
 
   # Steep checks the rules core against its RBS signatures in sig/
   # (bundle exec rake steep). Only the default rake task needs it;

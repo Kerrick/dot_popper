@@ -6,7 +6,7 @@ The app itself isn't built in this repository. It is built by the iOS route of L
 
 ## Where things stand
 
-- **Dot Popper builds its own kit.** The [Kits workflow](../.github/workflows/kits.yml) builds `dot-popper-ipad-kit.zip` on every `v*` tag and by hand, from Lota's `v0.2.2` tag and Fledge v0.6.0, with Lota's iOS host and Dot Popper's two changes to it in `ios/host` (PACKAGING.md, "The iPad and iPhone kit"). The project targets iPhone and iPad. Earlier kits, built by a Lota agent from Lota's experiment branches, are retired.
+- **Dot Popper builds its own kit.** The [Kits workflow](../.github/workflows/kits.yml) builds `dot-popper-ipad-kit.zip` on every `v*` tag and by hand, from Lota's `v0.2.2` tag and Fledge v0.7.0, with Lota's iOS host and Dot Popper's two changes to it in `ios/host` (PACKAGING.md, "The iPad and iPhone kit"). The project targets iPhone and iPad. Earlier kits, built by a Lota agent from Lota's experiment branches, are retired.
 - **It runs in the Simulator.** A fresh runner builds the kit's project for the Simulator and, unsigned, for devices, and the autoplay bot plays it to the end in an iPad Pro 13-inch Simulator with exit status 0, with all four shaders, the fonts, the pile at Game Over, and the save folder working.
 - **It hasn't run on a real iPad or iPhone.** Nobody has yet signed it, installed it, or played it on hardware. See "What is still unverified" at the end.
 
