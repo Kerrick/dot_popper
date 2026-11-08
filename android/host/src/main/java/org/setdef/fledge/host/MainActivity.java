@@ -5,10 +5,12 @@ package org.setdef.fledge.host;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.VibrationEffect;
@@ -45,13 +47,21 @@ import org.setdef.fledge.FledgeRuby;
  * release, and rake android:deps builds 3.4.10's (tasks/android_build.rb).
  *
  * Dot Popper's copy (PACKAGING.md, "The Android kit") is Lota 0.2.2's
- * (ext/lota/phone/host/android in the gem) with one addition: in a
+ * (ext/lota/phone/host/android in the gem) with two additions. In a
  * debuggable build only, each string extra of the launching intent named
  * lota.env.NAME sets the environment variable NAME before Ruby starts, so
  * the emulator checks can pass the game its settings with am start --es.
+ * And Share my score opens Android's share sheet: the game opens a
+ * dotpopper-share: URL (SheetSharing), and startActivity, below, starts
+ * the sheet in its place.
  */
 public class MainActivity extends SDLActivity {
     private static final String ENV_PREFIX = "lota.env.";
+
+    // The scheme the game opens to share a result (SheetSharing::SCHEME),
+    // and the query parameter that holds the text.
+    private static final String SHARE_SCHEME = "dotpopper-share";
+    private static final String SHARE_TEXT = "text";
 
     // The meta-data in AndroidManifest.xml that asks SDL to send Back to
     // the game as a key and do nothing else (SDL's SDL_HINT_ANDROID_TRAP_BACK_BUTTON).
@@ -125,6 +135,33 @@ public class MainActivity extends SDLActivity {
         getOnBackInvokedDispatcher().registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, () -> {});
     }
 
+    /**
+     * SDL_OpenURL starts an ACTION_VIEW intent for the URL through this
+     * activity (SDLActivity.openURL), so a share URL is caught here and
+     * never leaves the app: no other app is asked, and no activity of
+     * ours needs an intent filter that other apps could reach. The share
+     * sheet, a chooser over ACTION_SEND with the text as plain text,
+     * starts in its place. A URL with no text throws, as an unknown URL
+     * would, and SDL answers false, so the game falls back on its own
+     * preview.
+     */
+    @Override
+    public void startActivity(Intent intent) {
+        Uri uri = intent.getData();
+        if (!Intent.ACTION_VIEW.equals(intent.getAction()) || uri == null || !SHARE_SCHEME.equalsIgnoreCase(uri.getScheme())) {
+            super.startActivity(intent);
+            return;
+        }
+        String text = uri.getQueryParameter(SHARE_TEXT);
+        if (text == null) {
+            throw new IllegalArgumentException("a share URL with no text");
+        }
+        Intent send = new Intent(Intent.ACTION_SEND);
+        send.setType("text/plain");
+        send.putExtra(Intent.EXTRA_TEXT, text);
+        super.startActivity(Intent.createChooser(send, null));
+        Log.i(getPackageName(), "showed the share sheet");
+    }
 
     private void setEnvironmentFromIntent(String tag) {
         Bundle extras = getIntent().getExtras();
