@@ -12,7 +12,7 @@
 #    game/dot_popper, the kit's program (android/android_kit) as main.rb,
 #    and Lota's Android host from the gem in host/android, with Dot
 #    Popper's two changed files (android/host) over it;
-# 4. fledge build android (Fledge v0.6.0) writes the Gradle project, and
+# 4. fledge build android (Fledge v0.7.0) writes the Gradle project, and
 #    Gradle builds the debug APK and the release App Bundle.
 #
 # A second job installs the kit's APK on an x86_64 emulator of API 33
@@ -47,7 +47,7 @@ env:
   LOTA_REPOSITORY: https://github.com/setdef/Lota.git
   LOTA_REF: ${{ inputs.lota_ref || 'v0.2.2' }}
   NDK_REVISION: 30.0.16248370
-  FLEDGE_TAG: v0.6.0
+  FLEDGE_TAG: v0.7.0
   IDENTIFIER: com.setdef.DotPopper
   APP_NAME: Dot Popper
 

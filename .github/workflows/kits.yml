@@ -44,7 +44,7 @@ defaults:
 env:
   LOTA_VERSION: "0.2.2"
   # Only the iOS build names Fledge itself; lota fuse pins its own.
-  FLEDGE_TAG: v0.6.0
+  FLEDGE_TAG: v0.7.0
   IDENTIFIER: com.setdef.DotPopper
   BUNDLE_FROZEN: "true"
 
