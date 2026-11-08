@@ -12,7 +12,7 @@ This guide is for Rubyists who want to build Dot Popper from source, change it, 
 
 ## What's in the code
 
-- **Rules you can test without a window.** The rules, in `lib/dot_popper`, are 2,350 lines, built mostly from immutable values made with `Data.define`. They draw nothing, play nothing, and read no input. 796 unit tests run in about 4 seconds, and [Steep](https://github.com/soutaro/steep) checks the rules against RBS signatures in strict mode.
+- **Rules you can test without a window.** The rules, in `lib/dot_popper`, are 2,350 lines, built mostly from immutable values made with `Data.define`. They draw nothing, play nothing, and read no input. 796 unit tests run without a window, and [Steep](https://github.com/soutaro/steep) checks the rules against RBS signatures in strict mode.
 - **The look and sound as plain values.** `lib/dot_popper/presentation` (8,068 lines) holds every color, word, size, timing, and animation curve, and the synthesizer that makes every sound when the game starts. It never calls Lota, so its tests run without a window too.
 - **LÖVE's engine, from Ruby.** `lib/dot_popper/shell` (4,522 lines) does the drawing, sound, and input through Lota: four GLSL shaders, LÖVE's particle systems for the pop droplets, Box2D physics for the pile at Game Over, stereo sound, mouse, touch, gamepads, and a tablet's accelerometer.
 - **A game that plays itself.** A bot plays rounds by itself. Scripted scenarios play the game in a real window, check it as they go, and quit. A simulator plays the real rules with a model player on screens from an iPhone to a 32-inch monitor.
