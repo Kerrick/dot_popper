@@ -23,10 +23,17 @@ class RendererChoiceTest < Minitest::Test
     assert_predicate choice, :vulkan_allowed?
   end
 
-  def test_linux_allows_only_opengl_and_android_keeps_loves_order
+  def test_linux_and_android_allow_only_opengl
     assert_equal [:opengl], decide(platform: LINUX).renderers
-    assert_nil decide(platform: ANDROID).renderers
-    assert_predicate decide(platform: ANDROID), :vulkan_allowed?
+    assert_equal [:opengl], decide(platform: ANDROID).renderers
+    refute_predicate decide(platform: ANDROID), :vulkan_allowed?
+  end
+
+  def test_the_environment_can_bring_vulkan_back_on_android
+    assert_equal [:vulkan], decide(asked: [:vulkan], platform: ANDROID).renderers
+    assert_predicate decide(asked: [:vulkan], platform: ANDROID), :vulkan_allowed?
+    assert_equal [:opengl], decide(platform: ANDROID, vulkan_failed: true).renderers
+    refute decide(platform: ANDROID).rescues?(NO_GPU), "no Vulkan, nothing to leave out"
   end
 
   def test_apple_systems_never_try_vulkan

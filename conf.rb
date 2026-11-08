@@ -33,8 +33,15 @@ def Lota.conf(t)
   # overlay while it still takes the controller, and Vulkan's shows it.
   # Where Vulkan then fails to start the game, the game starts again
   # without it, and leaves it out for a month (Shell::VulkanRescue).
-  # Android keeps Vulkan too: a blind playtest found OpenGL ES stuttered
-  # there on battery. Apple's systems have Metal alone.
+  # Android allows only OpenGL ES, until a Lota release fixes a crash:
+  # with Vulkan the game segfaults in Graphics.present after
+  # surfaceDestroyed whenever it goes to the background (HOME, an app
+  # switch, the share sheet), 6 of 6 times on a OnePlus Nord, and 0 of 6
+  # with OpenGL ES (real device, 2026-11-07). It kept Vulkan before, since
+  # a blind playtest found OpenGL ES stuttery on battery (before Lota
+  # 0.2.2 fixed Vulkan's landscape slowdown), but a crash on every app
+  # switch is worse than stutter. Go back to Vulkan when Lota fixes it.
+  # Apple's systems have Metal alone.
   # DOT_POPPER_RENDERERS=opengl (or vulkan, or metal, comma-separated)
   # overrides this, to compare them on a device, and DOT_POPPER_NO_VULKAN=1
   # leaves Vulkan out, as after it failed.
