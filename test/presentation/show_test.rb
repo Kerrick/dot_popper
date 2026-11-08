@@ -25,6 +25,46 @@ class ShowTest < Minitest::Test
   end
 
   # Play starts a round; empty space beside it does nothing.
+  # A game on a field so wide that the dots, which hold still here, never
+  # cover one another, so each fresh dot can be tapped on the spot.
+  def calm_show
+    @game = DotPopper::Game.new(field(4000, 3000), random: Random.new(2))
+    show = Show.new(game: @game, layout: layout, sounds: @sounds, radius: R, random: Random.new(3))
+    show.tap(*middle(show.play_reach))
+    show
+  end
+
+  def pop_fresh(show)
+    fresh = @game.round.dots.find(&:fresh?)
+    show.tap(fresh.x, fresh.y)
+  end
+
+  def test_a_streak_earns_a_bonus_dot_that_arrives_with_a_chime_and_pays_with_a_chord
+    show = calm_show
+    DotPopper::Rules::BONUS.streak.times { pop_fresh(show) }
+
+    assert_equal 1, @sounds.names.count(:bonus), "the bonus dot arrives with a chime"
+    refute_includes @sounds.names, :bonus_pop
+    bonus = @game.round.dots.find(&:bonus?)
+    assert bonus.fresh?
+    assert(show.effects.rings.any? { it.look == Look::BONUS_RIPPLE })
+
+    show.update(Look::BONUS_BEACON_EVERY + 0.1)
+    assert(show.effects.rings.any? { it.look == Look::BONUS_BEACON }, "a ring pulses about it while it waits")
+
+    pop_fresh(show)
+    assert_equal 1, @sounds.names.count(:bonus_pop)
+    assert(show.effects.rings.any? { it.look == Look::BONUS_SHOCKWAVE })
+    refute(@game.round.dots.any? { it.fresh? && it.bonus? })
+  end
+
+  def test_an_ordinary_pop_makes_no_bonus_sound
+    show = calm_show
+    3.times { pop_fresh(show) }
+
+    assert_equal [:start, :pop, :pop, :pop], @sounds.names
+  end
+
   def test_only_play_starts_a_round
     @show.tap(5, 5)
     assert @show.title?

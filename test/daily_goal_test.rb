@@ -24,7 +24,7 @@ class DailyGoalTest < Minitest::Test
   end
 
   def test_each_goal_is_judged_from_one_rounds_stats
-    stats = RoundStats.start.with(longest_run: 15, waits: [3.0] + ([0.5] * 9), duration: 40.0, slips: 1, score: 25)
+    stats = RoundStats.start.with(longest_run: 15, waits: [3.0] + ([0.5] * 9), duration: 50.0, slips: 1, score: 30)
 
     DailyGoal::LIST.reject { it.kind == :clean_round }.each { assert it.met?(stats), it.to_s }
     refute goal(:clean_round).met?(stats)
@@ -32,10 +32,10 @@ class DailyGoalTest < Minitest::Test
   end
 
   def test_each_goal_falls_short_just_below_its_target
-    short = RoundStats.start.with(longest_run: 14, waits: [2.99] + ([1.2] * 8), duration: 39.9, slips: 0, score: 24)
+    short = RoundStats.start.with(longest_run: 14, waits: [2.99] + ([1.2] * 8), duration: 49.9, slips: 0, score: 29)
 
     DailyGoal::LIST.reject { it.kind == :clean_round }.each { refute it.met?(short), it.to_s }
-    refute goal(:comeback).met?(short.with(score: 30)), "a comeback needs a wrong tap"
+    refute goal(:comeback).met?(short.with(score: 40)), "a comeback needs a wrong tap"
   end
 
   def test_its_name_in_the_log

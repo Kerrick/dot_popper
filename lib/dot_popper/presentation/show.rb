@@ -75,6 +75,7 @@ module DotPopper
         @preview = nil
         @slip = nil
         @penalized_at = -Float::INFINITY
+        @beckoned_at = nil
         @recorder = RoundStats::Recorder.new
         @records = nil
         @credits = nil
@@ -678,6 +679,7 @@ module DotPopper
       def follow_round
         before = hud.seconds
         @hud = hud.read(game.round, now) { tick(it) if playing? }
+        beckon
         @lead_in = nil if @lead_in&.over?(now)
         return unless @lead_in && playing? && before && hud.seconds < before && now - @penalized_at >= 0.1
 
@@ -804,6 +806,7 @@ module DotPopper
         @slip = nil
         @undo = nil # the round's records would be lost to an undo
         @lead_in = nil
+        @beckoned_at = nil
         sounds.play(:start)
       end
 
@@ -818,6 +821,35 @@ module DotPopper
                    palette.cream, palette.gain, look::GAIN_FLOAT)
         sounds.play(:pop, pitch: pop_pitch, pan: pan(event.x))
         @haptics.buzz(look::HAPTICS.pop)
+        bonus_popped(event) if dot.bonus?
+        bonus_earned(event.spawned) if event.spawned.bonus?
+      end
+
+      # The streak's payoff: a larger burst and a second, wider shockwave
+      # over the pop's own, and a chord.
+      def bonus_popped(event)
+        effects.burst(event.x, event.y, look::BONUS_BURST, look::BONUS_CONFETTI)
+        effects.ring(event.dot.x, event.dot.y, look::BONUS_SHOCKWAVE, follow: event.dot.id)
+        sounds.play(:bonus_pop, pan: pan(event.x))
+        @haptics.buzz(look::HAPTICS.penalty)
+      end
+
+      # The streak's result: the bonus dot arrives in place of the ordinary
+      # one, in a wide ripple and a chime, and keeps a ring pulsing about
+      # it (#beckon).
+      def bonus_earned(dot)
+        effects.ring(dot.x, dot.y, look::BONUS_RIPPLE, follow: dot.id)
+        sounds.play(:bonus, pan: pan(dot.x))
+        @beckoned_at = now
+      end
+
+      # While a bonus dot waits, a mint ring pulses about it every so often.
+      def beckon
+        return unless @beckoned_at && playing? && now - @beckoned_at >= look::BONUS_BEACON_EVERY
+
+        dot = game.round.dots.find { it.fresh? && it.bonus? } or return @beckoned_at = nil
+        @beckoned_at = now
+        effects.ring(dot.x, dot.y, look::BONUS_BEACON, follow: dot.id)
       end
 
       def penalized(event)

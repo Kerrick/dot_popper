@@ -12,6 +12,13 @@
 # waits, and with a small chance per attempt it taps anyway and hits a
 # popped dot on top. Simulated at 30 updates a second.
 #
+# Run it as "bundle exec ruby script/simulate.rb bonus [rounds [streaks
+# [points [seconds]]]]", each list comma-separated, to compare
+# candidate numbers for the streak's bonus dot (Rules::Bonus) on three
+# devices instead: score, round length, how often a round is endless, how
+# many bonus dots a round earns, and how many of the day's goals
+# (DailyGoal) a round meets, for each candidate and without a bonus dot.
+#
 # Every device plays with each choice of dot size (DotSizing): the
 # standard size, as the spec has it, and sized to the screen. Each plays
 # twice, with the spawn rule (Spawner) and without it, to show how often
@@ -56,7 +63,7 @@ module Simulation
 
   # How one round went. +covered+ counts the fresh dots that spawned
   # under a popped one; +spawns+, how each was drawn (DotPopper::Spawn).
-  Result = Data.define(:score, :seconds, :penalties, :dots, :covered, :spawns) do
+  Result = Data.define(:score, :seconds, :penalties, :dots, :covered, :spawns, :stats) do
     def endless? = seconds > GIVE_UP
     def count(&) = spawns.count(&)
   end
@@ -65,7 +72,9 @@ module Simulation
 
   # One device with one choice of dot size, and the spawn rule's tries
   # (0 turns it off).
-  Job = Data.define(:device, :sizing, :spawn_tries) do
+  Job = Data.define(:device, :sizing, :spawn_tries, :bonus) do
+    def initialize(device:, sizing:, spawn_tries:, bonus: DotPopper::Rules::BONUS) = super
+
     # The field a round starts on: the device's screen in graphics
     # units, as the game would see it, with the dots sized as chosen.
     def field
@@ -76,13 +85,14 @@ module Simulation
 
   TRIES = [DotPopper::Rules::SPAWN_TRIES, 0].freeze
 
-  JOBS = SIZINGS.flat_map { |sizing| DEVICES.flat_map { |device| TRIES.map { Job.new(device, sizing, it) } } }.freeze
+  JOBS = SIZINGS.flat_map { |sizing| DEVICES.flat_map { |device| TRIES.map { Job.new(device:, sizing:, spawn_tries: it) } } }.freeze
 
   class Player
     def initialize(job, random)
       @device = job.device
       @field = job.field
       @spawn_tries = job.spawn_tries
+      @bonus = job.bonus
       @random = random
       @r = @field.radius
       @hand = [0.0, 0.0]
@@ -91,7 +101,8 @@ module Simulation
     def play
       field = @field
       @hand = [field.width / 2, field.height / 2]
-      round = DotPopper::Round.new(field, random: @random, spawn_tries: @spawn_tries)
+      round = DotPopper::Round.new(field, random: @random, spawn_tries: @spawn_tries, bonus: @bonus)
+      stats = DotPopper::RoundStats.start
       t = 0.0
       penalties = 0
       covered_spawns = 0
@@ -115,6 +126,7 @@ module Simulation
           fresh = round.dots.find(&:fresh?)
           aim = [fresh.x, fresh.y]
           event = round.tap_at(*aim)
+          stats = stats.record(event, at: round.elapsed) if event
           @hand = aim
           case event
           in DotPopper::Events::Popped then break
@@ -124,7 +136,7 @@ module Simulation
         end
       end
       Result.new(score: round.score, seconds: t, penalties:, dots: round.dots.size, covered: covered_spawns,
-                 spawns: round.spawns)
+                 spawns: round.spawns, stats: stats.with(duration: round.elapsed))
     end
 
     private
@@ -205,6 +217,45 @@ module Simulation
   def self.share(results, &)
     100.0 * results.sum { it.count(&) } / results.sum { it.spawns.size }
   end
+
+  # The streak lengths, bonus points and bonus seconds to compare.
+  # With no lists given: streaks of 6 to 12, 2 or 4 points, 2, 4 or 6 seconds.
+  def self.candidates(streaks, points, seconds)
+    [nil, *streaks.product(points, seconds).map { |args| DotPopper::Rules::Bonus.new(*args) }]
+  end
+
+  def self.numbers(text, default, convert) = text ? text.split(",").map { convert.call(it) } : default
+
+  BONUS_DEVICES = DEVICES.values_at(0, 3, 4).freeze
+
+  def self.compare_bonuses(rounds, streaks: nil, points: nil, seconds: nil)
+    list = candidates(numbers(streaks, [6, 8, 10, 12], :to_i.to_proc), numbers(points, [2, 4], :to_i.to_proc),
+                      numbers(seconds, [2.0, 4.0, 6.0], :to_f.to_proc))
+    jobs = BONUS_DEVICES.flat_map do |device|
+      list.map { Job.new(device:, sizing: DotPopper::DotSizing::SIZED_TO_SCREEN, spawn_tries: DotPopper::Rules::SPAWN_TRIES, bonus: it) }
+    end
+    results = jobs.map { |job| Ractor.new(job, rounds) { |each, count| Simulation.play(each, count) } }.map(&:value)
+    jobs.zip(results).group_by { |job, _| job.device }.each do |device, rows|
+      puts "\n#{device.name}"
+      puts format("%-18s %6s %5s %6s %6s %7s %6s %6s  %s", "bonus (n/pts/s)", "score", "p90", "secs", "p90s", "endless",
+                  "pen", "bonus", DotPopper::DailyGoal::LIST.map { "#{it.kind}".ljust(12) }.join)
+      rows.each { |job, each| compare_row(job.bonus, each, rounds) }
+    end
+  end
+
+  def self.compare_row(bonus, results, rounds)
+    scores = results.map(&:score).sort
+    times = results.map(&:seconds).sort
+    goals = DotPopper::DailyGoal::LIST.map { |goal| format("%-12s", format("%.0f%%", 100.0 * results.count { goal.met?(it.stats) } / rounds)) }
+    name = bonus ? "#{bonus.streak}/#{bonus.points}/#{bonus.seconds.to_i}" : "none"
+    puts format("%-18s %6.1f %5d %6.1f %6.1f %6.0f%% %6.1f %6.2f  %s", name, scores.sum.fdiv(rounds), scores[(rounds * 0.9).floor],
+                times.sum / rounds, times[(rounds * 0.9).floor], 100.0 * results.count(&:endless?) / rounds,
+                results.sum(&:penalties).fdiv(rounds), results.sum { it.stats.bonuses }.fdiv(rounds), goals.join)
+  end
 end
 
-Simulation.run(Integer(ARGV.fetch(0, 200)))
+if ARGV.first == "bonus"
+  Simulation.compare_bonuses(Integer(ARGV.fetch(1, 200)), streaks: ARGV[2], points: ARGV[3], seconds: ARGV[4])
+else
+  Simulation.run(Integer(ARGV.fetch(0, 200)))
+end

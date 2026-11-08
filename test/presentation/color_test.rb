@@ -37,6 +37,20 @@ class ColorTest < Minitest::Test
     assert_operator palette.fresh_body.contrast(palette.popped_top), :>=, 4.5
   end
 
+  # The bonus dot is a bright dot first: as light as the ordinary one, so
+  # it is plainly the dot to pop in grayscale too, and it is marked by a
+  # shape (a dark star) that needs no hue, which must itself read on the body.
+  def test_a_bonus_dot_is_as_bright_as_a_fresh_one_and_its_star_reads_on_it
+    bright = [palette.bonus_light, palette.bonus_body, palette.bonus_deep, palette.bonus_bounce, palette.bonus_rim]
+    popped = [palette.popped_top, palette.popped_bottom, palette.popped_crater]
+
+    bright.product(popped).each { |light, dark| assert_operator light.contrast(dark), :>=, 2.5 }
+    assert_operator palette.bonus_body.contrast(palette.ink_top), :>=, 7.0
+    assert_operator palette.bonus_body.contrast(palette.bonus_mark), :>=, 7.0
+    assert_in_delta palette.fresh_body.luminance, palette.bonus_body.luminance, 0.15
+    refute_equal palette.fresh_body, palette.bonus_body
+  end
+
   def test_a_fresh_dot_stands_out_from_the_night
     assert_operator palette.fresh_body.contrast(palette.ink_top), :>=, 7.0
   end

@@ -5,7 +5,7 @@ module DotPopper
     # The score and the time left, in a see-through pill at the top of the
     # safe area, over every dot, outlined so they stay crisp over one. A number that changes bumps by drawing in
     # a bigger font for a moment; glyphs are never stretched.
-    class HudPainter < Data.define(:pen)
+    class HudPainter < Data.define(:pen, :dots)
       G = ::Lota::Graphics
       BUMP_STEP = 2 # font sizes a bump steps through, in graphics units
 
@@ -19,6 +19,7 @@ module DotPopper
           readout(readout, pill.x + (cell * (i + 0.5)), pill.y + (pad * 0.55), number, label, layout)
         end
         divider(pill.x + cell, pill.y + (pad * 0.7), pill.bottom - (pad * 0.7))
+        streak(hud.streak_readout, pill) if hud.streak_readout
         pill
       end
 
@@ -52,6 +53,23 @@ module DotPopper
       end
 
       private
+
+      # The streak toward a bonus dot, as a row of the game's own small
+      # dots hung under the pill: bright ones are the pops so far, dark
+      # ones are still to come, and all of them mint when the bonus dot is
+      # out there to pop.
+      def streak(readout, pill)
+        pixels = pen.pixels
+        radius = pill.height * Presentation::Hud::PIP
+        step = radius * Presentation::Hud::PIP_STEP
+        left = pill.center_x - (step * (readout.size - 1) / 2.0)
+        top = pill.bottom + (radius * 1.7)
+        readout.size.times do |i|
+          grown = readout.bumping?(i) ? radius * readout.scale : radius
+          dots.icon(pixels.snap(left + (step * i)), pixels.snap(top), grown, fresh: readout.lit?(i),
+                                                                       bonus: readout.ready, opacity: 0.95)
+        end
+      end
 
       def fonts(layout)
         type = pen.look::TYPE

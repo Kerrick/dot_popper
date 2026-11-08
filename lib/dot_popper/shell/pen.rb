@@ -132,7 +132,7 @@ module DotPopper
       def paint_shaders
         if (dot = @shaders[:dot])
           %i[fresh_light fresh_body fresh_deep fresh_bounce fresh_rim gloss halo popped_top popped_bottom popped_rim
-             popped_crater popped_lip shadow alarm].each { uniform(dot, it.to_s, rgb(palette.public_send(it))) }
+             popped_crater popped_lip shadow alarm bonus_light bonus_body bonus_deep bonus_bounce bonus_rim bonus_mark].each { uniform(dot, it.to_s, rgb(palette.public_send(it))) }
         end
         return unless (backdrop = @shaders[:backdrop])
 

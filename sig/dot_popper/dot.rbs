@@ -14,15 +14,19 @@ module DotPopper
 
     attr_reader popped: bool
 
+    attr_reader bonus: bool
+
     def self.spawn: (Field field, Random random, id: Integer) -> Dot
 
-    def self.new: (id: Integer, x: number, y: number, velocity_x: number, velocity_y: number, radius: number, ?popped: bool) -> instance
+    def self.new: (id: Integer, x: number, y: number, velocity_x: number, velocity_y: number, radius: number, ?popped: bool, ?bonus: bool) -> instance
 
-    def initialize: (id: Integer, x: number, y: number, velocity_x: number, velocity_y: number, radius: number, ?popped: bool) -> void
+    def initialize: (id: Integer, x: number, y: number, velocity_x: number, velocity_y: number, radius: number, ?popped: bool, ?bonus: bool) -> void
 
     def popped?: () -> bool
 
     def fresh?: () -> bool
+
+    def bonus?: () -> bool
 
     def pop: () -> Dot
 

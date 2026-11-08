@@ -26,7 +26,7 @@ module DotPopper
         @bloom = bloom
         @dots = DotPainter.new(pen:)
         @effects = EffectsPainter.new(pen:, sparks:)
-        @hud = HudPainter.new(pen:)
+        @hud = HudPainter.new(pen:, dots: @dots)
         @title = TitlePainter.new(pen:, dots: @dots)
         @records = RecordsPainter.new(pen:)
         @credits = CreditsPainter.new(pen:)

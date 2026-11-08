@@ -5,20 +5,24 @@ module DotPopper
   # whether it has been popped. A dot is a value; moving or popping it
   # gives a new dot with the same +id+, so anything that follows a dot
   # through a round, such as its animation, follows the id.
-  class Dot < Data.define(:id, :x, :y, :velocity_x, :velocity_y, :radius, :popped)
+  class Dot < Data.define(:id, :x, :y, :velocity_x, :velocity_y, :radius, :popped, :bonus)
     def self.spawn(field, random, id:)
       x, y = field.random_center(random)
       new(id:, x:, y:, velocity_x: field.random_speed(random), velocity_y: field.random_speed(random),
           radius: field.radius)
     end
 
-    def initialize(id:, x:, y:, velocity_x:, velocity_y:, radius:, popped: false)
+    def initialize(id:, x:, y:, velocity_x:, velocity_y:, radius:, popped: false, bonus: false)
       super(id:, x: x.to_f, y: y.to_f, velocity_x: velocity_x.to_f, velocity_y: velocity_y.to_f, radius: radius.to_f,
-            popped:)
+            popped:, bonus:)
     end
 
     def popped? = popped
     def fresh? = !popped
+
+    # Whether this is a bonus dot, earned by a streak (Rules::BONUS). It is
+    # the bright dot to pop, only dressed apart; popped, it is a popped dot.
+    def bonus? = bonus
 
     # The same dot, popped. Popping changes only how a tap treats it and
     # how it looks; a popped dot keeps moving for the rest of the round.

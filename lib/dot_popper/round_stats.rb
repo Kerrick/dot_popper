@@ -6,9 +6,11 @@ module DotPopper
   # many of those the score floor softened, how long each fresh dot took
   # to pop from when it appeared (its wait), how long the round ran, the
   # score, and the pops in a row since the last wrong tap (+run+) with the
-  # most of those the round had (+longest_run+). It is built from the
+  # most of those the round had (+longest_run+), and how many of the pops
+  # were of bonus dots (+bonuses+). It is built from the
   # rules' events, so it decides nothing.
-  class RoundStats < Data.define(:pops, :slips, :softened, :waits, :fresh_since, :duration, :score, :run, :longest_run)
+  class RoundStats < Data.define(:pops, :slips, :softened, :waits, :fresh_since, :duration, :score, :run, :longest_run,
+                                          :bonuses)
     def self.start = new(pops: 0, slips: 0, softened: 0, waits: [], fresh_since: 0.0, duration: 0.0)
 
     # The stats of +round+ as it starts: none for a round begun afresh;
@@ -20,9 +22,9 @@ module DotPopper
       start.with(pops:, score: round.score, run: pops, longest_run: pops)
     end
 
-    def initialize(pops:, slips:, softened:, waits:, fresh_since:, duration:, score: 0, run: 0, longest_run: 0)
+    def initialize(pops:, slips:, softened:, waits:, fresh_since:, duration:, score: 0, run: 0, longest_run: 0, bonuses: 0)
       super(pops:, slips:, softened:, waits: waits.dup.freeze, fresh_since: fresh_since.to_f, duration: duration.to_f,
-            score:, run:, longest_run:)
+            score:, run:, longest_run:, bonuses:)
     end
 
     # The stats after +event+, which happened +at+ seconds into the round.
@@ -78,7 +80,7 @@ module DotPopper
     def popped(event, at)
       ran = run + 1
       with(pops: pops + 1, waits: waits + [at - fresh_since], fresh_since: at, score: score + event.points, run: ran,
-           longest_run: [longest_run, ran].max)
+           longest_run: [longest_run, ran].max, bonuses: bonuses + (event.dot.bonus? ? 1 : 0))
     end
   end
 end

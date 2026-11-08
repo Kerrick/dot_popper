@@ -5,7 +5,7 @@ module DotPopper
   # the rules that changes, and it changes by swapping in new values, so a
   # tap changes all three at once and says what it did with an event.
   class Round
-    attr_reader :field, :dots, :score, :countdown, :elapsed, :spawns
+    attr_reader :field, :dots, :score, :countdown, :elapsed, :spawns, :streak, :bonus
 
     # A round that goes on from where it was left before its clock first
     # ran, as the tutorial leaves it: +dots+ (a Stack) as they are, its
@@ -13,15 +13,22 @@ module DotPopper
     # the clock. From there it is a round like any other: its clock runs
     # from its first update, each pop spawns a dot under every dot there,
     # and a tap reaches only the topmost.
-    def self.resume(field, dots:, score:, seconds:, random: Random.new, spawn_tries: Rules::SPAWN_TRIES)
-      new(field, random:, dots:, score:, seconds:, spawn_tries:)
+    # Its streak starts at none: the tutorial's pops were its own.
+    def self.resume(field, dots:, score:, seconds:, random: Random.new, spawn_tries: Rules::SPAWN_TRIES,
+                    bonus: Rules::BONUS)
+      new(field, random:, dots:, score:, seconds:, spawn_tries:, bonus:)
     end
 
     # +spawn_tries+ is how hard a spawn works for a touch target (Spawner);
-    # 0 turns the rule off, as the simulator does to measure it.
+    # 0 turns the rule off, as the simulator does to measure it. +bonus+
+    # (Rules::Bonus) is the streak's reward; nil turns it off, likewise.
+    # +streak+ counts the pops in a row since the last wrong tap or bonus
+    # dot, toward the next bonus dot.
     def initialize(field, random: Random.new, dots: nil, score: Rules::LOWEST_SCORE,
-                   seconds: Rules::STARTING_SECONDS, spawn_tries: Rules::SPAWN_TRIES)
+                   seconds: Rules::STARTING_SECONDS, spawn_tries: Rules::SPAWN_TRIES, bonus: Rules::BONUS)
       @field = field
+      @bonus = bonus
+      @streak = 0
       @random = random
       @spawner = Spawner.for(field, tries: spawn_tries)
       @spawns = []
@@ -70,8 +77,9 @@ module DotPopper
 
     # A fresh dot to go in beneath every dot of +above+, recorded in
     # +spawns+.
-    def spawn(above)
+    def spawn(above, bonus: false)
       spawn = @spawner.spawn(@random, id: @next_id, above: above.to_a)
+      spawn = spawn.with(dot: spawn.dot.with(bonus: true)) if bonus
       @next_id += 1
       @spawns << spawn
       spawn.dot
@@ -80,14 +88,37 @@ module DotPopper
     def pop(dot, x, y)
       popped = dot.pop
       above = dots.replace(popped)
-      spawned = spawn(above)
+      points, seconds = payoff(dot)
+      earned = count_toward_bonus(dot)
+      spawned = spawn(above, bonus: earned)
       @dots = above.slide_under(spawned)
-      @score += Rules::POP_POINTS
-      @countdown = countdown.adjust(Rules::POP_SECONDS)
-      Events::Popped.new(dot: popped, x:, y:, points: Rules::POP_POINTS, seconds: Rules::POP_SECONDS, spawned:)
+      @score += points
+      @countdown = countdown.adjust(seconds)
+      Events::Popped.new(dot: popped, x:, y:, points:, seconds:, spawned:)
+    end
+
+    # What a pop of +dot+ pays: a pop's own, and a bonus dot's besides.
+    def payoff(dot)
+      rule = bonus
+      return [Rules::POP_POINTS, Rules::POP_SECONDS] unless dot.bonus? && rule
+
+      [Rules::POP_POINTS + rule.points, Rules::POP_SECONDS + rule.seconds]
+    end
+
+    # Counts the pop of +dot+ in the streak, and says whether the streak
+    # is now long enough that the next fresh dot is a bonus dot. Earning
+    # one, or popping one, starts the count over.
+    def count_toward_bonus(dot)
+      rule = bonus or return false
+
+      @streak = dot.bonus? ? 0 : streak + 1
+      earned = streak >= rule.streak
+      @streak = 0 if earned
+      earned
     end
 
     def penalize(dot, x, y)
+      @streak = 0
       lost = [Rules::PENALTY_POINTS, score - Rules::LOWEST_SCORE].min
       @score -= lost
       @countdown = countdown.adjust(-Rules::PENALTY_SECONDS)

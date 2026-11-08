@@ -13,6 +13,8 @@ module DotPopper
         ink_top: hex["#1d1a4a"], ink_bottom: hex["#0c0b22"], ink_glow: hex["#2b2766"], ink_edge: hex["#05040f"],
         fresh_light: hex["#fff0bf"], fresh_body: hex["#ffbf52"], fresh_deep: hex["#f07c34"],
         fresh_bounce: hex["#ffd98c"], fresh_rim: hex["#fff6d6"], gloss: hex["#ffffff"], halo: hex["#ffb347"],
+        bonus_light: hex["#e6fff6"], bonus_body: hex["#6fe9c5"], bonus_deep: hex["#1fae96"],
+        bonus_bounce: hex["#b4fbe6"], bonus_rim: hex["#f2fffa"], bonus_mark: hex["#1d1a4a"],
         popped_top: hex["#4a4570"], popped_bottom: hex["#37335a"], popped_rim: hex["#8f88bd"],
         popped_crater: hex["#29263f"], popped_lip: hex["#6b6596"],
         shadow: hex["#04030d"], alarm: hex["#ff4f9a"],
@@ -283,6 +285,31 @@ module DotPopper
         alpha: Tween.new(from: 0.3, to: 0.0, duration: 0.25, ease: :out_quad), color: PALETTE.soft
       )
 
+      # A bonus dot (Rules::BONUS), earned by a streak: it appears in a
+      # wider mint ripple, and pulses a ring now and then while it waits,
+      # so the eye finds it among the dots (outlines only; they hide no
+      # dot). Popped, it bursts larger and in more colors, with a second,
+      # wider shockwave.
+      BONUS_BEACON_EVERY = 0.9
+      BONUS_CONFETTI = [PALETTE.bonus_body, PALETTE.bonus_light, PALETTE.cream, PALETTE.confetti.first].freeze
+      BONUS_RIPPLE = RingLook.new(
+        radius: Tween.new(from: 0.3, to: 2.2, duration: 0.7, ease: :out_cubic),
+        width: Tween.new(from: 0.12, to: 0.0, duration: 0.7, ease: :linear),
+        alpha: Tween.new(from: 0.8, to: 0.0, duration: 0.7, ease: :in_out_sine), color: PALETTE.bonus_body
+      )
+      BONUS_BEACON = RingLook.new(
+        radius: Tween.new(from: 1.05, to: 1.7, duration: 0.6, ease: :out_cubic),
+        width: Tween.new(from: 0.06, to: 0.0, duration: 0.6, ease: :linear),
+        alpha: Tween.new(from: 0.55, to: 0.0, duration: 0.6, ease: :out_quad), color: PALETTE.bonus_body
+      )
+      BONUS_BURST = Burst.new(count: 26, speed: 2.6..6.4, life: 0.3..0.45, size: 0.06..0.13, drag: 3.5,
+                              gravity: 3.0, alpha: 0.9)
+      BONUS_SHOCKWAVE = RingLook.new(
+        radius: Tween.new(from: 1.0, to: 2.8, duration: 0.45, ease: :out_cubic),
+        width: Tween.new(from: 0.2, to: 0.0, duration: 0.45, ease: :out_quad),
+        alpha: Tween.new(from: 0.8, to: 0.0, duration: 0.45, ease: :out_quad), color: PALETTE.bonus_body
+      )
+
       # A wrong tap: the dot shudders and its rim flashes, the screen
       # shakes a little, and the edges glow.
       ALARM_RING = RingLook.new(
@@ -449,6 +476,19 @@ module DotPopper
           Note.new(wave: :sine, from: 360, to: 980, length: 0.12, volume: 1.0),
           Note.new(wave: :sine, from: 720, to: 1960, length: 0.07, volume: 0.25),
           Note.new(wave: :noise, from: 1, length: 0.012, attack: 0.001, volume: 0.25)
+        ]),
+        # A bonus dot appears: three bright notes up, like a bell.
+        bonus: Patch.new(notes: [880.0, 1318.51, 1760.0].each_with_index.flat_map do |hz, i|
+          [Note.new(wave: :sine, from: hz, start: i * 0.06, length: 0.22, volume: 0.7),
+           Note.new(wave: :sine, from: hz * 2, start: i * 0.06, length: 0.14, volume: 0.18)]
+        end),
+        # A bonus dot is popped: the bloop, and a chord over it.
+        bonus_pop: Patch.new(notes: [
+          Note.new(wave: :sine, from: 360, to: 980, length: 0.12, volume: 1.0),
+          Note.new(wave: :noise, from: 1, length: 0.012, attack: 0.001, volume: 0.25),
+          Note.new(wave: :triangle, from: 659.25, start: 0.05, length: 0.3, volume: 0.6),
+          Note.new(wave: :triangle, from: 987.77, start: 0.05, length: 0.3, volume: 0.5),
+          Note.new(wave: :sine, from: 1318.51, start: 0.05, length: 0.4, volume: 0.5)
         ]),
         # A low, dull "bonk", falling.
         bonk: Patch.new(notes: [

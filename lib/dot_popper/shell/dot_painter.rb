@@ -17,7 +17,7 @@ module DotPopper
       SEGMENTS = 64
 
       def draw(stack, animations, now, radius)
-        paint { stack.bottom_up.each { |dot| one(dot.x, dot.y, radius, animations.pose(dot, now), 1.0) } }
+        paint { stack.bottom_up.each { |dot| one(dot.x, dot.y, radius, animations.pose(dot, now), 1.0, dot.bonus?) } }
       end
 
       # What of the dots glows, for Bloom: the fresh dots alone. The glow
@@ -27,14 +27,14 @@ module DotPopper
         paint do
           stack.bottom_up.each do |dot|
             pose = animations.pose(dot, now)
-            one(dot.x, dot.y, radius, pose, pose.freshness) if pose.freshness.positive?
+            one(dot.x, dot.y, radius, pose, pose.freshness, dot.bonus?) if pose.freshness.positive?
           end
         end
       end
 
       # One dot that is not in play, such as the title's examples.
-      def icon(x, y, radius, fresh:, opacity: 1.0)
-        paint { one(x, y, radius, fresh ? Presentation::Pose::FRESH : Presentation::Pose::STILL, opacity) }
+      def icon(x, y, radius, fresh:, opacity: 1.0, bonus: false)
+        paint { one(x, y, radius, fresh ? Presentation::Pose::FRESH : Presentation::Pose::STILL, opacity, bonus) }
       end
 
       # One plain dot in the colors of +palette+, whichever look is worn,
@@ -56,17 +56,17 @@ module DotPopper
         pen.shading(:dot) { yield }
       end
 
-      def one(x, y, radius, pose, opacity)
-        pen.shader?(:dot) ? shaded(x, y, radius, pose, opacity) : flat(x, y, radius, pose, opacity)
+      def one(x, y, radius, pose, opacity, bonus)
+        pen.shader?(:dot) ? shaded(x, y, radius, pose, opacity, bonus) : flat(x, y, radius, pose, opacity, bonus)
       end
 
-      def shaded(x, y, radius, pose, opacity)
-        G.color = [pose.freshness, pose.alarm, 0.0, opacity]
+      def shaded(x, y, radius, pose, opacity, bonus)
+        G.color = [pose.freshness, pose.alarm, bonus ? pose.freshness : 0.0, opacity]
         half = radius * pen.look::DOT.extent
         pen.square(x, y, half * pose.scale_x, half * pose.scale_y)
       end
 
-      def flat(x, y, radius, pose, opacity)
+      def flat(x, y, radius, pose, opacity, bonus)
         sizes = pen.look::DOT
         G.push do
           G.translate(x, y)
@@ -75,23 +75,35 @@ module DotPopper
           # only dropped: a crescent below, never a dark band all round.
           pen.color(pen.palette.shadow, sizes.shadow_alpha * opacity)
           G.circle(:fill, 0, radius * sizes.shadow_offset, radius, SEGMENTS)
-          pose.freshness >= 0.5 ? flat_fresh(radius, opacity) : flat_popped(radius, opacity)
+          pose.freshness >= 0.5 ? flat_fresh(radius, opacity, bonus:) : flat_popped(radius, opacity)
           flat_alarm(radius, pose.alarm * opacity) if pose.alarm.positive?
         end
       end
 
       # The bright rim is the whole disc, and the body is drawn inside it,
       # so the dot's edge is its hit circle.
-      def flat_fresh(radius, opacity, palette = pen.palette)
+      def flat_fresh(radius, opacity, palette = pen.palette, bonus: false)
+        rim, deep, body = (bonus ? palette.to_h.values_at(:bonus_rim, :bonus_deep, :bonus_body) : palette.to_h.values_at(:fresh_rim, :fresh_deep, :fresh_body))
         inner = radius - [radius * pen.look::DOT.rim, pen.pixels.line_width(2)].max
-        pen.color(palette.fresh_rim, opacity)
+        pen.color(rim, opacity)
         G.circle(:fill, 0, 0, radius, SEGMENTS)
-        pen.color(palette.fresh_deep, opacity)
+        pen.color(deep, opacity)
         G.circle(:fill, 0, 0, inner, SEGMENTS)
-        pen.color(palette.fresh_body, opacity)
+        pen.color(body, opacity)
         G.circle(:fill, -radius * 0.06, -radius * 0.08, inner * 0.88, SEGMENTS)
         pen.color(palette.gloss, 0.85 * opacity)
         G.ellipse(:fill, -radius * 0.36, -radius * 0.46, radius * 0.24, radius * 0.13, 32)
+        flat_star(radius, opacity, palette) if bonus
+      end
+
+      # The bonus dot's mark: a dark four-pointed star, as the shader's, as
+      # two crossed diamonds (a fill must be convex).
+      def flat_star(radius, opacity, palette)
+        pen.color(palette.bonus_mark, opacity)
+        tip = radius * 0.58
+        waist = radius * 0.13
+        G.polygon(:fill, -tip, 0, 0, -waist, tip, 0, 0, waist)
+        G.polygon(:fill, 0, -tip, waist, 0, 0, tip, -waist, 0)
       end
 
       def flat_popped(radius, opacity, palette = pen.palette)

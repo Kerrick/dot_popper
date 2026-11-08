@@ -40,4 +40,45 @@ class HudTest < Minitest::Test
     refute @hud.urgent?
     assert_in_delta 0.0, @hud.time_readout.urgency
   end
+
+  def test_it_shows_the_streak_toward_a_bonus_dot_as_dots_and_bumps_the_newest
+    readout = @hud.streak_readout
+
+    assert_equal [0, DotPopper::Rules::BONUS.streak, false], [readout.lit, readout.size, readout.ready]
+    @round.instance_variable_set(:@streak, 3)
+    hud = @hud.read(@round, 1.0)
+
+    assert_equal 3, hud.streak_readout.lit
+    assert hud.streak_readout.lit?(2)
+    refute hud.streak_readout.lit?(3)
+    assert hud.streak_readout.bumping?(2)
+    assert_operator hud.streak_readout.scale, :>, 1.2
+    assert_in_delta 1.0, hud.read(@round, 2.0).streak_readout.scale
+  end
+
+  def test_a_wrong_tap_empties_the_streak_without_a_bump
+    @round.instance_variable_set(:@streak, 5)
+    hud = @hud.read(@round, 1.0)
+    @round.instance_variable_set(:@streak, 0)
+    after = hud.read(@round, 5.0)
+
+    assert_equal 0, after.streak_readout.lit
+    assert_in_delta 1.0, after.streak_readout.scale
+  end
+
+  def test_with_a_bonus_dot_on_the_field_every_dot_of_the_streak_is_lit
+    round = round_with(dot(100, 100, bonus: true))
+    readout = @hud.read(round, 0.0).streak_readout
+
+    assert readout.ready
+    assert(Array.new(readout.size) { readout.lit?(it) }.all?)
+  end
+
+  def test_there_is_no_streak_without_a_bonus_rule_or_after_the_round
+    plain = DotPopper::Round.new(field, random: Random.new(1), bonus: nil)
+
+    assert_nil @hud.read(plain, 0.0).streak_readout
+    @round.update(60)
+    assert_nil @hud.read(@round, 60.0).streak_readout
+  end
 end

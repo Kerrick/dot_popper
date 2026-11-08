@@ -14,15 +14,21 @@ module DotPopper
     # Every dot spawned this round, oldest first, with how it was drawn.
     attr_reader spawns: Array[Spawn]
 
+    # Pops in a row toward the next bonus dot.
+    attr_reader streak: Integer
+
+    # The streak's reward, or nil when the round has none.
+    attr_reader bonus: Rules::Bonus?
+
     @random: Random
 
     @spawner: Spawner
 
     @next_id: Integer
 
-    def self.resume: (Field field, dots: Stack, score: Integer, seconds: number, ?random: Random, ?spawn_tries: Integer) -> Round
+    def self.resume: (Field field, dots: Stack, score: Integer, seconds: number, ?random: Random, ?spawn_tries: Integer, ?bonus: Rules::Bonus?) -> Round
 
-    def initialize: (Field field, ?random: Random, ?dots: Stack?, ?score: Integer, ?seconds: number, ?spawn_tries: Integer) -> void
+    def initialize: (Field field, ?random: Random, ?dots: Stack?, ?score: Integer, ?seconds: number, ?spawn_tries: Integer, ?bonus: Rules::Bonus?) -> void
 
     def over?: () -> bool
 
@@ -34,7 +40,11 @@ module DotPopper
 
     private
 
-    def spawn: (Stack above) -> Dot
+    def spawn: (Stack above, ?bonus: bool) -> Dot
+
+    def payoff: (Dot dot) -> [Integer, Float]
+
+    def count_toward_bonus: (Dot dot) -> bool
 
     def pop: (Dot dot, number x, number y) -> Events::Popped
 

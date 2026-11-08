@@ -11,13 +11,15 @@ module DotPopper
     # The goals, each a thing a single round can do. The targets were set
     # with the simulator's model player on the 24 × 16 R window (see
     # doc/decisions.md): reachable on a good round, not on every round.
+    # The bonus dot (Rules::BONUS) lengthens rounds and raises scores, and
+    # the three targets that count those were raised to match.
     LIST = [
       new(kind: :clean_run, target: 15),   # pops in a row without a wrong tap
       new(kind: :patient_pop, target: 3),  # seconds a fresh dot was on screen before its pop
       new(kind: :quick_start, target: 10), # pops in the round's first 10 seconds
-      new(kind: :long_round, target: 40),  # seconds the round lasts
-      new(kind: :comeback, target: 20),    # points, in a round with a wrong tap
-      new(kind: :score, target: 25),       # points
+      new(kind: :long_round, target: 50),  # seconds the round lasts
+      new(kind: :comeback, target: 30),    # points, in a round with a wrong tap
+      new(kind: :score, target: 30),       # points
       new(kind: :clean_round, target: 10)  # points, with no wrong tap at all
     ].freeze
 
