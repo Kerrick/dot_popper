@@ -1094,3 +1094,11 @@ In the tutorial, a tap on a bright dot no longer turns it into a popped dot, wit
 
 **To reverse:** In `Shell::TitlePainter#draw`, give the pill's `icon:` a lambda that draws `GhostPainter` tapping `dots.icon` again, as before this entry (in the project's history).
 
+
+## The game moves by the time between frames starting to draw
+
+`Shell::App#tick`, which `Lota.update` calls, moves the game on by the time between the last two frames starting to draw (`Presentation::FrameClock`), not by the `dt` Lota measured at the top of its loop. With no frame drawn since the last move, as in the background, it counts up to now. Every second is counted once, so the clock and the rules keep time with the wall. The GUI suite's director still steps `App#update` by its scenario's fixed step.
+
+**Why:** On the maintainer's OnePlus Nord (OpenGL ES, 60 Hz) every frame reached the screen 16.7 ms after the last (SurfaceFlinger's frame times), yet Lota's `dt` swung 7.5 ms, 25 ms, 7.5 ms, and so on: 52 to 67 of every 300 frames measured over 20 ms, and the longest in each 5 s 26 to 28 ms. So the dots moved unevenly on an even screen, which is the "not buttery smooth" he felt. Lota steps its timer before it clears the screen, and on Android the clear is where a frame waits for a free buffer, a wait that ends in step with the screen, but after the timer has been read. A frame starts to draw right after that wait, so the time between draws is even: stepping the timer after the clear instead gave 0 to 3 frames over 20 ms in 300, the longest 20 to 22 ms. Measuring between draws gets the same in the game's own code, through `Lota::Timer.time`, without replacing Lota's loop.
+
+**To reverse:** Make `Lota.update` in main.rb call `@app.update(dt)` again. Do that once Lota's own loop steps the timer after the clear, or paces frames by when they are shown.

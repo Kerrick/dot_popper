@@ -22,6 +22,7 @@ module DotPopper
         @elapsed = 0.0
         @uptime = 0.0
         @chatter = Presentation::Chatter.quiet(Look::CHATTER)
+        @clock = Presentation::FrameClock.start
         @splash = Presentation::Splash.start unless Presentation::Splash.skipped?(env)
       end
 
@@ -90,6 +91,13 @@ module DotPopper
         @game.subscribe { happened(it.class.name.split("::").last) } if @frames
       end
 
+      # Lota's frame, which Lota measured as +measured+ seconds: the game
+      # moves on by the time between frames starting to draw (FrameClock).
+      def tick(measured)
+        @clock, seconds = @clock.tick(::Lota::Timer.time, measured)
+        update(seconds)
+      end
+
       def update(seconds)
         measure(seconds)
         @uptime += seconds
@@ -119,7 +127,10 @@ module DotPopper
         development(seconds)
       end
 
-      def draw = @renderer.draw(@cursor, @splash)
+      def draw
+        @clock = @clock.drawing(::Lota::Timer.time)
+        @renderer.draw(@cursor, @splash)
+      end
 
       def mouse_pressed(x, y, button, istouch)
         return if chattered?(x, y, button, istouch)
@@ -565,8 +576,6 @@ module DotPopper
         ::Lota::Event.quit if @quit_after && @elapsed >= @quit_after
       end
 
-      # With DOT_POPPER_PERF=1, prints how smoothly the game ran every five
-      # seconds, from each frame's real time.
       # With DOT_POPPER_PERF=1, prints how smoothly the game ran every five
       # seconds, and every frame slow enough to notice with what was going
       # on, from each frame's real time.

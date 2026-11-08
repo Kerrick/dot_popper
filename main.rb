@@ -76,7 +76,7 @@ def Lota.load
   @app.load
 end
 
-def Lota.update(dt) = @app.update(dt)
+def Lota.update(dt) = @app.tick(dt)
 def Lota.draw = @app.draw
 def Lota.mousepressed(x, y, button, istouch) = @app.mouse_pressed(x, y, button, istouch)
 def Lota.mousemoved(x, y, _dx, _dy, istouch) = @app&.mouse_moved(x, y, istouch)

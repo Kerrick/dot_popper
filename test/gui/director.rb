@@ -78,7 +78,9 @@ module DotPopperGui
         Director.current.start(@app)
       end
 
-      def update(_dt) = Director.current.frame { super(it) }
+      # Each frame moves on by the scenario's own step, straight to the
+      # App, past its FrameClock, so a scenario plays alike on any machine.
+      def update(_dt) = Director.current.frame { @app.update(it) }
 
       def errorhandler(error) = Director.current.failed(error)
     end
