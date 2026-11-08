@@ -4,13 +4,13 @@ What each store needs, what Dot Popper already has, and what is still missing. S
 
 ## Decide first: the license
 
-Dot Popper is AGPL-3.0-or-later, and so is Lota, which ships inside every build. The App Store's and Mac App Store's terms add restrictions that the GPL family forbids, so an AGPL app on those stores is widely held to be a license conflict. Kerrick Long holds the copyright to both Dot Popper and Lota, so he can resolve it without anyone else. His commercial licensing is handled on his own site, not in this repository or Lota's. Lota will never offer a switch that claims a different license or changes its license statement: `lota fuse` will write a notices file of facts, with Lota's AGPL-3.0-or-later statement always present. If a store build's notices must read differently under his authority, that is a step in Dot Popper's own build, settled with his licensing, not something Lota provides.
+Dot Popper is all rights reserved from after v0.9.9 on; `LICENSE` says so, and its Credits screen too. Lota, which ships inside every build, stays AGPL-3.0-or-later, and the App Store's and Mac App Store's terms add restrictions that the GPL family forbids, so a build for those stores depends on the commercial license Kerrick Long, who holds the copyright to both, gives himself. That is handled on his own site, not in this repository or Lota's. Before a store build, confirm it, and that built apps no longer carry Fledge 0.6.0's AGPL notices (Lota 0.3.0 fixes that).
 
 The bundled third-party code also needs a check before any store build:
 
 - **OpenAL Soft is LGPL-2.1.** It ships on Android (as a shared `libopenal.so`, which a user can replace) and in the desktop builds, so their notices must include its source offer. iOS doesn't use it: there, Lota links Apple's own OpenAL framework, as LÖVE does, so the iOS build contains no LGPL code.
 - **FreeType** is used under the FreeType License (not the GPL), which needs a credit line in the app.
-- **The rest is permissive:** LÖVE (zlib), SDL (zlib), Ruby (Ruby or BSD-2), Box2D (MIT), Fredoka and Iosevka (SIL OFL 1.1). Dot Popper's own sounds and icon are setdef's, under CC-BY-SA-4.0, credited on its Credits screen.
+- **The rest is permissive:** LÖVE (zlib), SDL (zlib), Ruby (Ruby or BSD-2), Box2D (MIT), Fredoka and Iosevka (SIL OFL 1.1). Dot Popper's own sounds and icon are setdef's, all rights reserved.
 
 Every store build should carry a "Licenses" or "About" screen, or file, listing these.
 
@@ -32,7 +32,7 @@ CI takes each store's values from the repository's settings on GitHub, never fro
 | `ANDROID_UPLOAD_KEY_ALIAS` | Secret | The key's alias in that keystore. | Kept with the keystore. |
 | `ANDROID_UPLOAD_KEY_PASSWORD` | Secret | The keystore's and key's password. | Yes. |
 
-Set a variable with `gh variable set NAME --repo Kerrick/dot_popper`, and a secret with `gh secret set NAME --repo Kerrick/dot_popper`. Apple's signing will add certificates and an App Store Connect API key here, all as secrets, once that work is done. The Microsoft Store signs an MSIX itself, so it needs no key.
+Set a variable with `gh variable set NAME --repo setdef/dot_popper`, and a secret with `gh secret set NAME --repo setdef/dot_popper`. Apple's signing will add certificates and an App Store Connect API key here, all as secrets, once that work is done. The Microsoft Store signs an MSIX itself, so it needs no key.
 
 ## Google Play
 
@@ -44,9 +44,9 @@ Set a variable with `gh variable set NAME --repo Kerrick/dot_popper`, and a secr
     ```sh
     keytool -genkeypair -v -keystore dot-popper-upload.jks -alias upload \
       -keyalg RSA -keysize 2048 -validity 10000
-    gh secret set ANDROID_UPLOAD_KEYSTORE --repo Kerrick/dot_popper < <(base64 -i dot-popper-upload.jks)
-    gh secret set ANDROID_UPLOAD_KEY_ALIAS --repo Kerrick/dot_popper --body upload
-    gh secret set ANDROID_UPLOAD_KEY_PASSWORD --repo Kerrick/dot_popper
+    gh secret set ANDROID_UPLOAD_KEYSTORE --repo setdef/dot_popper < <(base64 -i dot-popper-upload.jks)
+    gh secret set ANDROID_UPLOAD_KEY_ALIAS --repo setdef/dot_popper --body upload
+    gh secret set ANDROID_UPLOAD_KEY_PASSWORD --repo setdef/dot_popper
     ```
 
     Use one password for the keystore and the key.

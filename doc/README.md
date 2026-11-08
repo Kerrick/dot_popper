@@ -1,10 +1,10 @@
 <!--
   SPDX-FileCopyrightText: 2026 setdef
-  SPDX-License-Identifier: CC-BY-SA-4.0
+  SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
 -->
 # Dot Popper: developer guide
 
-[![Package](https://github.com/Kerrick/dot_popper/actions/workflows/package.yml/badge.svg?branch=trunk)](https://github.com/Kerrick/dot_popper/actions/workflows/package.yml) [![GUI](https://github.com/Kerrick/dot_popper/actions/workflows/gui.yml/badge.svg?branch=trunk)](https://github.com/Kerrick/dot_popper/actions/workflows/gui.yml) [![License](https://img.shields.io/badge/license-AGPL--3.0--or--later-ffbf52)](../LICENSE) [![Ruby](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2FKerrick%2Fdot_popper%2Ftrunk%2F.ruby-version&search=(.*)&replace=%241&label=Ruby&logo=ruby&color=ffbf52)](#requirements)
+[![Package](https://github.com/setdef/dot_popper/actions/workflows/package.yml/badge.svg?branch=trunk)](https://github.com/setdef/dot_popper/actions/workflows/package.yml) [![GUI](https://github.com/setdef/dot_popper/actions/workflows/gui.yml/badge.svg?branch=trunk)](https://github.com/setdef/dot_popper/actions/workflows/gui.yml) [![Ruby](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2FKerrick%2Fdot_popper%2Ftrunk%2F.ruby-version&search=(.*)&replace=%241&label=Ruby&logo=ruby&color=ffbf52)](#requirements)
 
 Dot Popper is a 2D arcade game written in Ruby. It runs on [Lota](https://github.com/setdef/Lota), which runs the engine that [LÖVE](https://love2d.org) games run on, with Ruby in place of Lua. [Fledge](https://github.com/setdef/Fledge) packages it into apps for Mac, Windows, and Linux that players run without Ruby. For what the game is and how to install it, see the [README](../README.md).
 
@@ -55,7 +55,7 @@ If you know LÖVE, [Why Ruby](why_ruby.md) sets Dot Popper's code beside the Lua
 Clone the repository, install Ruby and the gems, and run the game:
 
 ```console
-$ git clone https://github.com/Kerrick/dot_popper.git
+$ git clone https://github.com/setdef/dot_popper.git
 $ cd dot_popper
 $ mise install
 $ bundle install
@@ -136,7 +136,7 @@ The iPhone, iPad, and Android builds are experimental, and are not released to p
 
 ### Releases
 
-`version` in `fledge.yml` sets the app's version. A `v*` tag makes CI build every app and playtest kit and attach them to the tag's [GitHub release](https://github.com/Kerrick/dot_popper/releases).
+`version` in `fledge.yml` sets the app's version. A `v*` tag makes CI build every app and playtest kit and attach them to the tag's [GitHub release](https://github.com/setdef/dot_popper/releases).
 
 ## Documentation
 
@@ -154,13 +154,13 @@ The iPhone, iPad, and Android builds are experimental, and are not released to p
 
 ## Reporting problems
 
-Open an [issue on GitHub](https://github.com/Kerrick/dot_popper/issues). For a problem with a build, say which platform you built on, which you ran on, and what `bundle exec lota run` printed.
+Open an [issue on GitHub](https://github.com/setdef/dot_popper/issues). For a problem with a build, say which platform you built on, which you ran on, and what `bundle exec lota run` printed.
 
 ## Copyright and license
 
-Dot Popper is copyright 2026, setdef. The code is [AGPL-3.0-or-later](../LICENSES/AGPL-3.0-or-later.txt). The documentation, sounds, and icon are [CC-BY-SA-4.0](../LICENSES/CC-BY-SA-4.0.txt). The fonts in `assets/fonts` are under the SIL Open Font License, and each keeps its license beside it.
+Dot Popper is copyright 2026, setdef, all rights reserved: its code, documentation, sounds, and icon alike. See [LICENSE](../LICENSE). The fonts in `assets/fonts` are under the SIL Open Font License, and each keeps its license beside it. Noto Emoji's pointing hand is under the [Apache License 2.0](../LICENSES/Apache-2.0.txt).
 
-If you give others a changed Dot Popper, or code copied from it, you must release your changes under the AGPL. That holds for an app you hand out and for a game people play over a network. Every packaged app carries the notices for Lota, LÖVE, Ruby, and the libraries they bring.
+Versions up to and including v0.9.9 were published under the AGPL-3.0-or-later, with their documentation, sounds, and icon under CC-BY-SA-4.0, and remain available on those terms at their tags. Every packaged app carries the notices for Lota, LÖVE, Ruby, and the libraries they bring.
 
 ## How Dot Popper is made
 

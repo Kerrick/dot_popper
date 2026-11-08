@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
 //
 // A glow along the screen's edges only, in the vertex color, fading to
 // nothing within +band+ units of the edge, so it never covers the dots

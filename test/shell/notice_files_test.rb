@@ -24,7 +24,6 @@ class NoticeFilesTest < Minitest::Test
   def test_the_games_own_texts_are_read_from_its_folder
     notices = DotPopper::Shell::NoticeFiles.new(game: File.join(APP, "game")).notices
 
-    assert_equal "Fixture AGPL\n", notices.agpl
     assert_equal "Copyright 2016 Fixture Authors\n", notices.ofl
     assert_equal "Copyright 2013 Fixture Emoji Authors\n", notices.emoji
   end

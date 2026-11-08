@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
 //
 // One dot, drawn from its geometry at the screen's own resolution, so it
 // is crisp at any size. The game draws a square around each dot with

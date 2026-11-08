@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   SPDX-FileCopyrightText: 2026 setdef <kerrick@setdef.com>
-  SPDX-License-Identifier: AGPL-3.0-or-later
+  SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
 
   Dot Popper's privacy manifest, which the App Store asks of every app
   (doc/ios.md). It is in the host's Host folder, which project.yml takes

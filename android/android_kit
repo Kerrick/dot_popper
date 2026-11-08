@@ -2,7 +2,7 @@
 # frozen_string_literal: true
 
 # SPDX-FileCopyrightText: 2026 setdef <kerrick@setdef.com>
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
 
 # The Android kit's program (experimental; PACKAGING.md, "The Android
 # kit"), from Lota's spike (setdef/Lota spike/android/android_kit at

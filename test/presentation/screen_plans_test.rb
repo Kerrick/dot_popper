@@ -329,7 +329,7 @@ class ScreenPlansTest < Minitest::Test
 
   def credits_show(screen_layout)
     long = ["License text with a longer word, #{"x" * 90}, and a ruled line", "-" * 70, "", "  1. an indented item"]
-    notices = Notices.new(agpl: Array.new(40) { long.join("\n") }.join("\n\n"), ofl: "Fredoka text", lota: "Lota text",
+    notices = Notices.new(iosevka: Array.new(40) { long.join("\n") }.join("\n\n"), ofl: "Fredoka text", lota: "Lota text",
                           fledge: ["Fledge text"])
     game = DotPopper::Game.new(field(screen_layout.width, screen_layout.height), random: Random.new(2))
     show = Show.new(game:, layout: screen_layout, sounds: FakeSounds.new, radius: R, notices:, measure: RoughMeasure.new)

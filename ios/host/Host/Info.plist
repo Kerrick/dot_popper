@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   SPDX-FileCopyrightText: 2026 setdef <kerrick@setdef.com>
-  SPDX-License-Identifier: AGPL-3.0-or-later
+  SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
 
   Dot Popper's copy of Lota 0.2.2's iOS Info.plist (ext/lota/phone/host/ios
   in the gem), which kits.yml lays over Lota's host in the phone project.

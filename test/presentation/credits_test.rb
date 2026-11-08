@@ -10,28 +10,27 @@ class CreditsTest < Minitest::Test
   WORDS = Look::WORDS
 
   def test_the_book_is_in_order_and_skips_what_the_build_lacks
-    full = Notices.new(agpl: "AGPL", ofl: "OFL", iosevka: "IOS", emoji: "NOTO", lota: "LOTA", fledge: %w[ONE TWO])
+    full = Notices.new(ofl: "OFL", iosevka: "IOS", emoji: "NOTO", lota: "LOTA", fledge: %w[ONE TWO])
     texts = CreditsBook.compose(WORDS, full).blocks.reject { it.kind == :note }.map(&:text)
 
-    assert_equal ["Made by setdef", "Dot Popper © 2026 setdef", "AGPL", "Open-source licenses", "Fredoka", "OFL",
+    assert_equal ["Made by setdef", "Dot Popper © 2026 setdef", "Open-source licenses", "Fredoka", "OFL",
                   "Iosevka", "IOS", "Noto Emoji", "NOTO", "Lota", "LOTA", "Fledge", "ONE", "TWO"], texts
 
     bare = CreditsBook.compose(WORDS, Notices.none).blocks
     assert_equal ["Dot Popper © 2026 setdef", "Fredoka", "Iosevka", "Noto Emoji"], bare.select { it.kind == :subheading }.map(&:text),
                  "a heading with nothing under it goes"
-    assert_includes bare.map(&:text).join(" "), "CC-BY-SA-4.0", "the sounds and icon are said to be CC-BY-SA"
+    assert_includes bare.map(&:text).join(" "), "All rights reserved.", "the game keeps its rights"
   end
 
-  # The maintainer may yet keep Dot Popper proprietary: then its notice is
-  # its copyright with all rights reserved, and nothing of its own
-  # licenses, while every open-source notice the build carries stays.
-  def test_a_proprietary_build_reserves_all_rights_and_keeps_the_open_source_notices
-    full = Notices.new(agpl: "AGPL TEXT", ofl: "OFL TEXT", iosevka: "IOSEVKA TEXT", emoji: "NOTO TEXT", lota: "LOTA TEXT",
+  # Dot Popper is proprietary: its notice is its copyright with all rights
+  # reserved, while every open-source notice the build carries stays.
+  def test_the_book_reserves_all_rights_and_keeps_the_open_source_notices
+    full = Notices.new(ofl: "OFL TEXT", iosevka: "IOSEVKA TEXT", emoji: "NOTO TEXT", lota: "LOTA TEXT",
                        fledge: ["RUBY"])
-    texts = CreditsBook.compose(WORDS, full, licensing: :proprietary).blocks.map(&:text).join(" ")
+    texts = CreditsBook.compose(WORDS, full).blocks.map(&:text).join(" ")
 
     assert_includes texts, "Dot Popper © 2026 setdef All rights reserved."
-    %w[AGPL\ TEXT CC-BY-SA-4.0 Affero].each { refute_includes texts, it.delete("\\") }
+    %w[AGPL CC-BY-SA-4.0 Affero].each { refute_includes texts, it.delete("\\") }
     %w[OFL\ TEXT IOSEVKA\ TEXT NOTO\ TEXT LOTA\ TEXT RUBY].each { assert_includes texts, it.delete("\\") }
   end
 
@@ -185,7 +184,7 @@ class CreditsTest < Minitest::Test
 
   def a_show
     @sounds = FakeSounds.new
-    notices = Notices.new(agpl: Array.new(30) { "Some license words, #{it} " * 20 }.join("\n\n"), ofl: "Font text")
+    notices = Notices.new(iosevka: Array.new(30) { "Some license words, #{it} " * 20 }.join("\n\n"), ofl: "Font text")
     game = DotPopper::Game.new(field, random: Random.new(2))
     show = Show.new(game:, layout: layout, sounds: @sounds, radius: R, notices:, measure: RoughMeasure.new)
     show.primary

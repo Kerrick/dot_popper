@@ -1,5 +1,0 @@
-module DotPopper
-  # How Dot Popper itself is licensed, as its Credits say: :open or
-  # :proprietary.
-  LICENSING: :open | :proprietary
-end

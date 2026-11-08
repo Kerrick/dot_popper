@@ -1212,3 +1212,9 @@ A dot that turns golden at random involves no decision, and adds luck to scores 
 ### Holiday themes stay once earned
 
 A theme appears during its holiday, unlocks for good after one round, and returns the next year for anyone who missed it. Letting someone play Halloween all year is autonomy (*Glued to Games*), and an offer that vanishes is pressure the game does not need. Every theme must keep the bright dot unmistakable from the popped ones (Hodent).
+
+## Dot Popper is all rights reserved after v0.9.9
+
+The maintainer's decision, before any paid feature is built: Dot Popper's own code, documentation, sounds and icon are all rights reserved from after the v0.9.9 tag. `LICENSE` and the Credits screen say so, and the switch between open and proprietary (`DotPopper::LICENSING`) is gone. Third-party notices stay on the Credits screen. Versions through v0.9.9 stay available under the AGPL and CC-BY-SA at their tags.
+
+**To reverse:** restore the license files and `LICENSING` from the v0.9.9 tag. setdef holds the copyright, so it can license later versions however it likes.

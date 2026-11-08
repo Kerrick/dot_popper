@@ -3,15 +3,14 @@
 module DotPopper
   module Presentation
     # The license texts the running build carries, as the shell found them
-    # (Shell::NoticeFiles): the game's own license (+agpl+) and the font's
-    # (+ofl+), Iosevka's (+iosevka+), Noto Emoji's, for the tutorial's
+    # (Shell::NoticeFiles): the font's license (+ofl+), Iosevka's (+iosevka+), Noto Emoji's, for the tutorial's
     # pointing hand (+emoji+), Lota's notices (+lota+), and each of
     # Fledge's (+fledge+). What a build lacks is nil, or empty, and the
     # Credits screen skips it.
-    class Notices < Data.define(:agpl, :ofl, :iosevka, :emoji, :lota, :fledge)
+    class Notices < Data.define(:ofl, :iosevka, :emoji, :lota, :fledge)
       def self.none = new
 
-      def initialize(agpl: nil, ofl: nil, iosevka: nil, emoji: nil, lota: nil, fledge: []) = super
+      def initialize(ofl: nil, iosevka: nil, emoji: nil, lota: nil, fledge: []) = super
     end
 
     # How the Credits screen reads: the type's size, a line's height in
@@ -26,18 +25,16 @@ module DotPopper
     class CreditsBlock < Data.define(:kind, :text); end
 
     # What the Credits screen says, in order: who made Dot Popper (and,
-    # when the words have it, whom to thank); its own copyright and license
-    # notice, with the license's text and the sounds' and icon's; and under
+    # when the words have it, whom to thank); its copyright, with all
+    # rights reserved; and under
     # "Open-source licenses", Fredoka's, Iosevka's, Noto Emoji's, then
     # Lota's notices, then Fledge's.
-    # Each license is shown if the build has it. Under +licensing+
-    # :proprietary (DotPopper::LICENSING), Dot Popper's own notice is its
-    # copyright with all rights reserved, without its licenses.
+    # Each license is shown if the build has it.
     class CreditsBook < Data.define(:blocks)
-      def self.compose(words, notices, licensing: LICENSING)
+      def self.compose(words, notices)
         say = words.notice
         blocks = [CreditsBlock.new(:heading, say.fetch(:made_by)), CreditsBlock.new(:note, say[:thanks]),
-                  *own(say, notices, licensing),
+                  CreditsBlock.new(:subheading, say.fetch(:copyright)), CreditsBlock.new(:note, say.fetch(:reserved)),
                   CreditsBlock.new(:heading, say.fetch(:open_source)),
                   CreditsBlock.new(:subheading, say.fetch(:font_name)), CreditsBlock.new(:note, say.fetch(:font)),
                   CreditsBlock.new(:legal, notices.ofl),
@@ -49,17 +46,6 @@ module DotPopper
                   CreditsBlock.new(:subheading, say.fetch(:fledge)),
                   *notices.fledge.map { CreditsBlock.new(:legal, it) }]
         new(blocks: bare(blocks.reject { it.text.to_s.strip.empty? }))
-      end
-
-      # Dot Popper's own notice: its copyright, and either its licenses or
-      # that all rights are reserved.
-      def self.own(say, notices, licensing)
-        if licensing == :proprietary
-          return [CreditsBlock.new(:subheading, say.fetch(:copyright)), CreditsBlock.new(:note, say.fetch(:reserved))]
-        end
-
-        [CreditsBlock.new(:subheading, say.fetch(:copyright)), CreditsBlock.new(:note, say.fetch(:license)),
-         CreditsBlock.new(:legal, notices.agpl), CreditsBlock.new(:note, say.fetch(:assets))]
       end
 
       # +blocks+ with no heading left over nothing.

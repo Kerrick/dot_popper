@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
 //
 // One direction of a separable Gaussian blur, for the fresh dots' and
 // droplets' glow: five reads, the centre and two on each side between

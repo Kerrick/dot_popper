@@ -16,14 +16,14 @@ For playtesting, each device also has a **playtest kit**, which holds the app an
 
 ### From a release
 
-Releases are on the [Releases page](https://github.com/Kerrick/dot_popper/releases), each with its apps and, from v0.8.2-rc.1 on, its playtest kits. GitHub marks them as prereleases, and it replaces the space in each file's name with a dot, so the Windows installer appears there as `Dot.Popper-x64-mingw-ucrt-setup.exe`.
+Releases are on the [Releases page](https://github.com/setdef/dot_popper/releases), each with its apps and, from v0.8.2-rc.1 on, its playtest kits. GitHub marks them as prereleases, and it replaces the space in each file's name with a dot, so the Windows installer appears there as `Dot.Popper-x64-mingw-ucrt-setup.exe`.
 
 ### From any push to `trunk`
 
 The [Package workflow](.github/workflows/package.yml) builds all three platforms on every push to `trunk`, so a build of the latest code is usually available:
 
 1. Sign in to GitHub. Downloads from workflow runs require it.
-2. Open the [Package workflow's runs](https://github.com/Kerrick/dot_popper/actions/workflows/package.yml) and choose a run with a green check mark.
+2. Open the [Package workflow's runs](https://github.com/setdef/dot_popper/actions/workflows/package.yml) and choose a run with a green check mark.
 3. At the bottom of the run's page, under Artifacts, download `dot-popper-windows-x64`, `dot-popper-macos-arm64`, or `dot-popper-linux-x86_64`. Each one is a `.zip` holding that platform's two files.
 
 GitHub deletes artifacts after its retention period, which is 90 days by default.
@@ -89,7 +89,7 @@ Lota isn't on RubyGems.org, so its gems come from `vendor/cache`, and `Gemfile.l
 
 ### The icon
 
-`script/make_icon.rb` draws the icon in code. It is licensed under CC-BY-SA-4.0 (see `LICENSES/ICONS.md`).
+`script/make_icon.rb` draws the icon in code. It is all rights reserved (see `LICENSES/ICONS.md`).
 
 ### What goes into the app
 
@@ -204,7 +204,7 @@ These have been verified on CI's runners:
 - `lota fuse` builds the Windows, macOS, and Linux apps from Lota 0.2.2's release gems, and each app plays itself with no Ruby on its `PATH` (Windows and Linux with Mesa's software OpenGL).
 - The Windows kit's `playtest.ps1`, run from a downloaded, unzipped kit in Windows PowerShell 5.1 with answers on standard input, asks every check, restarts the game for check 2, captures the game's frame-rate output, collects `%APPDATA%\dot_popper`, and writes one complete `dot-popper-results.txt`. The Linux kit's `playtest.sh` does the same under Xvfb.
 - The iPad kit is built from Lota's v0.2.2 tag, with Lota's iOS host, and Fledge v0.8.0, builds on a fresh Mac for the Simulator and, unsigned, for devices, and plays itself to the end in an iPad Simulator.
-- The Android kit's APK, built from Lota's v0.2.2 tag by its phone guide, installs on an `x86_64` emulator of API 33 (a 320 × 640 dp screen, drawn by LÖVE's OpenGL ES renderer on SwiftShader; Android allows only OpenGL ES until Lota fixes Vulkan's crash on backgrounding, see doc/decisions.md), plays itself for 45 seconds and exits with status 0, prints a radius of 50 dp, ignores Back during a round and at Game Over, and leaves the app on Back from the title ([run 42266401142](https://github.com/Kerrick/dot_popper/actions/runs/42266401142)).
+- The Android kit's APK, built from Lota's v0.2.2 tag by its phone guide, installs on an `x86_64` emulator of API 33 (a 320 × 640 dp screen, drawn by LÖVE's OpenGL ES renderer on SwiftShader; Android allows only OpenGL ES until Lota fixes Vulkan's crash on backgrounding, see doc/decisions.md), plays itself for 45 seconds and exits with status 0, prints a radius of 50 dp, ignores Back during a round and at Game Over, and leaves the app on Back from the title ([run 42266401142](https://github.com/setdef/dot_popper/actions/runs/42266401142)).
 
 These have not been verified:
 

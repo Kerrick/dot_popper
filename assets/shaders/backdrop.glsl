@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
 //
 // The night the dots play on: deep ink-indigo, lighter in a soft pool
 // toward the middle and darker at the edges, dithered so the gradient

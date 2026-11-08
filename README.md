@@ -1,10 +1,10 @@
 <!--
   SPDX-FileCopyrightText: 2026 setdef
-  SPDX-License-Identifier: CC-BY-SA-4.0
+  SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
 -->
 # Dot Popper
 
-[![Version](https://img.shields.io/github/v/release/Kerrick/dot_popper?include_prereleases&label=version&color=ffbf52)](https://github.com/Kerrick/dot_popper/releases) [![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux-ffbf52)](#install)
+[![Version](https://img.shields.io/github/v/release/setdef/dot_popper?include_prereleases&label=version&color=ffbf52)](https://github.com/setdef/dot_popper/releases) [![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux-ffbf52)](#install)
 
 **Pop the bright dot. Every dot you pop stays on the screen.**
 
@@ -16,7 +16,7 @@ A round starts with 10 seconds on the clock. Each pop gives you a point and a se
 
 *The bright dot, sliding out from under a popped one.*
 
-Dot Popper is free and open source. [Download it](#install) from the releases page.
+[Download Dot Popper](#install) from the releases page.
 
 ## What's in the game
 
@@ -47,7 +47,7 @@ On a screen where the size makes a visible difference, such as a large monitor i
 
 ## Install
 
-Download the file for your computer from the [releases page](https://github.com/Kerrick/dot_popper/releases), and open it:
+Download the file for your computer from the [releases page](https://github.com/setdef/dot_popper/releases), and open it:
 
 | Your computer | Download | Then |
 | --- | --- | --- |
@@ -98,10 +98,12 @@ On a Mac, Windows or Linux, Full screen and Quit sit between How to play and the
 
 ## Reporting problems
 
-Open an [issue on GitHub](https://github.com/Kerrick/dot_popper/issues). Say which computer and system you play on, and the name of the file you downloaded.
+Open an [issue on GitHub](https://github.com/setdef/dot_popper/issues). Say which computer and system you play on, and the name of the file you downloaded.
 
 ## Credits and license
 
-Dot Popper is made by setdef. The game is free software under the [GNU Affero General Public License, version 3 or later](LICENSE): you may play it, share it, and change it. Its sounds and icon are under [CC-BY-SA-4.0](LICENSES/CC-BY-SA-4.0.txt). Its lettering is set in Fredoka and Iosevka, under the SIL Open Font License, and its tutorial's pointing hand is Noto Emoji's, under the [Apache License 2.0](LICENSES/Apache-2.0.txt). To see every license that comes with the game, open the Credits screen from the Records screen.
+Dot Popper is made by setdef, © 2026 setdef, all rights reserved. Its lettering is set in Fredoka and Iosevka, under the SIL Open Font License, and its tutorial's pointing hand is Noto Emoji's, under the [Apache License 2.0](LICENSES/Apache-2.0.txt). To see every open-source license that comes with the game, open the Credits screen from the Records screen.
+
+Versions up to and including v0.9.9 were published under the AGPL-3.0-or-later, and remain available on those terms at their tags. See [LICENSE](LICENSE).
 
 To build Dot Popper yourself, change it, or read how it works, see the [developer guide](doc/README.md).
