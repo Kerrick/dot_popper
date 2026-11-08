@@ -14,7 +14,7 @@
 // delegate.
 //
 // Dot Popper's copy (doc/ios.md) is Lota 0.2.2's (ext/lota/phone/host/ios
-// in the gem), which kits.yml lays it over in the phone project, with three
+// in the gem), which kits.yml lays it over in the phone project, with four
 // additions. The colour behind SDL's view, on its window and the window's
 // root view, as each window becomes key: the night's ink (#0c0b22), so
 // nothing pink or white can show behind the game, or, with
@@ -25,7 +25,10 @@
 // app's UIApplication (Info.plist's NSPrincipalClass), shows the sheet
 // in its place rather than send the URL anywhere. And the orientation
 // that SDL reads from UIApplication, which DotPopperApplication answers
-// from the scene (see its statusBarOrientation).
+// from the scene (see its statusBarOrientation). And the store, for
+// buying the paid version: the game opens a dotpopper-store: URL
+// (Storefront), and DotPopperApplication hands it to DotPopperStore, in
+// Store.swift beside this file, since StoreKit 2 is Swift's alone.
 // Lota's host already sets the audio session to Ambient (Info.plist's
 // LotaAudioSessionCategory) and SDL_ACCELEROMETER_AS_JOYSTICK=0.
 @import FledgeRuby;
@@ -146,6 +149,14 @@ static void present_share_sheet(NSString *text) {
   os_log(app_log, "showed the share sheet");
 }
 
+// The store's half, in Store.swift: takes a dotpopper-store: URL on the
+// main thread and answers whether it was one.
+@interface DotPopperStore : NSObject
++ (BOOL)handleURL:(NSURL *)url;
+@end
+
+static NSString *const StoreScheme = @"dotpopper-store";
+
 // The app's UIApplication. SDL_OpenURL asks it canOpenURL: and then
 // openURL:options:completionHandler: (SDL's src/misc/ios/SDL_sysurl.m at
 // release-3.4.10), so a share URL is caught here, on the main thread the
@@ -172,6 +183,8 @@ static void present_share_sheet(NSString *text) {
 }
 
 - (BOOL)canOpenURL:(NSURL *)url {
+  if ([url.scheme caseInsensitiveCompare:StoreScheme] == NSOrderedSame)
+    return YES;
   if (shared_text(url) != nil)
     return top_controller() != nil;
   return [super canOpenURL:url];
@@ -180,6 +193,12 @@ static void present_share_sheet(NSString *text) {
 - (void)openURL:(NSURL *)url
               options:(NSDictionary<UIApplicationOpenExternalURLOptionsKey, id> *)options
     completionHandler:(void (^)(BOOL success))completion {
+  if ([url.scheme caseInsensitiveCompare:StoreScheme] == NSOrderedSame) {
+    BOOL handled = [DotPopperStore handleURL:url];
+    if (completion != nil)
+      completion(handled);
+    return;
+  }
   NSString *text = shared_text(url);
   if (text == nil) {
     [super openURL:url options:options completionHandler:completion];

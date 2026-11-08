@@ -1,0 +1,43 @@
+# Checks ios/host/Host/Store.swift against a StoreKit configuration file in
+# the iOS Simulator (doc/decisions.md): xcodegen, then xcodebuild test. It
+# builds no game: a bare app holds the real Store.swift and an Objective-C
+# file that calls it as main.m does, and the test target buys, restores and
+# fails through StoreKit's test session. Settings match the host project
+# that fledge build ios writes, Swift's language version included.
+name: StoreCheck
+options:
+  deploymentTarget:
+    iOS: "15.0"
+targets:
+  StoreCheck:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+      - path: ../host/Host/Store.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.setdef.DotPopper.storecheck
+        INFOPLIST_FILE: App/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CLANG_ENABLE_MODULES: YES
+        CLANG_ENABLE_OBJC_ARC: YES
+    scheme:
+      storeKitConfiguration: Tests/DotPopper.storekit
+      testTargets:
+        - StoreCheckTests
+  StoreCheckTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: Tests
+    dependencies:
+      - target: StoreCheck
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.setdef.DotPopper.storecheck.tests
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/StoreCheck.app/StoreCheck
+        BUNDLE_LOADER: $(TEST_HOST)

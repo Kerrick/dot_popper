@@ -50,7 +50,7 @@ import org.setdef.fledge.FledgeRuby;
  * release, and rake android:deps builds 3.4.10's (tasks/android_build.rb).
  *
  * Dot Popper's copy (PACKAGING.md, "The Android kit") is Lota 0.2.2's
- * (ext/lota/phone/host/android in the gem) with four changes. In a
+ * (ext/lota/phone/host/android in the gem) with five changes. In a
  * debuggable build only, each string extra of the launching intent named
  * lota.env.NAME sets the environment variable NAME before Ruby starts, so
  * the emulator checks can pass the game its settings with am start --es.
@@ -58,7 +58,10 @@ import org.setdef.fledge.FledgeRuby;
  * dotpopper-share: URL (SheetSharing), and startActivity, below, starts
  * the sheet in its place. The window asks for the screen's fastest
  * refresh rate (preferFastestRefresh). And vibrate buzzes from a thread
- * of its own, so the game's thread never waits for the vibrator.
+ * of its own, so the game's thread never waits for the vibrator. And
+ * Buying the paid version: the game opens a dotpopper-store: URL
+ * (Storefront), and startActivity hands it to PaidStore, beside this file,
+ * which asks Play Billing.
  */
 public class MainActivity extends SDLActivity {
     private static final String ENV_PREFIX = "lota.env.";
@@ -67,6 +70,9 @@ public class MainActivity extends SDLActivity {
     // and the query parameter that holds the text.
     private static final String SHARE_SCHEME = "dotpopper-share";
     private static final String SHARE_TEXT = "text";
+
+    // The scheme the game opens to reach the store (Storefront::SCHEME).
+    private static final String STORE_SCHEME = "dotpopper-store";
 
     // The meta-data in AndroidManifest.xml that asks SDL to send Back to
     // the game as a key and do nothing else (SDL's SDL_HINT_ANDROID_TRAP_BACK_BUTTON).
@@ -79,6 +85,7 @@ public class MainActivity extends SDLActivity {
     // game a frame at 120 Hz. One thread keeps the buzzes in order.
     private final ExecutorService buzzer = Executors.newSingleThreadExecutor();
     private boolean shortEdgesMode;
+    private PaidStore store;
 
     @Override
     protected String[] getLibraries() {
@@ -179,11 +186,22 @@ public class MainActivity extends SDLActivity {
      * sheet, a chooser over ACTION_SEND with the text as plain text,
      * starts in its place. A URL with no text throws, as an unknown URL
      * would, and SDL answers false, so the game falls back on its own
-     * preview.
+     * preview. A store URL is caught the same way and goes to PaidStore; one
+     * that is malformed throws as well, so the game says the store isn't
+     * answering.
      */
     @Override
     public void startActivity(Intent intent) {
         Uri uri = intent.getData();
+        if (Intent.ACTION_VIEW.equals(intent.getAction()) && uri != null && STORE_SCHEME.equalsIgnoreCase(uri.getScheme())) {
+            if (store == null) {
+                store = new PaidStore(this);
+            }
+            if (!store.handle(uri)) {
+                throw new IllegalArgumentException("a store URL with parts missing");
+            }
+            return;
+        }
         if (!Intent.ACTION_VIEW.equals(intent.getAction()) || uri == null || !SHARE_SCHEME.equalsIgnoreCase(uri.getScheme())) {
             super.startActivity(intent);
             return;

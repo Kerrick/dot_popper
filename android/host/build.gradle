@@ -1,0 +1,87 @@
+// SPDX-FileCopyrightText: 2026 setdef <kerrick@setdef.com>
+// SPDX-License-Identifier: MIT
+//
+// Dot Popper's copy of Fledge v0.8.0's template (lib/fledge/templates/android),
+// which android.yml lays over it, with one change: Play Billing, for
+// buying the paid version (PaidStore).
+//
+// Written by fledge build (ADR 012): the app, with its identity from
+// fledge.yml, targeting API 36, as Google Play requires of new apps and
+// updates since 2026-08-31, and running on API 26 and later, as Fledge's
+// Android runtime does (ADR 011). Its Ruby, its program, and its gems
+// are the folder fledge/, which the task fledgeAsset stores, uncompressed,
+// as the asset fledge.zip, which org.setdef.fledge.FledgeRuby, in
+// libs/FledgeRuby.aar, unpacks on the app's first launch. Native
+// libraries are stored uncompressed and aligned for 16 KB pages. No
+// signing is configured: assembleDebug and bundleDebug sign with the
+// Android SDK's debug key, assembleRelease and bundleRelease leave the
+// app unsigned, and you sign a release with your own key, in a
+// signingConfigs block, or with apksigner for an APK and jarsigner for
+// the app bundle (.aab) Google Play takes.
+plugins {
+    id 'com.android.application'
+}
+
+// Stores the folder fledge/ as fledge.zip, uncompressed, with Gradle's
+// own Ant, in a folder the Android Gradle plugin takes as generated
+// assets, so the asset is made again whenever the folder changes.
+abstract class FledgeAsset extends DefaultTask {
+    @InputDirectory
+    abstract DirectoryProperty getRoot()
+
+    @OutputDirectory
+    abstract DirectoryProperty getOutputDirectory()
+
+    @TaskAction
+    void pack() {
+        File zip = outputDirectory.file('fledge.zip').get().asFile
+        zip.delete()
+        ant.zip(destfile: zip, basedir: root.get().asFile, compress: false, defaultexcludes: 'no')
+    }
+}
+
+def fledgeAsset = tasks.register('fledgeAsset', FledgeAsset) {
+    root = layout.projectDirectory.dir('fledge')
+}
+
+android {
+    namespace = 'org.setdef.fledge.host'
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId = '@@APPLICATION_ID@@'
+        minSdk = 26
+        targetSdk = 36
+        versionCode = @@VERSION_CODE@@
+        versionName = '@@VERSION_NAME@@'
+    }
+
+    // fledge.zip stays stored, uncompressed, in the APK and in every APK
+    // Google Play makes from the app bundle, whose BundleConfig.pb
+    // carries this list.
+    androidResources {
+        noCompress += ['zip']
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.sources.assets.addGeneratedSourceDirectory(fledgeAsset) { it.outputDirectory }
+    }
+}
+
+dependencies {
+    implementation files('libs/FledgeRuby.aar')
+    implementation 'com.android.billingclient:billing:9.1.0'
+}

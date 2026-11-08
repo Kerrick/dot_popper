@@ -1,0 +1,35 @@
+{
+  "identifier" : "A1B2C3D4",
+  "nonRenewingSubscriptions" : [ ],
+  "products" : [
+    {
+      "displayPrice" : "1.99",
+      "familyShareable" : false,
+      "internalID" : "6471234567",
+      "localizations" : [
+        {
+          "description" : "Achievements, themes, and creating friend groups.",
+          "displayName" : "The paid version",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.setdef.DotPopper.paid",
+      "referenceName" : "Paid version",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6471234560",
+    "_developerTeamID" : "AAAAAAAAAA",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 0,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [ ]
+  },
+  "subscriptionGroups" : [ ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}
