@@ -23,7 +23,7 @@ Dot Popper is free and open source. [Download it](#install) from the releases pa
 - **A goal for each day.** Dot Popper sets one goal each day for a single round, the same for every player that day, such as "score 10 points in a round without a single mistake" or "pop a bright dot that has been on screen for at least 3 seconds." Meet it on days in a row, and the game counts your streak on the title screen.
 - **Records.** On the Records screen, the game keeps your best score, your longest round, your most pops in a row without a mistake, your fastest pop, and a chart of your last 20 rounds, with totals for every round you have played.
 - **A pile to play with.** When time runs out, the dots tumble into a heap at the bottom of the screen. Grab one and throw it while you read your score.
-- **A result to share.** Click Copy my result, and the game puts your round on the clipboard, ready to paste into a chat:
+- **A score to share.** Click Share my score, and the game shows the words it would share. Click Copy, and they go on the clipboard, ready to paste into a chat. Nothing is copied until you click Copy:
 
   ```text
   Dot Popper: 24 points
@@ -76,7 +76,7 @@ Press Play, and pop the bright dot, again and again, until the clock runs out.
 | Start a round, or continue after one | Click Play or Continue, or press Enter or Space | Start, or A on the button |
 | Open your records, from the title | Click Your records | X |
 | Leave the Records screen | Click Back, or press Escape | B, or Start |
-| Copy your result, after a round | Click Copy my result | Y |
+| Share your score, after a round | Click Share my score, then Copy. Escape closes it | Y, then Y or A to copy. B closes it |
 | Throw a dot, after a round | Drag it and let go | Hold A on a dot, move, and let go. The right stick rolls the whole pile |
 | Change the dot size, from the title | Click the Dot size choice | Either shoulder button |
 | Turn the sound off or on | Press M, or click the speaker in the corner of the title | Back (also called View or Select) |
