@@ -1290,3 +1290,24 @@ The design is the section "Friend groups with a trophy to steal" above; these ar
 **A trophy, with its word, marks the way in** (Hodent: an icon and a label beat either alone), from the title's top left, where nothing else sits.
 
 **To deploy:** run `server/` behind HTTPS, set `Groups::Settings::SERVER_URL`, and update the privacy statements as `doc/publishing.md` says. Until then, no build shows groups or connects to anything.
+
+
+## Buying the paid version
+
+One non-consumable product, `Presentation::Storefront::PRODUCT_ID` (assumed `com.setdef.DotPopper.paid`), sold with StoreKit 2 and Play Billing and ending in `Entitlement#unlock!`. To change the id, change that constant and `ios/store_check/Tests/DotPopper.storekit`.
+
+**How the game reaches the store.** As Share my score does: the game opens `dotpopper-store://open|buy|restore?n=…&product=…&file=…`, and the host catches it before it leaves the app (`DotPopperApplication` and `ios/host/Host/Store.swift`; `MainActivity#startActivity` and `android/host/…/PaidStore.java`). SDL's `open_url` returns only a yes or no, so the host answers in the file the URL names, in the save folder: `answer`, `owned`, `state` and `price`, the whole state each time, replaced atomically. `Storefront` reads it four times a second, never during a round, and ignores the state of an answer to an older request. `owned=1` always unlocks. The scheme is registered nowhere, so no other app can send one. StoreKit 2 is Swift-only, hence the one Swift file; Fledge's project compiles everything in `Host/`, so `project.yml` needs no change. Play Billing needs AndroidX, so `android/host` overlays Fledge's `build.gradle` (the dependency) and `gradle.properties` (AndroidX on).
+
+**Launch asks too.** A silent check at launch makes a reinstall or another device's purchase simply appear; StoreKit's `currentEntitlements` asks nobody to sign in. Only the Restore Purchases button calls `AppStore.sync`, which can prompt, as Apple's guidance has it.
+
+**The offer is calm.** One quiet "Paid version" pill on the Records screen, as quiet as Credits, and nowhere else: no prompt after a round, no badge, no timer, no count. Pressure of that kind would crowd out the reasons to play (Nguyen; Ferrara on rewards bolted onto the surface). It names what is included, says rounds stay free, and takes its price from the store, as Google's policy requires it match. Enter and Space go Back here rather than buy, so a keyboard or a gamepad can never buy by reflex. Apple's 2.2 and 3.1.1 are why no word says trial or demo, and why Restore Purchases is always on the screen. Johnson: the offer's rows are a dot and a short label. To change the words, `Look::WORDS.offer`.
+
+**Desktop is sold whole (`Entitlement::DESKTOP_PAID`, true).** No store sells inside a desktop build, and doc/publishing.md sells it, if at all, as a download, where the sale happens before the game opens. So a computer's copy is paid and offers nothing. Set the constant to false to make desktops free. `DOT_POPPER_PAID=0` is a free player on any system, `DOT_POPPER_PAID=1` paid on any, and `DOT_POPPER_FAKE_STORE=1` rehearses the offer with no store.
+
+**A refund locks nothing.** `Entitlement` has only `unlock!`, and a player offline or between stores must never lose what they bought, so the game takes back nothing when the store later says `owned=0`. A refund abuser keeps some cosmetics. Reversing this means a `lock!`, called from `Storefront#heard`.
+
+**No server.** StoreKit 2's signed transactions are verified on the device; Play purchases are not signature-checked, since that needs the Console's key and is defeated by anyone able to edit `entitlement.txt`. Nothing here is worth a server.
+
+**Checked:** `ios/store_check` (XcodeGen, then `xcodebuild test` on a Simulator) drives the real `Store.swift` through its URLs and answer file against StoreKit's local test store: price, purchase, a past purchase at launch, restore both ways, a refund. Run alone, a purchase failure mode set with `failTransactionsEnabled` stuck across later tests and failed their purchases, so that path has no test there. The Android host compiled with Billing 9.1.0 against Fledge's own Gradle template and AGP 9.4.1.
+
+**Not checkable until accounts exist:** a real App Store or Play purchase, sandbox or otherwise; Play Billing at runtime at all; the StoreKit sheet over SDL's window in the real game; whether Swift links into the Lota kit (CI's Kits run will show it). Before submitting: create the product under this id in both consoles, and attach the IAP to the build for review (Apple 2.1(b), 2.3.1(a)); achievements, themes and groups must exist first, as the offer names them.

@@ -11,7 +11,8 @@
 # 3. a phone project, laid out as the guide lays it out, holds the game in
 #    game/dot_popper, the kit's program (android/android_kit) as main.rb,
 #    and Lota's Android host from the gem in host/android, with Dot
-#    Popper's two changed files (android/host) over it;
+#    Popper's changed files (android/host) over it, Play Billing's Gradle
+#    settings among them;
 # 4. fledge build android (Fledge v0.8.0) writes the Gradle project, and
 #    Gradle builds the debug APK and the release App Bundle.
 #
@@ -272,6 +273,7 @@ jobs:
           "$tools/aapt2" dump xmltree --file AndroidManifest.xml "$apk" > "$RUNNER_TEMP/manifest.txt"
           grep -A1 "SDL_ENV.SDL_ANDROID_TRAP_BACK_BUTTON" "$RUNNER_TEMP/manifest.txt"
           grep -q "SDL_ENV.SDL_ANDROID_TRAP_BACK_BUTTON" "$RUNNER_TEMP/manifest.txt"
+          grep -q "com.android.vending.BILLING" "$RUNNER_TEMP/manifest.txt"
           grep -q "android:debuggable" "$RUNNER_TEMP/manifest.txt"
 
       - name: Assemble and zip the kit

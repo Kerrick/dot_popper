@@ -457,6 +457,7 @@ jobs:
           plutil -extract CFBundleDisplayName raw "$project/Host/Info.plist" | grep -qx "Dot Popper"
           grep -q SDL_ACCELEROMETER_AS_JOYSTICK "$project/Host/main.m"
           grep -q "0x0c / 255.0 green:0x0b / 255.0 blue:0x22" "$project/Host/main.m"
+          grep -q "AppStore.sync" "$project/Host/Store.swift"
           grep -q 'TARGETED_DEVICE_FAMILY: "1,2"' "$project/project.yml"
           echo "symbolic links: $(find "$project" -type l | wc -l)"
           {

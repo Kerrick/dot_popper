@@ -28,7 +28,7 @@ The bundle identifier is `com.setdef.DotPopper`, set in `fledge.yml`.
 | Multitasking | Leave `UIRequiresFullScreen` unset | Split View and Stage Manager resize the window, which the game handles exactly as it handles a rotation |
 | Status bar | Hidden: set `UIStatusBarHidden` to `true` in Info.plist for the launch screen; the game hides it itself after launch | See "Fullscreen and the safe area" |
 | Audio session | `AVAudioSessionCategoryAmbient`, which Lota's host program sets before `SDL_RunApp` from its `Info.plist`'s `LotaAudioSessionCategory`, `ambient` | See "Sound" |
-| Entitlements | None | The game uses no network, iCloud, Game Center, camera, or microphone, and saves only in the app's own container |
+| Entitlements | None | The game uses no iCloud, Game Center, camera, or microphone, and saves only in the app's own container. In-App Purchase needs no entitlement file; StoreKit is the app's only network use (doc/decisions.md, "Buying the paid version") |
 | `UIApplicationSupportsIndirectInputEvents` | `true` | SDL needs it to see a mouse or trackpad on an iPad. The game treats clicks as taps |
 
 ## How the game behaves on iOS
