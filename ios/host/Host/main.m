@@ -14,7 +14,7 @@
 // delegate.
 //
 // Dot Popper's copy (doc/ios.md) is Lota 0.2.2's (ext/lota/phone/host/ios
-// in the gem), which kits.yml lays it over in the phone project, with two
+// in the gem), which kits.yml lays it over in the phone project, with three
 // additions. The colour behind SDL's view, on its window and the window's
 // root view, as each window becomes key: the night's ink (#0c0b22), so
 // nothing pink or white can show behind the game, or, with
@@ -23,7 +23,9 @@
 // the system's share sheet, for Share my score: the game opens a
 // dotpopper-share: URL (SheetSharing), and DotPopperApplication, the
 // app's UIApplication (Info.plist's NSPrincipalClass), shows the sheet
-// in its place rather than send the URL anywhere.
+// in its place rather than send the URL anywhere. And the orientation
+// that SDL reads from UIApplication, which DotPopperApplication answers
+// from the scene (see its statusBarOrientation).
 // Lota's host already sets the audio session to Ambient (Info.plist's
 // LotaAudioSessionCategory) and SDL_ACCELEROMETER_AS_JOYSTICK=0.
 @import FledgeRuby;
@@ -155,6 +157,19 @@ static void present_share_sheet(NSString *text) {
 @end
 
 @implementation DotPopperApplication
+
+// SDL 3.4.10 still asks UIApplication which way the screen is turned
+// (UIKit_ComputeViewFrame, as the game goes fullscreen), and swaps the
+// view's width and height when the answer disagrees with the window's
+// shape. In this scene-based app on an iPad with iPadOS 27 the answer is
+// always Unknown, which SDL takes for portrait, so a landscape game drew
+// tall and cut off. The scene knows.
+- (UIInterfaceOrientation)statusBarOrientation {
+  for (UIScene *scene in self.connectedScenes)
+    if ([scene isKindOfClass:UIWindowScene.class])
+      return ((UIWindowScene *)scene).interfaceOrientation;
+  return [super statusBarOrientation];
+}
 
 - (BOOL)canOpenURL:(NSURL *)url {
   if (shared_text(url) != nil)
