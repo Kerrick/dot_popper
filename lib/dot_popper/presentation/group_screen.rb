@@ -133,7 +133,7 @@ module DotPopper
         gap = margin
         half = (room - gap) / 2.0
         join = Rect.new(x:, y:, width: half, height: button)
-        [GroupAction.new(name: :group_join, rect: join, text: GroupWords.join),
+        [GroupAction.new(name: :group_join, rect: join, text: GroupWords.join(panel.paid?)),
          GroupAction.new(name: :group_create, rect: join.with(x: join.right + gap), text: GroupWords.create(panel.paid?))]
       end
 

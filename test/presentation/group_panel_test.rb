@@ -26,7 +26,7 @@ class GroupPanelTest < Minitest::Test
     @sounds = FakeSounds.new
     @worker = HandWorker.new
     @session = Groups::Session.new(store: DotPopper::BestScore::Memory.new, worker: @worker)
-    @paid = DotPopper::Entitlement.free
+    @paid = DotPopper::Entitlement.new(DotPopper::BestScore::Memory.new, forced: true)
     @game = DotPopper::Game.new(field)
     build
   end
@@ -99,7 +99,20 @@ class GroupPanelTest < Minitest::Test
     assert_equal "234567", panel.code
   end
 
+  def test_join_needs_paid_and_says_so
+    @paid = DotPopper::Entitlement.free
+    build
+    panel.open
+    tick
+    tap_control(:group_join)
+
+    assert_equal GroupWords.needs_paid, panel.note
+    assert_empty @worker.started
+  end
+
   def test_create_needs_paid_and_says_so
+    @paid = DotPopper::Entitlement.free
+    build
     panel.open
     tick
     tap_control(:group_create)
@@ -109,7 +122,6 @@ class GroupPanelTest < Minitest::Test
   end
 
   def test_create_with_paid_makes_a_group
-    @paid = DotPopper::Entitlement.new(DotPopper::BestScore::Memory.new, forced: true)
     build
     panel.open
     tick

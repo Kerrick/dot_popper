@@ -14,9 +14,9 @@ module DotPopper
       def blurb = "Beat your friends and take the trophy. Its score falls a point a day."
       def mark_label = "Your dot"
       def code_label = "Code"
-      def join = "Join"
+      def join(paid) = paid ? "Join" : "Join (paid)"
       def create(paid) = paid ? "Create" : "Create (paid)"
-      def needs_paid = "Creating a group comes with the paid version. Joining is free."
+      def needs_paid = "Friend groups come with the paid version."
       def privacy = "Joining or creating sends your dot and scores to the group's server."
       def need_code = "Tap your friend's code."
       def erase = "Erase"
@@ -48,7 +48,7 @@ module DotPopper
         { offline: "Can't reach the group right now.", no_such_group: "No group has that code.",
           group_full: "That group is full.", bad_mark: "Pick one of the dots.",
           already_in_group: "You are already in a group.", too_many_tries: "Too many tries. Wait a while.",
-          not_paid: "Creating a group needs the full game.",
+          not_paid: "Friend groups come with the paid version.",
           no_group: "You are not in a group." }.fetch(reason, "Something went wrong.")
       end
     end
@@ -180,6 +180,8 @@ module DotPopper
       end
 
       def join
+        return @note = GroupWords.needs_paid unless paid?
+
         return @note = GroupWords.need_code if code.size < GroupWords::CODE_LENGTH
 
         groups.join(mark, code)

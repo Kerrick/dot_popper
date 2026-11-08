@@ -31,7 +31,7 @@ For example, a player takes the trophy with 30 on Monday. On Wednesday the score
 
 ## Free and Paid
 
-Creating a group needs the paid version of the game. Joining a group and taking its trophy are free. Proving a purchase comes later, and will involve several stores.
+Friend groups are for players with the paid version: both creating a group and joining one need it. Leaving a group and deleting everything are always available. Proving a purchase comes later, and will involve several stores.
 
 ## What a member can find out
 
