@@ -14,8 +14,12 @@ module DotPopper
       DOT = 0.17 # the guide's dot's radius, in the button's height
       # The hand's size, as the radius GhostPainter draws it for, in the
       # button's height: a pointer is drawn smaller for its dot than a
-      # fingertip or a reticle, so it is drawn for a larger one here.
-      HAND = { touch: 0.2, mouse: 0.42, gamepad: 0.32 }.freeze
+      # pointing hand or a reticle, so it is drawn for a larger one here.
+      HAND = { touch: 0.26, mouse: 0.42, gamepad: 0.32 }.freeze
+      # Where the hand's tip is, from the icon's middle, in the button's
+      # height: up and to the left, more so for the pointing hand, which
+      # reaches furthest down and to the right.
+      TIP = { touch: [-0.2, -0.2], mouse: [-0.08, -0.12], gamepad: [-0.08, -0.12] }.freeze
 
       def draw(show, layout)
         now = show.now
@@ -48,14 +52,17 @@ module DotPopper
 
       # "How to play"'s icon: the Tutorial's guide, drawn as the hand in
       # use (GhostPainter), tapping a small bright dot, in a square +size+
-      # across around +x+, +y+. The tapped point sits a little up and to
-      # the left, since the hand reaches in from below and to the right.
+      # across around +x+, +y+. The tapped point sits up and to the left,
+      # since the hand reaches in from below and to the right, and the
+      # hand never turns, wherever the button is.
       def guide(input, x, y, size, alpha)
-        tip_x = x - (size * 0.08)
-        tip_y = y - (size * 0.12)
+        across, down = TIP.fetch(input.name)
+        tip_x = x + (size * across)
+        tip_y = y + (size * down)
         dots.icon(tip_x, tip_y, size * DOT, fresh: true, opacity: alpha)
         pose = Presentation::GhostPose.new(x: tip_x, y: tip_y, press: 1.0, since_press: nil, alpha:)
-        GhostPainter.new(pen:).draw(pose, input, size * HAND.fetch(input.name))
+        GhostPainter.new(pen:).draw(pose, input, size * HAND.fetch(input.name),
+                                    screen: [Float::INFINITY, Float::INFINITY])
       end
 
       # The choice of dot size, each segment named, saying what it does

@@ -13,7 +13,7 @@ module DotPopper
     # Where the ghost hand is at one moment, and how it is pressing:
     # +press+ from 0 (lifted) to 1 (down), +since_press+ the seconds since
     # this tap went down, or nil between taps, and +alpha+ how much of it
-    # shows. The shell draws it as the player's own hand: a fingertip, a
+    # shows. The shell draws it as the player's own hand: a pointing hand, a
     # mouse pointer, or a gamepad's reticle and its A button.
     class GhostPose < Data.define(:x, :y, :press, :since_press, :alpha)
       # This pose +share+ of the way to +other+.

@@ -3,26 +3,32 @@
 module DotPopper
   module Shell
     # The Tutorial's ghost hand, drawn as the player's own hand on the
-    # input they last used (Presentation::InputKind): a fingertip for a
-    # touchscreen, a mouse pointer that clicks, or a gamepad's reticle with
-    # its A button beside it. It is pale and see-through, so the dot under
-    # it shows, and each press rings where it lands. Its letter sits on
-    # whole device pixels; the hand itself moves smoothly.
+    # input they last used (Presentation::InputKind): a pointing hand for
+    # a touchscreen, a mouse pointer that clicks, or a gamepad's reticle
+    # with its A button beside it. The pointer and the reticle are pale and
+    # see-through, so the dot under them shows; the hand touches the dot
+    # only with its fingertip, and is solid, so it reads as a hand. Each
+    # press rings where it lands. Its letter, its outlines and its tip sit
+    # on whole device pixels.
     class GhostPainter < Data.define(:pen)
       G = ::Lota::Graphics
-      ALPHA = 0.85 # how much of the hand shows at most
+      ALPHA = 0.85 # how much of the pointer and the reticle show at most
       RING = 0.4 # seconds a press's ring lasts
+      RIPPLE = 0.45 # seconds a tap's ripple lasts, before the hand lifts away
+      HAND = 0.55 # the hand's finger's width, in the dot's radius
 
       # A pointer's outline, its tip at 0, 0, in twentieths of its height.
       ARROW = [[0, 0], [0, 17], [4, 13], [7, 20], [10, 19], [7, 12], [12, 12]].freeze
       # ...filled as convex pieces: a fan from the tip, and the tail.
       PIECES = [[0, 1, 2], [0, 2, 5], [0, 5, 6], [2, 3, 4, 5]].freeze
 
-      def draw(pose, input, radius)
+      # The hand for +input+ at +pose+, sized for a dot of +radius+, kept
+      # on a screen +width+ by +height+ (the window's, unless given).
+      def draw(pose, input, radius, screen: G.dimensions)
         return unless pose && pose.alpha.positive?
 
         case input.name
-        in :touch then fingertip(pose, radius)
+        in :touch then hand(pose, radius, screen)
         in :mouse then pointer(pose, radius)
         in :gamepad then gamepad(pose, radius)
         end
@@ -32,32 +38,63 @@ module DotPopper
 
       def palette = pen.palette
 
-      # A finger reaching in from below and to the right, its pad on the
-      # point it taps; it presses in a little as it goes down.
-      def fingertip(pose, radius)
-        alpha = pose.alpha * ALPHA
-        ring(pose.x, pose.y, pose, radius * 0.35, radius * 0.95)
-        width = radius * 0.8
-        length = radius * 2.7
+      # A gloved hand pointing (Presentation::PointingHand), its
+      # fingertip's pad on the point it taps, reaching in from below and to
+      # the right, or mirrored where an edge would cut it off. As it
+      # presses, it sinks a little smaller, as if pushed into the glass,
+      # and a ripple spreads from its fingertip.
+      def hand(pose, radius, screen)
+        pixels = pen.pixels
+        x = pixels.snap(pose.x)
+        y = pixels.snap(pose.y)
+        ripple(x, y, pose, radius)
+        unit = radius * HAND
+        across, down = Presentation::PointingHand.facing(x, y, unit, *screen)
+        size = unit * (1 - (Presentation::PointingHand::PRESS * pose.press))
+        edge = pixels.whole(unit * 0.13) / size
         G.push do
-          G.translate(pose.x, pose.y)
-          G.rotate(-0.55)
-          press = 1 - (0.08 * pose.press)
-          G.scale(press, press)
-          edge = pen.pixels.line_width(2)
-          pen.color(palette.shadow, alpha * 0.6)
-          capsule(-(width / 2.0) - edge, -(width / 2.0) - edge, width + (2 * edge), length)
-          pen.color(palette.cream, alpha)
-          capsule(-width / 2.0, -width / 2.0, width, length)
-          pen.color(palette.fresh_light.mix(palette.urgent, 0.25), alpha)
-          nail = width * 0.56
-          G.rectangle(:fill, -nail / 2.0, -width * 0.36, nail, nail * 0.95, nail * 0.42, nail * 0.42, 16)
+          G.translate(x, y)
+          G.scale(across * size, down * size)
+          G.rotate(Presentation::PointingHand::TILT)
+          Presentation::PointingHand::PARTS.each { glove(it, edge, pose.alpha) }
         end
       end
 
-      def capsule(x, y, width, length)
-        corner = width / 2.0
-        G.rectangle(:fill, x, y, width, length, corner, corner, 24)
+      # A group of the hand's shapes, outlined +edge+ wide.
+      def glove(shapes, edge, alpha)
+        pen.color(palette.ink_top, alpha)
+        shapes.each { shape(it.grown(edge)) }
+        pen.color(palette.cream, alpha)
+        shapes.each { shape(it) }
+      end
+
+      def shape(shape)
+        case shape
+        in Presentation::PointingHand::RoundRect[x:, y:, width:, height:, corner:]
+          G.rectangle(:fill, x, y, width, height, corner, corner, 12)
+        in Presentation::PointingHand::Capsule[from: [x1, y1], to: [x2, y2], width:]
+          half = width / 2.0
+          length = Math.hypot(x2 - x1, y2 - y1)
+          nx = -(y2 - y1) / length * half
+          ny = (x2 - x1) / length * half
+          G.polygon(:fill, x1 + nx, y1 + ny, x2 + nx, y2 + ny, x2 - nx, y2 - ny, x1 - nx, y1 - ny)
+          G.circle(:fill, x1, y1, half, 16)
+          G.circle(:fill, x2, y2, half, 16)
+        end
+      end
+
+      # A tap's ripple: two thin rings spreading from where the fingertip
+      # lands, past the dot's edge, gone before the hand lifts away.
+      def ripple(x, y, pose, radius)
+        since = pose.since_press or return
+        G.line_width = pen.pixels.line_width([radius * pen.pixels.scale * 0.06, 2].max)
+        [[0.0, 1.0], [0.06, 0.6]].each do |delay, strength|
+          share = (since - delay) / (RIPPLE - delay)
+          next unless share.between?(0.0, 1.0)
+
+          pen.color(palette.cream, pose.alpha * strength * (1 - share))
+          G.circle(:line, x, y, radius * (0.4 + (1.2 * Presentation::Ease.out_cubic(share))), 48)
+        end
       end
 
       # The system's arrow, pale, its tip on the point; a click shrinks it

@@ -147,7 +147,7 @@ module DotPopper
         clear: 2.3, warn: 1.8, flight: 0.6, quick: 0.45, gap: 0.15, hold: 0.45, linger: 0.35, handover: 0.35,
         longest: 5.0,
         spotlight: SpotlightLook.new(dim: 0.62, move: 0.35, feather: 0.9, dot: 1.5),
-        ghost: GhostLook.new(loop: 1.6, glide: 0.5, fade: 0.25, rest: [0.75, 0.9].freeze, hover: [-1.0, -3.6].freeze,
+        ghost: GhostLook.new(loop: 1.6, glide: 0.5, fade: 0.25, rest: [0.75, 0.9].freeze, hover: [-1.0, -4.2].freeze,
                              bob: 0.1),
         lead: LeadLook.new(dim: 0.6, halo: 1.3, fade: 0.4)
       )
