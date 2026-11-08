@@ -42,7 +42,7 @@ module DotPopper
                      keeper: RecordKeeper.new(best: game.best, lifetime:, achievements:), notices: Notices.none,
                      sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never, window: NoWindowControl.new,
                      entitlement: Entitlement.free, wardrobe: Wardrobe.plain(look::THEMES),
-                     groups: Groups::Session.off)
+                     groups: Groups::Session.off, storefront: NoStorefront.new)
         @game = game
         @window = window
         @tutorial_flag = tutorial_flag
@@ -52,6 +52,8 @@ module DotPopper
         @achievements = achievements
         @feat_watch = FeatWatch.new
         @groups = GroupPanel.new(groups:, entitlement:, sounds:)
+        @storefront = storefront
+        @offer = false
         @tutorial = nil
         @handing_over = nil
         @lead_in = nil
@@ -248,6 +250,9 @@ module DotPopper
         in :quit then window.quit
         in :records then open_records
         in :group_open then @groups.open
+        in :offer then open_offer
+        in :buy then buy
+        in :restore then @storefront.restore
         in DotSizing => sizing then choose_sizing(sizing)
         in :share then share
         in :copy then copy_result
@@ -272,6 +277,7 @@ module DotPopper
           elsif credits? then [button(:back, layout.back_button)]
           elsif group_open? then group_controls
           elsif looks? then looks_controls
+          elsif offer? then offer_controls
           elsif records? then records_controls
           elsif title? then title_controls
           elsif sharing? then share_controls
@@ -297,7 +303,7 @@ module DotPopper
       def primary
         if group_open? then @groups.stop_editing
         elsif sharing? then copy_result
-        elsif records? then leave
+        elsif offer? || records? then leave
         elsif title? then play
         elsif finished? then continue_on
         end
@@ -434,6 +440,7 @@ module DotPopper
         @records = nil
         @looks = false
         @credits = nil
+        @offer = false
         @clearing = clearing.cancel
         sounds.play(:tick, pitch: 0.8)
       end
@@ -443,10 +450,63 @@ module DotPopper
       def leave
         return @groups.close if group_open?
 
-        if credits? then close_credits
+        if offer? then close_offer
+        elsif credits? then close_credits
         elsif looks? then close_looks
         else close_records
         end
+      end
+
+      def close_offer
+        @offer = false
+        sounds.play(:tick, pitch: 0.8)
+      end
+
+      # Whether the Records screen offers the way to the paid version: where
+      # there is a store, to a player who has not bought it. It is offered
+      # here and nowhere else, and asks for nothing; a player finds it or
+      # does not (doc/decisions.md).
+      def offer_offered? = @storefront.offered? && !@entitlement.paid?
+
+      # Whether the offer of the paid version is open, over the Records screen.
+      def offer? = @offer
+
+      # Opens the offer over the Records screen, and asks the store for the
+      # price, or asks again if an earlier request was never answered.
+      def open_offer
+        return unless records? && !credits? && offer_offered?
+
+        @offer = true
+        @storefront.connect
+        sounds.play(:tick)
+      end
+
+      # Where the offer's words and buttons go (OfferPlan), or nil while it
+      # is closed.
+      def offer_plan
+        return unless offer?
+
+        OfferScreen.new(layout:, type: look::TYPE, words:, measure: @measure, offering: !@entitlement.paid?).plan
+      end
+
+      # The price the store gave, or nil before it has.
+      def offer_price = @storefront.price
+
+      # What the offer says of how the store is getting on: thanks once the
+      # player owns it, and otherwise a word only when there is something to
+      # say.
+      def offer_status
+        return words.offer[:thanks] if @entitlement.paid?
+
+        words.offer.fetch(@storefront.status, "")
+      end
+
+      # Buy where the store gave a price, and otherwise the same button's
+      # "Try again".
+      def buy
+        return @storefront.connect unless offer_price
+
+        @storefront.buy
       end
 
       # Whether the Credits screen is open over the Records screen.
@@ -470,7 +530,7 @@ module DotPopper
 
       # Opens the Credits screen over the Records screen, at the top.
       def open_credits
-        return unless records? && !credits?
+        return unless records? && !credits? && !offer?
 
         @credits = CreditsScroll.at_top(content: 0.0, window: 0.0)
         lay_out_credits
@@ -516,7 +576,7 @@ module DotPopper
       # A gamepad's Y on the Records screen, held by +by+: Undo while it is
       # offered, or else the start of holding "Clear my records…".
       def clear_or_undo(by)
-        return if credits?
+        return if credits? || offer?
         return undo if undo_offer
 
         hold_clear(by) if clear_offered?
@@ -661,6 +721,7 @@ module DotPopper
       def update(seconds)
         @now += seconds
         @groups.update(now, quiet: !playing?, showing: (title? && !records?) || finished?)
+        follow_store(seconds) unless playing?
         clear_records if clearing.done?(now)
         @undo = nil unless @undo&.open?(now)
         @hover = hover.at(hovered).update(seconds, look::HOVER)
@@ -774,9 +835,25 @@ module DotPopper
         looks_layout.cards.map { button(it.theme, it.rect) } << button(:back, layout.back_button)
       end
 
+      def offer_controls
+        plan = offer_plan
+        [(button(:buy, plan[:buy]) if plan.key?(:buy)),
+         (button(:restore, plan[:restore]) if plan.key?(:restore)),
+         button(:back, layout.back_button)].compact
+      end
+
+      # Hears the store, outside a round; a tick marks the purchase landing
+      # while the offer is open.
+      def follow_store(seconds)
+        free = !@entitlement.paid?
+        @storefront.update(seconds)
+        sounds.play(:tick, pitch: 1.3) if free && offer? && @entitlement.paid?
+      end
+
       def records_controls
         [(button(:credits, layout.credits_button)),
          (button(:looks, layout.looks_button) if looks_offered?),
+         (button(:offer, layout.offer_button) if offer_offered?),
          (button(:undo, layout.undo_button) if undo_offer),
          (button(:clear, layout.clear_records_button) if clear_offered?),
          button(:back, layout.back_button)].compact

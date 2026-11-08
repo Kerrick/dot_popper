@@ -54,12 +54,18 @@ module DotPopper
                                   starts: [File.dirname(File.expand_path($PROGRAM_NAME))]).notices
         achievements = Achievements.new(SaveFile.new(name: "achievements.txt"))
         keeper = RecordKeeper.new(best: @game.best, lifetime:, achievements:, folder: ->(name) { SaveFile.new(name:) })
-        entitlement = Entitlement.new(SaveFile.new(name: "entitlement.txt"), forced: Entitlement.forced?(@env))
+        entitlement = Entitlement.new(SaveFile.new(name: "entitlement.txt"), forced: Entitlement.forced?(@env, os:))
         wardrobe = Presentation::Wardrobe.new(SaveFile.new(name: "looks.txt"), themes: Look::THEMES, entitlement:, today:)
         @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
         @pen.wear(wardrobe.palette)
         @speaker = Speaker.new(Look::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Look::SOUND.volume)
         @splash = @splash.with(sounding: !@speaker.muted?) if @splash
+        storefront = if flag?("DOT_POPPER_FAKE_STORE")
+                       rehearsal = Presentation::RehearsalStore.new
+                       Presentation::Storefront.new(opener: rehearsal, answers: rehearsal, entitlement:)
+                     else
+                       Presentation::Storefront.for(os, opener: UrlOpener.new, answers: StoreAnswers.in_save_folder, entitlement:)
+                     end
         groups = Groups::Session.at(Groups::Settings.server_url(@env), store: SaveFile.new(name: "group.txt"))
         @show = Presentation::Show.new(groups:, game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"),
@@ -72,7 +78,8 @@ module DotPopper
                                        tutorial_flag: Presentation::TutorialFlag.new(
                                          SaveFile.new(name: "tutorial.txt"), mode: Presentation::TutorialFlag.mode(@env)
                                        ),
-                                       entitlement:, wardrobe:)
+                                       entitlement:, wardrobe:, storefront:)
+        storefront.connect
         @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
                                         archive: ->(name) { SaveFile.new(name:) }))
         puts "Dot Popper: each round is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"

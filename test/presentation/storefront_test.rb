@@ -1,0 +1,273 @@
+# frozen_string_literal: true
+
+require_relative "presentation_helper"
+
+# Buying the paid version: the URLs the hosts catch, the answers they
+# write back, and the calm screen that offers it.
+class StorefrontTest < Minitest::Test
+  include PresentationTest
+
+  class FakeOpener
+    attr_reader :urls
+    attr_writer :refuses
+
+    def initialize = @urls = []
+
+    def open(url)
+      @urls << url
+      !@refuses
+    end
+  end
+
+  class FakeAnswers
+    attr_accessor :text
+    attr_reader :removed
+
+    def read = @text
+    def remove = (@removed = true) && (@text = nil)
+    def path = "/save dir/answer.txt"
+  end
+
+  def setup
+    @opener = FakeOpener.new
+    @answers = FakeAnswers.new
+    @entitlement = DotPopper::Entitlement.free
+    @store = Storefront.new(opener: @opener, answers: @answers, entitlement: @entitlement)
+  end
+
+  def hear(text)
+    @answers.text = text
+    @store.update(Storefront::EVERY)
+  end
+
+  def test_a_url_names_the_action_the_request_the_product_and_where_to_answer
+    assert_equal "dotpopper-store://buy?n=3&product=com.setdef.DotPopper.paid&file=%2Fsave%20dir%2Fanswer.txt",
+                 Storefront.url(:buy, 3, "/save dir/answer.txt")
+  end
+
+  def test_only_phones_have_a_store
+    assert_instance_of Storefront, Storefront.for("iOS", opener: @opener, answers: @answers, entitlement: @entitlement)
+    assert_instance_of Storefront, Storefront.for("Android", opener: @opener, answers: @answers, entitlement: @entitlement)
+    refute_predicate Storefront.for("OS X", opener: @opener, answers: @answers, entitlement: @entitlement), :offered?
+  end
+
+  def test_connecting_asks_the_store_and_a_paid_player_needs_no_asking
+    @store.connect
+
+    assert @answers.removed
+    assert_match %r{\Adotpopper-store://open\?n=1&}, @opener.urls.last
+    assert_equal :loading, @store.status
+
+    @entitlement.unlock!
+    @store.connect
+
+    assert_equal 1, @opener.urls.size
+  end
+
+  def test_an_answer_sets_the_price_and_status
+    @store.connect
+    hear("answer=1\nowned=0\nstate=ready\nprice=$1.99\n")
+
+    assert_equal "$1.99", @store.price
+    assert_equal :ready, @store.status
+    refute_predicate @entitlement, :paid?
+  end
+
+  def test_owning_it_unlocks_whatever_request_the_answer_is_to
+    @store.connect
+    @store.connect
+    hear("answer=1\nowned=1\nstate=ready\nprice=$1.99\n")
+
+    assert_predicate @entitlement, :paid?
+  end
+
+  def test_an_older_answer_does_not_overturn_a_newer_request
+    @store.connect
+    hear("answer=1\nowned=0\nstate=ready\nprice=$1.99\n")
+    @store.buy
+    hear("answer=1\nowned=0\nstate=ready\nprice=$1.99\n")
+
+    assert_equal :busy, @store.status
+    hear("answer=2\nowned=0\nstate=cancelled\nprice=$1.99\n")
+
+    assert_equal :ready, @store.status
+  end
+
+  def test_buying_needs_a_price_and_is_not_asked_twice
+    @store.buy
+
+    assert_empty @opener.urls
+    @store.connect
+    hear("answer=1\nowned=0\nstate=ready\nprice=$1.99\n")
+    @store.buy
+    @store.buy
+
+    assert_equal(1, @opener.urls.count { it.include?("://buy") })
+    assert_includes @opener.urls.last, "n=2"
+  end
+
+  def test_restore_says_when_there_is_nothing_to_restore
+    @store.restore
+    hear("answer=1\nowned=0\nstate=none\n")
+
+    assert_equal :none, @store.status
+  end
+
+  def test_a_refusal_or_an_unknown_state_is_said_plainly
+    @opener.refuses = true
+    @store.connect
+
+    assert_equal :unavailable, @store.status
+    @opener.refuses = false
+    @store.connect
+    hear("answer=2\nowned=0\nstate=gibberish\n")
+
+    assert_equal :failed, @store.status
+  end
+
+  def test_a_store_that_later_says_not_owned_takes_nothing_back
+    @entitlement.unlock!
+    hear("answer=9\nowned=0\nstate=ready\n")
+
+    assert_predicate @entitlement, :paid?
+  end
+
+  def test_the_answer_is_read_only_every_so_often
+    @answers.text = "answer=0\nowned=1\nstate=ready\n"
+    @store.update(Storefront::EVERY / 2)
+
+    refute_predicate @entitlement, :paid?
+    @store.update(Storefront::EVERY)
+
+    assert_predicate @entitlement, :paid?
+  end
+
+  def test_the_paid_setting_covers_desktops_by_default
+    assert DotPopper::Entitlement.forced?({}, os: "Linux")
+    refute DotPopper::Entitlement.forced?({}, os: "iOS")
+    refute DotPopper::Entitlement.forced?({}, os: "Android")
+    refute DotPopper::Entitlement.forced?({ "DOT_POPPER_PAID" => "0" }, os: "Windows")
+    assert DotPopper::Entitlement.forced?({ "DOT_POPPER_PAID" => "1" }, os: "iOS")
+    assert DotPopper::Entitlement.forced?({ "DOT_POPPER_PAID" => "1" })
+  end
+
+  def test_no_word_of_the_offer_calls_it_a_trial_or_a_demo
+    words = Look::WORDS.offer.values.flatten.join(" ")
+
+    refute_match(/trial|demo/i, words)
+  end
+
+  def test_the_offers_buttons_stay_on_every_screen_and_apart
+    [[390, 844], [844, 390], [1920, 1080], [400, 320], [320, 568]].each do |width, height|
+      layout = layout(width, height)
+      plan = OfferScreen.new(layout:, type: Look::TYPE, words: Look::WORDS, measure: RoughMeasure.new, offering: true).plan
+      safe = layout.safe
+
+      assert plan.placed.fits?, "the offer fits #{width}x#{height}"
+      plan.note_lines.each { assert_operator RoughMeasure.new.width(:semibold, plan.size(:note), it), :<=, safe.width }
+      %i[heading items status buy restore].each { assert plan.key?(it), "#{it} stays at #{width}x#{height}" }
+      refute overlap?(plan[:restore], layout.back_button), "Restore clears Back at #{width}x#{height}"
+      assert_operator plan[:buy].bottom, :<=, plan[:restore].y
+      assert_operator plan[:restore].bottom, :<=, safe.bottom + 1e-6
+    end
+  end
+
+  def test_the_way_to_the_offer_clears_the_records_buttons
+    [[390, 844], [844, 390], [1920, 1080], [400, 320], [320, 568]].each do |width, height|
+      layout = layout(width, height)
+      others = [layout.back_button, layout.credits_button, layout.looks_button, layout.clear_records_button]
+
+      others.each { refute overlap?(layout.offer_button, it), "the pill clears #{it} at #{width}x#{height}" }
+    end
+  end
+
+  def test_the_offer_opens_only_from_the_records_and_buys_where_it_is_offered
+    show, opener = offer_show
+    show.open_offer
+
+    refute_predicate show, :offer?, "the offer needs the Records screen open"
+
+    show.open_records
+    show.open_offer
+
+    assert_predicate show, :offer?
+    assert_match %r{\Adotpopper-store://open}, opener.urls.last
+    assert_equal %i[buy restore back], show.controls.map(&:name)
+
+    answer("answer=1\nowned=0\nstate=ready\nprice=$1.99\n", show)
+    assert_equal "$1.99", show.offer_price
+    assert_equal "", show.offer_status
+
+    buy = show.reach_of(:buy)
+    show.tap(buy.center_x, buy.center_y)
+
+    assert_match %r{\Adotpopper-store://buy}, opener.urls.last
+  end
+
+  def test_enter_on_the_offer_goes_back_and_never_buys
+    show, opener = offer_show
+    show.open_records
+    show.open_offer
+    answer("answer=1\nowned=0\nstate=ready\nprice=$1.99\n", show)
+    show.primary
+
+    refute_predicate show, :offer?
+    assert_predicate show, :records?
+    refute(opener.urls.any? { it.include?("://buy") })
+  end
+
+  def test_the_purchase_landing_thanks_the_player_and_takes_the_button_away
+    show, = offer_show
+    show.open_records
+
+    assert_includes show.controls.map(&:name), :offer
+
+    show.open_offer
+    answer("answer=1\nowned=1\nstate=ready\nprice=$1.99\n", show)
+
+    assert_equal Look::WORDS.offer[:thanks], show.offer_status
+    assert_equal %i[back], show.controls.map(&:name)
+    show.back
+
+    refute_includes show.controls.map(&:name), :offer
+  end
+
+  def test_a_store_is_not_read_during_a_round
+    show, = offer_show
+    @answers.text = "answer=0\nowned=1\nstate=ready\n"
+    show.primary
+    show.update(Storefront::EVERY * 2)
+
+    refute_predicate @entitlement, :paid?
+  end
+
+  def test_a_computer_offers_nothing
+    show = build_show(storefront: NoStorefront.new)
+    show.open_records
+
+    refute_includes show.controls.map(&:name), :offer
+  end
+
+  private
+
+  def overlap?(one, other)
+    one.x < other.right && other.x < one.right && one.y < other.bottom && other.y < one.bottom
+  end
+
+  def build_show(**options)
+    game = DotPopper::Game.new(field, random: Random.new(3))
+    Show.new(game:, layout: layout, sounds: FakeSounds.new, radius: R, measure: RoughMeasure.new, **options)
+  end
+
+  def offer_show
+    opener = FakeOpener.new
+    store = Storefront.new(opener:, answers: @answers, entitlement: @entitlement)
+    show = build_show(storefront: store, entitlement: @entitlement)
+    [show, opener]
+  end
+
+  def answer(text, show)
+    @answers.text = text
+    show.update(Storefront::EVERY)
+  end
+end

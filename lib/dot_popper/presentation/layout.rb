@@ -212,8 +212,18 @@ module DotPopper
       end
 
       # The top of the Records screen's buttons, whichever row they are on.
-      def records_floor(looks: false)
-        [back_button.y, credits_button.y, clear_records_button.y, (looks_button.y if looks)].compact.min
+      def records_floor(looks: false, offer: false)
+        [back_button.y, credits_button.y, clear_records_button.y, (looks_button.y if looks), (offer_button.y if offer)].compact.min
+      end
+
+      # The Records screen's way to the paid version, a quiet pill at the
+      # right, on a row of its own above every other button there, so it
+      # never takes the place of Credits or Looks.
+      def offer_button
+        height = button_size
+        width = [height * 3.4, safe.width - (2 * margin)].min
+        top = [credits_button.y, looks_button.y, clear_records_button.y].min
+        Rect.new(x: safe.right - margin - width, y: top - margin - height, width:, height:)
       end
 
       # The size of a screen's main button, the title's Play and Game

@@ -102,6 +102,15 @@ module DotPopper
         full_screen: "Full screen", windowed: "Window", quit: "Quit",
         # The Looks screen: its button's word and heading, and each look's name.
         looks: { title: "Looks", classic: "Classic", halloween: "Halloween", winter: "Winter", valentine: "Hearts" }.freeze,
+        offer: {
+          entry: "Paid version", heading: "The paid version",
+          includes: ["Achievements to earn", "Themes to choose from", "Create friend groups"].freeze,
+          note: "Rounds stay free and unlimited, and what you've earned comes with it.",
+          buy: "Buy for %s", retry: "Try again", restore: "Restore Purchases",
+          loading: "Asking the store…", busy: "One moment…", pending: "Waiting for approval.",
+          failed: "That didn't go through.", none: "Nothing to restore on this account.",
+          unavailable: "The store isn't answering.", thanks: "Thank you. It's yours."
+        }.freeze,
         hold_to_clear: ByInput.new(
           touch: "Press and hold to clear your bests, totals, chart, and goal streak.",
           mouse: "Press and hold to clear your bests, totals, chart, and goal streak.",

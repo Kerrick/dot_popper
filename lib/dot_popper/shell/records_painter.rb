@@ -22,7 +22,7 @@ module DotPopper
         palette = pen.palette
         plan = Presentation::RecordsLayout.new(layout:, sheet:, look: pen.look::RECORDS,
                                                widest: widest(sheet, layout.scaled(pen.look::RECORDS.text)),
-                                               looks: show.looks_offered?)
+                                               looks: show.looks_offered?, offer: show.offer_offered?)
         notes = note_lines(sheet, plan, layout)
         plan = plan.with(note_lines: notes.size)
         pen.text(words.records, pen.fonts.bold(plan.heading_size), layout.center_x, plan.heading_y, palette.cream)
@@ -32,6 +32,7 @@ module DotPopper
         back(show, layout)
         credits(show, layout)
         looks(show, layout) if show.looks_offered?
+        offer(show, layout)
         corner(show, layout)
         return nothing_yet(words, layout, plan) if sheet.empty
 
@@ -101,6 +102,14 @@ module DotPopper
         G.line_width = pen.pixels.line_width(2)
         pen.color(pen.palette.cream)
         G.circle(:line, pen.pixels.snap(x + (radius * 0.6)), pen.pixels.snap(y), radius, 32)
+      end
+
+      # The way to the paid version, as quiet as Credits, where there is a store.
+      def offer(show, layout)
+        return unless show.offer_offered?
+
+        PillButton.new(pen:).draw(layout.offer_button, show.words.offer[:entry], alpha: 0.8 + (0.2 * show.hover.level(:offer)),
+                                                                                  color: pen.palette.soft, hover: show.hover.level(:offer))
       end
 
       # +text+ where the prompt goes, in a line or two that fit across.

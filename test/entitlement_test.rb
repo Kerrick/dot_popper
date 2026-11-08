@@ -15,7 +15,7 @@ class EntitlementTest < Minitest::Test
   end
 
   def test_the_setting_stands_in_for_a_purchase
-    assert Entitlement.forced?("DOT_POPPER_PAID" => "1")
+    assert Entitlement.forced?({ "DOT_POPPER_PAID" => "1" })
     refute Entitlement.forced?({})
     assert_predicate Entitlement.new(DotPopper::BestScore::Memory.new, forced: true), :paid?
   end

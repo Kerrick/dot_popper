@@ -31,6 +31,7 @@ module DotPopper
         @records = RecordsPainter.new(pen:)
         @credits = CreditsPainter.new(pen:)
         @looks = LooksPainter.new(pen:, dots: @dots)
+        @offer = OfferPainter.new(pen:)
         @finale = FinalePainter.new(pen:)
         @group = GroupPainter.new(pen:)
         @share = SharePreviewPainter.new(pen:, dots: @dots)
@@ -51,7 +52,9 @@ module DotPopper
           @dots.draw(@show.attract.dots, @at_rest, @show.now, radius)
           if @show.records?
             veil(width, height, @pen.look::RECORDS.veil)
-            records_screen.draw(@show, layout)
+            if @show.offer? then @offer.draw(@show, layout)
+            else records_screen.draw(@show, layout)
+            end
           elsif @show.group_open?
             veil(width, height, @pen.look::GROUPS.veil)
             @group.draw(@show, layout)
