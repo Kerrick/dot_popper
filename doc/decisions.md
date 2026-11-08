@@ -831,6 +831,14 @@ For about 1.4 seconds before the title, or 3.5 with sound (a 0.25 s fade in, a h
 
 **To reverse:** Drop `@splash` from `Shell::App` and the splash arguments of `Renderer#draw`.
 
+### The splash follows setdef's brand master spec: amber, its glow, and a steady block under calm
+
+setdef's brand README (`setdef.com/brand/README.md`) is decided, and the splash follows it. The mark is `#fbbf24` (`SPLASH_YELLOW`; the maintainer chose it over the retired `#F2C24B` in two blind rounds), on `SPLASH_INK` `#09090b`, which stays: the spec names `#101012` as the website's dark ground but does not require it elsewhere, and the game's near-black is shared with nothing else. The glow is the spec's: the mark blurred, in its own colour at 55%, under the crisp mark, letters and block together, the block's following its lit level. The spec says "a blur of 0.12em", but its artwork's filter is a Gaussian of standard deviation 60 in 1000 units, 0.06em, so the screen matches the artwork. `Logotype#glow` makes the `Bloom`'s look from the logotype's size: three passes of sigma 3 spread over 5.2 blurred pixels, and the blurred layer's resolution is set so that is 0.06 of the size in device pixels (resolution 1 at the smallest sizes, with a gentler sigma), so the blur scales with the window and the screen's density; `SplashPainter#refresh` makes it again on a resize. It is added to the ground rather than composited over it, which differs from the SVG's filter by a hair on a near-black ground. Where there is no blur shader there is no glow. The spec also says a blink stops under reduced motion, so with `DOT_POPPER_CALM=1` the block stays steady and lit, as when muted, while the jingle still plays if sound is on and the splash lasts as long as it does.
+
+**Why:** The mark is setdef's, and the brand's own file is the authority for how it looks and behaves.
+
+**To reverse:** Put the old colour in `look.rb`, give `SplashPainter` a fixed `BloomLook`, and drop `calm` from `Splash`.
+
 ### License texts are set in Iosevka, wrapped with their indentation kept
 
 On the Credits screen the license bodies are in Iosevka Regular, a monospace face, while headings, "Made by" and the summaries stay in Fredoka. A monospace face keeps the texts' columns and numbered clauses as their authors set them. Each line is wrapped to the window's width and every piece of it keeps the line's leading indentation, so a long clause continues under itself and nothing ever scrolls sideways. Iosevka's own OFL, with its copyright line, is among the open-source licenses.

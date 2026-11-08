@@ -3,25 +3,29 @@
 module DotPopper
   module Shell
     # The setdef splash: its black ground over the whole window, and its
-    # logotype (Presentation::Logotype) centred on it, in Workshop Yellow.
-    # The letters and the block sit on a faint, smooth glow, both blurred
-    # by the Bloom and added to the ground; where there is no blur shader
-    # there is no glow. The block blinks, as Presentation::Splash says, and
+    # logotype (Presentation::Logotype) centred on it, in setdef's amber.
+    # The letters and the block sit on setdef's glow (brand/README.md):
+    # both blurred by a Bloom, in the mark's own colour at 55%, under the
+    # crisp mark. The blur is a fixed share of the logotype's size
+    # (Logotype#glow), so it looks alike at every window size; where there
+    # is no blur shader there is no glow. The block blinks, as Presentation::Splash says, and
     # its glow follows its own lit level: "The block cursor glows exactly
     # when the letters glow, and is flat when they're flat." Letters and
     # block are placed on whole device pixels.
     # Presentation::Splash says how much of each shows.
     class SplashPainter
       G = ::Lota::Graphics
-      GLOW = Presentation::BloomLook.new(strength: 0.22, sigma: 3.0, passes: 3, resolution: 0.3)
 
       def initialize(pen:)
         @pen = pen
-        @glow = Bloom.new(pen, GLOW)
+        refresh
       end
 
-      # Makes the glow's canvases again, after a resize.
-      def refresh = @glow.refresh
+      # Makes the glow again for the window's size now, after a resize.
+      def refresh
+        width, height = G.dimensions
+        @glow = Bloom.new(@pen, Presentation::Logotype.fit(width, height).glow(G.dpi_scale))
+      end
 
       def draw(splash)
         width, height = G.dimensions

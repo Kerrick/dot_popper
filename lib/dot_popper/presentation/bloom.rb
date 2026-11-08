@@ -33,6 +33,24 @@ module DotPopper
         new(offsets: [0.0] + pairs.map(&:first), weights: [taps.first] + pairs.map(&:last))
       end
 
+      # The standard deviation, in pixels, of the blur the nine taps make:
+      # less than +sigma+, since the taps stop at four pixels.
+      def self.spread(sigma)
+        taps = (-4..4).map { [it, Math.exp(-(it**2) / (2.0 * (sigma**2)))] }
+        total = taps.sum(&:last)
+        Math.sqrt(taps.sum { |at, weight| at * at * weight } / total)
+      end
+
+      # The sigma whose taps spread +wanted+ pixels (at most about 2.5).
+      def self.sigma_for(wanted)
+        low, high = 0.01, 1000.0
+        60.times do
+          middle = (low + high) / 2
+          spread(middle) < wanted ? low = middle : high = middle
+        end
+        high
+      end
+
       # What every read counts together, both sides: 1 for a blur that
       # neither brightens nor darkens.
       def total = weights.first + (2 * weights.drop(1).sum)

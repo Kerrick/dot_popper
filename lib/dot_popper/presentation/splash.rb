@@ -18,6 +18,15 @@ module DotPopper
       BLOCK_BOTTOM = 0.14
       BLOCK_LEFT = ((WORD.length - 1) * ADVANCE) + CELL + BLOCK_GAP # from the first letter's start
       WIDTH = BLOCK_LEFT + BLOCK_WIDTH # in ems
+      # setdef's glow (brand/README.md): the mark blurred, in its own
+      # colour at 55%, under the mark. The spec calls it "a blur of
+      # 0.12em"; the artwork's filter is a Gaussian with a standard
+      # deviation of 60 of Iosevka's 1000 units, 0.06em, which is what
+      # the screen matches.
+      GLOW_SIGMA = 0.06
+      GLOW_STRENGTH = 0.55
+      GLOW_PASSES = 3
+      GLOW_STEP = 3.0 # the blur's sigma per pass, in the blurred layer's pixels
 
       # The size that fits a window +width+ by +height+: about as wide as
       # setdef's artwork is in its frame, narrower on a portrait screen,
@@ -26,6 +35,23 @@ module DotPopper
         across = width * (height > width ? 0.7 : 0.78)
         tall = height * 0.6 / (BLOCK_BOTTOM - BLOCK_TOP)
         new(size: [[across / WIDTH, tall].min.floor, 1].max)
+      end
+
+      # The Bloom's look that blurs the mark by GLOW_SIGMA of its size,
+      # in device pixels, at every size. The blur runs +GLOW_PASSES+ times
+      # at GLOW_STEP, whose nine taps spread (BlurKernel.spread) a little
+      # less than the sigma says; over the passes that adds up to a number
+      # of blurred pixels, and the blurred layer's +resolution+ is what
+      # makes that the wanted number of device pixels. A mark small enough
+      # to need more than the full resolution is blurred more gently
+      # instead. The size is in graphics units, so +density+ is the device
+      # pixels to each.
+      def glow(density = 1.0)
+        wanted = GLOW_SIGMA * size * density
+        reach = BlurKernel.spread(GLOW_STEP) * Math.sqrt(GLOW_PASSES)
+        resolution = [reach / wanted, 1.0].min
+        sigma = BlurKernel.sigma_for(wanted * resolution / Math.sqrt(GLOW_PASSES))
+        BloomLook.new(strength: GLOW_STRENGTH, sigma:, passes: GLOW_PASSES, resolution:)
       end
 
       def width = WIDTH * size
@@ -62,8 +88,11 @@ module DotPopper
     # and so on, so the last note leaves it dark, and it holds dark for a
     # beat before the fade out, so that the fade to the title is not
     # mistaken for the cursor fading: the splash stays that long. Muted,
-    # there is no music to flash to, so the block stays lit.
-    class Splash < Data.define(:at, :sounding)
+    # there is no music to flash to, so the block stays lit. So it does
+    # when +calm+ (DOT_POPPER_CALM, the reduced-motion setting), as setdef's
+    # brand says a blinking mark stops under reduced motion; the jingle
+    # still plays, if sound is on.
+    class Splash < Data.define(:at, :sounding, :calm)
       BEAT = 60.0 / 120
       Note = Data.define(:at, :pitch)
       JINGLE = [[0.0, 1.2], [1.0, 0.9], [3.0, 1.2], [3.5, 0.9], [4.0, 1.0], [5.0, 0.8]]
@@ -78,7 +107,7 @@ module DotPopper
       LIGHTS = 0.03 # seconds the block takes to light
       FADES = 0.1 # and to go dark
 
-      def self.start(sounding: false) = new(at: 0.0, sounding:)
+      def self.start(sounding: false, calm: false) = new(at: 0.0, sounding:, calm:)
 
       # Whether the environment (+env+) asks for no splash: the bot, the GUI
       # director, and a plain request leave it out.
@@ -100,11 +129,10 @@ module DotPopper
       def ground = fade_out
 
       # How lit the block is, 0 to 1, before the mark's fade; always 1 when
-      # muted. Sounding, rising over
-      # LIGHTS from the start of a lit span, and falling over FADES from
-      # its end.
+      # muted or calm. Sounding, rising over LIGHTS from the start of a
+      # lit span, and falling over FADES from its end.
       def block
-        return 1.0 unless sounding
+        return 1.0 if calm || !sounding
 
         span = lit.reverse_each.find { |from, _| from <= at } or return 0.0
         from, to = span

@@ -23,7 +23,7 @@ module DotPopper
         @uptime = 0.0
         @chatter = Presentation::Chatter.quiet(Look::CHATTER)
         @clock = Presentation::FrameClock.start
-        @splash = Presentation::Splash.start unless Presentation::Splash.skipped?(env)
+        @splash = Presentation::Splash.start(calm: flag?("DOT_POPPER_CALM")) unless Presentation::Splash.skipped?(env)
       end
 
       def load

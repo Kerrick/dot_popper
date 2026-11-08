@@ -120,6 +120,30 @@ class SplashTest < Minitest::Test
     assert_equal 0.0, splash.with(at: splash.total - 0.01).block, "no light during the fade out"
   end
 
+  # setdef's brand: anywhere the cursor blinks on a screen, it stops under
+  # reduced motion. The jingle is sound, not motion, so it still plays.
+  def test_calm_the_block_is_steady_and_lit_even_with_the_jingle
+    splash = Splash.start(sounding: true, calm: true)
+    (0..splash.total).step(0.01).each { |t| assert_equal 1.0, splash.with(at: t).block, "at #{t}" }
+    assert_equal Splash::JINGLE, splash.notes(Splash::SOUNDING)
+    assert_in_delta 3.5, splash.total, 1e-9
+    refute Splash.start.calm
+  end
+
+  # brand/README.md: the glow is a 0.06em-deviation blur (the artwork's
+  # filter) at 55%, whatever the size.
+  def test_the_glow_blurs_the_same_share_of_the_mark_at_every_size
+    [1.0, 2.0].each do |density|
+      [40, 120, 262, 600, 1100].each do |size|
+        look = Logotype.new(size:).glow(density)
+        assert_in_delta 0.55, look.strength, 1e-9
+        reach = BlurKernel.spread(look.sigma) * Math.sqrt(look.passes) / look.resolution
+        assert_in_delta 0.06 * size * density, reach, 1e-6, "at size #{size}, density #{density}"
+        assert_operator look.resolution, :<=, 1.0
+      end
+    end
+  end
+
   def test_the_shortest_dark_span_outlasts_the_fade
     gaps = Splash::JINGLE.each_slice(2).each_cons(2).map { |(_, off), (on, _)| on.at - off.at }
     assert_operator gaps.min, :>, Splash::FADES
