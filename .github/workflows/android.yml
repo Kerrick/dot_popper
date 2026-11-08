@@ -1,8 +1,8 @@
 # Builds Dot Popper's EXPERIMENTAL Android kit (PACKAGING.md, "The Android
 # kit"), for a phone such as a OnePlus Nord N30 5G (Android 13,
-# arm64-v8a), by the route of Lota's doc/guide/phones.md at v0.2.2:
+# arm64-v8a), by the route of Lota's doc/guide/phones.md at v0.3.0:
 #
-# 1. rake android:deps, in a clone of Lota at v0.2.2, builds LÖVE's
+# 1. rake android:deps, in a clone of Lota at v0.3.0, builds LÖVE's
 #    libraries and SDL3 for arm64-v8a and x86_64 with NDK r30, OpenAL Soft
 #    as a shared libopenal.so and SDL3 as libSDL3.so;
 # 2. the files Lota's gem packages, built and unpacked from the clone,
@@ -13,7 +13,7 @@
 #    and Lota's Android host from the gem in host/android, with Dot
 #    Popper's changed files (android/host) over it, Play Billing's Gradle
 #    settings among them;
-# 4. fledge build android (Fledge v0.8.0) writes the Gradle project, and
+# 4. fledge build android (Fledge v0.10.0) writes the Gradle project, and
 #    Gradle builds the debug APK and the release App Bundle.
 #
 # A second job installs the kit's APK on an x86_64 emulator of API 33
@@ -31,7 +31,7 @@ on:
       lota_ref:
         description: "A Lota tag or commit (full SHA) to build from, to try an engine fix"
         required: false
-        default: "v0.2.2"
+        default: "v0.3.0"
 
 permissions:
   contents: read
@@ -46,9 +46,9 @@ defaults:
 
 env:
   LOTA_REPOSITORY: https://github.com/setdef/Lota.git
-  LOTA_REF: ${{ inputs.lota_ref || 'v0.2.2' }}
+  LOTA_REF: ${{ inputs.lota_ref || 'v0.3.0' }}
   NDK_REVISION: 30.0.16248370
-  FLEDGE_TAG: v0.8.0
+  FLEDGE_TAG: v0.10.0
   IDENTIFIER: com.setdef.DotPopper
   APP_NAME: Dot Popper
 
@@ -145,7 +145,7 @@ jobs:
         run: |
           phone=$RUNNER_TEMP/phone
           game=$phone/game/dot_popper
-          mkdir -p "$game" "$phone/licenses"
+          mkdir -p "$game"
           git archive HEAD | tar -x -C "$game"
           (cd "$game" && rm -rf .github vendor android ios test doc playtest script sig server Steepfile Rakefile \
             Gemfile Gemfile.lock mise.toml .ruby-version INSIPIRATION.md PACKAGING.md README.md)
@@ -159,17 +159,11 @@ jobs:
           if grep -rl "requestAudioFocus" "$phone/host/android/src/main/java"; then
             echo "::warning::the host's Java requests audio focus, which may stop other apps' music"
           fi
-          # OpenAL Soft is LGPL, so the app carries its licence and source.
-          cp "$LOTA_SOURCE/ext/lota/licenses/LICENSE-LGPL-2.0-or-later.txt" \
-            "$LOTA_SOURCE"/vendor/sources/android/openal-soft-*.tar.bz2 "$phone/licenses/"
-          # Lota writes NOTICES.txt for a desktop app only (lota fuse), so the
-          # phone's is written from Lota's own record of what the Android
-          # build links, in Lota's format (script/phone_notices.rb). It sits
-          # at the project's top, two folders above the game, where the
-          # Credits screen looks (Shell::NoticeFiles). It runs in Lota's
-          # bundle, which has the rice gem the record cites.
-          (cd "$LOTA_SOURCE" && BUNDLE_PATH="$RUNNER_TEMP/lota-bundle" bundle exec ruby "$GITHUB_WORKSPACE/script/phone_notices.rb" \
-            android "$LOTA_SOURCE" "$phone/NOTICES.txt")
+          # Lota's rake android:notices writes the phone project's NOTICES.txt
+          # at its top, two folders above the game, where the Credits screen
+          # looks (Shell::NoticeFiles), and copies OpenAL Soft's source, which
+          # its LGPL asks the app to carry, into the project's sources folder.
+          (cd "$LOTA_SOURCE" && BUNDLE_PATH="$RUNNER_TEMP/lota-bundle" bundle exec rake "android:notices[$phone]")
           head -c 600 "$phone/NOTICES.txt"; grep -c . "$phone/NOTICES.txt"
           cat > "$phone/Gemfile" <<EOF
           # frozen_string_literal: true
@@ -251,16 +245,16 @@ jobs:
               grep -q "lib/$abi/$lib" "$RUNNER_TEMP/libs.txt" || { echo "::error::the APK has no lib/$abi/$lib"; exit 1; }
             done
           done
-          # The notices, in the app's files (fledge.zip) with the LGPL text and
-          # OpenAL Soft's source, two folders above the game's.
+          # The notices, in the app's files (fledge.zip) with the LGPL text in
+          # them and OpenAL Soft's source beside them, two folders above the game's.
           unzip -Z1 "$apk" | grep -v "^lib/" | head -40
           entry=$(unzip -Z1 "$apk" | grep -E "fledge.*\.zip$" | head -1) || { echo "::error::the APK has no fledge zip"; exit 1; }
           unzip -o -q "$apk" "$entry" -d "$RUNNER_TEMP/apk"
           bundled=$RUNNER_TEMP/apk/$entry
-          unzip -Z1 "$bundled" | grep -E "(^|/)(NOTICES.txt|licenses/.*)$" | tee "$RUNNER_TEMP/notices.txt"
+          unzip -Z1 "$bundled" | grep -E "(^|/)(NOTICES.txt|sources/.*)$" | tee "$RUNNER_TEMP/notices.txt"
           unzip -Z1 "$bundled" | grep -E "^[^/]*NOTICES.txt$" > /dev/null || echo "::warning::NOTICES.txt is not at the zip's top"
           unzip -p "$bundled" "$(grep -E '(^|/)NOTICES.txt$' "$RUNNER_TEMP/notices.txt" | grep -v '^notices/' | head -1)" > "$RUNNER_TEMP/NOTICES.txt"
-          grep -q "licenses/openal-soft-.*tar.bz2" "$RUNNER_TEMP/notices.txt"
+          grep -q "sources/openal-soft-.*tar.bz2" "$RUNNER_TEMP/notices.txt"
           grep -q "^OpenAL Soft 1" "$RUNNER_TEMP/NOTICES.txt"
           grep -q "Portions of this software are copyright .* The FreeType Project" "$RUNNER_TEMP/NOTICES.txt"
           grep -q "^==== LGPL-2.0-or-later ====" "$RUNNER_TEMP/NOTICES.txt"

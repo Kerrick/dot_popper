@@ -1,5 +1,5 @@
 # Fuses Dot Popper with `lota fuse` on this runner's platform (PACKAGING.md),
-# as Lota 0.2.2's README documents: Lota's gem for the platform, from
+# as Lota 0.3.0's README documents: Lota's gem for the platform, from
 # vendor/cache and checked against the SHA256SUMS of Lota's release, is
 # installed, and lota fuse builds the app into $RUNNER_TEMP/fuse. It also
 # writes $RUNNER_TEMP/build.txt, the lines a kit names its build by, and
@@ -42,35 +42,15 @@ runs:
         gem install --local "$gem_file"
         ruby -S lota --version
 
-    # lota fuse installs every gem the lockfile locks, the development
-    # group's too, and steep's json compiles there. On Windows that build
-    # needs RubyInstaller's MSYS2 make and compiler, as lota fuse's error
-    # says (ridk install), which the runner's MSYS2 lacks; RubyInstaller
-    # enables them for a gem's extension. ridk is a .cmd, which PowerShell
-    # runs and Git's bash does not.
-    - name: Install RubyInstaller's MSYS2 development tools
-      if: runner.os == 'Windows'
-      shell: pwsh
-      run: |
-        ridk install 3
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-    # mkmf writes MSYS paths such as /C/... into the Makefile, which the
-    # runner's own C:\mingw64 make, ahead of MSYS2's on the PATH, cannot
-    # follow, so the step leaves C:\mingw64 off its PATH.
+    # lota fuse leaves out of the app what only the repository needs (a
+    # fused LÖVE game ships the whole folder it's given).
     - name: lota fuse
       shell: bash
       run: |
-        if [ "$RUNNER_OS" = Windows ]; then
-          PATH=$(printf '%s' "$PATH" | tr ':' '\n' | grep -vix '/c/mingw64/bin' | paste -sd: -)
-          echo "make: $(command -v make || echo none); gcc: $(command -v gcc || echo none)"
-        fi
-        # lota fuse ships all of the folder it is given, as a fused LÖVE game
-        # does, so it gets a copy without what only the repository needs.
-        stage=$RUNNER_TEMP/game
-        mkdir -p "$stage"
-        git archive HEAD | (cd "$stage" && tar -x)
-        (cd "$stage" && rm -rf .github android ios test doc playtest script sig server Steepfile Rakefile \
-          mise.toml INSIPIRATION.md PACKAGING.md README.md)
-        (cd "$stage" && ruby -S lota fuse . --identifier "$IDENTIFIER" --app-version "$APP_VERSION" --icon icons/icon --out "$RUNNER_TEMP/fuse")
+        exclude=()
+        for path in test doc sig script playtest android ios .github Rakefile Steepfile mise.toml \
+          INSIPIRATION.md PACKAGING.md README.md .gitignore; do
+          exclude+=(--exclude "$path")
+        done
+        ruby -S lota fuse . "${exclude[@]}" --identifier "$IDENTIFIER" --app-version "$APP_VERSION" --icon icons/icon --out "$RUNNER_TEMP/fuse"
         ls -la "$RUNNER_TEMP/fuse"

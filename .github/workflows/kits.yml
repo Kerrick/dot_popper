@@ -1,6 +1,6 @@
 # Builds Dot Popper's playtest kits (PACKAGING.md, "Playtest kits"): one
 # kit in, one results file out, per device. Each desktop kit holds the app
-# `lota fuse` builds with Lota 0.2.2's release gem (.github/actions/fuse),
+# `lota fuse` builds with Lota 0.3.0's release gem (.github/actions/fuse),
 # on its own platform's runner, as the Package workflow builds the apps:
 #
 # - Windows x64: the game, playtest.ps1, which asks the hand checks one at
@@ -14,8 +14,8 @@
 #   which works as playtest.ps1 does, and a README, tested as the Windows
 #   kit is, under Xvfb with Mesa.
 # - iPad and iPhone (experimental): the Xcode project `fledge build ios`
-#   writes, with Lota 0.2.2's experimental iOS engine built from a clone
-#   of Lota at its v0.2.2 tag and Lota's iOS host, by the route of Lota's
+#   writes, with Lota 0.3.0's experimental iOS engine built from a clone
+#   of Lota at its v0.3.0 tag and Lota's iOS host, by the route of Lota's
 #   doc/guide/phones.md, and ios-results.txt to fill in. A second, fresh runner builds that
 #   project for the Simulator and, unsigned, for devices, and runs the
 #   autoplay check of doc/ios.md.
@@ -42,9 +42,9 @@ defaults:
     shell: bash
 
 env:
-  LOTA_VERSION: "0.2.2"
+  LOTA_VERSION: "0.3.0"
   # Only the iOS build names Fledge itself; lota fuse pins its own.
-  FLEDGE_TAG: v0.8.0
+  FLEDGE_TAG: v0.10.0
   IDENTIFIER: com.setdef.DotPopper
   BUNDLE_FROZEN: "true"
 
@@ -397,13 +397,11 @@ jobs:
           # Written by kits.yml: starts the game's copy as its own program does.
           load File.join(__dir__, "game", "dot_popper", "bin", "dot_popper")
           EOF
-          # Lota writes NOTICES.txt for a desktop app only (lota fuse), so the
-          # phone's is written from Lota's own record of what the iOS build
-          # links, in Lota's format (script/phone_notices.rb). It sits at the
-          # project's top, two folders above the game, where the Credits
-          # screen looks (Shell::NoticeFiles). Apple's OpenAL needs no
-          # notice, so there is no LGPL text or source here.
-          (cd "$LOTA_SOURCE" && bundle exec ruby "$GITHUB_WORKSPACE/script/phone_notices.rb" ios "$LOTA_SOURCE" "$phone/NOTICES.txt")
+          # Lota's rake ios:notices writes the phone project's NOTICES.txt
+          # at its top, two folders above the game, where the Credits screen
+          # looks (Shell::NoticeFiles). Apple's OpenAL needs no notice, so
+          # there is no LGPL text or source here.
+          (cd "$LOTA_SOURCE" && bundle exec rake "ios:notices[$phone]")
           head -c 600 "$phone/NOTICES.txt"; grep -c . "$phone/NOTICES.txt"
           cat > "$phone/Gemfile" <<EOF
           # frozen_string_literal: true

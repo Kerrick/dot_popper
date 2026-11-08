@@ -42,7 +42,7 @@ class NoticeFilesTest < Minitest::Test
   end
 
   # An Android or iOS app: the project's top holds NOTICES.txt (written by
-  # script/phone_notices.rb), notices/ is Fledge's, and the game is two
+  # Lota's rake ios:notices or rake android:notices), notices/ is Fledge's, and the game is two
   # folders down, in game/dot_popper.
   def test_a_phone_app_finds_the_notices_at_the_projects_top
     Dir.mktmpdir do |root|

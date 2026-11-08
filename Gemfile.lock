@@ -1,9 +1,9 @@
 GIT
   remote: https://github.com/setdef/Fledge
-  revision: 043b80e71046fdbba0b778a65e31d45f792e5e2b
-  tag: v0.8.0
+  revision: e92d92ef548c505de2909c205a1ca113cd89cadf
+  tag: v0.10.0
   specs:
-    fledge (0.8.0)
+    fledge (0.10.0)
 
 GEM
   remote: https://rubygems.org/
@@ -22,9 +22,9 @@ GEM
       rb-fsevent (~> 0.10, >= 0.10.3)
       rb-inotify (~> 0.9, >= 0.9.10)
     logger (1.7.0)
-    lota (0.2.2-arm64-darwin)
-    lota (0.2.2-x64-mingw-ucrt)
-    lota (0.2.2-x86_64-linux-gnu)
+    lota (0.3.0-arm64-darwin)
+    lota (0.3.0-x64-mingw-ucrt)
+    lota (0.3.0-x86_64-linux-gnu)
     minitest (5.27.0)
     parser (3.3.13.0)
       ast (~> 2.4.1)
@@ -75,7 +75,7 @@ PLATFORMS
 
 DEPENDENCIES
   fledge!
-  lota (~> 0.2.2)
+  lota (~> 0.3.0)
   minitest (~> 5.25)
   rake (~> 13.2)
   steep (~> 2.1)
@@ -89,14 +89,14 @@ CHECKSUMS
   ffi (1.17.4-x64-mingw-ucrt) sha256=f6ff9618cfccc494138bddade27aa06c74c6c7bc367a1ea1103d80c2fcb9ed35
   ffi (1.17.4-x86_64-linux-gnu) sha256=9d3db14c2eae074b382fa9c083fe95aec6e0a1451da249eab096c34002bc752d
   fileutils (1.8.1) sha256=2d541a1ee34a9ed5c4f054be8fb819a26b5d654488a31dc8806917cf448b9cc3
-  fledge (0.8.0)
+  fledge (0.10.0)
   json (3.1.0) sha256=3ce7ccf8fde58960177a3a756c31f292a4c1e1dedee884547096a5b0604e3bd8
   language_server-protocol (3.17.0.6) sha256=5ef2c0c138f8267e1bc631d3328347d354f96724b0af22f2c79516120443b7f0
   listen (3.10.1) sha256=4c3f32855657f348747da4dd2372ff3790d90a6b1d3e4f21a3706adb2d04783c
   logger (1.7.0) sha256=196edec7cc44b66cfb40f9755ce11b392f21f7967696af15d274dde7edff0203
-  lota (0.2.2-arm64-darwin) sha256=352c7dbd5237f577e8428d8e47f626c8914601fcc0865a6f667aae5595c70962
-  lota (0.2.2-x64-mingw-ucrt) sha256=812d7289f3bb8cc4f474e5d842ada83265894f2ee05c1a59afde36723da3ba94
-  lota (0.2.2-x86_64-linux-gnu) sha256=1d04ac10e912fbb6c29b721e445d78ed43ac1fc984443e05b0980ebef4adca71
+  lota (0.3.0-arm64-darwin) sha256=a7d316a234be2332833f7fb783b5fe1e73fffe6329f12d386f9e233d88213b36
+  lota (0.3.0-x64-mingw-ucrt) sha256=76d9af4fa8a84e116cb943d34dd1a78fff281098f469142aa89c4ac857adbf0c
+  lota (0.3.0-x86_64-linux-gnu) sha256=0d494f09eb87c32d74b283cddeb18782f8edf5e13e65b211fc942235d359e1a2
   minitest (5.27.0) sha256=2d3b17f8a36fe7801c1adcffdbc38233b938eb0b4966e97a6739055a45fa77d5
   parser (3.3.13.0) sha256=e02f9b63c2fe05b0c68f692ba4df89b3cb113b663964f75d988fbebfd6c3deca
   prism (2.1.0-arm64-darwin) sha256=2d0c2e3e011cfd89c041940907d3ff3def379d7b0f2ba158d1d42238e8ad8afc

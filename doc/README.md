@@ -49,12 +49,12 @@ The game looks for the server at `Groups::Settings::SERVER_URL`, which is `nil` 
 
 | You develop on | Lota's gem in `vendor/cache` |
 | --- | --- |
-| macOS 14 or newer on Apple silicon | `lota-0.2.2-arm64-darwin.gem` |
-| Windows on x64, with [RubyInstaller](https://rubyinstaller.org/)'s Ruby | `lota-0.2.2-x64-mingw-ucrt.gem` |
-| Linux on x86_64 with glibc, and an X11 or Wayland desktop with OpenGL | `lota-0.2.2-x86_64-linux-gnu.gem` |
+| macOS 14 or newer on Apple silicon | `lota-0.3.0-arm64-darwin.gem` |
+| Windows on x64, with [RubyInstaller](https://rubyinstaller.org/)'s Ruby | `lota-0.3.0-x64-mingw-ucrt.gem` |
+| Linux on x86_64 with glibc, and an X11 or Wayland desktop with OpenGL | `lota-0.3.0-x86_64-linux-gnu.gem` |
 
 - Dot Popper needs Ruby 4.0.9, which `.ruby-version` and `mise.toml` name.
-- Bundler installs Lota 0.2.2 from `vendor/cache`, and [Fledge](https://github.com/setdef/Fledge) v0.8.0 from its Git tag. Fledge is in the `development` group, so it stays out of the app.
+- Bundler installs Lota 0.3.0 from `vendor/cache`, and [Fledge](https://github.com/setdef/Fledge) v0.10.0 from its Git tag. Fledge is in the `development` group, so it stays out of the app.
 - Other systems, such as Intel Macs, Linux on ARM, and Linux with musl, have no Lota gem in `vendor/cache`.
 
 ## Getting started
@@ -131,7 +131,7 @@ No type error detected. 🫖
 `lota fuse` builds the app for the computer it runs on. It runs Lota's gem from outside the bundle, so install that gem into your Ruby first, from `vendor/cache`:
 
 ```console
-$ gem install --local vendor/cache/lota-0.2.2-arm64-darwin.gem
+$ gem install --local vendor/cache/lota-0.3.0-arm64-darwin.gem
 $ lota fuse . --identifier com.setdef.DotPopper --app-version 0.9.9 --icon icons/icon
 dist/Dot Popper-arm64-darwin.tar.gz
 dist/Dot Popper-arm64-darwin.dmg

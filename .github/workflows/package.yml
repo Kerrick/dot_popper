@@ -1,5 +1,5 @@
 # Builds Dot Popper into apps people without Ruby can run (PACKAGING.md),
-# one way: `lota fuse`, with Lota 0.2.2's release gem
+# one way: `lota fuse`, with Lota 0.3.0's release gem
 # (.github/actions/fuse), each on its own platform's runner. On Windows
 # x64 a .zip and an installer, on macOS arm64 a .dmg and a .tar.gz, and on
 # Linux x86_64 (glibc 2.39, so ubuntu-24.04) a .tar.gz and an AppImage.
@@ -31,7 +31,7 @@ defaults:
 
 env:
   BUNDLE_FROZEN: "true"
-  LOTA_VERSION: "0.2.2"
+  LOTA_VERSION: "0.3.0"
   IDENTIFIER: com.setdef.DotPopper
   # The bot plays, sounds go nowhere, and the save folder is a test's own.
   PLAY_ENV: ALSOFT_DRIVERS=null DOT_POPPER_AUTOPLAY=1 DOT_POPPER_SEED=7 DOT_POPPER_QUIT_AFTER=20 DOT_POPPER_PERF=1 DOT_POPPER_SAVE_AS=ci-play

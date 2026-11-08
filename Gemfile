@@ -7,13 +7,14 @@ ruby file: ".ruby-version"
 # Lota is not on RubyGems.org. Its precompiled gems for each platform we
 # build on live in vendor/cache, downloaded from its GitHub release and
 # checked against the release's SHA256SUMS.
-gem "lota", "~> 0.2.2"
+gem "lota", "~> 0.3.0"
 
 # Fledge packages the game for people who don't have Ruby (PACKAGING.md).
-# It is pinned to v0.8.0, the release Lota 0.2.2's lota fuse builds with.
+# Pinned to v0.10.0; a fused app takes Fledge 0.9.0, as Lota 0.3.0's
+# lota fuse pins it.
 # In the development group, so fledge build leaves it out of the app.
 group :development do
-  gem "fledge", git: "https://github.com/setdef/Fledge", tag: "v0.8.0"
+  gem "fledge", git: "https://github.com/setdef/Fledge", tag: "v0.10.0"
 
   # Steep checks the rules core against its RBS signatures in sig/
   # (bundle exec rake steep). Only the default rake task needs it;
