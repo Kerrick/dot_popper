@@ -811,6 +811,8 @@ Every build now uses the identifier `com.setdef.DotPopper`, which was `com.kerri
 
 ## Only OpenGL on Windows and Linux
 
+*Windows since went back to Vulkan first: see "Vulkan first on Windows, for the Xbox overlay".*
+
 LÖVE tries its renderers in a fixed order, Vulkan first, but falls back only when a renderer can't be created at all. A computer with a Vulkan driver but no GPU it can use (old integrated graphics, a virtual machine, a remote desktop, a display server like Xvfb) gets "Failed to initialize graphics" and can't play. That was found on the maintainer's Linux machine, and Lota keeps LÖVE's behavior here by design: the choice is the game's, in `conf.rb`. LÖVE tries renderers in its own fixed order whatever order a game lists, so a game can put OpenGL first only by leaving Vulkan out. Dot Popper allows only OpenGL on Windows and Linux: OpenGL is the renderer LÖVE has supported longest and runs nearly everywhere, and a game this light gains nothing from Vulkan on a computer. Android keeps Vulkan first, since a blind playtest on a OnePlus Nord rated OpenGL ES "stuttery" on battery and Lota 0.2.2 fixed Vulkan's landscape slowdown there. macOS and iOS have only Metal. `DOT_POPPER_RENDERERS` still overrides the order for testing.
 
 ## Phone builds write their own NOTICES.txt
@@ -818,3 +820,18 @@ LÖVE tries its renderers in a fixed order, Vulkan first, but falls back only wh
 **Decision:** `script/phone_notices.rb` writes the Android and iOS apps' `NOTICES.txt` by calling Lota's `Lota::Notices` with the works Lota's `licenses.rb` records for each phone, rather than hand-written text.
 
 **Why:** Lota 0.2.2's `lota fuse` writes this file for desktop only, and the phones left Credits without FreeType's credit, and (on Android) without OpenAL Soft's LGPL text and source offer. Using Lota's own record keeps one source of facts and the same format. The Android app's `licenses/` folder already carries OpenAL Soft's exact source archive, so that is the source offer; no release asset or written offer is added.
+
+## Vulkan first on Windows, for the Xbox overlay
+
+On Windows, in fullscreen, the Xbox button opened the Xbox Game Bar's overlay out of sight: the overlay took the controller, so Dot Popper's cursor stopped, but it never drew over the game. The maintainer tried the four combinations on his PC, which is connected to a TV:
+
+| | TV's game mode | Xbox overlay | Alt+Tab |
+|---|---|---|---|
+| OpenGL, borderless (0.9.2) | yes | no | instant |
+| OpenGL, exclusive | yes | no | disruptive |
+| Vulkan, borderless | no | yes | instant |
+| Vulkan, exclusive | no | yes | barely worse |
+
+No combination gave both. He chose the working overlay. Windows now allows both renderers, and LÖVE's own order puts Vulkan first on x64 (and OpenGL first on ARM64, whatever a game lists). LÖVE falls back to OpenGL only when Vulkan can't be created at all, and Lota matches LÖVE there on purpose, so a Windows PC with a Vulkan driver but no usable GPU (a virtual machine, a remote desktop) may fail to start. That's the risk the Linux choice above avoids, and it was judged rare on Windows. `DOT_POPPER_RENDERERS=opengl` still starts the game there. Fullscreen stays borderless, which matched exclusive on both counts and has the better Alt+Tab. `DOT_POPPER_FULLSCREEN=exclusive` stays as a switch for testing.
+
+**To reverse:** In `conf.rb`, match `mingw|mswin` again along with `linux` for the OpenGL-only list.

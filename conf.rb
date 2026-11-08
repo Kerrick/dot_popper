@@ -24,14 +24,15 @@ def Lota.conf(t)
   # Which graphics renderers LÖVE may use. It tries them in its own fixed
   # order, Vulkan first, whatever order is given here, and gives up rather
   # than trying OpenGL when a computer has Vulkan but no GPU it can use
-  # (old graphics, virtual machines, remote desktops), so on Windows and
-  # Linux only OpenGL is allowed, the most tested and most widely
-  # supported; this game gains nothing from Vulkan on a computer. Android
-  # keeps Vulkan first: a blind playtest found OpenGL ES stuttered there on
-  # battery. Apple's systems have Metal alone. DOT_POPPER_RENDERERS=opengl
-  # (or vulkan, or metal, comma-separated) overrides this, to
-  # compare them on a device.
+  # (old graphics, virtual machines, remote desktops), so on Linux only
+  # OpenGL is allowed, the most tested and most widely supported. Windows
+  # allows both, so x64 PCs get Vulkan: there, OpenGL's fullscreen hides
+  # the Xbox Game Bar's overlay while it still takes the controller, and
+  # Vulkan's shows it. Android keeps Vulkan too: a blind playtest found OpenGL ES
+  # stuttered there on battery. Apple's systems have Metal alone.
+  # DOT_POPPER_RENDERERS=opengl (or vulkan, or metal, comma-separated)
+  # overrides this, to compare them on a device.
   chosen = ENV.fetch("DOT_POPPER_RENDERERS", "").split(",").map(&:strip).reject(&:empty?).map(&:to_sym)
-  chosen = %i[opengl] if chosen.empty? && RUBY_PLATFORM.match?(/mingw|mswin|linux/) && !RUBY_PLATFORM.include?("android")
+  chosen = %i[opengl] if chosen.empty? && RUBY_PLATFORM.include?("linux") && !RUBY_PLATFORM.include?("android")
   t.renderers = chosen unless chosen.empty?
 end
