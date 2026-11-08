@@ -30,11 +30,15 @@ ruby "$here/android_emulator.rb" "$apk" "$package" "$out/autoplay" \
 
 # Back on the title leaves the app: Dot Popper quits itself
 # (Lota::Event.quit), with no DOT_POPPER_QUIT_AFTER to do it instead.
+# Back waits for the setdef splash to be over, since a key during it only
+# skips it: the splash lasts 3.5 s of the game's time, and on a slow
+# runner that was more than the 4 s of the clock this once waited.
 ruby "$here/android_emulator.rb" "$apk" "$package" "$out/back-on-title" \
   --env ALSOFT_DRIVERS=null --env DOT_POPPER_SAVE_AS=ci_back --env DOT_POPPER_KIT_PROBE=1 \
   --ready "kit probe: subscribed" --shot 2 --timeout 90 \
-  --key-after "4:KEYCODE_BACK:kit probe: subscribed" \
+  --key-after "1:KEYCODE_BACK:kit probe: splash over" \
   --expect "Dot Popper: a dot's radius is 50 dp, about 8 mm" \
+  --expect-order "kit probe: splash over" \
   --expect-order "kit probe: keypressed :escape, :acback, false in Title" \
   --expect-order "exited with status 0" || status=1
 

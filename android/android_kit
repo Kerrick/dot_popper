@@ -13,7 +13,9 @@
 # and a launch from the launcher never has, it also logs what Lota's
 # window reports on frames 60 and 600, each touch and key the game
 # receives (with the state it arrives in), each event the game announces,
-# and, every 15 frames of a round, where its topmost fresh dot is.
+# the frame the setdef splash is over on (a key before then only skips
+# the splash), and, every 15 frames of a round, where its topmost fresh
+# dot is.
 if ENV["DOT_POPPER_KIT_PROBE"] == "1"
   $stdout.sync = true
   require "lota"
@@ -64,6 +66,10 @@ if ENV["DOT_POPPER_KIT_PROBE"] == "1"
       define_singleton_method(:draw) do
         draw.call
         frames += 1
+        if !@kit_splash_over && @app.instance_variable_get(:@splash).nil?
+          @kit_splash_over = true
+          puts "kit probe: splash over by frame #{frames}"
+        end
         if [60, 600].include?(frames)
           puts "kit probe: frame #{frames}, Window.fullscreen #{Lota::Window.fullscreen.inspect}, " \
             "safe_area #{Lota::Window.safe_area.inspect}, Graphics.dimensions #{Lota::Graphics.dimensions.inspect}, " \
