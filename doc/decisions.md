@@ -910,6 +910,12 @@ He then found the splash too short with sound: the whole thing was fading to the
 
 **To reverse:** Drop `Splash#block`, and draw the block at `splash.mark` in `SplashPainter`.
 
+### The block glows with the letters
+
+The maintainer's brand decision for setdef's mark: "The block cursor glows exactly when the letters glow, and is flat when they're flat." The block is drawn into the same glow pass as the letters, at its own lit level (`splash.block`), so its glow fades and returns with the blink while the letters' glow is unchanged. Where there is no blur shader, neither glows. Colours, proportions, timing and blink are untouched.
+
+**To reverse:** Drop the `block` call from the glow block in `SplashPainter#draw`.
+
 ## The gamepad cursor gathers speed in 0.08 s, not 0.3 s
 
 Release-candidate players said the gamepad cursor's "friction feels like bad delay". The cause was the ramp: the cursor took 0.3 s to reach its speed, so it lagged behind the stick on every push. Swink's *Game Feel* puts "feels direct" below about 100 ms, so the ramp is now 0.08 s. Letting go already stopped the cursor dead, and the squared stick curve still handles fine aiming, so nothing else changed. The d-pad and stick go through the same path with no other smoothing.

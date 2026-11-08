@@ -4,10 +4,12 @@ module DotPopper
   module Shell
     # The setdef splash: its black ground over the whole window, and its
     # logotype (Presentation::Logotype) centred on it, in Workshop Yellow.
-    # The letters sit on a faint, smooth glow, the letters blurred by the
-    # Bloom and added to the ground; where there is no blur shader there
-    # is no glow. The block blinks, as Presentation::Splash says. Letters
-    # and block are placed on whole device pixels.
+    # The letters and the block sit on a faint, smooth glow, both blurred
+    # by the Bloom and added to the ground; where there is no blur shader
+    # there is no glow. The block blinks, as Presentation::Splash says, and
+    # its glow follows its own lit level: "The block cursor glows exactly
+    # when the letters glow, and is flat when they're flat." Letters and
+    # block are placed on whole device pixels.
     # Presentation::Splash says how much of each shows.
     class SplashPainter
       G = ::Lota::Graphics
@@ -32,7 +34,10 @@ module DotPopper
         pixels = @pen.pixels
         left = pixels.snap(logotype.left(width / 2.0))
         baseline = pixels.snap(logotype.baseline(height / 2.0))
-        @glow.glow(splash.mark) { letters(logotype, font, left, baseline, 1.0) }
+        @glow.glow(splash.mark) do
+          letters(logotype, font, left, baseline, 1.0)
+          block(logotype, left, baseline, splash.block)
+        end
         letters(logotype, font, left, baseline, splash.mark)
         block(logotype, left, baseline, splash.mark * splash.block)
       end
