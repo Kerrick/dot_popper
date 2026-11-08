@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "lib/dot_popper/shell/vulkan_rescue"
+
 # Lota reads this before it opens the window. main.rb then sizes the
 # window to the play area DotPopper::Presentation::Look::WINDOW names,
 # fitted to the desktop.
@@ -22,18 +24,24 @@ def Lota.conf(t)
   t.window.stencil = false
   t.window.depth = false
   # Which graphics renderers LÖVE may use (t.graphics.renderers; LÖVE 12 moved
-  # it from t.renderers). It tries them in its own fixed
-  # order, Vulkan first, whatever order is given here, and gives up rather
-  # than trying OpenGL when a computer has Vulkan but no GPU it can use
-  # (old graphics, virtual machines, remote desktops), so on Linux only
-  # OpenGL is allowed, the most tested and most widely supported. Windows
-  # allows both, so x64 PCs get Vulkan: there, OpenGL's fullscreen hides
-  # the Xbox Game Bar's overlay while it still takes the controller, and
-  # Vulkan's shows it. Android keeps Vulkan too: a blind playtest found OpenGL ES
-  # stuttered there on battery. Apple's systems have Metal alone.
+  # it from t.renderers). It tries them in its own fixed order, Vulkan
+  # first, whatever order is given here, and gives up rather than trying
+  # OpenGL when a computer has Vulkan but no GPU it can use (old graphics,
+  # virtual machines, remote desktops), so on Linux only OpenGL is allowed,
+  # the most tested and most widely supported. Windows allows both, so x64
+  # PCs get Vulkan: there, OpenGL's fullscreen hides the Xbox Game Bar's
+  # overlay while it still takes the controller, and Vulkan's shows it.
+  # Where Vulkan then fails to start the game, the game starts again
+  # without it, and leaves it out for a month (Shell::VulkanRescue).
+  # Android keeps Vulkan too: a blind playtest found OpenGL ES stuttered
+  # there on battery. Apple's systems have Metal alone.
   # DOT_POPPER_RENDERERS=opengl (or vulkan, or metal, comma-separated)
-  # overrides this, to compare them on a device.
-  chosen = ENV.fetch("DOT_POPPER_RENDERERS", "").split(",").map(&:strip).reject(&:empty?).map(&:to_sym)
-  chosen = %i[opengl] if chosen.empty? && RUBY_PLATFORM.include?("linux") && !RUBY_PLATFORM.include?("android")
-  t.graphics.renderers = chosen unless chosen.empty?
+  # overrides this, to compare them on a device, and DOT_POPPER_NO_VULKAN=1
+  # leaves Vulkan out, as after it failed.
+  @vulkan_rescue = DotPopper::Shell::VulkanRescue.choose(identity: t.identity, title: t.window.title)
+  @vulkan_rescue.apply(t.graphics)
 end
+
+# Vulkan's failure to start the game starts it again without Vulkan;
+# anything else shows Lota's error screen.
+def Lota.errorhandler(error) = @vulkan_rescue&.rescue(error) || super

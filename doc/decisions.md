@@ -874,6 +874,28 @@ No combination gave both. He chose the working overlay. Windows now allows both 
 
 **To reverse:** In `conf.rb`, match `mingw|mswin` again along with `linux` for the OpenGL-only list.
 
+*The risk is since covered: see "When Vulkan can't start the game, it starts again without it".*
+
+## When Vulkan can't start the game, it starts again without it
+
+**Decision:** When Vulkan fails to start the game, the game notes the day in its save folder (`vulkan_failed.txt`) and at once runs itself again with `DOT_POPPER_NO_VULKAN=1`, which leaves Vulkan out, so LÖVE takes OpenGL on Windows. The player sees one slower start, not an error. For 30 days after, `conf.rb` reads the note and leaves Vulkan out from the start. Then the game tries Vulkan again, and if it still fails, falls back again by itself. `Presentation::RendererChoice` decides the renderers and which errors it rescues, `VulkanFailure` is the note, `Relaunch` is how the game runs itself again, and `Shell::VulkanRescue` carries them out from `conf.rb`'s `Lota.errorhandler`, which must live in `conf.rb`, since the window opens before `main.rb` loads.
+
+**Why:** Windows allows Vulkan for the Xbox overlay (above), and LÖVE falls back to OpenGL only when Vulkan can't be created at all, so a PC with a Vulkan driver but no GPU it can use (a virtual machine, a remote desktop, old integrated graphics) got "Failed to initialize graphics. Vulkan: failed to find a suitable GPU." and never started. Store certification and reviewers may test in virtual machines. Lota won't add a fallback, by design, but its error handler receives that error, as `love.errorhandler` would. Three ways were weighed:
+
+- A note alone, read by `conf.rb` on the next launch, works only on the second launch, after an error the player has to understand.
+- Lota's in-process restart doesn't exist: `Lota::Event.restart` replaces the process under `lota run` only, and a fused game quits instead. Under `bundle exec lota run`, Lota's restart even runs `bundle` again rather than `lota`. LÖVE also picks its graphics module once, when the module opens, so nothing in one process could switch renderers.
+- Running itself again works on the first launch. Fledge documents how: on Windows, start the app's `NAME.exe` again, two folders above the program Ruby runs (`ROOT\app\main.rb`); on macOS and Linux, `RbConfig.ruby $0 ARGV`. Under `lota run`, it is `RbConfig.ruby $0 run ARGV`. On Windows, Ruby's `exec` runs the new process, waits for it, and exits with its status, so a script that waits for the game, such as `playtest.ps1` or CI, still sees the real game end.
+
+So the game runs itself again, and the note only spares later launches the failed try. The environment variable, not the note, tells the second run to leave Vulkan out, so a save folder that can't be written still gets the game started, and since the second run has no Vulkan to fail, it never starts a third. Where the game can't run itself again (a phone, or a Windows app whose `.exe` isn't where Fledge puts it), it shows one line, "Dot Popper will use different graphics now. Please start it again.", and the note makes that start work.
+
+`conf.rb` makes `t.identity` the save folder before it reads the note: until `Lota.conf` returns, Lota's save folder is the one named after the game's folder, and the error handler would write elsewhere under `DOT_POPPER_SAVE_AS` or `lota run`.
+
+The note lasts 30 days, not forever, because a driver update or a move from a virtual machine to real hardware can make Vulkan work, and the Xbox overlay is the reason Vulkan is allowed at all. Trying again costs one slower start a month on a PC where Vulkan still fails; never trying again would cost the overlay for good on one where it now works. Delete `vulkan_failed.txt` to try sooner.
+
+The rescue takes only a `RuntimeError` that mentions Vulkan, a suitable GPU, no supported renderer, or the window mode, and only while Vulkan was allowed; anything else goes to Lota's own error screen. Proven on Linux under Xvfb with `DOT_POPPER_RENDERERS=vulkan`, which fails with exactly that message and then played on OpenGL, on a Mac with the same setting (no supported renderer, then Metal), and on GitHub's Windows runner, which has no GPU: the Package workflow plays the fused app allowed only Vulkan and checks that it ran its own exe again and drew with OpenGL. A real Windows PC with a Vulkan driver and no usable GPU hasn't been tried.
+
+**To reverse:** Drop `Shell::VulkanRescue` and its `Presentation` objects, set `t.graphics.renderers` in `conf.rb` from `DOT_POPPER_RENDERERS` as before, and remove `Lota.errorhandler` from `conf.rb` and the Vulkan play from the Windows job.
+
 ## "Press B again to quit" goes where there's room
 
 The maintainer saw "Press B again to quit" drawn behind the Play button. It was placed under the title's backing, which ends at the line above Play. The title's plan now places it: a gap under Play, or, where the bottom row leaves no room there, a gap above the name. On the smallest windows, where neither has room, it stands in for today's goal, the best, or the legend, and that line fades out while it shows. It shows for only two seconds, so it takes no room from the other lines, and Play never moves.
