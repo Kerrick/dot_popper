@@ -146,7 +146,7 @@ module DotPopper
       # fades in 0.6 s, as the first dot grows in, so the round's dots are
       # never hidden; its halo lasts past the first tick.
       TUTORIAL = TutorialLook.new(
-        drift: 1.0, stop: 0.15, resume: 0.5, slow: 0.35, start: [-1.1, -1.2].freeze, born: 0.1, peek: 0.8,
+        drift: 1.0, stop: 0.15, resume: 0.5, slow: 0.35, start: [-0.27, -0.12].freeze, born: 0.1, peek: 0.8,
         clear: 2.3, warn: 1.6, flight: 0.6, quick: 0.45, gap: 0.15, hold: 0.45, linger: 0.35, dissolve: 0.4,
         cross: 0.25, longest: 5.0,
         spotlight: SpotlightLook.new(dim: 0.62, move: 0.35, feather: 0.9, dot: 1.5),

@@ -933,3 +933,11 @@ On iOS and Android, Share my score hands the result's text to the system's share
 **Why:** Players on a phone expect the phone's own sheet, which reaches Messages, chats and notes in one tap. Catching the URL in the host, rather than registering a URL scheme and an activity for it, means no other app can send the game that URL, no round trip through the system and no disambiguation dialog, and the game keeps its focus. All the native code lives in the host files Dot Popper already owns, since a gem can't add to the host. The text is percent-encoded as RFC 3986's unreserved characters, so a space is `%20` and a plus `%2B`, which iOS's and Android's parsers both decode alike.
 
 **To reverse:** Pass `InGameSharing.new` as the Show's `sharing:` in `Shell::App#load` (or drop `SheetSharing` and `UrlOpener`), then remove `DotPopperApplication` and `NSPrincipalClass` from `ios/host`, and `startActivity` from `android/host`'s `MainActivity`.
+
+### The tutorial's first dot starts left of the middle
+
+The tutorial's first bright dot starts about a quarter of the window's width left of the middle and a little above it, and drifts further left, so it freezes well away from the centre on every window size (at least 3 radii, inside the safe area, clear of the HUD and the skip button). The next dot is born under it and slides out toward the middle.
+
+**Why:** A gamepad's cursor starts hidden in the middle of the screen. With the dot there too, the player's reticle sat on the ghost's, and nobody had to aim. Now the cursor, pointer or thumb must travel to the dot.
+
+**To reverse:** Set `TUTORIAL.start` back to a small offset and the first dot's `velocity_x` positive.

@@ -4,7 +4,9 @@ module DotPopper
   module Presentation
     # How the Tutorial plays, in seconds, radii, and rates of time, where 1
     # is the game's own. The first dot drifts for +drift+ from +start+ (an
-    # [x, y] offset from the middle of the screen), and time stops in
+    # [x, y] offset from the middle of the screen, as shares of the
+    # field's width and height, so it is well away from the middle, where a
+    # gamepad's cursor starts, on any screen), and time stops in
     # +stop+ and starts again in +resume+, or at +slow+ while the bright
     # dot slides clear. The next dot is +born+ under the first, a little
     # to its left; time stops as it peeks out, +peek+ away, holds for
@@ -152,8 +154,9 @@ module DotPopper
       def first_dot(center_x, center_y)
         across, down = @script.start
         speed = Rules::SPEEDS.min * radius
-        Dot.new(id: BRIGHT, x: center_x + (across * radius), y: center_y + (down * radius), velocity_x: speed,
-                velocity_y: speed, radius:).confine(field)
+        # It drifts away from the middle, so the next dot slides out toward it.
+        Dot.new(id: BRIGHT, x: center_x + (across * field.width), y: center_y + (down * field.height),
+                velocity_x: -speed, velocity_y: speed, radius:).confine(field)
       end
 
       def spawned(dot)

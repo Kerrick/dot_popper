@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "presentation_helper"
+require_relative "screen_plans_test"
 
 class TutorialTest < Minitest::Test
   include PresentationTest
@@ -20,7 +21,7 @@ class TutorialTest < Minitest::Test
   def test_the_bright_dot_drifts_at_the_slowest_speed_then_time_eases_to_a_stop
     dot = bright
     speed = DotPopper::Rules::SPEEDS.min * R
-    assert_equal [speed, speed], [dot.velocity_x, dot.velocity_y]
+    assert_equal [-speed, speed], [dot.velocity_x, dot.velocity_y]
     assert_equal :drift, @tutorial.beat
 
     play_for(SCRIPT.drift + STEP)
@@ -32,6 +33,30 @@ class TutorialTest < Minitest::Test
     still = bright
     play_for(3.0)
     assert_equal [still.x, still.y], [bright.x, bright.y], "time stands still until the player taps"
+  end
+
+  def test_the_bright_dot_freezes_well_away_from_the_middle_where_a_gamepad_cursor_starts
+    sizes = ScreenPlansTest::SIZES
+    sizes.each do |width, height|
+      radius = DotPopper::DotSize.fitted(width, height).radius
+      field = DotPopper::Field.new(width, height, radius)
+      inset = Rect.new(x: 0.0, y: 44.0, width: width.to_f, height: height - 78.0)
+      screen = Layout.new(width:, height:, safe: inset, look: Look::LAYOUT)
+      tutorial = Tutorial.new(field:, center: [screen.center_x, screen.center_y], effects: Effects.new(radius:),
+                              sounds: @sounds, haptics: @haptics, look: Look)
+      (((SCRIPT.drift + SCRIPT.stop + 0.2) / STEP).ceil).times { tutorial.update(STEP) }
+      dot = tutorial.dots.find { it.id == Tutorial::BRIGHT }
+      name = "#{width}x#{height}"
+
+      assert_equal :aim, tutorial.beat, name
+      assert_operator Math.hypot(dot.x - screen.center_x, dot.y - screen.center_y), :>=, 3 * radius, name
+      assert_operator dot.x - radius, :>=, inset.x, name
+      assert_operator dot.x + radius, :<=, inset.right, name
+      assert_operator dot.y - radius, :>=, inset.y + screen.margin, name
+      assert_operator dot.y + radius, :<=, inset.bottom, name
+      assert_operator dot.x + radius, :<=, screen.skip_button.x, "#{name}: clear of the skip button" \
+        if dot.y - radius < screen.skip_button.bottom
+    end
   end
 
   def test_the_spotlight_finds_the_bright_dot_and_the_ghost_hand_taps_it
