@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 setdef <kerrick@setdef.com>
 // SPDX-License-Identifier: MIT
 //
-// Dot Popper's copy of Fledge v0.8.0's template (lib/fledge/templates/android),
+// Dot Popper's copy of Fledge v0.10.0's template (lib/fledge/templates/android),
 // which android.yml lays over it, with one change: Play Billing, for
 // buying the paid version (PaidStore).
 //

@@ -13,7 +13,7 @@
 // in OTHER_LDFLAGS. Info.plist names SDLUIKitSceneDelegate as the scene's
 // delegate.
 //
-// Dot Popper's copy (doc/ios.md) is Lota 0.2.2's (ext/lota/phone/host/ios
+// Dot Popper's copy (doc/ios.md) is Lota 0.3.0's (ext/lota/phone/host/ios
 // in the gem), which kits.yml lays it over in the phone project, with four
 // additions. The colour behind SDL's view, on its window and the window's
 // root view, as each window becomes key: the night's ink (#0c0b22), so
@@ -25,7 +25,8 @@
 // app's UIApplication (Info.plist's NSPrincipalClass), shows the sheet
 // in its place rather than send the URL anywhere. And the orientation
 // that SDL reads from UIApplication, which DotPopperApplication answers
-// from the scene (see its statusBarOrientation). And the store, for
+// from the scene (see its statusBarOrientation; Lota 0.3.1's host will
+// answer it for itself, and this can go then). And the store, for
 // buying the paid version: the game opens a dotpopper-store: URL
 // (Storefront), and DotPopperApplication hands it to DotPopperStore, in
 // Store.swift beside this file, since StoreKit 2 is Swift's alone.

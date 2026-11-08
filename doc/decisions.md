@@ -863,6 +863,8 @@ LÖVE tries its renderers in a fixed order, Vulkan first, but falls back only wh
 
 ## Phone builds write their own NOTICES.txt
 
+*Since replaced by Lota's rake tasks: see "Phone notices and Lota 0.3.0's other switch-overs".*
+
 **Decision:** `script/phone_notices.rb` writes the Android and iOS apps' `NOTICES.txt` by calling Lota's `Lota::Notices` with the works Lota's `licenses.rb` records for each phone, rather than hand-written text.
 
 **Why:** Lota 0.2.2's `lota fuse` writes this file for desktop only, and the phones left Credits without FreeType's credit, and (on Android) without OpenAL Soft's LGPL text and source offer. Using Lota's own record keeps one source of facts and the same format. The Android app's `licenses/` folder already carries OpenAL Soft's exact source archive, so that is the source offer; no release asset or written offer is added.
@@ -1071,6 +1073,8 @@ The share preview no longer says "Copy it, then paste it anywhere." under the re
 **To reverse:** Put `share_note` back in `Words` and `Look::WORDS`, measure it again in `ShareScreen#note_line`, and draw it in `SharePreviewPainter#note` until Copy is pressed.
 
 ## Android draws with OpenGL ES until Lota fixes Vulkan's backgrounding crash
+
+*Since reversed: see "Android draws with Vulkan again, on Lota 0.3.0".*
 
 **Decision:** `conf.rb` (via `Presentation::RendererChoice.usual`) allows only OpenGL ES on Android, as it does only OpenGL on Linux. `DOT_POPPER_RENDERERS=vulkan` still overrides it, so Vulkan can be re-tested on a device.
 
@@ -1341,3 +1345,25 @@ The maintainer's decision: joining a group needs the paid version, as creating o
 **To reverse:** drop the `paid?` check in `GroupPanel#join`.
 
 **The friend-group client follows the server API at b31a753 (2026-11-08).** `look` is `seat`, 1 to 8 and optional; the game keeps its dots 0-based and converts at the edge (`Groups::Mark.seat`, `.of_seat`), and reads its own seat, the members and the holder from the group (`seat`, `member_seats`, `holder_seat`), because a taken or omitted seat gets the lowest free one. Thefts come from `GET /group/thefts` after every group the server returns, are told once, and stay on the server until `DELETE /group/thefts/:id`. There is no `kind` and no `paid`: the game sends only rounds that count (dots sized to the screen, not the tutorial's) and keeps its own Paid gate on creating and joining. A 429 sets a wait from `Retry-After` (60 seconds if unreadable, an hour at most) during which creating and joining send nothing; a 409 body says `group_full` or `already_in_group` (the latter refreshes the group); a 422 on the seat is a bad dot. Every failure stays quiet. `Groups::Settings::SERVER_URL` is still nil. *To reverse:* none needed; the wait is `Session#wait_out`.
+
+## Android draws with Vulkan again, on Lota 0.3.0
+
+**Decision:** Android keeps LÖVE's order again, Vulkan first (`RendererChoice.usual` no longer treats Android as Linux), replacing "Android draws with OpenGL ES until Lota fixes Vulkan's backgrounding crash". Lota 0.3.0's Android host fixes that crash: its `GameSurface` holds `surfaceDestroyed` until the game's thread reports it has paused, which Lota's extension does from an SDL event watch. Dot Popper's `MainActivity` is 0.3.0's, with Dot Popper's own additions kept (fastest refresh, off-thread vibrate, share sheet, Paid store, `lota.env`, Back), and its manifest keeps the longer `configChanges` list, 0.3.0's plus `grammaticalGender`, `mcc`, `mnc`, `touchscreen` and `colorMode`.
+
+**Why:** The maintainer's Nord crashed in 6 of 6 background cycles on Vulkan, and the fix was proven on it in 6 of 6 cycles, a share to Messages and a lock, on the earlier `vk-pause-host` branch; 0.3.0's is the same fix in substance. A smoothness run on USB found Vulkan and OpenGL ES tied, so smoothness doesn't decide it. **A battery check is still owed:** the blind playtest that kept Vulkan before found OpenGL ES stuttery on battery, and USB can't test that. On Vulkan, Android's rescue can now fire too: it can't restart itself, so it asks the player to start the game again, and the note then leaves Vulkan out.
+
+**To reverse:** Make `RendererChoice.usual` answer `[:opengl]` for Android again, which `DOT_POPPER_RENDERERS=opengl` already does for one run.
+
+## The Vulkan rescue keeps its own relaunch
+
+**Decision:** Lota 0.3.0's restart now works under `bundle exec lota run` and in fused games, but `VulkanRescue` keeps `Presentation::Relaunch` and its `exec`, rather than returning `"restart"` from the error handler.
+
+**Why:** It isn't clearly simpler and safe. The rescue needs what happens when a restart can't happen: Lota's exits with status 1 and a log line if `exec` fails, and ends silently on a phone, where the rescue instead tells the player to start the game again. Relaunch's route is the one proven on GitHub's GPU-less Windows runner.
+
+**To reverse:** Have `VulkanRescue#start_again` return `-> { "restart" }` when `Relaunch#command` would have run, and keep the phone's message.
+
+## Phone notices and Lota 0.3.0's other switch-overs
+
+**Decision:** `rake ios:notices` and `rake android:notices` (Lota 0.3.0) write the phones' `NOTICES.txt` and copy OpenAL Soft's source into the project's `sources/`, replacing `script/phone_notices.rb` and the workflow's own copy into `licenses/`. `lota fuse --exclude` replaces the staged copy in `.github/actions/fuse`, and `lota fuse` no longer installs the development group's gems, so the Windows `ridk install` workaround is gone. Fuse's Fledge pin is 0.9.0 (Lota's), while the Gemfile and phone builds take v0.10.0. `iOS`'s `statusBarOrientation` fix stays until Lota 0.3.1.
+
+**To reverse:** Restore `script/phone_notices.rb` and the workflow steps from git history.

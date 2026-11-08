@@ -13,6 +13,7 @@ import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.system.ErrnoException;
@@ -21,11 +22,13 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.DisplayCutout;
+import android.view.SurfaceHolder;
 import android.view.WindowManager;
 import android.window.OnBackInvokedDispatcher;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.libsdl.app.SDLActivity;
+import org.libsdl.app.SDLSurface;
 import org.setdef.fledge.FledgeRuby;
 
 /**
@@ -49,7 +52,7 @@ import org.setdef.fledge.FledgeRuby;
  * 3.4.10's, unchanged: SDLActivity refuses a libSDL3.so of another
  * release, and rake android:deps builds 3.4.10's (tasks/android_build.rb).
  *
- * Dot Popper's copy (PACKAGING.md, "The Android kit") is Lota 0.2.2's
+ * Dot Popper's copy (PACKAGING.md, "The Android kit") is Lota 0.3.0's
  * (ext/lota/phone/host/android in the gem) with five changes. In a
  * debuggable build only, each string extra of the launching intent named
  * lota.env.NAME sets the environment variable NAME before Ruby starts, so
@@ -77,6 +80,15 @@ public class MainActivity extends SDLActivity {
     // The meta-data in AndroidManifest.xml that asks SDL to send Back to
     // the game as a key and do nothing else (SDL's SDL_HINT_ANDROID_TRAP_BACK_BUTTON).
     private static final String TRAP_BACK = "SDL_ENV.SDL_ANDROID_TRAP_BACK_BUTTON";
+
+    // How long surfaceDestroyed waits for the game to pause, at most.
+    private static final long PAUSE_WAIT_MILLIS = 2000;
+
+    // Whether Lota's extension tells this class when the game pauses, and
+    // whether the game's thread has paused, from gamePaused.
+    private static final Object pauseLock = new Object();
+    private static boolean gameReports;
+    private static boolean gamePaused;
 
     private Vibrator vibrator;
     // Where each buzz is started: Vibrator.vibrate asks the system's
@@ -123,6 +135,84 @@ public class MainActivity extends SDLActivity {
             ruby.join();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+        }
+        synchronized (pauseLock) {
+            gameReports = false;
+            pauseLock.notifyAll();
+        }
+    }
+
+    /**
+     * Called by Lota's extension on the game's thread, from inside the
+     * event pump: with true when SDL tells the game it entered the
+     * background, after which it draws nothing until it returns, and with
+     * false when it will return to the foreground, and when the game first
+     * opens its event module.
+     */
+    public static void gamePaused(boolean paused) {
+        synchronized (pauseLock) {
+            gameReports = true;
+            gamePaused = paused;
+            pauseLock.notifyAll();
+        }
+    }
+
+    @Override
+    protected SDLSurface createSDLSurface(Context context) {
+        return new GameSurface(context);
+    }
+
+    /**
+     * SDL's surface, but one whose surfaceDestroyed waits for the game to
+     * pause before SDL lets the window go.
+     *
+     * SDL's surfaceDestroyed queues the pause for the game's thread, which
+     * takes it in its next event pump, and then releases the window at once
+     * (SDL 3.4.10, SDLSurface.surfaceDestroyed and onNativeSurfaceDestroyed
+     * in src/core/android/SDL_android.c). Only for an OpenGL window does SDL
+     * wait first, for up to half a second, until that pump has put the
+     * game's EGL context aside; for a Vulkan window it does not wait, so a
+     * frame that LÖVE's Vulkan renderer is drawing then finds its surface
+     * lost, makes a new one from a window that is gone, and crashes
+     * (doc/contributors/upstream/017.md). This one asks for the pause, as
+     * SDL's would, then waits until the game's thread reports it, as SDL
+     * waits for an OpenGL window, and then lets SDL's release the window.
+     * By then the game's thread is in its event pump, which LÖVE's own
+     * watch has marked graphics inactive in, and which SDL blocks until the
+     * app returns. A game that reports nothing, because it has not opened
+     * its event module or has ended, is not waited for, and one whose frame
+     * takes longer than PAUSE_WAIT_MILLIS is waited for no longer.
+     */
+    private static final class GameSurface extends SDLSurface {
+        GameSurface(Context context) {
+            super(context);
+        }
+
+        @Override
+        public void surfaceDestroyed(SurfaceHolder holder) {
+            SDLActivity.mNextNativeState = SDLActivity.NativeState.PAUSED;
+            SDLActivity.handleNativeState();
+            awaitGamePause();
+            super.surfaceDestroyed(holder);
+        }
+    }
+
+    private static void awaitGamePause() {
+        long deadline = SystemClock.uptimeMillis() + PAUSE_WAIT_MILLIS;
+        synchronized (pauseLock) {
+            while (gameReports && !gamePaused) {
+                long left = deadline - SystemClock.uptimeMillis();
+                if (left <= 0) {
+                    Log.w("SDL", "the game did not pause within " + PAUSE_WAIT_MILLIS + " ms of its surface going");
+                    return;
+                }
+                try {
+                    pauseLock.wait(left);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
         }
     }
 

@@ -3,7 +3,7 @@
   SPDX-FileCopyrightText: 2026 setdef <kerrick@setdef.com>
   SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
 
-  Dot Popper's copy of Lota 0.2.2's iOS Info.plist (ext/lota/phone/host/ios
+  Dot Popper's copy of Lota 0.3.0's iOS Info.plist (ext/lota/phone/host/ios
   in the gem), which kits.yml lays over Lota's host in the phone project.
   Its changes: the display name, Dot Popper, which has a space the
   target's name cannot; and NSPrincipalClass, DotPopperApplication, the

@@ -3,25 +3,15 @@
   SPDX-FileCopyrightText: 2026 setdef <kerrick@setdef.com>
   SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
 
-  Dot Popper's copy of Lota 0.2.2's Android host manifest
+  Dot Popper's copy of Lota 0.3.0's Android host manifest
   (ext/lota/phone/host/android in the gem), which android.yml lays over
   Lota's host in the phone project. Its two changes: Dot Popper decides
   what Back does itself, as Escape (Shell::App), so the meta-data below
-  asks SDL to trap Back; and the activity handles every configuration
-  change that leaves its pixels alone, not only turning and keyboards.
-
-  SDL can't survive its activity being made again: onDestroy quits the
-  game, and the new activity's onCreate calls System.exit. So a change
-  the manifest doesn't list ends the game: dark theme (uiMode), font size
-  (fontScale, fontWeightAdjustment), language (locale, layoutDirection,
-  grammaticalGender), a SIM (mcc, mnc), and overlays (assetsPaths), which
-  Android applies when a wallpaper's colours or the system font change,
-  and to a just-installed app, sometimes after its first launch has begun.
-  SDL's onConfigurationChanged passes the language and dark theme on.
-  Display size (density) is on the list too, though not in SDL's own
-  manifest: the game keeps drawing at the density it started with, since
-  LÖVE reads the dpi scale once and the window's pixels don't change, and
-  takes up the new size at its next launch. Lota's notes follow.
+  asks SDL to trap Back; and the activity also handles the changes
+  Lota's list leaves out: grammatical gender, a SIM (mcc, mnc), a
+  touchscreen, and the display's colour mode, each of which would
+  otherwise end the game, as SDL can't survive its activity being made
+  again. Lota's notes follow.
 
   A Lota game's manifest, in place of the one fledge build android writes
   (Fledge's lib/fledge/templates/android/src/main/AndroidManifest.xml at
@@ -49,7 +39,7 @@
         <activity
             android:name="org.setdef.fledge.host.MainActivity"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
-            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation|uiMode|fontScale|fontWeightAdjustment|locale|layoutDirection|grammaticalGender|mcc|mnc|touchscreen|colorMode|assetsPaths|density"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation|uiMode|fontScale|fontWeightAdjustment|locale|layoutDirection|assetsPaths|density|grammaticalGender|mcc|mnc|touchscreen|colorMode"
             android:launchMode="singleInstance"
             android:exported="true">
             <intent-filter>

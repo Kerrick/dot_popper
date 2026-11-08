@@ -13,8 +13,8 @@ module DotPopper
     # integrated graphics). So Linux allows only OpenGL, and once Vulkan
     # has failed to start the game on a computer (VulkanFailure), Vulkan
     # is left out there, and LÖVE takes its next renderer: OpenGL on
-    # Windows, Metal on a Mac. Android allows only OpenGL ES for now, since
-    # Vulkan crashes the game whenever it goes to the background.
+    # Windows, Metal on a Mac. Android's own "linux" gets LÖVE's order,
+    # since it isn't the Linux of a desktop: Vulkan first, then OpenGL ES.
     class RendererChoice < Data.define(:renderers, :excluded, :platform)
       # What a start says when the renderer LÖVE picked can't draw: Vulkan
       # finding no GPU it can use ("Vulkan: failed to find a suitable
@@ -37,8 +37,8 @@ module DotPopper
       # "vulkan, opengl", as Symbols.
       def self.asked(text) = text.to_s.split(",").map(&:strip).reject(&:empty?).map(&:to_sym)
 
-      # Only OpenGL on Linux and Android; LÖVE's own order elsewhere.
-      def self.usual(platform) = platform.include?("linux") ? [:opengl] : nil
+      # Only OpenGL on Linux; LÖVE's own order elsewhere, Android's too.
+      def self.usual(platform) = platform.include?("linux") && !platform.include?("android") ? [:opengl] : nil
 
       # Whether LÖVE may try Vulkan: Apple's systems have only Metal.
       def vulkan_allowed?
