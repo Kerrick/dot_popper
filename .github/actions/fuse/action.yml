@@ -69,7 +69,7 @@ runs:
         # does, so it gets a copy without what only the repository needs.
         stage=$RUNNER_TEMP/game
         mkdir -p "$stage"
-        git archive HEAD | tar -x -C "$stage"
+        git archive HEAD | (cd "$stage" && tar -x)
         (cd "$stage" && rm -rf .github android ios test doc playtest script sig server Steepfile Rakefile \
           mise.toml INSIPIRATION.md PACKAGING.md README.md)
         (cd "$stage" && ruby -S lota fuse . --identifier "$IDENTIFIER" --app-version "$APP_VERSION" --icon icons/icon --out "$RUNNER_TEMP/fuse")

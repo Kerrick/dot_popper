@@ -12,11 +12,11 @@ here=$(cd "$(dirname "$0")" && pwd)
 package=com.setdef.DotPopper
 status=0
 
-# The bot plays for 45 seconds. Back during its first round and at its
+# The bot plays for 90 seconds, for a bonus dot can stretch its first round. Back during its first round and at its
 # first Game Over must do nothing: the game carries on to the title and
 # quits only when DOT_POPPER_QUIT_AFTER says.
 ruby "$here/android_emulator.rb" "$apk" "$package" "$out/autoplay" \
-  --env DOT_POPPER_AUTOPLAY=1 --env DOT_POPPER_SEED=7 --env DOT_POPPER_QUIT_AFTER=45 --env ALSOFT_DRIVERS=null \
+  --env DOT_POPPER_AUTOPLAY=1 --env DOT_POPPER_SEED=7 --env DOT_POPPER_QUIT_AFTER=90 --env ALSOFT_DRIVERS=null \
   --env DOT_POPPER_SAVE_AS=ci_autoplay --env DOT_POPPER_SHOTS=3,12,25,38 --env DOT_POPPER_KIT_PROBE=1 \
   --ready "Dot Popper: " --shot 5 --shot 20 --timeout 300 --pull "Dot Popper: screenshot (\\S+)" \
   --key-after "3:KEYCODE_BACK:kit probe: event RoundStarted" \
