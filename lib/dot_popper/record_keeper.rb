@@ -3,7 +3,7 @@
 module DotPopper
   # Clears the player's records, and brings them back: the BestScore and
   # the Lifetime, the two stores that hold every best, total, chart bar,
-  # and goal streak, and the Achievements, the feats earned, which are
+  # and goal streak, and the Achievements, the achievements earned, which are
   # records of what the player did as much as a best is. Nothing else is
   # a record, so the playtest log, the settings, what the game has taught,
   # and whether the paid version was bought stay as they are.

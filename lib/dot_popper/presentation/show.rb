@@ -20,7 +20,7 @@ module DotPopper
     # methods). +sharing+ (InGameSharing's methods) offers Game
     # Over's result to share, in a preview or a phone's own sheet, and
     # +clipboard+ takes it when the player copies it. +achievements+
-    # (Achievements) keeps the feats a round earns, as it ends, and the
+    # (Achievements) keeps the achievements a round earns, as it ends, and the
     # Records screen lists them once the +entitlement+ says the paid
     # version was bought. +tutorial_flag+
     # (TutorialFlag) says whether Play opens the Tutorial first. +window+
@@ -50,7 +50,7 @@ module DotPopper
         @wardrobe = wardrobe
         @looks = false
         @achievements = achievements
-        @feat_watch = FeatWatch.new
+        @achievement_watch = AchievementWatch.new
         @groups = GroupPanel.new(groups:, entitlement:, sounds:)
         @storefront = storefront
         @offer = false
@@ -734,7 +734,7 @@ module DotPopper
 
       # Hears one of the rules' events (Game#subscribe).
       def call(event)
-        @feat_watch.call(event)
+        @achievement_watch.call(event)
         case event
         when Events::RoundStarted then round_started(event)
         when Events::Popped then popped(event)
@@ -1007,11 +1007,11 @@ module DotPopper
         result = lifetime.record(stats, event.size_class)
         @groups.round_finished(score: event.score, sized_to_screen: event.size_class == SizeClass::FITTED && !@tutorial_round)
         @wardrobe.round_played
-        feats = @achievements.award(@feat_watch.earned, day: lifetime.today.iso8601)
-        feats = [] unless @entitlement.paid? # kept, and shown once the paid version is bought
+        achievements = @achievements.award(@achievement_watch.earned, day: lifetime.today.iso8601)
+        achievements = [] unless @entitlement.paid? # kept, and shown once the paid version is bought
         lesson = @tutor.lesson(@slip) if @slip&.among(event.round.dots)
         @finale = Finale.new(look: look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now,
-                             stats:, record: result.records.first, goal_met: result.goal_met, lesson:, feats:,
+                             stats:, record: result.records.first, goal_met: result.goal_met, lesson:, achievements:,
                              first: event.first, screen: words.played_on(event.round.field, sized: event.size_class == SizeClass::FITTED))
         sounds.play(event.new_best ? :new_best : :game_over)
       end

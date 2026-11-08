@@ -2,13 +2,13 @@
 
 require "test_helper"
 
-class FeatWatchTest < Minitest::Test
+class AchievementWatchTest < Minitest::Test
   include DotPopperTest
 
   Events = DotPopper::Events
 
   def setup
-    @watch = DotPopper::FeatWatch.new
+    @watch = DotPopper::AchievementWatch.new
   end
 
   # Starts watching +round+, as the game announces it.
@@ -68,7 +68,7 @@ class FeatWatchTest < Minitest::Test
     covered = dot(400, 300, popped: true)
     watch(round_with(covered, dot(395, 300, id: 7)))
 
-    assert_operator DotPopper::Visibility.of(@round.dots.find(&:fresh?), [covered]), :<, DotPopper::Feat::SHARP
+    assert_operator DotPopper::Visibility.of(@round.dots.find(&:fresh?), [covered]), :<, DotPopper::Achievement::SHARP
     assert_instance_of Events::Popped, tap_at(346, 300)
     assert_equal %i[sharpshooter], @watch.earned
   end
@@ -85,7 +85,7 @@ class FeatWatchTest < Minitest::Test
     fresh = dot(400 - 9, 300, id: 7)
     watch(round_with(covered, fresh))
 
-    assert_operator DotPopper::Visibility.of(fresh, [covered]), :>=, DotPopper::Feat::SHARP
+    assert_operator DotPopper::Visibility.of(fresh, [covered]), :>=, DotPopper::Achievement::SHARP
     tap_at(fresh.x - 45, 300)
     refute_includes @watch.earned, :sharpshooter
   end
@@ -266,7 +266,7 @@ class FeatWatchTest < Minitest::Test
     assert_empty @watch.earned
   end
 
-  def test_feats_are_listed_in_the_order_the_records_screen_lists_them
+  def test_achievements_are_listed_in_the_order_the_records_screen_lists_them
     open_round
     @round.instance_variable_set(:@elapsed, 95.0)
     score!(@round, 80)

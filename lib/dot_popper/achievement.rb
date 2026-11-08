@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # The feats a player can earn, each for skill and none for time spent:
+  # The achievements a player can earn, each for skill and none for time spent:
   # something the game asks a player to do well, done. Their numbers are
   # here, apart from the rules, which they never touch. The ids are the
   # order the Records screen lists them in, and what Achievements saves.
@@ -10,7 +10,7 @@ module DotPopper
   # players (doc/decisions.md): a player who taps only once a fingertip
   # fits on the dot pops it with a third or more showing, so a dot popped
   # with under a tenth showing was a deliberate, precise tap.
-  module Feat
+  module Achievement
     IDS = %i[sharpshooter sharp_trio patience blink steady unshaken shake_off comeback fast_start big_score
              long_haul].freeze
 

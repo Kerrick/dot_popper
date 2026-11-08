@@ -1,5 +1,5 @@
 module DotPopper
-  module Feat
+  module Achievement
     type id = Symbol
 
     IDS: Array[id]

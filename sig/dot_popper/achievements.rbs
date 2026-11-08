@@ -2,19 +2,19 @@ module DotPopper
   class Achievements
     @store: BestScore::_Store
 
-    @days: Hash[Feat::id, String]
+    @days: Hash[Achievement::id, String]
 
     def initialize: (BestScore::_Store store) -> void
 
-    def earned?: (Feat::id id) -> bool
+    def earned?: (Achievement::id id) -> bool
 
-    def earned: () -> Array[Feat::id]
+    def earned: () -> Array[Achievement::id]
 
     def count: () -> Integer
 
-    def day: (Feat::id id) -> String?
+    def day: (Achievement::id id) -> String?
 
-    def award: (Array[Feat::id] ids, day: String) -> Array[Feat::id]
+    def award: (Array[Achievement::id] ids, day: String) -> Array[Achievement::id]
 
     def saved: () -> String?
 
@@ -26,6 +26,6 @@ module DotPopper
 
     def text: () -> String
 
-    def parse: (String? text) -> Hash[Feat::id, String]
+    def parse: (String? text) -> Hash[Achievement::id, String]
   end
 end

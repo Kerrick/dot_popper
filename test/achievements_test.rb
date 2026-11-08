@@ -32,8 +32,8 @@ class AchievementsTest < Minitest::Test
     assert_equal "2026-11-02", saved.day(:steady)
   end
 
-  def test_damaged_text_and_unknown_feats_are_left_out
-    achievements = DotPopper::Achievements.new(Memory.new("blink=2026-11-01\nfuture_feat=2027-01-01\n\ngarbage\n=x\n"))
+  def test_damaged_text_and_unknown_achievements_are_left_out
+    achievements = DotPopper::Achievements.new(Memory.new("blink=2026-11-01\nfuture_achievement=2027-01-01\n\ngarbage\n=x\n"))
 
     assert_equal %i[blink], achievements.earned
   end

@@ -3,7 +3,7 @@
 module DotPopper
   module Presentation
     # One line of the Records screen: what it counts, and how many. A
-    # feat's line (FeatWords) also has a +mark+ before its label, :earned,
+    # achievement's line (AchievementWords) also has a +mark+ before its label, :earned,
     # :open, or :locked, for one the paid version has not shown yet.
     class RecordRow < Data.define(:label, :value, :mark)
       def initialize(label:, value:, mark: nil) = super
@@ -21,21 +21,21 @@ module DotPopper
     # and there is nothing to list. +mine+ says, for each of the last
     # +scores+, whether it was played in +size_class+, and so counts
     # toward the bests shown; the chart dims the others, and +chart_note+
-    # says so whenever there are any. +feats+ lists the feats, or is nil
+    # says so whenever there are any. +achievements+ lists the achievements, or is nil
     # when the sheet is built with no Achievements to list.
-    class RecordsSheet < Data.define(:bests, :totals, :goal, :scores, :empty, :notes, :mine, :chart_note, :feats)
-      # The feats as a section: with the paid version, each with its mark
+    class RecordsSheet < Data.define(:bests, :totals, :goal, :scores, :empty, :notes, :mine, :chart_note, :achievements)
+      # The achievements as a section: with the paid version, each with its mark
       # filled if earned; without it, every one locked, under a heading
       # that says where they come from. What was earned while free is kept
       # (Achievements), and shows once the version is bought.
-      def self.feats_section(achievements, paid:)
+      def self.achievements_section(achievements, paid:)
         return unless achievements
 
-        rows = Feat::IDS.map do |id|
+        rows = Achievement::IDS.map do |id|
           mark = paid ? (achievements.earned?(id) ? :earned : :open) : :locked
-          RecordRow.new(label: FeatWords.name(id), value: FeatWords.mark(id), mark:)
+          RecordRow.new(label: AchievementWords.name(id), value: AchievementWords.mark(id), mark:)
         end
-        heading = paid ? FeatWords.heading(achievements.count) : FeatWords::LOCKED_HEADING
+        heading = paid ? AchievementWords.heading(achievements.count) : AchievementWords::LOCKED_HEADING
         RecordSection.new(title: heading, rows:)
       end
 
@@ -64,7 +64,7 @@ module DotPopper
         mine = stats.recent_classes.map { it == size_class }
         new(bests:, totals:, goal:, scores: stats.recent, empty: stats.rounds.zero?,
             notes: field ? words.screen_notes(field, sizing) : [], mine:,
-            chart_note: (words.chart_note(sizing) unless mine.all?), feats: feats_section(achievements, paid:))
+            chart_note: (words.chart_note(sizing) unless mine.all?), achievements: achievements_section(achievements, paid:))
       end
     end
 
@@ -161,18 +161,18 @@ module DotPopper
 
       private
 
-      # The feats take a column of their own where three fit, or else go
+      # The achievements take a column of their own where three fit, or else go
       # under whichever of two is shorter.
       def columns
         chart = sheet.scores.empty? ? [] : [:chart]
-        return [chart + [sheet.bests, sheet.totals, sheet.goal, *sheet.feats]] unless wide?
+        return [chart + [sheet.bests, sheet.totals, sheet.goal, *sheet.achievements]] unless wide?
 
         two = [[sheet.bests, sheet.goal], chart + [sheet.totals]]
-        return two unless sheet.feats
-        return two + [[sheet.feats]] if fits?(3)
+        return two unless sheet.achievements
+        return two + [[sheet.achievements]] if fits?(3)
 
         shorter = two.each_index.min_by { lines(two[it]) }
-        two.each_with_index.map { |parts, i| i == shorter ? parts + [sheet.feats] : parts }
+        two.each_with_index.map { |parts, i| i == shorter ? parts + [sheet.achievements] : parts }
       end
 
       def gap = layout.scaled(look.gap)

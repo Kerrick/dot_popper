@@ -1,22 +1,22 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # Watches a Game's events (Game#subscribe) for the Feats a round earns,
+  # Watches a Game's events (Game#subscribe) for the Achievements a round earns,
   # and decides nothing: it only reads what the rules report and the
-  # round they happened in. #earned lists, in Feat::IDS order, every feat
+  # round they happened in. #earned lists, in Achievement::IDS order, every achievement
   # the round in play, or the one just finished, has earned so far.
   #
   # Dots, the clock, and a round's length are read from the round itself
   # when an event arrives, which is when the rules have already settled
   # them: a popped dot's place in the stack, the clock after its second.
-  class FeatWatch
+  class AchievementWatch
     def initialize
       @round = nil
       @targets = {}
       reset
     end
 
-    def earned = Feat::IDS.select { @found.include?(it) }
+    def earned = Achievement::IDS.select { @found.include?(it) }
 
     def call(event)
       round = @round
@@ -56,7 +56,7 @@ module DotPopper
       streak
       early(round)
       clock(round)
-      find(:comeback) if @low && round.countdown.remaining >= Feat::BACK
+      find(:comeback) if @low && round.countdown.remaining >= Achievement::BACK
       appeared(event.spawned, dots.take_while { it.id != event.spawned.id }, round)
     end
 
@@ -68,36 +68,36 @@ module DotPopper
     end
 
     def ended(event)
-      find(:big_score) if event.score >= Feat::BIG_SCORE
-      find(:long_haul) if event.round.elapsed >= Feat::LONG_HAUL
+      find(:big_score) if event.score >= Achievement::BIG_SCORE
+      find(:long_haul) if event.round.elapsed >= Achievement::LONG_HAUL
     end
 
     def sharp(dot, above)
       share = Visibility.of(dot, above)
-      find(:sharpshooter) if share < Feat::SHARP
-      @sharp += 1 if share < Feat::SHARP_TRIO_BELOW
-      find(:sharp_trio) if @sharp >= Feat::SHARP_TRIO
+      find(:sharpshooter) if share < Achievement::SHARP
+      @sharp += 1 if share < Achievement::SHARP_TRIO_BELOW
+      find(:sharp_trio) if @sharp >= Achievement::SHARP_TRIO
     end
 
     # +seconds+ passed between the last pop and this one.
     def waited(seconds)
-      find(:patience) if @covered && !@tapped && seconds >= Feat::PATIENCE
-      find(:blink) if seconds < Feat::BLINK
+      find(:patience) if @covered && !@tapped && seconds >= Achievement::PATIENCE
+      find(:blink) if seconds < Achievement::BLINK
     end
 
     def streak
       @run += 1
-      find(:steady) if @run >= Feat::STEADY
-      find(:unshaken) if @run >= Feat::UNSHAKEN
-      find(:shake_off) if @slipped && @run >= Feat::SHAKE_OFF
+      find(:steady) if @run >= Achievement::STEADY
+      find(:unshaken) if @run >= Achievement::UNSHAKEN
+      find(:shake_off) if @slipped && @run >= Achievement::SHAKE_OFF
     end
 
     def early(round)
-      @early += 1 if round.elapsed <= Feat::FAST_START_SECONDS
-      find(:fast_start) if @early >= Feat::FAST_START
+      @early += 1 if round.elapsed <= Achievement::FAST_START_SECONDS
+      find(:fast_start) if @early >= Achievement::FAST_START
     end
 
-    def clock(round) = (@low ||= round.countdown.remaining <= Feat::BRINK)
+    def clock(round) = (@low ||= round.countdown.remaining <= Achievement::BRINK)
 
     # A fresh dot has slid under the others: whether it spawned with no
     # room for a fingertip yet, so the wait to pop it is waiting for it to

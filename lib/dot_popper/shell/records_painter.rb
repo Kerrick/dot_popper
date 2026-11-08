@@ -14,7 +14,7 @@ module DotPopper
     class RecordsPainter < Data.define(:pen)
       G = ::Lota::Graphics
       DIM = 0.3 # how much of a bar shows when its round counts elsewhere
-      MARK = 1.1 # the room a feat's mark takes before its label, in rows' type
+      MARK = 1.1 # the room a achievement's mark takes before its label, in rows' type
 
       def draw(show, layout)
         sheet = show.records or return
@@ -48,7 +48,7 @@ module DotPopper
       def widest(sheet, size)
         label = pen.fonts.semibold(size)
         value = pen.fonts.bold(size)
-        sections = [sheet.bests, sheet.totals, sheet.goal, sheet.feats].compact
+        sections = [sheet.bests, sheet.totals, sheet.goal, sheet.achievements].compact
         rows = sections.flat_map(&:rows).map { label.width(it.label) + value.width(it.value) + (size * 2) + (it.mark ? size * MARK : 0) }
         titles = sections.map(&:title) + [Presentation::Words.last_rounds(sheet.scores.size)]
         (rows + titles.map { value.width(it) }).max
@@ -214,7 +214,7 @@ module DotPopper
         end
       end
 
-      # A feat's mark, a small dot in the game's own shape: filled in the
+      # A achievement's mark, a small dot in the game's own shape: filled in the
       # fresh dot's orange when earned, a ring while there is more to do,
       # and a fainter one while the paid version has yet to show them.
       def mark(kind, x, y, size)

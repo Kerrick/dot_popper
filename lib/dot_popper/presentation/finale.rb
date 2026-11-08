@@ -17,15 +17,15 @@ module DotPopper
     # bright dot hidden beneath, or nil, and +replayed+ how many times it
     # has replayed.
     # +first+ says the round was the first of its SizeClass, which set the
-    # best without beating one. +feats+ are the ids of the feats (Feat)
+    # best without beating one. +achievements+ are the ids of the achievements (Achievement)
     # the round earned for the first time, which a player who has the
     # paid version hears of in a line after the score, never during the
     # round.
     class Finale < Data.define(:look, :score, :best, :new_best, :at, :stats, :record, :goal_met, :ready_at,
-                               :celebrated, :goal_celebrated, :screen, :lesson, :replayed, :first, :feats)
+                               :celebrated, :goal_celebrated, :screen, :lesson, :replayed, :first, :achievements)
       def initialize(look:, score:, best:, new_best:, at:, stats: RoundStats.start, record: nil, goal_met: false,
                      ready_at: nil, celebrated: false, goal_celebrated: false, screen: nil, lesson: nil, replayed: 0, first: false,
-                     feats: [])
+                     achievements: [])
         super
       end
 

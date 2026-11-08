@@ -1,10 +1,10 @@
 module DotPopper
-  class FeatWatch
+  class AchievementWatch
     @round: Round?
 
     @targets: Hash[Float, TouchTarget]
 
-    @found: Array[Feat::id]
+    @found: Array[Achievement::id]
 
     @sharp: Integer
 
@@ -24,7 +24,7 @@ module DotPopper
 
     def initialize: () -> void
 
-    def earned: () -> Array[Feat::id]
+    def earned: () -> Array[Achievement::id]
 
     def call: (event event) -> void
 
@@ -54,6 +54,6 @@ module DotPopper
 
     def target: (Float radius) -> TouchTarget
 
-    def find: (Feat::id id) -> void
+    def find: (Achievement::id id) -> void
   end
 end
