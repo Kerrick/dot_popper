@@ -69,7 +69,8 @@ jobs:
 
       # Unpacked under a folder with a space, Mesa's llvmpipe beside the
       # program (SDL loads opengl32.dll from there first), and a clean
-      # environment with no Ruby.
+      # environment with no Ruby. Then again allowed only Vulkan, to see
+      # the game get past it.
       - name: Play the unpacked app with no Ruby on its PATH
         shell: pwsh
         run: |
@@ -84,30 +85,49 @@ jobs:
             Get-ChildItem -LiteralPath 'C:\msys64\ucrt64\bin' -Filter $pattern | Copy-Item -Destination $program.DirectoryName
           }
           $system = $env:SystemRoot
-          $start = [Diagnostics.ProcessStartInfo]::new($program.FullName)
-          $start.UseShellExecute = $false
-          $start.RedirectStandardOutput = $true
-          $start.RedirectStandardError = $true
-          $start.WorkingDirectory = $system
-          $start.Environment.Clear()
-          $variables = @{
-            SystemRoot = $system; SystemDrive = $env:SystemDrive; windir = $system
-            PATH = "$system\System32;$system;$system\System32\Wbem"
-            USERPROFILE = $env:USERPROFILE; APPDATA = $env:APPDATA; LOCALAPPDATA = $env:LOCALAPPDATA
-            TEMP = $env:RUNNER_TEMP; TMP = $env:RUNNER_TEMP; GALLIUM_DRIVER = 'llvmpipe'
+          # Runs the app with PLAY_ENV and $extra, and returns its status and output.
+          function Play([hashtable] $extra) {
+            $start = [Diagnostics.ProcessStartInfo]::new($program.FullName)
+            $start.UseShellExecute = $false
+            $start.RedirectStandardOutput = $true
+            $start.RedirectStandardError = $true
+            $start.WorkingDirectory = $system
+            $start.Environment.Clear()
+            $variables = @{
+              SystemRoot = $system; SystemDrive = $env:SystemDrive; windir = $system
+              PATH = "$system\System32;$system;$system\System32\Wbem"
+              USERPROFILE = $env:USERPROFILE; APPDATA = $env:APPDATA; LOCALAPPDATA = $env:LOCALAPPDATA
+              TEMP = $env:RUNNER_TEMP; TMP = $env:RUNNER_TEMP; GALLIUM_DRIVER = 'llvmpipe'
+            }
+            foreach ($name in $variables.Keys) { $start.Environment[$name] = $variables[$name] }
+            foreach ($pair in ($env:PLAY_ENV -split ' ')) { $name, $value = $pair -split '=', 2; $start.Environment[$name] = $value }
+            foreach ($name in $extra.Keys) { $start.Environment[$name] = $extra[$name] }
+            $process = [Diagnostics.Process]::Start($start)
+            $out = $process.StandardOutput.ReadToEndAsync()
+            $err = $process.StandardError.ReadToEndAsync()
+            if (-not $process.WaitForExit(120000)) { $process.Kill($true); throw 'Dot Popper.exe still ran after 120 s' }
+            $process.WaitForExit()
+            Write-Host "exit status: $($process.ExitCode)"
+            Write-Host "--- stdout"; Write-Host $out.Result
+            Write-Host "--- stderr"; Write-Host $err.Result
+            [pscustomobject]@{ Status = $process.ExitCode; Out = $out.Result; Err = $err.Result }
           }
-          foreach ($name in $variables.Keys) { $start.Environment[$name] = $variables[$name] }
-          foreach ($pair in ($env:PLAY_ENV -split ' ')) { $name, $value = $pair -split '=', 2; $start.Environment[$name] = $value }
-          $process = [Diagnostics.Process]::Start($start)
-          $out = $process.StandardOutput.ReadToEndAsync()
-          $err = $process.StandardError.ReadToEndAsync()
-          if (-not $process.WaitForExit(120000)) { $process.Kill($true); throw 'Dot Popper.exe still ran after 120 s' }
-          $process.WaitForExit()
-          Write-Host "exit status: $($process.ExitCode)"
-          Write-Host "--- stdout"; Write-Host $out.Result
-          Write-Host "--- stderr"; Write-Host $err.Result
-          if ($process.ExitCode -ne 0) { exit 1 }
-          if ($out.Result -notmatch 'frames a second') { Write-Host '::error::the game never reported drawing a frame'; exit 1 }
+          $play = Play @{}
+          if ($play.Status -ne 0) { exit 1 }
+          if ($play.Out -notmatch 'frames a second') { Write-Host '::error::the game never reported drawing a frame'; exit 1 }
+
+          # A PC whose Vulkan can't start the game (doc/decisions.md, "When
+          # Vulkan can't start the game, it starts again without it"):
+          # allowed only Vulkan, which this runner has no GPU for, the game
+          # must run its own exe again without it, in a fresh save folder,
+          # and play.
+          Write-Host '=== Vulkan alone'
+          $play = Play @{ DOT_POPPER_RENDERERS = 'vulkan'; DOT_POPPER_SAVE_AS = 'ci-vulkan' }
+          if ($play.Status -ne 0) { exit 1 }
+          if ($play.Err -notmatch 'starts again without Vulkan') { Write-Host '::error::the game never started again without Vulkan'; exit 1 }
+          if ($play.Out -notmatch 'renderer OpenGL') { Write-Host '::error::the game started again, but not with OpenGL'; exit 1 }
+          if ($play.Out -notmatch 'frames a second') { Write-Host '::error::the game never reported drawing a frame without Vulkan'; exit 1 }
+          if (-not (Test-Path -LiteralPath "$env:APPDATA\ci-vulkan\vulkan_failed.txt")) { Write-Host '::error::no note that Vulkan failed'; exit 1 }
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
