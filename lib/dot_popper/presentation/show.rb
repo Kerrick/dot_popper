@@ -109,15 +109,22 @@ module DotPopper
       # Whether the Looks screen is open over the Records screen, and what
       # it shows: every look the player can wear, and the one worn.
       def looks? = @looks
-      def looks = @wardrobe.choices
+      def looks = @wardrobe.shown
       def worn = @wardrobe.worn
 
-      # Whether the Records screen offers Looks: the paid version is
-      # bought, and there is a look besides the ordinary one to choose.
+      # Whether the looks are only to see, as for a free player, and
+      # whether +theme+ is one this player has earned.
+      def looks_locked? = @wardrobe.locked?
+      def look_earned?(theme) = @wardrobe.earned?(theme)
+
+      # Whether the Records screen offers Looks: always to a free player,
+      # who is shown what looks there are and which they have earned, and
+      # to a paid one once there is a look besides the ordinary one to
+      # choose.
       def looks_offered? = records? && !credits? && !looks? && @wardrobe.offered?
 
       # Where the Looks screen's cards go (LooksLayout).
-      def looks_layout = LooksLayout.new(layout:, themes: looks, look: look::LOOKS)
+      def looks_layout = LooksLayout.new(layout:, themes: looks, look: look::LOOKS, note: looks_locked?)
 
       def open_looks
         return unless looks_offered?
@@ -135,7 +142,7 @@ module DotPopper
       # once, so the choice is seen before it is left.
       def wear(theme)
         return unless looks?
-        return sounds.play(:tick, pitch: 0.8) if theme == worn
+        return sounds.play(:tick, pitch: 0.8) if looks_locked? || theme == worn
 
         @wardrobe.wear(theme)
         sounds.play(:tick, pitch: 1.2)
@@ -476,6 +483,7 @@ module DotPopper
       def open_offer
         return unless records? && !credits? && offer_offered?
 
+        @looks = false
         @offer = true
         @storefront.connect
         sounds.play(:tick)
@@ -832,7 +840,9 @@ module DotPopper
       end
 
       def looks_controls
-        looks_layout.cards.map { button(it.theme, it.rect) } << button(:back, layout.back_button)
+        buttons = looks_layout.cards.map { button(it.theme, it.rect) } << button(:back, layout.back_button)
+        buttons << button(:offer, layout.clear_records_button) if looks_locked? && offer_offered?
+        buttons
       end
 
       def offer_controls

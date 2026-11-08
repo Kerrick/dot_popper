@@ -18,7 +18,12 @@ class WardrobeTest < Minitest::Test
     wardrobe = wardrobe(paid: false)
 
     assert_predicate wardrobe.worn, :ordinary?
-    refute_predicate wardrobe, :offered?
+    assert_predicate wardrobe, :offered?, "a free player is shown the looks"
+    assert_predicate wardrobe, :locked?
+    assert_equal Look::THEMES, wardrobe.shown
+    wardrobe.wear(Look::THEMES.last)
+
+    assert_predicate wardrobe.worn, :ordinary?
   end
 
   def test_a_paid_player_wears_the_theme_in_season_and_the_ordinary_look_out_of_it

@@ -24,15 +24,18 @@ module DotPopper
     # says so whenever there are any. +achievements+ lists the achievements, or is nil
     # when the sheet is built with no Achievements to list.
     class RecordsSheet < Data.define(:bests, :totals, :goal, :scores, :empty, :notes, :mine, :chart_note, :achievements)
-      # The achievements as a section: with the paid version, each with its mark
-      # filled if earned; without it, every one locked, under a heading
-      # that says where they come from. What was earned while free is kept
-      # (Achievements), and shows once the version is bought.
+      # The achievements as a section, each with its mark filled if earned,
+      # which a free player is shown too (what was earned while free is
+      # kept, Achievements). With the paid version the rest are open, and
+      # the heading counts; without it the rest are locked, under a heading
+      # that says where they come from.
       def self.achievements_section(achievements, paid:)
         return unless achievements
 
         rows = Achievement::IDS.map do |id|
-          mark = paid ? (achievements.earned?(id) ? :earned : :open) : :locked
+          mark = if achievements.earned?(id) then :earned
+                 else paid ? :open : :locked
+                 end
           RecordRow.new(label: AchievementWords.name(id), value: AchievementWords.mark(id), mark:)
         end
         heading = paid ? AchievementWords.heading(achievements.count) : AchievementWords::LOCKED_HEADING

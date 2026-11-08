@@ -2,8 +2,9 @@
 
 require_relative "presentation_helper"
 
-# The Looks screen: offered on the Records screen once the paid version
-# is bought and there is a look to choose, a card for each look, and the
+# The Looks screen: offered on the Records screen to a free player always,
+# who sees every look and which are earned but wears none, and to a paid
+# player once there is a look to choose; a card for each look, and the
 # choice shown at once.
 class LooksTest < Minitest::Test
   include PresentationTest
@@ -16,13 +17,20 @@ class LooksTest < Minitest::Test
     @paid = DotPopper::BestScore::Memory.new
   end
 
-  def test_looks_are_offered_only_to_a_paid_player_with_a_look_to_choose
+  def test_looks_are_offered_to_a_free_player_always_and_to_a_paid_one_with_a_look_to_choose
     show(paid: false)
     open_records
 
-    refute @show.looks_offered?
-    assert_nil @show.reach_of(:looks)
+    assert @show.looks_offered?
+    assert @show.reach_of(:looks)
 
+    @day = Date.new(2026, 11, 8)
+    show(paid: false)
+    open_records
+
+    assert @show.looks_offered?, "a free player is shown that looks exist, in season or not"
+
+    @day = Date.new(2026, 10, 31)
     show(paid: true)
     open_records
 
@@ -87,9 +95,59 @@ class LooksTest < Minitest::Test
     assert_nil @show.play_reach
   end
 
+  def test_a_free_player_sees_every_look_and_which_are_earned_and_wears_none
+    show(paid: false)
+    open_records
+    @show.open_looks
+
+    assert_predicate @show, :looks?
+    assert_equal Look::THEMES, @show.looks
+    assert_predicate @show, :looks_locked?
+    assert_equal %i[classic halloween], Look::THEMES.select { @show.look_earned?(it) }.map(&:key)
+    assert_equal "Looks come with the full game", Look::WORDS.looks[:locked]
+    before = @show.palette
+    @show.tap(*card_center(Look::THEMES.last))
+
+    assert_same before, @show.palette
+    assert_equal Look::THEMES.first, @show.worn
+  end
+
+  def test_a_look_earned_while_free_shows_as_earned_and_is_worn_on_purchase
+    show(paid: false)
+
+    assert(@wardrobe.earned?(Look::THEMES.find { it.key == :halloween }))
+    refute(@wardrobe.earned?(Look::THEMES.find { it.key == :winter }))
+    @paid.write("paid")
+    @wardrobe.refresh
+
+    assert_equal :halloween, @wardrobe.worn.key
+  end
+
+  def test_the_looks_screen_leads_to_the_offer_only_where_a_store_can_complete_one
+    show(paid: false)
+    open_records
+    @show.open_looks
+
+    refute(@show.controls.any? { it.name == :offer }, "no store, so nothing is offered")
+
+    store = Struct.new(:status, :price) do
+      def offered? = true
+      def connect = nil
+      def update(_seconds) = nil
+    end.new(:ready, "$1.99")
+    show(paid: false, storefront: store)
+    open_records
+    @show.open_looks
+    reach = @show.controls.find { it.name == :offer }.reach
+    @show.tap(reach.center_x, reach.center_y)
+
+    assert_predicate @show, :offer?
+    refute_predicate @show, :looks?
+  end
+
   def test_the_cards_fit_their_room_apart_from_each_other_and_from_back_at_every_size
-    SIZES.each do |width, height|
-      plan = LooksLayout.new(layout: layout(width, height), themes: Look::THEMES, look: Look::LOOKS)
+    SIZES.product([false, true]).each do |(width, height), note|
+      plan = LooksLayout.new(layout: layout(width, height), themes: Look::THEMES, look: Look::LOOKS, note:)
       rects = plan.cards.map(&:rect)
       back = layout(width, height).back_button
       whole = layout(width, height).safe
@@ -120,7 +178,12 @@ class LooksTest < Minitest::Test
 
   private
 
-  def show(paid:)
+  def card_center(theme)
+    rect = @show.looks_layout.cards.find { it.theme == theme }.rect
+    [rect.center_x, rect.center_y]
+  end
+
+  def show(paid:, **options)
     @paid.write("paid") if paid
     entitlement = DotPopper::Entitlement.new(@paid)
     store = DotPopper::BestScore::Memory.new
@@ -128,7 +191,7 @@ class LooksTest < Minitest::Test
     @game = DotPopper::Game.new(field, random: Random.new(2), best: DotPopper::BestScore.new(DotPopper::BestScore::Memory.new))
     @wardrobe = wardrobe
     @show = Show.new(game: @game, layout: layout, sounds: @sounds, radius: R, entitlement:, wardrobe:,
-                     lifetime: DotPopper::Lifetime.new(DotPopper::BestScore::Memory.new, today: -> { @day }))
+                     lifetime: DotPopper::Lifetime.new(DotPopper::BestScore::Memory.new, today: -> { @day }), **options)
     finish_round
   end
 

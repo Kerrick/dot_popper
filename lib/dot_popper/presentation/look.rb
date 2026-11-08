@@ -101,7 +101,7 @@ module DotPopper
         quit_again: "Press B again to quit",
         full_screen: "Full screen", windowed: "Window", quit: "Quit",
         # The Looks screen: its button's word and heading, and each look's name.
-        looks: { title: "Looks", classic: "Classic", halloween: "Halloween", winter: "Winter", valentine: "Hearts" }.freeze,
+        looks: { title: "Looks", locked: "Looks come with the full game", classic: "Classic", halloween: "Halloween", winter: "Winter", valentine: "Hearts" }.freeze,
         offer: {
           entry: "Paid version", heading: "The paid version",
           includes: ["Achievements to earn", "Themes to choose from", "Create friend groups"].freeze,
@@ -179,7 +179,7 @@ module DotPopper
       # The Looks screen, over the Records screen: its heading's size, the
       # gap between cards in margins, a card's height in its width, and the
       # widest a card grows (in units at a scale of 1).
-      LOOKS = LooksLook.new(heading: 48, gap: 1.0, ratio: 0.78, widest: 260)
+      LOOKS = LooksLook.new(heading: 48, gap: 1.0, ratio: 0.78, widest: 260, note: 20)
 
       # The eight marks a member of a friend group wears, in the order of
       # Groups::Mark: a dot's colour and the dark shape drawn on it. Add to

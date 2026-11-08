@@ -7,7 +7,10 @@ module DotPopper
     # is kept whether or not the player has bought the paid version, and
     # is worn the day they do. Wearing a theme is the paid version's, so
     # the wardrobe asks the +entitlement+ and nothing else: for a free
-    # player the ordinary look is always worn.
+    # player the ordinary look is always worn. A free player is still shown
+    # every look, and which of them they have earned (#shown): the same
+    # rule as the achievements, to show what is there, plainly, in one
+    # calm place.
     #
     # What is worn is settled when the wardrobe is made, when the title
     # shows (#refresh), and when the player chooses, never in the middle of
@@ -60,13 +63,22 @@ module DotPopper
         @themes.select { it.ordinary? || earned?(it) || it.in_season?(@today.call) }
       end
 
-      # Whether there is a choice to offer: the paid version is bought and
-      # there is a look besides the ordinary one.
-      def offered? = @entitlement.paid? && choices.size > 1
+      # What the Looks screen shows: what a paid player can wear, and for a
+      # free player every look, the ones they have earned marked as such
+      # (#earned?), none to wear.
+      def shown = locked? ? @themes : choices
+
+      # Whether the looks are shown but not to wear, as for a free player.
+      def locked? = !@entitlement.paid?
+
+      # Whether the Records screen offers the Looks screen: to a free
+      # player always, since there are looks to see, and to a paid player
+      # once there is one besides the ordinary look to choose.
+      def offered? = locked? || choices.size > 1
 
       # Wears +theme+ from now on, if it is a choice and the player may.
       def wear(theme)
-        return unless offered? && choices.include?(theme)
+        return unless !locked? && choices.size > 1 && choices.include?(theme)
 
         @chosen = theme.key
         save

@@ -17,11 +17,19 @@ module DotPopper
         plan = show.looks_layout
         pen.text(show.words.looks.fetch(:title), pen.fonts.bold(plan.heading_size), layout.center_x, plan.heading_y,
                  pen.palette.cream)
+        note(show, plan, layout) if plan.note
         plan.cards.each { card(it, show) }
+        PillButton.new(pen:).draw(layout.clear_records_button, show.words.offer[:entry], alpha: 0.8 + (0.2 * show.hover.level(:offer)),
+                                  hover: show.hover.level(:offer), color: pen.palette.soft) if plan.note && show.offer_offered?
         PillButton.new(pen:).draw(layout.back_button, show.words.go_back, hover: show.hover.level(:back))
       end
 
       private
+
+      # For a free player, the one line that says where looks come from.
+      def note(show, plan, layout)
+        pen.text(show.words.looks.fetch(:locked), pen.fonts.semibold(plan.note_size), layout.center_x, plan.note_y, pen.palette.soft)
+      end
 
       def card(card, show)
         theme = card.theme
@@ -34,8 +42,34 @@ module DotPopper
         G.rectangle(:fill, rect.x, rect.y, rect.width, rect.height, corner, corner, 32)
         pair(rect, palette)
         name(show.words.looks.fetch(theme.key), rect, palette)
+        locked = show.looks_locked?
+        earned = show.look_earned?(theme)
+        shade(rect, corner, palette) if locked && !earned
         outline(rect, corner, chosen, hover)
         tick(rect, palette) if chosen
+        badge(rect, palette, earned) if locked && !chosen
+      end
+
+      # A look not earned yet is dimmed, so what is earned is plain.
+      def shade(rect, corner, palette)
+        pen.color(palette.ink_bottom, 0.6)
+        G.rectangle(:fill, rect.x, rect.y, rect.width, rect.height, corner, corner, 32)
+      end
+
+      # A free player's mark in a card's top right corner, as the Records
+      # screen's achievements wear theirs: a filled dot if earned, a ring if
+      # not.
+      def badge(rect, palette, earned)
+        size = pen.pixels.whole([rect.height * 0.2, 22.0].max)
+        x = pen.pixels.snap(rect.right - (size * 0.9))
+        y = pen.pixels.snap(rect.y + (size * 0.9))
+        pen.color(palette.fresh_light)
+        if earned
+          G.circle(:fill, x, y, size * 0.3, 24)
+        else
+          G.line_width = pen.pixels.line_width(2)
+          G.circle(:line, x, y, size * 0.3, 24)
+        end
       end
 
       # A bright dot, and over its right side a popped one, in the upper

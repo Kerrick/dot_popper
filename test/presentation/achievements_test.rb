@@ -4,7 +4,7 @@ require_relative "presentation_helper"
 
 # The achievements on the Records screen and at Game Over: shown with the paid
 # version, earned and kept without it, and cleared with the records.
-class AchievementsTest < Minitest::Test
+class AchievementsOnRecordsTest < Minitest::Test
   include PresentationTest
 
   Memory = DotPopper::BestScore::Memory
@@ -81,18 +81,22 @@ class AchievementsTest < Minitest::Test
     assert_equal ["Sharpshooter", "<10%"], sheet.achievements.rows.first.then { [it.label, it.value] }
   end
 
-  def test_a_free_player_sees_the_achievements_exist_but_not_which_are_earned
+  def test_a_free_player_sees_the_achievements_exist_and_which_are_earned
     @achievements.award(%i[sharpshooter], day: "2026-11-08")
     sheet = build_sheet(paid: false)
 
-    assert_equal [:locked], sheet.achievements.rows.map(&:mark).uniq
+    assert_equal [:earned], sheet.achievements.rows.map(&:mark).first(1)
+    assert_equal [:locked], sheet.achievements.rows.map(&:mark).drop(1).uniq
     assert_equal "Achievements come with the full game", sheet.achievements.title
   end
 
-  def test_buying_shows_what_was_earned_while_free
+  def test_buying_opens_the_rest_and_counts_what_was_earned_while_free
     @achievements.award(%i[sharpshooter], day: "2026-11-08")
+    sheet = build_sheet(paid: true)
 
-    assert_equal [:earned], build_sheet(paid: true).achievements.rows.map(&:mark).first(1)
+    assert_equal [:earned], sheet.achievements.rows.map(&:mark).first(1)
+    assert_equal [:open], sheet.achievements.rows.map(&:mark).drop(1).uniq
+    assert_equal "Achievements: 1 of 11", sheet.achievements.title
   end
 
   def test_a_sheet_with_no_achievements_lists_no_achievements
@@ -108,6 +112,23 @@ class AchievementsTest < Minitest::Test
     assert_equal DotPopper::Achievement::IDS.size, achievements.size
     assert_equal 1, achievements.map(&:x).uniq.size
     assert_empty achievements.map(&:x) & others.map(&:x)
+  end
+
+  def test_a_free_players_records_fit_with_the_achievements_looks_and_the_offer_at_phone_and_desktop_sizes
+    sheet = build_sheet(paid: false)
+
+    [[1200, 800], [800, 500], [400, 320], [400, 850], [850, 400], [844, 390], [2560, 1440]].each do |width, height|
+      plan = RecordsLayout.new(layout: layout(width, height), sheet:, look: Look::RECORDS, widest: 360, looks: true, offer: true)
+      page = layout(width, height)
+
+      assert_operator plan.prompt_y, :<=, page.records_floor(looks: true, offer: true), "#{width}x#{height}"
+      plan.placements.each do |placed|
+        assert_operator placed.x, :>=, 0, "#{width}x#{height}"
+        assert_operator placed.right, :<=, width, "#{width}x#{height}"
+        assert_operator placed.y, :<, plan.prompt_y, "#{width}x#{height}"
+      end
+      assert_equal DotPopper::Achievement::IDS.size, plan.placements.count { it.item.is_a?(RecordRow) && it.item.mark }, "#{width}x#{height}"
+    end
   end
 
   def test_on_a_narrow_screen_the_achievements_stack_under_the_rest_and_all_fit
