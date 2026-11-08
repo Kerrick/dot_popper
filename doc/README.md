@@ -12,10 +12,10 @@ This guide is for Rubyists who want to build Dot Popper from source, change it, 
 
 ## What's in the code
 
-- **Rules you can test without a window.** The rules, in `lib/dot_popper`, are 1,557 lines, built mostly from immutable values made with `Data.define`. They draw nothing, play nothing, and read no input. 517 unit tests run in about 3 seconds, and [Steep](https://github.com/soutaro/steep) checks the rules against RBS signatures in strict mode.
-- **The look and sound as plain values.** `lib/dot_popper/presentation` (4,869 lines) holds every color, word, size, timing, and animation curve, and the synthesizer that makes every sound when the game starts. It never calls Lota, so its tests run without a window too.
-- **LÖVE's engine, from Ruby.** `lib/dot_popper/shell` (3,038 lines) does the drawing, sound, and input through Lota: four GLSL shaders, LÖVE's particle systems for the pop droplets, Box2D physics for the pile at Game Over, stereo sound, mouse, touch, gamepads, and a tablet's accelerometer.
-- **A game that plays itself.** A bot plays rounds by itself. Ten scripted scenarios play the game in a real window, check it as they go, and quit. A simulator plays the real rules with a model player on screens from an iPhone to a 32-inch monitor.
+- **Rules you can test without a window.** The rules, in `lib/dot_popper`, are 2,350 lines, built mostly from immutable values made with `Data.define`. They draw nothing, play nothing, and read no input. 796 unit tests run in about 4 seconds, and [Steep](https://github.com/soutaro/steep) checks the rules against RBS signatures in strict mode.
+- **The look and sound as plain values.** `lib/dot_popper/presentation` (8,068 lines) holds every color, word, size, timing, and animation curve, and the synthesizer that makes every sound when the game starts. It never calls Lota, so its tests run without a window too.
+- **LÖVE's engine, from Ruby.** `lib/dot_popper/shell` (4,522 lines) does the drawing, sound, and input through Lota: four GLSL shaders, LÖVE's particle systems for the pop droplets, Box2D physics for the pile at Game Over, stereo sound, mouse, touch, gamepads, and a tablet's accelerometer.
+- **A game that plays itself.** A bot plays rounds by itself. Scripted scenarios play the game in a real window, check it as they go, and quit. A simulator plays the real rules with a model player on screens from an iPhone to a 32-inch monitor.
 - **Shipped like any other game.** On every push to `trunk`, CI builds the app for each desktop on that desktop, then plays each one for 20 seconds with no Ruby on the PATH.
 
 If you know LÖVE, [Why Ruby](why_ruby.md) sets Dot Popper's code beside the Lua a LÖVE game would use for the same job, and says where Lua wins.
@@ -28,6 +28,7 @@ If you know LÖVE, [Why Ruby](why_ruby.md) sets Dot Popper's code beside the Lua
 | `conf.rb` | Lota's window settings: the title, the 1200 × 800 window, the save folder's name, and which graphics renderers to allow |
 | `lib/dot_popper/` | The rules. `rules.rb` holds every number that sets how the game plays, in dot radii; `round.rb` and `stack.rb` hold a round and its dots |
 | `lib/dot_popper/presentation/` | How the game looks and sounds, as values. `look.rb` holds every setting, and `words.rb` writes every sentence the player reads |
+| `lib/dot_popper/groups/` | The friend groups' client, which makes every network call on a thread of its own |
 | `lib/dot_popper/shell/` | Carries out the presentation with Lota: painters, the speaker, input, and save files |
 | `bin/dot_popper` | The program in the packaged app. It starts the game as a fused Lota game, which saves in a folder named after the game, as a fused LÖVE game does |
 | `fledge.yml` | The app's name, version, identifier, icon, and installers, for Fledge |
@@ -97,6 +98,9 @@ The game reads these from its environment. `main.rb` lists them all.
 | `DOT_POPPER_NO_SHADERS=1` | Draws with plain shapes, as on a GPU whose driver cannot compile the shaders |
 | `DOT_POPPER_FAKE_GAMEPAD=1` | Plays as if a gamepad were in hand: the words name its buttons, and its cursor shows |
 | `DOT_POPPER_FAKE_TILT=0.6,0` | Stands in for a tablet's accelerometer, to roll the pile at Game Over |
+| `DOT_POPPER_PAID=1` | Plays as if the paid version were bought. `0` plays free |
+| `DOT_POPPER_FAKE_STORE=1` | Rehearses a purchase with no store |
+| `DOT_POPPER_SERVER=URL` | Uses this friend-group server, in place of the one set in the game |
 | `DOT_POPPER_CALM=1` | Turns off the screen shake, and makes the pile settle gently. Players use this one too |
 
 The screenshots in the README came from bot runs like this one, which saves a screenshot every half second from 12 to 34 seconds in:
@@ -114,12 +118,12 @@ The seed repeats the same rounds, but the game times each screenshot by the cloc
 
 ```console
 $ bundle exec rake
-517 runs, 678992 assertions, 0 failures, 0 errors, 0 skips
+796 runs, 715183 assertions, 0 failures, 0 errors, 0 skips
 No type error detected. 🫖
 ```
 
 - `bundle exec rake test` runs the unit tests alone, and `bundle exec rake steep` runs Steep alone.
-- `bundle exec rake test:gui` plays the ten scenarios in `test/gui/scenarios` in real windows. It needs a display, so `rake` leaves it out. CI runs it on every push and pull request, on Linux, under a virtual display with software OpenGL.
+- `bundle exec rake test:gui` plays the scenarios in `test/gui/scenarios`, except the galleries, which render screens to compare by eye, in real windows. It needs a display, so `rake` leaves it out. CI runs it on every push and pull request, on Linux, under a virtual display with software OpenGL.
 - `bundle exec ruby script/simulate.rb 20` plays 20 rounds on each of six screens with a model player, with each dot size, and prints a table of scores, round lengths, and penalties. A run of 20 rounds finished in 36 seconds on an M1 Max. [Decisions made overnight](decisions.md) has the rules its numbers set.
 
 ## Building the app
@@ -128,11 +132,13 @@ No type error detected. 🫖
 
 ```console
 $ gem install --local vendor/cache/lota-0.2.2-arm64-darwin.gem
-$ lota fuse . --identifier com.setdef.DotPopper --app-version 0.9.2 --icon icons/icon
+$ lota fuse . --identifier com.setdef.DotPopper --app-version 0.9.9 --icon icons/icon
 dist/Dot Popper-arm64-darwin.tar.gz
 dist/Dot Popper-arm64-darwin.dmg
 Built the app for arm64-darwin only. Run lota fuse on each platform you ship for.
 ```
+
+`lota fuse` ships all of the folder it is given, so CI fuses a copy without the tests, docs, and other repository files. A build from your own checkout includes them.
 
 On an M1 Max, a build finished in about 45 seconds. `lota fuse` needs Git and the network, because Bundler fetches Fledge from GitHub and Fledge downloads its Ruby runtime the first time. On Windows, it also needs RubyInstaller's MSYS2 tools (`ridk install`), because one development gem compiles there. On a Mac, `lota fuse` writes a `.dmg` and a `.tar.gz`; on Windows, a `.zip` and a setup program; on Linux, a `.tar.gz` and an AppImage. To ship all three, build on all three, as CI does. [Packaging Dot Popper](../PACKAGING.md) has what goes in the app, and how CI builds and checks each one.
 
@@ -152,7 +158,7 @@ The iPhone, iPad, and Android builds are experimental, and are not released to p
 | [Decisions made overnight](decisions.md) | Each call made about the rules, crowding, presentation, and LÖVE's engine, with why, and what it would take to reverse it |
 | [Why Ruby](why_ruby.md) | Dot Popper's Ruby beside the Lua a LÖVE game would use, from values and blocks to Ractors, and where Lua wins |
 | [Dot Popper on an iPad](ios.md) | What the iOS app needs, how the game behaves there, and how to check a run in the Simulator |
-| [Publishing Dot Popper](publishing.md) | What each store needs, from Google Play to Homebrew, and the license question to settle first |
+| [Publishing Dot Popper](publishing.md) | What each store needs, from Google Play to Homebrew, and how the game's licenses stand |
 | [Playtests](playtests/) | What each playtest on a real device found, and what it led to |
 | [Inspiration](../INSIPIRATION.md) | Optional reading for the game's look and feel: summaries of books on interaction design, visual design, game design, and writing |
 | [Lota's README](https://github.com/setdef/Lota) | Lota's API, and how a LÖVE call becomes a Ruby one |
