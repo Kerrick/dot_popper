@@ -1186,3 +1186,29 @@ The maintainer found the title cluttered: the legend, How to play, Full screen a
 `test/gui/scenarios/title_gallery.rb` renders the title in each of those states and sizes, as screenshots to compare; it is not part of `rake test:gui`. Run it with `DOT_POPPER_SCENARIO=title_gallery DOT_POPPER_GALLERY=name`.
 
 **To reverse:** In `TitleScreen#blocks`, put `play` after the streak, restore `GAPS`, put `Layout#window_buttons` back to a row above the mute button, and give `Words#streak` its longer sentence.
+
+## What playtesters asked for after 0.9.8, and what the books say
+
+Four ideas came from playtesters. None is built yet. Each entry says what it should be if it is built, by the reasoning of the books in `INSIPIRATION.md`.
+
+### Friend groups with a trophy to steal: good, and worth paying for
+
+A small group of invited friends holds one trophy, and doing better than the holder takes it. It adds relatedness, the need the game serves least (*Glued to Games*); it lives in the metagame (Elias, Garfield and Gutschera), so a round's rules and attention stay as they are; and a holder and a thief make stories that a ranked list does not (Sylvester). Rounds of a minute need nobody online together.
+
+It is good only on three conditions. The trophy must stay stealable: a best-ever score lets one freak round end the contest, so the holder's score should fall a little each day, about 1 point, until someone beats it. Losing it must feel fair (Juul), so group rounds use only dots sized to the screen, and how a phone fares against a mouse needs measuring with players. And the pressure must stay friendly (Nguyen): one message for a theft, no nagging or guilt for being away, and no global leaderboard.
+
+Free players can join a group and steal the trophy, and creating a group is what Paid buys, because a friend group is only as big as its members who can take part.
+
+**Test first:** one group keeps a trophy by hand in its chat for two or three weeks, with the daily fall, using Share my score (Fullerton, Schell). The question is whether they are still at it in week three.
+
+### Achievements: a few, and only for skill
+
+Sharpshooter, for popping a dot with little of it visible, celebrates the game's central choice: wait for the dot to slide out, or take a chance (Sylvester). Feedback on competence motivates (*Glued to Games*); rewards bolted onto the surface do not (Ferrara), and simple scores can crowd out richer reasons to play (Nguyen). So: about 8 to 12 feats on the Records screen, none for grinding, and nothing that interrupts a round.
+
+### A bonus dot: earned by a streak, never by chance
+
+A dot that turns golden at random involves no decision, and adds luck to scores people compare; losing to someone's lucky dots fails Juul's test of a loss you can blame yourself for. One earned by a run of pops without a mistake raises the stakes of every risky tap, and gives experts a new pattern to learn (Koster). It must replace the next bright dot, not add a second target; the tutorial must teach it without words; and it changes the clock's balance and the daily goals' targets, so it goes through `script/simulate.rb` and then players before it stays.
+
+### Holiday themes stay once earned
+
+A theme appears during its holiday, unlocks for good after one round, and returns the next year for anyone who missed it. Letting someone play Halloween all year is autonomy (*Glued to Games*), and an offer that vanishes is pressure the game does not need. Every theme must keep the bright dot unmistakable from the popped ones (Hodent).
