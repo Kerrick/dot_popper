@@ -9,7 +9,6 @@ module DotPopper
 
       def ok? = status.between?(200, 299)
       def offline? = status.zero?
-      def error = body["error"]
     end
 
     # One HTTPS request at a time, by Net::HTTP. net/http, openssl and
@@ -54,7 +53,8 @@ module DotPopper
         text = response.body.to_s
         Reply.new(status: response.code.to_i, body: text.empty? ? {} : JSON.parse(text))
       rescue JSON::ParserError
-        Reply.offline
+        # A refusal with a page for a body is still a refusal.
+        response.code.to_i.between?(200, 299) ? Reply.offline : Reply.new(status: response.code.to_i, body: {})
       end
     end
   end

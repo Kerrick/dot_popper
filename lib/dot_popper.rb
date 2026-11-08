@@ -11,7 +11,6 @@ end
 require_relative "dot_popper/rules"
 require_relative "dot_popper/entitlement"
 require_relative "dot_popper/visibility"
-require_relative "dot_popper/trophy"
 require_relative "dot_popper/events"
 require_relative "dot_popper/field"
 require_relative "dot_popper/size_class"

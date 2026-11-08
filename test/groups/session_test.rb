@@ -27,8 +27,9 @@ class SessionTest < Minitest::Test
   def new_session = Groups::Session.new(store: @store, worker: @worker, clock: -> { @time })
   def pump = @session.update(quiet: true)
 
-  def group(trophy: { "score" => 5 }, news: [])
-    { "code" => "2345678", "trophy" => trophy, "news" => news, "members" => [{ "mark" => 4, "holder" => false, "me" => true }] }
+  def group(score: 5, news: [], looks: [4])
+    { "join_code" => "2345678", "holder_look" => nil, "score_to_beat" => score, "news" => news,
+      "members" => looks.map { { "look" => it, "you" => it == looks.first } } }
   end
 
   def answer(status, body)
@@ -39,9 +40,9 @@ class SessionTest < Minitest::Test
   def joined
     @session.join(4, "2345678")
     pump
-    answer(201, { "token" => "t", "id" => 1 })
+    answer(201, { "token" => "t" })
     pump
-    answer(200, { "group" => group })
+    answer(201, group)
   end
 
   def test_a_new_player_asks_nothing
@@ -66,11 +67,12 @@ class SessionTest < Minitest::Test
 
     job = @worker.started.first.first
 
-    assert_equal [:player, :post, "/v1/players", {}], [job.kind, job.verb, job.path, job.body]
-    answer(201, { "token" => "t", "id" => 1 })
+    assert_equal [:player, :post, "/player", nil], [job.kind, job.verb, job.path, job.body]
+    answer(201, { "token" => "t" })
     pump
 
-    assert_equal({ code: "2345678", mark: 4 }, @worker.started.first.first.body)
+    assert_equal([:post, "/membership", { join_code: "2345678", look: 4 }],
+                 [@worker.started.first.first.verb, @worker.started.first.first.path, @worker.started.first.first.body])
     refute_respond_to @session, :name
     refute_respond_to @session, :report
     refute_respond_to @session, :block
@@ -78,10 +80,9 @@ class SessionTest < Minitest::Test
 
   def test_the_server_may_give_another_mark_when_the_one_asked_for_is_worn
     joined
-    answer_mark = group.merge("members" => [{ "mark" => 2, "holder" => false, "me" => true }])
     @session.refresh
     pump
-    answer(200, { "group" => answer_mark })
+    answer(200, group(looks: [2, 4]))
 
     assert_equal 2, @session.mark
   end
@@ -123,7 +124,7 @@ class SessionTest < Minitest::Test
     pump
     @session.refresh
     pump
-    answer(200, { "group" => group })
+    answer(200, group)
 
     assert_equal [:round], @worker.started.map { it.first.kind }
   end
@@ -137,7 +138,7 @@ class SessionTest < Minitest::Test
     @time += DAY * 3
     @session.refresh
     pump
-    answer(200, { "group" => group })
+    answer(200, group)
 
     assert_empty @worker.started
   end
@@ -156,7 +157,7 @@ class SessionTest < Minitest::Test
     @session = new_session
     @session.round_finished(score: 10, sized_to_screen: true)
     pump
-    answer(404, { "error" => "not_in_group" })
+    answer(404, {})
     @session.round_finished(score: 11, sized_to_screen: true)
     pump
 
@@ -167,18 +168,18 @@ class SessionTest < Minitest::Test
     joined
     @session.round_finished(score: 10, sized_to_screen: true)
     pump
-    answer(200, { "taken" => true, "group" => group(trophy: { "score" => 10 }) })
+    answer(200, { "took_trophy" => true, "group" => group(score: 10) })
 
-    assert_equal :taken, @session.next_message.kind
+    assert_equal [:taken, 10], @session.next_message.then { [it.kind, it.score] }
     assert_nil @session.next_message
   end
 
   def test_a_theft_is_told_once_even_across_launches
     joined
-    news = [{ "id" => 9, "thief" => 6, "score" => 12 }]
+    news = [{ "id" => 9, "thief_look" => 6, "score" => 12 }]
     @session.refresh
     pump
-    answer(200, { "group" => group(news:) })
+    answer(200, group(news:))
 
     assert_equal [6, 12], @session.next_message.then { [it.who, it.score] }
 
@@ -186,7 +187,7 @@ class SessionTest < Minitest::Test
     @worker.started.clear
     @session.refresh
     pump
-    answer(200, { "group" => group(news:) })
+    answer(200, group(news:))
 
     assert_nil @session.next_message
   end
@@ -195,7 +196,7 @@ class SessionTest < Minitest::Test
     joined
     @session.refresh
     pump
-    answer(401, { "error" => "unknown_token" })
+    answer(401, {})
 
     refute_predicate @session, :known?
   end
@@ -208,6 +209,130 @@ class SessionTest < Minitest::Test
 
     refute_predicate @session, :known?
     assert_nil new_session.token
+  end
+
+  def test_a_round_is_reported_as_kind_one_with_a_score_in_range
+    joined
+    @session.round_finished(score: 250_000, sized_to_screen: true)
+    pump
+
+    job = @worker.started.first.first
+
+    assert_equal [:post, "/group/rounds", { score: 100_000, kind: 1 }], [job.verb, job.path, job.body]
+  end
+
+  def test_a_creator_says_they_paid_with_the_look_they_want
+    @session.create(3)
+    pump
+    answer(201, { "token" => "t" })
+    pump
+    job = @worker.started.first.first
+
+    assert_equal [:post, "/group", { look: 3, paid: true }], [job.verb, job.path, job.body]
+    answer(201, group(looks: [5]))
+
+    assert_equal 5, @session.mark, "the server gave the lowest free look"
+  end
+
+  def test_a_told_theft_is_deleted_by_id_and_forgotten_once_gone
+    joined
+    news = [{ "id" => 9, "thief_look" => 6, "score" => 12 }]
+    @session.refresh
+    pump
+    answer(200, group(news:))
+    @session.next_message
+    pump
+    job = @worker.started.first.first
+
+    assert_equal [:delete, "/group/news/9"], [job.verb, job.path]
+    @worker.answer(Reply.offline)
+    pump
+    @session.refresh
+    pump
+    answer(200, group(news:))
+
+    assert_nil @session.next_message
+    assert_equal [[:delete, "/group/news/9"]], @worker.started.map { [it.first.verb, it.first.path] }
+    answer(200, group)
+
+    assert_nil @session.next_message
+  end
+
+  def test_each_refusal_status_says_what_went_wrong
+    {
+      [:create, 402] => :not_paid, [:create, 409] => :already_in_group, [:create, 422] => :bad_mark,
+      [:create, 413] => :failed, [:create, 500] => :failed,
+      [:join, 403] => :group_full, [:join, 404] => :no_such_group, [:join, 409] => :already_in_group,
+      [:join, 422] => :no_such_group, [:join, 429] => :too_many_tries
+    }.each do |(what, status), error|
+      setup
+      what == :create ? @session.create(1) : @session.join(1, "2345678")
+      pump
+      answer(201, { "token" => "t" })
+      pump
+      answer(status, {})
+
+      assert_equal error, @session.error, "#{what} #{status}"
+      refute_predicate @session, :member?
+    end
+  end
+
+  def test_no_group_is_not_an_error_when_asking_for_the_group_or_leaving
+    joined
+    @session.refresh
+    pump
+    answer(404, {})
+
+    refute_predicate @session, :member?
+    assert_nil @session.error
+    @session.refresh
+    pump
+    answer(200, group)
+    @session.leave
+    pump
+    answer(404, {})
+
+    refute_predicate @session, :member?
+    assert_nil @session.error
+  end
+
+  def test_leaving_is_a_delete_of_the_membership
+    joined
+    @session.leave
+    pump
+    job = @worker.started.first.first
+
+    assert_equal [:delete, "/membership"], [job.verb, job.path]
+    answer(204, {})
+
+    refute_predicate @session, :member?
+  end
+
+  def test_a_round_the_server_refuses_is_dropped_quietly
+    joined
+    @session.round_finished(score: 10, sized_to_screen: true)
+    pump
+    answer(422, {})
+
+    assert_nil @session.error
+    assert_predicate @session, :member?
+    @session.refresh
+    pump
+    answer(200, group)
+
+    assert_empty @worker.started
+  end
+
+  def test_a_failing_theft_delete_is_quiet
+    joined
+    @session.refresh
+    pump
+    answer(200, group(news: [{ "id" => 9, "thief_look" => 6, "score" => 12 }]))
+    @session.next_message
+    pump
+    answer(404, {})
+
+    assert_nil @session.error
   end
 
   def test_the_server_url_is_one_setting

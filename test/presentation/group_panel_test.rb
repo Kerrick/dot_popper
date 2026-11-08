@@ -18,10 +18,8 @@ class GroupPanelTest < Minitest::Test
   end
 
   def group(news: [], members: nil)
-    members ||= [{ "mark" => 0, "holder" => true, "me" => true },
-                 { "mark" => 1, "holder" => false, "me" => false }]
-    { "code" => "2345678", "members" => members, "news" => news,
-      "trophy" => { "holder_id" => 1, "holder_mark" => 0, "score" => 20, "standing" => 18, "days_held" => 2 } }
+    members ||= [{ "look" => 0, "you" => true }, { "look" => 1, "you" => false }]
+    { "join_code" => "2345678", "members" => members, "news" => news, "holder_look" => 0, "score_to_beat" => 18 }
   end
 
   def setup
@@ -61,9 +59,9 @@ class GroupPanelTest < Minitest::Test
     tap_code("2345678")
     tap_control(:group_join)
     tick
-    reply(201, { "token" => "t", "id" => 1 })
+    reply(201, { "token" => "t" })
     tick
-    reply(200, { "group" => group(news:) })
+    reply(201, group(news:))
   end
 
   def test_no_server_offers_no_group
@@ -150,11 +148,11 @@ class GroupPanelTest < Minitest::Test
     tick
     tick
 
-    assert_equal({}, @worker.started.first.first.body)
-    reply(201, { "token" => "t", "id" => 1 })
+    assert_nil @worker.started.first.first.body
+    reply(201, { "token" => "t" })
     tick
 
-    assert_equal({ code: "2345678", mark: 5 }, @worker.started.first.first.body)
+    assert_equal({ join_code: "2345678", look: 5 }, @worker.started.first.first.body)
   end
 
   def test_the_door_has_no_field_for_text_and_the_screen_offers_no_report_or_block
@@ -172,7 +170,7 @@ class GroupPanelTest < Minitest::Test
   end
 
   def test_a_theft_message_names_no_one_and_shows_the_thiefs_dot
-    join!(news: [{ "id" => 9, "thief" => 4, "score" => 21 }])
+    join!(news: [{ "id" => 9, "thief_look" => 4, "score" => 21 }])
     panel.close
     tick
 
@@ -205,7 +203,7 @@ class GroupPanelTest < Minitest::Test
   end
 
   def test_group_rows_fit_a_small_phones_screen_in_columns_and_above_the_floor
-    members = Array.new(8) { { "mark" => it, "holder" => it.zero?, "me" => it == 3 } }
+    members = Array.new(8) { { "look" => it, "you" => it == 3 } }
     build(width: 844, height: 390)
     panel.open
     tick
@@ -233,7 +231,7 @@ class GroupPanelTest < Minitest::Test
   end
 
   def test_a_message_waits_for_launch_or_game_over_and_shows_once
-    join!(news: [{ "id" => 9, "thief" => 1, "score" => 21 }])
+    join!(news: [{ "id" => 9, "thief_look" => 1, "score" => 21 }])
     tick
 
     assert_nil panel.banner, "not while the group screen covers it"

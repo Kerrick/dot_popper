@@ -30,10 +30,10 @@ module DotPopper
 
       # The score to beat today, or that nobody holds the trophy yet. Who
       # holds it shows in the members' rows, by their dot.
-      def trophy_line(trophy)
-        return "Nobody holds the trophy yet. Score any points to take it." unless trophy["holder_mark"]
+      def trophy_line(holder_look, score_to_beat)
+        return "Nobody holds the trophy yet. Score any points to take it." unless holder_look
 
-        "Beat #{trophy["standing"]} to take the trophy."
+        "Beat #{score_to_beat} to take the trophy."
       end
 
       # The one message a theft or a win makes.
@@ -48,7 +48,8 @@ module DotPopper
         { offline: "Can't reach the group right now.", no_such_group: "No group has that code.",
           group_full: "That group is full.", bad_mark: "Pick one of the dots.",
           already_in_group: "You are already in a group.", too_many_tries: "Too many tries. Wait a while.",
-          not_in_group: "You are not in that group any more." }.fetch(reason, "Something went wrong.")
+          not_paid: "Creating a group needs the full game.",
+          no_group: "You are not in a group." }.fetch(reason, "Something went wrong.")
       end
     end
 

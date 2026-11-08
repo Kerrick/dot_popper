@@ -1287,13 +1287,13 @@ The design is the section "Friend groups with a trophy to steal" above; these ar
 
 **The server's old data.** The schema changed (no names, blocks or reports; a mark on each membership). No server has been deployed, so there is nothing to migrate; delete any development database.
 
-**Friends-only trust.** The server decides the trophy but believes a client's score and that a creator has paid: there is no store receipt to check yet. When Paid is real, checking the receipt is one new line in `App#create_group`.
+**Friends-only trust.** The server decides the trophy but believes a client's score and that a creator has paid: there is no store receipt to check yet. When Paid is real, checking the receipt is a change in one place in the Rails server's group creation.
 
 **The network.** `Net::HTTP` runs on one low-priority thread, starting with the first request, so a player with no group has no thread and loads no networking code. Nothing is handed to it during a round. Every failure is quiet: the screen says it can't reach the group, and rounds play as ever. Fledge's 0.8.0 runtimes were inspected: `net/http` and `openssl` are in all five, with `socket` compiled or built in, and each carries certificate authorities (`libexec/cert.pem`, or `etc/ssl/cert.pem` on Windows). It has not been run on a phone or on Windows.
 
 **A trophy, with its word, marks the way in** (Hodent: an icon and a label beat either alone), from the title's top left, where nothing else sits.
 
-**To deploy:** run `server/` behind HTTPS, set `Groups::Settings::SERVER_URL`, and update the privacy statements as `doc/publishing.md` says. Until then, no build shows groups or connects to anything.
+**To deploy:** run the Rails server (`~/Developer/dot_popper-server`) behind HTTPS, set `Groups::Settings::SERVER_URL`, and update the privacy statements as `doc/publishing.md` says. Until then, no build shows groups or connects to anything.
 
 
 ## Buying the paid version
@@ -1331,3 +1331,5 @@ The maintainer's decision, designed by the books: **show what is there, plainly,
 ## A look at the real screens (2026-11-08)
 
 The screens that were only tested are now seen (`test/gui/scenarios/screens_gallery.rb`, and `offer_gallery`, at 1200 x 800, 400 x 850, 850 x 400 and 400 x 320, free and paid, with the group screens against a local `server/`). Three things were wrong, and are fixed: on the Friend group door, the code box and keypad covered the "Your dot" label where the two columns sit side by side (the box now starts level with the dots, below the label); a member of a group was never shown the invite code, so nobody could ask a friend in (the group screen now says "Invite code: 1234567" under the trophy line); and the offer called looks "Themes" while every screen calls them Looks (Johnson: one name for one thing). Game Over's "New achievement: Blink" line, Records, Looks cards (earned, locked, worn) and the offer with its thanks read cleanly at every size. *To reverse:* the three edits are in `GroupScreen#door` and `#group_plan` and `Look::WORDS.offer[:includes]`.
+
+**The friend-group client speaks the Rails server (2026-11-08).** The prototype `server/` folder and `lib/dot_popper/trophy.rb` are removed: the Rails app in `~/Developer/dot_popper-server` decides the trophy, and the game no longer uses `Trophy` (it only shows `score_to_beat` and `holder_look`). Paths have no `/v1`. A round is sent as `kind: 1` (dots sized to the screen) with the score clamped to 0-100000. Creating sends `paid: true`: the game, via `Entitlement`, decides who may create. A member is known only by look: `you: true` marks this player, and the look the server assigned when theirs was taken is what the game then shows as theirs. Refusals have empty bodies, so `Groups::Session::REFUSALS` maps status to a quiet message; a refused round (404 or 422) is dropped. News is told once and then deleted by id (`DELETE /group/news/:id`); a delete that did not get through is retried on the next group fetch. *To reverse:* none needed; to point at another server, change `Groups::Settings::SERVER_URL`.

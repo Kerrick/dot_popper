@@ -1,6 +1,6 @@
 # Dot Popper's server: what it must do
 
-This spec is for the Rails app in `~/Developer/dot_popper-server`, which will replace the prototype in this repository's `server/` folder. It says what the server does, and leaves its shape to you. Prefer whatever a vanilla Rails app would do.
+This spec is for the Rails app in `~/Developer/dot_popper-server`. It says what the server does, and leaves its shape to you. Prefer whatever a vanilla Rails app would do.
 
 ## What the server is for
 
@@ -18,7 +18,7 @@ The server decides these. The game only shows the answer.
 
 For example, a player takes the trophy with 30 on Monday. On Wednesday the score to beat is 28, so a round of 28 from someone else does nothing and a round of 29 takes the trophy.
 
-`lib/dot_popper/trophy.rb` in this repository states these rules in code. Keep your tests in step with it.
+The prototype that stated these rules in code (`lib/dot_popper/trophy.rb`) has been removed; the Rails app is now the only statement of them.
 
 ## Players
 

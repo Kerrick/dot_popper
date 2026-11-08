@@ -9,14 +9,31 @@ module DotPopper
     # Nothing is sent until the player creates or joins a group: a Session
     # with no saved token makes no connection at all. +store+ answers
     # read and write, as a SaveFile does, and +clock+ gives the time.
+    #
+    # The server's refusals have empty bodies, so what went wrong is read
+    # from the status alone (REFUSALS). Members have no ids: a member is
+    # their look (the game's Mark), and the one with "you" set is this player.
     class Session
       # A request to make, and +then+ one to make after it succeeds.
       class Job < Data.define(:kind, :verb, :path, :body, :then)
         def initialize(kind:, verb:, path:, body: nil, then: nil) = super
       end
 
+      # The server's kind of round for dots sized to the screen, the only
+      # kind that counts, and the highest score it takes.
+      SIZED_TO_SCREEN = 1
+      HIGHEST_SCORE = 100_000
+      SECONDS_A_DAY = 86_400
       # How long a round played offline may wait to be reported, in days.
       PENDING_DAYS = 2
+      # What a status means, by the kind of job it answers. :forget means
+      # the player is in no group; :drop means the server will never take
+      # the round waiting.
+      REFUSALS = {
+        group: { 402 => :not_paid, 409 => :already_in_group, 422 => :bad_mark },
+        joined: { 403 => :group_full, 404 => :no_such_group, 409 => :already_in_group, 422 => :no_such_group, 429 => :too_many_tries },
+        round: { 404 => :forget, 422 => :drop }
+      }.freeze
       # A Worker that is never asked to do anything.
       NO_WORKER = Struct.new(:none) do
         def start(*) = nil
@@ -49,26 +66,30 @@ module DotPopper
       def known? = !@token.nil?
       def busy? = @running.positive?
       def members = @group ? @group["members"] : []
-      def trophy = @group&.fetch("trophy")
+      def score_to_beat = @group&.fetch("score_to_beat")
+      # The look of the member holding the trophy, or nil if it is vacant.
+      def holder_look = @group&.fetch("holder_look")
 
       # Looks up the group, at launch and when its screen opens. Without
       # a token there is nothing to look up and nothing is sent.
-      def refresh = known? ? ask(Job.new(kind: :group, verb: :get, path: "/v1/group")) : nil
+      def refresh = known? ? ask(Job.new(kind: :group, verb: :get, path: "/group")) : nil
 
       # Makes a group, or joins the one with +code+ (digits), wearing +mark+
-      # (Groups::Mark) if no one there does, else the first that is free.
-      def create(mark) = as_player(Job.new(kind: :group, verb: :post, path: "/v1/groups", body: { mark: }))
-      def join(mark, code) = as_player(Job.new(kind: :group, verb: :post, path: "/v1/groups/join", body: { code:, mark: }))
-      def leave = ask(Job.new(kind: :left, verb: :delete, path: "/v1/groups/mine"))
-      def delete_everything = ask(Job.new(kind: :deleted, verb: :delete, path: "/v1/players/me"))
+      # (Groups::Mark) if no one there does, else the lowest that is free.
+      # Only the game decides whether a player may create (Entitlement),
+      # so the server is told the player has paid.
+      def create(mark) = as_player(Job.new(kind: :group, verb: :post, path: "/group", body: { look: mark, paid: true }))
+      def join(mark, code) = as_player(Job.new(kind: :joined, verb: :post, path: "/membership", body: { join_code: code, look: mark }))
+      def leave = ask(Job.new(kind: :left, verb: :delete, path: "/membership"))
+      def delete_everything = ask(Job.new(kind: :deleted, verb: :delete, path: "/player"))
 
       # A round just ended. Only one played by a member, with dots sized
       # to the screen, counts; if it cannot be sent now, the best such
       # round waits and is sent with the next contact.
       def round_finished(score:, sized_to_screen:)
-        return unless belongs? && Trophy.counts?(sized_to_screen:) && score.positive?
+        return unless belongs? && sized_to_screen == true && score.positive?
 
-        @pending = [score, @pending.to_i].max
+        @pending = [score.clamp(0, HIGHEST_SCORE), @pending.to_i].max
         @pending_day = today
         save
         send_pending
@@ -107,37 +128,55 @@ module DotPopper
       # the server no name or anything else.
       def as_player(job)
         @error = nil
-        known? ? ask(job) : ask(Job.new(kind: :player, verb: :post, path: "/v1/players", body: {}, then: job))
+        known? ? ask(job) : ask(Job.new(kind: :player, verb: :post, path: "/player", body: nil, then: job))
       end
 
       def send_pending
         return unless @pending && belongs?
 
-        ask(Job.new(kind: :round, verb: :post, path: "/v1/rounds", body: { score: @pending, sized_to_screen: true }))
+        ask(Job.new(kind: :round, verb: :post, path: "/group/rounds", body: { score: @pending, kind: SIZED_TO_SCREEN }))
       end
 
+      # The theft is told: the server is asked to forget it, and until it
+      # has, this device does not tell it again.
       def tell_server(id)
         @told << id
         save
-        ask(Job.new(kind: :told, verb: :post, path: "/v1/news/seen", body: { ids: @told }))
+        delete_news(id)
       end
+
+      def delete_news(id) = ask(Job.new(kind: :told, verb: :delete, path: "/group/news/#{id}"))
 
       def settle(job, reply)
         @running -= 1
         return @error = :offline if reply.offline?
         return forget_identity if reply.status == 401
-        return left_meanwhile if job.kind == :round && reply.status == 404
-        return @error = reply.error&.to_sym || :failed unless reply.ok?
+        return refused(job, reply.status) unless reply.ok?
 
         @error = nil
         apply(job, reply)
         ask(job.then) if job.then
       end
 
+      def refused(job, status)
+        case job.kind
+        when :told then nil
+        when :left then look_at(nil) if status == 404
+        when :group then status == 404 ? look_at(nil) : @error = REFUSALS[:group].fetch(status, :failed)
+        else
+          case REFUSALS.dig(job.kind, status)
+          when :forget then left_meanwhile
+          when :drop then give_up_pending
+          when nil then @error = :failed
+          else @error = REFUSALS.dig(job.kind, status)
+          end
+        end
+      end
+
       def apply(job, reply)
         case job.kind
         when :player then adopt(reply.body)
-        when :group then look_at(reply.body["group"])
+        when :group, :joined then look_at(reply.body)
         when :left then look_at(nil)
         when :deleted then forget_identity
         when :round then finish_round(reply.body)
@@ -154,16 +193,28 @@ module DotPopper
         remember_membership(!group.nil?)
         return unless group
 
-        wearing = group["members"].find { it["me"] }
-        remember_mark(wearing["mark"]) if wearing
-
-        group["news"].reject { @told.include?(it["id"]) }.each do |news|
-          next if @messages.any? { it.id == news["id"] }
-
-          @messages << Message.stolen(news["thief"], news["score"], news["id"])
-        end
+        wearing = group["members"].find { it["you"] }
+        remember_mark(wearing["look"]) if wearing
+        tell_of(group["news"])
         drop_stale_pending
         send_pending
+      end
+
+      # Queues a Message for each theft not yet told, and asks the server
+      # again to forget those already told that it still keeps.
+      def tell_of(news)
+        news.each do |item|
+          if @told.include?(item["id"])
+            delete_news(item["id"])
+          elsif @messages.none? { it.id == item["id"] }
+            @messages << Message.stolen(item["thief_look"], item["score"], item["id"])
+          end
+        end
+        kept = @told & news.map { it["id"] }
+        return if kept == @told
+
+        @told = kept
+        save
       end
 
       def remember_mark(mark)
@@ -183,23 +234,25 @@ module DotPopper
       # The server says this player is in no group, so a waiting round
       # has nowhere to go.
       def left_meanwhile
-        @pending = nil
         @was_member = false
+        give_up_pending
+      end
+
+      def give_up_pending
+        @pending = nil
         save
       end
 
       def finish_round(body)
-        @pending = nil
-        save
-        @messages << Message.taken(body["group"]["trophy"]["score"]) if body["taken"]
+        give_up_pending
+        @messages << Message.taken(body["group"]["score_to_beat"]) if body["took_trophy"]
         look_at(body["group"])
       end
 
       def drop_stale_pending
         return unless @pending && today - @pending_day.to_i > PENDING_DAYS
 
-        @pending = nil
-        save
+        give_up_pending
       end
 
       def forget_identity
@@ -213,7 +266,7 @@ module DotPopper
         save
       end
 
-      def today = Trophy.day(@clock.call)
+      def today = @clock.call.to_i / SECONDS_A_DAY
 
       # Saved one per line: token, mark, unsent score and its day, and
       # the thefts already told, and whether they were last in a group.
