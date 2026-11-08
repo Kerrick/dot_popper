@@ -141,6 +141,19 @@ class ScreenPlansTest < Minitest::Test
     assert_equal %i[streak goal best].first(dropped.size), dropped
   end
 
+  # The title's legend says the scoring with no word, in the Tutorial's
+  # numbers and stopwatch, in two columns that line up.
+  def test_the_legend_shows_what_each_dot_does_in_the_tutorials_signs
+    rows = Legend.rows.map { |fresh, points, seconds| [fresh, points.text, points.stopwatch, seconds.text, seconds.stopwatch] }
+    assert_equal [[true, "+1", false, "+1", true], [false, "−2", false, "−2", true]], rows
+
+    legend = Legend.measure(30.0) { it.size * 15.0 }
+    assert_in_delta 30.0 * 0.5 * 2.7, legend.points, 1e-9, "the numbers start past the dot"
+    assert_in_delta legend.points + 30.0 + (30.0 * Legend::APART), legend.seconds, 1e-9
+    assert_in_delta legend.seconds + 30.0 + (Tally.icon(30.0) * (1 + Tally::GAP)), legend.width, 1e-9,
+                    "the second column ends with its stopwatch"
+  end
+
   def test_short_of_room_game_over_lets_the_hint_go_first_and_keeps_the_score
     plan = FinaleScreen.new(layout: layout(640, 400), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
                             scrim: Look::FINALE_BACKING, finale: finale(lesson: true, goal_met: true, record: true),

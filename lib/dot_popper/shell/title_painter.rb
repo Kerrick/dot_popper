@@ -22,7 +22,7 @@ module DotPopper
         title = pen.fonts.bold(plan.size(:title))
         Lettering.new(pen:).candy(words.title, title, layout.center_x,
                                   plan[:title].y + (title.height / 2.0) - ((1 - intro) * 24), intro)
-        legend(show, layout, plan, under_quit(show, plan, :legend, intro))
+        legend(layout, plan, under_quit(show, plan, :legend, intro))
         line(plan, :best, words.best_line(marquee.best), pen.palette.soft, under_quit(show, plan, :best, intro))
         daily_goal(show, layout, plan, under_quit(show, plan, :goal, intro)) if plan[:goal]
         quit_prompt(show, plan)
@@ -90,27 +90,22 @@ module DotPopper
         end
       end
 
-      # "Tap a bright dot: +1 point, +1 second" beside a fresh dot, and the
-      # popped dot's line beneath it, the two lines left-aligned on their
-      # dots so they read as a pair.
-      def legend(show, layout, plan, alpha)
-        words = show.words
-        items = [[true, words.legend_fresh], [false, words.legend_popped]]
-        font = pen.fonts.semibold(plan.size(:legend))
-        radius = font.height * 0.5
-        gap = radius * 0.7
-        width = items.map { |_, text| (radius * 2.7) + font.width(text) }.max
-        x = layout.center_x - (width / 2.0)
+      # A bright dot, then "+1" and "+1" with a stopwatch, and beneath it a
+      # popped dot, then "−2" and "−2" with a stopwatch, in the colours the
+      # Tutorial flies them in (Presentation::Legend).
+      def legend(layout, plan, alpha)
+        font = pen.fonts.bold(plan.size(:legend))
+        legend = Presentation::Legend.measure(font.height) { font.width(it) }
+        radius = legend.radius
+        x = layout.center_x - (legend.width / 2.0)
         y = plan[:legend].center_y
-        items.each_with_index do |(fresh, text), i|
-          item(x, y + ((i - 0.5) * radius * 2.8), radius, gap, fresh, text, font, alpha)
+        tallies = TallyPainter.new(pen:)
+        Presentation::Legend.rows.each_with_index do |(fresh, points, seconds), i|
+          row = y + ((i - 0.5) * radius * Presentation::Legend::ROW)
+          dots.icon(x + radius, row, radius, fresh:, opacity: alpha)
+          tallies.left(points, font, x + legend.points, row, fresh ? pen.palette.cream : pen.palette.alarm, alpha)
+          tallies.left(seconds, font, x + legend.seconds, row, fresh ? pen.palette.gain : pen.palette.alarm, alpha)
         end
-      end
-
-      def item(x, y, radius, gap, fresh, text, font, alpha)
-        dots.icon(x + radius, y, radius, fresh:, opacity: alpha)
-        width = font.width(text)
-        pen.text(text, font, x + (radius * 2) + gap + (width / 2.0), y, fresh ? pen.palette.cream : pen.palette.soft, alpha)
       end
     end
   end

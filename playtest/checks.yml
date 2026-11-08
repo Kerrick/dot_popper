@@ -178,10 +178,9 @@ ios:
     answer: yes_no
 
   - id: 3
-    try: In a round, tap a popped (dark) dot on purpose, ideally one with the bright dot hiding under it. The title calls this "Tap a popped dot".
+    try: In a round, tap a popped (dark) dot on purpose, ideally one with the bright dot hiding under it.
     ask: Tapping a popped dot costs 2 points and 2 seconds, and a dashed outline shows the bright dot it hid.
     answer: yes_no
-    quotes: [Tap a popped dot]
 
   - id: 4
     ask: "How big a dot feels under your finger:"
@@ -271,10 +270,9 @@ android:
     answer: yes_no
 
   - id: 3
-    try: In a round, tap a popped (dark) dot on purpose, ideally one with the bright dot hiding under it. The title calls this "Tap a popped dot".
+    try: In a round, tap a popped (dark) dot on purpose, ideally one with the bright dot hiding under it.
     ask: Tapping a popped dot costs 2 points and 2 seconds, and a dashed outline shows the bright dot it hid.
     answer: yes_no
-    quotes: [Tap a popped dot]
 
   - id: 4
     ask: "How big a dot feels under your finger:"

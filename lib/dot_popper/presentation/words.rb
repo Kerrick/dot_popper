@@ -9,9 +9,8 @@ module DotPopper
     # do are ByInputs, said as a tap, a click, or a gamepad's button,
     # whichever +input+ (InputKind) the player last used (#for): +play+,
     # +continue+, +go_back+, +credits+, +share+ and the share preview's
-    # +copy+ and +close+, the +legend+'s verbs for a bright and a
-    # popped dot, and +covered+, which teaches the stacking rule on Game
-    # Over, a sentence a line. +labels+ name the Records screen's sections
+    # +copy+ and +close+, and +covered+, which teaches the stacking rule
+    # on Game Over, a sentence a line. +labels+ name the Records screen's sections
     # and rows, by what they count. +goals+ say each kind of DailyGoal as
     # the end of "Today's goal: ...", with %d for its target. +screen_size+
     # says how big a screen is, in dots, with %d for its width and height,
@@ -19,7 +18,7 @@ module DotPopper
     class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time, :covered,
                               :share, :share_heading, :share_note, :copied, :copy, :close, :records, :go_back,
                               :no_rounds, :clear, :keep_holding, :hold_to_clear, :cleared, :undo, :labels, :goals, :goal_done, :goal_met,
-                              :screen_size, :legend, :credits, :credits_title, :notice, :quit_again, :input)
+                              :screen_size, :credits, :credits_title, :notice, :quit_again, :input)
       MINUS = "−" # a true minus sign, as wide as the plus
       # How near a round must come to the best for Game Over to say by how
       # much; further off, the gap is only a number to dwell on.
@@ -52,7 +51,6 @@ module DotPopper
       def continue = super.for(input)
       def go_back = super.for(input)
       def covered = super.for(input)
-      def legend = super.for(input)
       def clear = super.for(input)
       def hold_to_clear = super.for(input)
       def undo = super.for(input)
@@ -67,13 +65,6 @@ module DotPopper
 
       # "Your best: 27".
       def best_line(best) = "#{self.best}: #{best}"
-
-      # The title's two lines that teach the scoring, one beside each kind
-      # of dot: "Click a bright dot: +1 point, +1 second".
-      def legend_fresh = "#{legend.first}: #{Words.change(Rules::POP_POINTS, "point")}, " \
-                         "#{Words.change(Rules::POP_SECONDS, "second")}"
-      def legend_popped = "#{legend.last}: #{Words.change(-Rules::PENALTY_POINTS, "point")}, " \
-                          "#{Words.change(-Rules::PENALTY_SECONDS, "second")}"
 
       # How a finished round compares with the best it did not beat:
       # "3 points short of your best of 27". With no best yet, nothing. A
@@ -252,8 +243,6 @@ module DotPopper
       # "1 pop", "2 pops".
       def self.count(number, noun) = "#{number} #{noun}#{"s" unless number == 1}"
 
-      # A signed change with its unit: "+1 point", "−2 seconds".
-      def self.change(number, noun) = "#{signed(number)} #{noun}#{"s" unless number.abs == 1}"
 
       private
 

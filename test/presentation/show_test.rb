@@ -65,11 +65,11 @@ class ShowTest < Minitest::Test
   # The words name the press the player last made: a click to start,
   # until a gamepad or a finger is used.
   def test_the_words_follow_the_input_last_used
-    assert_equal [InputKind::MOUSE, "Click a bright dot"], [@show.input, @show.words.legend.first]
+    assert_equal [InputKind::MOUSE, "Play"], [@show.input, @show.words.play]
     @show.input = InputKind::GAMEPAD
     assert_equal "Play (A)", @show.words.play
     @show.input = InputKind::TOUCH
-    assert_equal "Tap a popped dot: −2 points, −2 seconds", @show.words.legend_popped
+    assert_equal "Play", @show.words.play
     assert_equal "Continue",
                  Show.new(game: @game, layout:, sounds: @sounds, radius: R, input: InputKind::TOUCH).words.continue
   end

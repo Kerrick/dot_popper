@@ -73,16 +73,6 @@ class WordsTest < Minitest::Test
     assert_equal "New record: your fastest pop, 0.3 seconds after the dot appeared", record[:fastest_pop, 0.31]
   end
 
-  # The title teaches the scoring in words a first-time player can act on,
-  # with the numbers taken from the rules.
-  def test_the_legend_says_what_each_press_does
-    assert_equal "Click a bright dot: +1 point, +1 second", Look::WORDS.legend_fresh
-    assert_equal "Click a popped dot: −2 points, −2 seconds", Look::WORDS.legend_popped
-    assert_equal "Tap a bright dot: +1 point, +1 second", Look::WORDS.for(InputKind::TOUCH).legend_fresh
-    assert_equal "Pop a bright dot: +1 point, +1 second", Look::WORDS.for(InputKind::GAMEPAD).legend_fresh
-    assert_equal "Hit a popped dot: −2 points, −2 seconds", Look::WORDS.for(InputKind::GAMEPAD).legend_popped
-  end
-
   # What to do is said for the hand the player last used: "tap" for a
   # finger, "click" for a mouse, and a gamepad's button by name. The
   # main buttons name the gamepad's button that presses them.
@@ -113,7 +103,6 @@ class WordsTest < Minitest::Test
   def test_a_computer_starts_with_the_mouse_and_a_phone_with_a_finger
     assert_equal InputKind::MOUSE, InputKind.starting(touch: false)
     assert_equal InputKind::TOUCH, InputKind.starting(touch: true)
-    assert_equal "Click a bright dot", Look::WORDS.legend.first
   end
 
   def test_the_round_in_one_line

@@ -1,34 +1,36 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # The words follow the hand: Click with the mouse, Tap with a finger,
-  # and a gamepad's buttons by name, on the title and on Game Over, as
-  # the Show's words say them.
+  # The words and the hand drawn follow the hand in use: the mouse, a
+  # finger, or a gamepad, whose buttons are named, on the title and on
+  # Game Over, as the Show's input and words say them.
   class WordsScenario < Scenario
     scenario :words
 
+    MOUSE = DotPopper::Presentation::InputKind::MOUSE
+    TOUCH = DotPopper::Presentation::InputKind::TOUCH
+
     def play
-      check_equal("Click a bright dot", words.legend.first, "a computer starts out saying Click")
+      check_equal(MOUSE, show.input, "a computer starts out with the mouse")
       title_drawn
       touch_move(layout.center_x, layout.center_y)
-      check_equal("Tap a bright dot", words.legend.first, "a finger on the screen makes it Tap")
+      check_equal(TOUCH, show.input, "a finger on the screen makes it touch")
       check_equal("Play", words.play, "Play says Play")
       move(layout.center_x, layout.center_y)
-      check_equal("Tap a bright dot", words.legend.first, "a motion that goes nowhere, as a window opening under the pointer sends, changes nothing")
+      check_equal(TOUCH, show.input, "a motion that goes nowhere, as a window opening under the pointer sends, changes nothing")
       move(layout.center_x + 30, layout.center_y)
-      check_equal("Click a bright dot", words.legend.first, "a real move of the mouse makes it Click again")
+      check_equal(MOUSE, show.input, "a real move of the mouse makes it the mouse again")
       pad(:dpup)
       check_equal("Play (A)", words.play, "a gamepad's button makes it Press A, on Play's button")
       title_drawn
       start_round(method(:touch))
       pop_fresh(method(:touch))
       run_out_the_clock
-      check_equal("Wait for the bright dot to slide out, then tap it.", words.covered.last,
-                  "Game Over says Tap after a round played by touch")
+      check_equal(TOUCH, show.input, "Game Over follows a round played by touch")
+      check_equal("Continue", words.continue, "and says Continue")
       move(layout.center_x, layout.center_y)
       move(layout.center_x + 30, layout.center_y)
-      check_equal("Wait for the bright dot to slide out, then click it.", words.covered.last,
-                  "a real move of the mouse makes it Click")
+      check_equal(MOUSE, show.input, "a real move of the mouse makes it the mouse")
       pad(:dpdown)
       check_equal("Continue (A)", words.continue, "a gamepad makes it Press A, on Continue's button")
       continue_to_title(->(*) { pad(:start) })

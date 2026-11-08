@@ -123,34 +123,8 @@ module DotPopper
         share = flight.progress(now)
         x = from[0] + ((to[0] - from[0]) * share)
         y = from[1] + ((to[1] - from[1]) * share)
-        alpha = flight.alpha(now)
-        return pen.outlined(flight.text, font, x, y, flight.color, alpha) unless flight.icon
-
-        icon = font.height * 0.62
-        gap = icon * 0.25
-        text = font.width(flight.text)
-        left = x - ((text + gap + icon) / 2.0)
-        pen.outlined(flight.text, font, left + (text / 2.0), y, flight.color, alpha)
-        stopwatch(left + text + gap + (icon / 2.0), y, icon, flight.color, alpha)
-      end
-
-      # A small stopwatch, +size+ across, centred on +x+, +y+: its face, a
-      # hand, and the button on top, over a dark edge.
-      def stopwatch(x, y, size, color, alpha)
-        pixels = pen.pixels
-        x = pixels.snap(x)
-        y = pixels.snap(y)
-        face = size * 0.42
-        middle = y + (size * 0.08)
-        line = pixels.whole(size * 0.12)
-        [[pen.palette.shadow, alpha * 0.7, line + pixels.line_width(2)], [color, alpha, line]].each do |ink, strength, width|
-          pen.color(ink, strength)
-          G.line_width = width
-          G.circle(:line, x, middle, face, 32)
-          G.line(x, middle, x + (face * 0.45), middle - (face * 0.55))
-          G.line(x, middle - face, x, middle - face - (size * 0.12))
-          G.line(x - (size * 0.14), middle - face - (size * 0.14), x + (size * 0.14), middle - face - (size * 0.14))
-        end
+        tally = Presentation::Tally.new(text: flight.text, stopwatch: flight.icon == :stopwatch)
+        TallyPainter.new(pen:).centered(tally, font, x, y, flight.color, flight.alpha(now))
       end
     end
   end

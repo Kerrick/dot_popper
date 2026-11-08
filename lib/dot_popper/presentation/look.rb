@@ -31,9 +31,6 @@ module DotPopper
           mouse: ["New dots appear under the popped ones.", "Wait for the bright dot to slide out, then click it."].freeze,
           gamepad: ["New dots appear under the popped ones.", "Wait for the bright dot to slide out, then pop it."].freeze
         ),
-        legend: ByInput.new(touch: ["Tap a bright dot", "Tap a popped dot"].freeze,
-                            mouse: ["Click a bright dot", "Click a popped dot"].freeze,
-                            gamepad: ["Pop a bright dot", "Hit a popped dot"].freeze),
         share: ByInput.new(touch: "Share my score", mouse: "Share my score", gamepad: "Share my score (Y)"),
         share_heading: "Share your score", share_note: "Copy it, then paste it anywhere.",
         copied: "Copied! Paste it anywhere.",

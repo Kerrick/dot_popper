@@ -17,6 +17,38 @@ module DotPopper
       def play_button = placed[:play]
     end
 
+    # The title's legend, a reminder of the scoring with no word, in the
+    # Tutorial's own signs (Tally): a bright dot, then "+1" and "+1" with a
+    # stopwatch; under it a popped dot, then "−2" and "−2" with a
+    # stopwatch, the numbers in two columns. On a line +height+ tall, it
+    # is +width+ across, and its columns start +points+ and +seconds+
+    # from its left. Its dots' radius is DOT of the line's height, with
+    # AFTER_DOT of that radius after them; its columns are APART lines'
+    # heights apart, its rows ROW radii apart, and the whole HEIGHT lines
+    # tall.
+    class Legend < Data.define(:height, :points, :seconds, :width)
+      DOT = 0.5
+      AFTER_DOT = 0.7
+      APART = 0.9
+      ROW = 2.8
+      HEIGHT = 2.4
+
+      # Each row, top first: whether its dot is fresh, then what its tap
+      # does to the score and to the clock.
+      def self.rows = [[true, *Tally.pop], [false, *Tally.penalty]]
+
+      # The legend on a line +height+ tall, its numbers as wide as the
+      # block measures them.
+      def self.measure(height, &measure)
+        first = height * DOT * (2 + AFTER_DOT)
+        widest = ->(column) { rows.map { it[column].width(height, &measure) }.max }
+        second = first + widest[1] + (height * APART)
+        new(height:, points: first, seconds: second, width: second + widest[2])
+      end
+
+      def radius = height * DOT
+    end
+
     # The title screen, short of its dots: its name, the legend, the best
     # score (+best+, shown from 1), today's goal (+goal+, its sentence or
     # "Today's goal is done." once +done+), the days in a row it has been
@@ -90,7 +122,7 @@ module DotPopper
         title, legend, line = sizes.values_at(:title, :legend, :best)
         goal = goal_lines(sizes[:goal]) if self.goal
         [Block.new(name: :title, height: measure.height(:bold, title) * 1.06, width: measure.width(:bold, title, words.title)),
-         Block.new(name: :legend, height: measure.height(:semibold, legend) * 2.4, gap: gap(:legend, scale),
+         Block.new(name: :legend, height: measure.height(:bold, legend) * Legend::HEIGHT, gap: gap(:legend, scale),
                    width: legend_width(legend)),
          best_block(line, scale),
          (goal_block(goal, sizes[:goal], scale) if goal),
@@ -154,13 +186,8 @@ module DotPopper
         width > across ? (size * across / width).floor : size
       end
 
-      def legend_lines = [words.legend_fresh, words.legend_popped]
-
-      # How wide the legend is: a dot, a gap, and its longer line.
-      def legend_width(size)
-        radius = measure.height(:semibold, size) * 0.5
-        legend_lines.map { (radius * 2.7) + measure.width(:semibold, size, it) }.max
-      end
+      # How wide the legend is (Legend), its numbers set in bold +size+.
+      def legend_width(size) = Legend.measure(measure.height(:bold, size)) { measure.width(:bold, size, it) }.width
 
       # The legend's +size+, shrunk by whole sizes until its longer line
       # fits across.
