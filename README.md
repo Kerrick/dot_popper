@@ -70,6 +70,8 @@ Dot Popper does not update itself. Download the newest release and install it ov
 
 Press Play, and pop the bright dot, again and again, until the clock runs out.
 
+The first time you press Play, a short tutorial with no words shows you how, in about 20 seconds: a pop, the point and second it gives, and a bright dot to wait for. It scores nothing. Skip it with the ⏭ button in the corner, Escape, or B on a controller. It never comes back, even after you clear your records.
+
 | To | With a mouse and keyboard | With a controller |
 | --- | --- | --- |
 | Pop a dot | Click it | Aim with the left stick or the d-pad, and press A or the right trigger |

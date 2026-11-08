@@ -577,6 +577,40 @@ The hint that explains the stacking rule no longer appears during a round. It ap
 
 **To reverse:** Pass `lesson: nil` to the `Finale` in `Show#round_ended`. Setting `Look::LESSON.times` changes how often the note shows.
 
+### The first Play opens a tutorial with no words
+
+On a fresh install, the first Play opens a tutorial of about 20 seconds before the round. It has four beats. A bright dot drifts, time eases to a stop in 0.15 s, a spotlight dims everything else, and a ghost hand taps the dot over and over until the player does. The pop holds time still while "+1" flies into the HUD's score and a small stopwatch with "+1" into its time, each counting up as it lands, with a chime and a tick. A new bright dot is born under the popped one; as it peeks out, time stops again, a soft ✕ marks the popped dot, and the hand hovers over it without tapping. Time then flows slowly until the bright dot is clear, and the hand moves to it and taps. A tap on the popped dot shows its cost, "−2" leaping out of the score and the time with the game's penalty sound, shudder and dashed outline, and the beat goes on. The last pop's numbers fly in, the dots fade, the HUD shows 0 and 10, and the real round starts while a halo lights the clock as it starts to run. The ghost hand is the player's own: a fingertip, a mouse pointer, or a gamepad's reticle with its A button. A ⏭ button in the top right corner, Escape, and a gamepad's B skip it, and start the round at once. It never shakes the screen, and muted it teaches as fully, since every lesson is drawn.
+
+It is the only teaching that has no words. The title's legend and Game Over's lesson are unchanged.
+
+**Why:** In playtests, one player ignored the title's words and asked how to play, and another never noticed that pops add a second. Players don't read, and someone who can't read English should still understand the game. So the tutorial uses only numbers, the clock's digits, and drawn shapes. It stops time so the player can look at the one thing that matters, and it uses the real dot drawing, the slowest real speed, the real HUD and the real pop and penalty effects, so what it teaches is what the game does. Each step on is the player's own tap, so they learn by doing, and a wrong tap is safe.
+
+**To reverse:** Construct `Show` without `tutorial_flag:` in `Shell::App#load`.
+
+### The tutorial is a scene of its own, not a round
+
+`Presentation::Tutorial` is a scripted scene the Show plays over the title, as it holds the Records screen. The game stays on its title until the tutorial ends; then the Show starts the round exactly as Play does. Its dots are the rules' own `Dot` and `Stack`, but its score and clock are only the HUD's numbers, so nothing in it is scored, logged, or counted toward bests, records or the daily goal.
+
+**Why:** The rules say the clock never waits in Playing and nothing touches the score or clock outside it. A tutorial that stops time can't be a round, and a round that taught would put practice taps into the records.
+
+**To reverse:** Remove the tutorial's branch from `Show#play`.
+
+### The tutorial's flag survives clearing the records
+
+`tutorial.txt` in the save folder says `seen` once the tutorial opens, and it is kept apart from the records, as `taught.txt` is. Clearing the records leaves it. `DOT_POPPER_TUTORIAL=1` opens it on every Play, to try it; the bot, the GUI director and `DOT_POPPER_NO_TUTORIAL=1` leave it out.
+
+**Why:** Clearing the records starts the scores over, not the player. Someone who has played doesn't need to be shown how again.
+
+**To reverse:** Have `RecordKeeper` remove `tutorial.txt` when it clears.
+
+### Players from 0.9 skip the tutorial
+
+The tutorial is due only for a player who has not played: no round in `lifetime.txt`, and records never cleared.
+
+**Why:** Everyone with a 0.9 save has already played, so the tutorial would only stand between them and the game they know.
+
+**To reverse:** Pass `played: false` to `TutorialFlag#due?` in `Show#play`.
+
 ### The dot-size choice is a labelled segmented control
 
 The title's dot-size choice used to be a single pill that read "Dots: same size everywhere" and switched when tapped. It is now a small control labelled "Dot size", with two segments side by side, one for each choice (now named by what they do on this screen; see "The dot-size choice says what it does on this screen"). The chosen segment is filled in cream with dark text. Tapping a segment chooses it, and tapping the chosen one again changes nothing. Either shoulder button on a controller still switches between the two. On a wide window the control sits in the bottom row between "Your records" and the mute button, with its label on the left and its segments centred on the screen. On an upright phone it takes a row of its own above them, with the label above the segments. Each segment is a button's height (at least 44 units), and a tap reaches it within a dot's width, as for the other title buttons.
