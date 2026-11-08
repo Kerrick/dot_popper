@@ -40,13 +40,27 @@ class ShowTutorialTest < Minitest::Test
     round = @game.round
     assert_equal scene.dots.map(&:id), round.dots.map(&:id), "the same dots, in the same order"
     assert_equal [true, true, false], round.dots.map(&:popped?)
-    assert_equal 2, round.score
-    assert_operator round.countdown.remaining, :<=, 12.0
-    assert_operator round.countdown.remaining, :>, 11.9, "the clock has only just started"
-    assert_equal [2, 12], [@show.hud.score, @show.hud.seconds], "the HUD shows the same numbers"
+    assert_equal 1, round.score, "two pops, less what the guide's wrong tap cost"
+    assert_operator round.countdown.remaining, :<=, 10.0
+    assert_operator round.countdown.remaining, :>, 9.9, "the clock has only just started"
+    assert_equal [1, 10], [@show.hud.score, @show.hud.seconds], "the HUD shows the same numbers"
     assert_same scene.animations, @show.animations, "and the dots are drawn as they were"
     assert_equal 0, @lifetime.stats.rounds
     assert_equal [DotPopper::Events::RoundStarted], @events.uniq - [DotPopper::Events::TitleShown]
+  end
+
+  # A player's own wrong taps cost too, so the round may start with no
+  # time to spare: the clock it is handed runs out as any round's does.
+  def test_a_tutorial_left_with_a_second_hands_the_round_that_second
+    play_through(slips: 7)
+
+    assert @show.playing?
+    assert_equal 1, @game.round.score
+    assert_operator @game.round.countdown.remaining, :<=, 1.0
+    assert_equal [1, 1], [@show.hud.score, @show.hud.seconds]
+    update_for(1.1)
+    assert @show.finished?
+    assert_equal 1, @best.of(@game.size_class)
   end
 
   def test_the_round_it_goes_on_into_counts_as_any_round_does
@@ -160,18 +174,28 @@ class ShowTutorialTest < Minitest::Test
     end
   end
 
-  # Plays the whole tutorial, tapping each bright dot as it is shown.
-  def play_through(hand_over: true)
+  # Plays the whole tutorial, tapping each bright dot as it is shown, and
+  # the popped one +slips+ times as the next peeks out from under it.
+  def play_through(hand_over: true, slips: 0)
     press_main
     [Tutorial::BRIGHT, Tutorial::NEXT].each do |id|
       update_for(0.1) until %i[aim aim_next].include?(@show.tutorial.beat) && !tapped?(id)
       dot = @show.tutorial.dots.find { it.id == id }
       @show.tap(dot.x, dot.y)
+      slip(slips) if id == Tutorial::BRIGHT
     end
     update_for(0.1) while @show.tutorial? if hand_over
   end
 
   def tapped?(id) = @show.tutorial.dots.find { it.id == id }.popped?
+
+  def slip(times)
+    return if times.zero?
+
+    update_for(0.1) until @show.tutorial.beat == :warn
+    popped = @show.tutorial.dots.find { it.id == Tutorial::BRIGHT }
+    times.times { @show.tap(popped.x, popped.y) }
+  end
 
   def finish_round
     update_for(0.1) until @show.finished?

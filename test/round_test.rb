@@ -175,11 +175,13 @@ class RoundTest < Minitest::Test
   end
   # The tutorial's state, as Round.resume carries it into the round: two
   # popped dots on top, and the fresh one born under both.
-  def resumed
+  # Its wrong taps cost what they do in play, so it may leave less: as
+  # little as +score+ 0 and +seconds+ 1.
+  def resumed(score: 2, seconds: 12.0)
     first = dot(300, 300, popped: true, id: 0)
     second = dot(340, 300, popped: true, id: 1)
     fresh = dot(500, 300, velocity_x: 60, id: 2)
-    DotPopper::Round.resume(field, dots: DotPopper::Stack.new(dots: [first, second, fresh]), score: 2, seconds: 12.0,
+    DotPopper::Round.resume(field, dots: DotPopper::Stack.new(dots: [first, second, fresh]), score:, seconds:,
                                    random: Random.new(1))
   end
 
@@ -224,5 +226,36 @@ class RoundTest < Minitest::Test
 
     assert round.over?
     assert_in_delta 12.0, round.elapsed
+  end
+
+  def test_a_resumed_round_at_no_points_keeps_the_score_floor
+    round = resumed(score: 0, seconds: 7.0)
+
+    refute round.over?
+    penalty = round.tap_at(300, 300)
+    assert_equal 0, penalty.points, "there was nothing to lose"
+    assert_equal [0, 5.0], [round.score, round.countdown.remaining]
+    round.tap_at(500, 300)
+    assert_equal [1, 6.0], [round.score, round.countdown.remaining]
+  end
+
+  def test_a_resumed_round_with_little_time_left_runs_it_out_and_no_further
+    round = resumed(score: 1, seconds: 1.0)
+
+    refute round.over?, "a second on the clock is a second to play"
+    round.update(0.6)
+    refute round.over?
+    round.update(0.6)
+    assert round.over?
+    assert_in_delta 1.0, round.elapsed
+    assert_nil round.tap_at(500, 300), "and then no tap counts"
+  end
+
+  def test_a_wrong_tap_with_less_than_two_seconds_left_ends_a_resumed_round
+    round = resumed(score: 1, seconds: 1.0)
+    round.tap_at(300, 300)
+
+    assert round.over?
+    assert_equal 0, round.score
   end
 end

@@ -6,7 +6,8 @@ module DotPopperGui
   # as a screenshot. The director leaves the tutorial out of every other
   # session, so this one forces it (DOT_POPPER_TUTORIAL=1). The game stays
   # on its title until its end, and then the round goes on from its dots,
-  # its score and its time, with only the clock starting.
+  # its score and its time, with only the clock starting. Its wrong taps,
+  # the guide's and the player's, cost what they do in play.
   #
   # It plays with the mouse, or with DOT_POPPER_GUI_INPUT=touch, a finger.
   # With DOT_POPPER_GUI_INPUT=gamepad, it opens the tutorial with Start,
@@ -101,7 +102,7 @@ module DotPopperGui
     def wait_for_the_bright_dot
       freeze_on(:warn)
       wait_for("the guide's tap on the popped dot", within: 200) { tutorial.flights.any? }
-      check_equal([1, 11], shown, "the guide's tap shows the cost, and takes nothing")
+      check_equal([0, 9], shown, "the guide's tap costs the point there was and two seconds")
       wait(0.2)
       keep_screenshot(name("3-cost"))
       wait(0.9)
@@ -116,24 +117,25 @@ module DotPopperGui
     end
 
     # A tap on the popped dot, on its side away from the bright one: its
-    # cost flies out of the HUD, nothing is taken, and the beat goes on.
+    # cost flies out of the HUD, which drops by it, the score no lower than
+    # 0, and the beat goes on.
     def too_soon
       popped = dot(T::BRIGHT)
       peeking = dot(T::NEXT)
       x = popped.x + ((popped.x - peeking.x).positive? ? 0.5 : -0.5) * popped.radius
       how.call(x, popped.y)
-      check_equal([1, 11], shown, "a tap on the popped dot shows its cost, and takes nothing")
+      check_equal([0, 7], shown, "a tap on the popped dot costs two seconds, the score staying at 0")
       wait(0.25)
       keep_screenshot(name("3-slip"))
-      check(game.round.nil? && story.none?(:Penalized), "nothing real is lost")
+      check(game.round.nil? && story.none?(:Penalized), "the rules hear nothing yet: no clock is running")
       check(tutorial.beat == :warn || tutorial.beat == :slide, "the beat goes on")
     end
 
     # The last pop spawns a bright dot under the two popped ones, and the
-    # round goes on from there: the same dots, 2 points and 12 seconds,
-    # and only the clock starts.
+    # round goes on from there: the same dots, the point and the 8 seconds
+    # the two wrong taps left, and only the clock starts.
     def now_it_runs
-      wait_for("the last pop's numbers", within: 120) { shown == [2, 12] }
+      wait_for("the last pop's numbers", within: 120) { shown == [1, 8] }
       check_equal([true, true, false], tutorial.dots.map(&:popped?), "its pop spawns a bright dot under them")
       wait_for("the light on the clock", within: 300) { tutorial.nil? || tutorial.beat == :ending }
       scene = tutorial&.dots&.map(&:id)
@@ -141,16 +143,16 @@ module DotPopperGui
       wait_for("the round", within: 300) { show.playing? }
       check_equal([T::BRIGHT, T::NEXT, T::LAST], round.dots.map(&:id), "the round goes on with the tutorial's dots")
       check_equal([true, true, false], round.dots.map(&:popped?), "popped and fresh as they were")
-      check_equal(2, round.score, "and its 2 points")
-      check(round.countdown.remaining <= 12.0 && round.countdown.remaining > 11.8,
-            "and its 12 seconds, the clock only now starting (#{round.countdown.remaining})")
-      check_equal([2, 12], [show.hud.score, show.hud.seconds], "the HUD shows the same numbers")
+      check_equal(1, round.score, "and its point")
+      check(round.countdown.remaining <= 8.0 && round.countdown.remaining > 7.8,
+            "and its 8 seconds, the clock only now starting (#{round.countdown.remaining})")
+      check_equal([1, 8], [show.hud.score, show.hud.seconds], "the HUD shows the same numbers")
       check(show.lead_in, "the clock is lit as it starts to run")
       wait(0.3)
       keep_screenshot(name("4-runs"))
       check_equal(%i[RoundStarted], story.uniq - %i[TitleShown], "the tutorial told the rules nothing until then")
       wait(1.2)
-      check(round.countdown.remaining < 11.0, "the clock runs")
+      check(round.countdown.remaining < 7.0, "the clock runs")
     end
   end
 end

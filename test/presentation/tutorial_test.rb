@@ -119,9 +119,9 @@ class TutorialTest < Minitest::Test
       @tutorial.flights.any?
     end
     assert pressed && near?(pressed, bright), "the guide presses the popped dot"
-    assert_equal %w[−2 −2], @tutorial.flights.map(&:text), "and its cost leaps out of the score and the time"
+    assert_equal %w[−1 −2], @tutorial.flights.map(&:text), "and its cost leaps out of the score and the time"
     assert_equal [nil, :stopwatch], @tutorial.flights.map(&:icon)
-    assert_equal [1, 11], shown, "but the numbers stay: the guide's tap takes nothing"
+    assert_equal [0, 9], shown, "which drop by it, the score no lower than 0, as in play"
     assert_equal :bonk, @sounds.names.last
     assert_equal 1, @effects.reveals.size, "the bright dot under it is outlined"
     assert_equal 1, @effects.rings.count { it.look == Look::ALARM_RING }
@@ -151,13 +151,13 @@ class TutorialTest < Minitest::Test
     end, "the guide moves to the clear bright dot and taps it")
   end
 
-  def test_a_tap_on_the_popped_dot_shows_its_cost_takes_nothing_and_the_beat_goes_on
+  def test_a_tap_on_the_popped_dot_costs_what_it_does_in_play_and_the_beat_goes_on
     to_the_peek
     tap_on(bright)
 
     assert_equal :warn, @tutorial.beat, "the beat goes on"
-    assert_equal [1, 11], shown, "the numbers stay"
-    assert_equal %w[−2 −2], @tutorial.flights.map(&:text)
+    assert_equal [0, 9], shown, "two seconds, and the one point there was to lose"
+    assert_equal %w[−1 −2], @tutorial.flights.map(&:text), "it says only what was lost"
     assert_equal [Anchor.hud(:score), Anchor.hud(:time)], @tutorial.flights.map(&:from)
     assert_equal :bonk, @sounds.names.last
     assert_equal Look::HAPTICS.penalty, @haptics.buzzes.last, "the player's own tap buzzes"
@@ -177,7 +177,7 @@ class TutorialTest < Minitest::Test
     last = @tutorial.dots.to_a.last
     assert_includes DotPopper::Rules::SPEEDS.map { it * R }, last.velocity_x.abs, "at one of the game's speeds"
     play_for(SCRIPT.gap + SCRIPT.quick + STEP)
-    assert_equal [2, 12], shown
+    assert_equal [1, 10], shown, "two pops, less what the guide's tap cost"
     still = @tutorial.dots.to_a.last
     play_for(SCRIPT.linger)
     assert_equal :ending, @tutorial.beat
@@ -187,8 +187,24 @@ class TutorialTest < Minitest::Test
     play_for(SCRIPT.handover)
     assert @tutorial.over?
     assert_in_delta 1.0, @tutorial.rate, 1e-9, "and time flows as the game's does"
-    assert_equal [2, 12], [@tutorial.score, @tutorial.seconds], "what it leaves the round"
+    assert_equal [1, 10], [@tutorial.score, @tutorial.seconds], "what it leaves the round"
     assert_equal 3, @tutorial.dots.size, "no dot fades or is added"
+  end
+
+  # However often the player taps the popped dot, the score and the
+  # clock stop at 0, as Countdown and the score's floor do in play, and
+  # say nothing more once they are there; the clock is still, so it never
+  # runs out, and the last pop's second is what the round starts with.
+  def test_wrong_taps_stop_at_nothing_and_the_round_gets_what_is_left
+    to_the_peek
+    7.times { tap_on(bright) }
+
+    assert_equal [0, 0], shown
+    assert_equal %w[−1 −2 −2 −2 −2 −2 −1], @tutorial.flights.map(&:text), "what was left, then nothing"
+    play_until { @tutorial.beat == :aim_next }
+    tap_on(next_dot)
+    play_until(within: 900) { @tutorial.over? }
+    assert_equal [1, 1], [@tutorial.score, @tutorial.seconds]
   end
 
   def test_a_tap_on_empty_space_only_ripples

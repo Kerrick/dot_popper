@@ -53,18 +53,20 @@ module DotPopper
     # 3. A new bright dot is born under the popped one. As it peeks out,
     #    time stops again, and the guide taps the popped dot, once: the
     #    game's own penalty plays, its shudder, the dashed outline of the
-    #    bright dot under it, and "−2" out of the score and the time. The
-    #    guide then waits to one side while time flows slowly until the
-    #    bright dot is clear, and moves to it and taps. A tap of the
-    #    player's on the popped dot shows the same, and the beat goes on.
+    #    bright dot under it, and its cost out of the score and the time,
+    #    which drop as it does. The guide then waits to one side while time
+    #    flows slowly until the bright dot is clear, and moves to it and
+    #    taps. A tap of the player's on the popped dot costs the same, and
+    #    the beat goes on.
     # 4. Its pop spawns the next bright dot under them all, as a pop in
     #    play does, its numbers fly in, and the spotlight moves to the
     #    clock as time flows again (#over?). The Show then hands the scene
     #    to the round, whose LeadIn lets the clock run.
     #
-    # No wrong tap here costs anything: its "−2" shows what it would cost,
-    # and the numbers stay as they were, so every player carries the same
-    # two pops into the round.
+    # Every wrong tap here, the guide's too, costs what it does in play
+    # (Rules): two points, never below zero, and two seconds, the clock
+    # never below zero either. The clock is still, so it can never run
+    # out, but the numbers it carries into the round are the true ones.
     #
     # It plays its pops, cost, and chimes through the Show's +effects+,
     # +sounds+, and +haptics+, on a +field+ like a round's, from +center+,
@@ -132,8 +134,8 @@ module DotPopper
         follow
       end
 
-      # A tap at +x+, +y+: on the bright dot, a pop; on a popped dot, what
-      # it would cost; on empty space, the game's whisper of a ripple. A
+      # A tap at +x+, +y+: on the bright dot, a pop; on a popped dot, its
+      # cost; on empty space, the game's whisper of a ripple. A
       # bright dot is popped only once the scene has shown it; the next
       # one waits for beat 3.
       def tap(x, y)
@@ -324,17 +326,16 @@ module DotPopper
       # A tap on a popped dot, the player's or the guide's: the game's own
       # penalty, its shudder and ring, the bright dot under it outlined,
       # the edge's glow and the bonk, and "−2" out of the score and the
-      # time. The screen never shakes, and the numbers stay: it shows the
-      # cost and takes nothing. Only the player's own tap buzzes, since a
-      # buzz in the hand says "you did that".
+      # time, which drop by it as it leaps out (#penalize). The screen never
+      # shakes. Only the player's own tap buzzes, since a buzz in the hand
+      # says "you did that".
       def slip(dot, x, y, guide: false)
         animations.wobble(dot.id, now)
         @effects.ring(dot.x, dot.y, @look::ALARM_RING, follow: dot.id)
         hidden = dots.fresh_beneath(dot, x, y)
         @effects.reveal(hidden, @look::REVEAL) if hidden
         @effects.light(@look::PENALTY_FLASH)
-        fly_out(:score)
-        fly_out(:time)
+        penalize
         @sounds.play(:bonk, pan: pan(x))
         @haptics.buzz(@look::HAPTICS.penalty) unless guide
       end
@@ -349,12 +350,26 @@ module DotPopper
                                from: Anchor.at(x, y), to: Anchor.hud(to), born:, duration:)
       end
 
-      # A wrong tap's cost, leaping out of the HUD's score or time (+from+).
-      def fly_out(from)
+      # A wrong tap's cost, as Round#penalize takes it: two points, but
+      # never below the lowest score, and two seconds, but never below
+      # zero. The HUD drops by it at once, and what it lost leaps out of
+      # the score and the time; as in play, a floor that kept a number
+      # from falling says only what was lost, and nothing when nothing was.
+      def penalize
+        points = [Rules::PENALTY_POINTS, hud.score - Rules::LOWEST_SCORE].min
+        seconds = [Rules::PENALTY_SECONDS.to_i, hud.seconds].min
+        @hud = hud.showing(hud.score - points, hud.seconds - seconds, now)
+        fly_out(:score, points) if points.positive?
+        fly_out(:time, seconds) if seconds.positive?
+      end
+
+      # +lost+ points or seconds, leaping out of the HUD's score or time
+      # (+from+).
+      def fly_out(from, lost)
         score = from == :score
-        @flights << Flight.new(text: Words.points(-(score ? Rules::PENALTY_POINTS : Rules::PENALTY_SECONDS)),
-                               icon: (:stopwatch unless score), color: @look::PALETTE.alarm, from: Anchor.hud(from),
-                               to: Anchor.hud(from, below: 1.6), born: now, duration: @look::LOSS_FLOAT.life)
+        @flights << Flight.new(text: Words.points(-lost), icon: (:stopwatch unless score), color: @look::PALETTE.alarm,
+                               from: Anchor.hud(from), to: Anchor.hud(from, below: 1.6), born: now,
+                               duration: @look::LOSS_FLOAT.life)
       end
 
       # A pop's numbers landing in the HUD, which counts them up, with a
