@@ -10,11 +10,13 @@ module DotPopper
   class Entitlement
     PAID = "paid"
     FORCED_BY = "DOT_POPPER_PAID"
-    # Whether a computer's copy has everything: no store sells inside it, so
-    # a desktop copy is sold (or given) already whole. The one setting;
-    # doc/decisions.md, "Buying the paid version". The systems that do have
-    # a store are STORE_SYSTEMS, as Lota::System.os names them.
-    DESKTOP_PAID = true
+    # Whether a computer's copy has everything for nothing. It does not: a
+    # desktop copy is free until a distribution channel sells it
+    # (Presentation::Storefront::CHANNELS; doc/decisions.md, "Desktop is
+    # free until a channel sells it"). Set it true to ship a desktop copy
+    # whole. The systems that have a store of their own are STORE_SYSTEMS,
+    # as Lota::System.os names them.
+    DESKTOP_PAID = false
     STORE_SYSTEMS = %w[iOS Android].freeze
 
     # An entitlement that has bought nothing and keeps nothing.

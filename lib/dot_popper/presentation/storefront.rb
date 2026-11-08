@@ -36,9 +36,35 @@ module DotPopper
 
       attr_reader :status, :price
 
-      # The storefront for +os+: the store where the host has one, else none.
-      def self.for(os, opener:, answers:, entitlement:)
-        SYSTEMS.include?(os) ? new(opener:, answers:, entitlement:) : NoStorefront.new
+      # The distribution channels that can sell the paid version on a
+      # computer, by name, each a callable that takes +entitlement:+ and
+      # answers a store like this class (offered?, status, price, connect,
+      # buy, restore, update). None is built yet, so every desktop build is
+      # free. To add one: write its store, register it here under its name,
+      # and set BUILD_CHANNEL for the build that ships through it. Nothing
+      # that is paid for needs to change, since features ask only
+      # Entitlement#paid?.
+      CHANNELS = {}.freeze
+      # The channel this build is sold through, or nil for none. A build
+      # for a channel sets it; DOT_POPPER_CHANNEL does the same for a try.
+      BUILD_CHANNEL = nil
+      CHANNEL_SETTING = "DOT_POPPER_CHANNEL"
+
+      # The channel this build is sold through, as +env+ and the build say.
+      def self.channel(env)
+        named = env.fetch(CHANNEL_SETTING, "")
+        named.empty? ? BUILD_CHANNEL : named
+      end
+
+      # The storefront for +os+: the store where the host has one; else, on
+      # a computer, its channel's store; else none, which offers nothing, so
+      # no one is offered a purchase that cannot complete. A channel nobody
+      # has built is none.
+      def self.for(os, opener:, answers:, entitlement:, channel: nil, channels: CHANNELS)
+        return new(opener:, answers:, entitlement:) if SYSTEMS.include?(os)
+
+        sold = channels[channel]
+        sold ? sold.call(entitlement:) : NoStorefront.new
       end
 
       # The URL asking the host to do +action+ (:open, :buy, :restore) as
@@ -127,7 +153,8 @@ module DotPopper
       end
     end
 
-    # Where there is no store, as on a computer: nothing is offered.
+    # Where there is no store, as on a computer whose build has no channel:
+    # nothing is offered.
     class NoStorefront
       def offered? = false
       def status = :unavailable

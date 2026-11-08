@@ -64,7 +64,8 @@ module DotPopper
                        rehearsal = Presentation::RehearsalStore.new
                        Presentation::Storefront.new(opener: rehearsal, answers: rehearsal, entitlement:)
                      else
-                       Presentation::Storefront.for(os, opener: UrlOpener.new, answers: StoreAnswers.in_save_folder, entitlement:)
+                       Presentation::Storefront.for(os, opener: UrlOpener.new, answers: StoreAnswers.in_save_folder, entitlement:,
+                                                    channel: Presentation::Storefront.channel(@env))
                      end
         groups = Groups::Session.at(Groups::Settings.server_url(@env), store: SaveFile.new(name: "group.txt"))
         @show = Presentation::Show.new(groups:, game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,

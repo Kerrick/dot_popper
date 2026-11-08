@@ -142,13 +142,39 @@ class StorefrontTest < Minitest::Test
     assert_predicate @entitlement, :paid?
   end
 
-  def test_the_paid_setting_covers_desktops_by_default
-    assert DotPopper::Entitlement.forced?({}, os: "Linux")
+  def test_a_computer_is_free_by_default_and_the_setting_still_stands_in
+    refute DotPopper::Entitlement.forced?({}, os: "Linux")
+    refute DotPopper::Entitlement.forced?({}, os: "Windows")
+    refute DotPopper::Entitlement.forced?({}, os: "OS X")
+    assert DotPopper::Entitlement.forced?({ "DOT_POPPER_PAID" => "1" }, os: "Linux")
     refute DotPopper::Entitlement.forced?({}, os: "iOS")
     refute DotPopper::Entitlement.forced?({}, os: "Android")
     refute DotPopper::Entitlement.forced?({ "DOT_POPPER_PAID" => "0" }, os: "Windows")
     assert DotPopper::Entitlement.forced?({ "DOT_POPPER_PAID" => "1" }, os: "iOS")
     assert DotPopper::Entitlement.forced?({ "DOT_POPPER_PAID" => "1" })
+  end
+
+  def test_a_computer_has_no_channel_by_default_so_offers_nothing
+    assert_nil Storefront::BUILD_CHANNEL
+    assert_nil Storefront.channel({})
+    assert_empty Storefront::CHANNELS
+    ["Linux", "Windows", "OS X"].each do |os|
+      refute_predicate Storefront.for(os, opener: @opener, answers: @answers, entitlement: @entitlement, channel: Storefront.channel({})), :offered?
+    end
+  end
+
+  def test_a_channel_nobody_built_offers_nothing_but_a_built_one_is_used_without_touching_features
+    named = Storefront.channel({ "DOT_POPPER_CHANNEL" => "steam" })
+
+    assert_equal "steam", named
+    refute_predicate Storefront.for("Linux", opener: @opener, answers: @answers, entitlement: @entitlement, channel: named), :offered?
+
+    made = Object.new
+    channels = { "steam" => ->(entitlement:) { made.tap { @given = entitlement } } }
+
+    assert_same made, Storefront.for("Linux", opener: @opener, answers: @answers, entitlement: @entitlement, channel: "steam", channels:)
+    assert_same @entitlement, @given
+    assert_instance_of Storefront, Storefront.for("iOS", opener: @opener, answers: @answers, entitlement: @entitlement, channel: "steam", channels:)
   end
 
   def test_no_word_of_the_offer_calls_it_a_trial_or_a_demo
