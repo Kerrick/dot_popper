@@ -80,10 +80,11 @@ class LayoutTest < Minitest::Test
   end
 
   # "How to play" stands beside the mute button, between it and "Your
-  # records", where there is room for it, and otherwise, as on a small
-  # upright phone, on a row of its own above the mute button, with the
-  # dot-size choice above that. It is never smaller than a fingertip, and
-  # never wider than the safe area.
+  # records", where there is room for it, with "Your records" narrowed to
+  # make room on an upright phone; and otherwise, as on the narrowest
+  # phone, on a row of its own above the mute button, with the dot-size
+  # choice above that. It is never smaller than a fingertip, and never
+  # wider than the safe area.
   def test_how_to_play_sits_beside_the_mute_button_or_a_row_above_it
     [[1200, 800], [400, 850], [375, 812], [320, 568], [400, 320], [812, 375], [2560, 1440]].each do |width, height|
       plan = layout(width, height)
@@ -92,6 +93,7 @@ class LayoutTest < Minitest::Test
 
       assert_operator button.height, :>=, 44, name
       assert_operator button.width, :>=, button.height * Layout::HOW_TO_PLAY_LEAST, name
+      assert_operator plan.records_button.width, :>=, button.height * Layout::HOW_TO_PLAY_LEAST, name
       assert_operator button.x, :>=, 0, name
       assert_operator button.right, :<=, width, name
       [plan.records_button, plan.mute_button, plan.sizing_control.label, plan.sizing_control.frame].each do
@@ -102,36 +104,45 @@ class LayoutTest < Minitest::Test
     assert_equal wide.mute_button.y, wide.how_to_play_button.y, "beside the mute button"
     assert_operator wide.how_to_play_button.right, :<, wide.mute_button.x
     assert_operator wide.sizing_control.frame.right, :<, wide.how_to_play_button.x, "the dot-size choice still fits"
-    small = layout(375, 812)
+    phone = layout(375, 812)
+    assert_equal phone.mute_button.y, phone.how_to_play_button.y, "an iPhone mini upright keeps one row"
+    small = layout(320, 568)
     assert_operator small.how_to_play_button.bottom, :<, small.mute_button.y, "a row above it"
     assert_operator small.sizing_control.frame.bottom, :<, small.how_to_play_button.y
   end
 
-  # A desktop's "Full screen" and Quit: a row of their own above the
-  # bottom row's right end, Quit in the corner over the mute button, as
-  # tall as the other buttons, apart from them, and with the dot-size
-  # choice, where it has no room in the bottom row, a row above them; or
-  # their icons alone, a fingertip across, in the top right corner.
-  def test_full_screen_and_quit_take_a_row_above_the_corner_buttons_or_the_top_corner
-    [[1200, 800], [800, 500], [400, 320], [2560, 1440]].each do |width, height|
+  # A desktop's "Full screen" and Quit stand in the bottom row, between
+  # "How to play" and the mute button, as tall as the other buttons and
+  # apart from them: labelled, or as their icons, round, a fingertip
+  # across. Where the row has no room even for the icons, they stand a
+  # row above its right end, or in the top right corner.
+  def test_full_screen_and_quit_stand_in_the_bottom_row_between_how_to_play_and_the_mute_button
+    [[1200, 800], [800, 500], [640, 400], [2560, 1440]].each do |width, height|
       plan = layout(width, height)
-      buttons = plan.window_buttons
-      above = plan.sizing_control(above: buttons.rects)
+      buttons = [true, false].map { plan.window_buttons(labelled: it) }.find { plan.fits_in_row?(it) }
       name = "#{width}x#{height}"
 
-      assert buttons.labelled
-      assert_in_delta plan.mute_button.right, buttons.quit.right, 1e-9, name
-      assert_operator buttons.quit.bottom, :<, plan.mute_button.y, name
-      assert_operator buttons.fullscreen.x, :>=, plan.margin, name
-      [plan.how_to_play_button, plan.mute_button, plan.records_button, above.label, above.frame].each do |other|
+      assert buttons, "#{name}: the row has room"
+      how = plan.how_to_play_button(window: buttons)
+      assert_equal [plan.mute_button.y] * 3, [how.y, *buttons.rects.map(&:y)], name
+      assert_operator how.right, :<, buttons.fullscreen.x, name
+      assert_operator buttons.fullscreen.right, :<, buttons.quit.x, name
+      assert_operator buttons.quit.right, :<, plan.mute_button.x, name
+      control = plan.sizing_control(window: buttons)
+      [how, plan.mute_button, plan.records_button, control.label, control.frame].each do |other|
         buttons.rects.each { assert apart?(it, other), "#{name}: #{it.to_h} overlaps #{other.to_h}" }
       end
-      next if above.frame.y == plan.mute_button.y
-
-      assert_operator above.frame.bottom, :<, buttons.quit.y, "#{name}: the stacked choice stands above them"
     end
+    assert layout(800, 500).fits_in_row?(layout(800, 500).window_buttons), "800x500 has room for their words"
+    refute layout(640, 400).fits_in_row?(layout(640, 400).window_buttons), "640x400 has room for their icons only"
+
+    above = layout(400, 850).window_icons_above
+    refute above.labelled
+    assert_in_delta layout(400, 850).mute_button.right, above.quit.right, 1e-9
+    assert_operator above.quit.bottom, :<, layout(400, 850).mute_button.y
     icons = layout(400, 320).window_icons
     refute icons.labelled
+    assert icons.cornered?
     assert_equal [44.0, 44.0], [icons.quit.width, icons.quit.height]
     assert_in_delta layout(400, 320).mute_button.right, icons.quit.right, 1e-9
     assert_in_delta layout(400, 320).top, icons.quit.y, 1e-9

@@ -3,12 +3,13 @@
 module DotPopper
   module Shell
     # The title screen: the name, a legend that teaches the rule with one
-    # dot of each kind, the best score, the Play button, "How to play",
-    # the mute button, on a desktop "Full screen" and Quit, and, once a round has been played, today's goal,
-    # "Your records", and, where it changes something, the choice of how
-    # dots are sized, each where the Show's TitlePlan puts it. From the name to the prompt, the
-    # words sit on a faint backing, so the dots drifting behind them dim
-    # further.
+    # dot of each kind, and the Play button; under them, once a round has
+    # been played, the best score and today's goal; and along the bottom,
+    # "Your records", where it changes something the choice of how dots
+    # are sized, and "How to play", on a desktop "Full screen" and Quit,
+    # and the mute button, each where the Show's TitlePlan puts it. From
+    # the name to the last line, the words sit on a faint backing, so the
+    # dots drifting behind them dim further.
     class TitlePainter < Data.define(:pen, :dots)
       G = ::Lota::Graphics
       HELP = 0.3 # the help sign's ring's radius, in the button's height

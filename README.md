@@ -70,7 +70,7 @@ Dot Popper does not update itself. Download the newest release and install it ov
 
 Press Play, and pop the bright dot, again and again, until the clock runs out.
 
-The first time you press Play, a short tutorial with no words shows you how, in about 20 seconds: a pop, the point and second it gives, what a click on a popped dot costs, and a bright dot to wait for. The clock waits meanwhile, but a click on a popped dot costs what it does in a round, and when the tutorial ends, your first round goes on from it, with its dots, its points and its time, and the clock starts. Skip it with the ⏭ button in the corner, Escape, or B on a controller. It never opens by itself again, even after you clear your records, but How to play, beside the speaker on the title, plays it whenever you like, and H or Y on a controller does too. Your round then goes on from it, as it does the first time.
+The first time you press Play, a short tutorial with no words shows you how, in about 20 seconds: a pop, the point and second it gives, what a click on a popped dot costs, and a bright dot to wait for. The clock waits meanwhile, but a click on a popped dot costs what it does in a round, and when the tutorial ends, your first round goes on from it, with its dots, its points and its time, and the clock starts. Skip it with the ⏭ button in the corner, Escape, or B on a controller. It never opens by itself again, even after you clear your records, but How to play, in the title's bottom right corner, plays it whenever you like, and H or Y on a controller does too. Your round then goes on from it, as it does the first time.
 
 | To | With a mouse and keyboard | With a controller |
 | --- | --- | --- |
@@ -86,7 +86,7 @@ The first time you press Play, a short tutorial with no words shows you how, in 
 | Switch to fullscreen and back | Click Full screen (Window, in fullscreen) on the title, or press F11, or Alt+Enter (Cmd+Enter on a Mac) | Aim at Full screen on the title, and press A |
 | Quit | Click Quit on the title, or press Escape, on the title or during a round | B twice, on the title |
 
-On a Mac, Windows or Linux, Full screen and Quit sit above How to play and the speaker on the title, so the mouse alone can fill the screen and leave the game, even in fullscreen, where the window's own buttons are gone. From the Records screen or Game Over, click Back or Continue to get to the title. On a very small window, they show only their icons, in the title's top right corner.
+On a Mac, Windows or Linux, Full screen and Quit sit between How to play and the speaker, in the title's bottom row, so the mouse alone can fill the screen and leave the game, even in fullscreen, where the window's own buttons are gone. From the Records screen or Game Over, click Back or Continue to get to the title. On a small window, they show only their icons, and on the smallest, in the title's top right corner.
 
 ## Good to know
 

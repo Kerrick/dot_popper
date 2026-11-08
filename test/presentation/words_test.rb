@@ -132,7 +132,7 @@ class WordsTest < Minitest::Test
     end
     assert_equal "Today's goal: pop 15 bright dots in a row without a mistake.",
                  Look::WORDS.goal(DotPopper::DailyGoal.new(kind: :clean_run, target: 15))
-    assert_equal "You've met the daily goal 3 days in a row.", Look::WORDS.streak(3)
+    assert_equal "Met 3 days in a row.", Look::WORDS.streak(3)
   end
 
   def test_wrapping_breaks_between_words_to_fit

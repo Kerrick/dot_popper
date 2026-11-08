@@ -212,8 +212,8 @@ module DotPopper
       def goal_done_line(goal) = "#{goal_done} #{format(goals.fetch(goal.kind), goal.target)}."
 
       # The days in a row the goal has been met, for the title once there
-      # are two or more: "You've met the daily goal 3 days in a row."
-      def streak(days) = "You've met the daily goal #{days} days in a row."
+      # are two or more, under the goal it counts: "Met 3 days in a row."
+      def streak(days) = "Met #{days} days in a row."
 
       # +text+ broken between words into lines no wider than +room+, as
       # the block measures a line. A single word wider than +room+ keeps a

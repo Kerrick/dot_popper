@@ -48,9 +48,14 @@ module DotPopper
 
     # The title's window buttons on a desktop, where each is drawn:
     # "Full screen" (or "Window") and Quit, each with its word beside its
-    # icon where +labelled+, and otherwise only its icon.
-    class WindowButtons < Data.define(:fullscreen, :quit, :labelled)
+    # icon where +labelled+, and otherwise only its icon; and where they
+    # stand (+place+): in the bottom row (:row), a row above its right
+    # end (:above), or in the top right corner (:corner).
+    class WindowButtons < Data.define(:fullscreen, :quit, :labelled, :place)
       def rects = [fullscreen, quit]
+      def in_row? = place == :row
+      def above? = place == :above
+      def cornered? = place == :corner
     end
 
     # The window's first size on a desktop: a reference play area measured
@@ -120,21 +125,28 @@ module DotPopper
       end
 
       # The title's "Your records" button, in the safe area's bottom left
-      # corner, across from the mute button and as tall as it.
+      # corner, across from the mute button and as tall as it: HOW_TO_PLAY
+      # buttons' heights across, or, where the row is short of room for it
+      # and "How to play" both at that width, as on an upright phone, as
+      # little as HOW_TO_PLAY_LEAST.
       def records_button
         height = button_size
-        Rect.new(x: safe.x + margin, y: safe.bottom - margin - height, width: height * 3.8, height:)
+        shared = (safe.width - (4 * margin) - height) / 2.0
+        width = shared.clamp(height * HOW_TO_PLAY_LEAST, height * HOW_TO_PLAY)
+        Rect.new(x: safe.x + margin, y: safe.bottom - margin - height, width:, height:)
       end
 
       # The title's "How to play": a quiet pill with the help sign on it,
-      # beside the mute button, as tall as it. It takes the room
-      # between "Your records" and the mute button, up to HOW_TO_PLAY
-      # buttons' heights across; where that is less than HOW_TO_PLAY_LEAST,
-      # as on a small phone held upright, it takes a row of its own above
-      # the mute button instead, as the dot-size choice does.
-      def how_to_play_button
+      # the first of the bottom row's right-hand group, beside the window
+      # buttons where +window+ (WindowButtons) puts them in the row, and
+      # otherwise beside the mute button, as tall as it. It takes the room
+      # left of them, past "Your records", up to HOW_TO_PLAY buttons'
+      # heights across; where that is less than HOW_TO_PLAY_LEAST, as on a
+      # small phone held upright, it takes a row of its own above the mute
+      # button instead, as the dot-size choice does.
+      def how_to_play_button(window: nil)
         height = button_size
-        right = mute_button.x - margin
+        right = (window&.in_row? ? window.fullscreen.x : mute_button.x) - margin
         room = right - (records_button.right + margin)
         if room >= height * HOW_TO_PLAY_LEAST
           width = [height * HOW_TO_PLAY, room].min
@@ -202,26 +214,43 @@ module DotPopper
       end
 
       # The title's window buttons on a desktop, "Full screen" (or
-      # "Window") and Quit, each with its icon: a row of their own above
-      # the corner buttons, at its right end, Quit over the mute button,
-      # in the corner where the window's own buttons are, as tall as the
-      # others. As wide as they are, they fit the narrowest window.
-      def window_buttons
+      # "Window") and Quit, each with its icon, and its word where
+      # +labelled+: in the bottom row, between "How to play" and the mute
+      # button, so help, the window and sound stand together in the corner
+      # where a desktop puts its window buttons, as tall as the others.
+      # Labelled, they are as wide as FULL_SCREEN and QUIT heights;
+      # otherwise round, as the mute button is.
+      def window_buttons(labelled: true)
         height = button_size
-        y = [mute_button.y, how_to_play_button.y].min - row_apart(height) - height
-        quit = Rect.new(x: safe.right - margin - (height * QUIT), y:, width: height * QUIT, height:)
-        WindowButtons.new(fullscreen: Rect.new(x: quit.x - margin - (height * FULL_SCREEN), y:, width: height * FULL_SCREEN,
-                                               height:),
-                          quit:, labelled: true)
+        quit_width = labelled ? height * QUIT : height
+        fullscreen_width = labelled ? height * FULL_SCREEN : height
+        y = mute_button.y
+        quit = Rect.new(x: mute_button.x - margin - quit_width, y:, width: quit_width, height:)
+        fullscreen = Rect.new(x: quit.x - margin - fullscreen_width, y:, width: fullscreen_width, height:)
+        WindowButtons.new(fullscreen:, quit:, labelled:, place: :row)
       end
 
-      # The same two as only their icons, round, as the mute button is, in
-      # the safe area's top right corner: where a window too short for
-      # their row has no room left for it (TitleScreen).
+      # Whether the bottom row has room for +window+ (WindowButtons) with
+      # "How to play" still beside them, short of "Your records".
+      def fits_in_row?(window) = how_to_play_button(window:).y == mute_button.y
+
+      # The same two as only their icons, round, a row above the bottom
+      # row's right end, Quit over the mute button: where the bottom row
+      # has no room for them, as on a narrow window.
+      def window_icons_above
+        size = button_size
+        y = [mute_button.y, how_to_play_button.y].min - row_apart(size) - size
+        quit = Rect.new(x: safe.right - margin - size, y:, width: size, height: size)
+        WindowButtons.new(fullscreen: quit.with(x: quit.x - margin - size), quit:, labelled: false, place: :above)
+      end
+
+      # The same two as only their icons, round, in the safe area's top
+      # right corner: where a window too short for a row above the
+      # bottom one has no room left for it (TitleScreen).
       def window_icons
         size = button_size
         quit = Rect.new(x: safe.right - margin - size, y: top, width: size, height: size)
-        WindowButtons.new(fullscreen: quit.with(x: quit.x - margin - size), quit:, labelled: false)
+        WindowButtons.new(fullscreen: quit.with(x: quit.x - margin - size), quit:, labelled: false, place: :corner)
       end
 
       # The title's choice of dot size: its label, then its two segments,
@@ -229,17 +258,20 @@ module DotPopper
       # words. The title shows it only where it changes something. With
       # room between "Your records" and "How to play", it sits there,
       # label on the left, its segments centred on the screen if they can
-      # be. Otherwise, as on an upright phone, its segments are centred a
-      # row above the buttons, under the label, and above the rows in
-      # +above+ too, as the window buttons' row.
-      def sizing_control(above: [])
+      # be: the middle of the row, between the player's records on the
+      # left and help, the window and sound on the right. Otherwise, as on
+      # an upright phone, its segments are centred a row above the
+      # buttons, under the label, and above the window buttons too where
+      # +window+ (WindowButtons) has them in a row above.
+      def sizing_control(window: nil)
         height = button_size
         segment = height * 4.2
         label = height * 2.1
         left = records_button.right + margin
-        how = how_to_play_button
+        how = how_to_play_button(window:)
         right = (how.y == mute_button.y ? how.x : mute_button.x) - margin
-        return stacked_choice(height, segment, label, above) if right - left < label + (segment * 2)
+        above = window&.above? ? window.rects : []
+        return stacked_choice(height, segment, label, how, above) if right - left < label + (segment * 2)
 
         x = (center_x - segment).clamp(left + label, right - (segment * 2))
         y = mute_button.y
@@ -258,11 +290,11 @@ module DotPopper
       # found a tap on Standard's lower half opening "Your records".)
       def row_apart(height) = [margin, [(2 * Rules::RADIUS) - height, safe.height * 0.05].min].max
 
-      # The choice a row above the buttons, and above "How to play" where
-      # that has a row of its own, and above the rows in +above+.
-      def stacked_choice(height, segment, label, above)
+      # The choice a row above the buttons, and above "How to play" (+how+)
+      # where that has a row of its own, and above the rows in +above+.
+      def stacked_choice(height, segment, label, how, above)
         segment = [segment, (safe.width / 2.0) - margin].min
-        y = [mute_button.y, how_to_play_button.y, *above.map(&:y)].min - row_apart(height) - height
+        y = [mute_button.y, how.y, *above.map(&:y)].min - row_apart(height) - height
         tall = height * 0.7
         Segmented.new(label: Rect.new(x: center_x - (label / 2.0), y: y - tall, width: label, height: tall),
                       options: segments(center_x - segment, y, segment, height))

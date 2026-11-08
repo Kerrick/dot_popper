@@ -35,6 +35,7 @@ class ScreenPlansTest < Minitest::Test
         end
         assert_apart plan.placed.rects.values + screen.bottom_row, name
         plan.placed.rects.each_value { assert_inside it, screen_layout.safe, name }
+        screen.bottom_row.each { assert_within it, screen_layout.safe, name }
         assert_operator plan.backing.bottom, :<=, screen.bottom_row.map(&:y).min, name
         assert_goal_fits(plan, goal == :done, screen_layout, name)
         others = plan.placed.rects.except(plan.quit_over).values + screen.bottom_row
@@ -74,6 +75,7 @@ class ScreenPlansTest < Minitest::Test
           assert_operator button.height, :>=, 44.0, name
           assert_within button, screen_layout.safe, name
         end
+        screen.bottom_row(buttons).each { assert_within it, screen_layout.safe, name }
         assert_operator buttons.fullscreen.right, :<, buttons.quit.x, "#{name}: Quit is to the right"
         bottom_row = screen.bottom_row(buttons)
         assert_apart plan.placed.rects.values + (bottom_row | buttons.rects), name
@@ -85,18 +87,41 @@ class ScreenPlansTest < Minitest::Test
     end
   end
 
-  def test_the_window_buttons_are_labelled_wherever_a_row_fits_and_icons_only_on_the_smallest_window
-    labelled = ->(width, height) do
-      TitleScreen.new(layout: layout(width, height), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
-                      window: true, radius: DotPopper::DotSize.fitted(width, height).radius).plan.window_buttons.labelled
+  # They are labelled wherever the bottom row has room for their words,
+  # their icons in the row where it has room for those, their icons a row
+  # above it on a narrow window, and only on the smallest, their icons in
+  # the top right corner.
+  def test_the_window_buttons_are_labelled_wherever_the_row_has_room
+    place = lambda do |width, height|
+      buttons = TitleScreen.new(layout: layout(width, height), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
+                                window: true, radius: DotPopper::DotSize.fitted(width, height).radius).plan.window_buttons
+      [buttons.place, buttons.labelled]
     end
 
-    [[1200, 800], [800, 500], [640, 400], [400, 850], [1920, 1080]].each { assert labelled[*it], it.join("x") }
-    refute labelled[400, 320], "400x320 has no room for their row"
+    [[1200, 800], [800, 500], [1920, 1080], [2560, 1440]].each { assert_equal [:row, true], place[*it], it.join("x") }
+    assert_equal [:row, false], place[640, 400]
+    assert_equal [:above, false], place[400, 850]
+    assert_equal [:corner, false], place[400, 320]
     wide = TitleScreen.new(layout: layout(1200, 800), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
                            window: true).plan
-    assert_operator wide.window_buttons.quit.bottom, :<, wide.mute_button.y, "a row above the mute button"
-    assert_in_delta wide.mute_button.right, wide.window_buttons.quit.right, 1e-9, "at its right end"
+    assert_equal wide.mute_button.y, wide.window_buttons.quit.y, "in the bottom row"
+    assert_operator wide.how_to_play_button.right, :<, wide.window_buttons.fullscreen.x, "after How to play"
+    assert_operator wide.window_buttons.quit.right, :<, wide.mute_button.x, "before the mute button"
+  end
+
+  # The title reads top down: the name, the legend and Play, which say
+  # what the game is and how to start it, and under Play, further off,
+  # the player's own best, goal and streak, closer to each other than to
+  # Play.
+  def test_play_follows_the_legend_and_the_players_own_lines_stand_apart_under_it
+    plan = TitleScreen.new(layout: layout(1200, 800), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
+                           best: 75, goal: GOAL, streak: 5, records: true, window: true).plan
+
+    assert_equal %i[title legend play best goal streak], plan.placed.rects.keys
+    under_play = plan[:best].y - plan.play_button.bottom
+    assert_operator under_play, :>, plan.play_button.y - plan[:legend].bottom, "the player's own lines stand apart"
+    assert_operator under_play, :>, plan[:goal].y - plan[:best].bottom, "and together"
+    assert_operator plan.backing.bottom, :>=, plan[:streak].bottom, "the backing reaches every line"
   end
 
   # Phones and tablets show no window buttons, and their titles are laid
