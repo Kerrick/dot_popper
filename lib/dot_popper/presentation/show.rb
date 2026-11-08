@@ -19,8 +19,8 @@ module DotPopper
     # the Records screen, and puts them back. +measure+ sizes the screens' words (RoughMeasure's
     # methods), and +hint+ gives Game Over's line on playing with the
     # pile, or nil. +sharing+ (InGameSharing's methods) offers Game
-    # Over's result to share, and +clipboard+ takes it when the player
-    # copies it.
+    # Over's result to share, in a preview or a phone's own sheet, and
+    # +clipboard+ takes it when the player copies it.
     class Show
       # The dot-size choices in the order the title draws their segments:
       # the default, dots sized to the screen, first.
@@ -409,7 +409,8 @@ module DotPopper
 
       # A gamepad's Y, or a tap on "Share my score": on Game Over, offers
       # the round's result to share (+sharing+), which in the game opens
-      # the share preview, and copies nothing yet. In the preview, Y
+      # the share preview, and copies nothing yet; on a phone it opens the
+      # system's share sheet, and no preview. In the preview, Y
       # copies, as Copy does. Anywhere else it does nothing.
       def share
         return copy_result if sharing?

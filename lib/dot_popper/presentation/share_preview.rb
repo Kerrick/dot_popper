@@ -27,9 +27,9 @@ module DotPopper
 
     # How the game offers a result to share: in the game, by opening a
     # SharePreview, from which only Copy writes the clipboard. It is the
-    # Show's +sharing+, so a phone's own share sheet can later take its
-    # place: its #offer would hand +text+ to the system's sheet and answer
-    # nil, and no preview would open.
+    # Show's +sharing+ on a computer; on a phone SheetSharing takes its
+    # place, hands +text+ to the system's sheet and answers nil, so no
+    # preview opens, and falls back on this one.
     class InGameSharing < Data.define
       def offer(text, now) = SharePreview.open(text, now)
     end

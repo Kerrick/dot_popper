@@ -8,7 +8,8 @@ module DotPopper
     # and goes from Game Over back to the title. Given the Show, it presses
     # the buttons a player would: Play to start a round, Continue to go
     # on, "Share my score" on every other Game Over, then Copy in the
-    # share preview, and Close, a moment apart, and on its second visit to
+    # share preview, and Close, a moment apart (on a phone, the system's
+    # share sheet opens instead, and the bot goes on), and on its second visit to
     # the title, "Your records", and Back after a while. The first time the title offers
     # the choice of dot size, it taps the other one, so a run shows the
     # title's dots change. It sees only what a player sees: the dots and

@@ -55,6 +55,7 @@ module DotPopper
                                        tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt"),
                                                                     times: Look::LESSON.times),
                                        haptics: Haptics.for(os), clipboard: Clipboard.new, notices:,
+                                       sharing: Presentation::SheetSharing.for(os, opener: UrlOpener.new),
                                        lifetime:, keeper:, sizing_store:, input: starting_input, measure: FontMeasure.new(@pen.fonts),
                                        hint: -> { @tilting&.hint&.for(@show.input) })
         @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,

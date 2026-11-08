@@ -36,6 +36,49 @@ class ShareTest < Minitest::Test
     assert_equal SharePreview.open("Dot Popper: 3 points", 4.0), preview
   end
 
+  # An opener that remembers the URLs it was given, and takes them or not.
+  class FakeOpener
+    attr_reader :urls
+
+    def initialize(takes:)
+      @takes = takes
+      @urls = []
+    end
+
+    def open(url)
+      @urls << url
+      @takes
+    end
+  end
+
+  def test_a_phone_shares_through_its_own_sheet_and_a_computer_in_the_game
+    opener = FakeOpener.new(takes: true)
+
+    assert_equal SheetSharing.new(opener:, fallback: InGameSharing.new), SheetSharing.for("iOS", opener:)
+    assert_equal SheetSharing.new(opener:, fallback: InGameSharing.new), SheetSharing.for("Android", opener:)
+    ["OS X", "Windows", "Linux"].each { assert_equal InGameSharing.new, SheetSharing.for(it, opener:) }
+    assert_empty opener.urls
+  end
+
+  def test_the_sheet_s_url_carries_the_text_percent_encoded
+    assert_equal "dotpopper-share://score?text=Dot%20Popper%3A%2025%20points%0A%F0%9F%9F%A1%201%2B1%26a%3Db%3F~._-",
+                 SheetSharing.url("Dot Popper: 25 points\n🟡 1+1&a=b?~._-")
+  end
+
+  def test_a_sheet_that_takes_the_text_opens_no_preview
+    opener = FakeOpener.new(takes: true)
+
+    assert_nil SheetSharing.for("iOS", opener:).offer("Dot Popper: 3 points", 4.0)
+    assert_equal [SheetSharing.url("Dot Popper: 3 points")], opener.urls
+  end
+
+  def test_a_sheet_that_will_not_open_falls_back_on_the_preview
+    opener = FakeOpener.new(takes: false)
+
+    assert_equal SharePreview.open("Dot Popper: 3 points", 4.0),
+                 SheetSharing.for("Android", opener:).offer("Dot Popper: 3 points", 4.0)
+  end
+
   def test_share_my_score_rises_into_place_once_the_score_has_landed
     before = ShareCue.at(-0.1, CUE)
     assert_in_delta 0.0, before.alpha
