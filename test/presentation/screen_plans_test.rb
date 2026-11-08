@@ -61,13 +61,12 @@ class ScreenPlansTest < Minitest::Test
     SIZES.each do |width, height|
       screen_layout = layout(width, height)
       radius = DotPopper::DotSize.fitted(width, height).radius
-      [true, false].repeated_permutation(5) do |lesson, goal_met, new_best, record, hint|
+      [true, false].repeated_permutation(3) do |goal_met, new_best, record|
         below = screen_layout.top + 60
         plan = FinaleScreen.new(layout: screen_layout, type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
-                                scrim: Look::FINALE_BACKING, finale: finale(lesson:, goal_met:, new_best:, record:),
-                                below:, hint: (Look::TILT.drag_hint if hint), radius:).plan
-        name = "#{width}x#{height} lesson #{lesson}, goal #{goal_met}, new best #{new_best}, record #{record}, " \
-               "hint #{hint}"
+                                scrim: Look::FINALE_BACKING, finale: finale(goal_met:, new_best:, record:),
+                                below:, radius:).plan
+        name = "#{width}x#{height} goal #{goal_met}, new best #{new_best}, record #{record}"
 
         assert plan.placed.fits?, name
         %i[score continue].each { assert plan[it], "#{name}: #{it} always shows" }
@@ -154,12 +153,14 @@ class ScreenPlansTest < Minitest::Test
                     "the second column ends with its stopwatch"
   end
 
-  def test_short_of_room_game_over_lets_the_hint_go_first_and_keeps_the_score
-    plan = FinaleScreen.new(layout: layout(640, 400), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
-                            scrim: Look::FINALE_BACKING, finale: finale(lesson: true, goal_met: true, record: true),
-                            below: 70, hint: Look::TILT.drag_hint).plan
+  def test_short_of_room_game_over_lets_the_record_go_first_and_keeps_the_score
+    plan = FinaleScreen.new(layout: layout(640, 330), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
+                            scrim: Look::FINALE_BACKING, finale: finale(goal_met: true, record: true), below: 70).plan
+    order = %i[record summary goal best heading share]
+    dropped = order.reject { plan[it] }
 
-    refute plan[:hint]
+    refute_empty dropped
+    assert_equal order.first(dropped.size), dropped
     assert plan[:score]
     assert plan[:continue]
   end
@@ -274,9 +275,8 @@ class ScreenPlansTest < Minitest::Test
 
   def middle(rect) = [rect.center_x, rect.center_y]
 
-  def finale(lesson: false, goal_met: false, new_best: false, record: false)
+  def finale(goal_met: false, new_best: false, record: false)
     Finale.new(look: Look::FINALE, score: 128, best: new_best ? 128 : 140, new_best:, at: 0.0, goal_met:,
-               lesson: (Slip.new(popped: 1, bright: 2) if lesson),
                record: (DotPopper::LifetimeStats::Record.new(kind: :longest_run, value: 31) if record))
   end
 

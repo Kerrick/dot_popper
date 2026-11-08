@@ -559,7 +559,7 @@ A second test drives the whole `Game` through its screens and checks that nothin
 
 ### The Game Over pile is a toy that tilts and shakes
 
-At Game Over, tilting a phone or tablet turns the pile's gravity toward the lowest side of the screen, and a sharp shake throws every dot up, against the pull. With a gamepad, the right stick turns it instead: the dots fall the way it points, and straight down when it is let go. While the pile is tilted, a lid along the top of the window keeps the dots on the screen. The accelerometer is switched on only while the pile exists. A light line under "Tap to continue" says how to do it on the first three Game Overs: "Tilt your iPad to roll the dots.", or "Push the right stick to roll the dots." with a controller. With no accelerometer and no controller, the pile is unchanged.
+At Game Over, tilting a phone or tablet turns the pile's gravity toward the lowest side of the screen, and a sharp shake throws every dot up, against the pull. With a gamepad, the right stick turns it instead: the dots fall the way it points, and straight down when it is let go. While the pile is tilted, a lid along the top of the window keeps the dots on the screen. The accelerometer is switched on only while the pile exists. A light line under "Tap to continue" says how to do it on the first three Game Overs: "Tilt your iPad to roll the dots.", or "Push the right stick to roll the dots." with a controller (since removed; see "Game Over leaves the pile to be found by touch"). With no accelerometer and no controller, the pile is unchanged.
 
 The math lives in `presentation/tilt.rb` and is tested. SDL reports the accelerometer in the device's own portrait axes, as the push holding the device up, and never turns those axes with the screen, so the game maps each of the four display orientations itself. The reading is smoothed with a time constant of 0.2 seconds, so a hand's tremor never reaches the dots. One g is the pile's existing gravity, so holding the device upright drops the dots exactly as before. A shake is a jump of more than 0.5 g away from the last 0.3 seconds' average, followed by a 0.6-second cooldown (first 1.2 g, then 0.8 g after the first iPad playtest). With `DOT_POPPER_CALM=1`, the pull changes four times as slowly and a shake never throws anything. `DOT_POPPER_FAKE_TILT=x,y` stands in for an accelerometer during testing.
 
@@ -567,7 +567,7 @@ The math lives in `presentation/tilt.rb` and is tested. SDL reports the accelero
 
 **Later, after the iPhone playtest:** the maintainer found a shake tossed the dots "maybe a bit, not as much/'violent' as I'd expect". A shake now throws every ball at 20 radii a second, plus 40 for each g past the threshold, up to 108 (it was 24 for each g past it, up to 36, so a 1 g jolt threw at under 5). Each ball takes 0.6 to all of that, so the gentlest toss, 12 radii a second, is twice a dot's fastest speed. And it is seen to land: a bright cream ring bursts from every dot (`Look::SHAKE_RING`), the score rattles (`Look::SHAKE_RATTLE`), and a low tick sounds (`Show#shaken`, which `Tilting` calls). Juicing a response with more than one channel makes a small action feel big (Swink, *Game Feel*); it is Game Over, so nothing it covers matters to a score.
 
-**To reverse:** In `Shell::App#load`, stop creating and subscribing `Tilting`, and stop passing it to the `Renderer`. The pile then falls straight down and the hint never shows. Deleting `presentation/tilt.rb`, `shell/tilting.rb`, `shell/accelerometer.rb`, and `shell/tilt_hint_painter.rb`, along with `Look::TILT`, removes the feature entirely.
+**To reverse:** In `Shell::App#load`, stop creating and subscribing `Tilting`, and stop passing it to the `Renderer`. The pile then falls straight down. Deleting `presentation/tilt.rb`, `shell/tilting.rb`, and `shell/accelerometer.rb`, along with `Look::TILT`, removes the feature entirely.
 
 ### The stacking rule is taught on Game Over, not in play
 
@@ -985,3 +985,11 @@ Game Over's two sentences, "New dots appear under the popped ones. Wait for the 
 **Why:** How to play must never depend on reading. Failure is the moment a player is ready to learn (Juul, *The Art of Failure*), and showing the consequence where it happened teaches better than a sentence about it (Hodent, *The Gamer's Brain*). The player already saw this penalty in the round, and the tutorial showed it too, so the replay needs no words to be read as "that's what happened, and that's the dot you couldn't see".
 
 **To reverse:** Give `Words` its `covered` lines back, pass them to `Tutor#lesson` in `Show#round_ended`, lay them out again in `FinaleScreen#blocks`, and drop `Show#replay_slip`.
+
+### Game Over leaves the pile to be found by touch
+
+Game Over's light line about the pile, "Drag the dots to play with them." (or "Drag the dots, or tilt your iPad to roll them.", or the right stick's line with a controller), is gone, with `TiltHint`, its painter, its words in `Look::TILT`, and its place in `FinaleScreen`. The pile still tumbles, drags, tilts and rolls exactly as before. `tilt_hint.txt`, which counted the line, is no longer written; the records' clearing still leaves it alone where an older version wrote it.
+
+**Why:** The pile is a toy, and a toy is found by playing with it (Sicart, *Play Matters*): the dots fall in front of the player, and the first touch that moves one says more than the sentence did. The sentence explained something a player discovers in a second, to a player who may not read English, and how to play must never depend on reading. Omit needless words (Strunk).
+
+**To reverse:** Bring back `TiltHint` and `TiltHintPainter`, pass `hint:` to the `Show` and `Tilting`, and give `FinaleScreen#blocks` its hint line again.

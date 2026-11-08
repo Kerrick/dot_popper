@@ -17,8 +17,7 @@ module DotPopper
     # +input+ (InputKind) is what the player last pressed with, and the
     # words follow it. +keeper+ (RecordKeeper) clears the records, from
     # the Records screen, and puts them back. +measure+ sizes the screens' words (RoughMeasure's
-    # methods), and +hint+ gives Game Over's line on playing with the
-    # pile, or nil. +sharing+ (InGameSharing's methods) offers Game
+    # methods). +sharing+ (InGameSharing's methods) offers Game
     # Over's result to share, in a preview or a phone's own sheet, and
     # +clipboard+ takes it when the player copies it. +tutorial_flag+
     # (TutorialFlag) says whether Play opens the Tutorial first.
@@ -33,7 +32,7 @@ module DotPopper
       def initialize(game:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false,
                      tutor: Tutor.new(BestScore::Memory.new, times: look::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
                      lifetime: Lifetime.new(BestScore::Memory.new), sizing_store: BestScore::Memory.new,
-                     input: InputKind::MOUSE, measure: RoughMeasure.new, hint: -> {},
+                     input: InputKind::MOUSE, measure: RoughMeasure.new,
                      keeper: RecordKeeper.new(best: game.best, lifetime:), notices: Notices.none,
                      sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never)
         @game = game
@@ -43,7 +42,6 @@ module DotPopper
         @lead_in = nil
         @notices = notices
         @measure = measure
-        @hint = hint
         @lifetime = lifetime
         @layout = layout
         @sounds = sounds
@@ -525,7 +523,7 @@ module DotPopper
         return unless finale
 
         FinaleScreen.new(layout:, type: look::TYPE, words:, measure: @measure, scrim: look::FINALE_BACKING, finale:,
-                         below: hud_bottom, hint: @hint.call, radius: game.round&.field&.radius || @radius)
+                         below: hud_bottom, radius: game.round&.field&.radius || @radius)
       end
 
       # The window changed size. The title's dots are respawned if their

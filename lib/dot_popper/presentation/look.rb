@@ -332,12 +332,7 @@ module DotPopper
       TILT = TiltLook.new(smoothing: 0.2, wake: 0.05, shake: 1.0, reversal: 0.35, settle: 0.3, cooldown: 0.6,
                           least_kick: 20.0,
                           kick: 40.0, most_kick: 108.0, shakes: true, fling: Throw.new(spread: 1.0, least: 0.6),
-                          dead_zone: 0.2,
-                          hint_rounds: 3, hint_alpha: 0.7,
-                          tilt_hint: "Tilt your %s to roll the dots.",
-                          stick_hint: "Hold A on a dot to drag it, or push the right stick to roll them.",
-                          drag_hint: "Drag the dots to play with them.",
-                          drag_tilt_hint: "Drag the dots, or tilt your %s to roll them.")
+                          dead_zone: 0.2)
       CALM_TILT = TILT.with(smoothing: 0.8, shakes: false)
 
       # Dragging the pile (Presentation::PileGrabs): a press on a dot that

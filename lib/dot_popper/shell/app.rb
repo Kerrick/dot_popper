@@ -57,7 +57,6 @@ module DotPopper
                                        haptics: Haptics.for(os), clipboard: Clipboard.new, notices:,
                                        sharing: Presentation::SheetSharing.for(os, opener: UrlOpener.new),
                                        lifetime:, keeper:, sizing_store:, input: starting_input, measure: FontMeasure.new(@pen.fonts),
-                                       hint: -> { @tilting&.hint&.for(@show.input) },
                                        tutorial_flag: Presentation::TutorialFlag.new(
                                          SaveFile.new(name: "tutorial.txt"), mode: Presentation::TutorialFlag.mode(@env)
                                        ))
@@ -67,14 +66,14 @@ module DotPopper
         @pile = Pile.new(flag?("DOT_POPPER_CALM") ? Look::CALM_PILE : Look::PILE)
         @game.subscribe(@pile)
         @gamepads = Gamepads.new(pretend: fake_gamepad?)
-        @tilting = tilting(os)
+        @tilting = tilting
         @game.subscribe(@tilting)
         @dragging = Dragging.new(pile: @pile, show: @show, look: flag?("DOT_POPPER_CALM") ? Look::CALM_GRAB : Look::GRAB)
         @game.subscribe(@dragging)
         @fake_drag = Presentation::FakeDrag.parse(@env["DOT_POPPER_FAKE_DRAG"])
         @sparks = Sparks.new(Look)
         @bloom = Bloom.new(@pen, Look::BLOOM)
-        @renderer = Renderer.new(@show, @pen, pile: @pile, sparks: @sparks, bloom: @bloom, tilting: @tilting,
+        @renderer = Renderer.new(@show, @pen, pile: @pile, sparks: @sparks, bloom: @bloom,
                                              diagnostic: flag?("DOT_POPPER_DIAGNOSTIC_COLORS"))
         @renderer.prepare
         @input = Presentation::InputRouter.new
@@ -529,16 +528,12 @@ module DotPopper
 
       # Playing with the game-over pile: by the accelerometer, or
       # DOT_POPPER_FAKE_TILT's steady reading in its place, and by any
-      # gamepad's right stick. Every device it runs on has a pointer to
-      # drag the dots with, a mouse or a touchscreen, for the hint.
-      def tilting(os)
+      # gamepad's right stick.
+      def tilting
         fake = Presentation::Reading.parse(@env["DOT_POPPER_FAKE_TILT"])
-        width, height = ::Lota::Graphics.dimensions
         Tilting.new(pile: @pile, gamepads: @gamepads,
                     accelerometer: fake ? FakeAccelerometer.new(steady: fake) : Accelerometer.new,
-                    look: flag?("DOT_POPPER_CALM") ? Look::CALM_TILT : Look::TILT,
-                    hint: Presentation::TiltHint.new(SaveFile.new(name: "tilt_hint.txt"), Look::TILT),
-                    device: Presentation::TiltHint.device(os, width, height), turns: @touch, pointer: true)
+                    look: flag?("DOT_POPPER_CALM") ? Look::CALM_TILT : Look::TILT, turns: @touch)
       end
 
       # The middle of the pile's ball nearest +x+, +y+, or that point with

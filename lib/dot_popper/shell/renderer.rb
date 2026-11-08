@@ -16,12 +16,11 @@ module DotPopper
       # With +diagnostic+ (DOT_POPPER_DIAGNOSTIC_COLORS), each frame clears
       # to pure blue and draws no night, so any pixel the game's drawing
       # reaches but nothing paints shows blue (doc/ios.md).
-      def initialize(show, pen, pile:, sparks:, bloom:, tilting: nil, diagnostic: false)
+      def initialize(show, pen, pile:, sparks:, bloom:, diagnostic: false)
         @show = show
         @diagnostic = diagnostic
         @pen = pen
         @pile = pile
-        @tilting = tilting
         @bloom = bloom
         @dots = DotPainter.new(pen:)
         @effects = EffectsPainter.new(pen:, sparks:)
@@ -31,7 +30,6 @@ module DotPopper
         @credits = CreditsPainter.new(pen:)
         @finale = FinalePainter.new(pen:)
         @share = SharePreviewPainter.new(pen:, dots: @dots)
-        @tilt_hint = TiltHintPainter.new(pen:)
         @cursor = CursorPainter.new(pen:)
         @splash = SplashPainter.new(pen:)
         @tutorial = TutorialPainter.new(pen:)
@@ -61,7 +59,7 @@ module DotPopper
           veil(width, height, @show.finale&.dim(@show.now).to_f) unless @show.playing?
           @effects.scene(@show.effects, dots)
           @effects.words(@show.effects, layout)
-          finale(layout) unless @show.playing?
+          @finale.draw(@show, layout) unless @show.playing?
           lead_in = @show.lead_in
           if lead_in
             pill = @hud.bounds(@show.hud, layout)
@@ -108,14 +106,6 @@ module DotPopper
       def cover
         width, height = G.dimensions
         [width + 1, height + 1]
-      end
-
-      # Game Over's lines, and under them, the first few times, how to
-      # play with the pile.
-      def finale(layout)
-        @finale.draw(@show, layout)
-        hint = @tilting&.hint&.for(@show.input)
-        @tilt_hint.draw(hint, @show) if hint
       end
 
       def field

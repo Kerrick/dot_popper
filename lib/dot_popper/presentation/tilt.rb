@@ -16,15 +16,10 @@ module DotPopper
     # more for each g past that, at most +most_kick+, and the next shake
     # counts only after
     # +cooldown+ seconds, each ball as +fling+ (a Throw) says. A calm
-    # pile (+shakes+ false) never throws a ball. A stick inside +dead_zone+ is at rest. The hint shows on the
-    # first +hint_rounds+ Game Overs, under the prompt, at +hint_alpha+ of
-    # the prompt's: +stick_hint+ to a player at a gamepad,
-    # +drag_tilt_hint+ with a pointer and an accelerometer,
-    # +drag_hint+ with a pointer alone, or +tilt_hint+ with an
-    # accelerometer alone, %s naming the device.
+    # pile (+shakes+ false) never throws a ball. A stick inside
+    # +dead_zone+ is at rest.
     class TiltLook < Data.define(:smoothing, :wake, :shake, :reversal, :settle, :cooldown, :least_kick, :kick, :most_kick,
-                                 :shakes, :fling, :dead_zone, :hint_rounds, :hint_alpha, :tilt_hint, :stick_hint,
-                                 :drag_hint, :drag_tilt_hint)
+                                 :shakes, :fling, :dead_zone)
       # The speed, in radii a second, a jolt of +jolt+ g throws a ball:
       # none for a jolt no bigger than a shake, and at least +least_kick+
       # for one that is, so even a gentle shake tosses the dots high.
@@ -236,52 +231,6 @@ module DotPopper
         angle = away + random.rand(-spread..spread)
         reach = speed * radius * random.rand(least..1.0)
         [Math.cos(angle) * reach, Math.sin(angle) * reach]
-      end
-    end
-
-    # The light line on Game Over that says the pile can be played with,
-    # on its first few showings ever, one way for the device in hand: how
-    # to push, with a gamepad, since a player holding one is not touching
-    # the screen; how to drag and tilt, on a tablet or phone; how to drag,
-    # with a mouse or a touchscreen alone; or how to tilt. It remembers how many times it has
-    # shown through a store that answers +read+ and +write(text)+, as the
-    # Tutor's does.
-    class TiltHint
-      def initialize(store, look)
-        @store = store
-        @look = look
-        @shown = Integer(store.read.to_s.strip, exception: false) || 0
-      end
-
-      attr_reader :shown
-
-      # The line for a Game Over with these ways to play with the pile, as
-      # a ByInput, counting it as shown, or nil once it has shown enough,
-      # or with no way to play. A player at the gamepad is told about its
-      # A and right stick, and one at a mouse or a screen about dragging
-      # and tilting. +device+ names the thing to tilt: "iPad", say.
-      # +pointer+ says whether a mouse or a finger can drag the dots.
-      def offer(gamepad:, accelerometer:, device:, pointer: false)
-        return if @shown >= @look.hint_rounds
-
-        by_hand = if pointer && accelerometer then format(@look.drag_tilt_hint, device)
-                  elsif pointer then @look.drag_hint
-                  elsif accelerometer then format(@look.tilt_hint, device)
-                  end
-        by_pad = @look.stick_hint if gamepad
-        return unless by_hand || by_pad
-
-        @shown += 1
-        @store.write(@shown.to_s)
-        ByInput.new(touch: by_hand || by_pad, mouse: by_hand || by_pad, gamepad: by_pad || by_hand)
-      end
-
-      # What to call the device in the hint: an iPad or iPhone on iOS, by
-      # its screen's shorter side in points, or "device" elsewhere.
-      def self.device(os, width, height)
-        return "device" unless os == "iOS"
-
-        [width, height].min >= 600 ? "iPad" : "iPhone"
       end
     end
   end

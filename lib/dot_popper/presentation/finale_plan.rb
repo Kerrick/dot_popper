@@ -21,26 +21,24 @@ module DotPopper
     # show at least their lower half under Continue: "Time's up!", "You met
     # today's goal!" when the round did, the score, the best or how far
     # short of it the round fell, the round's facts, a record it set,
-    # "Share my score", closing the score's group, +hint+, how to play
-    # with the pile, when there is one, and the Continue button, as big as
-    # Layout's primary_size for dots of +radius+. Short of room, the type
-    # shrinks first; then the hint goes, then the record, the facts, the
+    # "Share my score", closing the score's group, and the Continue
+    # button, as big as Layout's primary_size for dots of +radius+. Short
+    # of room, the type shrinks first; then the record goes, the facts, the
     # goal, the best, "Time's up!", and last "Share my score".
     # The score and Continue always stay. The backing (+scrim+, a
     # ScrimLook) is drawn around everything above Continue, so "Share my
     # score" reads as part of the score, and Continue, which needs none,
     # stands apart on the pile; it hides no more of the pile than it must.
     # Sizes are measured with +measure+ (RoughMeasure's methods).
-    class FinaleScreen < Data.define(:layout, :type, :words, :measure, :scrim, :finale, :below, :hint, :radius)
+    class FinaleScreen < Data.define(:layout, :type, :words, :measure, :scrim, :finale, :below, :radius)
       # The gaps above each line, in graphics units at full size.
-      GAPS = { heading: 26, goal: 12, score: 4, best: 4, summary: 14, record: 8, share: 16, continue: 22,
-               hint: 10 }.freeze
+      GAPS = { heading: 26, goal: 12, score: 4, best: 4, summary: 14, record: 8, share: 16, continue: 22 }.freeze
       # "Share my score"'s share glyph and the room around its words, in
       # the button's height.
       SHARE_GLYPH = 0.62
       SHARE_SIDES = 1.1
 
-      def initialize(layout:, type:, words:, measure:, scrim:, finale:, below:, hint: nil, radius: Rules::RADIUS) = super
+      def initialize(layout:, type:, words:, measure:, scrim:, finale:, below:, radius: Rules::RADIUS) = super
 
       def plan
         placed = Column.new(room:).fit(layout.type_scales) { blocks(sizes(it), it) }
@@ -78,7 +76,6 @@ module DotPopper
          line(:summary, :semibold, sizes[:summary], words.summary(finale.stats), scale, drop: 3),
          (line(:record, :semibold, sizes[:summary], words.record(finale.record), scale, drop: 2) if finale.record),
          share(scale),
-         (line(:hint, :semibold, sizes[:summary], hint, scale, drop: 1) if hint),
          continue(scale)].compact
       end
 

@@ -16,22 +16,14 @@ module DotPopper
     class Tilting
       STICK = "the gamepad's right stick"
 
-      # The light line Game Over shows, saying how to play, as a ByInput,
-      # or nil.
-      attr_reader :hint
-
-      def initialize(pile:, gamepads:, accelerometer:, look:, hint:, device:, turns:, pointer: false,
-                     random: Random.new)
+      def initialize(pile:, gamepads:, accelerometer:, look:, turns:, random: Random.new)
         @pile = pile
         @gamepads = gamepads
         @accelerometer = accelerometer
         @look = look
-        @hints = hint
-        @device = device
         @turns = turns
-        @pointer = pointer
         @random = random
-        @tilt = @hint = nil
+        @tilt = nil
       end
 
       def call(event)
@@ -61,13 +53,11 @@ module DotPopper
         @accelerometer.start if @accelerometer.present?
         sources = [(@accelerometer.source if @accelerometer.present?), (STICK if @gamepads.any?)].compact
         puts "Dot Popper: tilt from #{sources.empty? ? "none" : sources.join(" and ")}"
-        @hint = @hints.offer(gamepad: @gamepads.any?, accelerometer: @accelerometer.present?, device: @device,
-                               pointer: @pointer)
       end
 
       def end_pile
         @accelerometer.stop if @tilt && @accelerometer.present?
-        @tilt = @hint = nil
+        @tilt = nil
       end
 
       def apply(step)
