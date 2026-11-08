@@ -27,7 +27,7 @@ module DotPopper
         continue: ByInput.new(touch: "Continue", mouse: "Continue", gamepad: "Continue (A)"),
         time_up: "Time's up!", new_best: "New best!", best: "Your best", score: "SCORE", time: "TIME",
         share: ByInput.new(touch: "Share my score", mouse: "Share my score", gamepad: "Share my score (Y)"),
-        share_heading: "Share your score", share_note: "Copy it, then paste it anywhere.",
+        share_heading: "Share your score",
         copied: "Copied! Paste it anywhere.",
         copy: ByInput.new(touch: "Copy", mouse: "Copy", gamepad: "Copy (A)"),
         close: ByInput.new(touch: "Close", mouse: "Close", gamepad: "Close (B)"),

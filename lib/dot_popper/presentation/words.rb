@@ -15,7 +15,7 @@ module DotPopper
     # says how big a screen is, in dots, with %d for its width and height,
     # and names the choices of dot size (DotSizing) by what they do here.
     class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time,
-                              :share, :share_heading, :share_note, :copied, :copy, :close, :records, :go_back,
+                              :share, :share_heading, :copied, :copy, :close, :records, :go_back,
                               :no_rounds, :clear, :keep_holding, :hold_to_clear, :cleared, :undo, :labels, :goals, :goal_done, :goal_met,
                               :screen_size, :credits, :credits_title, :notice, :quit_again, :input)
       MINUS = "−" # a true minus sign, as wide as the plus

@@ -6,8 +6,8 @@ module DotPopper
     # SharePlan puts it: the screen veiled behind a dark card, "Share your
     # score", the result in a message bubble, left-aligned as it will read
     # when pasted, its emoji drawn as the game's own dots and a stopwatch,
-    # a line on what Copy does, which becomes "Copied! Paste it anywhere."
-    # with a check once it has, and Close beside Copy, the card's one
+    # "Copied! Paste it anywhere." with a check once Copy has copied it,
+    # and Close beside Copy, the card's one
     # filled gold button. It lifts into place as it fades in.
     class SharePreviewPainter < Data.define(:pen, :dots)
       G = ::Lota::Graphics
@@ -105,14 +105,14 @@ module DotPopper
         G.rectangle(:fill, x - (radius * 0.25), y - (radius * 1.1), radius * 0.5, radius * 0.25)
       end
 
-      # What Copy does, until it has: then "Copied! Paste it anywhere.",
-      # with a check, fading in over it.
+      # Once Copy has copied: "Copied! Paste it anywhere.", with a check,
+      # fading in where the plan keeps room for it.
       def note(show, plan, copied, alpha)
+        return unless copied.positive?
+
         rect = plan[:note]
         font = pen.fonts.semibold(plan.size(:note))
-        words = show.words
-        pen.text(words.share_note, font, rect.center_x, rect.center_y, pen.palette.soft, alpha * (1 - copied))
-        Check.new(pen:).labelled(words.copied, font, rect.center_x, rect.center_y, alpha * copied) if copied.positive?
+        Check.new(pen:).labelled(show.words.copied, font, rect.center_x, rect.center_y, alpha * copied)
       end
     end
   end

@@ -4,8 +4,8 @@ module DotPopper
   module Presentation
     # Where the share preview's parts go, worked out by ShareScreen#plan:
     # each block's Rect by name (Stacked), the :heading, the :message
-    # holding the result's lines, the :note under it ("Copied! Paste it
-    # anywhere." once copied), and the :buttons row; the font size each
+    # holding the result's lines, the :note under it, where "Copied! Paste
+    # it anywhere." shows once copied, and the :buttons row; the font size each
     # is set in; the message broken into +lines+ that fit across it; the
     # +card+ behind them all; the +close+ and +copy+ buttons, side by side
     # in the buttons row, Copy on the right; and the +bubble+'s padding
@@ -18,9 +18,10 @@ module DotPopper
     # The share preview over Game Over: a card, as wide as its message
     # needs, up to what +look+ (SharePreviewLook) or the safe area
     # allows, in the middle of the screen, holding "Share your score", the result's +lines+ in a
-    # message bubble, a line on what Copy does, and Close and Copy. Short
+    # message bubble, room for "Copied!" once Copy has copied, and Close
+    # and Copy. Short
     # of room the type shrinks first, then the heading goes. The message,
-    # the note and the buttons always stay, since they are what the
+    # the note's room and the buttons always stay, since they are what the
     # preview is for. Sizes are measured with +measure+ (RoughMeasure's
     # methods).
     class ShareScreen < Data.define(:layout, :type, :words, :measure, :look, :lines)
@@ -81,11 +82,11 @@ module DotPopper
         [[widest + (2 * side), buttons].max, room.width].min
       end
 
-      # What Copy does, or, with a check before it, that it has.
+      # Room for "Copied! Paste it anywhere." with a check before it, kept
+      # before Copy is pressed, so nothing moves when it shows.
       def note_line(size, scale)
         height = measure.height(:semibold, size)
-        width = [measure.width(:semibold, size, words.share_note),
-                 measure.width(:semibold, size, words.copied) + (height * 0.75)].max
+        width = measure.width(:semibold, size, words.copied) + (height * 0.75)
         Block.new(name: :note, height:, width:, gap: gap(:note, scale))
       end
 

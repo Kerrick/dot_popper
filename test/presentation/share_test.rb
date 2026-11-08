@@ -30,6 +30,20 @@ class ShareTest < Minitest::Test
     assert_in_delta 0.0, copied.arrival(2.0, Look::SHARE_PREVIEW)
   end
 
+  # The card says nothing about Copy before it is pressed, and keeps room
+  # for "Copied! Paste it anywhere." and its check, so nothing moves when
+  # it shows.
+  def test_the_card_keeps_room_only_for_the_copied_line
+    measure = RoughMeasure.new
+    plan = ShareScreen.new(layout: layout(1200, 800), type: Look::TYPE, words: Look::WORDS, measure:,
+                           look: Look::SHARE_PREVIEW, lines: ["Dot Popper: 3 points"]).plan
+    size = plan.size(:note)
+    copied = measure.width(:semibold, size, Look::WORDS.copied) + (measure.height(:semibold, size) * 0.75)
+
+    assert_in_delta copied, plan[:note].width, 1e-9
+    refute Look::WORDS.to_h.values.grep(String).any? { it.include?("Copy it") }, "no line on what Copy does"
+  end
+
   def test_in_the_game_sharing_opens_the_preview
     preview = InGameSharing.new.offer("Dot Popper: 3 points", 4.0)
 
