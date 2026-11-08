@@ -73,9 +73,9 @@ module DotPopperGui
       keep_screenshot(name("1-tap"))
       shot = screenshot
       bright = dot(T::BRIGHT)
-      # Left of its middle, clear of the hand: the pointing finger's pad
-      # and outline reach about 0.3 of a radius and two device pixels left
-      # of the point it taps, and the tap's ripple has spread past 0.8 by
+      # Left of its middle, clear of the hand: the emoji's finger reaches
+      # about 0.2 of a radius left of the point it taps, its thumb only
+      # below the dot, and the tap's ripple has spread past 0.8 by
       # the time the press is down, so a small dot on a 1x screen needs
       # more than half a radius; the dot's pale ring starts past 0.65.
       x = bright.x - (bright.radius * 0.55)

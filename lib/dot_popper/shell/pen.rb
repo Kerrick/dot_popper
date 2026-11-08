@@ -2,9 +2,9 @@
 
 module DotPopper
   module Shell
-    # What every painter draws with: the fonts, the shaders, a plain square
-    # to draw shaders on, and the screen's device pixels for placing text
-    # and the HUD crisply.
+    # What every painter draws with: the fonts, the pointing hand's
+    # pictures, the shaders, a plain square to draw shaders on, and the
+    # screen's device pixels for placing text and the HUD crisply.
     #
     # Every shader is optional. One that will not compile on this GPU, or
     # all of them with DOT_POPPER_NO_SHADERS=1, is left out with a warning,
@@ -13,11 +13,12 @@ module DotPopper
       G = ::Lota::Graphics
       SHADERS = %i[dot edge backdrop blur].freeze
 
-      attr_reader :fonts, :look, :pixels
+      attr_reader :fonts, :look, :pixels, :hands
 
       def initialize(look, shaders: true)
         @look = look
         @fonts = FontBook.new(look::TYPE)
+        @hands = HandSprites.new
         @square = G::Image.new(::Lota::Image::ImageData.new(2, 2, :rgba8, ("\xFF".b * 16)))
         @shaders = shaders ? SHADERS.to_h { [it, compile(it)] }.compact : {}
         warn "Dot Popper: drawing without shaders" if @shaders.empty?

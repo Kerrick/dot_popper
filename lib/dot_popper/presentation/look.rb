@@ -67,6 +67,9 @@ module DotPopper
           mono_name: "Iosevka",
           mono: "Iosevka, copyright (c) 2015-2026 Renzhi Li (aka. Belleve Invis), under the SIL Open Font " \
                 "License, version 1.1. It sets the license texts below.",
+          emoji_name: "Noto Emoji",
+          emoji: "The tutorial's pointing hand is Noto Emoji's, copyright 2013 Google, Inc., under the Apache " \
+                 "License, version 2.0.",
           lota: "Lota", fledge: "Fledge"
         }.freeze,
         cleared: "Records cleared.", undo: ByInput.new(touch: "Undo", mouse: "Undo", gamepad: "Undo (Y)"),

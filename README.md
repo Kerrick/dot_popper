@@ -102,6 +102,6 @@ Open an [issue on GitHub](https://github.com/Kerrick/dot_popper/issues). Say whi
 
 ## Credits and license
 
-Dot Popper is made by setdef. The game is free software under the [GNU Affero General Public License, version 3 or later](LICENSE): you may play it, share it, and change it. Its sounds and icon are under [CC-BY-SA-4.0](LICENSES/CC-BY-SA-4.0.txt). Its lettering is set in Fredoka and Iosevka, under the SIL Open Font License. To see every license that comes with the game, open the Credits screen from the Records screen.
+Dot Popper is made by setdef. The game is free software under the [GNU Affero General Public License, version 3 or later](LICENSE): you may play it, share it, and change it. Its sounds and icon are under [CC-BY-SA-4.0](LICENSES/CC-BY-SA-4.0.txt). Its lettering is set in Fredoka and Iosevka, under the SIL Open Font License, and its tutorial's pointing hand is Noto Emoji's, under the [Apache License 2.0](LICENSES/Apache-2.0.txt). To see every license that comes with the game, open the Credits screen from the Records screen.
 
 To build Dot Popper yourself, change it, or read how it works, see the [developer guide](doc/README.md).

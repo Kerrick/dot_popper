@@ -6,29 +6,36 @@ class PointingHandTest < Minitest::Test
   include PresentationTest
 
   HAND = DotPopper::Presentation::PointingHand
+  ROOT = File.expand_path("../..", __dir__)
 
-  def test_its_fingertip_is_on_the_point_it_taps
-    finger = HAND::PARTS[1].first
-    assert_in_delta 0.0, finger.x + (finger.width / 2.0), 1e-9, "the finger is centred on it"
-    assert finger.y.negative? && finger.y > -finger.width, "its pad, not its middle, is on it"
+  def test_every_size_has_its_png_and_each_is_that_many_pixels_square
+    HAND::SIZES.each do |size|
+      path = File.join(ROOT, "assets", "emoji", "hand-#{size}.png")
+      assert File.file?(path), "#{path} (ruby script/make_hand.rb)"
+      assert_equal [size, size], File.binread(path, 24).unpack("@16N2"), path
+    end
   end
 
-  # Tilted, the hand reaches down and to the right from its tip, and only
-  # its fingertip is above or left of it, so it hides no more of the dot
-  # it taps than a fingertip would.
-  def test_it_reaches_in_from_below_and_to_the_right
-    left, top, right, bottom = HAND::BOUNDS
-    assert_operator left, :>, -1.0
-    assert_operator top, :>, -1.0
-    assert_operator right, :>, 3.0
-    assert_operator bottom, :>, 4.0
+  def test_the_smallest_png_with_enough_pixels_is_drawn_smaller_never_larger
+    assert_equal 48, HAND.size_for(20)
+    assert_equal 128, HAND.size_for(96.5)
+    assert_equal 128, HAND.size_for(128)
+    assert_equal 512, HAND.size_for(900), "past the largest, the largest"
   end
 
-  def test_it_turns_away_from_an_edge_that_would_cut_it_off
-    unit = 10.0
-    assert_equal [1, 1], HAND.facing(100, 100, unit, 400, 850), "from below and to the right"
-    assert_equal [-1, 1], HAND.facing(380, 100, unit, 400, 850), "from the left, near the right edge"
-    assert_equal [1, -1], HAND.facing(100, 830, unit, 400, 850), "from above, near the bottom"
-    assert_equal [-1, -1], HAND.facing(380, 830, unit, 400, 850), "from above and to the left, in the corner"
+  # The fingertip is at the top, a little left of the middle, and the
+  # wrist at the bottom, below and right of it, so the hand hides only
+  # the lower part of the dot it taps.
+  def test_its_tip_is_at_the_top_and_its_wrist_at_the_bottom
+    tip_x, tip_y = HAND::TIP_AT
+    wrist_x, wrist_y = HAND::WRIST_AT
+    assert_operator tip_y, :<, 0.06
+    assert_operator wrist_y, :>, 0.95
+    assert tip_x.between?(0.35, 0.45) && wrist_x > tip_x
+  end
+
+  def test_it_mirrors_only_where_the_right_edge_would_cut_it_off
+    assert_equal 1, HAND.facing(100, 150, 400)
+    assert_equal(-1, HAND.facing(350, 150, 400))
   end
 end

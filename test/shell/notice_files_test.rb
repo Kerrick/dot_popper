@@ -26,6 +26,7 @@ class NoticeFilesTest < Minitest::Test
 
     assert_equal "Fixture AGPL\n", notices.agpl
     assert_equal "Copyright 2016 Fixture Authors\n", notices.ofl
+    assert_equal "Copyright 2013 Fixture Emoji Authors\n", notices.emoji
   end
 
   def test_the_program_folder_is_searched_too

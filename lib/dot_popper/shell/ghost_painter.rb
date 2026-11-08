@@ -6,16 +6,16 @@ module DotPopper
     # input they last used (Presentation::InputKind): a pointing hand for
     # a touchscreen, a mouse pointer that clicks, or a gamepad's reticle
     # with its A button beside it. The pointer and the reticle are pale and
-    # see-through, so the dot under them shows; the hand touches the dot
-    # only with its fingertip, and is solid, so it reads as a hand. Each
-    # press rings where it lands. Its letter, its outlines and its tip sit
-    # on whole device pixels.
+    # see-through, so the dot under them shows; the hand, the pointing
+    # emoji, touches the dot only with its fingertip, and is solid. Each
+    # press rings where it lands. Its letter and its tip sit on whole
+    # device pixels.
     class GhostPainter < Data.define(:pen)
       G = ::Lota::Graphics
       ALPHA = 0.85 # how much of the pointer and the reticle show at most
       RING = 0.4 # seconds a press's ring lasts
       RIPPLE = 0.45 # seconds a tap's ripple lasts, before the hand lifts away
-      HAND = 0.55 # the hand's finger's width, in the dot's radius
+      HAND = 3.0 # the pointing hand's picture's side, in the dot's radius
 
       # A pointer's outline, its tip at 0, 0, in twentieths of its height.
       ARROW = [[0, 0], [0, 17], [4, 13], [7, 20], [10, 19], [7, 12], [12, 12]].freeze
@@ -38,49 +38,26 @@ module DotPopper
 
       def palette = pen.palette
 
-      # A gloved hand pointing (Presentation::PointingHand), its
-      # fingertip's pad on the point it taps, reaching in from below and to
-      # the right, or mirrored where an edge would cut it off. As it
-      # presses, it sinks a little smaller, as if pushed into the glass,
-      # and a ripple spreads from its fingertip.
+      # The pointing hand emoji (Presentation::PointingHand), upright, its
+      # fingertip on the point it taps and the hand below it, mirrored
+      # where the right edge would cut it off. It is the smallest of its
+      # PNGs with at least the pixels it needs, drawn a little smaller with
+      # its mipmaps. As it presses, it sinks a little smaller, as if pushed
+      # into the glass, and a ripple spreads from its fingertip.
       def hand(pose, radius, screen)
         pixels = pen.pixels
         x = pixels.snap(pose.x)
         y = pixels.snap(pose.y)
         ripple(x, y, pose, radius)
-        unit = radius * HAND
-        across, down = Presentation::PointingHand.facing(x, y, unit, *screen)
-        size = unit * (1 - (Presentation::PointingHand::PRESS * pose.press))
-        edge = pixels.whole(unit * 0.13) / size
-        G.push do
-          G.translate(x, y)
-          G.scale(across * size, down * size)
-          G.rotate(Presentation::PointingHand::TILT)
-          Presentation::PointingHand::PARTS.each { glove(it, edge, pose.alpha) }
-        end
-      end
-
-      # A group of the hand's shapes, outlined +edge+ wide.
-      def glove(shapes, edge, alpha)
-        pen.color(palette.ink_top, alpha)
-        shapes.each { shape(it.grown(edge)) }
-        pen.color(palette.cream, alpha)
-        shapes.each { shape(it) }
-      end
-
-      def shape(shape)
-        case shape
-        in Presentation::PointingHand::RoundRect[x:, y:, width:, height:, corner:]
-          G.rectangle(:fill, x, y, width, height, corner, corner, 12)
-        in Presentation::PointingHand::Capsule[from: [x1, y1], to: [x2, y2], width:]
-          half = width / 2.0
-          length = Math.hypot(x2 - x1, y2 - y1)
-          nx = -(y2 - y1) / length * half
-          ny = (x2 - x1) / length * half
-          G.polygon(:fill, x1 + nx, y1 + ny, x2 + nx, y2 + ny, x2 - nx, y2 - ny, x1 - nx, y1 - ny)
-          G.circle(:fill, x1, y1, half, 16)
-          G.circle(:fill, x2, y2, half, 16)
-        end
+        art = Presentation::PointingHand
+        side = radius * HAND * (1 - (art::PRESS * pose.press))
+        across = art.facing(x, radius * HAND, screen.first)
+        sprite = pen.hands.for(side * pixels.scale)
+        scale = side / sprite.height
+        (tip_x, tip_y), (wrist_x, wrist_y) = art::TIP_AT, art::WRIST_AT
+        G.color = [1, 1, 1, pose.alpha]
+        G.draw(sprite, x + (across * (wrist_x - tip_x) * side), y + ((wrist_y - tip_y) * side), 0,
+               across * scale, scale, wrist_x * sprite.width, wrist_y * sprite.height)
       end
 
       # A tap's ripple: two thin rings spreading from where the fingertip

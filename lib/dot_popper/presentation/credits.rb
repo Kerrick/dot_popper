@@ -4,12 +4,14 @@ module DotPopper
   module Presentation
     # The license texts the running build carries, as the shell found them
     # (Shell::NoticeFiles): the game's own license (+agpl+) and the font's
-    # (+ofl+), Iosevka's (+iosevka+), Lota's notices (+lota+), and each of Fledge's (+fledge+).
-    # What a build lacks is nil, or empty, and the Credits screen skips it.
-    class Notices < Data.define(:agpl, :ofl, :iosevka, :lota, :fledge)
+    # (+ofl+), Iosevka's (+iosevka+), Noto Emoji's, for the tutorial's
+    # pointing hand (+emoji+), Lota's notices (+lota+), and each of
+    # Fledge's (+fledge+). What a build lacks is nil, or empty, and the
+    # Credits screen skips it.
+    class Notices < Data.define(:agpl, :ofl, :iosevka, :emoji, :lota, :fledge)
       def self.none = new
 
-      def initialize(agpl: nil, ofl: nil, iosevka: nil, lota: nil, fledge: []) = super
+      def initialize(agpl: nil, ofl: nil, iosevka: nil, emoji: nil, lota: nil, fledge: []) = super
     end
 
     # How the Credits screen reads: the type's size, a line's height in
@@ -26,7 +28,8 @@ module DotPopper
     # What the Credits screen says, in order: who made Dot Popper (and,
     # when the words have it, whom to thank); its own copyright and license
     # notice, with the license's text and the sounds' and icon's; and under
-    # "Open-source licenses", Fredoka's, Iosevka's, then Lota's notices, then Fledge's.
+    # "Open-source licenses", Fredoka's, Iosevka's, Noto Emoji's, then
+    # Lota's notices, then Fledge's.
     # Each license is shown if the build has it. Under +licensing+
     # :proprietary (DotPopper::LICENSING), Dot Popper's own notice is its
     # copyright with all rights reserved, without its licenses.
@@ -40,6 +43,8 @@ module DotPopper
                   CreditsBlock.new(:legal, notices.ofl),
                   CreditsBlock.new(:subheading, say.fetch(:mono_name)), CreditsBlock.new(:note, say.fetch(:mono)),
                   CreditsBlock.new(:legal, notices.iosevka),
+                  CreditsBlock.new(:subheading, say.fetch(:emoji_name)), CreditsBlock.new(:note, say.fetch(:emoji)),
+                  CreditsBlock.new(:legal, notices.emoji),
                   CreditsBlock.new(:subheading, say.fetch(:lota)), CreditsBlock.new(:legal, notices.lota),
                   CreditsBlock.new(:subheading, say.fetch(:fledge)),
                   *notices.fledge.map { CreditsBlock.new(:legal, it) }]
