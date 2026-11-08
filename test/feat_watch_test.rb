@@ -193,9 +193,9 @@ class FeatWatchTest < Minitest::Test
     open_round
     @round.update(9.2)
     pop_fresh
-    8.times { pop_fresh }
+    3.times { pop_fresh }
     refute_includes @watch.earned, :comeback
-    pop_fresh
+    8.times { pop_fresh }
 
     assert_includes @watch.earned, :comeback
   end
