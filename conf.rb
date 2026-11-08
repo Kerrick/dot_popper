@@ -21,7 +21,8 @@ def Lota.conf(t)
   # buffer, so the drawable's last 2 of 2338 px went undrawn in landscape.
   t.window.stencil = false
   t.window.depth = false
-  # Which graphics renderers LÖVE may use. It tries them in its own fixed
+  # Which graphics renderers LÖVE may use (t.graphics.renderers; LÖVE 12 moved
+  # it from t.renderers). It tries them in its own fixed
   # order, Vulkan first, whatever order is given here, and gives up rather
   # than trying OpenGL when a computer has Vulkan but no GPU it can use
   # (old graphics, virtual machines, remote desktops), so on Linux only
@@ -34,5 +35,5 @@ def Lota.conf(t)
   # overrides this, to compare them on a device.
   chosen = ENV.fetch("DOT_POPPER_RENDERERS", "").split(",").map(&:strip).reject(&:empty?).map(&:to_sym)
   chosen = %i[opengl] if chosen.empty? && RUBY_PLATFORM.include?("linux") && !RUBY_PLATFORM.include?("android")
-  t.renderers = chosen unless chosen.empty?
+  t.graphics.renderers = chosen unless chosen.empty?
 end
