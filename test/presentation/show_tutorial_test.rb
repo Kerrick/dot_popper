@@ -151,6 +151,43 @@ class ShowTutorialTest < Minitest::Test
     assert @show.playing?
   end
 
+  # "How to play" replays it on any title, seen or not, and it hands over
+  # into a round as a first Play's does; the seen flag stays seen.
+  def test_how_to_play_opens_it_again_and_it_hands_over_into_a_round
+    play_through
+    finish_round
+    assert @show.title?
+    reach = @show.reach_of(:how_to_play)
+    @show.tap(reach.center_x, reach.center_y)
+
+    assert @show.tutorial?
+    assert_instance_of DotPopper::Game::Title, @game.state
+    assert_equal "seen", @store.read
+    play_through(opened: true)
+    assert @show.playing?
+    assert_equal [true, true, false], @game.round.dots.map(&:popped?)
+    assert_equal 1, @game.round.score
+    assert_operator @game.round.countdown.remaining, :>, 9.8, "from what it left, the clock only now running"
+    assert @show.lead_in
+  end
+
+  def test_how_to_play_is_offered_on_a_first_title_too_and_even_when_the_flag_never_opens_it
+    @show = Show.new(game: @game, layout: layout, sounds: @sounds, radius: R, random: Random.new(3),
+                     lifetime: @lifetime, keeper: DotPopper::RecordKeeper.new(best: @best, lifetime: @lifetime))
+
+    assert_includes @show.controls.map(&:name), :how_to_play
+    @show.how_to_play
+    assert @show.tutorial?
+  end
+
+  def test_how_to_play_does_nothing_off_the_title
+    @show.how_to_play
+    @show.back
+    assert @show.playing?
+    @show.how_to_play
+    refute @show.tutorial?
+  end
+
   def test_its_dots_follow_a_resized_window
     press_main
     @show.resize(layout(400, 850), DotPopper::Field.new(400, 850, R))
@@ -176,8 +213,8 @@ class ShowTutorialTest < Minitest::Test
 
   # Plays the whole tutorial, tapping each bright dot as it is shown, and
   # the popped one +slips+ times as the next peeks out from under it.
-  def play_through(hand_over: true, slips: 0)
-    press_main
+  def play_through(hand_over: true, slips: 0, opened: false)
+    press_main unless opened
     [Tutorial::BRIGHT, Tutorial::NEXT].each do |id|
       update_for(0.1) until %i[aim aim_next].include?(@show.tutorial.beat) && !tapped?(id)
       dot = @show.tutorial.dots.find { it.id == id }

@@ -3,14 +3,19 @@
 module DotPopper
   module Shell
     # The title screen: the name, a legend that teaches the rule with one
-    # dot of each kind, the best score, the Play button, the mute button, and,
-    # once a round has been played, today's goal, "Your records", and,
-    # where it changes something, the choice of how dots are sized, each
-    # where the Show's TitlePlan puts it. From the name to the prompt, the
+    # dot of each kind, the best score, the Play button, "How to play",
+    # the mute button, and, once a round has been played, today's goal,
+    # "Your records", and, where it changes something, the choice of how
+    # dots are sized, each where the Show's TitlePlan puts it. From the name to the prompt, the
     # words sit on a faint backing, so the dots drifting behind them dim
     # further.
     class TitlePainter < Data.define(:pen, :dots)
       G = ::Lota::Graphics
+      DOT = 0.17 # the guide's dot's radius, in the button's height
+      # The hand's size, as the radius GhostPainter draws it for, in the
+      # button's height: a pointer is drawn smaller for its dot than a
+      # fingertip or a reticle, so it is drawn for a larger one here.
+      HAND = { touch: 0.2, mouse: 0.42, gamepad: 0.32 }.freeze
 
       def draw(show, layout)
         now = show.now
@@ -30,6 +35,9 @@ module DotPopper
         hover = show.hover
         PrimaryButton.new(pen:).draw(plan.play_button, words.play, alpha: intro, hover: hover.level(:play))
         MuteButton.new(pen:).draw(plan.mute_button, show.sounds.muted?, hover: hover.level(:mute))
+        PillButton.new(pen:).draw(plan.how_to_play_button, words.how_to_play, alpha: intro,
+                                  hover: hover.level(:how_to_play),
+                                  icon: ->(x, y, size) { guide(show.input, x, y, size, intro) })
         return unless show.records_offered?
 
         PillButton.new(pen:).draw(plan.records_button, words.records, alpha: intro, hover: hover.level(:records))
@@ -37,6 +45,18 @@ module DotPopper
       end
 
       private
+
+      # "How to play"'s icon: the Tutorial's guide, drawn as the hand in
+      # use (GhostPainter), tapping a small bright dot, in a square +size+
+      # across around +x+, +y+. The tapped point sits a little up and to
+      # the left, since the hand reaches in from below and to the right.
+      def guide(input, x, y, size, alpha)
+        tip_x = x - (size * 0.08)
+        tip_y = y - (size * 0.12)
+        dots.icon(tip_x, tip_y, size * DOT, fresh: true, opacity: alpha)
+        pose = Presentation::GhostPose.new(x: tip_x, y: tip_y, press: 1.0, since_press: nil, alpha:)
+        GhostPainter.new(pen:).draw(pose, input, size * HAND.fetch(input.name))
+      end
 
       # The choice of dot size, each segment named, saying what it does
       # here, and showing a dot at the size it gives, in true proportion.

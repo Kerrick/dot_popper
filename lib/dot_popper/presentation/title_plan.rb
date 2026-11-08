@@ -5,13 +5,13 @@ module DotPopper
     # Where the title's words go, worked out by TitleScreen#plan: each
     # line's Rect by name (Stacked), the Play button's as :play, the font
     # size each is set in, today's goal broken into lines, the faint
-    # backing behind them, the bottom row's buttons, which the words
-    # keep above, and where "Press B again to quit" goes while it shows
+    # backing behind them, the bottom row's buttons, which the words keep
+    # above, and where "Press B again to quit" goes while it shows
     # (+quit_line+), with the name of the line it stands in for there, if
     # any (+quit_over+). A line the screen had no room for, or that is
     # not shown, has no Rect.
     class TitlePlan < Data.define(:placed, :sizes, :goal_lines, :backing, :records_button, :sizing_control,
-                                  :mute_button, :quit_line, :quit_over)
+                                  :mute_button, :how_to_play_button, :quit_line, :quit_over)
       def [](name) = placed[name]
       def size(name) = sizes.fetch(name)
       def play_button = placed[:play]
@@ -56,10 +56,11 @@ module DotPopper
     # primary_size for dots of +radius+ (or, on a window too small for
     # that, as small as a button), stacked as one group in the
     # middle of the screen; and the bottom row, "Your records" once
-    # +records+ is offered, the dot-size choice where +sizing+ is, and the
-    # mute button. The bottom row is laid out first, and the words fit in
-    # what is left above it: their type shrinks first, then the streak
-    # goes, then the goal, then the best, and last the name shrinks on.
+    # +records+ is offered, the dot-size choice where +sizing+ is, "How to
+    # play", and the mute button. The bottom row is laid out first, and
+    # the words fit in what is left above it: their type shrinks first,
+    # then the streak goes, then the goal, then the best, and last the
+    # name shrinks on.
     # The legend and Play always stay, since they are how to play.
     # Sizes are measured with +measure+ (RoughMeasure's methods).
     class TitleScreen < Data.define(:layout, :type, :words, :measure, :best, :goal, :done, :streak, :records,
@@ -87,7 +88,8 @@ module DotPopper
         end
         TitlePlan.new(placed:, sizes:, goal_lines: goal_lines(sizes[:goal]), backing: backing(placed, sizes),
                       records_button: layout.records_button, sizing_control: layout.sizing_control,
-                      mute_button: layout.mute_button, **quit_line(placed, sizes))
+                      mute_button: layout.mute_button, how_to_play_button: layout.how_to_play_button,
+                      **quit_line(placed, sizes))
       end
 
       # The middle of the screen, from the safe area's top margin down to
@@ -101,9 +103,9 @@ module DotPopper
 
       # The bottom row's parts that show: the dot-size choice's label and
       # segments too, which take a row above the buttons where they do not
-      # fit between them.
+      # fit between them, as "How to play" does.
       def bottom_row
-        parts = [layout.mute_button]
+        parts = [layout.mute_button, layout.how_to_play_button]
         parts << layout.records_button if records
         parts.push(layout.sizing_control.label, layout.sizing_control.frame) if sizing
         parts

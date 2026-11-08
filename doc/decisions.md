@@ -972,6 +972,14 @@ The soft pink ✕ that marked the popped dot in the tutorial is gone. Instead, a
 
 **To reverse:** In `Tutorial#show_the_cost`, hover the guide over the popped dot (`ghost.hovering`) instead of tapping it, and drop the cue that calls `guide_slips`.
 
+### "How to play" on the title replays the tutorial
+
+The title's bottom row has a small, quiet pill beside the mute button, "How to play", with an icon: the tutorial's guide, drawn as the hand in use (a pointer for the mouse, a fingertip for touch, a reticle with its A for a gamepad), tapping a small bright dot. Pressing it opens the tutorial at once, on any title, whether the tutorial was seen or not, and it hands over into a real round as a first Play's tutorial does; the seen flag keeps its meaning, and the first Play still opens it only once. H does the same from the keyboard, and so does Y on a gamepad, which has nothing to share on the title (on Game Over it shares, on the Records screen it clears); the gamepad's cursor reaches the button as it does any other, and its label then says "How to play (Y)". `Layout#how_to_play_button` puts it between "Your records" and the mute button, 3.8 buttons' heights across, or as little as 3.1 where the room is short; where even that won't fit, as on a phone 375 points wide held upright, it takes a row of its own above the mute button, set apart as the dot-size choice's row is, and the dot-size choice, where it can't sit between "Your records" and "How to play", goes a row above that. The title's words fit in what is left, by the plan's usual rules.
+
+**Why:** The maintainer hands his phone to playtesters, and every player may want to see it again: people forget what they learned once (Hodent, *The Gamer's Brain*), and a tutorial a player can't call up again leaves them without control (Lidwell, Holden & Butler, *Universal Principles of Design*, on control). Saffer (*Microinteractions*) warns against hidden triggers, so it is a visible button, not a secret key. An icon with a short label is understood faster and more surely than either alone (Johnson, *Designing with the Mind in Mind*), and the icon is the very hand the tutorial shows, so it says what the button opens before a word is read. It is quiet and in the corner, so Play stays the one thing to press.
+
+**To reverse:** Drop `:how_to_play` from `Show#title_controls`, `Layout#how_to_play_button` from `TitleScreen#bottom_row`, its pill from `Shell::TitlePainter#draw`, and the H key and the title's Y from `Shell::App`.
+
 ### Every wrong tap in the tutorial costs what it does in play
 
 *Reverses the part of "The tutorial's guide shows a wrong tap's cost, with no ✕" that had its wrong taps cost nothing.*

@@ -69,6 +69,9 @@ module DotPopper
     # whole window; text and buttons stay inside +safe+, the part that no
     # notch, rounded corner, or home indicator covers.
     class Layout < Data.define(:width, :height, :safe, :look)
+      HOW_TO_PLAY = 3.8 # "How to play"'s width, in its heights, with room
+      HOW_TO_PLAY_LEAST = 3.1 # ...and the least it is drawn at in the bottom row
+
       # The scale for text and the HUD: 1 on a mid-sized window, smaller on
       # a phone, a little larger on a big screen.
       def ui = ([safe.width, safe.height].min / look.reference).clamp(0.72, 1.35)
@@ -112,6 +115,25 @@ module DotPopper
       def records_button
         height = button_size
         Rect.new(x: safe.x + margin, y: safe.bottom - margin - height, width: height * 3.8, height:)
+      end
+
+      # The title's "How to play": a quiet pill with the Tutorial's guide
+      # on it, beside the mute button, as tall as it. It takes the room
+      # between "Your records" and the mute button, up to HOW_TO_PLAY
+      # buttons' heights across; where that is less than HOW_TO_PLAY_LEAST,
+      # as on a small phone held upright, it takes a row of its own above
+      # the mute button instead, as the dot-size choice does.
+      def how_to_play_button
+        height = button_size
+        right = mute_button.x - margin
+        room = right - (records_button.right + margin)
+        if room >= height * HOW_TO_PLAY_LEAST
+          width = [height * HOW_TO_PLAY, room].min
+          return Rect.new(x: right - width, y: mute_button.y, width:, height:)
+        end
+
+        width = [height * HOW_TO_PLAY, safe.width - (2 * margin)].min
+        Rect.new(x: safe.right - margin - width, y: mute_button.y - row_apart(height) - height, width:, height:)
       end
 
       # The Records screen's "Clear my records…": small, in the safe
@@ -173,16 +195,17 @@ module DotPopper
       # The title's choice of dot size: its label, then its two segments,
       # each as tall as a button and wide enough for a dot icon and a few
       # words. The title shows it only where it changes something. With
-      # room between "Your records" and the mute button, it sits there,
+      # room between "Your records" and "How to play", it sits there,
       # label on the left, its segments centred on the screen if they can
-      # be. Otherwise, as on an upright
-      # phone, its segments are centred a row above them, under the label.
+      # be. Otherwise, as on an upright phone, its segments are centred a
+      # row above the buttons, under the label.
       def sizing_control
         height = button_size
         segment = height * 4.2
         label = height * 2.1
         left = records_button.right + margin
-        right = mute_button.x - margin
+        how = how_to_play_button
+        right = (how.y == mute_button.y ? how.x : mute_button.x) - margin
         return stacked_choice(height, segment, label) if right - left < label + (segment * 2)
 
         x = (center_x - segment).clamp(left + label, right - (segment * 2))
@@ -196,14 +219,17 @@ module DotPopper
 
       private
 
-      # The choice a row above the buttons, with room between for each to
-      # be reached a good way past its edge: up to a standard dot's width
+      # How far apart two rows of buttons are, each +height+ tall, so each
+      # is reached a good way past its edge: up to a standard dot's width
       # around it, as far as a short screen allows. (The Android playtest
       # found a tap on Standard's lower half opening "Your records".)
+      def row_apart(height) = [margin, [(2 * Rules::RADIUS) - height, safe.height * 0.05].min].max
+
+      # The choice a row above the buttons, and above "How to play" where
+      # that has a row of its own.
       def stacked_choice(height, segment, label)
         segment = [segment, (safe.width / 2.0) - margin].min
-        apart = [margin, [(2 * Rules::RADIUS) - height, safe.height * 0.05].min].max
-        y = mute_button.y - apart - height
+        y = [mute_button.y, how_to_play_button.y].min - row_apart(height) - height
         tall = height * 0.7
         Segmented.new(label: Rect.new(x: center_x - (label / 2.0), y: y - tall, width: label, height: tall),
                       options: segments(center_x - segment, y, segment, height))

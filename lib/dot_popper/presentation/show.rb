@@ -143,9 +143,10 @@ module DotPopper
       # A tap at +x+, +y+, by +by+ (a finger's id, :mouse, or :gamepad),
       # which #let_go names when it lets go. In a round, every tap goes to
       # the game at once. Elsewhere a tap presses the screen's button under
-      # it (#controls): on the title, Play, the mute button, "Your records",
-      # and the dot-size choice; on Game Over, Continue and "Share my
-      # score", and over it, the share preview's Copy and Close; and on the
+      # it (#controls): on the title, Play, the mute button, "How to play",
+      # "Your records", and the dot-size choice; on Game Over, Continue and
+      # "Share my score", and over it, the share preview's Copy and Close;
+      # and on the
       # Records screen, Back, Undo, or "Clear my records…", which a press
       # starts holding. Empty space does nothing, but a tap on one of the
       # title's fresh dots pops it, for fun, and a tap away from the share
@@ -161,6 +162,7 @@ module DotPopper
         in :back then leave
         in :credits then open_credits
         in :mute then sounds.toggle_mute
+        in :how_to_play then how_to_play
         in :records then open_records
         in DotSizing => sizing then choose_sizing(sizing)
         in :share then share
@@ -219,6 +221,13 @@ module DotPopper
         return open_tutorial if @tutorial_flag.due?(played: records_offered?)
 
         start_round
+      end
+
+      # The title's "How to play", H, or a gamepad's Y there: the Tutorial,
+      # at once, whether it was seen or not, handing over into a round as
+      # it does on a first Play.
+      def how_to_play
+        open_tutorial if title? && !records?
       end
 
       # The Tutorial's skip button, Escape, or a gamepad's B: the round
@@ -608,6 +617,7 @@ module DotPopper
       def title_controls
         plan = title_plan
         buttons = [Control.new(name: :mute, reach: layout.mute_button)]
+        buttons << button(:how_to_play, plan.how_to_play_button)
         buttons << button(:records, plan.records_button) if records_offered?
         buttons.concat(SIZINGS.zip(plan.sizing_control.options).map { button(*it) }) if sizing_offered?
         buttons << primary_button(:play, plan.play_button) if plan.play_button

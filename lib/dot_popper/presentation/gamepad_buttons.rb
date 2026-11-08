@@ -11,7 +11,8 @@ module DotPopper
     # [:start] start a round from the title, or continue after one, or
     #   leave the Records screen (Start)
     # [:share] copy the result on Game Over, or on the Records screen,
-    #   held, clear the records, and pressed again, undo that (Y)
+    #   held, clear the records, and pressed again, undo that; on the
+    #   title, where there is nothing to share, How to play (Y)
     # [:records] open the Records screen from the title (X), and on the
     #   Records screen, the Credits screen
     # [:leave] leave the Credits screen, or the Records screen (B)

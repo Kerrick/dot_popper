@@ -79,6 +79,34 @@ class LayoutTest < Minitest::Test
     assert_operator narrow.label.bottom, :<=, narrow.frame.y + 1e-9
   end
 
+  # "How to play" stands beside the mute button, between it and "Your
+  # records", where there is room for it, and otherwise, as on a small
+  # upright phone, on a row of its own above the mute button, with the
+  # dot-size choice above that. It is never smaller than a fingertip, and
+  # never wider than the safe area.
+  def test_how_to_play_sits_beside_the_mute_button_or_a_row_above_it
+    [[1200, 800], [400, 850], [375, 812], [320, 568], [400, 320], [812, 375], [2560, 1440]].each do |width, height|
+      plan = layout(width, height)
+      button = plan.how_to_play_button
+      name = "#{width}x#{height}"
+
+      assert_operator button.height, :>=, 44, name
+      assert_operator button.width, :>=, button.height * Layout::HOW_TO_PLAY_LEAST, name
+      assert_operator button.x, :>=, 0, name
+      assert_operator button.right, :<=, width, name
+      [plan.records_button, plan.mute_button, plan.sizing_control.label, plan.sizing_control.frame].each do
+        assert apart?(button, it), "#{name}: #{button.to_h} overlaps #{it.to_h}"
+      end
+    end
+    wide = layout(1200, 800)
+    assert_equal wide.mute_button.y, wide.how_to_play_button.y, "beside the mute button"
+    assert_operator wide.how_to_play_button.right, :<, wide.mute_button.x
+    assert_operator wide.sizing_control.frame.right, :<, wide.how_to_play_button.x, "the dot-size choice still fits"
+    small = layout(375, 812)
+    assert_operator small.how_to_play_button.bottom, :<, small.mute_button.y, "a row above it"
+    assert_operator small.sizing_control.frame.bottom, :<, small.how_to_play_button.y
+  end
+
   # Whether two rects do not overlap, to within a rounding error.
   def apart?(one, other, slack = 1e-9)
     one.right <= other.x + slack || other.right <= one.x + slack || one.bottom <= other.y + slack ||

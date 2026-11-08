@@ -32,6 +32,7 @@ module DotPopper
         copy: ByInput.new(touch: "Copy", mouse: "Copy", gamepad: "Copy (A)"),
         close: ByInput.new(touch: "Close", mouse: "Close", gamepad: "Close (B)"),
         records: "Your records",
+        how_to_play: ByInput.new(touch: "How to play", mouse: "How to play", gamepad: "How to play (Y)"),
         go_back: ByInput.new(touch: "Back", mouse: "Back", gamepad: "Back (B)"),
         no_rounds: "Play a round, and your records will appear here.",
         clear: ByInput.new(touch: "Clear my records…", mouse: "Clear my records…",

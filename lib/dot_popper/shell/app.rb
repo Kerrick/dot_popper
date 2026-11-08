@@ -206,12 +206,22 @@ module DotPopper
         case @buttons.intent(button)
         in :press then gamepad_down(:a)
         in :start then @show.start
-        in :share then @show.records? ? @show.clear_or_undo(:y) : @show.share
+        in :share then share_pressed
         in :records then @show.records? ? @show.open_credits : (@show.open_records if @show.records_offered?)
         in :leave then @show.back || leave_title
         in :mute then @speaker.toggle_mute
         in :sizing then @show.toggle_sizing
         in nil then nil
+        end
+      end
+
+      # Y: on the Records screen, "Clear my records…" held, or Undo; on the
+      # title, where there is nothing to share, "How to play"; and
+      # elsewhere, "Share my score".
+      def share_pressed
+        if @show.records? then @show.clear_or_undo(:y)
+        elsif @show.title? then @show.how_to_play
+        else @show.share
         end
       end
 
@@ -258,6 +268,7 @@ module DotPopper
         return skip_splash if @splash
 
         return @speaker.toggle_mute if key == :m
+        return @show.how_to_play if key == :h
         return @show.open_credits if key == :c && @show.records?
         return if @show.credits_key(key)
         # Enter or Space presses the screen's main button, on any device;

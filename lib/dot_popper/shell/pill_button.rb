@@ -6,12 +6,15 @@ module DotPopper
     # pixels: a quiet button, as "Your records" or the share preview's
     # Close. Its word shrinks, by whole sizes, to fit. +hover+, from 0 to
     # 1, is how lit the mouse over it has made it (Presentation::Hover):
-    # its backing and outline brighten.
+    # its backing and outline brighten. With an +icon+, which draws itself
+    # given the middle and the size of a square, the icon stands at the
+    # pill's left end and the word in the room to its right.
     class PillButton < Data.define(:pen)
       G = ::Lota::Graphics
       LABEL = 0.4 # the word's size, in the button's height
+      ICON = 1.1 # the room an icon takes, in the button's height
 
-      def draw(rect, text, alpha: 1.0, color: pen.palette.cream, hover: 0.0)
+      def draw(rect, text, alpha: 1.0, color: pen.palette.cream, hover: 0.0, icon: nil)
         return if alpha <= 0.0
 
         pixels = pen.pixels
@@ -25,8 +28,11 @@ module DotPopper
         G.line_width = pixels.line_width(1)
         inset = pixels.line_at(x) - x
         G.rectangle(:line, x + inset, y + inset, width - (2 * inset), height - (2 * inset), corner, corner, 48)
-        font = fit(text, width - (height * 0.6), height)
-        pen.text(text, font, x + (width / 2.0), y + (height / 2.0), color, alpha)
+        return word(text, x, y, width, height, color, alpha) unless icon
+
+        icon.call(x + (height * ICON / 2.0), y + (height / 2.0), height)
+        beside = height * ICON * 0.85
+        word(text, x + beside, y, width - beside, height, color, alpha)
       end
 
       # Only the words of a pill already drawn, on top of whatever has
@@ -39,6 +45,11 @@ module DotPopper
       end
 
       private
+
+      def word(text, x, y, width, height, color, alpha)
+        font = fit(text, width - (height * 0.6), height)
+        pen.text(text, font, x + (width / 2.0), y + (height / 2.0), color, alpha)
+      end
 
       def fit(text, room, height)
         size = (height * LABEL).round

@@ -70,13 +70,14 @@ Dot Popper does not update itself. Download the newest release and install it ov
 
 Press Play, and pop the bright dot, again and again, until the clock runs out.
 
-The first time you press Play, a short tutorial with no words shows you how, in about 20 seconds: a pop, the point and second it gives, what a click on a popped dot costs, and a bright dot to wait for. The clock waits meanwhile, but a click on a popped dot costs what it does in a round, and when the tutorial ends, your first round goes on from it, with its dots, its points and its time, and the clock starts. Skip it with the ⏭ button in the corner, Escape, or B on a controller. It never comes back, even after you clear your records.
+The first time you press Play, a short tutorial with no words shows you how, in about 20 seconds: a pop, the point and second it gives, what a click on a popped dot costs, and a bright dot to wait for. The clock waits meanwhile, but a click on a popped dot costs what it does in a round, and when the tutorial ends, your first round goes on from it, with its dots, its points and its time, and the clock starts. Skip it with the ⏭ button in the corner, Escape, or B on a controller. It never opens by itself again, even after you clear your records, but How to play, beside the speaker on the title, plays it whenever you like, and H or Y on a controller does too. Your round then goes on from it, as it does the first time.
 
 | To | With a mouse and keyboard | With a controller |
 | --- | --- | --- |
 | Pop a dot | Click it | Aim with the left stick or the d-pad, and press A or the right trigger |
 | Start a round, or continue after one | Click Play or Continue, or press Enter or Space | Start, or A on the button |
 | Open your records, from the title | Click Your records | X |
+| Watch how to play again, from the title | Click How to play, or press H | Y |
 | Leave the Records screen | Click Back, or press Escape | B, or Start |
 | Share your score, after a round | Click Share my score, then Copy. Escape closes it | Y, then Y or A to copy. B closes it |
 | Throw a dot, after a round | Drag it and let go | Hold A on a dot, move, and let go. The right stick rolls the whole pile |

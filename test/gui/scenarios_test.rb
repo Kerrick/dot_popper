@@ -101,6 +101,21 @@ class GuiScenariosTest < Minitest::Test
                                                DOT_POPPER_FAKE_GAMEPAD: "1")
   end
 
+  def test_how_to_play_on_the_title_by_mouse_and_by_h
+    play("how_to_play", "How to play is drawn", "How to play opens the tutorial at once", "Escape skips it",
+         "H opens it again from the title")
+  end
+
+  def test_how_to_play_by_touch_on_an_upright_phone_sized_window
+    play("how_to_play", "How to play is drawn", "How to play opens the tutorial at once", "H opens it again",
+         window: "400x850", DOT_POPPER_GUI_INPUT: "touch")
+  end
+
+  def test_how_to_play_by_a_gamepads_y
+    play("how_to_play", "How to play opens the tutorial at once", "a gamepad's B skips it",
+         DOT_POPPER_GUI_INPUT: "gamepad", DOT_POPPER_FAKE_GAMEPAD: "1")
+  end
+
   def test_a_round_without_shaders
     play("round", "screens come in order", DOT_POPPER_NO_SHADERS: "1")
   end
