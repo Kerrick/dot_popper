@@ -35,7 +35,7 @@ Dot Popper is free and open source. [Download it](#install) from the releases pa
 - **Sound from where it happens.** A pop on the left of the screen plays from your left speaker.
 
 <p>
-  <img src="doc/images/title.png" alt="The title screen: a bright dot beside +1 and +1 second, a popped dot beside −2 and −2 seconds, your best score, today's goal, and a Play button" width="49%">
+  <img src="doc/images/title.png" alt="The title screen: a bright dot beside +1 and +1 second, a popped dot beside −2 and −2 seconds, and a Play button" width="49%">
   <img src="doc/images/game_over.png" alt="Game Over: Time's up, a score of 24, and the popped dots piled at the bottom of the screen" width="49%">
 </p>
 
