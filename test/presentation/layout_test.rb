@@ -107,6 +107,37 @@ class LayoutTest < Minitest::Test
     assert_operator small.sizing_control.frame.bottom, :<, small.how_to_play_button.y
   end
 
+  # A desktop's "Full screen" and Quit: a row of their own above the
+  # bottom row's right end, Quit in the corner over the mute button, as
+  # tall as the other buttons, apart from them, and with the dot-size
+  # choice, where it has no room in the bottom row, a row above them; or
+  # their icons alone, a fingertip across, in the top right corner.
+  def test_full_screen_and_quit_take_a_row_above_the_corner_buttons_or_the_top_corner
+    [[1200, 800], [800, 500], [400, 320], [2560, 1440]].each do |width, height|
+      plan = layout(width, height)
+      buttons = plan.window_buttons
+      above = plan.sizing_control(above: buttons.rects)
+      name = "#{width}x#{height}"
+
+      assert buttons.labelled
+      assert_in_delta plan.mute_button.right, buttons.quit.right, 1e-9, name
+      assert_operator buttons.quit.bottom, :<, plan.mute_button.y, name
+      assert_operator buttons.fullscreen.x, :>=, plan.margin, name
+      [plan.how_to_play_button, plan.mute_button, plan.records_button, above.label, above.frame].each do |other|
+        buttons.rects.each { assert apart?(it, other), "#{name}: #{it.to_h} overlaps #{other.to_h}" }
+      end
+      next if above.frame.y == plan.mute_button.y
+
+      assert_operator above.frame.bottom, :<, buttons.quit.y, "#{name}: the stacked choice stands above them"
+    end
+    icons = layout(400, 320).window_icons
+    refute icons.labelled
+    assert_equal [44.0, 44.0], [icons.quit.width, icons.quit.height]
+    assert_in_delta layout(400, 320).mute_button.right, icons.quit.right, 1e-9
+    assert_in_delta layout(400, 320).top, icons.quit.y, 1e-9
+    assert apart?(icons.fullscreen, icons.quit)
+  end
+
   # Whether two rects do not overlap, to within a rounding error.
   def apart?(one, other, slack = 1e-9)
     one.right <= other.x + slack || other.right <= one.x + slack || one.bottom <= other.y + slack ||

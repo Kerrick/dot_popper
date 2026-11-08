@@ -6,12 +6,12 @@ module DotPopper
     # line's Rect by name (Stacked), the Play button's as :play, the font
     # size each is set in, today's goal broken into lines, the faint
     # backing behind them, the bottom row's buttons, which the words keep
-    # above, and where "Press B again to quit" goes while it shows
-    # (+quit_line+), with the name of the line it stands in for there, if
-    # any (+quit_over+). A line the screen had no room for, or that is
-    # not shown, has no Rect.
+    # above, the window buttons on a desktop (WindowButtons, or nil), and
+    # where "Press B again to quit" goes while it shows (+quit_line+), with
+    # the name of the line it stands in for there, if any (+quit_over+). A
+    # line the screen had no room for, or that is not shown, has no Rect.
     class TitlePlan < Data.define(:placed, :sizes, :goal_lines, :backing, :records_button, :sizing_control,
-                                  :mute_button, :how_to_play_button, :quit_line, :quit_over)
+                                  :mute_button, :how_to_play_button, :window_buttons, :quit_line, :quit_over)
       def [](name) = placed[name]
       def size(name) = sizes.fetch(name)
       def play_button = placed[:play]
@@ -62,56 +62,93 @@ module DotPopper
     # then the streak goes, then the goal, then the best, and last the
     # name shrinks on.
     # The legend and Play always stay, since they are how to play.
+    # On a desktop (+window+), "Full screen" and Quit take a row of their
+    # own above the bottom row's right end (#window_buttons).
     # Sizes are measured with +measure+ (RoughMeasure's methods).
     class TitleScreen < Data.define(:layout, :type, :words, :measure, :best, :goal, :done, :streak, :records,
-                                    :sizing, :radius)
+                                    :sizing, :radius, :window)
       # The gaps above each line, in graphics units at full size.
       GAPS = { legend: 34, best: 24, best_room: 24, goal: 18, streak: 10, play: 28 }.freeze
       # How far the name shrinks on, once everything else has made room.
       NAME_SHRINKS = [1.0, 0.82, 0.66, 0.5, 0.4].freeze
 
       def initialize(layout:, type:, words:, measure:, best: 0, goal: nil, done: false, streak: 0, records: false,
-                     sizing: false, radius: Rules::RADIUS)
+                     sizing: false, radius: Rules::RADIUS, window: false)
         super
       end
 
       def plan
-        column = Column.new(room:)
-        placed = sizes = nil
-        play_heights.each do |play|
-          NAME_SHRINKS.each do |shrink|
-            placed = column.fit(layout.type_scales) { blocks(sizes(it, shrink), it, play) }
-            sizes = sizes(placed.scale, shrink)
-            break if placed.fits?
-          end
-          break if placed.fits?
-        end
+        buttons = window_buttons
+        placed, sizes = stack(buttons)
         TitlePlan.new(placed:, sizes:, goal_lines: goal_lines(sizes[:goal]), backing: backing(placed, sizes),
-                      records_button: layout.records_button, sizing_control: layout.sizing_control,
+                      records_button: layout.records_button, sizing_control: sizing_control(buttons),
                       mute_button: layout.mute_button, how_to_play_button: layout.how_to_play_button,
-                      **quit_line(placed, sizes))
+                      window_buttons: buttons, **quit_line(placed, sizes, buttons))
       end
 
       # The middle of the screen, from the safe area's top margin down to
       # a margin above the bottom row.
-      def room
+      def room(buttons = window_buttons)
         margin = layout.margin
         top = layout.top
         Rect.new(x: layout.safe.x + margin, y: top, width: layout.safe.width - (2 * margin),
-                 height: bottom_row.map(&:y).min - margin - top)
+                 height: bottom_row(buttons).map(&:y).min - margin - top)
       end
 
-      # The bottom row's parts that show: the dot-size choice's label and
-      # segments too, which take a row above the buttons where they do not
-      # fit between them, as "How to play" does.
-      def bottom_row
-        parts = [layout.mute_button, layout.how_to_play_button]
+      # The bottom row's parts that show: the window buttons' row above
+      # its right end, and the dot-size choice's label and segments too,
+      # which take a row above the buttons where they do not fit between
+      # them, as "How to play" does.
+      def bottom_row(buttons = window_buttons)
+        parts = [layout.mute_button, layout.how_to_play_button, *row_of(buttons)]
         parts << layout.records_button if records
-        parts.push(layout.sizing_control.label, layout.sizing_control.frame) if sizing
+        parts.push(sizing_control(buttons).label, sizing_control(buttons).frame) if sizing
         parts
       end
 
+      # Where "Full screen" and Quit go on a desktop's title (Layout's
+      # WindowButtons), or nil where the title has none. They are in their
+      # row, labelled, wherever the name, the legend and Play fit above it
+      # with the dot-size choice shown too, so that they stay put once it
+      # shows; only on a window too short for that, as the smallest, are
+      # they their icons alone, in the top right corner beside the name,
+      # which keeps clear of them.
+      def window_buttons
+        return unless window
+
+        row = layout.window_buttons
+        fits = with(sizing: true, best: 0, goal: nil, streak: 0).stack(row).first.fits?
+        fits ? row : layout.window_icons
+      end
+
+      protected
+
+      # The words stacked in the room above the bottom row, as the window
+      # buttons +buttons+ leave it: where they went, and the type's sizes.
+      def stack(buttons)
+        column = Column.new(room: room(buttons))
+        placed = sizes = nil
+        play_heights.each do |play|
+          NAME_SHRINKS.each do |shrink|
+            placed = column.fit(layout.type_scales) { blocks(sizes(it, shrink, buttons), it, play) }
+            sizes = sizes(placed.scale, shrink, buttons)
+            break if placed.fits?
+          end
+          break if placed.fits?
+        end
+        [placed, sizes]
+      end
+
       private
+
+      # The window buttons standing in the bottom row's rows, where they
+      # are labelled; none where they are icons in the corner.
+      def row_of(buttons) = buttons&.labelled ? buttons.rects : []
+
+      def sizing_control(buttons) = layout.sizing_control(above: row_of(buttons))
+
+      # Whether the window buttons are their icons in the top right corner.
+      def cornered?(buttons) = buttons && !buttons.labelled
 
       # How tall Play may be, from the first choice down: a dot across, or,
       # on a window too small for that, as tall as a button.
@@ -163,8 +200,8 @@ module DotPopper
 
       def gap(name, scale) = GAPS.fetch(name) * layout.ui * scale
 
-      def sizes(scale, shrink)
-        { title: title_size((layout.type_size(type.title, scale) * shrink).round),
+      def sizes(scale, shrink, buttons)
+        { title: title_size((layout.type_size(type.title, scale) * shrink).round, buttons),
           legend: legend_size(layout.type_size(type.legend, scale)),
           best: layout.type_size(type.best, scale), goal: layout.type_size(type.summary * 1.1, scale) }
       end
@@ -182,10 +219,14 @@ module DotPopper
       # How wide a line of the middle may be.
       def across = layout.safe.width - (layout.margin * 4)
 
-      # The name's +size+, shrunk if it would not fit across.
-      def title_size(size)
+      # The name's +size+, shrunk if it would not fit across, or, with the
+      # window buttons' icons in the corner beside it, between them and as
+      # far from the other side, a margin clear of them.
+      def title_size(size, buttons)
+        room = across
+        room = [room, 2 * (buttons.fullscreen.x - layout.margin - layout.center_x)].min if cornered?(buttons)
         width = measure.width(:bold, size, words.title)
-        width > across ? (size * across / width).floor : size
+        width > room ? (size * room / width).floor : size
       end
 
       # How wide the legend is (Legend), its numbers set in bold +size+.
@@ -203,8 +244,9 @@ module DotPopper
       # a gap above the name. It shows only for a moment, so it takes no
       # room from the others; where neither has room for it, it stands in
       # for a line that is already there: today's goal, the best, or, on
-      # the smallest windows, the legend.
-      def quit_line(placed, sizes)
+      # the smallest windows, the legend. Above the name is the window
+      # buttons' corner, where they are icons there.
+      def quit_line(placed, sizes, buttons)
         size = sizes[:goal]
         height = measure.height(:semibold, size)
         width = measure.width(:semibold, size, words.quit_again)
@@ -212,8 +254,8 @@ module DotPopper
         line = ->(y) { Rect.new(x: layout.center_x - (width / 2.0), y:, width:, height:) }
         below = placed[:play].bottom + gap
         above = placed[:title].y - gap - height
-        return { quit_line: line[below], quit_over: nil } if below + height + gap <= bottom_row.map(&:y).min
-        return { quit_line: line[above], quit_over: nil } if above >= layout.safe.y
+        return { quit_line: line[below], quit_over: nil } if below + height + gap <= bottom_row(buttons).map(&:y).min
+        return { quit_line: line[above], quit_over: nil } if above >= layout.safe.y && !cornered?(buttons)
 
         over = %i[goal best legend].find { placed.key?(it) }
         { quit_line: line[placed[over].center_y - (height / 2.0)], quit_over: over }

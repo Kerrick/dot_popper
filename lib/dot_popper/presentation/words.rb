@@ -18,7 +18,8 @@ module DotPopper
     class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time,
                               :share, :share_heading, :copied, :copy, :close, :records, :how_to_play, :go_back,
                               :no_rounds, :clear, :keep_holding, :hold_to_clear, :cleared, :undo, :labels, :goals, :goal_done, :goal_met,
-                              :screen_size, :credits, :credits_title, :notice, :quit_again, :input)
+                              :screen_size, :credits, :credits_title, :notice, :quit_again, :full_screen, :windowed, :quit,
+                              :input)
       MINUS = "−" # a true minus sign, as wide as the plus
       # How near a round must come to the best for Game Over to say by how
       # much; further off, the gap is only a number to dwell on.
@@ -58,6 +59,10 @@ module DotPopper
       def how_to_play = super.for(input)
       def copy = super.for(input)
       def close = super.for(input)
+
+      # What the title's fullscreen button says it does: "Full screen" in
+      # a window, and back in fullscreen, "Window".
+      def fullscreen_button(fullscreen) = fullscreen ? windowed : full_screen
 
       # What the Records screen says while "Clear my records…" is held:
       # on a gamepad, naming +button+, the one held ("A" or "Y").

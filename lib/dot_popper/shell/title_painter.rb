@@ -4,7 +4,7 @@ module DotPopper
   module Shell
     # The title screen: the name, a legend that teaches the rule with one
     # dot of each kind, the best score, the Play button, "How to play",
-    # the mute button, and, once a round has been played, today's goal,
+    # the mute button, on a desktop "Full screen" and Quit, and, once a round has been played, today's goal,
     # "Your records", and, where it changes something, the choice of how
     # dots are sized, each where the Show's TitlePlan puts it. From the name to the prompt, the
     # words sit on a faint backing, so the dots drifting behind them dim
@@ -36,6 +36,7 @@ module DotPopper
         PillButton.new(pen:).draw(plan.how_to_play_button, words.how_to_play, alpha: intro,
                                   hover: hover.level(:how_to_play),
                                   icon: ->(x, y, size) { help(x, y, size, intro) })
+        WindowButtonsPainter.new(pen:).draw(plan.window_buttons, show, intro) if plan.window_buttons
         return unless show.records_offered?
 
         PillButton.new(pen:).draw(plan.records_button, words.records, alpha: intro, hover: hover.level(:records))

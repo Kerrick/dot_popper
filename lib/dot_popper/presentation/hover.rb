@@ -4,8 +4,9 @@ module DotPopper
   module Presentation
     # One of a screen's buttons, where it is drawn (+frame+) and where a
     # press reaches it (+reach+, at least the frame): the title's :play,
-    # :mute and :records, a segment of its dot-size choice (named by the
-    # DotSizing it chooses), Game Over's :continue and :share, the share
+    # :mute, :how_to_play and :records, and on a desktop :fullscreen and
+    # :quit, a segment of its dot-size choice (named by the DotSizing it
+    # chooses), Game Over's :continue and :share, the share
     # preview's :copy and :close, and the Records screen's :back, :clear
     # and :undo. The Show answers taps and
     # the mouse's hover from the same ones (Show#controls), so a button

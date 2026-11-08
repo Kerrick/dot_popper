@@ -46,6 +46,13 @@ module DotPopper
       end
     end
 
+    # The title's window buttons on a desktop, where each is drawn:
+    # "Full screen" (or "Window") and Quit, each with its word beside its
+    # icon where +labelled+, and otherwise only its icon.
+    class WindowButtons < Data.define(:fullscreen, :quit, :labelled)
+      def rects = [fullscreen, quit]
+    end
+
     # The window's first size on a desktop: a reference play area measured
     # in radii, so the field is about as crowded as on a tablet, shrunk to
     # fit +most+ of the desktop if the desktop is smaller.
@@ -71,6 +78,8 @@ module DotPopper
     class Layout < Data.define(:width, :height, :safe, :look)
       HOW_TO_PLAY = 3.8 # "How to play"'s width, in its heights, with room
       HOW_TO_PLAY_LEAST = 3.1 # ...and the least it is drawn at in the bottom row
+      FULL_SCREEN = 3.8 # "Full screen"'s width, in its heights, as wide as "How to play"
+      QUIT = 2.4 # "Quit"'s width, in its heights
 
       # The scale for text and the HUD: 1 on a mid-sized window, smaller on
       # a phone, a little larger on a big screen.
@@ -192,21 +201,45 @@ module DotPopper
         Rect.new(x: safe.right - margin - width, y: safe.bottom - margin - height, width:, height:)
       end
 
+      # The title's window buttons on a desktop, "Full screen" (or
+      # "Window") and Quit, each with its icon: a row of their own above
+      # the corner buttons, at its right end, Quit over the mute button,
+      # in the corner where the window's own buttons are, as tall as the
+      # others. As wide as they are, they fit the narrowest window.
+      def window_buttons
+        height = button_size
+        y = [mute_button.y, how_to_play_button.y].min - row_apart(height) - height
+        quit = Rect.new(x: safe.right - margin - (height * QUIT), y:, width: height * QUIT, height:)
+        WindowButtons.new(fullscreen: Rect.new(x: quit.x - margin - (height * FULL_SCREEN), y:, width: height * FULL_SCREEN,
+                                               height:),
+                          quit:, labelled: true)
+      end
+
+      # The same two as only their icons, round, as the mute button is, in
+      # the safe area's top right corner: where a window too short for
+      # their row has no room left for it (TitleScreen).
+      def window_icons
+        size = button_size
+        quit = Rect.new(x: safe.right - margin - size, y: top, width: size, height: size)
+        WindowButtons.new(fullscreen: quit.with(x: quit.x - margin - size), quit:, labelled: false)
+      end
+
       # The title's choice of dot size: its label, then its two segments,
       # each as tall as a button and wide enough for a dot icon and a few
       # words. The title shows it only where it changes something. With
       # room between "Your records" and "How to play", it sits there,
       # label on the left, its segments centred on the screen if they can
       # be. Otherwise, as on an upright phone, its segments are centred a
-      # row above the buttons, under the label.
-      def sizing_control
+      # row above the buttons, under the label, and above the rows in
+      # +above+ too, as the window buttons' row.
+      def sizing_control(above: [])
         height = button_size
         segment = height * 4.2
         label = height * 2.1
         left = records_button.right + margin
         how = how_to_play_button
         right = (how.y == mute_button.y ? how.x : mute_button.x) - margin
-        return stacked_choice(height, segment, label) if right - left < label + (segment * 2)
+        return stacked_choice(height, segment, label, above) if right - left < label + (segment * 2)
 
         x = (center_x - segment).clamp(left + label, right - (segment * 2))
         y = mute_button.y
@@ -226,10 +259,10 @@ module DotPopper
       def row_apart(height) = [margin, [(2 * Rules::RADIUS) - height, safe.height * 0.05].min].max
 
       # The choice a row above the buttons, and above "How to play" where
-      # that has a row of its own.
-      def stacked_choice(height, segment, label)
+      # that has a row of its own, and above the rows in +above+.
+      def stacked_choice(height, segment, label, above)
         segment = [segment, (safe.width / 2.0) - margin].min
-        y = [mute_button.y, how_to_play_button.y].min - row_apart(height) - height
+        y = [mute_button.y, how_to_play_button.y, *above.map(&:y)].min - row_apart(height) - height
         tall = height * 0.7
         Segmented.new(label: Rect.new(x: center_x - (label / 2.0), y: y - tall, width: label, height: tall),
                       options: segments(center_x - segment, y, segment, height))

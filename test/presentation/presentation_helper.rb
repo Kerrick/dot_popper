@@ -25,6 +25,19 @@ module PresentationTest
     def names = played.map(&:first)
   end
 
+  # A desktop's window that only remembers what it was asked: whether it
+  # is fullscreen, and how many times it was asked to quit.
+  class FakeWindow
+    attr_reader :quits
+
+    def initialize = (@fullscreen = false) || (@quits = 0)
+
+    def offered? = true
+    def fullscreen? = @fullscreen
+    def toggle_fullscreen = @fullscreen = !@fullscreen
+    def quit = @quits += 1
+  end
+
   # Haptics that only remember how long each buzz was.
   class FakeHaptics
     attr_reader :buzzes

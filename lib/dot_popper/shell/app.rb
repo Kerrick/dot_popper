@@ -34,6 +34,11 @@ module DotPopper
         @ios = os == "iOS"
         puts "Dot Popper: a dot's radius is #{@dot_size.reason}"
         @touch ? fill_screen : open_window
+        # A desktop's title offers "Full screen" and Quit; a phone's or
+        # tablet's game already fills its screen, and leaves by the system.
+        @window = if @touch then Presentation::NoWindowControl.new
+                  else DesktopWindow.new(exclusive: @env["DOT_POPPER_FULLSCREEN"] == "exclusive")
+                  end
         report_renderer
         report_screen
         random = seed ? Random.new(seed) : Random.new
@@ -58,6 +63,7 @@ module DotPopper
                                        haptics: Haptics.for(os), clipboard: Clipboard.new, notices:,
                                        sharing: Presentation::SheetSharing.for(os, opener: UrlOpener.new),
                                        lifetime:, keeper:, sizing_store:, input: starting_input, measure: FontMeasure.new(@pen.fonts),
+                                       window: @window,
                                        tutorial_flag: Presentation::TutorialFlag.new(
                                          SaveFile.new(name: "tutorial.txt"), mode: Presentation::TutorialFlag.mode(@env)
                                        ))
@@ -489,13 +495,10 @@ module DotPopper
       # Whether Alt or Cmd is held, which makes Enter switch fullscreen.
       def fullscreen_chord? = ::Lota::Keyboard.down?(:lalt, :ralt, :lgui, :rgui)
 
-      # Fullscreen is borderless (:desktop), unless DOT_POPPER_FULLSCREEN
-      # asks for :exclusive, to compare how each works with a system
-      # overlay and a TV's game mode.
+      # F11 or Alt+Enter, as the title's "Full screen" (DesktopWindow).
       def toggle_fullscreen
-        fullscreen, = ::Lota::Window.fullscreen
         happened("a fullscreen switch")
-        ::Lota::Window.set_fullscreen(!fullscreen, @env["DOT_POPPER_FULLSCREEN"] == "exclusive" ? :exclusive : :desktop)
+        @window.toggle_fullscreen
       end
 
       # The window as a field of dots at the usual size; the game sizes a

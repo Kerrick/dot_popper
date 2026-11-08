@@ -8,7 +8,8 @@ module DotPopper
     # 1, is how lit the mouse over it has made it (Presentation::Hover):
     # its backing and outline brighten. With an +icon+, which draws itself
     # given the middle and the size of a square, the icon stands at the
-    # pill's left end and the word in the room to its right.
+    # pill's left end and the word in the room to its right; with an icon
+    # and no word, the icon stands alone in its middle.
     class PillButton < Data.define(:pen)
       G = ::Lota::Graphics
       LABEL = 0.4 # the word's size, in the button's height
@@ -29,6 +30,7 @@ module DotPopper
         inset = pixels.line_at(x) - x
         G.rectangle(:line, x + inset, y + inset, width - (2 * inset), height - (2 * inset), corner, corner, 48)
         return word(text, x, y, width, height, color, alpha) unless icon
+        return icon.call(x + (width / 2.0), y + (height / 2.0), height) unless text
 
         icon.call(x + (height * ICON / 2.0), y + (height / 2.0), height)
         beside = height * ICON * 0.85

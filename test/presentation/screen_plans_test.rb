@@ -44,6 +44,74 @@ class ScreenPlansTest < Minitest::Test
     end
   end
 
+  # A desktop's window may be any size from SMALLEST_WINDOW up, so these
+  # step across the whole range, and past it to big screens.
+  DESKTOP_WIDTHS = [400, 480, 640, 800, 1000, 1200, 1920, 3840].freeze
+  DESKTOP_HEIGHTS = [320, 340, 360, 400, 500, 640, 800, 1080, 2160].freeze
+
+  # On a desktop, "Full screen" and Quit join the title at every window
+  # size: labelled in a row of their own above the bottom row's right
+  # end, or, only where the smallest windows leave no room for that
+  # row, their icons in the top right corner. Wherever they are, the
+  # title's lines still fit, apart from them and from every other button,
+  # and they stay put whatever the title shows, the dot-size choice
+  # included, so they never move as a round is played.
+  def test_on_a_desktop_full_screen_and_quit_fit_the_title_at_every_window_size
+    DESKTOP_WIDTHS.product(DESKTOP_HEIGHTS) do |width, height|
+      screen_layout = layout(width, height)
+      radius = DotPopper::DotSize.fitted(width, height).radius
+      places = [[0, nil, false], [75, :open, false], [75, :done, true], [0, :open, true]].map do |best, goal, sizing|
+        screen = TitleScreen.new(layout: screen_layout, type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
+                                 best:, goal: { open: GOAL, done: WORDS.goal_done_line(DotPopper::DailyGoal.for(Date.new(2026, 11, 1))) }[goal],
+                                 done: goal == :done, streak: 5, records: !goal.nil?, sizing:, radius:, window: true)
+        plan = screen.plan
+        buttons = plan.window_buttons
+        name = "#{width}x#{height} best #{best}, goal #{goal.inspect}, sizing #{sizing}"
+
+        assert plan.placed.fits?, name
+        %i[title legend play].each { assert plan[it], "#{name}: #{it} always shows" }
+        buttons.rects.each do |button|
+          assert_operator button.height, :>=, 44.0, name
+          assert_within button, screen_layout.safe, name
+        end
+        assert_operator buttons.fullscreen.right, :<, buttons.quit.x, "#{name}: Quit is to the right"
+        bottom_row = screen.bottom_row(buttons)
+        assert_apart plan.placed.rects.values + (bottom_row | buttons.rects), name
+        others = plan.placed.rects.except(plan.quit_over).values + bottom_row + buttons.rects
+        others.each { assert_apart [plan.quit_line, it], "#{name}: quit" }
+        buttons
+      end
+      assert_equal 1, places.uniq.size, "#{width}x#{height}: they stay put"
+    end
+  end
+
+  def test_the_window_buttons_are_labelled_wherever_a_row_fits_and_icons_only_on_the_smallest_window
+    labelled = ->(width, height) do
+      TitleScreen.new(layout: layout(width, height), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
+                      window: true, radius: DotPopper::DotSize.fitted(width, height).radius).plan.window_buttons.labelled
+    end
+
+    [[1200, 800], [800, 500], [640, 400], [400, 850], [1920, 1080]].each { assert labelled[*it], it.join("x") }
+    refute labelled[400, 320], "400x320 has no room for their row"
+    wide = TitleScreen.new(layout: layout(1200, 800), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
+                           window: true).plan
+    assert_operator wide.window_buttons.quit.bottom, :<, wide.mute_button.y, "a row above the mute button"
+    assert_in_delta wide.mute_button.right, wide.window_buttons.quit.right, 1e-9, "at its right end"
+  end
+
+  # Phones and tablets show no window buttons, and their titles are laid
+  # out as before.
+  def test_without_a_window_to_switch_the_title_has_no_window_buttons
+    SIZES.each do |width, height|
+      screen = TitleScreen.new(layout: layout(width, height), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
+                               records: true, sizing: true)
+      plan = screen.plan
+
+      assert_nil plan.window_buttons
+      assert_equal layout(width, height).sizing_control, plan.sizing_control, "#{width}x#{height}"
+    end
+  end
+
   # On the maintainer's Android phone in portrait, "Done today:" and its
   # goal ran off both sides: a met goal was never broken into lines.
   def assert_goal_fits(plan, done, screen_layout, name)
@@ -178,11 +246,14 @@ class ScreenPlansTest < Minitest::Test
   # The Android playtest: on an upright phone, a tap on the lower half of
   # the dot size's Standard also reached "Your records" below it. Now no
   # point is in two buttons' reaches on any screen, and a tap at the
-  # middle of each button as drawn reaches that button.
+  # middle of each button as drawn reaches that button. On a desktop's
+  # window, of any size it can be, the same holds with "Full screen" and
+  # Quit on the title.
   def test_on_every_screen_a_press_reaches_one_button_and_the_middle_of_each_reaches_it
-    SIZES.each do |width, height|
-      each_screen(width, height) do |where, show|
-        name = "#{width}x#{height} #{where}"
+    desktop = DESKTOP_WIDTHS.product(DESKTOP_HEIGHTS).map { [*it, FakeWindow.new] }
+    (SIZES.map { [*it, NoWindowControl.new] } + desktop).each do |width, height, window|
+      each_screen(width, height, window:) do |where, show|
+        name = "#{width}x#{height} #{where}#{" on a desktop" if window.offered?}"
         controls = show.controls
 
         refute_empty controls, name
@@ -246,13 +317,14 @@ class ScreenPlansTest < Minitest::Test
     show
   end
 
-  # A Show on each screen in turn, with every button it can offer: the
+  # A Show on each screen in turn, with every button it can offer, and
+  # with +window+'s on the title: the
   # first title, Game Over, the title after a round with the dot-size
   # choice where it shows, the Records screen, and Undo there once the
   # records are cleared.
-  def each_screen(width, height)
+  def each_screen(width, height, window: NoWindowControl.new)
     game = DotPopper::Game.new(field(width, height), random: Random.new(2))
-    show = Show.new(game:, layout: layout(width, height), sounds: FakeSounds.new, radius: R)
+    show = Show.new(game:, layout: layout(width, height), sounds: FakeSounds.new, radius: R, window:)
     yield "the first title", show
     show.primary
     game.update(30)

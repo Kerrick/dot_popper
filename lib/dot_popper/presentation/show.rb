@@ -20,22 +20,25 @@ module DotPopper
     # methods). +sharing+ (InGameSharing's methods) offers Game
     # Over's result to share, in a preview or a phone's own sheet, and
     # +clipboard+ takes it when the player copies it. +tutorial_flag+
-    # (TutorialFlag) says whether Play opens the Tutorial first.
+    # (TutorialFlag) says whether Play opens the Tutorial first. +window+
+    # (NoWindowControl's methods) is the desktop's window, which the
+    # title's "Full screen" and Quit switch and close where it offers them.
     class Show
       # The dot-size choices in the order the title draws their segments:
       # the default, dots sized to the screen, first.
       SIZINGS = [DotSizing::SIZED_TO_SCREEN, DotSizing::STANDARD].freeze
 
       attr_reader :game, :effects, :animations, :hud, :attract, :layout, :marquee, :finale, :sounds, :now, :look,
-                  :lifetime, :input, :words, :clearing, :tutorial, :lead_in
+                  :lifetime, :input, :words, :clearing, :tutorial, :lead_in, :window
 
       def initialize(game:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false,
                      tutor: Tutor.new(BestScore::Memory.new, times: look::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
                      lifetime: Lifetime.new(BestScore::Memory.new), sizing_store: BestScore::Memory.new,
                      input: InputKind::MOUSE, measure: RoughMeasure.new,
                      keeper: RecordKeeper.new(best: game.best, lifetime:), notices: Notices.none,
-                     sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never)
+                     sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never, window: NoWindowControl.new)
         @game = game
+        @window = window
         @tutorial_flag = tutorial_flag
         @tutorial = nil
         @handing_over = nil
@@ -145,7 +148,8 @@ module DotPopper
       # which #let_go names when it lets go. In a round, every tap goes to
       # the game at once. Elsewhere a tap presses the screen's button under
       # it (#controls): on the title, Play, the mute button, "How to play",
-      # "Your records", and the dot-size choice; on Game Over, Continue and
+      # "Your records", the dot-size choice, and on a desktop "Full screen"
+      # and Quit; on Game Over, Continue and
       # "Share my score", and over it, the share preview's Copy and Close;
       # and on the
       # Records screen, Back, Undo, or "Clear my records…", which a press
@@ -164,6 +168,8 @@ module DotPopper
         in :credits then open_credits
         in :mute then sounds.toggle_mute
         in :how_to_play then how_to_play
+        in :fullscreen then window.toggle_fullscreen
+        in :quit then window.quit
         in :records then open_records
         in DotSizing => sizing then choose_sizing(sizing)
         in :share then share
@@ -521,7 +527,8 @@ module DotPopper
         goal = lifetime.goal_done? ? words.goal_done_line(lifetime.goal) : words.goal(lifetime.goal) if played?
         planned(TitleScreen.new(layout:, type: look::TYPE, words:, measure: @measure, best: marquee.best, goal:,
                                 done: lifetime.goal_done?, streak: lifetime.streak, records: records_offered?,
-                                sizing: sizing_offered?, radius: DotSize.fitted(layout.width, layout.height).radius))
+                                sizing: sizing_offered?, radius: DotSize.fitted(layout.width, layout.height).radius,
+                                window: window.offered?))
       end
 
       # Where Game Over's words and "Share my score" go (FinalePlan), or
@@ -631,6 +638,9 @@ module DotPopper
         buttons = [Control.new(name: :mute, reach: layout.mute_button)]
         buttons << button(:how_to_play, plan.how_to_play_button)
         buttons << button(:records, plan.records_button) if records_offered?
+        if (window_buttons = plan.window_buttons)
+          buttons << button(:fullscreen, window_buttons.fullscreen) << button(:quit, window_buttons.quit)
+        end
         buttons.concat(SIZINGS.zip(plan.sizing_control.options).map { button(*it) }) if sizing_offered?
         buttons << primary_button(:play, plan.play_button) if plan.play_button
         buttons
