@@ -32,6 +32,16 @@ module DotPopper
                                width: pixels.snap(cell * 2), height: pixels.snap(height))
       end
 
+      # Where the middles of the score's and the time's numbers are drawn,
+      # as [x, y] by name, for the Tutorial to point at.
+      def spots(hud, layout)
+        number, label = fonts(layout)
+        cell = cell([hud.score_readout, hud.time_readout], number, label)
+        rect = bounds(hud, layout)
+        y = number_middle(rect.y + (padding(number) * 0.55), number, label)
+        { score: [rect.x + (cell * 0.5), y], time: [rect.x + (cell * 1.5), y] }
+      end
+
       # Makes every size a bump or an urgent pulse passes through, an
       # elastic one's undershoot included, before the first number changes.
       def prepare(layout)
@@ -49,6 +59,10 @@ module DotPopper
       end
 
       def padding(number) = Presentation::Hud.padding(number.height)
+
+      # The middle of a readout's number, under its label, from the top of
+      # the readout.
+      def number_middle(top, number, label) = top + label.height + (number.height * 0.42)
 
       # Each readout's half of the pill: room for its widest text.
       def cell(readouts, number, label)
@@ -80,7 +94,7 @@ module DotPopper
       def readout(readout, x, top, number, label, layout)
         palette = pen.palette
         pen.outlined(readout.label, label, x, top + (label.height / 2.0), palette.soft)
-        center = top + label.height + (number.height * 0.42)
+        center = number_middle(top, number, label)
         size = Presentation::Pixels.font_size(layout.scaled(pen.look::TYPE.hud_number) * readout.scale, step: BUMP_STEP)
         color = palette.cream.mix(palette.urgent, readout.urgency)
         pen.outlined(readout.text, pen.fonts.bold(size), x, center, color)

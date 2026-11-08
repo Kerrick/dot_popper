@@ -57,7 +57,10 @@ module DotPopper
                                        haptics: Haptics.for(os), clipboard: Clipboard.new, notices:,
                                        sharing: Presentation::SheetSharing.for(os, opener: UrlOpener.new),
                                        lifetime:, keeper:, sizing_store:, input: starting_input, measure: FontMeasure.new(@pen.fonts),
-                                       hint: -> { @tilting&.hint&.for(@show.input) })
+                                       hint: -> { @tilting&.hint&.for(@show.input) },
+                                       tutorial_flag: Presentation::TutorialFlag.new(
+                                         SaveFile.new(name: "tutorial.txt"), mode: Presentation::TutorialFlag.mode(@env)
+                                       ))
         @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
                                         archive: ->(name) { SaveFile.new(name:) }))
         puts "Dot Popper: each round is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"
@@ -581,6 +584,7 @@ module DotPopper
 
       def screen_name
         if @show.records? then "Your records"
+        elsif @show.tutorial? then "the tutorial"
         elsif @show.playing? then "a round"
         elsif @show.finished? then "Game Over"
         else "the title"

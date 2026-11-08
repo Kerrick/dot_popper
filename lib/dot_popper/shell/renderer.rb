@@ -7,7 +7,9 @@ module DotPopper
     # into the Pile after time's up) over the Bloom's glow, the effects
     # over them, the screen's words and HUD on top, the share preview over
     # those when it is open, and over everything, the gamepad's cursor
-    # when it shows. Only the HUD shakes.
+    # when it shows. Only the HUD shakes. The Tutorial is drawn as a round
+    # is, from its own dots and HUD, with its spotlight, hand and skip
+    # button over them.
     class Renderer
       G = ::Lota::Graphics
 
@@ -32,6 +34,7 @@ module DotPopper
         @tilt_hint = TiltHintPainter.new(pen:)
         @cursor = CursorPainter.new(pen:)
         @splash = SplashPainter.new(pen:)
+        @tutorial = TutorialPainter.new(pen:)
         @at_rest = Presentation::DotAnimations.new(pen.look::MOTION)
       end
 
@@ -40,7 +43,9 @@ module DotPopper
         width, height = cover
         layout = @show.layout
         backdrop(width, height)
-        if @show.title?
+        if @show.tutorial?
+          tutorial(width, height, layout)
+        elsif @show.title?
           @dots.draw(@show.attract.dots, @at_rest, @show.now, radius)
           if @show.records?
             veil(width, height, @pen.look::RECORDS.veil)
@@ -57,7 +62,14 @@ module DotPopper
           @effects.scene(@show.effects, dots)
           @effects.words(@show.effects, layout)
           finale(layout) unless @show.playing?
+          lead_in = @show.lead_in
+          if lead_in
+            pill = @hud.bounds(@show.hud, layout)
+            @tutorial.lead_in_under(lead_in, @show.now, pill, @hud.spots(@show.hud, layout),
+                                     @show.game.round.field.radius)
+          end
           hud(layout)
+          @tutorial.lead_in_over(lead_in, @show.now, pill) if lead_in
           @share.draw(@show, layout, width, height)
         end
         splash ? @splash.draw(splash) : @cursor.draw(cursor)
@@ -66,6 +78,21 @@ module DotPopper
       private
 
       def radius = @show.game.field.radius
+
+      # The Tutorial: its dots and the effects of its taps, its HUD, never
+      # shaken, and its spotlight, hand and skip button over them all.
+      def tutorial(width, height, layout)
+        scene = @show.tutorial
+        @effects.flash(@show.effects, width, height)
+        @dots.draw(scene.dots, scene.animations, scene.now, scene.radius, opacity: scene.opacity)
+        @effects.scene(@show.effects, scene.dots)
+        @effects.words(@show.effects, layout)
+        pill = @hud.bounds(scene.hud, layout)
+        spots = @hud.spots(scene.hud, layout)
+        @tutorial.under_hud(scene, pill, spots)
+        @hud.draw(scene.hud, layout)
+        @tutorial.over_hud(@show, scene, layout, pill, spots)
+      end
 
       # How far the night and the veils must reach to cover every pixel:
       # a unit past Lota's dimensions. Those are whole units, rounded

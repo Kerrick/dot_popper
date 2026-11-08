@@ -26,6 +26,9 @@
 #                               round again. It mostly taps fresh dots and
 #                               sometimes a popped one, so penalties show.
 #   DOT_POPPER_NO_SPLASH=1      leaves out setdef's splash before the title
+#   DOT_POPPER_NO_TUTORIAL=1    never opens the tutorial on a first Play (the
+#                               bot and the GUI suite leave it out too)
+#   DOT_POPPER_TUTORIAL=1       opens the tutorial on every Play, seen or not
 #   DOT_POPPER_SPLASH_BLINK=beat  blinks the splash's block on the beat,
 #                               not with the jingle's notes
 #                               (the bot and the GUI suite do too).
