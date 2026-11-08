@@ -10,18 +10,23 @@ module DotPopper
     # with no saved token makes no connection at all. +store+ answers
     # read and write, as a SaveFile does, and +clock+ gives the time.
     #
-    # The server's refusals have empty bodies, so what went wrong is read
-    # from the status alone (REFUSALS). Members have no ids: a member is
-    # their look (the game's Mark), and the one with "you" set is this player.
+    # What went wrong is read from the status (REFUSALS) and, for a 409 or
+    # a 422, from the body. The server calls a member's place in a group a
+    # seat, 1 to 8; the game draws it as a Mark, 0 to 7 (Mark.of_seat), and
+    # a member is known by nothing else. The group's own +seat+ is this
+    # player's. A 429 says how long to wait (Retry-After), and until then
+    # nothing is sent that it would refuse.
     class Session
       # A request to make, and +then+ one to make after it succeeds.
       class Job < Data.define(:kind, :verb, :path, :body, :then)
         def initialize(kind:, verb:, path:, body: nil, then: nil) = super
       end
 
-      # The server's kind of round for dots sized to the screen, the only
-      # kind that counts, and the highest score it takes.
-      SIZED_TO_SCREEN = 1
+      # One member of the group, by the Mark they wear, and whether it is
+      # this player.
+      Member = Data.define(:mark, :you)
+
+      # The highest score the server takes.
       HIGHEST_SCORE = 100_000
       SECONDS_A_DAY = 86_400
       # How long a round played offline may wait to be reported, in days.
@@ -30,10 +35,17 @@ module DotPopper
       # the player is in no group; :drop means the server will never take
       # the round waiting.
       REFUSALS = {
-        group: { 402 => :not_paid, 409 => :already_in_group, 422 => :bad_mark },
-        joined: { 403 => :group_full, 404 => :no_such_group, 409 => :already_in_group, 422 => :no_such_group, 429 => :too_many_tries },
-        round: { 404 => :forget, 422 => :drop }
+        player: { 429 => :too_many_tries },
+        group: { 422 => :bad_mark, 429 => :too_many_tries },
+        joined: { 400 => :no_such_group, 404 => :no_such_group, 422 => :no_such_group, 429 => :too_many_tries },
+        round: { 400 => :drop, 404 => :forget, 422 => :drop }
       }.freeze
+      # What a 409's "error" means.
+      CONFLICTS = { "group_full" => :group_full, "already_in_group" => :already_in_group }.freeze
+      # The longest a Retry-After is believed, in seconds, and how long to
+      # wait when a 429 names no time.
+      LONGEST_WAIT = 3_600
+      USUAL_WAIT = 60
       # A Worker that is never asked to do anything.
       NO_WORKER = Struct.new(:none) do
         def start(*) = nil
@@ -65,10 +77,12 @@ module DotPopper
       def member? = !@group.nil?
       def known? = !@token.nil?
       def busy? = @running.positive?
-      def members = @group ? @group["members"] : []
+      # The members, each a Member, in seat order.
+      def members = @group ? @group["member_seats"].sort.map { Member.new(mark: Mark.of_seat(it), you: it == @group["seat"]) } : []
+      def join_code = @group&.fetch("join_code")
       def score_to_beat = @group&.fetch("score_to_beat")
-      # The look of the member holding the trophy, or nil if it is vacant.
-      def holder_look = @group&.fetch("holder_look")
+      # The Mark of the member holding the trophy, or nil if it is vacant.
+      def holder_mark = @group&.fetch("holder_seat")&.then { Mark.of_seat(it) }
 
       # Looks up the group, at launch and when its screen opens. Without
       # a token there is nothing to look up and nothing is sent.
@@ -76,15 +90,17 @@ module DotPopper
 
       # Makes a group, or joins the one with +code+ (digits), wearing +mark+
       # (Groups::Mark) if no one there does, else the lowest that is free.
-      # Only the game decides whether a player may create (Entitlement),
-      # so the server is told the player has paid.
-      def create(mark) = as_player(Job.new(kind: :group, verb: :post, path: "/group", body: { look: mark, paid: true }))
-      def join(mark, code) = as_player(Job.new(kind: :joined, verb: :post, path: "/membership", body: { join_code: code, look: mark }))
+      # Only the game decides whether a player may create or join
+      # (Entitlement); the server has no say in it.
+      def create(mark) = as_player(Job.new(kind: :group, verb: :post, path: "/group", body: { seat: Mark.seat(mark) }))
+      def join(mark, code) = as_player(Job.new(kind: :joined, verb: :post, path: "/membership", body: { join_code: code, seat: Mark.seat(mark) }))
       def leave = ask(Job.new(kind: :left, verb: :delete, path: "/membership"))
       def delete_everything = ask(Job.new(kind: :deleted, verb: :delete, path: "/player"))
 
-      # A round just ended. Only one played by a member, with dots sized
-      # to the screen, counts; if it cannot be sent now, the best such
+      # A round just ended. The server cannot tell how a score was won, so
+      # only a round that counts is sent: one played by a member, with dots
+      # sized to the screen, and not the tutorial's (+sized_to_screen+ is
+      # false for the others). If it cannot be sent now, the best such
       # round waits and is sent with the next contact.
       def round_finished(score:, sized_to_screen:)
         return unless belongs? && sized_to_screen == true && score.positive?
@@ -128,13 +144,15 @@ module DotPopper
       # the server no name or anything else.
       def as_player(job)
         @error = nil
+        return @error = :too_many_tries if waiting_out?
+
         known? ? ask(job) : ask(Job.new(kind: :player, verb: :post, path: "/player", body: nil, then: job))
       end
 
       def send_pending
         return unless @pending && belongs?
 
-        ask(Job.new(kind: :round, verb: :post, path: "/group/rounds", body: { score: @pending, kind: SIZED_TO_SCREEN }))
+        ask(Job.new(kind: :round, verb: :post, path: "/group/rounds", body: { score: @pending }))
       end
 
       # The theft is told: the server is asked to forget it, and until it
@@ -145,31 +163,54 @@ module DotPopper
         delete_news(id)
       end
 
-      def delete_news(id) = ask(Job.new(kind: :told, verb: :delete, path: "/group/news/#{id}"))
+      def delete_news(id) = ask(Job.new(kind: :told, verb: :delete, path: "/group/thefts/#{id}"))
+
+      def waiting_out? = @wait_until && @clock.call.to_i < @wait_until
+
+      def wait_out(seconds)
+        @wait_until = @clock.call.to_i + (seconds || USUAL_WAIT).clamp(0, LONGEST_WAIT)
+      end
 
       def settle(job, reply)
         @running -= 1
         return @error = :offline if reply.offline?
         return forget_identity if reply.status == 401
-        return refused(job, reply.status) unless reply.ok?
+        return refused(job, reply) unless reply.ok?
 
         @error = nil
         apply(job, reply)
         ask(job.then) if job.then
       end
 
-      def refused(job, status)
+      def refused(job, reply)
+        status = reply.status
+        wait_out(reply.retry_after) if status == 429
         case job.kind
         when :told then nil
-        when :left then look_at(nil) if status == 404
-        when :group then status == 404 ? look_at(nil) : @error = REFUSALS[:group].fetch(status, :failed)
+        when :left, :thefts then look_at(nil) if status == 404
+        when :group
+          status == 404 ? look_at(nil) : conflict_or(job, reply)
+        else conflict_or(job, reply)
+        end
+      end
+
+      # A 409 says which in its body; a 422 on a seat is a bad mark; and
+      # the rest are read from the status. A player who is in a group
+      # already is shown it.
+      def conflict_or(job, reply)
+        status = reply.status
+        body = reply.body.is_a?(Hash) ? reply.body : {}
+        reason = if status == 409 then CONFLICTS.fetch(body["error"], :failed)
+                 elsif status == 422 && job.kind == :joined && body.dig("errors", "seat") then :bad_mark
+                 else REFUSALS.dig(job.kind, status)
+                 end
+        case reason
+        when :forget then left_meanwhile
+        when :drop then give_up_pending
+        when nil then @error = :failed
         else
-          case REFUSALS.dig(job.kind, status)
-          when :forget then left_meanwhile
-          when :drop then give_up_pending
-          when nil then @error = :failed
-          else @error = REFUSALS.dig(job.kind, status)
-          end
+          @error = reason
+          refresh if reason == :already_in_group
         end
       end
 
@@ -177,6 +218,7 @@ module DotPopper
         case job.kind
         when :player then adopt(reply.body)
         when :group, :joined then look_at(reply.body)
+        when :thefts then tell_of(reply.body)
         when :left then look_at(nil)
         when :deleted then forget_identity
         when :round then finish_round(reply.body)
@@ -189,25 +231,37 @@ module DotPopper
       end
 
       def look_at(group)
+        return @error = :failed unless group.nil? || group?(group)
+
         @group = group
         remember_membership(!group.nil?)
         return unless group
 
-        wearing = group["members"].find { it["you"] }
-        remember_mark(wearing["look"]) if wearing
-        tell_of(group["news"])
+        remember_mark(Mark.of_seat(group["seat"]))
+        ask(Job.new(kind: :thefts, verb: :get, path: "/group/thefts"))
         drop_stale_pending
         send_pending
       end
 
+      # Whether +group+ is a group as the server describes one.
+      def group?(group)
+        group.is_a?(Hash) && Mark.seat?(group["seat"]) && group["member_seats"].is_a?(Array) &&
+          group["member_seats"].all? { Mark.seat?(it) } && group["join_code"].is_a?(String) &&
+          group["score_to_beat"].is_a?(Integer) && (group["holder_seat"].nil? || Mark.seat?(group["holder_seat"]))
+      end
+
       # Queues a Message for each theft not yet told, and asks the server
-      # again to forget those already told that it still keeps.
+      # again to forget those already told that it still keeps. The
+      # server keeps a theft until told it was acknowledged.
       def tell_of(news)
+        return unless news.is_a?(Array)
+
+        news = news.select { it.is_a?(Hash) && it["id"].is_a?(Integer) && Mark.seat?(it["thief_seat"]) }
         news.each do |item|
           if @told.include?(item["id"])
             delete_news(item["id"])
           elsif @messages.none? { it.id == item["id"] }
-            @messages << Message.stolen(item["thief_look"], item["score"], item["id"])
+            @messages << Message.stolen(Mark.of_seat(item["thief_seat"]), item["score"], item["id"])
           end
         end
         kept = @told & news.map { it["id"] }
@@ -245,8 +299,11 @@ module DotPopper
 
       def finish_round(body)
         give_up_pending
-        @messages << Message.taken(body["group"]["score_to_beat"]) if body["took_trophy"]
-        look_at(body["group"])
+        group = body["group"]
+        return unless group?(group)
+
+        @messages << Message.taken(group["score_to_beat"]) if body["took_trophy"]
+        look_at(group)
       end
 
       def drop_stale_pending
@@ -260,6 +317,7 @@ module DotPopper
         @mark = nil
         @group = nil
         @was_member = false
+        @wait_until = nil
         @pending = nil
         @messages.clear
         @told = []

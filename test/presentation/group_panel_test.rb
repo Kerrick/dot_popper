@@ -17,9 +17,8 @@ class GroupPanelTest < Minitest::Test
     def answer(reply) = @answers << [@started.shift.first, reply]
   end
 
-  def group(news: [], members: nil)
-    members ||= [{ "look" => 0, "you" => true }, { "look" => 1, "you" => false }]
-    { "join_code" => "2345678", "members" => members, "news" => news, "holder_look" => 0, "score_to_beat" => 18 }
+  def group(seats: [1, 2], seat: 1)
+    { "join_code" => "2345678", "seat" => seat, "member_seats" => seats, "holder_seat" => 1, "score_to_beat" => 18 }
   end
 
   def setup
@@ -61,7 +60,8 @@ class GroupPanelTest < Minitest::Test
     tick
     reply(201, { "token" => "t" })
     tick
-    reply(201, group(news:))
+    reply(201, group)
+    reply(200, news)
   end
 
   def test_no_server_offers_no_group
@@ -164,7 +164,7 @@ class GroupPanelTest < Minitest::Test
     reply(201, { "token" => "t" })
     tick
 
-    assert_equal({ join_code: "2345678", look: 5 }, @worker.started.first.first.body)
+    assert_equal({ join_code: "2345678", seat: 6 }, @worker.started.first.first.body)
   end
 
   def test_the_door_has_no_field_for_text_and_the_screen_offers_no_report_or_block
@@ -182,7 +182,7 @@ class GroupPanelTest < Minitest::Test
   end
 
   def test_a_theft_message_names_no_one_and_shows_the_thiefs_dot
-    join!(news: [{ "id" => 9, "thief_look" => 4, "score" => 21 }])
+    join!(news: [{ "id" => 9, "thief_seat" => 5, "score" => 21 }])
     panel.close
     tick
 
@@ -215,11 +215,10 @@ class GroupPanelTest < Minitest::Test
   end
 
   def test_group_rows_fit_a_small_phones_screen_in_columns_and_above_the_floor
-    members = Array.new(8) { { "look" => it, "you" => it == 3 } }
     build(width: 844, height: 390)
     panel.open
     tick
-    @session.instance_variable_set(:@group, group(members:))
+    @session.instance_variable_set(:@group, group(seats: (1..8).to_a, seat: 4))
     plan = @show.group_plan
 
     assert(plan.rows.all? { it.rect.bottom <= @show.layout.records_floor })
@@ -243,7 +242,7 @@ class GroupPanelTest < Minitest::Test
   end
 
   def test_a_message_waits_for_launch_or_game_over_and_shows_once
-    join!(news: [{ "id" => 9, "thief_look" => 1, "score" => 21 }])
+    join!(news: [{ "id" => 9, "thief_seat" => 2, "score" => 21 }])
     tick
 
     assert_nil panel.banner, "not while the group screen covers it"

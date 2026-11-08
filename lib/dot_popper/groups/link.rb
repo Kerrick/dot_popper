@@ -3,8 +3,11 @@
 module DotPopper
   module Groups
     # A server's answer: its status and parsed body, or status 0 when it
-    # could not be reached at all.
-    class Reply < Data.define(:status, :body)
+    # could not be reached at all. +retry_after+ is the seconds a 429
+    # asks the player to wait, or nil.
+    class Reply < Data.define(:status, :body, :retry_after)
+      def initialize(status:, body:, retry_after: nil) = super
+
       def self.offline = new(status: 0, body: {})
 
       def ok? = status.between?(200, 299)
@@ -51,10 +54,12 @@ module DotPopper
 
       def parse(response)
         text = response.body.to_s
-        Reply.new(status: response.code.to_i, body: text.empty? ? {} : JSON.parse(text))
+        status = response.code.to_i
+        wait = Integer(response["Retry-After"].to_s, 10, exception: false)
+        Reply.new(status:, body: text.empty? ? {} : JSON.parse(text), retry_after: wait)
       rescue JSON::ParserError
         # A refusal with a page for a body is still a refusal.
-        response.code.to_i.between?(200, 299) ? Reply.offline : Reply.new(status: response.code.to_i, body: {})
+        status.between?(200, 299) ? Reply.offline : Reply.new(status:, body: {}, retry_after: wait)
       end
     end
   end

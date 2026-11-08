@@ -157,13 +157,13 @@ module DotPopper
 
       # The group: the trophy, its members, Leave and Delete.
       def group_plan
-        group = panel.groups.group
+        groups = panel.groups
         y = under_heading
-        lines = wrapped(GroupWords.trophy_line(group["holder_look"], group["score_to_beat"]), y, :text)
-        lines += wrapped(GroupWords.code_line(group["join_code"]), lines.last.y + line_height, :text) if group["join_code"]
+        lines = wrapped(GroupWords.trophy_line(groups.holder_mark, groups.score_to_beat), y, :text)
+        lines += wrapped(GroupWords.code_line(groups.join_code), lines.last.y + line_height, :text)
         extra = alert_text || (GroupWords.standard_note if standard_dots)
         lines += wrapped(extra, lines.last.y + line_height, alert_text ? :alert : :note) if extra
-        rows = member_rows(group["members"], group["holder_look"], lines.last.y + (line_height * 0.8))
+        rows = member_rows(groups.members, groups.holder_mark, lines.last.y + (line_height * 0.8))
         leave = GroupAction.new(name: :group_leave, rect: layout.credits_button, text: GroupWords.leave)
         GroupPlan.new(size:, heading_y:, heading_size:, lines:, code_box: nil,
                       actions: [leave, *common_actions], rows:)
@@ -171,7 +171,7 @@ module DotPopper
 
       # The members, in columns of as many rows as fit between +top+ and
       # the floor.
-      def member_rows(members, holder_look, top)
+      def member_rows(members, holder_mark, top)
         row_height = button * ROW
         room = floor - (size * 0.4) - top
         per_column = [(room / row_height).floor, 1].max
@@ -180,7 +180,7 @@ module DotPopper
         x_of = ->(i) { columns == 1 ? left : layout.safe.x + margin + ((width + margin) * i) }
         members.each_with_index.map do |member, i|
           rect = Rect.new(x: x_of[i / per_column], y: top + ((i % per_column) * row_height), width:, height: button)
-          GroupRow.new(rect:, mark: member["look"], holder: member["look"] == holder_look, me: member["you"])
+          GroupRow.new(rect:, mark: member.mark, holder: member.mark == holder_mark, me: member.you)
         end
       end
     end
