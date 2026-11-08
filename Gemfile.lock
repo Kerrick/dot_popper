@@ -1,9 +1,9 @@
 GIT
   remote: https://github.com/setdef/Fledge
-  revision: c9025748aacb7ccbcfd9fdf559dfe0e58b6268f6
-  tag: v0.7.0
+  revision: 043b80e71046fdbba0b778a65e31d45f792e5e2b
+  tag: v0.8.0
   specs:
-    fledge (0.7.0)
+    fledge (0.8.0)
 
 GEM
   remote: https://rubygems.org/
@@ -89,7 +89,7 @@ CHECKSUMS
   ffi (1.17.4-x64-mingw-ucrt) sha256=f6ff9618cfccc494138bddade27aa06c74c6c7bc367a1ea1103d80c2fcb9ed35
   ffi (1.17.4-x86_64-linux-gnu) sha256=9d3db14c2eae074b382fa9c083fe95aec6e0a1451da249eab096c34002bc752d
   fileutils (1.8.1) sha256=2d541a1ee34a9ed5c4f054be8fb819a26b5d654488a31dc8806917cf448b9cc3
-  fledge (0.7.0)
+  fledge (0.8.0)
   json (3.1.0) sha256=3ce7ccf8fde58960177a3a756c31f292a4c1e1dedee884547096a5b0604e3bd8
   language_server-protocol (3.17.0.6) sha256=5ef2c0c138f8267e1bc631d3328347d354f96724b0af22f2c79516120443b7f0
   listen (3.10.1) sha256=4c3f32855657f348747da4dd2372ff3790d90a6b1d3e4f21a3706adb2d04783c
