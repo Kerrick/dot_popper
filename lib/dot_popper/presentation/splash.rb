@@ -57,11 +57,10 @@ module DotPopper
     # The block blinks like an amber terminal's cursor, lighting quickly
     # and fading a little slower, as a phosphor does. Sounding, each note
     # flips it: lit from the first until the second, dark until the third,
-    # and so on, so the last note leaves it dark. Muted, there are no notes
-    # to follow, so it blinks on the beat: lit, dark, lit, dark. Either way
-    # the last thing seen before the fade out is the block, dark and held
-    # dark for about half a second, so that the fade to the title is not
-    # mistaken for the cursor fading: the splash stays that long.
+    # and so on, so the last note leaves it dark, and it holds dark for a
+    # beat before the fade out, so that the fade to the title is not
+    # mistaken for the cursor fading: the splash stays that long. Muted,
+    # there is no music to flash to, so the block stays lit.
     class Splash < Data.define(:at, :sounding)
       BEAT = 60.0 / 120
       Note = Data.define(:at, :pitch)
@@ -69,10 +68,9 @@ module DotPopper
                .map { |beat, pitch| Note.new(at: beat * BEAT, pitch:) }.freeze
       FADE_IN = 0.25
       FADE_OUT = 0.3
-      # Muted: four beats of blinking, the last of them dark, then the fade out.
-      SILENT = (4 * BEAT) + FADE_OUT
+      SILENT = 1.4 # long enough to read the name
       # The last click, then two beats: the block goes dark at once, and
-      # holds dark for the second beat's worth before the fade out.
+      # holds dark for most of the second before the fade out.
       SOUNDING = JINGLE.last.at + (2 * BEAT)
       SKIPPED_BY = %w[DOT_POPPER_AUTOPLAY DOT_POPPER_SCENARIO DOT_POPPER_NO_SPLASH].freeze
       LIGHTS = 0.03 # seconds the block takes to light
@@ -99,10 +97,13 @@ module DotPopper
       # which shows the title under it.
       def ground = fade_out
 
-      # How lit the block is, 0 to 1, before the mark's fade: rising over
+      # How lit the block is, 0 to 1, before the mark's fade; always 1 when
+      # muted. Sounding, rising over
       # LIGHTS from the start of a lit span, and falling over FADES from
       # its end.
       def block
+        return 1.0 unless sounding
+
         span = lit.reverse_each.find { |from, _| from <= at } or return 0.0
         from, to = span
         at < to ? ((at - from) / LIGHTS).clamp(0.0, 1.0) : (1 - ((at - to) / FADES)).clamp(0.0, 1.0)
@@ -112,11 +113,7 @@ module DotPopper
 
       # When the block is lit, as [from, to] seconds.
       def lit
-        if sounding
-          JINGLE.each_slice(2).map { |on, off| [on.at, off.at] }
-        else
-          (0...4).step(2).map { [it * BEAT, (it + 1) * BEAT] }
-        end
+        JINGLE.each_slice(2).map { |on, off| [on.at, off.at] }
       end
 
       def fade_out = ((total - at) / FADE_OUT).clamp(0.0, 1.0)
