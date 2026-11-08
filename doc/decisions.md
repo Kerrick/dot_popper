@@ -941,3 +941,11 @@ The tutorial's first bright dot starts about a quarter of the window's width lef
 **Why:** A gamepad's cursor starts hidden in the middle of the screen. With the dot there too, the player's reticle sat on the ghost's, and nobody had to aim. Now the cursor, pointer or thumb must travel to the dot.
 
 **To reverse:** Set `TUTORIAL.start` back to a small offset and the first dot's `velocity_x` positive.
+
+## On Android, the game rides out dark theme, font size and overlays
+
+Dot Popper's Android activity now declares that it handles dark theme (`uiMode`), font size (`fontScale`, `fontWeightAdjustment`), language (`locale`, `layoutDirection`, `grammaticalGender`), a SIM (`mcc`, `mnc`), `touchscreen`, `colorMode`, and overlays (`assetsPaths`), as well as turning and keyboards. Before, any of these made Android destroy and recreate the activity. SDL can't survive that: `onDestroy` quits the game, and the new activity's `onCreate` logs "activity finished" and calls `System.exit(0)`. On an API 33 emulator, switching dark theme on, changing the font size, or turning on a font overlay each ended a running round. Turning on a font overlay is the kind of overlay change Android 12 and newer also make when a wallpaper's colours change. Android also applies an overlay update to a just-installed app. When that update lands after the first launch has begun, the activity is recreated before the game prints anything, which is the Android job's first-launch flake (it hit on 1 of 5 cold boots on an emulator here). With the new list, the same changes reach SDL's `onConfigurationChanged` and the game carries on. `assetsPaths` is in `android.jar`'s `configChanges` flags, though the docs don't list it. Density stays off the list, as in SDL's own manifest, since the game's sizes in dp come from it.
+
+**Why:** A player who switches on dark theme from Quick Settings, or whose phone does that at sunset, mid-round, shouldn't lose the round and the app.
+
+**To reverse:** Cut `android:configChanges` in `android/host/src/main/AndroidManifest.xml` back to `orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation`.

@@ -5,9 +5,21 @@
 
   Dot Popper's copy of Lota 0.2.2's Android host manifest
   (ext/lota/phone/host/android in the gem), which android.yml lays over
-  Lota's host in the phone project. Its one change: Dot Popper decides
+  Lota's host in the phone project. Its two changes: Dot Popper decides
   what Back does itself, as Escape (Shell::App), so the meta-data below
-  asks SDL to trap Back. Lota's notes follow.
+  asks SDL to trap Back; and the activity handles every configuration
+  change that leaves its pixels alone, not only turning and keyboards.
+
+  SDL can't survive its activity being made again: onDestroy quits the
+  game, and the new activity's onCreate calls System.exit. So a change
+  the manifest doesn't list ends the game: dark theme (uiMode), font size
+  (fontScale, fontWeightAdjustment), language (locale, layoutDirection,
+  grammaticalGender), a SIM (mcc, mnc), and overlays (assetsPaths), which
+  Android applies when a wallpaper's colours or the system font change,
+  and to a just-installed app, sometimes after its first launch has begun.
+  SDL's onConfigurationChanged passes the language and dark theme on.
+  Density stays off the list, as in SDL's own manifest, since the game's
+  sizes in dp come from it. Lota's notes follow.
 
   A Lota game's manifest, in place of the one fledge build android writes
   (Fledge's lib/fledge/templates/android/src/main/AndroidManifest.xml at
@@ -35,7 +47,7 @@
         <activity
             android:name="org.setdef.fledge.host.MainActivity"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
-            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation|uiMode|fontScale|fontWeightAdjustment|locale|layoutDirection|grammaticalGender|mcc|mnc|touchscreen|colorMode|assetsPaths"
             android:launchMode="singleInstance"
             android:exported="true">
             <intent-filter>
