@@ -2,11 +2,11 @@
 
 module DotPopper
   module Shell
-    # The Themes screen, over the title's dimmed dots, which already wear the
+    # The Themes screen, over the title's dimmed dots, which already use the
     # theme the player last chose: the heading, one card for each theme, and
     # Back in the bottom left corner. A card is its theme in small: its own
     # night, with a bright dot partly under a popped one, as in the game,
-    # and its name beneath. The theme being worn has a thick cream outline
+    # and its name beneath. The theme in use has a thick cream outline
     # and a check, so what is chosen shows without a word. Presentation::
     # LooksLayout decides where each card goes; this only draws, on whole
     # device pixels.
@@ -28,7 +28,7 @@ module DotPopper
         palette = theme.palette
         rect = snapped(card.rect)
         corner = [rect.height * 0.12, 6.0].max
-        chosen = theme == show.worn
+        chosen = theme == show.in_use
         hover = show.hover.level(theme)
         pen.color(palette.ink_top)
         G.rectangle(:fill, rect.x, rect.y, rect.width, rect.height, corner, corner, 32)
@@ -46,14 +46,14 @@ module DotPopper
       end
 
       # A mark in a card's top right corner, as the Stats screen's
-      # achievements wear theirs: a filled dot if earned, a ring if not.
+      # achievements have theirs: a filled dot if earned, a ring if not.
       # A bright dot, and over its right side a popped one, in the upper
       # part of the card, in the theme's own art.
       def pair(rect, theme)
         radius = pen.pixels.whole([rect.height * 0.25, rect.width * 0.19].min)
         y = pen.pixels.snap(rect.y + (rect.height * 0.42))
         left = rect.center_x - (radius * 0.55)
-        pen.wearing(theme) do
+        pen.using(theme) do
           dots.icon(pen.pixels.snap(left - radius * 0.55), y, radius, fresh: true)
           dots.icon(pen.pixels.snap(left + radius * 1.1), y, radius, fresh: false)
         end

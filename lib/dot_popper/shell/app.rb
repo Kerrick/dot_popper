@@ -56,13 +56,13 @@ module DotPopper
         keeper = StatsKeeper.new(score_record: @cabinet.score_record, stats_book:, achievements:, folder: ->(name) { SaveFile.new(name:) })
         entitlement = Entitlement.new(SaveFile.new(name: "entitlement.txt"), forced: Entitlement.forced?(@env, os:))
         theme_keeper = Presentation::ThemeKeeper.new(SaveFile.new(name: "themes.txt"), themes: Style::THEMES, entitlement:)
-        wear_fixture(theme_keeper)
+        use_fixture(theme_keeper)
         @theme_feed = theme_feed(theme_keeper)
         @theme_feed&.ask
         @pen = Pen.new(Style, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
-        @pen.wear(theme_keeper.worn)
+        @pen.use(theme_keeper.in_use)
         @speaker = Speaker.new(Style::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Style::SOUND.volume)
-        @speaker.dress(theme_keeper.worn)
+        @speaker.use(theme_keeper.in_use)
         @splash = @splash.with(sounding: !@speaker.muted?) if @splash
         storefront = Presentation::Storefront.for(
           os, entitlement:,
@@ -141,7 +141,7 @@ module DotPopper
         @cabinet.update(seconds)
         @show.update(seconds)
         @theme_feed&.update
-        dress
+        use_theme
         point_the_mouse
         repeat_keys
         @tilting.update(seconds)
@@ -377,12 +377,12 @@ module DotPopper
       end
 
       # A scenario's unlocks and theme, in place of the server's.
-      def wear_fixture(theme_keeper)
+      def use_fixture(theme_keeper)
         keys = @env["DOT_POPPER_THEME_UNLOCKS"]
         theme_keeper.receive(keys.split(",")) if keys
         key = @env["DOT_POPPER_THEME"]&.to_sym or return
 
-        Style::THEMES.find { it.key == key }&.then { theme_keeper.wear(it) }
+        Style::THEMES.find { it.key == key }&.then { theme_keeper.use(it) }
       end
 
       # The feed that reads the server's unlocks, if the game has a server.
@@ -394,11 +394,11 @@ module DotPopper
 
       # Puts on the Show's look if it has changed (Presentation::ThemeKeeper),
       # which is only ever between games.
-      def dress
-        return unless @pen.wear(@show.worn)
+      def use_theme
+        return unless @pen.use(@show.in_use)
 
         @renderer.prepare
-        @speaker.dress(@show.worn)
+        @speaker.use(@show.in_use)
       end
 
       # A press at +x+, +y+, by +by+ (a finger's id, :mouse, :gamepad, or

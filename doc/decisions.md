@@ -1533,3 +1533,11 @@ The fifth beat is gone. The tutorial is Good, Bad, Good again, as long as before
 **Telling the player.** A new theme is told once, at the title, when nothing else is asked of them: a calm moment (Saffer: bring the data forward, at the right time; Hodent: attention is scarce, so not mid-round). The card previews the theme's own bright and popped dot, and offers an immediate switch beside "Not now" (Rigby & Ryan: autonomy), so it is answered in one tap and never again. A free player is told too, because knowing is free, and their switch opens the Pro offer, as tapping Themes does (Ferrara: reward through meaning, not nagging; the offer is asked once). It is a card over the title and not a screen of its own: a judicious choice (the 80/20 rule, Tidwell's modal panel), and the game has no fixed count of screens; be judicious in adding one.
 
 **To reverse:** remove a theme's file and shader, or point `Look::THEMES` back at palettes alone.
+
+## A button names the action it takes: "Use Ghost", not "Wear it"
+
+*Renames the vocabulary of the sections above; they stand as history with their old words.*
+
+**Decision (maintainer's rule).** Nobody wears a theme, so no word of clothing is used for one, on screen or in code. The new-theme card's button is "Use <theme name>" (and "Use <theme name> with Pro" to a Free player, whose tap opens the offer), after Podmajersky and Yifrah in INSIPIRATION.md: a button names the action it takes. In code, wear/worn/wardrobe/dress/outfit are use/in use/theme: `ThemeKeeper#use` and `#in_use`, `Show#use`, `Pen#use` and `#using`, `Speaker#use`, `ArrivalPlan#use_button`, `Show#arrival_use_word`. (`Wardrobe` and `Look` are the old names of `ThemeKeeper` and `Theme`.) "A worn mouse" stays: it is worn out, not worn on.
+
+**Fit.** `ArrivalPlan` stacks the two buttons when the switch's word will not fit beside "Not now" (measured, `RoughMeasure`), so "Use Jack-o'-lantern" fits at 400 x 850 and 850 x 400 (`themes_test.rb`).

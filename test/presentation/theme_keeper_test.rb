@@ -38,24 +38,24 @@ class ThemeKeeperTest < Minitest::Test
     assert_equal [THEMES.first], theme_keeper.choices
   end
 
-  def test_each_new_theme_is_told_once_and_a_pro_player_can_wear_it
+  def test_each_new_theme_is_told_once_and_a_pro_player_can_use_it
     w = theme_keeper
     w.receive(["ghost"])
     assert_equal :ghost, w.arrival.key
     w.told(w.arrival)
     assert_nil w.arrival, "told, however it was answered"
-    w.wear(w.choices.last)
-    assert_equal :ghost, theme_keeper.worn.key
+    w.use(w.choices.last)
+    assert_equal :ghost, theme_keeper.in_use.key
   end
 
-  def test_a_free_player_may_know_of_a_theme_but_wears_the_ordinary_one
+  def test_a_free_player_may_know_of_a_theme_but_uses_the_ordinary_one
     w = theme_keeper(paid: false)
     w.receive(["ghost"])
     assert_predicate w, :offered?
     assert_predicate w, :locked?
     assert_equal :ghost, w.arrival.key
-    w.wear(w.choices.last)
-    assert_predicate w.worn, :ordinary?
+    w.use(w.choices.last)
+    assert_predicate w.in_use, :ordinary?
   end
 end
 

@@ -107,28 +107,28 @@ module DotPopper
       # The numbers of the game in play, or of the one just finished.
       def game_stats = @recorder.stats
 
-      # The colors of the theme being worn (ThemeKeeper), which only changes
+      # The colors of the theme in use (ThemeKeeper), which only changes
       # between games.
       def palette = @theme_keeper.palette
 
       # Whether the Themes screen is open over the Stats screen, and what
-      # it shows: every theme the player can wear, and the one worn.
+      # it shows: every theme the player can use, and the one in use.
       def themes? = @themes
 
       # The new theme to tell the player of, once, at the title, when nothing
       # else is asked of them; nil the rest of the time.
       def arrival = (@theme_keeper.arrival if title? && !stats? && !themes? && !group_open?)
       def arrival? = !arrival.nil?
-      def arrival_plan = ArrivalPlan.new(layout)
+      def arrival_plan = ArrivalPlan.new(layout:, word: (arrival_use_word if arrival?), measure: @measure)
 
       # The switch's word: a Free player's says how, since it opens the offer.
-      def arrival_wear_word = words.themes.fetch(themes_locked? ? :wear_pro : :wear)
+      def arrival_use_word = format(words.themes.fetch(themes_locked? ? :use_pro : :use), words.themes.fetch(arrival.key))
       def themes = @theme_keeper.shown
-      def worn = @theme_keeper.worn
+      def in_use = @theme_keeper.in_use
 
       # Whether tapping a theme leads to Pro, as it does for a Free player;
       # whether +theme+ is one this player has earned; and whether it is open
-      # to wear, earned or in season. They show the same to either player.
+      # to use, earned or in season. They show the same to either player.
       def themes_locked? = @theme_keeper.locked?
       def theme_earned?(theme) = @theme_keeper.earned?(theme)
       def theme_open?(theme) = @theme_keeper.open?(theme)
@@ -152,14 +152,14 @@ module DotPopper
         sounds.play(:tick, pitch: 0.8)
       end
 
-      # Wears +theme+ from now on, and the whole screen takes its colors at
+      # Uses +theme+ from now on, and the whole screen takes its colors at
       # once, so the choice is seen before it is left.
-      def wear(theme)
+      def use(theme)
         return unless themes?
         return open_offer_for(:themes) if themes_locked?
-        return sounds.play(:tick, pitch: 0.8) if theme == worn || !theme_open?(theme)
+        return sounds.play(:tick, pitch: 0.8) if theme == in_use || !theme_open?(theme)
 
-        @theme_keeper.wear(theme)
+        @theme_keeper.use(theme)
         sounds.play(:tick, pitch: 1.2)
       end
 
@@ -271,14 +271,14 @@ module DotPopper
         in :back then leave
         in :credits then open_credits
         in :themes then open_themes
-        in Theme => theme then wear(theme)
+        in Theme => theme then use(theme)
         in :mute then sounds.toggle_mute
         in :how_to_play then how_to_play
         in :fullscreen then window.toggle_fullscreen
         in :quit then window.quit
         in :stats then open_stats
-        in :arrival_wear then answer_arrival(wear: true)
-        in :arrival_later then answer_arrival(wear: false)
+        in :arrival_use then answer_arrival(use: true)
+        in :arrival_later then answer_arrival(use: false)
         in :group_open then @groups.open
         in :offer then open_offer
         in :achievements then open_offer_for(:achievements)
@@ -333,7 +333,7 @@ module DotPopper
       # and Copy in the share preview. In a game it does nothing, since
       # only a press at a place may touch the score.
       def primary
-        if arrival? then answer_arrival(wear: true)
+        if arrival? then answer_arrival(use: true)
         elsif group_open? then leave
         elsif sharing? then copy_result
         elsif offer? || stats? then leave
@@ -432,7 +432,7 @@ module DotPopper
       # the title, as Continue does. Says whether there was somewhere to go
       # back from, so that elsewhere the key can do its usual job.
       def back
-        if arrival? then answer_arrival(wear: false)
+        if arrival? then answer_arrival(use: false)
         elsif tutorial? then skip_tutorial
         elsif group_open? then leave
         elsif sharing? then close_share
@@ -921,21 +921,21 @@ module DotPopper
 
       def arrival_controls
         plan = arrival_plan
-        [button(:arrival_later, plan.later_button), button(:arrival_wear, plan.wear_button)]
+        [button(:arrival_later, plan.later_button), button(:arrival_use, plan.use_button)]
       end
 
       # The player has answered the news of a new theme. A Pro player's
-      # switch wears it at once; a Free player's opens the offer, the same
+      # switch uses it at once; a Free player's opens the offer, the same
       # as tapping Themes.
-      def answer_arrival(wear:)
+      def answer_arrival(use:)
         theme = arrival
         return unless theme
 
         @theme_keeper.told(theme)
-        if !wear then sounds.play(:tick, pitch: 0.8)
+        if !use then sounds.play(:tick, pitch: 0.8)
         elsif themes_locked? then open_offer_for(:themes)
         else
-          @theme_keeper.wear(theme)
+          @theme_keeper.use(theme)
           sounds.play(:tick, pitch: 1.2)
         end
       end

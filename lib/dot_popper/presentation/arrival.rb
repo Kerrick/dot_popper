@@ -5,8 +5,11 @@ module DotPopper
     # Where the card that tells of a new theme puts its parts, on the
     # title, in the safe area: a preview of the theme's two dots, its name,
     # and two buttons, the switch as prominent as Play and "Not now"
-    # beside it. A phone held upright stacks the buttons.
-    class ArrivalPlan < Data.define(:layout)
+    # beside it. A phone held upright stacks the buttons, and so does a card
+    # too short for the switch's word (+word+, sized by +measure+) to fit
+    # beside "Not now", as "Use Jack-o'-lantern" is on a phone held sideways.
+    class ArrivalPlan < Data.define(:layout, :word, :measure)
+      def initialize(layout:, word: nil, measure: RoughMeasure.new) = super
       def card
         safe = layout.safe
         width = [safe.width * 0.88, layout.scaled(520)].min
@@ -14,7 +17,7 @@ module DotPopper
         Rect.new(x: safe.x + ((safe.width - width) / 2.0), y: safe.y + ((safe.height - height) / 2.0), width:, height:)
       end
 
-      def stacked? = card.width < layout.scaled(380)
+      def stacked? = card.width < layout.scaled(380) || !word_fits_beside?
       def button_height = [card.height * (stacked? ? 0.13 : 0.17), layout.scaled(44)].max
       def heading_y = card.y + (card.height * (stacked? ? 0.11 : 0.15))
       def heading_size = button_height * 0.42
@@ -23,7 +26,7 @@ module DotPopper
       def preview_radius = card.height * 0.13
       def name_y = card.y + (card.height * (stacked? ? 0.54 : 0.6))
 
-      def wear_button
+      def use_button
         y = stacked? ? later_button.y - button_height - (card.height * 0.03) : row_y
         Rect.new(x: stacked? ? inset : inset + later_width + gap, y:, width: stacked? ? full : full - later_width - gap, height: button_height)
       end
@@ -35,6 +38,17 @@ module DotPopper
       end
 
       private
+
+      # Whether the word fits the switch when the buttons share a row, at the
+      # size the button gives it (PrimaryButton), with a rounded end's room
+      # on each side.
+      def word_fits_beside?
+        return true unless word
+
+        height = [card.height * 0.17, layout.scaled(44)].max
+        size = [(height * 0.36).round, 40].min
+        measure.width(:bold, size, word) <= full - later_width - gap - height
+      end
 
       def row_y = card.bottom - button_height - (card.height * 0.06)
       def inset = card.x + (card.width * 0.06)

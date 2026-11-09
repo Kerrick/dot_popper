@@ -19,7 +19,7 @@ module DotPopper
         cream = pen.palette.cream
         pen.text(words.fetch(:new), pen.fonts.semibold(plan.heading_size), plan.card.center_x, plan.heading_y, pen.palette.soft)
         pen.text(words.fetch(theme.key), pen.fonts.bold(plan.name_size), plan.card.center_x, plan.name_y, cream)
-        PrimaryButton.new(pen:).draw(plan.wear_button, show.arrival_wear_word, hover: show.hover.level(:arrival_wear))
+        PrimaryButton.new(pen:).draw(plan.use_button, show.arrival_use_word, hover: show.hover.level(:arrival_use))
         PillButton.new(pen:).draw(plan.later_button, words.fetch(:later), hover: show.hover.level(:arrival_later))
       end
 
@@ -44,7 +44,7 @@ module DotPopper
         r = plan.preview_radius
         x = plan.card.center_x
         y = plan.preview_y
-        pen.wearing(theme) do
+        pen.using(theme) do
           dots.icon(x - (r * 1.15), y, r, fresh: true)
           dots.icon(x + (r * 1.15), y, r, fresh: false)
         end

@@ -46,8 +46,8 @@ module DotPopper
       end
 
       # Plays +theme+'s own sounds in place of the ordinary ones, or the
-      # ordinary ones again. Made once per theme, the first time it is worn.
-      def dress(theme)
+      # ordinary ones again. Made once per theme, the first time it is used.
+      def use(theme)
         extra = theme.art&.sounds || {}
         @theme_voices ||= {}
         built = (@theme_voices[theme.key] ||= build(extra))

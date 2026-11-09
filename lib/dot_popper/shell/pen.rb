@@ -35,8 +35,8 @@ module DotPopper
       # its colors, its own dot shader is made ready, and the hover's lit
       # colors follow it. Says whether it was a change, so the caller can
       # redraw what it keeps, such as the clear color and the theme's
-      # night. A theme already worn changes nothing.
-      def wear(theme)
+      # night. A theme already in use changes nothing.
+      def use(theme)
         return false if theme.equal?(@theme)
 
         @theme = theme
@@ -49,18 +49,18 @@ module DotPopper
 
       attr_reader :theme
 
-      # The art of the theme worn, or nil for the ordinary one.
+      # The art of the theme in use, or nil for the ordinary one.
       def art = @theme&.art
 
       # The shader this theme's dots draw with, its own if it compiled.
       def dot_shader = @dot_shader || (shader?(:dot) ? :dot : nil)
 
       # Draws the block in +theme+, as a preview, and goes back.
-      def wearing(theme)
+      def using(theme)
         return yield unless theme && !theme.equal?(@theme) && !@shaders.empty?
 
         was = [@theme, @palette, @dot_shader]
-        wear(theme)
+        use(theme)
         begin
           yield
         ensure
@@ -71,14 +71,14 @@ module DotPopper
       end
 
       # What a button the mouse is over is lit with (Presentation::HoverStyle):
-      # the night's glow behind it and cream around it, in the worn palette.
+      # the night's glow behind it and cream around it, in the palette in use.
       def lit
         @lit ||= style::HOVER.with(fill: palette.ink_glow.with_alpha(style::HOVER.fill.a), edge: palette.cream)
       end
 
-      # +color+ as the worn palette has it: one of the ordinary palette's
-      # colors, which Style gives to rings and flashes, becomes the worn
-      # palette's color for the same job; any other color stays.
+      # +color+ as the palette in use has it: one of the ordinary palette's
+      # colors, which Style gives to rings and flashes, becomes the
+      # palette in use's color for the same job; any other color stays.
       def themed(color)
         ordinary = style::PALETTE.to_h
         job = ordinary.key(color)
@@ -179,7 +179,7 @@ module DotPopper
         key
       end
 
-      # Gives the shaders the worn palette's colors.
+      # Gives the shaders the colors of the palette in use.
       def paint_shaders
         if (dot = @shaders[:dot])
           %i[fresh_light fresh_body fresh_deep fresh_bounce fresh_rim gloss halo popped_top popped_bottom popped_rim

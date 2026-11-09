@@ -37,7 +37,7 @@ module DotPopper
         paint { |shader| one(x, y, radius, fresh ? Presentation::Pose::FRESH : Presentation::Pose::STILL, opacity, bonus, shader, 9) }
       end
 
-      # One plain dot in the colors of +palette+, whichever theme is worn,
+      # One plain dot in the colors of +palette+, whichever theme is in use,
       # as the Themes screen shows each theme's pair.
       def swatch(x, y, radius, palette, fresh:)
         G.push do

@@ -2,13 +2,13 @@
 
 module DotPopper
   module Presentation
-    # Which themes the game can wear, and which it does. A theme other
+    # Which themes the game can use, and which it does. A theme other
     # than the ordinary one exists to the player only once the server has
     # said it is unlocked (#receive), while online; from then on it is
     # kept for good, on this device, offline too. Before that no screen may
     # show a trace of it, though its art ships with the game.
     #
-    # Wearing one is Pro's, so a free player always wears the ordinary
+    # Using one is Pro's, so a free player always uses the ordinary
     # theme. A new theme is told once, at a calm moment (#arrival); telling
     # it never depends on buying anything.
     #
@@ -23,7 +23,7 @@ module DotPopper
       # made without one.
       def self.plain(themes) = new(ScoreRecord::Memory.new, themes:, entitlement: Entitlement.free)
 
-      attr_reader :worn
+      attr_reader :in_use
 
       def initialize(store, themes:, entitlement:)
         @store = store
@@ -35,7 +35,7 @@ module DotPopper
 
       def ordinary = @themes.find(&:ordinary?)
 
-      def palette = worn.palette
+      def palette = in_use.palette
 
       # The server's answer: every theme key unlocked so far. Unknown keys
       # are ignored, for a game older than the server. A key once saved
@@ -57,11 +57,11 @@ module DotPopper
       # Whether +theme+ may be chosen by this player.
       def earned?(theme) = choices.include?(theme)
 
-      # Whether +theme+ is open to wear; a Free player sees it open too,
-      # and only wearing it asks for Pro.
+      # Whether +theme+ is open to use; a Free player sees it open too,
+      # and only using it asks for Pro.
       def open?(theme) = choices.include?(theme)
 
-      # Whether themes are shown but not to wear, as for a free player.
+      # Whether themes are shown but not to use, as for a free player.
       def locked? = !@entitlement.pro?
 
       # Whether there is anything to choose among: not before the server
@@ -80,7 +80,7 @@ module DotPopper
         save
       end
 
-      def wear(theme)
+      def use(theme)
         return unless !locked? && choices.include?(theme)
 
         @chosen = theme.key
@@ -89,7 +89,7 @@ module DotPopper
       end
 
       def refresh
-        @worn = !@entitlement.pro? ? ordinary : (choices.find { it.key == @chosen } || ordinary)
+        @in_use = !@entitlement.pro? ? ordinary : (choices.find { it.key == @chosen } || ordinary)
       end
 
       private

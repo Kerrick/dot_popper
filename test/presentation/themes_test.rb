@@ -31,9 +31,9 @@ class ThemesTest < Minitest::Test
   def test_a_new_theme_is_told_with_an_immediate_switch
     show(paid: true, unlocked: ["ghost"])
     assert_equal :ghost, @show.arrival.key
-    wear = @show.arrival_plan.wear_button
-    @show.tap(wear.center_x, wear.center_y)
-    assert_equal :ghost, @show.worn.key
+    use_key = @show.arrival_plan.use_button
+    @show.tap(use_key.center_x, use_key.center_y)
+    assert_equal :ghost, @show.in_use.key
     assert_nil @show.arrival, "told once"
   end
 
@@ -41,7 +41,7 @@ class ThemesTest < Minitest::Test
     show(paid: true, unlocked: ["ghost"])
     later = @show.arrival_plan.later_button
     @show.tap(later.center_x, later.center_y)
-    assert_predicate @show.worn, :ordinary?
+    assert_predicate @show.in_use, :ordinary?
     assert_nil @show.arrival
   end
 
@@ -60,7 +60,34 @@ class ThemesTest < Minitest::Test
   def test_a_free_player_can_be_told_and_is_led_to_pro
     show(paid: false, unlocked: ["ghost"])
     assert_equal :ghost, @show.arrival.key
-    assert_includes @show.arrival_wear_word, "Pro"
-    assert_predicate @show.worn, :ordinary?
+    assert_includes @show.arrival_use_word, "Pro"
+    assert_predicate @show.in_use, :ordinary?
+  end
+
+  def test_the_switch_names_the_theme_it_uses
+    show(paid: true, unlocked: ["ghost"])
+    assert_equal "Use Ghost", @show.arrival_use_word
+  end
+
+  def test_the_longest_switch_and_not_now_both_fit_on_a_phone_either_way_up
+    show(paid: true)
+    [[400, 850], [850, 400]].each do |width, height|
+      %i[use use_pro].each do |key|
+        word = format(@show.words.themes.fetch(key), "Jack-o'-lantern")
+        plan = ArrivalPlan.new(layout: layout(width, height), word:)
+        card = plan.card
+        use = plan.use_button
+        later = plan.later_button
+        [use, later].each do |b|
+          assert_operator b.x, :>=, card.x, "#{word} at #{width}x#{height}"
+          assert_operator b.right, :<=, card.right, "#{word} at #{width}x#{height}"
+          assert_operator b.bottom, :<=, card.bottom, "#{word} at #{width}x#{height}"
+        end
+        apart = use.right <= later.x || later.right <= use.x || use.bottom <= later.y || later.bottom <= use.y
+        assert apart, "buttons overlap for #{word} at #{width}x#{height}"
+        size = [(plan.button_height * 0.36).round, 40].min
+        assert_operator RoughMeasure.new.width(:bold, size, word), :<=, use.width - plan.button_height, "#{word} at #{width}x#{height}"
+      end
+    end
   end
 end

@@ -50,7 +50,7 @@ class GuiScenariosTest < Minitest::Test
 
   def test_choosing_a_holiday_style_from_the_pro_version
     play("themes", "the Stats screen offers Themes once the server has unlocked a theme",
-         "a click on the ordinary theme's card wears it at once", "Escape leaves Themes for the Stats screen",
+         "a click on the ordinary theme's card uses it at once", "Escape leaves Themes for the Stats screen",
          DOT_POPPER_PRO: "1", DOT_POPPER_THEME_UNLOCKS: "ghost")
   end
 

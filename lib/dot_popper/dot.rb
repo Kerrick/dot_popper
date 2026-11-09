@@ -21,7 +21,7 @@ module DotPopper
     def fresh? = !popped
 
     # Whether this is a bonus dot, earned by a row (Rules::BONUS). It is
-    # the bright dot to pop, only dressed apart; popped, it is a popped dot.
+    # the bright dot to pop, only styled apart; popped, it is a popped dot.
     def bonus? = bonus
 
     # The same dot, popped. Popping changes only how a tap treats it and

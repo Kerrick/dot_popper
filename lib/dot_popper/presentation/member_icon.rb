@@ -41,7 +41,7 @@ module DotPopper
       # which String#hash is not.
       def self.seed(text) = text.to_s.bytes.reduce(FNV_OFFSET) { |hash, byte| ((hash ^ byte) * FNV_PRIME) & MASK }
 
-      # The pattern member +number+ wears in a group, as [fold, outer, inner]
+      # The pattern member +number+ has in a group, as [fold, outer, inner]
       # indexes, and the +ground+ (0 dark, 1 light).
       def self.pattern(group_id, number)
         seed = seed(group_id)
@@ -59,7 +59,7 @@ module DotPopper
             shapes: [*outer_shapes(OUTER[outer], FOLDS[fold], turn), *inner_shapes(INNER[inner], FOLDS[fold], turn)])
       end
 
-      # A group's own face, for telling groups apart: an icon no member wears
+      # A group's own face, for telling groups apart: an icon no member has
       # in its first COMBINATIONS numbers.
       def self.crest(group_id) = of(group_id, -1)
 
