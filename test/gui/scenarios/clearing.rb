@@ -15,14 +15,14 @@ module DotPopperGui
       quick_game
       open_stats
       before = files
-      check(!show.stats.empty, "the Records screen lists the game")
+      check(!show.stats.empty, "the Stats screen lists the game")
 
       let_go_too_soon(before)
       hold_by_touch
       check_cleared(before)
       undo = show.undo_reach
       click(undo.center_x, undo.center_y)
-      check(show.stats? && !show.stats.empty, "Undo brings the records back, and stays on the Records screen")
+      check(show.stats? && !show.stats.empty, "Undo brings the records back, and stays on the Stats screen")
       check(before == files, "Undo restores every file exactly")
 
       pad_down(:y)
@@ -43,14 +43,14 @@ module DotPopperGui
     def open_stats
       reach = show.stats_reach
       click(reach.center_x, reach.center_y)
-      check(show.stats?, "a click on Your records opens them")
+      check(show.stats?, "a click on Your stats opens them")
     end
 
     def let_go_too_soon(before)
       reach = show.clear_reach
       press(reach.center_x, reach.center_y)
       wait(HOLD / 2)
-      check(show.stats? && show.clearing.held?, "a press on Clear my records starts a hold and never goes back")
+      check(show.stats? && show.clearing.held?, "a press on Clear my stats starts a hold and never goes back")
       keep_screenshot("clearing-held")
       release(reach.center_x, reach.center_y)
       wait(HOLD)
@@ -66,7 +66,7 @@ module DotPopperGui
     end
 
     def check_cleared(before)
-      check(show.stats? && show.stats.empty, "held two seconds, the records clear, to the empty Records screen")
+      check(show.stats? && show.stats.empty, "held two seconds, the records clear, to the empty Stats screen")
       check(show.undo_offer, "Undo is offered")
       wait(0.3)
       keep_screenshot("clearing-cleared")

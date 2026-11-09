@@ -80,7 +80,7 @@ module DotPopper
         system
       end
 
-      # A white sprite whose opacity is SpriteArt's, +@look::PARTICLE_SPRITE+
+      # A white sprite whose opacity is SpriteArt's, +@style::PARTICLE_SPRITE+
       # units across, in as many pixels as the screen has.
       def sprite(name)
         density = G.dpi_scale

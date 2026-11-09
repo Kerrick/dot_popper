@@ -71,7 +71,7 @@ module DotPopper
       end
 
       # The pointer's velocity as it lets go at +at+, over its last
-      # samples, no faster than the look's fling.
+      # samples, no faster than the theme's fling.
       def throw_velocity(at, style)
         first = samples.first
         last = pointer

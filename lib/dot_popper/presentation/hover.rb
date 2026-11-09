@@ -90,7 +90,7 @@ module DotPopper
       def at(name) = name == over ? self : with(over: name)
 
       # +seconds+ later, every level a step nearer where it is going, by
-      # +look+ (HoverLook). A level that reaches 0 is forgotten.
+      # +style+ (HoverStyle). A level that reaches 0 is forgotten.
       def update(seconds, style)
         step = style.seconds.positive? ? seconds / style.seconds : 1.0
         names = levels.keys | [over].compact

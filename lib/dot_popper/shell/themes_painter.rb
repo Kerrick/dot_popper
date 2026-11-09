@@ -2,11 +2,11 @@
 
 module DotPopper
   module Shell
-    # The Looks screen, over the title's dimmed dots, which already wear the
-    # look the player last chose: the heading, one card for each look, and
-    # Back in the bottom left corner. A card is its look in small: its own
+    # The Themes screen, over the title's dimmed dots, which already wear the
+    # theme the player last chose: the heading, one card for each theme, and
+    # Back in the bottom left corner. A card is its theme in small: its own
     # night, with a bright dot partly under a popped one, as in the game,
-    # and its name beneath. The look being worn has a thick cream outline
+    # and its name beneath. The theme being worn has a thick cream outline
     # and a check, so what is chosen shows without a word. Presentation::
     # LooksLayout decides where each card goes; this only draws, on whole
     # device pixels.

@@ -8,7 +8,7 @@ module DotPopper
     # dot, down and to the right), where it waits beside a dot it will not
     # tap again (+hover+, an [x, y] offset from that dot, which the
     # Tutorial keeps on screen), how it wags its finger there, "no"
-    # (+wag+, a WagLook), and how long it then holds still (+settle+).
+    # (+wag+, a WagStyle), and how long it then holds still (+settle+).
     class GhostStyle < Data.define(:loop, :glide, :fade, :rest, :hover, :wag, :settle)
       # How long it waits, from arriving, before it may move on.
       def waiting = wag.time + settle

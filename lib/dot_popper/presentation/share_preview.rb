@@ -2,7 +2,7 @@
 
 module DotPopper
   module Presentation
-    # How the share preview looks: SHARE_PREVIEW in Look says each.
+    # How the share preview looks: SHARE_PREVIEW in Style says each.
     class SharePreviewStyle < Data.define(:arrive, :confirm, :lift, :width, :pad, :bubble, :veil); end
 
     # The result to share, open over Game Over since +at+: the very +text+
@@ -18,7 +18,7 @@ module DotPopper
       def copy(now) = with(copied_at: now)
       def copied? = !copied_at.nil?
 
-      # How far the preview has come in, by +look+ (SharePreviewLook).
+      # How far the preview has come in, by +style+ (SharePreviewStyle).
       def arrival(now, style) = style.arrive.at(now - at)
 
       # How far "Copied!" has come in since the last copy.

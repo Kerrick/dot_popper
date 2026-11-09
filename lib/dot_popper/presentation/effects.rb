@@ -31,7 +31,7 @@ module DotPopper
         @flash = EdgeFlash::NONE
       end
 
-      # Throws +look.count+ droplets out from (+x+, +y+), shared among
+      # Throws +style.count+ droplets out from (+x+, +y+), shared among
       # +colors+. No droplet outlives +longest+, which only a screen with
       # no game in play may raise.
       def burst(x, y, style, colors, longest: Burst::LONGEST_LIFE)

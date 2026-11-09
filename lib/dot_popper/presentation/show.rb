@@ -107,12 +107,12 @@ module DotPopper
       # The numbers of the game in play, or of the one just finished.
       def game_stats = @recorder.stats
 
-      # The colors of the look being worn (Wardrobe), which only changes
+      # The colors of the theme being worn (ThemeKeeper), which only changes
       # between games.
       def palette = @theme_keeper.palette
 
-      # Whether the Looks screen is open over the Stats screen, and what
-      # it shows: every look the player can wear, and the one worn.
+      # Whether the Themes screen is open over the Stats screen, and what
+      # it shows: every theme the player can wear, and the one worn.
       def themes? = @themes
       def themes = @theme_keeper.shown
       def worn = @theme_keeper.worn
@@ -128,7 +128,7 @@ module DotPopper
       # player and a Pro one.
       def themes_offered? = stats? && !credits? && !themes? && @theme_keeper.offered?
 
-      # Where the Looks screen's cards go (LooksLayout).
+      # Where the Themes screen's cards go (LooksLayout).
       def themes_layout = ThemesLayout.new(layout:, themes: themes, style: style::THEMES_LAYOUT)
 
       def open_themes
@@ -204,7 +204,7 @@ module DotPopper
       # What the Stats screen shows, while it is open.
       def stats = @stats
 
-      # Whether the title offers "Your records" and the choice of dot size:
+      # Whether the title offers "Your stats" and the choice of dot size:
       # only once a game has finished, so a first-time player's title says
       # only how to play. A player who cleared their records has played, so
       # it still offers them, though it shows no best or goal until their
@@ -215,7 +215,7 @@ module DotPopper
       # the title shows today's goal only then.
       def played? = stats_book.stats.games.positive?
 
-      # Whether the Stats screen offers "Clear my records…": while it has
+      # Whether the Stats screen offers "Clear my stats…": while it has
       # records to clear, and no Undo is offered.
       def clear_offered? = stats? && !stats.empty && !undo_offer
 
@@ -237,11 +237,11 @@ module DotPopper
       # which #let_go names when it lets go. In a game, every tap goes to
       # the game at once. Elsewhere a tap presses the screen's button under
       # it (#controls): on the title, Play, the mute button, "How to play",
-      # "Your records", the dot-size choice, and on a desktop "Full screen"
+      # "Your stats", the dot-size choice, and on a desktop "Full screen"
       # and Quit; on Game Over, Continue and
       # "Share my score", and over it, the share preview's Copy and Close;
       # and on the
-      # Stats screen, Back, Undo, or "Clear my records…", which a press
+      # Stats screen, Back, Undo, or "Clear my stats…", which a press
       # starts holding. Empty space does nothing, but a tap on one of the
       # title's fresh dots pops it, for fun, and a tap away from the share
       # preview's card closes it. A gamepad's A, which aims at no button,
@@ -614,7 +614,7 @@ module DotPopper
       end
 
       # A gamepad's Y on the Stats screen, held by +by+: Undo while it is
-      # offered, or else the start of holding "Clear my records…".
+      # offered, or else the start of holding "Clear my stats…".
       def clear_or_undo(by)
         return if credits? || offer?
         return undo if undo_offer
@@ -622,7 +622,7 @@ module DotPopper
         hold_clear(by) if clear_offered?
       end
 
-      # +by+ (as #tap names it) let go. A hold of "Clear my records…" it
+      # +by+ (as #tap names it) let go. A hold of "Clear my stats…" it
       # made ends, with nothing cleared, if it was let go too soon.
       def let_go(by)
         @credits_drag = nil if @credits_drag&.first == by
@@ -630,19 +630,19 @@ module DotPopper
         @groups.let_go(by, now)
       end
 
-      # Whatever holds "Clear my records…" stops, with nothing cleared, as
+      # Whatever holds "Clear my stats…" stops, with nothing cleared, as
       # when the window loses focus and a release may never be heard.
       def let_go_of_everything
         @clearing = clearing.cancel
         @groups.cancel_hold
       end
 
-      # Where a press reaches "Clear my records…" and Undo on the Records
+      # Where a press reaches "Clear my stats…" and Undo on the Records
       # screen, as the title's buttons do.
       def clear_reach = reach_of(:clear)
       def undo_reach = reach_of(:undo)
 
-      # The gamepad button that holds "Clear my records…", for its words.
+      # The gamepad button that holds "Clear my stats…", for its words.
       def holding_button = clearing.by == :y ? "Y" : "A"
 
       # A gamepad's Y, or a tap on "Share my score": on Game Over, offers
@@ -704,7 +704,7 @@ module DotPopper
       def continue_reach = reach_of(:continue)
       def play_reach = reach_of(:play)
 
-      # Where a tap reaches "Your records": never less than a dot's width
+      # Where a tap reaches "Your stats": never less than a dot's width
       # where it has room, and never past the safe area's bottom.
       def stats_reach = reach_of(:stats)
 
@@ -945,7 +945,7 @@ module DotPopper
         sounds.play(:tick, pitch: 0.7)
       end
 
-      # "Clear my records…" was held long enough: the records go, and Undo
+      # "Clear my stats…" was held long enough: the records go, and Undo
       # is offered.
       def clear_stats
         @clearing = clearing.cancel

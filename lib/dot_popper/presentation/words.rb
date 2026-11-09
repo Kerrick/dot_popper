@@ -188,7 +188,7 @@ module DotPopper
       # The control's label: "Dot size".
       def sizing_label = screen_size.fetch(:choice)
 
-      # The Stats screen's heading for the records it shows: "Your records
+      # The Stats screen's heading for the records it shows: "Your stats
       # with standard dots on screens this size".
       def records_heading(sizing) = labels.fetch(sizing.sized_to_screen? ? :fitted_records : :records)
 

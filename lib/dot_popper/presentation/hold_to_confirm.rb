@@ -2,7 +2,7 @@
 
 module DotPopper
   module Presentation
-    # Clearing the records: how long "Clear my records…" must be held,
+    # Clearing the records: how long "Clear my stats…" must be held,
     # how long Undo is offered once they are cleared, and how long the
     # hint to hold stays after a press let go too soon.
     class ClearStyle < Data.define(:hold, :undo, :hint); end

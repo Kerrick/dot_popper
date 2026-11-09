@@ -80,7 +80,7 @@ class LayoutTest < Minitest::Test
   end
 
   # "How to play" stands beside the mute button, between it and "Your
-  # records", where there is room for it, with "Your records" narrowed to
+  # records", where there is room for it, with "Your stats" narrowed to
   # make room on an upright phone; and otherwise, as on the narrowest
   # phone, on a row of its own above the mute button, with the dot-size
   # choice above that. It is never smaller than a fingertip, and never

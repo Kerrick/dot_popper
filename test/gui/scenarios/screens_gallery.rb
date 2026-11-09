@@ -5,7 +5,7 @@ module DotPopperGui
   # at: the friend groups' screens (against a server named by
   # DOT_POPPER_SERVER, such as script/group_stub.rb, with
   # DOT_POPPER_GROUP_CODE the seven digits of a group on it), Records,
-  # Looks, and Game Over. DOT_POPPER_GALLERY names the shots. Run it once
+  # Themes, and Game Over. DOT_POPPER_GALLERY names the shots. Run it once
   # with DOT_POPPER_PRO=1 and once with 0. Not part of rake test:gui: it
   # is for reviewing the screens.
   class ScreensGalleryScenario < Scenario

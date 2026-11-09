@@ -14,9 +14,9 @@ module DotPopper
       end
     end
 
-    # A look for the whole game, as plain data: its +key+ (what is saved
+    # A theme for the whole game, as plain data: its +key+ (what is saved
     # of it), its +palette+ (Palette, usually the ordinary one with some
-    # colors changed), and the +season+ it appears in. The ordinary look
+    # colors changed), and the +season+ it appears in. The ordinary theme
     # has no season, and is always there. Every dot, backdrop, button and
     # word takes its colors from the palette, so a theme needs no code.
     class Theme < Data.define(:key, :palette, :season)

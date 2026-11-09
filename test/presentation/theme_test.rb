@@ -2,7 +2,7 @@
 
 require_relative "presentation_helper"
 
-# Every look the game can wear, held to the ordinary look's own standards
+# Every look the game can wear, held to the ordinary theme's own standards
 # (ColorTest): a bright dot told from a popped one by lightness and not
 # hue alone, the stack's order kept visible, and the words readable.
 class ThemeTest < Minitest::Test

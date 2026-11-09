@@ -229,7 +229,7 @@ class StorefrontTest < Minitest::Test
     show, opener = offer_show
     show.open_offer
 
-    refute_predicate show, :offer?, "the offer needs the Records screen open"
+    refute_predicate show, :offer?, "the offer needs the Stats screen open"
 
     show.open_stats
     show.open_offer

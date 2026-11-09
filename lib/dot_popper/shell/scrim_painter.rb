@@ -2,7 +2,7 @@
 
 module DotPopper
   module Shell
-    # A ScrimLook drawn behind a rect of text: rounded rects in the night's
+    # A ScrimStyle drawn behind a rect of text: rounded rects in the night's
     # darkest ink, one inside the next, so the backing is darkest in the
     # middle and its edges feather out. Its outline is on whole device
     # pixels.

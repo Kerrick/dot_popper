@@ -5,7 +5,7 @@ module DotPopper
     # Every presentation setting in one place, as Rules holds every rule:
     # colors, words, type, sizes, timings, easing, and how strong each
     # effect is. Sizes and distances are in radii (R) unless they say
-    # otherwise, so the look scales with the dot; durations are seconds.
+    # otherwise, so the theme scales with the dot; durations are seconds.
     module Style
       hex = Color.method(:hex)
 
@@ -23,13 +23,13 @@ module DotPopper
         confetti: [hex["#ffbf52"], hex["#ff8fb8"], hex["#7df0c6"], hex["#b9a6ff"], hex["#fff4de"]].freeze
       )
 
-      # The looks the game can wear, the ordinary one first (Wardrobe), each
+      # The looks the game can wear, the ordinary one first (ThemeKeeper), each
       # the ordinary palette with some colors changed. Each keeps a fresh
       # dot light, glossy and warm-bright against a dark, matte, sunken
       # popped one, so the two read apart in grayscale and not by hue
       # alone, and a popped dot's rim shows against what lies under it, so
       # the stack's order stays visible; test/presentation/theme_test.rb
-      # holds every one to the ordinary look's own contrast. A holiday
+      # holds every one to the ordinary theme's own contrast. A holiday
       # theme appears from its season's first day to its last.
       THEMES = [
         Theme.new(key: :classic, palette: PALETTE),
@@ -136,8 +136,8 @@ module DotPopper
         }.freeze,
         cleared: "Stats cleared.", undo: ByInput.new(touch: "Undo", mouse: "Undo", gamepad: "Undo (Y)"),
         labels: {
-          records: "Your records with standard dots on screens this size",
-          fitted_records: "Your records with dots sized to the screen",
+          records: "Your stats with standard dots on screens this size",
+          fitted_records: "Your stats with dots sized to the screen",
           chart_note: "Brighter bars are games with standard dots on screens this size.",
           fitted_chart_note: "Brighter bars are games with dots sized to the screen.",
           score_record: "Highest score", longest_game: "Longest game",
@@ -175,7 +175,7 @@ module DotPopper
       # longest row needs, so each label stays near its number.
       RECORDS = StatsStyle.new(heading: 48, text: 23, line: 1.6, chart: 4.2, gap: 56, column: 520, veil: 0.9)
 
-      # The Looks screen, over the Stats screen: its heading's size, the
+      # The Themes screen, over the Stats screen: its heading's size, the
       # gap between cards in margins, a card's height in its width, and the
       # widest a card grows (in units at a scale of 1).
       THEMES_LAYOUT = ThemesStyle.new(heading: 48, gap: 1.0, ratio: 0.78, widest: 260)
@@ -187,7 +187,7 @@ module DotPopper
       # wheel's notch and a stick at full tilt move it.
       CREDITS = CreditsStyle.new(text: 20, line: 1.5, column: 680, wheel: 3, stick: 14)
 
-      # Clearing the records, from the Stats screen: "Clear my records…"
+      # Clearing the records, from the Stats screen: "Clear my stats…"
       # is held for two seconds, never only tapped, and Undo is offered
       # for ten after. A press let go too soon leaves its hint, to hold
       # it, for a moment.
@@ -263,7 +263,7 @@ module DotPopper
       # How a dot is drawn by the dot shader (assets/shaders/dot.glsl),
       # and the edge a player aims at: what is seen of a dot at rest ends
       # at its hit circle, radius 1, with a crisp rim, so a moving target
-      # is easy to track. See DotLook.
+      # is easy to track. See DotStyle.
       DOT = DotStyle.new(extent: 1.25, rim: 0.055, shadow_offset: 0.07, shadow_reach: 1.08, shadow_alpha: 0.4,
                         halo_width: 0.035, halo_alpha: 0.16, legend: 0.34)
 

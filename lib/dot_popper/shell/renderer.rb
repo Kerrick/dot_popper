@@ -94,7 +94,7 @@ module DotPopper
 
       def radius = @show.cabinet.field.radius
 
-      # The screen open over the title's dimmed dots: Credits, Looks, or
+      # The screen open over the title's dimmed dots: Credits, Themes, or
       # the Stats screen they were opened from.
       def stats_screen
         if @show.credits? then @credits

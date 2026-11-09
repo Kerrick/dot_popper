@@ -15,7 +15,7 @@ module DotPopperGui
       open_by_click
       lit = screenshot.lit_in(DotPopper::Presentation::Rect.new(x: layout.center_x - 200, y: layout.top,
                                                                 width: 400, height: layout.safe.height * 0.5))
-      check(lit > 100, "the Records screen shows its words (#{lit} light pixels)")
+      check(lit > 100, "the Stats screen shows its words (#{lit} light pixels)")
       click(layout.safe.x + 20, layout.top + 20)
       check(show.stats?, "a click elsewhere does nothing")
       back = show.back_reach
@@ -35,7 +35,7 @@ module DotPopperGui
     def open_by_click
       reach = show.stats_reach
       click(reach.center_x, reach.center_y)
-      check(show.stats?, "a click on Your records opens them")
+      check(show.stats?, "a click on Your stats opens them")
     end
 
     def closed(how)

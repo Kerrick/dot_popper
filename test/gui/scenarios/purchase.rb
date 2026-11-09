@@ -44,11 +44,11 @@ module DotPopperGui
       run_out_the_clock
       continue_to_title
       show.open_stats
-      check(!show.controls.map(&:name).include?(:offer), "the Records screen no longer offers the purchase")
-      check(!show.themes_locked?, "the looks are the player's to wear")
+      check(!show.controls.map(&:name).include?(:offer), "the Stats screen no longer offers the purchase")
+      check(!show.themes_locked?, "the themes are the player's to wear")
       check(show.group_panel.pro?, "the player can create a friend group")
       show.open_themes
-      check(show.themes?, "Looks opens")
+      check(show.themes?, "Themes opens")
       wait(0.5)
       keep_screenshot("purchase-pro-looks")
     end

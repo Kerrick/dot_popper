@@ -6,7 +6,7 @@ module DotPopper
     # last, on top, each with its own shadow and halo in that same order:
     # a popped dot covers the halo of a fresh dot beneath it. Each dot is
     # drawn at its rule position; its pose only scales it about that
-    # centre, and at rest it ends at its hit circle (Presentation::DotLook).
+    # centre, and at rest it ends at its hit circle (Presentation::DotStyle).
     #
     # With the dot shader, a dot is drawn from its geometry in one square.
     # Without it, plain circles keep the same distinction: a light disc
@@ -37,8 +37,8 @@ module DotPopper
         paint { one(x, y, radius, fresh ? Presentation::Pose::FRESH : Presentation::Pose::STILL, opacity, bonus) }
       end
 
-      # One plain dot in the colors of +palette+, whichever look is worn,
-      # as the Looks screen shows each look's pair.
+      # One plain dot in the colors of +palette+, whichever theme is worn,
+      # as the Themes screen shows each theme's pair.
       def swatch(x, y, radius, palette, fresh:)
         G.push do
           G.translate(x, y)

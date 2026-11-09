@@ -10,7 +10,7 @@ module DotPopper
     # on, "Share my score" on every other Game Over, then Copy in the
     # share preview, and Close, a moment apart (on a phone, the system's
     # share sheet opens instead, and the bot goes on), and on its second visit to
-    # the title, "Your records", and Back after a while. The first time the title offers
+    # the title, "Your stats", and Back after a while. The first time the title offers
     # the choice of dot size, it taps the other one, so a run shows the
     # title's dots change. It sees only what a player sees: the dots and
     # the screen.
@@ -83,7 +83,7 @@ module DotPopper
         middle(show.sizing_reaches.reject { |sizing, _| sizing == show.cabinet.sizing }.first.last)
       end
 
-      # Opens "Your records" once it is offered, and presses Back after
+      # Opens "Your stats" once it is offered, and presses Back after
       # +records_wait+; the title's own wait then starts again.
       def browse(show)
         if show.stats?

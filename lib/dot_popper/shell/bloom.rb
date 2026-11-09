@@ -12,7 +12,7 @@ module DotPopper
     # drawn into it.
     #
     # It is optional: without the blur shader (DOT_POPPER_NO_SHADERS=1
-    # included), or a canvas, or with no strength in the look, #glow
+    # included), or a canvas, or with no strength in the theme, #glow
     # draws nothing and the game looks as it did without it.
     class Bloom
       G = ::Lota::Graphics

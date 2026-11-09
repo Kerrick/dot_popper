@@ -168,7 +168,7 @@ module DotPopper
       def note_size = [layout.scaled(style.text * 0.9), SMALLEST_TEXT].max
       def note_y(i) = heading_y + (heading_size * 0.75) + (note_size * 1.3 * (i + 0.5))
       def prompt_size = layout.scaled(Style::TYPE.prompt)
-      # The prompt to go back sits over the row of "Clear my records…".
+      # The prompt to go back sits over the row of "Clear my stats…".
       def prompt_y = layout.stats_floor(themes:, offer:) - layout.margin - (prompt_size * 0.6)
 
       # The rows' type size, and the height of a row.
@@ -211,7 +211,7 @@ module DotPopper
       end
 
       # How wide a column would like to be: as its longest row needs, and
-      # never past the look's widest.
+      # never past the theme's widest.
       def wanted = [widest || Float::INFINITY, layout.scaled(style.column)].min
 
       # The body starts under the heading, lowered by a third of the room

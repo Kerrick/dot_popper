@@ -85,7 +85,7 @@ module DotPopper
       HOW_TO_PLAY_LEAST = 3.1 # ...and the least it is drawn at in the bottom row
       FULL_SCREEN = 3.8 # "Full screen"'s width, in its heights, as wide as "How to play"
       QUIT = 2.4 # "Quit"'s width, in its heights
-      THEMES_LAYOUT = 3.0 # the Stats screen's "Looks" width, in its height
+      THEMES_LAYOUT = 3.0 # the Stats screen's "Themes" width, in its height
 
       # The scale for text and the HUD: 1 on a mid-sized window, smaller on
       # a phone, a little larger on a big screen.
@@ -125,7 +125,7 @@ module DotPopper
         Rect.new(x: safe.right - margin - size, y: top, width: size, height: size)
       end
 
-      # The title's "Your records" button, in the safe area's bottom left
+      # The title's "Your stats" button, in the safe area's bottom left
       # corner, across from the mute button and as tall as it: HOW_TO_PLAY
       # buttons' heights across, or, where the row is short of room for it
       # and "How to play" both at that width, as on an upright phone, as
@@ -141,7 +141,7 @@ module DotPopper
       # the first of the bottom row's right-hand group, beside the window
       # buttons where +window+ (WindowButtons) puts them in the row, and
       # otherwise beside the mute button, as tall as it. It takes the room
-      # left of them, past "Your records", up to HOW_TO_PLAY buttons'
+      # left of them, past "Your stats", up to HOW_TO_PLAY buttons'
       # heights across; where that is less than HOW_TO_PLAY_LEAST, as on a
       # small phone held upright, it takes a row of its own above the mute
       # button instead, as the dot-size choice does.
@@ -158,8 +158,8 @@ module DotPopper
         Rect.new(x: safe.right - margin - width, y: mute_button.y - row_apart(height) - height, width:, height:)
       end
 
-      # The Stats screen's "Clear my records…": small, in the safe
-      # area's bottom right corner, across from where "Your records" was
+      # The Stats screen's "Clear my stats…": small, in the safe
+      # area's bottom right corner, across from where "Your stats" was
       # pressed, and on a row of its own under the prompt to go back.
       def clear_stats_button
         height = button_size
@@ -168,7 +168,7 @@ module DotPopper
       end
 
       # The Stats screen's Back, in the bottom left corner, where "Your
-      # records" was pressed, across from "Clear my records…" and never
+      # records" was pressed, across from "Clear my stats…" and never
       # into it.
       def back_button
         height = button_size
@@ -177,7 +177,7 @@ module DotPopper
       end
 
       # The Stats screen's Credits, a quiet pill beside Back, between it
-      # and "Clear my records…", when there is room for it there; and
+      # and "Clear my stats…", when there is room for it there; and
       # otherwise, as on an upright phone, on a row of its own above Back.
       def credits_button
         height = button_size
@@ -190,8 +190,8 @@ module DotPopper
         end
       end
 
-      # The Stats screen's Looks, a quiet pill of the same kind, offered
-      # once there is a look to choose. It follows Credits along the bottom
+      # The Stats screen's Themes, a quiet pill of the same kind, offered
+      # once there is a theme to choose. It follows Credits along the bottom
       # row when there is room for both, and otherwise takes the row above
       # Back, beside Credits if that is there too and has room, or over it.
       def themes_button
@@ -218,7 +218,7 @@ module DotPopper
 
       # The Stats screen's way to Pro, a quiet pill at the
       # right, on a row of its own above every other button there, so it
-      # never takes the place of Credits or Looks.
+      # never takes the place of Credits or Themes.
       def offer_button
         height = button_size
         width = [height * 3.4, safe.width - (2 * margin)].min
@@ -265,7 +265,7 @@ module DotPopper
       end
 
       # Whether the bottom row has room for +window+ (WindowButtons) with
-      # "How to play" still beside them, short of "Your records".
+      # "How to play" still beside them, short of "Your stats".
       def fits_in_row?(window) = how_to_play_button(window:).y == mute_button.y
 
       # The same two as only their icons, game, a row above the bottom
@@ -290,7 +290,7 @@ module DotPopper
       # The title's choice of dot size: its label, then its two segments,
       # each as tall as a button and wide enough for a dot icon and a few
       # words. The title shows it only where it changes something. With
-      # room between "Your records" and "How to play", it sits there,
+      # room between "Your stats" and "How to play", it sits there,
       # label on the left, its segments centred on the screen if they can
       # be: the middle of the row, between the player's records on the
       # left and help, the window and sound on the right. Otherwise, as on
@@ -321,7 +321,7 @@ module DotPopper
       # How far apart two rows of buttons are, each +height+ tall, so each
       # is reached a good way past its edge: up to a standard dot's width
       # around it, as far as a short screen allows. (The Android playtest
-      # found a tap on Standard's lower half opening "Your records".)
+      # found a tap on Standard's lower half opening "Your stats".)
       def row_apart(height) = [margin, [(2 * Rules::RADIUS) - height, safe.height * 0.05].min].max
 
       # The choice a row above the buttons, and above "How to play" (+how+)

@@ -29,7 +29,7 @@ module DotPopper
 
       attr_reader :palette
 
-      # Puts on the look whose colors are +palette+ (Presentation::Wardrobe):
+      # Puts on the theme whose colors are +palette+ (Presentation::ThemeKeeper):
       # the shaders are given its colors and the hover's lit colors follow
       # it. Says whether it was a change, so the caller can redraw what it
       # keeps, such as the clear color. A palette already worn changes nothing.
@@ -42,14 +42,14 @@ module DotPopper
         true
       end
 
-      # What a button the mouse is over is lit with (Presentation::HoverLook):
+      # What a button the mouse is over is lit with (Presentation::HoverStyle):
       # the night's glow behind it and cream around it, in the worn palette.
       def lit
         @lit ||= style::HOVER.with(fill: palette.ink_glow.with_alpha(style::HOVER.fill.a), edge: palette.cream)
       end
 
       # +color+ as the worn palette has it: one of the ordinary palette's
-      # colors, which Look gives to rings and flashes, becomes the worn
+      # colors, which Style gives to rings and flashes, becomes the worn
       # palette's color for the same job; any other color stays.
       def themed(color)
         ordinary = style::PALETTE.to_h

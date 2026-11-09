@@ -212,9 +212,9 @@ module DotPopper
 
     # The Credits screen laid out in the safe area: the heading at the
     # top as the Stats screen has it, Back along the bottom, and between
-    # them the window the text scrolls in, as wide as +look+'s column.
+    # them the window the text scrolls in, as wide as +style+'s column.
     # +wanted+ is how wide the text would like to be: the widest line of a
-    # license to show as written, if wider than the look's column.
+    # license to show as written, if wider than the theme's column.
     class CreditsLayout < Data.define(:layout, :style, :wanted)
       def initialize(layout:, style:, wanted: 0.0) = super
       def heading_size = layout.scaled(Style::RECORDS.heading)

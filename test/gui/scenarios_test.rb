@@ -38,19 +38,19 @@ class GuiScenariosTest < Minitest::Test
   end
 
   def test_the_stats_screen
-    play("records", "a click on Back goes back", "Escape goes back", "a gamepad's B goes back",
+    play("stats", "a click on Back goes back", "Escape goes back", "a gamepad's B goes back",
          "a click elsewhere does nothing")
   end
 
   def test_the_credits_screen
     play("credits", "a click on Credits opens them", "the wheel scrolls down", "End goes to the end",
-         "a finger's drag moves the page along", "Escape goes back to the Records screen",
-         "a gamepad's B goes back to the Records screen", "Escape again goes back to the title")
+         "a finger's drag moves the page along", "Escape goes back to the Stats screen",
+         "a gamepad's B goes back to the Stats screen", "Escape again goes back to the title")
   end
 
   def test_choosing_a_holiday_style_from_the_pro_version
-    play("themes", "a pro player wears the theme in season", "the Records screen offers Looks once a look is earned",
-         "a click on the ordinary look's card wears it at once", "Escape leaves Looks for the Records screen",
+    play("themes", "a pro player wears the theme in season", "the Stats screen offers Themes once a theme is earned",
+         "a click on the ordinary theme's card wears it at once", "Escape leaves Themes for the Stats screen",
          DOT_POPPER_PRO: "1", DOT_POPPER_TODAY: "2026-10-31")
   end
 
@@ -78,7 +78,7 @@ class GuiScenariosTest < Minitest::Test
   end
 
   def test_the_mouse_over_a_button_lights_it_and_shows_the_hand
-    play("hover", "the mouse over Your records hovers it", "the pointer is the pointing hand",
+    play("hover", "the mouse over Your stats hovers it", "the pointer is the pointing hand",
          "moving away clears the hover and the hand", "a finger over it leaves no hover")
   end
 
@@ -98,7 +98,7 @@ class GuiScenariosTest < Minitest::Test
 
   def test_a_free_player_buys_the_pro_version_on_a_test_builds_store
     play("purchase", "the games have run out", "Play leads to the offer", "the store gave its price", "Buy waits for the store",
-         "the Records screen no longer offers the purchase", "Looks opens", "scenario purchase passed",
+         "the Stats screen no longer offers the purchase", "Themes opens", "scenario purchase passed",
          DOT_POPPER_FREE_GAMES: "1", DOT_POPPER_TODAY: "2026-10-31")
   end
 

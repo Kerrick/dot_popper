@@ -58,7 +58,7 @@ module DotPopper
     # (+goal+, its sentence or "Today's goal is done." once +done+), and
     # the days in a row it has been met (+streak+, from 2). Under Play,
     # where games are counted, stands how many are left (+games+). Along the
-    # bottom, one row in three groups: "Your records" at the left once
+    # bottom, one row in three groups: "Your stats" at the left once
     # +records+ is offered, the dot-size choice in the middle where
     # +sizing+ is, and at the right "How to play", on a desktop
     # (+window+) "Full screen" and Quit (#window_buttons), and the mute

@@ -16,7 +16,7 @@ module DotPopper
     end
 
     # The share preview over Game Over: a card, as wide as its message
-    # needs, up to what +look+ (SharePreviewLook) or the safe area
+    # needs, up to what +style+ (SharePreviewStyle) or the safe area
     # allows, in the middle of the screen, holding "Share your score", the result's +lines+ in a
     # message bubble, room for "Copied!" once Copy has copied, and Close
     # and Copy. Short
@@ -41,7 +41,7 @@ module DotPopper
       end
 
       # The card's inside, from a margin and its padding inside the safe
-      # area, at most as wide as the look asks.
+      # area, at most as wide as the theme asks.
       def room
         inside = layout.margin + pad
         safe = layout.safe

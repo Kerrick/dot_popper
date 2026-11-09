@@ -118,7 +118,7 @@ class ClearingStatsTest < Minitest::Test
     refute @show.stats.empty
   end
 
-  # A cleared device's title is a new player's, but for "Your records"
+  # A cleared device's title is a new player's, but for "Your stats"
   # and the dot-size choice: those are the player's, not records.
   def test_the_title_after_clearing_shows_no_score_record_or_goal_but_keeps_its_buttons
     clear_by(:mouse)

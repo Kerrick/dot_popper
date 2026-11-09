@@ -28,7 +28,7 @@ class StatsSheetTest < Minitest::Test
   def test_the_sheet_lists_the_records_and_the_totals_in_plain_words
     rows = sheet.records.rows.to_h { [it.label, it.value] }
 
-    assert_equal "Your records with standard dots on screens this size", sheet.records.title
+    assert_equal "Your stats with standard dots on screens this size", sheet.records.title
     assert_equal({ "Highest score" => "27", "Longest game" => "48 seconds",
                    "Most dots in a row without a mistake" => "18", "Shortest Time to Pop" => "0.3 seconds",
                    "Longest Time to Pop" => "6.2 seconds" }, rows)
@@ -54,7 +54,7 @@ class StatsSheetTest < Minitest::Test
                                        field: DotPopper::Field.new(395, 850, 30),
                                        sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
 
-    assert_equal "Your records with dots sized to the screen", fitted.records.title
+    assert_equal "Your stats with dots sized to the screen", fitted.records.title
     assert_equal ["None yet"], fitted.records.rows.map(&:value).values_at(3)
     assert_equal ["This screen is about 7 dots wide and 14 dots tall.",
                   "Dots are sized to fit this screen, so scores compare across devices."], fitted.notes
@@ -145,7 +145,7 @@ class StatsSheetTest < Minitest::Test
   def test_the_chart_leads_when_there_are_scores
     plan = StatsLayout.new(layout: layout(400, 850), sheet:, style: Style::RECORDS)
 
-    assert_equal ["Your last 4 games", :chart, "Your records with standard dots on screens this size"],
+    assert_equal ["Your last 4 games", :chart, "Your stats with standard dots on screens this size"],
                  plan.placements.first(3).map(&:item)
   end
 

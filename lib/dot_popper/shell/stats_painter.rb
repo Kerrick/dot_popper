@@ -6,8 +6,8 @@ module DotPopper
     # notes on the screen's size under it, the chart of the last scores,
     # the records and totals as rows with their labels on the left and
     # their numbers lined up on the right, a faint dotted leader between,
-    # and along the bottom, Back in one corner, quiet Credits beside it and "Clear my records…" or,
-    # once they are cleared, Undo in the other. While "Clear my records…"
+    # and along the bottom, Back in one corner, quiet Credits beside it and "Clear my stats…" or,
+    # once they are cleared, Undo in the other. While "Clear my stats…"
     # is held, the prompt says what will go, and a bar under it fills.
     # Presentation::RecordsLayout decides where each goes; this only draws,
     # on whole device pixels.
@@ -59,7 +59,7 @@ module DotPopper
         sheet.notes.flat_map { |note| Presentation::Words.balance(note, room) { font.width(it) } }
       end
 
-      # While "Clear my records…" is held, what holding it will clear; and
+      # While "Clear my stats…" is held, what holding it will clear; and
       # for a moment after a press let go too soon, that it must be held.
       def prompt(show, plan, layout)
         words = show.words
@@ -82,7 +82,7 @@ module DotPopper
                                                                               color: pen.palette.soft, hover: show.hover.level(:credits))
       end
 
-      # Looks, quiet like Credits, with a bright dot and a popped one over
+      # Themes, quiet like Credits, with a bright dot and a popped one over
       # it for its icon.
       def themes(show, layout)
         hover = show.hover.level(:themes)
@@ -128,7 +128,7 @@ module DotPopper
         end
       end
 
-      # "Clear my records…", quiet in soft type. While it's held, the button
+      # "Clear my stats…", quiet in soft type. While it's held, the button
       # itself fills from the left in the alarm's pink, so how far along
       # the hold is can't be missed, and its words are drawn again on top.
       def clear(show, layout)
@@ -153,7 +153,7 @@ module DotPopper
         G.polygon(:fill, *outline)
       end
 
-      # "Records cleared." beside Undo, and under Undo, a faint bar that
+      # "Stats cleared." beside Undo, and under Undo, a faint bar that
       # empties as the time to undo runs out.
       def undo(show, offer, layout)
         rect = layout.undo_button

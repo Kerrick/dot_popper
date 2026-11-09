@@ -3,7 +3,7 @@
 module DotPopperGui
   # Every look, in the screens it dresses, at the sizes that matter, kept
   # as screenshots to look at side by side: the title, the Stats screen,
-  # the Looks screen, a game under way and Game Over, on a desktop's
+  # the Themes screen, a game under way and Game Over, on a desktop's
   # windows and on phone-shaped ones. It checks nothing but that each look
   # can be worn; DOT_POPPER_GALLERY names the shots. Needs
   # DOT_POPPER_PRO=1. Not part of rake test:gui: it is for reviewing the

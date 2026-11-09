@@ -110,10 +110,10 @@ desktop:
     quotes: [Share my score, Copy]
 
   - id: 10
-    try: On the title screen, click "Your records" in the bottom left corner. Then click Back.
-    ask: '"Your records" opens your records, and Back takes you back to the title. A click elsewhere on that screen does nothing.'
+    try: On the title screen, click "Your stats" in the bottom left corner. Then click Back.
+    ask: '"Your stats" opens your records, and Back takes you back to the title. A click elsewhere on that screen does nothing.'
     answer: yes_no
-    quotes: [Your records, Back]
+    quotes: [Your stats, Back]
 
   - id: 11
     ask: Text looks sharp, not blurry, at your display scale.
@@ -157,9 +157,9 @@ desktop:
   - id: 17
     group: controller
     try: On the title screen, press X. Then press B.
-    ask: X opens "Your records", and B goes back to the title (the screen's button says "Back (B)").
+    ask: X opens "Your stats", and B goes back to the title (the screen's button says "Back (B)").
     answer: yes_no
-    quotes: [Your records, Back (B)]
+    quotes: [Your stats, Back (B)]
 
   - id: 18
     group: controller
@@ -302,11 +302,11 @@ android:
   - id: 7
     try: >-
       Press Back (the back button, or a swipe in from the left or right edge)
-      on each screen in turn: on "Your records" (tap it on the title screen),
+      on each screen in turn: on "Your stats" (tap it on the title screen),
       during a game, at Game Over, and last on the title screen.
     ask: "What Back does:"
     parts:
-      - ask: on Your records, it goes back to the title
+      - ask: on Your stats, it goes back to the title
         answer: yes_no
       - ask: during a game, it does nothing, and the game carries on
         answer: yes_no
@@ -314,7 +314,7 @@ android:
         answer: yes_no
       - ask: on the title screen, it leaves the app
         answer: yes_no
-    quotes: [Your records]
+    quotes: [Your stats]
 
   - id: 8
     ask: Rotating the phone in the middle of a game keeps every dot on screen.

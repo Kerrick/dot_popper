@@ -58,7 +58,7 @@ module DotPopper
       def replay = with(replayed: replayed + 1)
     end
 
-    # How "Share my score" comes in (FinaleLook's +share+): it rises
+    # How "Share my score" comes in (FinaleStyle's +share+): it rises
     # +lift+ units into place along +arrive+, bouncing a little past it,
     # and as it settles a ring spreads out from its edge and fades,
     # +ring_reach+ units at most and +ring_alpha+ bright. On a new record it
@@ -73,7 +73,7 @@ module DotPopper
     # opacity (+ring_alpha+, 0 for no ring).
     class ShareCue < Data.define(:alpha, :drop, :ring, :ring_alpha)
       # The cue +elapsed+ seconds after the score landed, negative before
-      # then, by +look+ (ShareCueLook); +best+ for a new record.
+      # then, by +style+ (ShareCueStyle); +best+ for a new record.
       def self.at(elapsed, style, score_record: false)
         elapsed -= style.score_record_delay if score_record
         return new(alpha: 0.0, drop: 0.0, ring: 0.0, ring_alpha: 0.0) unless elapsed.positive?

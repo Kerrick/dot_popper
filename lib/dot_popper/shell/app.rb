@@ -209,7 +209,7 @@ module DotPopper
 
       # The window lost focus or got it back. A finger or button let go
       # meanwhile is never heard, so the pile's dots are let go now, and
-      # so is "Clear my records…", and no release is waited for to drop.
+      # so is "Clear my stats…", and no release is waited for to drop.
       def focus(focused)
         return if focused
 
@@ -247,7 +247,7 @@ module DotPopper
         end
       end
 
-      # Y: on the Stats screen, "Clear my records…" held, or Undo; on the
+      # Y: on the Stats screen, "Clear my stats…" held, or Undo; on the
       # title, where there is nothing to share, "How to play"; and
       # elsewhere, "Share my score".
       def share_pressed
@@ -259,7 +259,7 @@ module DotPopper
 
       # A gamepad button came up. Letting go of A ends its press, which on
       # Game Over throws a dragged dot, or goes on, as a click does; letting
-      # go of Y ends a hold of "Clear my records…".
+      # go of Y ends a hold of "Clear my stats…".
       def gamepad_released(button)
         case @buttons.intent(button)
         in :press then gamepad_up(:a)
@@ -371,7 +371,7 @@ module DotPopper
         ::Lota::Keyboard.key_repeat = reading
       end
 
-      # Puts on the Show's look if it has changed (Presentation::Wardrobe),
+      # Puts on the Show's look if it has changed (Presentation::ThemeKeeper),
       # which is only ever between games.
       def dress
         @renderer.prepare if @pen.wear(@show.palette)
@@ -642,7 +642,7 @@ module DotPopper
       end
 
       def screen_name
-        if @show.stats? then "Your records"
+        if @show.stats? then "Your stats"
         elsif @show.tutorial? then "the tutorial"
         elsif @show.playing? then "a game"
         elsif @show.game_over? then "Game Over"

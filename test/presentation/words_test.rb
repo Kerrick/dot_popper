@@ -85,7 +85,7 @@ class WordsTest < Minitest::Test
     refute(said.flatten.any? { it.include?("anywhere") }, "no press goes anywhere")
   end
 
-  # Holding "Clear my records…" says what will go, and on a gamepad
+  # Holding "Clear my stats…" says what will go, and on a gamepad
   # names the button being held.
   def test_clearing_the_stats_says_what_goes_and_names_the_button
     mouse = Style::WORDS.for(InputKind::MOUSE)

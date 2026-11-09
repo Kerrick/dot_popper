@@ -58,7 +58,7 @@ def results(checklist, text)
     "a clean exit" => /^exit code: 0$/, "the save folder" => /^== The game's save folder/, "the end" => /^finished: /
   ).each { |what, pattern| problems << "no sign of #{what}" unless text.match?(pattern) }
   # A game finishes within a session only when the bot lets the clock
-  # run out, so a missing games.csv is worth a look, not a failure.
+  # run out, so a missing games.csv is worth a theme, not a failure.
   puts "::warning::no games.csv in the results: no game finished" unless text.match?(/^-- games\.csv$/)
   problems
 end

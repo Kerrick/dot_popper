@@ -31,7 +31,7 @@ module DotPopper
     end
 
     # The way the dots are pulled, in g, on the screen: +x+ to the right,
-    # +y+ down. A pull of 1 is the pile's own gravity (PileLook), so a
+    # +y+ down. A pull of 1 is the pile's own gravity (PileStyle), so a
     # tablet held upright, or a stick at rest, drops the dots as before.
     class Pull < Data.define(:x, :y)
       STANDARD_GRAVITY = 9.80665 # m/s², a reading of 1 g
@@ -131,8 +131,8 @@ module DotPopper
     end
 
     # Notices a shake: a reading that jumps away from its recent average
-    # by more than the look's +shake+, the high-pass part of the signal,
-    # and then, within the look's +reversal+ seconds, jumps as far the
+    # by more than the theme's +shake+, the high-pass part of the signal,
+    # and then, within the theme's +reversal+ seconds, jumps as far the
     # other way. +first+ is the jolt waiting for its reversal, or nil, and
     # +waiting+ how much longer it waits.
     # After one, it waits out the +cooldown+ before it notices another, so

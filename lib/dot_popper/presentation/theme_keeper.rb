@@ -2,17 +2,17 @@
 
 module DotPopper
   module Presentation
-    # Which look the game wears. A holiday theme (Theme) appears during its
+    # Which theme the game wears. A holiday theme (Theme) appears during its
     # season, and one game played then earns it for good; an earned theme
     # is kept whether or not the player has bought Pro, and
     # is worn the day they do. Wearing a theme is Pro's, so
-    # the wardrobe asks the +entitlement+ and nothing else: for a free
-    # player the ordinary look is always worn. A free player is still shown
-    # every look, and which of them they have earned (#shown): the same
+    # the theme keeper asks the +entitlement+ and nothing else: for a free
+    # player the ordinary theme is always worn. A free player is still shown
+    # every theme, and which of them they have earned (#shown): the same
     # rule as the achievements, to show what is there, plainly, in one
     # calm place.
     #
-    # What is worn is settled when the wardrobe is made, when the title
+    # What is worn is settled when the theme keeper is made, when the title
     # shows (#refresh), and when the player chooses, never in the middle of
     # a game, so a game is never dressed twice. Until the player chooses,
     # the theme in season is worn; once they do, their choice is, all year.
@@ -24,7 +24,7 @@ module DotPopper
       EARNED = "earned"
       CHOSEN = "chosen"
 
-      # A wardrobe that keeps nothing and has bought nothing, for a Show
+      # A theme keeper that keeps nothing and has bought nothing, for a Show
       # made without one.
       def self.plain(themes)
         new(ScoreRecord::Memory.new, themes:, entitlement: Entitlement.free, today: -> { Date.today })
@@ -57,7 +57,7 @@ module DotPopper
       # Whether +theme+ is the player's for good.
       def earned?(theme) = theme.ordinary? || @earned.include?(theme.key)
 
-      # What the player can wear: the ordinary look, what they have
+      # What the player can wear: the ordinary theme, what they have
       # earned, and what is in season now, in the catalog's order.
       def choices
         @themes.select { it.ordinary? || earned?(it) || it.in_season?(@today.call) }
@@ -88,7 +88,7 @@ module DotPopper
       end
 
       # Works out again what is worn: the player's choice, else what is in
-      # season, else the ordinary look; and always the ordinary look
+      # season, else the ordinary theme; and always the ordinary theme
       # before the purchase.
       def refresh
         @worn = if !@entitlement.pro? then ordinary

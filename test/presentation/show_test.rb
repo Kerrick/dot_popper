@@ -499,7 +499,7 @@ class ShowTest < Minitest::Test
 
     @show.open_stats
     assert @show.back
-    refute @show.back, "with no Records screen, back has nothing to do"
+    refute @show.back, "with no Stats screen, back has nothing to do"
     assert @show.title?
   end
 

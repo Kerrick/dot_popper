@@ -77,7 +77,7 @@ module DotPopper
       end
 
       # Graphics units a second at full tilt and full pace: enough to cross
-      # the window's diagonal in the look's +crossing+, counting the half
+      # the window's diagonal in the theme's +crossing+, counting the half
       # of the ramp it spends gathering speed, and no less than +speed+
       # radii a second.
       def top_speed

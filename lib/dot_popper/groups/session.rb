@@ -91,7 +91,7 @@ module DotPopper
       # Whether a counting game has ended and its result is still awaited.
       def result_due? = @result_due
 
-      # Looks up the groups, at launch and when the groups' screen opens.
+      # Themes up the groups, at launch and when the groups' screen opens.
       # Without a token there is nothing to look up and nothing is sent.
       def refresh
         return unless known?

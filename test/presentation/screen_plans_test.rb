@@ -269,7 +269,7 @@ class ScreenPlansTest < Minitest::Test
   end
 
   # The Android playtest: on an upright phone, a tap on the lower half of
-  # the dot size's Standard also reached "Your records" below it. Now no
+  # the dot size's Standard also reached "Your stats" below it. Now no
   # point is in two buttons' reaches on any screen, and a tap at the
   # middle of each button as drawn reaches that button. On a desktop's
   # window, of any size it can be, the same holds with "Full screen" and
@@ -362,10 +362,10 @@ class ScreenPlansTest < Minitest::Test
     show.primary
     yield "the title after a game", show
     show.open_stats
-    yield "the Records screen", show
+    yield "the Stats screen", show
     show.tap(*middle(show.clear_reach))
     show.update(Style::RECORDS_CLEAR.hold)
-    yield "the Records screen with Undo", show
+    yield "the Stats screen with Undo", show
     show.open_credits
     yield "the Credits screen", show
   end

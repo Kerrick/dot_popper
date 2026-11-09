@@ -26,7 +26,7 @@ module DotPopper
     # of room, the type shrinks first; then the record goes, the facts, the
     # goal, the best, "Time's up!", and last "Share my score".
     # The score and Continue always stay. The backing (+scrim+, a
-    # ScrimLook) is drawn around everything above Continue, so "Share my
+    # ScrimStyle) is drawn around everything above Continue, so "Share my
     # score" reads as part of the score, and Continue, which needs none,
     # stands apart on the pile; it hides no more of the pile than it must.
     # Sizes are measured with +measure+ (RoughMeasure's methods).

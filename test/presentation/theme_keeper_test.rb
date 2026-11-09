@@ -18,7 +18,7 @@ class ThemeKeeperTest < Minitest::Test
     theme_keeper = theme_keeper(pro: false)
 
     assert_predicate theme_keeper.worn, :ordinary?
-    assert_predicate theme_keeper, :offered?, "a free player is shown the looks"
+    assert_predicate theme_keeper, :offered?, "a free player is shown the themes"
     assert_predicate theme_keeper, :locked?
     assert_equal Style::THEMES, theme_keeper.shown
     theme_keeper.wear(Style::THEMES.last)

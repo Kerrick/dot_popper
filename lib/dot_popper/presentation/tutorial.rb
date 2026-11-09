@@ -96,7 +96,7 @@ module DotPopper
     #
     # It plays its pops, cost, and chimes through the Show's +effects+,
     # +sounds+, and +haptics+, on a +field+ like a game's, from +center+,
-    # the screen's middle, as +look+ (Look) says, on the Show's clock from
+    # the screen's middle, as +style+ (Style) says, on the Show's clock from
     # +now+. Its last dot is drawn from +random+, as a game's are.
     class Tutorial
       BRIGHT = 0 # the first bright dot's id

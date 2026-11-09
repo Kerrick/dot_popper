@@ -2,19 +2,19 @@
 
 module DotPopper
   module Presentation
-    # Sizes for the Looks screen, in graphics units at a scale of 1: the
+    # Sizes for the Themes screen, in graphics units at a scale of 1: the
     # heading's type, the gap between cards in margins, a card's height as
     # a share of its width, the widest a card grows, and the type of the
     # note a free player is given.
     class ThemesStyle < Data.define(:heading, :gap, :ratio, :widest); end
 
-    # One look on the Looks screen, where it is drawn.
+    # One theme on the Themes screen, where it is drawn.
     class ThemeCard < Data.define(:theme, :rect); end
 
-    # The Looks screen laid out in the safe area: the heading at the top,
+    # The Themes screen laid out in the safe area: the heading at the top,
     # Back (Layout#back_button) at the bottom, and between them one card
-    # for each look, in the most even grid the room allows, as large as it
-    # can be and no larger than +look.widest+. The grid sits a little above
+    # for each theme, in the most even grid the room allows, as large as it
+    # can be and no larger than +style.widest+. The grid sits a little above
     # the middle of its room, and a short last row is centred.
     class ThemesLayout < Data.define(:layout, :themes, :style)
       def heading_size = layout.scaled(style.heading)

@@ -33,8 +33,8 @@ module DotPopper
     end
 
     # The right trigger, as a button: it presses once when pulled past
-    # +look.trigger_press+, and again only after it is let back below
-    # +look.trigger_release+. +pressed+ is whether the last pull pressed.
+    # +style.trigger_press+, and again only after it is let back below
+    # +style.trigger_release+. +pressed+ is whether the last pull pressed.
     class Trigger < Data.define(:held, :pressed)
       def self.released = new(held: false, pressed: false)
 

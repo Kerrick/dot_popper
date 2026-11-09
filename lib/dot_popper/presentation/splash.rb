@@ -72,7 +72,7 @@ module DotPopper
 
     # How the setdef splash plays: it fades in, holds, and fades out, and
     # a press ends it. Over it plays a jingle: the clicks of pressing
-    # Bigger, Smaller, Bigger, Smaller, "Your records", and Back, at 120
+    # Bigger, Smaller, Bigger, Smaller, "Your stats", and Back, at 120
     # beats a minute, in quarter, quarter, a quarter's rest, eighth,
     # eighth, quarter, quarter. The rhythm says when each click starts, not
     # how long it lasts. It goes high, low, high, low, then middle and lower:
