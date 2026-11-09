@@ -34,13 +34,13 @@ module DotPopper
       end
 
       # Where to press this frame, as [x, y], or nil.
-      def update(seconds, game, show = nil)
-        notice(game.state)
+      def update(seconds, cabinet, show = nil)
+        notice(cabinet.state)
         @waited += seconds
-        case game.state
-        when Game::Title then title(game, show)
-        when Game::GameOver then finish(game, show)
-        when Game::Playing then play(seconds, game.round)
+        case cabinet.state
+        when Cabinet::Title then title(cabinet, show)
+        when Cabinet::GameOver then finish(cabinet, show)
+        when Cabinet::Playing then play(seconds, cabinet.round)
         end
       end
 
@@ -49,8 +49,8 @@ module DotPopper
       def notice(state)
         return if state.class == @state
 
-        @finales += 1 if state.is_a?(Game::GameOver)
-        @titles += 1 if state.is_a?(Game::Title)
+        @finales += 1 if state.is_a?(Cabinet::GameOver)
+        @titles += 1 if state.is_a?(Cabinet::Title)
         @shared = false
         @state = state.class
         @waited = 0.0
@@ -66,11 +66,11 @@ module DotPopper
 
       def center(field) = [field.width / 2.0, field.height * 0.62]
 
-      def title(game, show)
+      def title(cabinet, show)
         return browse(show) if show && (show.records? || (@titles == 2 && !@browsed))
         return choose_size(show) if show && !@resized && show.sizing_offered?
 
-        press_once(@look.title_wait) { start(game, show) }
+        press_once(@look.title_wait) { start(cabinet, show) }
       end
 
       # Taps the choice of dot size not yet chosen, once, after half the
@@ -80,7 +80,7 @@ module DotPopper
 
         @resized = true
         @waited = 0.0
-        middle(show.sizing_reaches.reject { |sizing, _| sizing == show.game.sizing }.first.last)
+        middle(show.sizing_reaches.reject { |sizing, _| sizing == show.cabinet.sizing }.first.last)
       end
 
       # Opens "Your records" once it is offered, and presses Back after
@@ -101,11 +101,11 @@ module DotPopper
 
       # Play's middle; without the Show, the middle of the screen, which
       # the game itself takes as a start.
-      def start(game, show) = show ? middle(show.play_reach) : center(game.field)
+      def start(cabinet, show) = show ? middle(show.play_reach) : center(cabinet.field)
 
       # Shares and copies every other result first, then presses Continue
       # once the game will hear.
-      def finish(game, show)
+      def finish(cabinet, show)
         return in_preview(show) if show&.sharing?
 
         if show && @finales.even? && !@shared && @waited >= @look.finale_wait / 2 && show.share_reach
@@ -113,7 +113,7 @@ module DotPopper
           @pressed_at = @waited
           return middle(show.share_reach)
         end
-        press_once(@look.finale_wait) { show ? middle(show.continue_reach) : center(game.field) } if game.state.ready?
+        press_once(@look.finale_wait) { show ? middle(show.continue_reach) : center(cabinet.field) } if cabinet.state.ready?
       end
 
       # In the share preview, a moment after each press: Copy, then Close.

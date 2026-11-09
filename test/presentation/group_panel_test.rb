@@ -29,12 +29,12 @@ class GroupPanelTest < Minitest::Test
     @worker = HandWorker.new
     @session = Groups::Session.new(store: DotPopper::BestScore::Memory.new, worker: @worker)
     @paid = DotPopper::Entitlement.new(DotPopper::BestScore::Memory.new, forced: true)
-    @game = DotPopper::Game.new(field)
+    @cabinet = DotPopper::Cabinet.new(field)
     build
   end
 
   def build(width: 800, height: 600, entitlement: @paid)
-    @show = Show.new(game: @game, layout: layout(width, height), sounds: @sounds, radius: R,
+    @show = Show.new(cabinet: @cabinet, layout: layout(width, height), sounds: @sounds, radius: R,
                      entitlement:, groups: @session)
   end
 

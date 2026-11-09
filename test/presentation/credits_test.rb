@@ -185,12 +185,12 @@ class CreditsTest < Minitest::Test
   def a_show
     @sounds = FakeSounds.new
     notices = Notices.new(iosevka: Array.new(30) { "Some license words, #{it} " * 20 }.join("\n\n"), ofl: "Font text")
-    game = DotPopper::Game.new(field, random: Random.new(2))
-    show = Show.new(game:, layout: layout, sounds: @sounds, radius: R, notices:, measure: RoughMeasure.new)
+    cabinet = DotPopper::Cabinet.new(field, random: Random.new(2))
+    show = Show.new(cabinet:, layout: layout, sounds: @sounds, radius: R, notices:, measure: RoughMeasure.new)
     show.primary
-    game.update(30)
+    cabinet.update(30)
     show.update(1.0)
-    game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     show.primary
     show
   end

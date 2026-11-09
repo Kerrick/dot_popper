@@ -9,7 +9,7 @@ module DotPopper
     # accelerometer, the stick and the screen's orientation each frame,
     # and carries out what it asks on the Pile.
     #
-    # It hears the rules' events (Game#subscribe), after the Pile does.
+    # It hears the rules' events (Cabinet#subscribe), after the Pile does.
     # The accelerometer is on only while a pile is there. With neither an
     # accelerometer nor a pushed stick, it never touches the pile, which
     # falls as it always has.

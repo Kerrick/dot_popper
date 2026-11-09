@@ -15,9 +15,9 @@ class ShowTutorialTest < Minitest::Test
     @store = DotPopper::BestScore::Memory.new
     @best = DotPopper::BestScore.new(DotPopper::BestScore::Memory.new)
     @lifetime = DotPopper::Lifetime.new(DotPopper::BestScore::Memory.new)
-    @game = DotPopper::Game.new(field, best: @best, random: Random.new(2))
+    @cabinet = DotPopper::Cabinet.new(field, best: @best, random: Random.new(2))
     @events = []
-    @game.subscribe { @events << it.class }
+    @cabinet.subscribe { @events << it.class }
     @show = show
   end
 
@@ -26,7 +26,7 @@ class ShowTutorialTest < Minitest::Test
 
     assert @show.tutorial?
     refute @show.title?
-    assert_instance_of DotPopper::Game::Title, @game.state
+    assert_instance_of DotPopper::Cabinet::Title, @cabinet.state
     assert_empty @events.grep(->(it) { it == DotPopper::Events::RoundStarted })
     assert_equal "seen", @store.read, "it is seen from the moment it opens"
   end
@@ -37,7 +37,7 @@ class ShowTutorialTest < Minitest::Test
     update_for(STEP) while @show.tutorial?
 
     assert @show.playing?
-    round = @game.round
+    round = @cabinet.round
     assert_equal scene.dots.map(&:id), round.dots.map(&:id), "the same dots, in the same order"
     assert_equal [true, true, false], round.dots.map(&:popped?)
     assert_equal 1, round.score, "two pops, less what the guide's wrong tap cost"
@@ -55,12 +55,12 @@ class ShowTutorialTest < Minitest::Test
     play_through(slips: 7)
 
     assert @show.playing?
-    assert_equal 1, @game.round.score
-    assert_operator @game.round.countdown.remaining, :<=, 1.0
+    assert_equal 1, @cabinet.round.score
+    assert_operator @cabinet.round.countdown.remaining, :<=, 1.0
     assert_equal [1, 1], [@show.hud.score, @show.hud.seconds]
     update_for(1.1)
     assert @show.finished?
-    assert_equal 1, @best.of(@game.size_class)
+    assert_equal 1, @best.of(@cabinet.size_class)
   end
 
   def test_the_round_it_goes_on_into_counts_as_any_round_does
@@ -69,8 +69,8 @@ class ShowTutorialTest < Minitest::Test
 
     assert_equal 1, @lifetime.stats.rounds
     assert_operator @show.stats.pops, :>=, 2, "its two pops are the round's"
-    assert_equal @game.round.score, @show.stats.score
-    assert_equal @game.round.score, @best.of(@game.size_class)
+    assert_equal @cabinet.round.score, @show.stats.score
+    assert_equal @cabinet.round.score, @best.of(@cabinet.size_class)
   end
 
   def test_its_end_starts_the_round_with_the_clock_lit_and_its_first_second_ticking
@@ -96,8 +96,8 @@ class ShowTutorialTest < Minitest::Test
     refute @show.tutorial?
     assert @show.playing?
     assert_nil @show.lead_in
-    assert_equal [0, 1], [@game.round.score, @game.round.dots.size], "nothing of the tutorial's comes with it"
-    assert_in_delta DotPopper::Rules::STARTING_SECONDS, @game.round.countdown.remaining
+    assert_equal [0, 1], [@cabinet.round.score, @cabinet.round.dots.size], "nothing of the tutorial's comes with it"
+    assert_in_delta DotPopper::Rules::STARTING_SECONDS, @cabinet.round.countdown.remaining
   end
 
   def test_its_streak_beat_can_be_skipped_and_leaves_nothing_behind
@@ -111,8 +111,8 @@ class ShowTutorialTest < Minitest::Test
     @show.back
 
     assert @show.playing?
-    assert_equal [0, 1, 0], [@game.round.score, @game.round.dots.size, @game.round.streak]
-    assert_in_delta DotPopper::Rules::STARTING_SECONDS, @game.round.countdown.remaining
+    assert_equal [0, 1, 0], [@cabinet.round.score, @cabinet.round.dots.size, @cabinet.round.streak]
+    assert_in_delta DotPopper::Rules::STARTING_SECONDS, @cabinet.round.countdown.remaining
   end
 
   def test_escape_or_a_gamepads_b_skips_it
@@ -176,18 +176,18 @@ class ShowTutorialTest < Minitest::Test
     @show.tap(reach.center_x, reach.center_y)
 
     assert @show.tutorial?
-    assert_instance_of DotPopper::Game::Title, @game.state
+    assert_instance_of DotPopper::Cabinet::Title, @cabinet.state
     assert_equal "seen", @store.read
     play_through(opened: true)
     assert @show.playing?
-    assert_equal [true, true, false], @game.round.dots.map(&:popped?)
-    assert_equal 1, @game.round.score
-    assert_operator @game.round.countdown.remaining, :>, 9.8, "from what it left, the clock only now running"
+    assert_equal [true, true, false], @cabinet.round.dots.map(&:popped?)
+    assert_equal 1, @cabinet.round.score
+    assert_operator @cabinet.round.countdown.remaining, :>, 9.8, "from what it left, the clock only now running"
     assert @show.lead_in
   end
 
   def test_how_to_play_is_offered_on_a_first_title_too_and_even_when_the_flag_never_opens_it
-    @show = Show.new(game: @game, layout: layout, sounds: @sounds, radius: R, random: Random.new(3),
+    @show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3),
                      lifetime: @lifetime, keeper: DotPopper::RecordKeeper.new(best: @best, lifetime: @lifetime))
 
     assert_includes @show.controls.map(&:name), :how_to_play
@@ -215,13 +215,13 @@ class ShowTutorialTest < Minitest::Test
   private
 
   def show(keeper: DotPopper::RecordKeeper.new(best: @best, lifetime: @lifetime))
-    Show.new(game: @game, layout: layout, sounds: @sounds, radius: R, random: Random.new(3), lifetime: @lifetime,
+    Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3), lifetime: @lifetime,
              keeper:, tutorial_flag: TutorialFlag.new(@store))
   end
 
   def update_for(seconds)
     (seconds / STEP).ceil.times do
-      @game.update(STEP)
+      @cabinet.update(STEP)
       @show.update(STEP)
     end
   end
@@ -264,7 +264,7 @@ class ShowTutorialTest < Minitest::Test
 
   def finish_round
     update_for(0.1) until @show.finished?
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
   end
 end

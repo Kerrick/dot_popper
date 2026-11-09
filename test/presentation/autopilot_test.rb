@@ -6,38 +6,38 @@ class AutopilotTest < Minitest::Test
   include PresentationTest
 
   def test_it_plays_a_round_and_comes_back_to_the_title
-    game = DotPopper::Game.new(field, random: Random.new(4))
+    cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
     pilot = Autopilot.new(Look::AUTOPILOT, random: Random.new(5))
     seen = []
     events = []
-    game.subscribe { events << it.class }
+    cabinet.subscribe { events << it.class }
     3000.times do
-      x, y = pilot.update(1 / 60.0, game)
-      game.press(x, y) if x
-      game.update(1 / 60.0)
-      seen << game.state.class
-      break if seen.include?(DotPopper::Game::GameOver) && game.state.is_a?(DotPopper::Game::Title)
+      x, y = pilot.update(1 / 60.0, cabinet)
+      cabinet.press(x, y) if x
+      cabinet.update(1 / 60.0)
+      seen << cabinet.state.class
+      break if seen.include?(DotPopper::Cabinet::GameOver) && cabinet.state.is_a?(DotPopper::Cabinet::Title)
     end
 
-    assert_includes seen, DotPopper::Game::GameOver
-    assert_instance_of DotPopper::Game::Title, game.state
+    assert_includes seen, DotPopper::Cabinet::GameOver
+    assert_instance_of DotPopper::Cabinet::Title, cabinet.state
     assert_includes events, DotPopper::Events::Popped
   end
 
   def test_with_the_show_it_copies_every_other_result
-    game = DotPopper::Game.new(field, random: Random.new(4))
+    cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
     clipboard = MemoryClipboard.new
-    show = Show.new(game:, layout: layout, sounds: FakeSounds.new, radius: R, clipboard:)
+    show = Show.new(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R, clipboard:)
     pilot = Autopilot.new(Look::AUTOPILOT, random: Random.new(5))
     copies = []
     rounds = 0
-    game.subscribe { rounds += 1 if it.is_a?(DotPopper::Events::RoundStarted) }
+    cabinet.subscribe { rounds += 1 if it.is_a?(DotPopper::Events::RoundStarted) }
     12_000.times do
-      x, y = pilot.update(1 / 60.0, game, show)
+      x, y = pilot.update(1 / 60.0, cabinet, show)
       show.tap(x, y) if x
-      game.update(1 / 60.0)
+      cabinet.update(1 / 60.0)
       show.update(1 / 60.0)
-      copies << clipboard.text if game.state.is_a?(DotPopper::Game::Title) && copies.size < rounds
+      copies << clipboard.text if cabinet.state.is_a?(DotPopper::Cabinet::Title) && copies.size < rounds
       break if rounds >= 3
     end
 
@@ -47,17 +47,17 @@ class AutopilotTest < Minitest::Test
   end
 
   def test_on_its_second_title_it_looks_at_the_records_and_goes_back
-    game = DotPopper::Game.new(field, random: Random.new(4))
-    show = Show.new(game:, layout: layout, sounds: FakeSounds.new, radius: R)
+    cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
+    show = Show.new(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R)
     pilot = Autopilot.new(Look::AUTOPILOT, random: Random.new(5))
     opened = false
     rounds = 0
-    game.subscribe { rounds += 1 if it.is_a?(DotPopper::Events::RoundStarted) }
+    cabinet.subscribe { rounds += 1 if it.is_a?(DotPopper::Events::RoundStarted) }
     12_000.times do
-      x, y = pilot.update(1 / 60.0, game, show)
+      x, y = pilot.update(1 / 60.0, cabinet, show)
       show.tap(x, y) if x
       opened ||= show.records?
-      game.update(1 / 60.0)
+      cabinet.update(1 / 60.0)
       show.update(1 / 60.0)
       break if rounds >= 2
     end
@@ -70,20 +70,20 @@ class AutopilotTest < Minitest::Test
   # 800 by 600 fits smaller dots, so once a round has finished the title
   # offers the choice, and the pilot switches it once.
   def test_it_switches_the_dot_size_once_the_title_offers_it
-    game = DotPopper::Game.new(field, random: Random.new(4))
-    show = Show.new(game:, layout: layout, sounds: FakeSounds.new, radius: R)
+    cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
+    show = Show.new(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R)
     pilot = Autopilot.new(Look::AUTOPILOT, random: Random.new(5))
     rounds = 0
-    game.subscribe { rounds += 1 if it.is_a?(DotPopper::Events::RoundStarted) }
+    cabinet.subscribe { rounds += 1 if it.is_a?(DotPopper::Events::RoundStarted) }
     12_000.times do
-      x, y = pilot.update(1 / 60.0, game, show)
+      x, y = pilot.update(1 / 60.0, cabinet, show)
       show.tap(x, y) if x
-      game.update(1 / 60.0)
+      cabinet.update(1 / 60.0)
       show.update(1 / 60.0)
       break if rounds >= 3
     end
 
-    assert game.sizing.sized_to_screen?
+    assert cabinet.sizing.sized_to_screen?
     assert_equal 3, rounds
   end
 

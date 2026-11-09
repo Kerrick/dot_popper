@@ -12,8 +12,8 @@ class HoverTest < Minitest::Test
 
   def setup
     @sounds = FakeSounds.new
-    @game = DotPopper::Game.new(field, random: Random.new(2))
-    @show = Show.new(game: @game, layout:, sounds: @sounds, radius: R, random: Random.new(3))
+    @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2))
+    @show = Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3))
   end
 
   def test_a_level_eases_up_while_over_and_back_down_once_left
@@ -101,7 +101,7 @@ class HoverTest < Minitest::Test
   def test_game_over_hovers_share_my_score_and_a_round_hovers_nothing
     press_main
     assert_empty @show.controls
-    @game.update(20)
+    @cabinet.update(20)
     @show.update(0.1)
     @show.pointer_at(*middle(@show.share_reach))
     assert_equal :share, @show.hovered
@@ -120,8 +120,8 @@ class HoverTest < Minitest::Test
 
   def finish_round
     press_main
-    @game.update(20)
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @cabinet.update(20)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
   end
 end

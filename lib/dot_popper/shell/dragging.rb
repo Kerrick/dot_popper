@@ -14,7 +14,7 @@ module DotPopper
     # velocity that closes on it, which Box2D's contacts and walls still
     # stop, as a joint's pull would be.
     #
-    # It hears the rules' events (Game#subscribe), after the Pile does,
+    # It hears the rules' events (Cabinet#subscribe), after the Pile does,
     # and drops every pointer when the pile goes.
     class Dragging
       def initialize(pile:, show:, look:)
@@ -33,7 +33,7 @@ module DotPopper
       # A pointer went down where the Show waits for its release.
       def press(key, x, y)
         id, center = @pile.ball_at(x, y)
-        let_go(@grabs.press(key, x, y, now:, radius: @pile.radius || 1.0, heard: @show.game.state.ready?,
+        let_go(@grabs.press(key, x, y, now:, radius: @pile.radius || 1.0, heard: @show.cabinet.state.ready?,
                                        ball: id, center:))
       end
 

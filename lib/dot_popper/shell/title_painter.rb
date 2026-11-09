@@ -77,7 +77,7 @@ module DotPopper
         words = show.words
         height = control.options.first.height
         choices = Presentation::Show::SIZINGS.map do
-          [words.sizing(it, preview), words.sizing_note(it, preview), it == show.game.sizing, preview.icon(it, height),
+          [words.sizing(it, preview), words.sizing_note(it, preview), it == show.cabinet.sizing, preview.icon(it, height),
            show.hover.level(it)]
         end
         SegmentedPainter.new(pen:, dots:).draw(control, show.words.sizing_label, choices, alpha:)

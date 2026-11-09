@@ -12,7 +12,7 @@ module DotPopperGui
 
     def play
       check_equal([400, 850], L::Graphics.dimensions, "the window opens at DOT_POPPER_WINDOW's size")
-      check(game.sizing.sized_to_screen?, "a new player's dots are sized to the screen")
+      check(cabinet.sizing.sized_to_screen?, "a new player's dots are sized to the screen")
       check(!File.exist?(saved("dot_size.txt")), "nothing is saved before the player chooses")
       start_round
       check_close(fitted_radius, round.field.radius, "the first round's dots are sized to the window")
@@ -25,8 +25,8 @@ module DotPopperGui
       sizing, second = show.sizing_reaches.last
       check_equal(DotPopper::DotSizing::STANDARD, sizing, "the second segment is Standard")
       click(second.center_x, second.center_y)
-      check(!game.sizing.sized_to_screen?, "a click on the second segment picks the standard size")
-      check_equal(game.sizing.to_text, File.read(saved("dot_size.txt")), "dot_size.txt remembers the choice")
+      check(!cabinet.sizing.sized_to_screen?, "a click on the second segment picks the standard size")
+      check_equal(cabinet.sizing.to_text, File.read(saved("dot_size.txt")), "dot_size.txt remembers the choice")
       start_round
       check_close(R::RADIUS, round.field.radius, "the next round's dots are the standard size")
     end

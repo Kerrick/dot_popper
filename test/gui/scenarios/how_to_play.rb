@@ -25,7 +25,7 @@ module DotPopperGui
       keep_screenshot(name("title"))
       press_it(reach)
       check(show.tutorial?, "How to play opens the tutorial at once")
-      check(game.state.is_a?(DotPopper::Game::Title) && game.round.nil?, "the game stays on its title meanwhile")
+      check(cabinet.state.is_a?(DotPopper::Cabinet::Title) && cabinet.round.nil?, "the game stays on its title meanwhile")
       wait_for("the tutorial's first beat", within: 900) { show.tutorial&.beat == :aim }
       wait(0.6)
       keep_screenshot(name("tutorial"))

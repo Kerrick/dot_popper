@@ -79,7 +79,7 @@ module DotPopperGui
       met = done ? today : today - 1
       streak = stats.streak.with(current: done ? 4 : 3, longest: 4, last_met: met.iso8601)
       show.lifetime.restore(stats.with(streak:).to_text)
-      game.best.restore("#{game.size_class.name}=24\n#{DotPopper::SizeClass::FITTED.name}=24\n")
+      cabinet.best.restore("#{cabinet.size_class.name}=24\n#{DotPopper::SizeClass::FITTED.name}=24\n")
       show.send(:records_changed)
     end
   end

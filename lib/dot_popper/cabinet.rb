@@ -4,14 +4,14 @@ module DotPopper
   # The game as a whole: Title, then Playing, then Game Over, then Title
   # again. Each state is a value that answers +press+ and +update+ with
   # the state that follows it, so each transition reads in one place.
-  # The Game is the shell around them: it holds the current state, makes
+  # The Cabinet is the shell around them: it holds the current state, makes
   # rounds, keeps the best scores, and tells its listeners every event, in
   # order. A round's records count among those of its SizeClass, the
   # class of the field it started on.
   #
   # +screen+ is the window as a Field at the usual dot size (DotSize);
   # +sizing+ (DotSizing) decides the radius a round's dots get on it.
-  class Game
+  class Cabinet
     LARGEST_SEED = 2_147_483_648 # 2**31
 
     attr_reader :state, :best, :screen, :sizing
@@ -114,26 +114,26 @@ module DotPopper
     # Waiting to start. Any press begins a round.
     class Title < Data.define
       def round = nil
-      def press(game, _x, _y) = game.start_round
+      def press(cabinet, _x, _y) = cabinet.start_round
       def update(_game, _seconds) = self
     end
 
     # A round in progress. It ends the moment the clock reaches zero,
     # whether time ran out or a penalty took the last of it.
     class Playing < Data.define(:round, :seed, :size_class)
-      def press(game, x, y)
-        game.announce(round.tap_at(x, y))
-        settle(game)
+      def press(cabinet, x, y)
+        cabinet.announce(round.tap_at(x, y))
+        settle(cabinet)
       end
 
-      def update(game, seconds)
+      def update(cabinet, seconds)
         round.update(seconds)
-        settle(game)
+        settle(cabinet)
       end
 
       private
 
-      def settle(game) = round.over? ? game.finish(round, seed, size_class) : self
+      def settle(cabinet) = round.over? ? cabinet.finish(round, seed, size_class) : self
     end
 
     # The round is over and its score is shown. Presses are ignored for a
@@ -145,7 +145,7 @@ module DotPopper
       def score = round.score
       def ready? = shown >= Rules::GAME_OVER_GRACE
 
-      def press(game, _x, _y) = ready? ? game.show_title : self
+      def press(cabinet, _x, _y) = ready? ? cabinet.show_title : self
       def update(_game, seconds) = with(shown: shown + seconds)
     end
   end

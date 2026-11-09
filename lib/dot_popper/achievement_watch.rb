@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # Watches a Game's events (Game#subscribe) for the Achievements a round earns,
+  # Watches a Cabinet's events (Cabinet#subscribe) for the Achievements a round earns,
   # and decides nothing: it only reads what the rules report and the
   # round they happened in. #earned lists, in Achievement::IDS order, every achievement
   # the round in play, or the one just finished, has earned so far.

@@ -175,7 +175,7 @@ module DotPopper
         return unless @pending && member? && !@sending && !waiting_out?
 
         @sending = true
-        ask(Job.new(kind: :game, verb: :post, path: "/games", body: { score: @pending }))
+        ask(Job.new(kind: :cabinet, verb: :post, path: "/games", body: { score: @pending }))
       end
 
       def fetch_changes(id)
@@ -193,7 +193,7 @@ module DotPopper
 
       def settle(job, reply)
         @running -= 1
-        @sending = false if job.kind == :game
+        @sending = false if job.kind == :cabinet
         @fetching.delete(job.group_id) if job.kind == :changes
         return @error = :offline if reply.offline? && job.loud
         return if reply.offline?
@@ -210,7 +210,7 @@ module DotPopper
 
       def refused(job, reply)
         wait_out(reply.retry_after) if reply.status == 429
-        return give_up_pending if job.kind == :game && NEVER_TAKEN.include?(reply.status)
+        return give_up_pending if job.kind == :cabinet && NEVER_TAKEN.include?(reply.status)
         return gone(job.group_id) if reply.status == 404 && %i[group changes left].include?(job.kind)
         return forget_identity if reply.status == 404 && job.kind == :deleted
 
@@ -232,7 +232,7 @@ module DotPopper
         when :changes then read_changes(job.group_id, reply.body)
         when :left then gone(job.group_id)
         when :deleted then forget_identity
-        when :game then finish_game(job.body[:score], reply.body)
+        when :cabinet then finish_game(job.body[:score], reply.body)
         end
       end
 

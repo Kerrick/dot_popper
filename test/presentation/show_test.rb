@@ -7,10 +7,10 @@ class ShowTest < Minitest::Test
 
   def setup
     @sounds = FakeSounds.new
-    @game = DotPopper::Game.new(field, random: Random.new(2))
+    @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2))
     @clipboard = MemoryClipboard.new
     @sizing_store = DotPopper::BestScore::Memory.new
-    @show = Show.new(game: @game, layout: layout, sounds: @sounds, radius: R, random: Random.new(3),
+    @show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3),
                      clipboard: @clipboard, sizing_store: @sizing_store)
   end
 
@@ -28,14 +28,14 @@ class ShowTest < Minitest::Test
   # A game on a field so wide that the dots, which hold still here, never
   # cover one another, so each fresh dot can be tapped on the spot.
   def calm_show
-    @game = DotPopper::Game.new(field(4000, 3000), random: Random.new(2))
-    show = Show.new(game: @game, layout: layout, sounds: @sounds, radius: R, random: Random.new(3))
+    @cabinet = DotPopper::Cabinet.new(field(4000, 3000), random: Random.new(2))
+    show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3))
     show.tap(*middle(show.play_reach))
     show
   end
 
   def pop_fresh(show)
-    fresh = @game.round.dots.find(&:fresh?)
+    fresh = @cabinet.round.dots.find(&:fresh?)
     show.tap(fresh.x, fresh.y)
   end
 
@@ -45,7 +45,7 @@ class ShowTest < Minitest::Test
 
     assert_equal 1, @sounds.names.count(:bonus), "the bonus dot arrives with a chime"
     refute_includes @sounds.names, :bonus_pop
-    bonus = @game.round.dots.find(&:bonus?)
+    bonus = @cabinet.round.dots.find(&:bonus?)
     assert bonus.fresh?
     assert(show.effects.rings.any? { it.look == Look::BONUS_RIPPLE })
 
@@ -55,7 +55,7 @@ class ShowTest < Minitest::Test
     pop_fresh(show)
     assert_equal 1, @sounds.names.count(:bonus_pop)
     assert(show.effects.rings.any? { it.look == Look::BONUS_SHOCKWAVE })
-    refute(@game.round.dots.any? { it.fresh? && it.bonus? })
+    refute(@cabinet.round.dots.any? { it.fresh? && it.bonus? })
   end
 
   def test_an_ordinary_pop_makes_no_bonus_sound
@@ -71,7 +71,7 @@ class ShowTest < Minitest::Test
 
     @show.tap(*middle(@show.play_reach))
     assert @show.playing?
-    assert_equal 0, @game.round.score
+    assert_equal 0, @cabinet.round.score
   end
 
   # Play is at least a dot fitted to the screen across, whichever size is
@@ -92,10 +92,10 @@ class ShowTest < Minitest::Test
     assert @show.playing?
     @show.primary
     assert @show.playing?, "in a round it does nothing"
-    @game.update(20)
+    @cabinet.update(20)
     @show.tap(5, 5, by: :gamepad)
     assert @show.finished?, "the grace still holds"
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     @show.tap(5, 5, by: :mouse)
     assert @show.finished?, "a click on empty space is the pile's"
     @show.tap(5, 5, by: :gamepad)
@@ -111,7 +111,7 @@ class ShowTest < Minitest::Test
     @show.input = InputKind::TOUCH
     assert_equal "Play", @show.words.play
     assert_equal "Continue",
-                 Show.new(game: @game, layout:, sounds: @sounds, radius: R, input: InputKind::TOUCH).words.continue
+                 Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, input: InputKind::TOUCH).words.continue
   end
 
   RESULT = "Dot Popper: 1 point\n🟡 1 pop · ⚫ 0 mistakes · ⏱ 11 seconds\n" \
@@ -121,8 +121,8 @@ class ShowTest < Minitest::Test
   # when the player presses Copy, and then to exactly what was shown.
   def test_share_my_score_shows_the_result_and_only_copy_copies_it
     start_and_pop
-    @game.update(20)
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @cabinet.update(20)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     @show.update(0.1)
     @show.tap(*middle(@show.share_reach))
 
@@ -184,8 +184,8 @@ class ShowTest < Minitest::Test
     continue = middle(@show.continue_reach)
     @show.share
     assert_equal %i[close copy], @show.controls.map(&:name).sort, "only the preview's buttons take a press"
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
-    assert @game.state.ready?, "the grace runs on under the preview"
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
+    assert @cabinet.state.ready?, "the grace runs on under the preview"
     @show.primary
     assert @show.finished?, "the main button copies there, and goes nowhere"
     refute @show.waits_for_release?(*continue), "no press under the preview drags the pile"
@@ -204,9 +204,9 @@ class ShowTest < Minitest::Test
 
       def offer(text, _now) = (@offered = text) && nil
     end.new
-    show = Show.new(game: @game, layout:, sounds: @sounds, radius: R, clipboard: @clipboard, sharing: sheet)
+    show = Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, clipboard: @clipboard, sharing: sheet)
     press_main(show)
-    @game.update(20)
+    @cabinet.update(20)
     show.share
 
     assert_match(/\ADot Popper: 0 points\n/, sheet.offered)
@@ -216,7 +216,7 @@ class ShowTest < Minitest::Test
 
   def test_each_finished_round_is_added_to_the_lifetime_stats
     start_and_pop
-    @game.update(20)
+    @cabinet.update(20)
 
     assert_equal 1, @show.lifetime.stats.rounds
     assert_equal 1, @show.lifetime.stats.pops
@@ -225,14 +225,14 @@ class ShowTest < Minitest::Test
 
   def test_game_over_names_the_best_record_the_round_set
     start_and_pop
-    @game.update(20)
+    @cabinet.update(20)
     assert_nil @show.finale.record, "a first round has nothing to beat"
 
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
-    @game.press(10, 10)
-    @game.press(10, 10)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @cabinet.press(10, 10)
+    @cabinet.press(10, 10)
     2.times { start_and_pop(started: true) }
-    @game.update(30)
+    @cabinet.update(30)
 
     assert_equal :longest_run, @show.finale.record.kind
     assert_equal 2, @show.finale.record.value
@@ -241,14 +241,14 @@ class ShowTest < Minitest::Test
   # 2026-11-01's goal is to pop 10 bright dots in the first 10 seconds.
   def test_the_round_that_meets_todays_goal_celebrates_it_once_the_score_has_counted
     lifetime = DotPopper::Lifetime.new(DotPopper::BestScore::Memory.new, today: -> { Date.new(2026, 11, 1) })
-    show = Show.new(game: @game, layout:, sounds: @sounds, radius: R, random: Random.new(3), lifetime:)
+    show = Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3), lifetime:)
     press_main(show)
     10.times do
-      fresh = @game.round.dots.find(&:fresh?)
-      clear_around!(@game.round, fresh)
+      fresh = @cabinet.round.dots.find(&:fresh?)
+      clear_around!(@cabinet.round, fresh)
       show.tap(fresh.x, fresh.y)
     end
-    @game.update(30)
+    @cabinet.update(30)
 
     assert show.finale.goal_met
     refute show.finale.goal_due?(show.now), "not before the score has counted"
@@ -259,12 +259,12 @@ class ShowTest < Minitest::Test
 
   def test_continue_goes_on_once_the_grace_is_over_and_empty_space_never_does
     press_main
-    @game.update(20)
+    @cabinet.update(20)
     @show.update(0.1)
     press_main
     assert @show.finished?, "the grace still holds"
 
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     @show.tap(5, 5)
     assert @show.finished?, "empty space is only for the pile"
     press_main
@@ -276,8 +276,8 @@ class ShowTest < Minitest::Test
     refute @show.back
     press_main
     refute @show.back, "in a round it does nothing"
-    @game.update(20)
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @cabinet.update(20)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     assert @show.back
     assert @show.title?
   end
@@ -288,7 +288,7 @@ class ShowTest < Minitest::Test
     refute @show.waits_for_release?(10, 10)
     press_main
     refute @show.waits_for_release?(10, 10)
-    @game.update(20)
+    @cabinet.update(20)
 
     assert @show.waits_for_release?(10, 10)
     refute @show.waits_for_release?(*middle(@show.share_reach))
@@ -311,7 +311,7 @@ class ShowTest < Minitest::Test
   def test_the_share_buttons_place_on_the_title_shares_nothing
     finish_round(back_to_title: false)
     place = middle(@show.share_reach)
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
     assert @show.title?
     assert_nil @show.share_reach
@@ -347,15 +347,15 @@ class ShowTest < Minitest::Test
 
     @show.tap(*middle(reach(DotPopper::DotSizing::SIZED_TO_SCREEN)))
     assert @show.title?, "the tap never starts a round"
-    assert @game.sizing.sized_to_screen?
+    assert @cabinet.sizing.sized_to_screen?
     assert_equal DotPopper::DotSizing::SIZED_TO_SCREEN.to_text, @sizing_store.read
     assert_in_delta 35.4, @show.attract.dots.first.radius, 0.1
     assert_equal 0, @show.marquee.best, "the title shows this choice's best"
 
     press_main
-    assert_in_delta 35.4, @game.round.field.radius, 0.1
+    assert_in_delta 35.4, @cabinet.round.field.radius, 0.1
 
-    @game.update(20)
+    @cabinet.update(20)
     assert_equal "Played with dots sized to the screen.", @show.finale.screen
   end
 
@@ -365,13 +365,13 @@ class ShowTest < Minitest::Test
     finish_round
     same = DotPopper::DotSizing::STANDARD
     @show.tap(*middle(reach(same)))
-    refute @game.sizing.sized_to_screen?
+    refute @cabinet.sizing.sized_to_screen?
     assert_nil @sizing_store.read, "nothing changed, so nothing is saved"
 
     @show.toggle_sizing
-    assert @game.sizing.sized_to_screen?
+    assert @cabinet.sizing.sized_to_screen?
     @show.tap(*middle(reach(same)))
-    refute @game.sizing.sized_to_screen?
+    refute @cabinet.sizing.sized_to_screen?
     assert @show.title?
   end
 
@@ -437,27 +437,27 @@ class ShowTest < Minitest::Test
     @show.tap(*middle(@show.layout.sizing_control.options.first))
 
     assert @show.title?
-    refute @game.sizing.sized_to_screen?
+    refute @cabinet.sizing.sized_to_screen?
   end
 
   # On the 24 × 16 R window, dots sized to it are the standard size, so
   # the title leaves the choice out, and neither its segments nor a
   # shoulder button change the saved one.
   def test_where_the_sizes_look_alike_the_choice_is_not_offered
-    game = DotPopper::Game.new(field(1200, 800), random: Random.new(2), sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
-    show = Show.new(game:, layout: layout(1200, 800), sounds: FakeSounds.new, radius: R, sizing_store: @sizing_store)
-    game.press(10, 10)
-    game.update(20)
-    game.update(DotPopper::Rules::GAME_OVER_GRACE)
-    game.press(10, 10)
+    cabinet = DotPopper::Cabinet.new(field(1200, 800), random: Random.new(2), sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
+    show = Show.new(cabinet:, layout: layout(1200, 800), sounds: FakeSounds.new, radius: R, sizing_store: @sizing_store)
+    cabinet.press(10, 10)
+    cabinet.update(20)
+    cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
+    cabinet.press(10, 10)
     assert show.records_offered?
     refute show.sizing_offered?
 
     show.toggle_sizing
-    assert game.sizing.sized_to_screen?, "the saved choice stays"
+    assert cabinet.sizing.sized_to_screen?, "the saved choice stays"
     assert_nil show.sizing_reaches.to_h.fetch(DotPopper::DotSizing::STANDARD)
     show.tap(*middle(show.layout.sizing_control.options.last))
-    assert game.state.is_a?(DotPopper::Game::Title), "where the control would be is empty space"
+    assert cabinet.state.is_a?(DotPopper::Cabinet::Title), "where the control would be is empty space"
     assert_nil @sizing_store.read
   end
 
@@ -466,12 +466,12 @@ class ShowTest < Minitest::Test
     finish_round
     assert @show.sizing_offered?
 
-    @game.screen = field(1200, 800)
-    @show.resize(layout(1200, 800), @game.field)
+    @cabinet.screen = field(1200, 800)
+    @show.resize(layout(1200, 800), @cabinet.field)
     refute @show.sizing_offered?
 
-    @game.screen = field(400, 850)
-    @show.resize(layout(400, 850), @game.field)
+    @cabinet.screen = field(400, 850)
+    @show.resize(layout(400, 850), @cabinet.field)
     assert @show.sizing_offered?
     assert_equal :smaller, @show.sizing_preview.effect
   end
@@ -519,21 +519,21 @@ class ShowTest < Minitest::Test
 
   def test_start_does_nothing_in_a_round
     @show.start
-    score = @game.round.score
-    clock = @game.round.countdown
+    score = @cabinet.round.score
+    clock = @cabinet.round.countdown
     @show.start
 
     assert @show.playing?
-    assert_equal [score, clock], [@game.round.score, @game.round.countdown]
+    assert_equal [score, clock], [@cabinet.round.score, @cabinet.round.countdown]
   end
 
   def test_start_continues_from_game_over_after_the_grace
     @show.start
-    @game.update(20)
+    @cabinet.update(20)
     @show.start
     assert @show.finished?, "the grace still holds"
 
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     @show.start
     assert @show.title?
   end
@@ -548,7 +548,7 @@ class ShowTest < Minitest::Test
     assert @show.playing?, "Y does nothing in a round"
     refute @show.sharing?
 
-    @game.update(20)
+    @cabinet.update(20)
     @show.update(0.1)
     @show.share
     assert @show.finished?
@@ -576,10 +576,10 @@ class ShowTest < Minitest::Test
 
   def test_a_pop_buzzes_briefly_and_a_wrong_tap_longer
     haptics = FakeHaptics.new
-    @show = Show.new(game: @game, layout: layout, sounds: @sounds, radius: R, random: Random.new(3), haptics:)
+    @show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3), haptics:)
     start_and_pop
-    popped = @game.round.dots.find(&:popped?)
-    clear_around!(@game.round, popped)
+    popped = @cabinet.round.dots.find(&:popped?)
+    clear_around!(@cabinet.round, popped)
     @show.tap(popped.x, popped.y)
 
     assert_equal [Look::HAPTICS.pop, Look::HAPTICS.penalty], haptics.buzzes
@@ -588,14 +588,14 @@ class ShowTest < Minitest::Test
 
   def test_a_pop_is_heard_where_it_is
     start_and_pop
-    x = @game.round.dots.find(&:popped?).x
+    x = @cabinet.round.dots.find(&:popped?).x
 
     assert_in_delta Look::SOUND.stereo.pan(x, 800), @sounds.pans.last
   end
 
   def test_the_pop_climbs_with_the_score_up_to_a_cap
     press_main
-    score!(@game.round, 1000)
+    score!(@cabinet.round, 1000)
     start_and_pop(started: true)
 
     assert_in_delta Look::SOUND.pop_highest, @sounds.played.last.last
@@ -603,8 +603,8 @@ class ShowTest < Minitest::Test
 
   def test_a_wrong_tap_shows_only_what_was_lost
     start_and_pop
-    popped = @game.round.dots.first
-    clear_around!(@game.round, popped)
+    popped = @cabinet.round.dots.first
+    clear_around!(@cabinet.round, popped)
     @show.tap(popped.x, popped.y) # the score falls from 1 to 0: only 1 lost
 
     assert_equal ["−1", "−2s"], @show.effects.floaters.last(2).map(&:text)
@@ -614,9 +614,9 @@ class ShowTest < Minitest::Test
 
   def test_a_wrong_tap_at_zero_shows_only_the_seconds
     start_and_pop
-    score!(@game.round, 0)
-    popped = @game.round.dots.first
-    clear_around!(@game.round, popped)
+    score!(@cabinet.round, 0)
+    popped = @cabinet.round.dots.first
+    clear_around!(@cabinet.round, popped)
     @show.tap(popped.x, popped.y)
 
     assert_equal "−2s", @show.effects.floaters.last.text
@@ -624,9 +624,9 @@ class ShowTest < Minitest::Test
 
   def test_a_wrong_tap_over_the_fresh_dot_outlines_it
     start_and_pop
-    popped = @game.round.dots.first
-    fresh = @game.round.dots.find(&:fresh?)
-    clear_around!(@game.round, popped)
+    popped = @cabinet.round.dots.first
+    fresh = @cabinet.round.dots.find(&:fresh?)
+    clear_around!(@cabinet.round, popped)
     put!(fresh.id, popped.x + 30, popped.y)
     @show.tap(popped.x - 20, popped.y)
 
@@ -639,30 +639,30 @@ class ShowTest < Minitest::Test
   # after a round whose wrong tap had the bright dot hidden beneath.
   def test_game_over_teaches_the_stack_after_a_wrong_tap_over_the_fresh_dot
     store = DotPopper::BestScore::Memory.new
-    @show = Show.new(game: @game, layout:, sounds: @sounds, radius: R, random: Random.new(3),
+    @show = Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3),
                      tutor: Tutor.new(store, times: 1))
     start_and_pop
-    popped = @game.round.dots.first
-    clear_around!(@game.round, popped)
+    popped = @cabinet.round.dots.first
+    clear_around!(@cabinet.round, popped)
     @show.tap(popped.x, popped.y)
-    @game.update(20)
+    @cabinet.update(20)
     assert_nil @show.finale.lesson, "a wrong tap with nothing under it teaches nothing"
 
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
     hide_fresh_under_a_popped_dot_and_tap_it
-    popped = @game.round.dots.first
-    fresh = @game.round.dots.find(&:fresh?)
-    @game.update(20)
+    popped = @cabinet.round.dots.first
+    fresh = @cabinet.round.dots.find(&:fresh?)
+    @cabinet.update(20)
     assert_equal Slip.new(popped: popped.id, bright: fresh.id), @show.finale.lesson, "the wrong tap is the lesson"
     assert_equal "1", store.read
     refute @show.finale_plan.placed.key?(:lesson), "with no word"
 
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
     press_main
     hide_fresh_under_a_popped_dot_and_tap_it(started: true)
-    @game.update(20)
+    @cabinet.update(20)
     assert_nil @show.finale.lesson, "it has been taught as often as it is"
   end
 
@@ -672,9 +672,9 @@ class ShowTest < Minitest::Test
   # pulses. The screen never shakes, and Continue works as ever.
   def test_game_overs_lesson_replays_the_wrong_tap_on_the_pile
     hide_fresh_under_a_popped_dot_and_tap_it
-    popped = @game.round.dots.first
-    fresh = @game.round.dots.find(&:fresh?)
-    @game.update(20)
+    popped = @cabinet.round.dots.first
+    fresh = @cabinet.round.dots.find(&:fresh?)
+    @cabinet.update(20)
     @show.update(Look::LESSON.every)
     @show.effects.update(Look::REVEAL.duration)
     @sounds.played.clear
@@ -689,7 +689,7 @@ class ShowTest < Minitest::Test
 
     (Look::LESSON.replays * 2).times { @show.update(Look::LESSON.every) }
     assert_equal Look::LESSON.replays, @show.finale.replayed, "a few times, and no more"
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
     assert @show.title?, "Continue works as ever"
   end
@@ -698,13 +698,13 @@ class ShowTest < Minitest::Test
   # it was, so Game Over shows nothing, and that Game Over doesn't count.
   def test_a_wrong_tap_whose_bright_dot_was_popped_later_teaches_nothing
     store = DotPopper::BestScore::Memory.new
-    @show = Show.new(game: @game, layout:, sounds: @sounds, radius: R, random: Random.new(3),
+    @show = Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3),
                      tutor: Tutor.new(store, times: 2))
     hide_fresh_under_a_popped_dot_and_tap_it
-    fresh = @game.round.dots.find(&:fresh?)
-    clear_around!(@game.round, fresh)
+    fresh = @cabinet.round.dots.find(&:fresh?)
+    clear_around!(@cabinet.round, fresh)
     @show.tap(fresh.x, fresh.y)
-    @game.update(20)
+    @cabinet.update(20)
 
     assert_nil @show.finale.lesson
     assert_nil store.read
@@ -712,8 +712,8 @@ class ShowTest < Minitest::Test
 
   def test_a_wrong_tap_with_the_fresh_dot_elsewhere_reveals_nothing
     start_and_pop
-    popped = @game.round.dots.first
-    clear_around!(@game.round, popped)
+    popped = @cabinet.round.dots.first
+    clear_around!(@cabinet.round, popped)
     @show.tap(popped.x, popped.y)
 
     assert_empty @show.effects.reveals
@@ -721,7 +721,7 @@ class ShowTest < Minitest::Test
 
   def test_game_over_counts_up_then_asks_to_continue_once_ready
     start_and_pop
-    @game.update(20)
+    @cabinet.update(20)
     @show.update(0.1)
 
     assert @show.finished?
@@ -729,7 +729,7 @@ class ShowTest < Minitest::Test
     assert @show.finale.first
     assert_equal 1, @show.finale.stats.pops
     assert_in_delta 0.0, @show.finale.prompt(@show.now)
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     @show.update(0.01)
     @show.update(1.0)
     assert_equal 1, @show.finale.shown_score(@show.now)
@@ -740,7 +740,7 @@ class ShowTest < Minitest::Test
   def test_the_last_seconds_tick
     press_main
     105.times do
-      @game.update(0.1)
+      @cabinet.update(0.1)
       @show.update(0.1)
     end
 
@@ -750,8 +750,8 @@ class ShowTest < Minitest::Test
 
   def test_back_on_the_title_the_effects_are_cleared
     start_and_pop
-    @game.update(20)
-    @game.update(1)
+    @cabinet.update(20)
+    @cabinet.update(1)
     press_main
 
     assert @show.title?
@@ -763,7 +763,7 @@ class ShowTest < Minitest::Test
   def middle(rect) = [rect.center_x, rect.center_y]
 
   def put!(id, x, y)
-    round = @game.round
+    round = @cabinet.round
     round.instance_variable_set(:@dots, round.dots.map_dots { it.id == id ? it.with(x:, y:) : it })
   end
 
@@ -771,9 +771,9 @@ class ShowTest < Minitest::Test
 
   def hide_fresh_under_a_popped_dot_and_tap_it(started: false)
     start_and_pop(started:)
-    popped = @game.round.dots.first
-    fresh = @game.round.dots.find(&:fresh?)
-    clear_around!(@game.round, popped)
+    popped = @cabinet.round.dots.first
+    fresh = @cabinet.round.dots.find(&:fresh?)
+    clear_around!(@cabinet.round, popped)
     put!(fresh.id, popped.x + 30, popped.y)
     @show.tap(popped.x - 20, popped.y)
     assert_equal 1, @show.effects.reveals.size
@@ -781,17 +781,17 @@ class ShowTest < Minitest::Test
 
   def finish_round(back_to_title: true)
     start_and_pop
-    @game.update(20)
+    @cabinet.update(20)
     return unless back_to_title
 
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
   end
 
   def start_and_pop(started: false)
     press_main unless started
-    fresh = @game.round.dots.find(&:fresh?)
-    clear_around!(@game.round, fresh)
+    fresh = @cabinet.round.dots.find(&:fresh?)
+    clear_around!(@cabinet.round, fresh)
     @show.tap(fresh.x, fresh.y)
   end
 end

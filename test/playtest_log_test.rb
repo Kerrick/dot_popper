@@ -7,8 +7,8 @@ class PlaytestLogTest < Minitest::Test
 
   def setup
     @store = DotPopper::BestScore::Memory.new
-    @game = DotPopper::Game.new(field, random: Random.new(9))
-    @game.subscribe(DotPopper::PlaytestLog.new(@store, clock: -> { Time.utc(2026, 11, 5, 9, 30) },
+    @cabinet = DotPopper::Cabinet.new(field, random: Random.new(9))
+    @cabinet.subscribe(DotPopper::PlaytestLog.new(@store, clock: -> { Time.utc(2026, 11, 5, 9, 30) },
                                                today: -> { Date.new(2026, 11, 5) }))
   end
 
@@ -31,10 +31,10 @@ class PlaytestLogTest < Minitest::Test
     old = "time,mode,seed,score\n2026-11-04T20:00:00Z,daily,7,12\n"
     store = DotPopper::BestScore::Memory.new(old)
     archives = {}
-    game = DotPopper::Game.new(field, random: Random.new(9))
-    game.subscribe(DotPopper::PlaytestLog.new(store, clock: -> { Time.utc(2026, 11, 5, 9, 30, 15) },
+    cabinet = DotPopper::Cabinet.new(field, random: Random.new(9))
+    cabinet.subscribe(DotPopper::PlaytestLog.new(store, clock: -> { Time.utc(2026, 11, 5, 9, 30, 15) },
                                               archive: ->(name) { archives[name] = DotPopper::BestScore::Memory.new }))
-    @game = game
+    @cabinet = cabinet
     play_round(pops: 1)
     play_round(pops: 1)
 
@@ -54,7 +54,7 @@ class PlaytestLogTest < Minitest::Test
   end
 
   def test_a_round_still_in_play_is_not_logged
-    @game.press(0, 0)
+    @cabinet.press(0, 0)
 
     assert_nil @store.read
   end
@@ -62,15 +62,15 @@ class PlaytestLogTest < Minitest::Test
   private
 
   def play_round(pops:)
-    @game.press(0, 0)
+    @cabinet.press(0, 0)
     pops.times do |i|
-      @game.update(1.0) if i.zero?
-      fresh = @game.round.dots.find(&:fresh?)
-      clear_around!(@game.round, fresh)
-      @game.press(fresh.x, fresh.y)
+      @cabinet.update(1.0) if i.zero?
+      fresh = @cabinet.round.dots.find(&:fresh?)
+      clear_around!(@cabinet.round, fresh)
+      @cabinet.press(fresh.x, fresh.y)
     end
-    @game.update(20)
-    @game.update(1)
-    @game.press(0, 0)
+    @cabinet.update(20)
+    @cabinet.update(1)
+    @cabinet.press(0, 0)
   end
 end

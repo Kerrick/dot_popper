@@ -74,7 +74,7 @@ module DotPopper
           if lead_in
             pill = @hud.bounds(@show.hud, layout)
             @tutorial.lead_in_under(lead_in, @show.now, pill, @hud.spots(@show.hud, layout),
-                                     @show.game.round.field.radius)
+                                     @show.cabinet.round.field.radius)
           end
           hud(layout)
           @tutorial.lead_in_over(lead_in, @show.now, pill) if lead_in
@@ -90,7 +90,7 @@ module DotPopper
       # A title change's announcement, for the few seconds it shows.
       def banner(layout) = @group.banner(@show.group_panel.banner, @show.now, layout, @show.banner_y)
 
-      def radius = @show.game.field.radius
+      def radius = @show.cabinet.field.radius
 
       # The screen open over the title's dimmed dots: Credits, Looks, or
       # the Records screen they were opened from.
@@ -133,7 +133,7 @@ module DotPopper
       end
 
       def field
-        round = @show.game.round or return
+        round = @show.cabinet.round or return
         @dots.draw(dots, @show.animations, @show.now, round.field.radius)
       end
 
@@ -141,7 +141,7 @@ module DotPopper
       # so it never washes out a dot or hints at a fresh dot that is
       # covered.
       def glow
-        round = @show.game.round or return
+        round = @show.cabinet.round or return
         @bloom.glow do
           @dots.glow(dots, @show.animations, @show.now, round.field.radius)
           @effects.droplets
@@ -150,7 +150,7 @@ module DotPopper
 
       # The round's dots where they are drawn: where the rules put them, or
       # after time's up, wherever they have tumbled to in the Pile.
-      def dots = @pile.stack || @show.game.round&.dots
+      def dots = @pile.stack || @show.cabinet.round&.dots
 
       # The score and clock, on top of everything, through Game Over too,
       # so a round ended by a penalty is seen to reach 0. After a wrong tap

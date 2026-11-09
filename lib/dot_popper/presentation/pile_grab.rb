@@ -27,7 +27,7 @@ module DotPopper
     # One pointer's press on Game Over, from the moment it goes down. It
     # went down on +ball+ (a dot's id, or nil for none) with the ball's
     # middle +offset+ from the pointer, as [x, y]; +heard+ says whether
-    # the game would have heard a press then (Game::GameOver#ready?). +samples+ are where
+    # the game would have heard a press then (Cabinet::GameOver#ready?). +samples+ are where
     # the pointer has been lately, newest last. Once +wandered+ past the
     # slop, it is no click; once +dragging+, it holds its ball.
     class Grab < Data.define(:ball, :offset, :radius, :heard, :start, :samples, :wandered, :dragging)

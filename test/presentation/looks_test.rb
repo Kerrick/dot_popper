@@ -188,9 +188,9 @@ class LooksTest < Minitest::Test
     entitlement = DotPopper::Entitlement.new(@paid)
     store = DotPopper::BestScore::Memory.new
     wardrobe = Wardrobe.new(store, themes: Look::THEMES, entitlement:, today: -> { @day })
-    @game = DotPopper::Game.new(field, random: Random.new(2), best: DotPopper::BestScore.new(DotPopper::BestScore::Memory.new))
+    @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), best: DotPopper::BestScore.new(DotPopper::BestScore::Memory.new))
     @wardrobe = wardrobe
-    @show = Show.new(game: @game, layout: layout, sounds: @sounds, radius: R, entitlement:, wardrobe:,
+    @show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, entitlement:, wardrobe:,
                      lifetime: DotPopper::Lifetime.new(DotPopper::BestScore::Memory.new, today: -> { @day }), **options)
     finish_round
   end
@@ -199,11 +199,11 @@ class LooksTest < Minitest::Test
 
   def finish_round
     press_main
-    fresh = @game.round.dots.find(&:fresh?)
-    clear_around!(@game.round, fresh)
+    fresh = @cabinet.round.dots.find(&:fresh?)
+    clear_around!(@cabinet.round, fresh)
     @show.tap(fresh.x, fresh.y)
-    @game.update(20)
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @cabinet.update(20)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
   end
 end

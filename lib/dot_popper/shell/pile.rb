@@ -8,7 +8,7 @@ module DotPopper
     # gravity between the window's sides onto its floor. A new round or
     # the title throws the world away.
     #
-    # It hears the rules' events (Game#subscribe). While a pile is falling,
+    # It hears the rules' events (Cabinet#subscribe). While a pile is falling,
     # +stack+ is the round's stack with each dot where its ball is, in the
     # same order, so popped dots still cover fresh ones.
     #

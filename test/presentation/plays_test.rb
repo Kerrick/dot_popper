@@ -23,8 +23,8 @@ class PlaysTest < Minitest::Test
     @day = Date.new(2026, 11, 8)
     @entitlement = DotPopper::Entitlement.free
     @plays = DotPopper::FreePlays.new(Memory.new, today: -> { @day }, entitlement: @entitlement, bank: 0)
-    @game = DotPopper::Game.new(field, random: Random.new(3))
-    @show = Show.new(game: @game, layout: layout, sounds: FakeSounds.new, radius: R, plays: @plays, entitlement: @entitlement,
+    @cabinet = DotPopper::Cabinet.new(field, random: Random.new(3))
+    @show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, plays: @plays, entitlement: @entitlement,
                      storefront: Store.new)
   end
 
@@ -66,7 +66,7 @@ class PlaysTest < Minitest::Test
   end
 
   def test_the_tutorial_costs_no_play
-    show = Show.new(game: @game, layout: layout, sounds: FakeSounds.new, radius: R, plays: @plays, storefront: Store.new,
+    show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, plays: @plays, storefront: Store.new,
                     tutorial_flag: TutorialFlag.new(Memory.new))
     press_main(show)
 
@@ -79,7 +79,7 @@ class PlaysTest < Minitest::Test
 
   def test_skipping_the_tutorial_with_none_left_opens_the_offer
     3.times { @plays.spend! }
-    show = Show.new(game: @game, layout: layout, sounds: FakeSounds.new, radius: R, plays: @plays, storefront: Store.new,
+    show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, plays: @plays, storefront: Store.new,
                     tutorial_flag: TutorialFlag.new(Memory.new))
     press_main(show)
     show.skip_tutorial
@@ -98,7 +98,7 @@ class PlaysTest < Minitest::Test
   end
 
   def test_a_title_with_no_counting_says_nothing_of_plays
-    show = Show.new(game: @game, layout: layout, sounds: FakeSounds.new, radius: R)
+    show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R)
 
     assert_nil show.plays_line
     assert_nil show.title_plan[:plays]
@@ -107,7 +107,7 @@ class PlaysTest < Minitest::Test
   def test_the_plays_line_and_the_offer_fit_on_the_screens_a_player_has
     [[1200, 800], [400, 850], [850, 400]].each do |width, height|
       layout = layout(width, height)
-      show = Show.new(game: DotPopper::Game.new(field, random: Random.new(3)), layout:, sounds: FakeSounds.new, radius: R,
+      show = Show.new(cabinet: DotPopper::Cabinet.new(field, random: Random.new(3)), layout:, sounds: FakeSounds.new, radius: R,
                       plays: @plays, storefront: Store.new)
       plan = show.title_plan
 

@@ -38,13 +38,13 @@ module DotPopperGui
     def initialize(app)
       @app = app
       @events = []
-      game.subscribe { @events << it }
+      cabinet.subscribe { @events << it }
     end
 
-    def game = app.game
+    def cabinet = app.cabinet
     def show = app.show
     def pile = app.pile
-    def round = game.round
+    def round = cabinet.round
     def layout = show.layout
     def words = show.words
 
@@ -224,7 +224,7 @@ module DotPopperGui
 
     # Waits out Game Over's grace and presses Continue.
     def continue_to_title(how = method(:click))
-      wait_for("Game Over ready for a press") { game.state.ready? }
+      wait_for("Game Over ready for a press") { cabinet.state.ready? }
       button = show.continue_reach
       how.call(button.center_x, button.center_y)
       wait_for("the title again", within: 5) { show.title? }

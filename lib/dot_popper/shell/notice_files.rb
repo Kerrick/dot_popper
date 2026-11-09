@@ -29,15 +29,15 @@ module DotPopper
       FLEDGE = "notices"
       REACH = 4
 
-      def initialize(game:, starts: [], reach: REACH)
-        @game = game
-        @roots = [game, *starts].compact.flat_map { climb(it, reach) }.uniq
+      def initialize(cabinet:, starts: [], reach: REACH)
+        @cabinet = cabinet
+        @roots = [cabinet, *starts].compact.flat_map { climb(it, reach) }.uniq
       end
 
       def notices
-        Presentation::Notices.new(ofl: read(@game, "assets", "fonts", "OFL.txt"),
-                                  iosevka: read(@game, "assets", "fonts", "Iosevka-LICENSE.md"),
-                                  emoji: read(@game, "assets", "emoji", "LICENSE.txt"),
+        Presentation::Notices.new(ofl: read(@cabinet, "assets", "fonts", "OFL.txt"),
+                                  iosevka: read(@cabinet, "assets", "fonts", "Iosevka-LICENSE.md"),
+                                  emoji: read(@cabinet, "assets", "emoji", "LICENSE.txt"),
                                   lota: lota, fledge: fledge)
       end
 

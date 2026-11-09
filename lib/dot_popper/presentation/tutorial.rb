@@ -52,7 +52,7 @@ module DotPopper
     # dots, their real drawing and the slowest real speed, and the real
     # HUD. The game stays on its title until it ends; then the round goes
     # on from exactly where it left its dots, its score and its time
-    # (Game#resume), and only the clock starts. It teaches without a word,
+    # (Cabinet#resume), and only the clock starts. It teaches without a word,
     # in five beats, and each tap that moves it on is the player's:
     #
     # 1. A bright dot drifts, time eases to a stop, a spotlight finds it,

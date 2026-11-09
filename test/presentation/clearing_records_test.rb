@@ -13,10 +13,10 @@ class ClearingRecordsTest < Minitest::Test
   def setup
     @sounds = FakeSounds.new
     @folder = DotPopper::RecordKeeper::Folder.new
-    @game = DotPopper::Game.new(field, random: Random.new(2), best: DotPopper::BestScore.new(@folder.call("best")))
+    @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), best: DotPopper::BestScore.new(@folder.call("best")))
     @lifetime = DotPopper::Lifetime.new(@folder.call("lifetime"), today: -> { Date.new(2026, 11, 5) })
-    @keeper = DotPopper::RecordKeeper.new(best: @game.best, lifetime: @lifetime, folder: @folder)
-    @show = Show.new(game: @game, layout: layout, sounds: @sounds, radius: R, lifetime: @lifetime, keeper: @keeper)
+    @keeper = DotPopper::RecordKeeper.new(best: @cabinet.best, lifetime: @lifetime, folder: @folder)
+    @show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, lifetime: @lifetime, keeper: @keeper)
     finish_round
     @show.open_records
   end
@@ -63,14 +63,14 @@ class ClearingRecordsTest < Minitest::Test
 
   def test_undo_puts_everything_back
     before = @lifetime.stats
-    best = @game.best.of(@game.size_class)
+    best = @cabinet.best.of(@cabinet.size_class)
     clear_by(:mouse)
     @show.tap(*middle(@show.undo_reach), by: :mouse)
 
     assert @show.records?, "Undo never goes back"
     refute @show.records.empty
     assert_equal before, @lifetime.stats
-    assert_equal best, @game.best.of(@game.size_class)
+    assert_equal best, @cabinet.best.of(@cabinet.size_class)
     assert_equal best, @show.marquee.best
     assert @show.clear_offered?
   end
@@ -145,11 +145,11 @@ class ClearingRecordsTest < Minitest::Test
 
   def finish_round
     press_main
-    fresh = @game.round.dots.find(&:fresh?)
-    clear_around!(@game.round, fresh)
+    fresh = @cabinet.round.dots.find(&:fresh?)
+    clear_around!(@cabinet.round, fresh)
     @show.tap(fresh.x, fresh.y)
-    @game.update(20)
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @cabinet.update(20)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
   end
 end

@@ -54,7 +54,7 @@ module DotPopper
       waits.count { (at += it) <= seconds }
     end
 
-    # Listens to a Game (Game#subscribe) and keeps the stats of the round
+    # Listens to a Cabinet (Cabinet#subscribe) and keeps the stats of the round
     # in play, or of the one just finished.
     class Recorder
       attr_reader :stats

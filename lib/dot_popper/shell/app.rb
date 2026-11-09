@@ -15,7 +15,7 @@ module DotPopper
 
       # What the GUI suite's director (test/gui/director.rb) watches as it
       # plays: the rules, the Show, and the game-over pile.
-      attr_reader :game, :show, :pile
+      attr_reader :cabinet, :show, :pile
 
       def initialize(env = ENV)
         @env = env
@@ -46,14 +46,14 @@ module DotPopper
         # screen's class.
         legacy = SizeClass.of(screen)
         sizing_store = SaveFile.new(name: "dot_size.txt")
-        @game = Game.new(screen, best: BestScore.new(SaveFile.new(name: "best_score.txt"), legacy:), random:,
+        @cabinet = Cabinet.new(screen, best: BestScore.new(SaveFile.new(name: "best_score.txt"), legacy:), random:,
                                  sizing: DotSizing.parse(sizing_store.read))
-        puts "Dot Popper: dots are sized to the screen as each round starts" if @game.sizing.sized_to_screen?
+        puts "Dot Popper: dots are sized to the screen as each round starts" if @cabinet.sizing.sized_to_screen?
         lifetime = Lifetime.new(SaveFile.new(name: "lifetime.txt"), today:, legacy:)
-        notices = NoticeFiles.new(game: File.expand_path("../../..", __dir__),
+        notices = NoticeFiles.new(cabinet: File.expand_path("../../..", __dir__),
                                   starts: [File.dirname(File.expand_path($PROGRAM_NAME))]).notices
         achievements = Achievements.new(SaveFile.new(name: "achievements.txt"))
-        keeper = RecordKeeper.new(best: @game.best, lifetime:, achievements:, folder: ->(name) { SaveFile.new(name:) })
+        keeper = RecordKeeper.new(best: @cabinet.best, lifetime:, achievements:, folder: ->(name) { SaveFile.new(name:) })
         entitlement = Entitlement.new(SaveFile.new(name: "entitlement.txt"), forced: Entitlement.forced?(@env, os:))
         wardrobe = Presentation::Wardrobe.new(SaveFile.new(name: "looks.txt"), themes: Look::THEMES, entitlement:, today:)
         @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
@@ -67,7 +67,7 @@ module DotPopper
         )
         plays = free_plays(entitlement, metered: storefront.offered? && player?)
         groups = Groups::Session.at(Groups::Settings.server_url(@env, test_build: Presentation::Storefront.test_build?), store: SaveFile.new(name: "group.txt"))
-        @show = Presentation::Show.new(groups:, game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,
+        @show = Presentation::Show.new(groups:, cabinet: @cabinet, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"),
                                        tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt"),
                                                                     times: Look::LESSON.times),
@@ -80,16 +80,16 @@ module DotPopper
                                        ),
                                        entitlement:, wardrobe:, storefront:, plays:)
         storefront.connect
-        @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
+        @cabinet.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
                                         archive: ->(name) { SaveFile.new(name:) }))
         puts "Dot Popper: each round is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"
         @pile = Pile.new(flag?("DOT_POPPER_CALM") ? Look::CALM_PILE : Look::PILE)
-        @game.subscribe(@pile)
+        @cabinet.subscribe(@pile)
         @gamepads = Gamepads.new(pretend: fake_gamepad?)
         @tilting = tilting
-        @game.subscribe(@tilting)
+        @cabinet.subscribe(@tilting)
         @dragging = Dragging.new(pile: @pile, show: @show, look: flag?("DOT_POPPER_CALM") ? Look::CALM_GRAB : Look::GRAB)
-        @game.subscribe(@dragging)
+        @cabinet.subscribe(@dragging)
         @fake_drag = Presentation::FakeDrag.parse(@env["DOT_POPPER_FAKE_DRAG"])
         @sparks = Sparks.new(Look)
         @bloom = Bloom.new(@pen, Look::BLOOM)
@@ -108,7 +108,7 @@ module DotPopper
         @shots = Presentation::ShotSchedule.parse(@env["DOT_POPPER_SHOTS"])
         @quit_after = Float(@env.fetch("DOT_POPPER_QUIT_AFTER", ""), exception: false)
         @frames = Presentation::FrameMeter.start(5) if flag?("DOT_POPPER_PERF")
-        @game.subscribe { happened(it.class.name.split("::").last) } if @frames
+        @cabinet.subscribe { happened(it.class.name.split("::").last) } if @frames
       end
 
       # Lota's frame, which Lota measured as +measured+ seconds: the game
@@ -131,10 +131,10 @@ module DotPopper
         @show.input = Presentation::InputKind::GAMEPAD unless moved == @cursor
         @cursor = moved
         if @autopilot
-          x, y = @autopilot.update(seconds, @game, @show)
+          x, y = @autopilot.update(seconds, @cabinet, @show)
           tap(x, y) if x
         end
-        @game.update(seconds)
+        @cabinet.update(seconds)
         @show.update(seconds)
         dress
         point_the_mouse
@@ -336,11 +336,11 @@ module DotPopper
         @pen.refresh
         @sparks.refresh
         @bloom.refresh
-        @game.screen = screen
-        @show.resize(layout, @game.field)
+        @cabinet.screen = screen
+        @show.resize(layout, @cabinet.field)
         # The heap keeps the finished round's dots, and their radius.
-        round = @game.round
-        @pile.refit(round ? Field.new(screen.width, screen.height, round.field.radius) : @game.field)
+        round = @cabinet.round
+        @pile.refit(round ? Field.new(screen.width, screen.height, round.field.radius) : @cabinet.field)
         @renderer.prepare
         @cursor = @cursor.refit(@show.layout.whole)
       end

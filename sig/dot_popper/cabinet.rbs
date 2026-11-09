@@ -1,5 +1,5 @@
 module DotPopper
-  class Game
+  class Cabinet
     LARGEST_SEED: Integer
 
     interface _Listener
@@ -59,9 +59,9 @@ module DotPopper
 
       def round: () -> nil
 
-      def press: (Game game, number x, number y) -> Playing
+      def press: (Cabinet cabinet, number x, number y) -> Playing
 
-      def update: (Game game, number seconds) -> Title
+      def update: (Cabinet cabinet, number seconds) -> Title
     end
 
     class Playing < ::Data
@@ -73,13 +73,13 @@ module DotPopper
 
       def self.new: (round: Round, seed: Integer, size_class: SizeClass) -> instance
 
-      def press: (Game game, number x, number y) -> (Playing | GameOver)
+      def press: (Cabinet cabinet, number x, number y) -> (Playing | GameOver)
 
-      def update: (Game game, number seconds) -> (Playing | GameOver)
+      def update: (Cabinet cabinet, number seconds) -> (Playing | GameOver)
 
       private
 
-      def settle: (Game game) -> (Playing | GameOver)
+      def settle: (Cabinet cabinet) -> (Playing | GameOver)
     end
 
     class GameOver < ::Data
@@ -97,9 +97,9 @@ module DotPopper
 
       def ready?: () -> bool
 
-      def press: (Game game, number x, number y) -> (GameOver | Title)
+      def press: (Cabinet cabinet, number x, number y) -> (GameOver | Title)
 
-      def update: (Game game, number seconds) -> GameOver
+      def update: (Cabinet cabinet, number seconds) -> GameOver
     end
   end
 end

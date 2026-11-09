@@ -331,12 +331,12 @@ class ScreenPlansTest < Minitest::Test
     long = ["License text with a longer word, #{"x" * 90}, and a ruled line", "-" * 70, "", "  1. an indented item"]
     notices = Notices.new(iosevka: Array.new(40) { long.join("\n") }.join("\n\n"), ofl: "Fredoka text", lota: "Lota text",
                           fledge: ["Fledge text"])
-    game = DotPopper::Game.new(field(screen_layout.width, screen_layout.height), random: Random.new(2))
-    show = Show.new(game:, layout: screen_layout, sounds: FakeSounds.new, radius: R, notices:, measure: RoughMeasure.new)
+    cabinet = DotPopper::Cabinet.new(field(screen_layout.width, screen_layout.height), random: Random.new(2))
+    show = Show.new(cabinet:, layout: screen_layout, sounds: FakeSounds.new, radius: R, notices:, measure: RoughMeasure.new)
     show.primary
-    game.update(30)
+    cabinet.update(30)
     show.update(1.0)
-    game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     show.primary
     show.open_records
     show
@@ -348,17 +348,17 @@ class ScreenPlansTest < Minitest::Test
   # choice where it shows, the Records screen, and Undo there once the
   # records are cleared.
   def each_screen(width, height, window: NoWindowControl.new)
-    game = DotPopper::Game.new(field(width, height), random: Random.new(2))
-    show = Show.new(game:, layout: layout(width, height), sounds: FakeSounds.new, radius: R, window:)
+    cabinet = DotPopper::Cabinet.new(field(width, height), random: Random.new(2))
+    show = Show.new(cabinet:, layout: layout(width, height), sounds: FakeSounds.new, radius: R, window:)
     yield "the first title", show
     show.primary
-    game.update(30)
+    cabinet.update(30)
     show.update(1.0)
     yield "Game Over", show
     show.share
     yield "the share preview", show
     show.close_share
-    game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     show.primary
     yield "the title after a round", show
     show.open_records

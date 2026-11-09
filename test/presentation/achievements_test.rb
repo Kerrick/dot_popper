@@ -16,11 +16,11 @@ class AchievementsOnRecordsTest < Minitest::Test
   end
 
   def show(paid:)
-    @game = DotPopper::Game.new(field, random: Random.new(2), best: DotPopper::BestScore.new(@folder.call("best")))
+    @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), best: DotPopper::BestScore.new(@folder.call("best")))
     lifetime = DotPopper::Lifetime.new(@folder.call("lifetime"), today: -> { Date.new(2026, 11, 8) })
-    keeper = DotPopper::RecordKeeper.new(best: @game.best, lifetime:, achievements: @achievements, folder: @folder)
+    keeper = DotPopper::RecordKeeper.new(best: @cabinet.best, lifetime:, achievements: @achievements, folder: @folder)
     entitlement = DotPopper::Entitlement.new(Memory.new(paid ? "paid" : nil))
-    @show = Show.new(game: @game, layout: layout, sounds: FakeSounds.new, radius: R, lifetime:, keeper:,
+    @show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, lifetime:, keeper:,
                      achievements: @achievements, entitlement:)
   end
 
@@ -28,11 +28,11 @@ class AchievementsOnRecordsTest < Minitest::Test
   # showing, and lets the clock run out.
   def play_a_sharp_round
     press_main
-    round = @game.round
+    round = @cabinet.round
     covered = dot(400, 300, popped: true)
     round.instance_variable_set(:@dots, DotPopper::Stack.new(dots: [covered, dot(395, 300, id: 900)]))
     @show.tap(346, 300)
-    @game.update(30)
+    @cabinet.update(30)
   end
 
   def test_a_sharp_pop_is_named_at_game_over_for_a_paid_player
@@ -55,7 +55,7 @@ class AchievementsOnRecordsTest < Minitest::Test
   def test_a_achievement_is_announced_only_the_round_it_is_first_earned
     show(paid: true)
     play_a_sharp_round
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
     play_a_sharp_round
 
@@ -144,7 +144,7 @@ class AchievementsOnRecordsTest < Minitest::Test
   def test_clearing_the_records_clears_the_achievements_and_undo_brings_them_back
     show(paid: true)
     play_a_sharp_round
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
     @show.open_records
     assert_equal :earned, @show.records.achievements.rows.first.mark

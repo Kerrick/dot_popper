@@ -24,14 +24,14 @@ class RulesFuzzTest < Minitest::Test
   def test_random_presses_change_a_round_only_while_it_is_played
     seed = Integer(ENV.fetch("RULES_FUZZ_SEED", 20_261_105))
     random = Random.new(seed)
-    game = DotPopper::Game.new(random_field(random), random:)
+    cabinet = DotPopper::Cabinet.new(random_field(random), random:)
     seen = Set.new
     3_000.times do |step|
-      before = game.state
+      before = cabinet.state
       seen << before.class
-      kept = [game.round&.score, game.round&.countdown]
-      random.rand < 0.5 ? game.press(*aim_anywhere(game, random)) : game.update(random.rand(1.5))
-      next if before.is_a?(DotPopper::Game::Playing)
+      kept = [cabinet.round&.score, cabinet.round&.countdown]
+      random.rand < 0.5 ? cabinet.press(*aim_anywhere(cabinet, random)) : cabinet.update(random.rand(1.5))
+      next if before.is_a?(DotPopper::Cabinet::Playing)
 
       assert_equal kept, [before.round&.score, before.round&.countdown], "seed #{seed}, step #{step}"
     end
@@ -40,7 +40,7 @@ class RulesFuzzTest < Minitest::Test
 
   private
 
-  def aim_anywhere(game, random) = [random.rand(game.field.width), random.rand(game.field.height)]
+  def aim_anywhere(cabinet, random) = [random.rand(cabinet.field.width), random.rand(cabinet.field.height)]
 
   def play(random, where)
     round = DotPopper::Round.new(random_field(random), random:)

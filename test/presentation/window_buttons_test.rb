@@ -11,8 +11,8 @@ class WindowButtonsTest < Minitest::Test
 
   def setup
     @window = FakeWindow.new
-    @game = DotPopper::Game.new(field(1200, 800), random: Random.new(2))
-    @show = Show.new(game: @game, layout: layout(1200, 800), sounds: FakeSounds.new, radius: R, window: @window)
+    @cabinet = DotPopper::Cabinet.new(field(1200, 800), random: Random.new(2))
+    @show = Show.new(cabinet: @cabinet, layout: layout(1200, 800), sounds: FakeSounds.new, radius: R, window: @window)
   end
 
   def test_a_click_on_full_screen_switches_the_window_and_a_second_switches_it_back
@@ -52,11 +52,11 @@ class WindowButtonsTest < Minitest::Test
   def test_only_the_title_offers_them
     @show.primary
     refute_window_buttons "a round"
-    @game.update(30)
+    @cabinet.update(30)
     @show.update(1.0)
     refute_window_buttons "Game Over"
     assert @show.continue_reach, "Continue goes back to the title"
-    @game.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     @show.primary
     @show.open_records
     refute_window_buttons "the Records screen"
@@ -64,7 +64,7 @@ class WindowButtonsTest < Minitest::Test
   end
 
   def test_a_phone_or_tablet_offers_neither
-    show = Show.new(game: @game, layout: layout(400, 850), sounds: FakeSounds.new, radius: R)
+    show = Show.new(cabinet: @cabinet, layout: layout(400, 850), sounds: FakeSounds.new, radius: R)
     names = show.controls.map(&:name)
 
     refute_includes names, :fullscreen

@@ -50,7 +50,7 @@ module DotPopperGui
       play = show.play_reach
       how.call(play.center_x, play.center_y)
       check(show.tutorial?, "the first Play opens the tutorial")
-      check(game.state.is_a?(DotPopper::Game::Title) && game.round.nil?, "the game stays on its title meanwhile")
+      check(cabinet.state.is_a?(DotPopper::Cabinet::Title) && cabinet.round.nil?, "the game stays on its title meanwhile")
     end
 
     def by_gamepad
@@ -102,7 +102,7 @@ module DotPopperGui
       wait(0.3)
       keep_screenshot(name("2-time"))
       check_equal([1, 11], shown, "the stopwatch lands in the time")
-      check(game.round.nil?, "nothing is scored for real")
+      check(cabinet.round.nil?, "nothing is scored for real")
       wait_for("time to flow again", within: 120) { tutorial.beat == :peek }
       check(dot(T::BRIGHT).popped? && dot(T::NEXT)&.fresh?, "as it does, the dot is popped, and one born under it")
       wait(0.3)
@@ -138,7 +138,7 @@ module DotPopperGui
       check_equal([0, 7], shown, "a tap on the popped dot costs two seconds, the score staying at 0")
       wait(0.25)
       keep_screenshot(name("3-slip"))
-      check(game.round.nil? && story.none?(:Penalized), "the rules hear nothing yet: no clock is running")
+      check(cabinet.round.nil? && story.none?(:Penalized), "the rules hear nothing yet: no clock is running")
       check(tutorial.beat == :warn || tutorial.beat == :slide, "the beat goes on")
     end
 

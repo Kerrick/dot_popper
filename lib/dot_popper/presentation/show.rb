@@ -33,19 +33,19 @@ module DotPopper
       # the default, dots sized to the screen, first.
       SIZINGS = [DotSizing::SIZED_TO_SCREEN, DotSizing::STANDARD].freeze
 
-      attr_reader :game, :effects, :animations, :hud, :attract, :layout, :marquee, :finale, :sounds, :now, :look,
+      attr_reader :cabinet, :effects, :animations, :hud, :attract, :layout, :marquee, :finale, :sounds, :now, :look,
                   :lifetime, :input, :words, :clearing, :tutorial, :lead_in, :window, :plays
 
-      def initialize(game:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false,
+      def initialize(cabinet:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false,
                      tutor: Tutor.new(BestScore::Memory.new, times: look::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
                      lifetime: Lifetime.new(BestScore::Memory.new), sizing_store: BestScore::Memory.new,
                      input: InputKind::MOUSE, measure: RoughMeasure.new,
                      achievements: Achievements.new(BestScore::Memory.new),
-                     keeper: RecordKeeper.new(best: game.best, lifetime:, achievements:), notices: Notices.none,
+                     keeper: RecordKeeper.new(best: cabinet.best, lifetime:, achievements:), notices: Notices.none,
                      sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never, window: NoWindowControl.new,
                      entitlement: Entitlement.free, wardrobe: Wardrobe.plain(look::THEMES),
                      groups: Groups::Session.off, storefront: NoStorefront.new, plays: FreePlays.unlimited)
-        @game = game
+        @cabinet = cabinet
         @window = window
         @tutorial_flag = tutorial_flag
         @entitlement = entitlement
@@ -79,9 +79,9 @@ module DotPopper
         @effects = Effects.new(radius:, random:, calm:)
         @animations = DotAnimations.new(look::MOTION)
         @hud = Hud.blank(look::HUD, words)
-        @attract = Attract.spawn(game.field, look::TITLE)
+        @attract = Attract.spawn(cabinet.field, look::TITLE)
         @now = 0.0
-        @marquee = Marquee.new(look: look::TITLE, best: game.best.of(game.size_class), at: @now)
+        @marquee = Marquee.new(look: look::TITLE, best: cabinet.best.of(cabinet.size_class), at: @now)
         @finale = nil
         @tutor = tutor
         @clipboard = clipboard
@@ -99,8 +99,8 @@ module DotPopper
         @undo = nil
         @pointer = nil
         @hover = Hover.none
-        game.subscribe(@recorder)
-        game.subscribe(self)
+        cabinet.subscribe(@recorder)
+        cabinet.subscribe(self)
       end
 
       # The numbers of the round in play, or of the one just finished.
@@ -163,7 +163,7 @@ module DotPopper
 
       # Whether the title is showing: the game is on its title, and the
       # Tutorial is not playing over it.
-      def title? = game.state.is_a?(Game::Title) && !tutorial?
+      def title? = cabinet.state.is_a?(Cabinet::Title) && !tutorial?
 
       # Whether the Tutorial is playing (#tutorial). The game stays on its
       # title meanwhile, so its clock is not running, and no tap there
@@ -185,7 +185,7 @@ module DotPopper
       # Where the Friend group screen's parts go, while it is open.
       def group_plan
         GroupScreen.new(layout:, look: look::GROUPS, measure: @measure, panel: @groups,
-                        standard_dots: !game.sizing.sized_to_screen?, back_text: words.go_back).plan
+                        standard_dots: !cabinet.sizing.sized_to_screen?, back_text: words.go_back).plan
       end
 
       # Whether the title offers the way in to groups: where there is a
@@ -222,14 +222,14 @@ module DotPopper
 
       # What the choice of dot size would do on this screen, worked out
       # afresh each time, so a resized window is always seen as it is now.
-      def sizing_preview = SizingPreview.of(game.screen, look::SIZING)
+      def sizing_preview = SizingPreview.of(cabinet.screen, look::SIZING)
 
       # Whether the title offers the choice of dot size: once a round has
       # finished, and only where the two sizes look different. Where they
       # look alike, the saved choice stays as it was, and rounds follow it.
       def sizing_offered? = records_offered? && sizing_preview.offered?
-      def playing? = game.state.is_a?(Game::Playing)
-      def finished? = game.state.is_a?(Game::GameOver)
+      def playing? = cabinet.state.is_a?(Cabinet::Playing)
+      def finished? = cabinet.state.is_a?(Cabinet::GameOver)
 
       # A tap at +x+, +y+, by +by+ (a finger's id, :mouse, or :gamepad),
       # which #let_go names when it lets go. In a round, every tap goes to
@@ -245,7 +245,7 @@ module DotPopper
       # preview's card closes it. A gamepad's A, which aims at no button,
       # presses the screen's main one (#primary).
       def tap(x, y, by: :tap)
-        return game.press(x, y) if playing?
+        return cabinet.press(x, y) if playing?
         return tutorial_tap(x, y) if tutorial?
 
         case control_at(x, y)&.name
@@ -351,7 +351,7 @@ module DotPopper
       # Game Over's Continue: back to the title, once the game will hear a
       # press (Rules::GAME_OVER_GRACE).
       def continue_on
-        game.press(layout.center_x, layout.center_y) if finished?
+        cabinet.press(layout.center_x, layout.center_y) if finished?
       end
 
       # The mouse moved to +x+, +y+, without a button held or with one.
@@ -422,20 +422,20 @@ module DotPopper
 
       # Switches how dots are sized (DotSizing) to the other choice, as a
       # gamepad's shoulder button does, while the title offers it.
-      def toggle_sizing = choose_sizing(game.sizing.toggled)
+      def toggle_sizing = choose_sizing(cabinet.sizing.toggled)
 
       # Sizes dots as +sizing+ (DotSizing) says, on the title while it
       # offers the choice, and remembers it. The title's dots and best
       # change with it, so the choice shows at once.
       def choose_sizing(sizing)
         return unless title? && sizing_offered?
-        return sounds.play(:tick, pitch: 0.8) if sizing == game.sizing
+        return sounds.play(:tick, pitch: 0.8) if sizing == cabinet.sizing
 
-        game.sizing = sizing
-        @sizing_store.write(game.sizing.to_text)
-        @attract = Attract.spawn(game.field, look::TITLE)
-        @marquee = marquee.with(best: game.best.of(game.size_class))
-        sounds.play(:tick, pitch: game.sizing.sized_to_screen? ? 1.2 : 0.9)
+        cabinet.sizing = sizing
+        @sizing_store.write(cabinet.sizing.to_text)
+        @attract = Attract.spawn(cabinet.field, look::TITLE)
+        @marquee = marquee.with(best: cabinet.best.of(cabinet.size_class))
+        sounds.play(:tick, pitch: cabinet.sizing.sized_to_screen? ? 1.2 : 0.9)
       end
 
       # Opens the Records screen over the title, with the stats as they
@@ -725,7 +725,7 @@ module DotPopper
         return unless finale
 
         FinaleScreen.new(layout:, type: look::TYPE, words:, measure: @measure, scrim: look::FINALE_BACKING, finale:,
-                         below: hud_bottom, radius: game.round&.field&.radius || @radius, group_line: @groups.game_line)
+                         below: hud_bottom, radius: cabinet.round&.field&.radius || @radius, group_line: @groups.game_line)
       end
 
       # The window changed size. The title's dots are respawned if their
@@ -747,11 +747,11 @@ module DotPopper
         effects.update(seconds)
         follow_tutorial(seconds) if tutorial?
         @attract = attract.update(seconds) if title?
-        follow_round if game.round
+        follow_round if cabinet.round
         follow_finale if finished?
       end
 
-      # Hears one of the rules' events (Game#subscribe).
+      # Hears one of the rules' events (Cabinet#subscribe).
       def call(event)
         @achievement_watch.call(event)
         case event
@@ -771,7 +771,7 @@ module DotPopper
       def start_round
         return offer_for_play unless plays.spend!
 
-        game.press(layout.center_x, layout.center_y)
+        cabinet.press(layout.center_x, layout.center_y)
       end
 
       # Opens the offer straight from the title, as Play does when no play
@@ -788,7 +788,7 @@ module DotPopper
       # the effects to its dots.
       def open_tutorial
         @tutorial_flag.seen!
-        field = game.field
+        field = cabinet.field
         effects.clear
         effects.scale_to(field.radius)
         @tutorial = Tutorial.new(field:, center: [layout.center_x, layout.center_y], effects:, sounds:,
@@ -803,7 +803,7 @@ module DotPopper
       end
 
       # The Tutorial moves on, and once it is over, the round goes on from
-      # exactly where it left its dots, score and time (Game#resume), and
+      # exactly where it left its dots, score and time (Cabinet#resume), and
       # only its clock starts, lit as it starts to run (LeadIn).
       def follow_tutorial(seconds)
         @tutorial.update(seconds)
@@ -811,7 +811,7 @@ module DotPopper
 
         @handing_over, @tutorial = @tutorial, nil
         scene = @handing_over
-        game.resume(field: scene.field, dots: scene.dots, score: scene.score, seconds: scene.seconds)
+        cabinet.resume(field: scene.field, dots: scene.dots, score: scene.score, seconds: scene.seconds)
         @lead_in = LeadIn.new(at: now, look: look::TUTORIAL.lead)
       end
 
@@ -819,7 +819,7 @@ module DotPopper
       # clock, its first second down ticks, as the urgent ones do.
       def follow_round
         before = hud.seconds
-        @hud = hud.read(game.round, now) { tick(it) if playing? }
+        @hud = hud.read(cabinet.round, now) { tick(it) if playing? }
         beckon
         @lead_in = nil if @lead_in&.over?(now)
         return unless @lead_in && playing? && before && hud.seconds < before && now - @penalized_at >= 0.1
@@ -901,7 +901,7 @@ module DotPopper
       def button(name, frame) = Control.new(name:, frame:, reach: within_safe(frame.reach(2 * @radius)))
 
       # A screen's main button, which a press reaches more generously.
-      def primary_button(name, frame) = Control.new(name:, frame:, reach: layout.primary_reach(frame, game.field.radius))
+      def primary_button(name, frame) = Control.new(name:, frame:, reach: layout.primary_reach(frame, cabinet.field.radius))
 
       def hold_clear(by)
         @clearing = clearing.press(by, now)
@@ -929,13 +929,13 @@ module DotPopper
       # best, show them as they are now.
       def records_changed
         @records = records_sheet if records?
-        @marquee = marquee.with(best: game.best.of(game.size_class))
+        @marquee = marquee.with(best: cabinet.best.of(cabinet.size_class))
       end
 
       def records_sheet
-        size_class = game.size_class
-        RecordsSheet.build(lifetime.stats, best: game.best.of(size_class), words:, streak: lifetime.streak,
-                           size_class:, field: game.field, sizing: game.sizing, achievements: @achievements,
+        size_class = cabinet.size_class
+        RecordsSheet.build(lifetime.stats, best: cabinet.best.of(size_class), words:, streak: lifetime.streak,
+                           size_class:, field: cabinet.field, sizing: cabinet.sizing, achievements: @achievements,
                            paid: @entitlement.paid?)
       end
 
@@ -1012,7 +1012,7 @@ module DotPopper
       def beckon
         return unless @beckoned_at && playing? && now - @beckoned_at >= look::BONUS_BEACON_EVERY
 
-        dot = game.round.dots.find { it.fresh? && it.bonus? } or return @beckoned_at = nil
+        dot = cabinet.round.dots.find { it.fresh? && it.bonus? } or return @beckoned_at = nil
         @beckoned_at = now
         effects.ring(dot.x, dot.y, look::BONUS_BEACON, follow: dot.id)
       end
@@ -1021,7 +1021,7 @@ module DotPopper
         @penalized_at = now
         animations.wobble(event.dot.id, now)
         effects.ring(event.dot.x, event.dot.y, look::ALARM_RING, follow: event.dot.id)
-        hidden = game.round.dots.fresh_beneath(event.dot, event.x, event.y)
+        hidden = cabinet.round.dots.fresh_beneath(event.dot, event.x, event.y)
         effects.reveal(hidden, look::REVEAL) if hidden
         @slip = Slip.new(popped: event.dot.id, bright: hidden.id) if hidden
         effects.kick(look::PENALTY_SHAKE)
@@ -1097,7 +1097,7 @@ module DotPopper
 
       def pop_pitch
         sound = look::SOUND
-        [1.0 + (game.round.score * sound.pop_climb), sound.pop_highest].min
+        [1.0 + (cabinet.round.score * sound.pop_climb), sound.pop_highest].min
       end
 
       def tick(seconds)
@@ -1108,7 +1108,7 @@ module DotPopper
       end
 
       def follow_finale
-        @finale = finale.ready(now) if game.state.ready?
+        @finale = finale.ready(now) if cabinet.state.ready?
         replay_slip if finale.lesson && finale.counted?(now) &&
                        look::LESSON.replay_due?(finale.replayed, now - finale.at - look::FINALE.tally.duration)
         goal_burst if finale.goal_due?(now)
@@ -1127,7 +1127,7 @@ module DotPopper
       def replay_slip
         slip = finale.lesson
         @finale = finale.replay
-        dots = game.round.dots
+        dots = cabinet.round.dots
         popped, bright = [slip.popped, slip.bright].map { |id| dots.find { it.id == id } }
         animations.wobble(popped.id, now)
         effects.ring(popped.x, popped.y, look::ALARM_RING, follow: popped.id)
