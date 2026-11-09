@@ -67,10 +67,20 @@ module DotPopper
       def center(field) = [field.width / 2.0, field.height * 0.62]
 
       def title(cabinet, show)
+        return later_on_arrival(show) if show&.arrival?
         return browse(show) if show && (show.stats? || (@titles == 2 && !@browsed))
         return choose_size(show) if show && !@resized && show.sizing_offered?
 
         press_once(@style.title_wait) { start(cabinet, show) }
+      end
+
+      # A new theme's card, as DOT_POPPER_THEME_UNLOCKS shows it: Play is out
+      # of reach (Show#controls) until it is answered, so the bot says "Not now".
+      def later_on_arrival(show)
+        return if @waited < @style.title_wait / 2
+
+        @waited = 0.0
+        middle(show.reach_of(:arrival_later))
       end
 
       # Taps the choice of dot size not yet chosen, once, after half the

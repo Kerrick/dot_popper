@@ -11,8 +11,11 @@ module DotPopper
       SERVER_URL = "https://server.dot-popper.setdef.com"
       OVERRIDE = "DOT_POPPER_SERVER"
 
+      # An automated run (Automation) has no server unless it names a
+      # local fake.
       def self.server_url(env = ENV)
-        env.fetch(OVERRIDE, SERVER_URL).then { it.empty? ? nil : it }
+        fallback = Automation.on?(env) ? "" : SERVER_URL
+        env.fetch(OVERRIDE, fallback).then { it.empty? ? nil : it }
       end
     end
   end

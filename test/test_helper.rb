@@ -3,6 +3,10 @@
 require "minitest/autorun"
 require "dot_popper"
 
+# The suite is an automated run: it reaches no outside host (Automation).
+ENV["DOT_POPPER_AUTOMATED"] = "1"
+DotPopper::Automation.guard!
+
 module DotPopperTest
   R = DotPopper::Rules::RADIUS
 

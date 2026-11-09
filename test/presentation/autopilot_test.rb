@@ -87,6 +87,26 @@ class AutopilotTest < Minitest::Test
     assert_equal 3, games
   end
 
+  # A new theme's card takes Home's whole screen, so Play is not offered
+  # behind it: the bot answers it instead of pressing a button that isn't
+  # there.
+  def test_it_answers_a_new_themes_card_before_playing
+    cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
+    keeper = ThemeKeeper.new(DotPopper::ScoreRecord::Memory.new, themes: Style::THEMES, entitlement: DotPopper::Entitlement.free)
+    keeper.receive(%w[ghost])
+    show = Show.new(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R, theme_keeper: keeper)
+    pilot = Autopilot.new(Style::AUTOPILOT, random: Random.new(5))
+    assert show.arrival?
+    600.times do
+      x, y = pilot.update(1 / 60.0, cabinet, show)
+      show.tap(x, y) if x
+      cabinet.update(1 / 60.0)
+      show.update(1 / 60.0)
+      break if show.playing?
+    end
+    assert show.playing?, "it played after answering the card"
+  end
+
   def test_it_taps_only_a_fresh_dot_it_can_see
     covered = dot(400, 300)
     game = game_with(dot(400, 300, popped: true), covered)

@@ -130,7 +130,8 @@ class PrivacyRequestsTest < Minitest::Test
   def test_only_the_link_touches_the_network
     banned = %r{\bNet::|\bTCPSocket\b|\bUDPSocket\b|\bUNIXSocket\b|\bSocket\.|\bOpenSSL\b|\bURI\.open\b|\bopen-uri\b|require\s+["'](?:net/|socket|openssl|open-uri)|HTTParty|Faraday|RestClient|Excon|Typhoeus}
 
-    assert_empty ruby_files.reject { it.end_with?("groups/link.rb") }.select { uncommented(it).match?(banned) }
+    # automation.rb only refuses connections (Automation.guard!); it opens none.
+    assert_empty ruby_files.reject { it.end_with?("groups/link.rb", "dot_popper/automation.rb") }.select { uncommented(it).match?(banned) }
     assert_empty native_files.select { File.read(it).match?(/URLSession|NSURLConnection|HttpURLConnection|OkHttp|Volley/) }
   end
 

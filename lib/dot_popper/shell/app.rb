@@ -19,6 +19,7 @@ module DotPopper
 
       def initialize(env = ENV)
         @env = env
+        Automation.guard!(exit_on_attempt: true) if Automation.on?(env)
         @elapsed = 0.0
         @uptime = 0.0
         @chatter = Presentation::Chatter.quiet(Style::CHATTER)
@@ -65,7 +66,7 @@ module DotPopper
         @speaker.use(theme_keeper.in_use)
         @splash = @splash.with(sounding: !@speaker.muted?) if @splash
         storefront = Presentation::Storefront.for(
-          os, entitlement:,
+          os, entitlement:, **(Automation.on?(@env) ? { channel: nil } : {}),
               native: Presentation::NativeStore.new(opener: UrlOpener.new, answers: StoreAnswers.in_save_folder),
               fake: Presentation::FakeStore.new(SaveFile.new(name: "fake_store.txt"), fails: Presentation::FakeStore.failure(@env))
         )
