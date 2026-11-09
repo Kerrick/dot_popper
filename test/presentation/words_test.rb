@@ -32,9 +32,9 @@ class WordsTest < Minitest::Test
   def test_the_shared_result_says_the_score_and_what_the_game_was
     stats = DotPopper::GameStats.start.with(pops: 27, mistakes: 1, duration: 38.2)
 
-    assert_equal "Dot Popper: 25 points, a new record!\n🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds",
+    assert_equal "Dot Popper: 25 points, a new record!\n🟡 27 dots · ⚫ 1 mistake · ⏱ 38 seconds",
                  Style::WORDS.share_text(25, stats, score_record: 25, new_score_record: true)
-    assert_equal "Dot Popper: 25 points, tying my best!\n🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds",
+    assert_equal "Dot Popper: 25 points, tying my record!\n🟡 27 dots · ⚫ 1 mistake · ⏱ 38 seconds",
                  Style::WORDS.share_text(25, stats, score_record: 25, new_score_record: false)
     assert_match(/\ADot Popper: 1 point\n/, Style::WORDS.share_text(1, stats, score_record: 25, new_score_record: false))
     assert_match(/\ADot Popper: 0 points\n/, Style::WORDS.share_text(0, stats, score_record: 0, new_score_record: false))
@@ -46,7 +46,7 @@ class WordsTest < Minitest::Test
     record = DotPopper::Stats::Record.new(kind: :most_dots_in_a_row, value: 18)
 
     assert_equal "Dot Popper: 25 points, a new record!\nNew record: 18 dots in a row without a mistake\n" \
-                 "🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds",
+                 "🟡 27 dots · ⚫ 1 mistake · ⏱ 38 seconds",
                  Style::WORDS.share_text(25, stats, score_record: 25, new_score_record: true, record:)
   end
 
@@ -57,7 +57,7 @@ class WordsTest < Minitest::Test
     screen = Style::WORDS.played_on(DotPopper::Field.new(1200, 800, 50))
 
     assert_equal "Played on a screen about 12 dots wide and 8 dots tall.", screen
-    assert_equal "Dot Popper: 25 points\n🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds\n#{screen}",
+    assert_equal "Dot Popper: 25 points\n🟡 27 dots · ⚫ 1 mistake · ⏱ 38 seconds\n#{screen}",
                  Style::WORDS.share_text(25, stats, score_record: 30, new_score_record: false, screen:)
     assert_equal "This screen is about 4 dots wide and 9 dots tall.",
                  Style::WORDS.screen_here(DotPopper::Field.new(395, 850, 50))
@@ -69,8 +69,8 @@ class WordsTest < Minitest::Test
 
     assert_equal "New record: 18 dots in a row without a mistake", record[:most_dots_in_a_row, 18]
     assert_equal "New record: your longest game, 48 seconds", record[:longest_game, 47.6]
-    assert_equal "New record: you waited 6.2 seconds for a dot, then popped it", record[:longest_time_to_pop, 6.24]
-    assert_equal "New record: your fastest pop, 0.3 seconds after the dot appeared", record[:shortest_time_to_pop, 0.31]
+    assert_equal "New record: your longest time to pop, 6.2 seconds", record[:longest_time_to_pop, 6.24]
+    assert_equal "New record: your shortest time to pop, 0.3 seconds", record[:shortest_time_to_pop, 0.31]
   end
 
   # The main buttons name the gamepad's button that presses them.
@@ -91,9 +91,9 @@ class WordsTest < Minitest::Test
     mouse = Style::WORDS.for(InputKind::MOUSE)
     pad = Style::WORDS.for(InputKind::GAMEPAD)
 
-    assert_equal "Keep holding to clear your records, totals, chart, and goal streak.", mouse.keep_holding("A")
-    assert_equal "Keep holding Y to clear your records, totals, chart, and goal streak.", pad.keep_holding("Y")
-    assert_equal ["Clear my records…", "Hold Y to clear my records…"], [mouse.clear, pad.clear]
+    assert_equal "Keep holding to clear your records, totals, chart, achievements, and streak.", mouse.keep_holding("A")
+    assert_equal "Keep holding Y to clear your records, totals, chart, achievements, and streak.", pad.keep_holding("Y")
+    assert_equal ["Clear my stats…", "Hold Y to clear my stats…"], [mouse.clear, pad.clear]
     assert_equal ["Undo", "Undo (Y)"], [mouse.undo, pad.undo]
   end
 
@@ -105,10 +105,10 @@ class WordsTest < Minitest::Test
   def test_the_game_in_one_line
     stats = DotPopper::GameStats.start.with(pops: 14, mistakes: 2, times_to_pop: [1.0, 3.14])
 
-    assert_equal "14 pops, 2 mistakes, slowest pop 3.1 seconds", Style::WORDS.summary(stats)
-    assert_equal "1 pop, 1 mistake, slowest pop 0.0 seconds",
+    assert_equal "14 dots, 2 mistakes, longest time to pop 3.1 seconds", Style::WORDS.summary(stats)
+    assert_equal "1 dot, 1 mistake, longest time to pop 0.0 seconds",
                  Style::WORDS.summary(DotPopper::GameStats.start.with(pops: 1, mistakes: 1, times_to_pop: [0.0]))
-    assert_equal "0 pops, 0 mistakes", Style::WORDS.summary(DotPopper::GameStats.start)
+    assert_equal "0 dots, 0 mistakes", Style::WORDS.summary(DotPopper::GameStats.start)
   end
 
   def test_a_long_time_reads_in_the_units_that_suit_it

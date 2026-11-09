@@ -2,10 +2,10 @@
 
 require_relative "presentation_helper"
 
-# The Looks screen: offered on the Stats screen to a free player always,
-# who sees every look and which are earned but wears none, and to a pro
-# player once there is a look to choose; a card for each look, and the
-# choice shown at once.
+# The Themes screen: offered on the Stats screen to every player alike, with a
+# card for each theme, which are earned marked the same. A Pro player's tap
+# wears one at once; a Free player's tap leads to the offer of Pro, and Back
+# from it returns to this screen.
 class ThemesTest < Minitest::Test
   include PresentationTest
 
@@ -17,31 +17,15 @@ class ThemesTest < Minitest::Test
     @pro = DotPopper::ScoreRecord::Memory.new
   end
 
-  def test_themes_are_offered_to_a_free_player_always_and_to_a_pro_one_with_a_style_to_choose
-    show(pro: false)
-    open_stats
+  def test_themes_are_offered_alike_to_a_free_player_and_a_pro_one
+    [Date.new(2026, 10, 31), Date.new(2026, 11, 8)].product([false, true]).each do |day, pro|
+      @day = day
+      show(pro:)
+      open_stats
 
-    assert @show.themes_offered?
-    assert @show.reach_of(:themes)
-
-    @day = Date.new(2026, 11, 8)
-    show(pro: false)
-    open_stats
-
-    assert @show.themes_offered?, "a free player is shown that looks exist, in season or not"
-
-    @day = Date.new(2026, 10, 31)
-    show(pro: true)
-    open_stats
-
-    assert @show.themes_offered?
-    assert @show.reach_of(:themes)
-
-    @day = Date.new(2026, 11, 8)
-    show(pro: true)
-    open_stats
-
-    refute @show.themes_offered?, "nothing earned, and none in season"
+      assert @show.themes_offered?, "#{day}, pro #{pro}"
+      assert @show.reach_of(:themes)
+    end
   end
 
   def test_a_game_in_season_wears_the_theme_and_keeps_it_to_choose_after_the_season
@@ -55,7 +39,7 @@ class ThemesTest < Minitest::Test
     open_stats
 
     assert_predicate @show.worn, :ordinary?
-    assert_equal [:classic, :halloween], @show.themes.map(&:key)
+    assert_equal Style::THEMES.map(&:key), @show.themes.map(&:key)
     assert @show.themes_offered?
   end
 
@@ -67,7 +51,7 @@ class ThemesTest < Minitest::Test
     assert_predicate @show, :themes?
     cards = @show.themes_layout.cards
 
-    assert_equal [:classic, :halloween], cards.map { it.theme.key }
+    assert_equal Style::THEMES.map(&:key), cards.map { it.theme.key }
     classic = cards.first
     @show.tap(classic.rect.center_x, classic.rect.center_y)
 
@@ -95,20 +79,46 @@ class ThemesTest < Minitest::Test
     assert_nil @show.play_reach
   end
 
-  def test_a_free_player_sees_every_style_and_which_are_earned_and_wears_none
+  def test_a_free_player_sees_every_theme_and_which_are_earned_and_a_tap_leads_to_pro
     show(pro: false)
     open_stats
     @show.open_themes
 
     assert_predicate @show, :themes?
     assert_equal Style::THEMES, @show.themes
-    assert_predicate @show, :themes_locked?
     assert_equal %i[classic halloween], Style::THEMES.select { @show.theme_earned?(it) }.map(&:key)
-    assert_equal "Looks come with the full game", Style::WORDS.themes[:locked]
     before = @show.palette
     @show.tap(*card_center(Style::THEMES.last))
 
     assert_same before, @show.palette
+    assert_equal Style::THEMES.first, @show.worn
+    assert_predicate @show, :offer?
+    assert_equal :themes, @show.offer_focus
+    assert_equal "Themes", @show.words.offer_items(@show.offer_focus).first
+  end
+
+  def test_back_from_the_offer_returns_to_the_themes_screen_as_it_was
+    show(pro: false)
+    open_stats
+    @show.open_themes
+    @show.tap(*card_center(Style::THEMES.last))
+    @show.back
+
+    refute_predicate @show, :offer?
+    assert_predicate @show, :themes?
+    assert_predicate @show, :stats?
+    assert_nil @show.offer_focus
+  end
+
+  def test_a_pro_player_taps_a_theme_that_is_not_open_and_nothing_happens
+    @day = Date.new(2026, 11, 8)
+    show(pro: true)
+    open_stats
+    @show.open_themes
+    winter = Style::THEMES.find { it.key == :winter }
+    @show.tap(*card_center(winter))
+
+    refute_predicate @show, :offer?
     assert_equal Style::THEMES.first, @show.worn
   end
 
@@ -123,31 +133,17 @@ class ThemesTest < Minitest::Test
     assert_equal :halloween, @theme_keeper.worn.key
   end
 
-  def test_the_themes_screen_leads_to_the_offer_only_where_a_store_can_complete_one
+  def test_the_themes_screen_has_no_pro_button_of_its_own
     show(pro: false)
     open_stats
     @show.open_themes
 
-    refute(@show.controls.any? { it.name == :offer }, "no store, so nothing is offered")
-
-    store = Struct.new(:status, :price) do
-      def offered? = true
-      def connect = nil
-      def update(_seconds) = nil
-    end.new(:ready, "$1.99")
-    show(pro: false, storefront: store)
-    open_stats
-    @show.open_themes
-    reach = @show.controls.find { it.name == :offer }.reach
-    @show.tap(reach.center_x, reach.center_y)
-
-    assert_predicate @show, :offer?
-    refute_predicate @show, :themes?
+    refute(@show.controls.any? { it.name == :offer }, "the cards lead to Pro")
   end
 
   def test_the_cards_fit_their_room_apart_from_each_other_and_from_back_at_every_size
-    SIZES.product([false, true]).each do |(width, height), note|
-      plan = ThemesLayout.new(layout: layout(width, height), themes: Style::THEMES, style: Style::THEMES_LAYOUT, note:)
+    SIZES.each do |width, height|
+      plan = ThemesLayout.new(layout: layout(width, height), themes: Style::THEMES, style: Style::THEMES_LAYOUT)
       rects = plan.cards.map(&:rect)
       back = layout(width, height).back_button
       whole = layout(width, height).safe

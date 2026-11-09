@@ -15,7 +15,7 @@ module DotPopper
         words = show.words.offer
         palette = pen.palette
         centered(plan, :heading, :bold, :heading, words[:heading], palette.cream)
-        items(plan, words)
+        items(plan, show.words.offer_items(show.offer_focus))
         note(plan) if plan.key?(:note)
         centered(plan, :status, :semibold, :note, show.offer_status, palette.cream)
         buttons(show, plan, words) if plan.key?(:buy)
@@ -36,11 +36,11 @@ module DotPopper
         end
       end
 
-      def items(plan, words)
+      def items(plan, list)
         font = pen.fonts.semibold(plan.size(:item))
         rect = plan[:items]
         line = font.height * Presentation::OfferScreen::LINE
-        words[:includes].each_with_index do |item, i|
+        list.each_with_index do |item, i|
           y = pen.pixels.snap(rect.y + (font.height / 2.0) + (i * line))
           pen.color(pen.palette.fresh_body)
           G.circle(:fill, pen.pixels.snap(rect.x + (font.height * 0.3)), y, font.height * 0.22, 32)

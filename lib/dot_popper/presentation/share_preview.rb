@@ -45,7 +45,7 @@ module DotPopper
 
       module_function
 
-      # "🟡 27 pops" as [:fresh, " 27 pops"].
+      # "🟡 27 dots" as [:fresh, " 27 dots"].
       def runs(line) = line.split(/(#{SPLIT})/o).reject(&:empty?).map { EMOJI.fetch(it, it) }
 
       # How wide +line+ is drawn, with each shape +height+ * WIDTH across

@@ -57,7 +57,9 @@ module DotPopper
             end
           elsif @show.group_open?
             veil(width, height, @pen.style::GROUPS.veil)
-            @group.draw(@show, layout)
+            if @show.offer? then @offer.draw(@show, layout)
+            else @group.draw(@show, layout)
+            end
           else
             veil(width, height, @pen.style::TITLE.dim)
             @title.draw(@show, layout)

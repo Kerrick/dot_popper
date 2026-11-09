@@ -114,7 +114,7 @@ class ShowTest < Minitest::Test
                  Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, input: InputKind::TOUCH).words.continue
   end
 
-  RESULT = "Dot Popper: 1 point\n🟡 1 pop · ⚫ 0 mistakes · ⏱ 11 seconds\n" \
+  RESULT = "Dot Popper: 1 point\n🟡 1 dot · ⚫ 0 mistakes · ⏱ 11 seconds\n" \
            "Played on a screen about 8 dots wide and 6 dots tall."
 
   # "Share my score" only shows the result: the clipboard changes only

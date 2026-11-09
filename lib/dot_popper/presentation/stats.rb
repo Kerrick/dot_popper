@@ -4,7 +4,7 @@ module DotPopper
   module Presentation
     # One line of the Stats screen: what it counts, and how many. A
     # achievement's line (AchievementWords) also has a +mark+ before its label, :earned,
-    # :open, or :locked, for one Pro has not shown yet.
+    # :open.
     class StatsRow < Data.define(:label, :value, :mark)
       def initialize(label:, value:, mark: nil) = super
     end
@@ -24,26 +24,22 @@ module DotPopper
     # says so whenever there are any. +achievements+ lists the achievements, or is nil
     # when the sheet is built with no Achievements to list.
     class StatsSheet < Data.define(:records, :totals, :goal, :scores, :empty, :notes, :mine, :chart_note, :achievements)
-      # The achievements as a section, each with its mark filled if earned,
-      # which a free player is shown too (what was earned while free is
-      # kept, Achievements). With Pro the rest are open, and
-      # the heading counts; without it the rest are locked, under a heading
-      # that says where they come from.
-      def self.achievements_section(achievements, pro:)
+      # The achievements as a section, each with its mark filled if earned
+      # and a ring if not, the same for a Free player and a Pro one (what is
+      # earned while Free is kept, Achievements). Tapping it is what asks
+      # a Free player for Pro (Show#stats_controls).
+      def self.achievements_section(achievements)
         return unless achievements
 
         rows = Achievement::IDS.map do |id|
-          mark = if achievements.earned?(id) then :earned
-                 else pro ? :open : :locked
-                 end
-          StatsRow.new(label: AchievementWords.name(id), value: AchievementWords.mark(id), mark:)
+          StatsRow.new(label: AchievementWords.name(id), value: AchievementWords.mark(id),
+                       mark: achievements.earned?(id) ? :earned : :open)
         end
-        heading = pro ? AchievementWords.heading(achievements.count) : AchievementWords::LOCKED_HEADING
-        StatsSection.new(title: heading, rows:)
+        StatsSection.new(title: AchievementWords.heading(achievements.count), rows:)
       end
 
       def self.build(stats, score_record:, words:, streak: 0, size_class: SizeClass::MEDIUM, field: nil,
-                     sizing: DotSizing::STANDARD, achievements: nil, pro: false)
+                     sizing: DotSizing::STANDARD, achievements: nil)
         labels = words.labels
         mine = stats.records_in(size_class)
         records = StatsSection.new(title: words.records_heading(sizing), rows: [
@@ -67,7 +63,7 @@ module DotPopper
         mine = stats.recent_classes.map { it == size_class }
         new(records:, totals:, goal:, scores: stats.recent, empty: stats.games.zero?,
             notes: field ? words.screen_notes(field, sizing) : [], mine:,
-            chart_note: (words.chart_note(sizing) unless mine.all?), achievements: achievements_section(achievements, pro:))
+            chart_note: (words.chart_note(sizing) unless mine.all?), achievements: achievements_section(achievements))
       end
     end
 
@@ -135,6 +131,35 @@ module DotPopper
       SMALLEST_TEXT = 11
 
       def initialize(layout:, sheet:, style:, note_lines: sheet.notes.size, widest: nil, themes: false, offer: false) = super
+
+      MARK = 1.1 # the room an achievement's mark takes before its label, in rows' type
+
+      # The layout with its widest row and its notes' lines worked out as
+      # +measure+ (Measure) sees the type, as the shell draws it.
+      def self.measured(layout:, sheet:, style:, measure:, themes: false, offer: false)
+        size = layout.scaled(style.text)
+        sections = [sheet.records, sheet.totals, sheet.goal, sheet.achievements].compact
+        rows = sections.flat_map(&:rows).map do |row|
+          measure.width(:semibold, size, row.label) + measure.width(:bold, size, row.value) + (size * 2) + (row.mark ? size * MARK : 0)
+        end
+        titles = (sections.map(&:title) + [Words.last_games(sheet.scores.size)]).map { measure.width(:bold, size, it) }
+        plan = new(layout:, sheet:, style:, widest: (rows + titles).max, themes:, offer:)
+        room = layout.safe.width - (layout.margin * 2)
+        lines = sheet.notes.flat_map { |note| Words.balance(note, room) { measure.width(:semibold, plan.note_size, it) } }
+        plan.with(note_lines: lines.size)
+      end
+
+      # The box around the achievements section, title and rows, or nil
+      # where it is not laid out.
+      def achievements_frame
+        section = sheet.achievements or return
+        parts = placements.select { it.item == section.title || section.rows.include?(it.item) }
+        return if parts.empty?
+
+        left = parts.map(&:x).min
+        top = parts.map { it.y - (it.height / 2.0) }.min
+        Rect.new(x: left, y: top, width: parts.map(&:right).max - left, height: parts.map { it.y + (it.height / 2.0) }.max - top)
+      end
 
       def heading_size = layout.scaled(style.heading)
       def heading_y = layout.top + (heading_size * 0.6)

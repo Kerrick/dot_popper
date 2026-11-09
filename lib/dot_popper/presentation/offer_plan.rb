@@ -18,13 +18,13 @@ module DotPopper
     # what is sold, when free games come, its price and Restore Purchases
     # always stay. The buttons are the plan's only while +offering+: a player who owns it
     # has nothing left to press here but Back.
-    class OfferScreen < Data.define(:layout, :type, :words, :measure, :offering, :note)
+    class OfferScreen < Data.define(:layout, :type, :words, :measure, :offering, :note, :focus)
       GAPS = { items: 16, note: 14, status: 8, buy: 10, restore: 12 }.freeze
       LINE = 1.3 # the items apart, in a line's height
       WIDE = 7.0 # the widest the buttons are, in their height
 
-      def initialize(layout:, type:, words:, measure:, offering:, note: nil)
-        super(layout:, type:, words:, measure:, offering:, note: note || words.offer_note(0, FreeGames::DAILY))
+      def initialize(layout:, type:, words:, measure:, offering:, note: nil, focus: nil)
+        super(layout:, type:, words:, measure:, offering:, note: note || words.offer_note(0, FreeGames::DAILY), focus:)
       end
 
       def plan
@@ -56,7 +56,7 @@ module DotPopper
       end
 
       def items(size, scale)
-        list = words.offer[:includes]
+        list = words.offer_items(focus)
         line = measure.height(:semibold, size)
         widest = list.map { measure.width(:semibold, size, it) }.max
         Block.new(name: :items, height: (line * LINE * (list.size - 1)) + line, width: widest + (line * 1.2),

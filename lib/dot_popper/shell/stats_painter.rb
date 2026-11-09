@@ -20,9 +20,7 @@ module DotPopper
         sheet = show.stats or return
         words = show.words
         palette = pen.palette
-        plan = Presentation::StatsLayout.new(layout:, sheet:, style: pen.style::RECORDS,
-                                               widest: widest(sheet, layout.scaled(pen.style::RECORDS.text)),
-                                               themes: show.themes_offered?, offer: show.offer_offered?)
+        plan = show.stats_layout
         notes = note_lines(sheet, plan, layout)
         plan = plan.with(note_lines: notes.size)
         pen.text(words.stats, pen.fonts.bold(plan.heading_size), layout.center_x, plan.heading_y, palette.cream)
@@ -216,7 +214,7 @@ module DotPopper
 
       # A achievement's mark, a small dot in the game's own shape: filled in the
       # fresh dot's orange when earned, a ring while there is more to do,
-      # and a fainter one while Pro has yet to show them.
+      # (the same for a Free player and a Pro one).
       def mark(kind, x, y, size)
         pixels = pen.pixels
         radius = size * 0.28
@@ -226,7 +224,7 @@ module DotPopper
           pen.color(pen.palette.fresh_body, 1.0)
           G.circle(:fill, centre_x, centre_y, radius, 24)
         else
-          pen.color(pen.palette.soft, kind == :locked ? 0.4 : 0.8)
+          pen.color(pen.palette.soft, 0.8)
           G.line_width = pixels.line_width(1.5)
           G.circle(:line, centre_x, centre_y, radius - 0.5, 24)
         end

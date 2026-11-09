@@ -15,9 +15,8 @@ module DotPopper
       def history_heading = "Title history"
       def join_heading = "Join with a code"
       def blurb = "Beat your friends and take the title."
-      def join(pro) = pro ? "Join" : "Join (pro)"
-      def create(pro) = pro ? "Create" : "Create (pro)"
-      def needs_pro = "Friend groups come with Pro."
+      def join = "Join"
+      def create = "Create"
       def privacy = "Joining or creating sends your scores to the groups' server, which also sees your IP address."
       def need_code = "Tap your friend's code."
       def erase = "Erase"
@@ -84,8 +83,9 @@ module DotPopper
     # tapped so far, what a long press would do, and what to tell the
     # player next. Nothing here is typed, so a controller can do all of it.
     # It asks the Session (Groups) for everything, and never waits for it.
-    # Pro changes only whether Create and Join do anything (+entitlement+);
-    # leaving and deleting never need it.
+    # Pro changes only what Create and Join do (+entitlement+): for a Free
+    # player they call +pro_offer+ with :groups, which opens the offer of
+    # Pro over this panel, where it was. Leaving and deleting never need it.
     class GroupPanel
       BANNER_SECONDS = 4.0
       HOLD = 2.0
@@ -93,7 +93,8 @@ module DotPopper
 
       attr_reader :groups, :code, :banner, :hold, :note, :page, :group_id, :offset
 
-      def initialize(groups:, entitlement:, sounds:)
+      def initialize(groups:, entitlement:, sounds:, pro_offer: ->(_feature) {})
+        @pro_offer = pro_offer
         @groups = groups
         @entitlement = entitlement
         @sounds = sounds
@@ -229,7 +230,7 @@ module DotPopper
       end
 
       def open_join
-        return @note = GroupWords.needs_pro unless pro?
+        return @pro_offer.call(:groups) unless pro?
 
         @code = ""
         show(:join)
@@ -264,14 +265,14 @@ module DotPopper
       end
 
       def submit_join
-        return @note = GroupWords.needs_pro unless pro?
+        return @pro_offer.call(:groups) unless pro?
         return @note = GroupWords.need_code if code.size < GroupWords::CODE_LENGTH
 
         groups.join(code)
       end
 
       def create
-        return @note = GroupWords.needs_pro unless pro?
+        return @pro_offer.call(:groups) unless pro?
 
         groups.create
       end

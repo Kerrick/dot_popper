@@ -53,7 +53,8 @@ module DotPopper
         @themes = false
         @achievements = achievements
         @achievement_watch = AchievementWatch.new
-        @groups = GroupPanel.new(groups:, entitlement:, sounds:)
+        @groups = GroupPanel.new(groups:, entitlement:, sounds:, pro_offer: ->(feature) { open_offer_for(feature) })
+        @offer_focus = nil
         @storefront = storefront
         @games = games
         @offer = false
@@ -116,19 +117,19 @@ module DotPopper
       def themes = @theme_keeper.shown
       def worn = @theme_keeper.worn
 
-      # Whether the looks are only to see, as for a free player, and
-      # whether +theme+ is one this player has earned.
+      # Whether tapping a theme leads to Pro, as it does for a Free player;
+      # whether +theme+ is one this player has earned; and whether it is open
+      # to wear, earned or in season. They show the same to either player.
       def themes_locked? = @theme_keeper.locked?
       def theme_earned?(theme) = @theme_keeper.earned?(theme)
+      def theme_open?(theme) = @theme_keeper.open?(theme)
 
-      # Whether the Stats screen offers Looks: always to a free player,
-      # who is shown what looks there are and which they have earned, and
-      # to a pro one once there is a look besides the ordinary one to
-      # choose.
+      # Whether the Stats screen offers Themes: always, the same to a Free
+      # player and a Pro one.
       def themes_offered? = stats? && !credits? && !themes? && @theme_keeper.offered?
 
       # Where the Looks screen's cards go (LooksLayout).
-      def themes_layout = ThemesLayout.new(layout:, themes: themes, style: style::THEMES_LAYOUT, note: themes_locked?)
+      def themes_layout = ThemesLayout.new(layout:, themes: themes, style: style::THEMES_LAYOUT)
 
       def open_themes
         return unless themes_offered?
@@ -146,7 +147,8 @@ module DotPopper
       # once, so the choice is seen before it is left.
       def wear(theme)
         return unless themes?
-        return sounds.play(:tick, pitch: 0.8) if themes_locked? || theme == worn
+        return open_offer_for(:themes) if themes_locked?
+        return sounds.play(:tick, pitch: 0.8) if theme == worn || !theme_open?(theme)
 
         @theme_keeper.wear(theme)
         sounds.play(:tick, pitch: 1.2)
@@ -262,6 +264,7 @@ module DotPopper
         in :stats then open_stats
         in :group_open then @groups.open
         in :offer then open_offer
+        in :achievements then open_offer_for(:achievements)
         in :buy then buy
         in :restore then @storefront.restore
         in DotSizing => sizing then choose_sizing(sizing)
@@ -285,10 +288,10 @@ module DotPopper
       def controls
         Control.apart(
           if tutorial? then [Control.new(name: :skip, reach: layout.skip_button)]
+          elsif offer? then offer_controls
           elsif credits? then [button(:back, layout.back_button)]
           elsif group_open? then group_controls
           elsif themes? then themes_controls
-          elsif offer? then offer_controls
           elsif stats? then stats_controls
           elsif title? then title_controls
           elsif sharing? then share_controls
@@ -452,6 +455,7 @@ module DotPopper
         @themes = false
         @credits = nil
         @offer = false
+        @offer_focus = nil
         @offer_for_play = false
         @clearing = clearing.cancel
         sounds.play(:tick, pitch: 0.8)
@@ -460,6 +464,7 @@ module DotPopper
       # Back, from the Credits screen to the Stats screen, or from the
       # Stats screen to the title.
       def leave
+        return close_offer if offer?
         return @groups.back if group_open?
 
         if offer? then close_offer
@@ -473,7 +478,25 @@ module DotPopper
         return close_stats if @offer_for_play
 
         @offer = false
+        @offer_focus = nil
         sounds.play(:tick, pitch: 0.8)
+      end
+
+      # What the open offer leads with, or nil when it was not opened by a
+      # tap on something Pro has.
+      attr_reader :offer_focus
+
+      # A Free player tapped something that comes with Pro (+feature+ is
+      # :achievements, :themes or :groups): the offer opens over the screen
+      # they are on, leading with it, and Back closes it to that same screen,
+      # open as it was, so no one loses their place.
+      def open_offer_for(feature)
+        return if @entitlement.pro? || offer?
+
+        @offer = true
+        @offer_focus = feature
+        @storefront.connect
+        sounds.play(:tick)
       end
 
       # Whether the Stats screen offers the way to Pro: where
@@ -492,6 +515,7 @@ module DotPopper
 
         @themes = false
         @offer = true
+        @offer_focus = nil
         @storefront.connect
         sounds.play(:tick)
       end
@@ -502,7 +526,7 @@ module DotPopper
         return unless offer?
 
         OfferScreen.new(layout:, type: style::TYPE, words:, measure: @measure, offering: !@entitlement.pro?,
-                        note: words.offer_note(games.left, games.daily)).plan
+                        note: words.offer_note(games.left, games.daily), focus: @offer_focus).plan
       end
 
       # The price the store gave, or nil before it has.
@@ -867,9 +891,7 @@ module DotPopper
       end
 
       def themes_controls
-        buttons = themes_layout.cards.map { button(it.theme, it.rect) } << button(:back, layout.back_button)
-        buttons << button(:offer, layout.clear_stats_button) if themes_locked? && offer_offered?
-        buttons
+        themes_layout.cards.map { button(it.theme, it.rect) } << button(:back, layout.back_button)
       end
 
       def offer_controls
@@ -887,10 +909,25 @@ module DotPopper
         sounds.play(:tick, pitch: 1.3) if free && offer? && @entitlement.pro?
       end
 
+      # Where the achievements are on the Stats screen, which a Free player
+      # taps to ask for Pro, or nil for a Pro player or where they are not listed.
+      def achievements_frame
+        return if @entitlement.pro? || !stats? || stats.empty || stats.achievements.nil?
+
+        stats_layout.achievements_frame
+      end
+
+      # The Stats screen laid out for the fonts this screen is measured with.
+      def stats_layout
+        StatsLayout.measured(layout:, sheet: stats, style: style::RECORDS, measure: @measure, themes: themes_offered?,
+                             offer: offer_offered?)
+      end
+
       def stats_controls
         [(button(:credits, layout.credits_button)),
          (button(:themes, layout.themes_button) if themes_offered?),
          (button(:offer, layout.offer_button) if offer_offered?),
+         (button(:achievements, achievements_frame) if achievements_frame),
          (button(:undo, layout.undo_button) if undo_offer),
          (button(:clear, layout.clear_stats_button) if clear_offered?),
          button(:back, layout.back_button)].compact
@@ -936,7 +973,7 @@ module DotPopper
         size_class = cabinet.size_class
         StatsSheet.build(stats_book.stats, score_record: cabinet.score_record.of(size_class), words:, streak: stats_book.streak,
                            size_class:, field: cabinet.field, sizing: cabinet.sizing, achievements: @achievements,
-                           pro: @entitlement.pro?)
+)
       end
 
       # Where the HUD's pill ends, at the safe area's top.

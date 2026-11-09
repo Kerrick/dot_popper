@@ -67,7 +67,7 @@ module DotPopper
       # a window, and back in fullscreen, "Window".
       def fullscreen_button(fullscreen) = fullscreen ? windowed : full_screen
 
-      # What the Stats screen says while "Clear my records…" is held:
+      # What the Stats screen says while "Clear my stats…" is held:
       # on a gamepad, naming +button+, the one held ("A" or "Y").
       def keep_holding(button) = super().for(input).sub("%s", button.to_s)
 
@@ -75,13 +75,21 @@ module DotPopper
       # games left", or "No games left today".
       def games_left(left) = left.positive? ? "#{Words.count(left, "game")} left" : "No games left today"
 
-      # The offer's note, plain about what free play there is and when more
-      # comes: "No free games left. 3 new free games come tomorrow."
+      # The offer's note, plain about how many games are left and how many
+      # come each day: "No games left today. 3 games a day." It never says
+      # "20 free games" alone, which would hide that most come a day at a time.
       def offer_note(left, daily)
-        coming = "#{daily} new free games"
-        return "No free games left. #{coming} come tomorrow." unless left.positive?
+        coming = "#{daily} games a day"
+        return "No games left today. #{coming}." unless left.positive?
 
-        "#{Words.count(left, "free game")} left. #{coming} come every day."
+        "#{Words.count(left, "game")} left. #{coming}."
+      end
+
+      # What the offer lists, +focus+ (:games, :achievements, :themes or
+      # :groups) first, so it opens with the thing the player tapped.
+      def offer_items(focus = nil)
+        first, rest = offer.fetch(:includes).partition { |key, _| key == focus }
+        (first + rest).map(&:last)
       end
 
       # "Your record: 27".
@@ -105,11 +113,11 @@ module DotPopper
       end
 
       # The game in one quiet line, so a player can see what it was made
-      # of: "14 pops, 2 mistakes, slowest pop 3.1 seconds". The slowest
-      # pop is the longest any fresh dot waited before it was popped.
+      # of: "14 dots, 2 mistakes, longest time to pop 3.1 seconds". The
+      # longest time to pop is the longest any fresh dot took to be popped.
       def summary(stats)
-        parts = [Words.count(stats.pops, "pop"), Words.count(stats.mistakes, "mistake")]
-        parts << "slowest pop #{format("%.1f", stats.longest_time_to_pop)} seconds" if stats.pops.positive?
+        parts = [Words.count(stats.pops, "dot"), Words.count(stats.mistakes, "mistake")]
+        parts << "longest time to pop #{format("%.1f", stats.longest_time_to_pop)} seconds" if stats.pops.positive?
         parts.join(", ")
       end
 
@@ -122,8 +130,8 @@ module DotPopper
           case record.kind
           when :most_dots_in_a_row then "#{Words.count(value.to_i, "dot")} in a row without a mistake"
           when :longest_game then "your longest game, #{Words.count(value.round, "second")}"
-          when :longest_time_to_pop then "you waited #{Words.tenths(value)} seconds for a dot, then popped it"
-          else "your fastest pop, #{Words.tenths(value)} seconds after the dot appeared"
+          when :longest_time_to_pop then "your longest time to pop, #{Words.tenths(value)} seconds"
+          else "your shortest time to pop, #{Words.tenths(value)} seconds"
           end
       end
 
@@ -135,12 +143,12 @@ module DotPopper
       #
       #   Dot Popper: 25 points, a new record!
       #   New record: 18 dots in a row without a mistake
-      #   🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds
+      #   🟡 27 dots · ⚫ 1 mistake · ⏱ 38 seconds
       #   Played on a screen about 12 dots wide and 8 dots tall.
       def share_text(score, stats, score_record:, new_score_record:, record: nil, screen: nil, first: false)
         ["Dot Popper: #{Words.count(score, "point")}#{score_record_note(score, score_record, new_score_record) unless first}",
          (self.record(record) if record),
-         "🟡 #{Words.count(stats.pops, "pop")} · ⚫ #{Words.count(stats.mistakes, "mistake")} · " \
+         "🟡 #{Words.count(stats.pops, "dot")} · ⚫ #{Words.count(stats.mistakes, "mistake")} · " \
          "⏱ #{Words.count(stats.duration.round, "second")}",
          screen].compact.join("\n")
       end
@@ -261,7 +269,7 @@ module DotPopper
       # The chart's caption: "Your last 20 games", or "Your last game".
       def self.last_games(count) = count == 1 ? "Your last game" : "Your last #{count} games"
 
-      # "1 pop", "2 pops".
+      # "1 game", "2 games".
       def self.count(number, noun) = "#{number} #{noun}#{"s" unless number == 1}"
 
 
@@ -269,7 +277,7 @@ module DotPopper
 
       def score_record_note(score, score_record, new_score_record)
         if new_score_record then ", a new record!"
-        elsif score == score_record && score_record.positive? then ", tying my best!"
+        elsif score == score_record && score_record.positive? then ", tying my record!"
         else ""
         end
       end

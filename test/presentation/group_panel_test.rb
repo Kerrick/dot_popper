@@ -97,22 +97,41 @@ class GroupPanelTest < Minitest::Test
     refute_includes names, :group_report
   end
 
-  def test_joining_needs_the_pro_version
+  def test_join_and_create_look_the_same_to_a_free_player_and_a_pro_one
+    build(entitlement: DotPopper::Entitlement.free)
+    panel.open
+    free = @show.group_plan.actions.map { [it.name, it.text] }
+    build(entitlement: @pro)
+    panel.open
+
+    assert_equal free, @show.group_plan.actions.map { [it.name, it.text] }
+    assert_equal %w[Join Create], @show.group_plan.actions.filter_map { it.text if %i[group_join_open group_create].include?(it.name) }
+  end
+
+  def test_joining_leads_a_free_player_to_the_offer_and_back_to_where_they_were
     build(entitlement: DotPopper::Entitlement.free)
     panel.open
     tap_control(:group_join_open)
 
-    assert_equal Words.needs_pro, panel.note
+    assert_predicate @show, :offer?
+    assert_equal :groups, @show.offer_focus
+    assert_equal "Friend groups", @show.words.offer_items(@show.offer_focus).first
     assert_equal :list, panel.page
     assert_empty @worker.started
+    tap_control(:back)
+
+    refute_predicate @show, :offer?
+    assert_predicate panel, :open?
+    assert_equal :list, panel.page
   end
 
-  def test_creating_needs_the_pro_version
+  def test_creating_leads_a_free_player_to_the_offer_and_starts_nothing
     build(entitlement: DotPopper::Entitlement.free)
     panel.open
     tap_control(:group_create)
 
-    assert_equal Words.needs_pro, panel.note
+    assert_predicate @show, :offer?
+    assert_equal :groups, @show.offer_focus
     assert_empty @worker.started
   end
 

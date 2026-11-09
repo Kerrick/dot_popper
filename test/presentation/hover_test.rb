@@ -89,7 +89,7 @@ class HoverTest < Minitest::Test
   def test_the_stats_screen_hovers_back_credits_themes_and_clear_and_nothing_else
     finish_game
     @show.open_stats
-    assert_equal %i[credits themes clear back], @show.controls.map(&:name)
+    assert_equal %i[credits themes achievements clear back], @show.controls.map(&:name)
     @show.pointer_at(*middle(@show.back_reach))
     assert_equal :back, @show.hovered
     @show.pointer_at(*middle(@show.clear_reach))

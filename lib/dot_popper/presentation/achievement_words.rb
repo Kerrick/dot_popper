@@ -24,8 +24,6 @@ module DotPopper
         long_haul: "#{Achievement::LONG_HAUL.to_i} s"
       }.freeze
 
-      LOCKED_HEADING = "Achievements come with the full game"
-
       def self.name(id) = NAMES.fetch(id)
       def self.mark(id) = MARKS.fetch(id)
 

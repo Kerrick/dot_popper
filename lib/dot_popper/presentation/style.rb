@@ -87,33 +87,33 @@ module DotPopper
         copied: "Copied! Paste it anywhere.",
         copy: ByInput.new(touch: "Copy", mouse: "Copy", gamepad: "Copy (A)"),
         close: ByInput.new(touch: "Close", mouse: "Close", gamepad: "Close (B)"),
-        stats: "Your records",
+        stats: "Your stats",
         how_to_play: ByInput.new(touch: "How to play", mouse: "How to play", gamepad: "How to play (Y)"),
         go_back: ByInput.new(touch: "Back", mouse: "Back", gamepad: "Back (B)"),
-        no_games: "Play a game, and your records will appear here.",
-        clear: ByInput.new(touch: "Clear my records…", mouse: "Clear my records…",
-                           gamepad: "Hold Y to clear my records…"),
+        no_games: "Play a game, and your stats will appear here.",
+        clear: ByInput.new(touch: "Clear my stats…", mouse: "Clear my stats…",
+                           gamepad: "Hold Y to clear my stats…"),
         keep_holding: ByInput.new(
-          touch: "Keep holding to clear your records, totals, chart, and goal streak.",
-          mouse: "Keep holding to clear your records, totals, chart, and goal streak.",
-          gamepad: "Keep holding %s to clear your records, totals, chart, and goal streak."
+          touch: "Keep holding to clear your records, totals, chart, achievements, and streak.",
+          mouse: "Keep holding to clear your records, totals, chart, achievements, and streak.",
+          gamepad: "Keep holding %s to clear your records, totals, chart, achievements, and streak."
         ),
         quit_again: "Press B again to quit",
         full_screen: "Full screen", windowed: "Window", quit: "Quit",
-        # The Looks screen: its button's word and heading, and each look's name.
-        themes: { title: "Looks", locked: "Looks come with the full game", classic: "Classic", halloween: "Halloween", winter: "Winter", valentine: "Hearts" }.freeze,
+        # The Themes screen: its button's word and heading, and each theme's name.
+        themes: { title: "Themes", classic: "Classic", halloween: "Halloween", winter: "Winter", valentine: "Hearts" }.freeze,
         offer: {
-          entry: "Pro", heading: "Pro",
-          includes: ["Unlimited play", "Achievements to earn", "Looks to choose from", "Create friend groups"].freeze,
+          entry: "Get Pro", heading: "Dot Popper Pro",
+          includes: { games: "Unlimited games", achievements: "Achievements", themes: "Themes", groups: "Friend groups" }.freeze,
           buy: "Buy for %s", retry: "Try again", restore: "Restore Purchases",
           loading: "Asking the store…", busy: "One moment…", pending: "Waiting for approval.",
           failed: "That didn't go through.", none: "Nothing to restore on this account.",
           unavailable: "The store isn't answering.", thanks: "Thank you. It's yours."
         }.freeze,
         hold_to_clear: ByInput.new(
-          touch: "Press and hold to clear your records, totals, chart, and goal streak.",
-          mouse: "Press and hold to clear your records, totals, chart, and goal streak.",
-          gamepad: "Hold Y to clear your records, totals, chart, and goal streak."
+          touch: "Press and hold to clear your records, totals, chart, achievements, and streak.",
+          mouse: "Press and hold to clear your records, totals, chart, achievements, and streak.",
+          gamepad: "Hold Y to clear your records, totals, chart, achievements, and streak."
         ),
         credits: ByInput.new(touch: "Credits", mouse: "Credits", gamepad: "Credits (X)"),
         credits_title: "Credits",
@@ -134,15 +134,15 @@ module DotPopper
                  "License, version 2.0.",
           lota: "Lota", fledge: "Fledge"
         }.freeze,
-        cleared: "Records cleared.", undo: ByInput.new(touch: "Undo", mouse: "Undo", gamepad: "Undo (Y)"),
+        cleared: "Stats cleared.", undo: ByInput.new(touch: "Undo", mouse: "Undo", gamepad: "Undo (Y)"),
         labels: {
           records: "Your records with standard dots on screens this size",
           fitted_records: "Your records with dots sized to the screen",
           chart_note: "Brighter bars are games with standard dots on screens this size.",
           fitted_chart_note: "Brighter bars are games with dots sized to the screen.",
-          score_record: "Best score", longest_game: "Longest game",
-          most_dots_in_a_row: "Most dots in a row without a mistake", shortest_time_to_pop: "Fastest pop",
-          longest_time_to_pop: "Longest wait that ended in a pop",
+          score_record: "Highest score", longest_game: "Longest game",
+          most_dots_in_a_row: "Most dots in a row without a mistake", shortest_time_to_pop: "Shortest Time to Pop",
+          longest_time_to_pop: "Longest Time to Pop",
           totals: "All your games", games: "Games played", pops: "Dots popped", mistakes: "Mistakes",
           seconds: "Time played", days: "Days played", none: "None yet",
           goal: "Daily goal", streak: "Days in a row you've met it", longest_streak: "Most days in a row"
@@ -178,7 +178,7 @@ module DotPopper
       # The Looks screen, over the Stats screen: its heading's size, the
       # gap between cards in margins, a card's height in its width, and the
       # widest a card grows (in units at a scale of 1).
-      THEMES_LAYOUT = ThemesStyle.new(heading: 48, gap: 1.0, ratio: 0.78, widest: 260, note: 20)
+      THEMES_LAYOUT = ThemesStyle.new(heading: 48, gap: 1.0, ratio: 0.78, widest: 260)
 
       # The Friend group screen, opened from the title.
       GROUPS = GroupStyle.new(heading: 44, text: 20, column: 560, veil: 0.9)

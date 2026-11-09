@@ -63,18 +63,20 @@ module DotPopper
         @themes.select { it.ordinary? || earned?(it) || it.in_season?(@today.call) }
       end
 
-      # What the Looks screen shows: what a pro player can wear, and for a
-      # free player every look, the ones they have earned marked as such
-      # (#earned?), none to wear.
-      def shown = locked? ? @themes : choices
+      # What the Themes screen shows, to every player alike: all the
+      # themes, the ones the player has earned marked as such (#earned?).
+      def shown = @themes
 
-      # Whether the looks are shown but not to wear, as for a free player.
+      # Whether +theme+ is open to wear: earned, or in season. A Free
+      # player sees it open too; only wearing it asks for Pro.
+      def open?(theme) = choices.include?(theme)
+
+      # Whether wearing a theme is Pro's, as it is for a Free player.
       def locked? = !@entitlement.pro?
 
-      # Whether the Stats screen offers the Looks screen: to a free
-      # player always, since there are looks to see, and to a pro player
-      # once there is one besides the ordinary look to choose.
-      def offered? = locked? || choices.size > 1
+      # Whether the Stats screen offers the Themes screen: always, to a
+      # Free player and a Pro one alike.
+      def offered? = true
 
       # Wears +theme+ from now on, if it is a choice and the player may.
       def wear(theme)

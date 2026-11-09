@@ -64,7 +64,7 @@ class AchievementsOnStatsTest < Minitest::Test
 
   def test_the_stats_list_every_achievement_open_before_any_is_earned
     show(pro: true)
-    sheet = build_sheet(pro: true)
+    sheet = build_sheet
     marks = sheet.achievements.rows.map(&:mark)
 
     assert_equal DotPopper::Achievement::IDS.size, marks.size
@@ -74,29 +74,50 @@ class AchievementsOnStatsTest < Minitest::Test
 
   def test_earned_achievements_are_marked_and_counted_for_a_pro_player
     @achievements.award(%i[sharpshooter blink], day: "2026-11-08")
-    sheet = build_sheet(pro: true)
+    sheet = build_sheet
 
     assert_equal "Achievements: 2 of 11", sheet.achievements.title
     assert_equal %i[earned open open earned], sheet.achievements.rows.first(4).map(&:mark).values_at(0, 1, 2, 3)
     assert_equal ["Sharpshooter", "<10%"], sheet.achievements.rows.first.then { [it.label, it.value] }
   end
 
-  def test_a_free_player_sees_the_achievements_exist_and_which_are_earned
+  def test_the_achievements_look_the_same_to_a_free_player_and_a_pro_one
     @achievements.award(%i[sharpshooter], day: "2026-11-08")
-    sheet = build_sheet(pro: false)
-
-    assert_equal [:earned], sheet.achievements.rows.map(&:mark).first(1)
-    assert_equal [:locked], sheet.achievements.rows.map(&:mark).drop(1).uniq
-    assert_equal "Achievements come with the full game", sheet.achievements.title
-  end
-
-  def test_buying_opens_the_rest_and_counts_what_was_earned_while_free
-    @achievements.award(%i[sharpshooter], day: "2026-11-08")
-    sheet = build_sheet(pro: true)
+    sheet = build_sheet
 
     assert_equal [:earned], sheet.achievements.rows.map(&:mark).first(1)
     assert_equal [:open], sheet.achievements.rows.map(&:mark).drop(1).uniq
     assert_equal "Achievements: 1 of 11", sheet.achievements.title
+  end
+
+  def test_a_free_player_taps_the_achievements_to_ask_for_pro_and_back_returns_to_the_stats
+    show(pro: false)
+    play_a_sharp_game
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
+    press_main
+    @show.open_stats
+    reach = @show.reach_of(:achievements)
+
+    refute_nil reach
+    @show.tap(reach.center_x, reach.center_y)
+
+    assert_predicate @show, :offer?
+    assert_equal :achievements, @show.offer_focus
+    assert_equal "Achievements", @show.words.offer_items(@show.offer_focus).first
+    @show.back
+
+    refute_predicate @show, :offer?
+    assert_predicate @show, :stats?
+  end
+
+  def test_a_pro_player_has_nothing_to_tap_among_the_achievements
+    show(pro: true)
+    play_a_sharp_game
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
+    press_main
+    @show.open_stats
+
+    assert_nil @show.reach_of(:achievements)
   end
 
   def test_a_sheet_with_no_achievements_lists_no_achievements
@@ -104,7 +125,7 @@ class AchievementsOnStatsTest < Minitest::Test
   end
 
   def test_the_stats_screen_puts_the_achievements_in_a_column_of_their_own_where_there_is_room
-    sheet = build_sheet(pro: true)
+    sheet = build_sheet
     plan = StatsLayout.new(layout: layout(1400, 700), sheet:, style: Style::RECORDS, widest: 360)
     achievements = plan.placements.select { it.item.is_a?(StatsRow) && it.item.mark }
     others = plan.placements.reject { it.item.is_a?(StatsRow) && it.item.mark }.select { it.item.is_a?(StatsRow) }
@@ -115,7 +136,7 @@ class AchievementsOnStatsTest < Minitest::Test
   end
 
   def test_a_free_players_stats_fit_with_the_achievements_themes_and_the_offer_at_phone_and_desktop_sizes
-    sheet = build_sheet(pro: false)
+    sheet = build_sheet
 
     [[1200, 800], [800, 500], [400, 320], [400, 850], [850, 400], [844, 390], [2560, 1440]].each do |width, height|
       plan = StatsLayout.new(layout: layout(width, height), sheet:, style: Style::RECORDS, widest: 360, themes: true, offer: true)
@@ -132,7 +153,7 @@ class AchievementsOnStatsTest < Minitest::Test
   end
 
   def test_on_a_narrow_screen_the_achievements_stack_under_the_rest_and_all_fit
-    sheet = build_sheet(pro: true)
+    sheet = build_sheet
     plan = StatsLayout.new(layout: layout(395, 850), sheet:, style: Style::RECORDS, widest: 300)
     placed = plan.placements
 
@@ -166,8 +187,8 @@ class AchievementsOnStatsTest < Minitest::Test
                                  recent_classes: [MEDIUM] * 2)
   end
 
-  def build_sheet(pro:)
+  def build_sheet
     StatsSheet.build(stats, score_record: 9, words: Style::WORDS, size_class: MEDIUM, field: DotPopper::Field.new(1200, 800, R),
-                              achievements: @achievements, pro:)
+                              achievements: @achievements)
   end
 end

@@ -6,7 +6,7 @@ module DotPopper
     # heading's type, the gap between cards in margins, a card's height as
     # a share of its width, the widest a card grows, and the type of the
     # note a free player is given.
-    class ThemesStyle < Data.define(:heading, :gap, :ratio, :widest, :note); end
+    class ThemesStyle < Data.define(:heading, :gap, :ratio, :widest); end
 
     # One look on the Looks screen, where it is drawn.
     class ThemeCard < Data.define(:theme, :rect); end
@@ -16,14 +16,9 @@ module DotPopper
     # for each look, in the most even grid the room allows, as large as it
     # can be and no larger than +look.widest+. The grid sits a little above
     # the middle of its room, and a short last row is centred.
-    class ThemesLayout < Data.define(:layout, :themes, :style, :note)
+    class ThemesLayout < Data.define(:layout, :themes, :style)
       def heading_size = layout.scaled(style.heading)
       def heading_y = layout.top + (heading_size * 0.6)
-      def note_size = layout.scaled(style.note)
-
-      # The middle of the one line a free player is told, under the heading.
-      def note_y = heading_y + (heading_size * 0.8) + (note_size * 0.6)
-
       def cards
         columns, width = best
         height = width * style.ratio
@@ -43,7 +38,7 @@ module DotPopper
 
       # What the cards may fill: under the heading, over Back.
       def room
-        top = note ? note_y + (note_size * 0.8) : heading_y + (heading_size * 0.8)
+        top = heading_y + (heading_size * 0.8)
         bottom = layout.back_button.y - layout.margin
         Rect.new(x: layout.safe.x + layout.margin, y: top, width: layout.safe.width - (2 * layout.margin),
                  height: [bottom - top, 0.0].max)

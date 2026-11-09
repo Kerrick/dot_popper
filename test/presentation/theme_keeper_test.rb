@@ -49,7 +49,7 @@ class ThemeKeeperTest < Minitest::Test
     theme_keeper.game_played
 
     assert_equal [:classic], theme_keeper.choices.map(&:key)
-    refute theme_keeper.offered?
+    assert theme_keeper.offered?, "Themes is always offered, with the others there to see"
 
     @day = Date.new(2027, 10, 20)
 

@@ -29,9 +29,9 @@ class StatsSheetTest < Minitest::Test
     rows = sheet.records.rows.to_h { [it.label, it.value] }
 
     assert_equal "Your records with standard dots on screens this size", sheet.records.title
-    assert_equal({ "Best score" => "27", "Longest game" => "48 seconds",
-                   "Most dots in a row without a mistake" => "18", "Fastest pop" => "0.3 seconds",
-                   "Longest wait that ended in a pop" => "6.2 seconds" }, rows)
+    assert_equal({ "Highest score" => "27", "Longest game" => "48 seconds",
+                   "Most dots in a row without a mistake" => "18", "Shortest Time to Pop" => "0.3 seconds",
+                   "Longest Time to Pop" => "6.2 seconds" }, rows)
     assert_equal [["Games played", "42"], ["Dots popped", "812"], ["Mistakes", "61"], ["Time played", "31 minutes"],
                   ["Days played", "5"]], sheet.totals.rows.map { [it.label, it.value] }
     assert_equal [3, 9, 27, 12], sheet.scores

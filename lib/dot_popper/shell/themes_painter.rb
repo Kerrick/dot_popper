@@ -17,19 +17,11 @@ module DotPopper
         plan = show.themes_layout
         pen.text(show.words.themes.fetch(:title), pen.fonts.bold(plan.heading_size), layout.center_x, plan.heading_y,
                  pen.palette.cream)
-        note(show, plan, layout) if plan.note
         plan.cards.each { card(it, show) }
-        PillButton.new(pen:).draw(layout.clear_stats_button, show.words.offer[:entry], alpha: 0.8 + (0.2 * show.hover.level(:offer)),
-                                  hover: show.hover.level(:offer), color: pen.palette.soft) if plan.note && show.offer_offered?
         PillButton.new(pen:).draw(layout.back_button, show.words.go_back, hover: show.hover.level(:back))
       end
 
       private
-
-      # For a free player, the one line that says where looks come from.
-      def note(show, plan, layout)
-        pen.text(show.words.themes.fetch(:locked), pen.fonts.semibold(plan.note_size), layout.center_x, plan.note_y, pen.palette.soft)
-      end
 
       def card(card, show)
         theme = card.theme
@@ -42,23 +34,21 @@ module DotPopper
         G.rectangle(:fill, rect.x, rect.y, rect.width, rect.height, corner, corner, 32)
         pair(rect, palette)
         name(show.words.themes.fetch(theme.key), rect, palette)
-        locked = show.themes_locked?
         earned = show.theme_earned?(theme)
-        shade(rect, corner, palette) if locked && !earned
+        shade(rect, corner, palette) unless show.theme_open?(theme)
         outline(rect, corner, chosen, hover)
         tick(rect, palette) if chosen
-        badge(rect, palette, earned) if locked && !chosen
+        badge(rect, palette, earned) unless chosen
       end
 
-      # A look not earned yet is dimmed, so what is earned is plain.
+      # A theme neither earned nor in season is dimmed, so what is open is plain.
       def shade(rect, corner, palette)
         pen.color(palette.ink_bottom, 0.6)
         G.rectangle(:fill, rect.x, rect.y, rect.width, rect.height, corner, corner, 32)
       end
 
-      # A free player's mark in a card's top right corner, as the Records
-      # screen's achievements wear theirs: a filled dot if earned, a ring if
-      # not.
+      # A mark in a card's top right corner, as the Stats screen's
+      # achievements wear theirs: a filled dot if earned, a ring if not.
       def badge(rect, palette, earned)
         size = pen.pixels.whole([rect.height * 0.2, 22.0].max)
         x = pen.pixels.snap(rect.right - (size * 0.9))
