@@ -57,31 +57,31 @@ module DotPopper
     # player's own: the best score (+best+, shown from 1), today's goal
     # (+goal+, its sentence or "Today's goal is done." once +done+), and
     # the days in a row it has been met (+streak+, from 2). Under Play,
-    # where plays are counted, stands how many are left (+plays+). Along the
+    # where games are counted, stands how many are left (+games+). Along the
     # bottom, one row in three groups: "Your records" at the left once
     # +records+ is offered, the dot-size choice in the middle where
     # +sizing+ is, and at the right "How to play", on a desktop
     # (+window+) "Full screen" and Quit (#window_buttons), and the mute
     # button. The bottom row is laid out first, and the words fit in what
     # is left above it: their type shrinks first, then the streak goes,
-    # then the goal, then the best, then the plays left, and last the name shrinks on. The
+    # then the goal, then the best, then the games left, and last the name shrinks on. The
     # legend and Play always stay, since they are how to play.
     # Sizes are measured with +measure+ (RoughMeasure's methods).
     class TitleScreen < Data.define(:layout, :type, :words, :measure, :best, :goal, :done, :streak, :records,
-                                    :sizing, :radius, :window, :plays)
+                                    :sizing, :radius, :window, :games)
       # The gaps above each line, in graphics units at full size.
       # The name, the legend and Play are near each other, one group; the
       # player's own lines stand further off under Play, and closer to
       # each other, another.
-      GAPS = { legend: 30, play: 30, plays: 12, best: 44, best_room: 44, goal: 14, streak: 8 }.freeze
+      GAPS = { legend: 30, play: 30, games: 12, best: 44, best_room: 44, goal: 14, streak: 8 }.freeze
       # How far the name shrinks on, once everything else has made room.
-      # The plays line goes last of the optional lines: a player at the limit
+      # The games line goes last of the optional lines: a player at the limit
       # needs it most.
-      PLAYS_DROP = 4
+      GAMES_DROP = 4
       NAME_SHRINKS = [1.0, 0.82, 0.66, 0.5, 0.4].freeze
 
       def initialize(layout:, type:, words:, measure:, best: 0, goal: nil, done: false, streak: 0, records: false,
-                     sizing: false, radius: Rules::RADIUS, window: false, plays: nil)
+                     sizing: false, radius: Rules::RADIUS, window: false, games: nil)
         super
       end
 
@@ -176,7 +176,7 @@ module DotPopper
          Block.new(name: :legend, height: measure.height(:bold, legend) * Legend::HEIGHT, gap: gap(:legend, scale),
                    width: legend_width(legend)),
          play(scale, play_height),
-         (block(:plays, :semibold, sizes[:goal], plays, scale, drop: PLAYS_DROP) if plays),
+         (block(:games, :semibold, sizes[:goal], games, scale, drop: GAMES_DROP) if games),
          best_block(line, scale),
          (goal_block(goal, sizes[:goal], scale) if goal),
          (block(:streak, :semibold, sizes[:goal], words.streak(streak), scale, drop: 1) if goal && streak >= 2)].compact

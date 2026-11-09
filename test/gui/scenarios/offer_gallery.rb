@@ -13,7 +13,7 @@ module DotPopperGui
 
     def play
       check(show.title?, "the game opens on the title")
-      quick_round
+      quick_game
       show.input = P::InputKind::TOUCH
       SIZES.each { |width, height| shots(width, height) }
       resize(1200, 800)

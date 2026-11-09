@@ -42,7 +42,7 @@ class ParticlesTest < Minitest::Test
     assert_equal alphas.sort.reverse, alphas
   end
 
-  def test_a_droplet_sprite_is_soft_and_round
+  def test_a_droplet_sprite_is_soft_and_game
     assert_in_delta 1.0, SpriteArt.droplet(0, 0)
     assert_in_delta 0.0, SpriteArt.droplet(1, 0)
     assert_in_delta SpriteArt.droplet(0.5, 0), SpriteArt.droplet(0, 0.5)

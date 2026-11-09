@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # How many rounds a player who has not bought the paid version may still
-  # start. A play is one started round; the Tutorial and "How to play"
-  # never cost one. A fresh install holds BANK plays for good, which never
-  # refill, and DAILY plays for each local day, which do not carry over.
-  # Each round spends the day's own first, so the bank lasts. There is no
+  # How many games a player who has not bought the paid version may still
+  # start. A free game is one started game; the Tutorial and "How to play"
+  # never cost one. A fresh install holds BANK games for good, which never
+  # refill, and DAILY games for each local day, which do not carry over.
+  # Each game spends the day's own first, so the bank lasts. There is no
   # way to earn more. Paying makes play unlimited (+entitlement+), and
   # +metered+ false counts nothing: for a machine playing, and for a build
   # with no store to pay in, as no one could then get past the limit. A
@@ -14,15 +14,15 @@ module DotPopper
   #
   # The store answers +read+ and +write(text)+ as BestScore's does; its
   # lines are +day=2026-11-08+, +spent=2+ and +bank=17+. A store with
-  # nothing in it, as on every save made before plays were counted, is a
+  # nothing in it, as on every save made before games were counted, is a
   # full bank. A player's clock is trusted, as the other saves trust it.
-  class FreePlays
-    # The one-time bank, and the plays each day. Both are provisional
-    # (doc/decisions.md, "Free plays").
+  class FreeGames
+    # The one-time bank, and the games each day. Both are provisional
+    # (doc/decisions.md, "Free games").
     BANK = 20
     DAILY = 3
 
-    # Plays that never count and never show: for a Show made without any.
+    # Games that never count and never show: for a Show made without any.
     def self.unlimited = new(BestScore::Memory.new, today: -> { Date.today }, entitlement: Entitlement.free, metered: false)
 
     # +today+ answers the player's local Date; +bank+ and +daily+ are what a
@@ -43,21 +43,21 @@ module DotPopper
       @bank = count(values["bank"], bank)
     end
 
-    # Whether plays are counted and shown: where the paid version can be
+    # Whether games are counted and shown: where the paid version can be
     # bought, and has not been.
     def metered? = @metered && !@entitlement.paid?
 
-    # The plays left today, those the bank holds, and both together.
+    # The games left today, those the bank holds, and both together.
     def daily_left = @day == today ? [@daily - @spent, 0].max : @daily
     def bank_left = @bank
     def left = daily_left + bank_left
 
-    # How many free plays come each day.
+    # How many free games come each day.
     attr_reader :daily
 
     def can_play? = !metered? || left.positive?
 
-    # Spends the play a round starting would use, and says whether there
+    # Spends the game that starting one would use, and says whether there
     # was one. Paid or unmetered, it counts nothing and always is.
     def spend!
       return true unless metered?

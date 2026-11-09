@@ -146,7 +146,7 @@ module DotPopper
 
       # The moving parts of each frame: the Session's replies, a long
       # press finished, and the next announcement at a moment for one.
-      # +quiet+ is false during a round, when the network waits; +showing+
+      # +quiet+ is false during a game, when the network waits; +showing+
       # says the screen can show a message now, on the title or at Game
       # Over.
       def update(now, quiet:, showing: quiet)
@@ -162,10 +162,10 @@ module DotPopper
                                   group_id: item.group_id, number: item.champion_number)
       end
 
-      def round_started = groups.round_started
+      def game_started = groups.game_started
 
       # A game ended: reports it if it counts.
-      def round_finished(score:, sized_to_screen:) = groups.round_finished(score:, sized_to_screen:)
+      def game_finished(score:, sized_to_screen:) = groups.game_finished(score:, sized_to_screen:)
 
       # Game Over's line about the groups: its words, a blank that holds
       # the line's place while the result is on its way, or nil.

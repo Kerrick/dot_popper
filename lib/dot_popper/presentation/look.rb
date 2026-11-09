@@ -90,7 +90,7 @@ module DotPopper
         records: "Your records",
         how_to_play: ByInput.new(touch: "How to play", mouse: "How to play", gamepad: "How to play (Y)"),
         go_back: ByInput.new(touch: "Back", mouse: "Back", gamepad: "Back (B)"),
-        no_rounds: "Play a round, and your records will appear here.",
+        no_games: "Play a game, and your records will appear here.",
         clear: ByInput.new(touch: "Clear my records…", mouse: "Clear my records…",
                            gamepad: "Hold Y to clear my records…"),
         keep_holding: ByInput.new(
@@ -138,23 +138,23 @@ module DotPopper
         labels: {
           bests: "Your bests with standard dots on screens this size",
           fitted_bests: "Your bests with dots sized to the screen",
-          chart_note: "Brighter bars are rounds with standard dots on screens this size.",
-          fitted_chart_note: "Brighter bars are rounds with dots sized to the screen.",
-          best_score: "Best score", longest_round: "Longest round",
+          chart_note: "Brighter bars are games with standard dots on screens this size.",
+          fitted_chart_note: "Brighter bars are games with dots sized to the screen.",
+          best_score: "Best score", longest_game: "Longest game",
           longest_run: "Most pops in a row without a mistake", fastest_pop: "Fastest pop",
           longest_wait: "Longest wait that ended in a pop",
-          totals: "All your rounds", rounds: "Rounds played", pops: "Dots popped", slips: "Mistakes",
+          totals: "All your games", games: "Games played", pops: "Dots popped", slips: "Mistakes",
           seconds: "Time played", days: "Days played", none: "None yet",
           goal: "Daily goal", streak: "Days in a row you've met it", longest_streak: "Most days in a row"
         }.freeze,
         goals: {
           clean_run: "pop %d bright dots in a row without a mistake",
           patient_pop: "pop a bright dot that has been on screen for at least %d seconds",
-          quick_start: "pop %d bright dots in the first 10 seconds of a round",
-          long_round: "keep one round going for %d seconds",
-          comeback: "finish a round with %d points even after a mistake",
-          score: "score %d points in one round",
-          clean_round: "score %d points in a round without a single mistake"
+          quick_start: "pop %d bright dots in the first 10 seconds of a game",
+          long_game: "keep one game going for %d seconds",
+          comeback: "finish a game with %d points even after a mistake",
+          score: "score %d points in one game",
+          clean_game: "score %d points in a game without a single mistake"
         }.freeze,
         goal_done: "Done today:", goal_met: "You met today's goal!",
         screen_size: {
@@ -217,8 +217,8 @@ module DotPopper
       # twice side to side in 0.8 s, 12° each way about the wrist, then
       # holds still 0.25 s. Time stays stopped 1.35 s, while the cost's
       # "−2"s float and the hand reaches its place, then flows at 0.6 while
-      # it wags. In the round, the clock's spotlight fades in 0.6 s, so the
-      # round's dots are never hidden; its halo lasts past the first tick.
+      # it wags. In the game, the clock's spotlight fades in 0.6 s, so the
+      # game's dots are never hidden; its halo lasts past the first tick.
       TUTORIAL = TutorialLook.new(
         drift: 1.0, stop: 0.15, resume: 0.5, slow: 0.6, start: [-0.27, -0.12].freeze, born: 0.1, peek: 0.8,
         clear: 2.3, warn: 1.35, flight: 0.6, quick: 0.45, gap: 0.15, hold: 0.45, linger: 0.35, handover: 0.35,
@@ -380,9 +380,9 @@ module DotPopper
       # "A fresh dot's edge is its hit circle"). 0.7 brings it back.
       BLOOM = BloomLook.new(strength: 0.0, sigma: 3.0, passes: 2, resolution: 0.5)
 
-      # Game over: how the round dims, how the score counts up, and the
+      # Game over: how the game dims, how the score counts up, and the
       # celebration of a new best. Its sparkles may outlive a pop's
-      # droplets, because no round is in play behind them.
+      # droplets, because no game is in play behind them.
       class FinaleLook < Data.define(:dim, :arrive, :tally, :prompt, :sparkles, :goal_sparkles, :sparkle_life,
                                      :share); end
       FINALE = FinaleLook.new(
@@ -416,7 +416,7 @@ module DotPopper
       # its edges feather out, so the pile still shows around them.
       FINALE_BACKING = ScrimLook.new(alpha: 0.6, feather: 40, layers: 10, pad: 18)
 
-      # After time's up, the round's dots tumble into a pile behind the
+      # After time's up, the game's dots tumble into a pile behind the
       # score, dimmed (Shell::Pile, with Box2D). A calm pile
       # (DOT_POPPER_CALM) falls slowly and settles without a bounce.
       PILE = PileLook.new(meter: 2.0, gravity: 20.0, restitution: 0.35, friction: 0.4, density: 1.0, damping: 0.05,
@@ -535,7 +535,7 @@ module DotPopper
 
       # The autoplay bot, for development (main.rb): how long it waits on
       # each screen, the Records screen too, how long it thinks before each
-      # tap (which grows with the score, so a round ends), and how often it
+      # tap (which grows with the score, so a game ends), and how often it
       # taps a popped dot.
       class AutopilotLook < Data.define(:title_wait, :finale_wait, :records_wait, :think, :tiring, :mistakes); end
       AUTOPILOT = AutopilotLook.new(title_wait: 1.6, finale_wait: 3.2, records_wait: 3.0, think: 0.22..0.45,

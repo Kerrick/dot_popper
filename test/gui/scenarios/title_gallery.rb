@@ -21,7 +21,7 @@ module DotPopperGui
       check(show.title?, "the game opens on the title")
       @desktop = show.window
       each_size { shoot("first") }
-      quick_round
+      quick_game
       returning(done: false)
       each_size { shoot("returning") }
       [P::InputKind::TOUCH, P::InputKind::GAMEPAD].each do |kind|

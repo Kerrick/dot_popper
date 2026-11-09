@@ -24,20 +24,20 @@ class AchievementsOnRecordsTest < Minitest::Test
                      achievements: @achievements, entitlement:)
   end
 
-  # Plays a round in which the player pops a dot with almost none of it
+  # Plays a game in which the player pops a dot with almost none of it
   # showing, and lets the clock run out.
-  def play_a_sharp_round
+  def play_a_sharp_game
     press_main
-    round = @cabinet.round
+    game = @cabinet.game
     covered = dot(400, 300, popped: true)
-    round.instance_variable_set(:@dots, DotPopper::Stack.new(dots: [covered, dot(395, 300, id: 900)]))
+    game.instance_variable_set(:@dots, DotPopper::Stack.new(dots: [covered, dot(395, 300, id: 900)]))
     @show.tap(346, 300)
     @cabinet.update(30)
   end
 
   def test_a_sharp_pop_is_named_at_game_over_for_a_paid_player
     show(paid: true)
-    play_a_sharp_round
+    play_a_sharp_game
 
     assert_equal [:sharpshooter], @show.finale.achievements
     assert_equal "New achievement: Sharpshooter", AchievementWords.earned(@show.finale.achievements)
@@ -45,19 +45,19 @@ class AchievementsOnRecordsTest < Minitest::Test
 
   def test_a_free_player_earns_it_too_but_hears_nothing_of_it
     show(paid: false)
-    play_a_sharp_round
+    play_a_sharp_game
 
     assert_empty @show.finale.achievements
     assert_equal [:sharpshooter], @achievements.earned
     assert_equal "sharpshooter=2026-11-08\n", @folder.call("achievements").read
   end
 
-  def test_a_achievement_is_announced_only_the_round_it_is_first_earned
+  def test_a_achievement_is_announced_only_the_game_it_is_first_earned
     show(paid: true)
-    play_a_sharp_round
+    play_a_sharp_game
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
-    play_a_sharp_round
+    play_a_sharp_game
 
     assert_empty @show.finale.achievements
   end
@@ -143,7 +143,7 @@ class AchievementsOnRecordsTest < Minitest::Test
 
   def test_clearing_the_records_clears_the_achievements_and_undo_brings_them_back
     show(paid: true)
-    play_a_sharp_round
+    play_a_sharp_game
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
     @show.open_records
@@ -162,7 +162,7 @@ class AchievementsOnRecordsTest < Minitest::Test
   private
 
   def stats
-    DotPopper::LifetimeStats.new(rounds: 4, pops: 40, slips: 2, seconds: 100.0, days: 2, recent: [3, 9],
+    DotPopper::LifetimeStats.new(games: 4, pops: 40, slips: 2, seconds: 100.0, days: 2, recent: [3, 9],
                                  recent_classes: [MEDIUM] * 2)
   end
 

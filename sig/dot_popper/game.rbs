@@ -1,5 +1,5 @@
 module DotPopper
-  class Round
+  class Game
     attr_reader field: Field
 
     attr_reader dots: Stack
@@ -11,13 +11,13 @@ module DotPopper
     # Seconds of play so far.
     attr_reader elapsed: Float
 
-    # Every dot spawned this round, oldest first, with how it was drawn.
+    # Every dot spawned this game, oldest first, with how it was drawn.
     attr_reader spawns: Array[Spawn]
 
     # Pops in a row toward the next bonus dot.
     attr_reader streak: Integer
 
-    # The streak's reward, or nil when the round has none.
+    # The streak's reward, or nil when the game has none.
     attr_reader bonus: Rules::Bonus?
 
     @random: Random
@@ -26,7 +26,7 @@ module DotPopper
 
     @next_id: Integer
 
-    def self.resume: (Field field, dots: Stack, score: Integer, seconds: number, ?random: Random, ?spawn_tries: Integer, ?bonus: Rules::Bonus?) -> Round
+    def self.resume: (Field field, dots: Stack, score: Integer, seconds: number, ?random: Random, ?spawn_tries: Integer, ?bonus: Rules::Bonus?) -> Game
 
     def initialize: (Field field, ?random: Random, ?dots: Stack?, ?score: Integer, ?seconds: number, ?spawn_tries: Integer, ?bonus: Rules::Bonus?) -> void
 

@@ -4,7 +4,7 @@ module DotPopper
   # One dot at one moment: where it is, how fast it goes on each axis, and
   # whether it has been popped. A dot is a value; moving or popping it
   # gives a new dot with the same +id+, so anything that follows a dot
-  # through a round, such as its animation, follows the id.
+  # through a game, such as its animation, follows the id.
   class Dot < Data.define(:id, :x, :y, :velocity_x, :velocity_y, :radius, :popped, :bonus)
     def self.spawn(field, random, id:)
       x, y = field.random_center(random)
@@ -25,7 +25,7 @@ module DotPopper
     def bonus? = bonus
 
     # The same dot, popped. Popping changes only how a tap treats it and
-    # how it looks; a popped dot keeps moving for the rest of the round.
+    # how it looks; a popped dot keeps moving for the rest of the game.
     def pop = with(popped: true)
 
     # Whether a point lies on this dot, edge included. The hit circle is

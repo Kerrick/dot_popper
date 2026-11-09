@@ -12,7 +12,7 @@ module DotPopper
 
     @today: ^() -> Date
 
-    @recorder: RoundStats::Recorder
+    @recorder: GameStats::Recorder
 
     def initialize: (BestScore::_Store store, ?clock: ^() -> Time, ?today: ^() -> Date,
                      ?archive: ^(String name) -> BestScore::_Store) -> void
@@ -21,7 +21,7 @@ module DotPopper
 
     private
 
-    def row: (Events::RoundEnded ended, RoundStats stats) -> String
+    def row: (Events::GameEnded ended, GameStats stats) -> String
 
     def seconds: (Float value) -> String
 

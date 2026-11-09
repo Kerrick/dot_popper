@@ -19,8 +19,8 @@ class SlowFrameTest < Minitest::Test
   end
 
   def test_with_nothing_recent_it_leaves_that_part_out
-    frame = SlowFrame.new(seconds: 0.06, screen: "a round", recent: nil, since: nil, major_gcs: 0, minor_gcs: 2)
+    frame = SlowFrame.new(seconds: 0.06, screen: "a game", recent: nil, since: nil, major_gcs: 0, minor_gcs: 2)
 
-    assert_equal "slow frame 60.0 ms on a round; garbage collections: 0 major, 2 minor", frame.report
+    assert_equal "slow frame 60.0 ms on a game; garbage collections: 0 major, 2 minor", frame.report
   end
 end

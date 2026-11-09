@@ -49,7 +49,7 @@ class HoverTest < Minitest::Test
     assert_nil @show.records_reach, "a first title offers no records"
     assert_nil @show.control_at(*middle(@show.layout.records_button))
 
-    finish_round
+    finish_game
     assert_equal :records, @show.control_at(*middle(@show.records_reach)).name
     assert_equal :records, @show.control_at(@show.records_reach.x + 1, @show.records_reach.bottom - 1).name,
                  "the whole reach, not only the drawn pill"
@@ -59,7 +59,7 @@ class HoverTest < Minitest::Test
   end
 
   def test_the_mouse_over_a_button_lights_it_and_moving_away_dims_it
-    finish_round
+    finish_game
     @show.pointer_at(*middle(@show.records_reach))
     assert_equal :records, @show.hovered
     @show.update(LOOK.seconds)
@@ -87,7 +87,7 @@ class HoverTest < Minitest::Test
   end
 
   def test_the_records_screen_hovers_back_credits_looks_and_clear_and_nothing_else
-    finish_round
+    finish_game
     @show.open_records
     assert_equal %i[credits looks clear back], @show.controls.map(&:name)
     @show.pointer_at(*middle(@show.back_reach))
@@ -98,7 +98,7 @@ class HoverTest < Minitest::Test
     assert_nil @show.hovered, "the title's buttons are covered"
   end
 
-  def test_game_over_hovers_share_my_score_and_a_round_hovers_nothing
+  def test_game_over_hovers_share_my_score_and_a_game_hovers_nothing
     press_main
     assert_empty @show.controls
     @cabinet.update(20)
@@ -118,7 +118,7 @@ class HoverTest < Minitest::Test
 
   def middle(rect) = [rect.center_x, rect.center_y]
 
-  def finish_round
+  def finish_game
     press_main
     @cabinet.update(20)
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)

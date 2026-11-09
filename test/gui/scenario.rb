@@ -44,7 +44,7 @@ module DotPopperGui
     def cabinet = app.cabinet
     def show = app.show
     def pile = app.pile
-    def round = cabinet.round
+    def game = cabinet.game
     def layout = show.layout
     def words = show.words
 
@@ -135,7 +135,7 @@ module DotPopperGui
     # Waits until the window is as the block says and the game has heard
     # the size it has now. The system takes its own time over a window,
     # so the game stands still meanwhile: these frames pass it no time,
-    # and the round plays the same however long the system takes.
+    # and the game plays the same however long the system takes.
     def settled_window(what)
       wait_for(what, within: WINDOW_FRAMES, step: 0.0) do
         yield && layout.width == L::Graphics.width && layout.height == L::Graphics.height
@@ -187,16 +187,16 @@ module DotPopperGui
     # last names, in order: [:RoundStarted, :Popped, ...].
     def story = events.map { it.class.name.split("::").last.to_sym }
 
-    def fresh_dot = round.dots.find(&:fresh?)
-    def uncovered?(dot) = round.dots.top_at(dot.x, dot.y)&.id == dot.id
+    def fresh_dot = game.dots.find(&:fresh?)
+    def uncovered?(dot) = game.dots.top_at(dot.x, dot.y)&.id == dot.id
 
-    # Starts a round with a click in the middle of the title, away from
+    # Starts a game with a click in the middle of the title, away from
     # its buttons.
-    def start_round(how = method(:click))
+    def start_game(how = method(:click))
       check(show.title?, "the title is showing")
       play = show.play_reach
       how.call(play.center_x, play.center_y)
-      check(show.playing?, "a press on Play starts a round")
+      check(show.playing?, "a press on Play starts a game")
     end
 
     # Waits for the fresh dot to come out from under the popped ones, and
@@ -216,10 +216,10 @@ module DotPopperGui
     def inside_window?(dot) = dot.x.between?(dot.radius, layout.width - dot.radius) &&
                               dot.y.between?(dot.radius, layout.height - dot.radius)
 
-    # Lets the round's clock run out, in long frames.
+    # Lets the game's clock run out, in long frames.
     def run_out_the_clock
-      wait_for("the round to end", within: 2000, step: QUICK) { show.finished? }
-      check(show.finished?, "the round ends when its clock runs out")
+      wait_for("the game to end", within: 2000, step: QUICK) { show.finished? }
+      check(show.finished?, "the game ends when its clock runs out")
     end
 
     # Waits out Game Over's grace and presses Continue.
@@ -231,9 +231,9 @@ module DotPopperGui
       check(show.title?, "Continue goes back to the title")
     end
 
-    # A whole round, played quickly: one pop, then the clock runs out.
-    def quick_round
-      start_round
+    # A whole game, played quickly: one pop, then the clock runs out.
+    def quick_game
+      start_game
       pop_fresh
       run_out_the_clock
       continue_to_title

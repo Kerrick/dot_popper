@@ -9,7 +9,7 @@ module DotPopper
   # on a field packed solid, the last draw stands, so a dot always spawns.
   #
   # A draw that passes the first time costs no more randomness than
-  # before, so seeded rounds replay as they did unless a redraw happens.
+  # before, so seeded games replay as they did unless a redraw happens.
   # With +tries+ at 0, every draw stands, which is the rule before it.
   class Spawner < Data.define(:check, :tries)
     def self.for(field, tries: Rules::SPAWN_TRIES) = new(check: SpawnCheck.for(field), tries:)

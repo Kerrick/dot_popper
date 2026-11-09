@@ -9,7 +9,7 @@ module DotPopper
     # dim with it, under Game Over's card and buttons, the numbers that
     # float up, the screen's words and HUD on top, the share preview over
     # those when it is open, and over everything, the gamepad's cursor
-    # when it shows. Only the HUD shakes. The Tutorial is drawn as a round
+    # when it shows. Only the HUD shakes. The Tutorial is drawn as a game
     # is, from its own dots and HUD, with its spotlight, hand and skip
     # button over them.
     class Renderer
@@ -74,7 +74,7 @@ module DotPopper
           if lead_in
             pill = @hud.bounds(@show.hud, layout)
             @tutorial.lead_in_under(lead_in, @show.now, pill, @hud.spots(@show.hud, layout),
-                                     @show.cabinet.round.field.radius)
+                                     @show.cabinet.game.field.radius)
           end
           hud(layout)
           @tutorial.lead_in_over(lead_in, @show.now, pill) if lead_in
@@ -101,7 +101,7 @@ module DotPopper
         end
       end
 
-      # The Tutorial, drawn as the round it opens is: its dots over their
+      # The Tutorial, drawn as the game it opens is: its dots over their
       # glow and the effects of its taps, its HUD, never shaken, and its
       # spotlight, guide and skip button over them all.
       def tutorial(width, height, layout)
@@ -133,27 +133,27 @@ module DotPopper
       end
 
       def field
-        round = @show.cabinet.round or return
-        @dots.draw(dots, @show.animations, @show.now, round.field.radius)
+        game = @show.cabinet.game or return
+        @dots.draw(dots, @show.animations, @show.now, game.field.radius)
       end
 
       # The fresh dots' and droplets' light, on the night under every dot,
       # so it never washes out a dot or hints at a fresh dot that is
       # covered.
       def glow
-        round = @show.cabinet.round or return
+        game = @show.cabinet.game or return
         @bloom.glow do
-          @dots.glow(dots, @show.animations, @show.now, round.field.radius)
+          @dots.glow(dots, @show.animations, @show.now, game.field.radius)
           @effects.droplets
         end
       end
 
-      # The round's dots where they are drawn: where the rules put them, or
+      # The game's dots where they are drawn: where the rules put them, or
       # after time's up, wherever they have tumbled to in the Pile.
-      def dots = @pile.stack || @show.cabinet.round&.dots
+      def dots = @pile.stack || @show.cabinet.game&.dots
 
       # The score and clock, on top of everything, through Game Over too,
-      # so a round ended by a penalty is seen to reach 0. After a wrong tap
+      # so a game ended by a penalty is seen to reach 0. After a wrong tap
       # the HUD shakes, by whole device pixels; the dots never do, since a
       # tap is judged where a dot really is.
       def hud(layout)
@@ -167,7 +167,7 @@ module DotPopper
       public
 
       # Makes the fonts a frame may need, so the first pop or tick of a
-      # round does not stall on making one, and clears each frame to the
+      # game does not stall on making one, and clears each frame to the
       # night's darkest ink, so a pixel nothing draws is never black or
       # another color.
       def prepare

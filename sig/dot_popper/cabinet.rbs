@@ -28,7 +28,7 @@ module DotPopper
 
     def update: (number seconds) -> self
 
-    def round: () -> Round?
+    def game: () -> Game?
 
     def field: () -> Field
 
@@ -42,22 +42,22 @@ module DotPopper
 
     def show_title: () -> Title
 
-    def start_round: (?Integer seed) -> Playing
+    def start_game: (?Integer seed) -> Playing
 
     def resume: (field: Field, dots: Stack, score: Integer, seconds: number) -> self
 
-    def finish: (Round round, Integer seed, SizeClass size_class) -> GameOver
+    def finish: (Game game, Integer seed, SizeClass size_class) -> GameOver
 
     private
 
-    def begin_round: (Round round, Integer seed) -> Playing
+    def begin_game: (Game game, Integer seed) -> Playing
 
     def advance: (state next_state) -> self
 
     class Title < ::Data
       def self.new: () -> instance
 
-      def round: () -> nil
+      def game: () -> nil
 
       def press: (Cabinet cabinet, number x, number y) -> Playing
 
@@ -65,13 +65,13 @@ module DotPopper
     end
 
     class Playing < ::Data
-      attr_reader round: Round
+      attr_reader game: Game
 
       attr_reader seed: Integer
 
       attr_reader size_class: SizeClass
 
-      def self.new: (round: Round, seed: Integer, size_class: SizeClass) -> instance
+      def self.new: (game: Game, seed: Integer, size_class: SizeClass) -> instance
 
       def press: (Cabinet cabinet, number x, number y) -> (Playing | GameOver)
 
@@ -83,15 +83,15 @@ module DotPopper
     end
 
     class GameOver < ::Data
-      attr_reader round: Round
+      attr_reader game: Game
 
       attr_reader new_best: bool
 
       attr_reader shown: Float
 
-      def self.new: (round: Round, new_best: bool, ?shown: Float) -> instance
+      def self.new: (game: Game, new_best: bool, ?shown: Float) -> instance
 
-      def initialize: (round: Round, new_best: bool, ?shown: Float) -> void
+      def initialize: (game: Game, new_best: bool, ?shown: Float) -> void
 
       def score: () -> Integer
 

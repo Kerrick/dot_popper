@@ -2,7 +2,7 @@
 
 module DotPopper
   module Presentation
-    # How the dots fall into a pile once a round is over, when the rules
+    # How the dots fall into a pile once a game is over, when the rules
     # no longer move them and they are only scenery. Box2D (Shell::Pile)
     # does the falling; this says how it should feel, in radii and
     # seconds, so the pile looks alike at any dot size.
@@ -11,7 +11,7 @@ module DotPopper
     # tuned for objects of about a meter; +gravity+ is in radii a second
     # squared; +restitution+, +friction+, and +density+ are each dot's;
     # +damping+ slows each dot in the air; +fling+ scales the velocity a
-    # dot had when the round ended; and no step is longer than
+    # dot had when the game ended; and no step is longer than
     # +longest_step+, so a slow frame cannot tunnel a dot through a wall.
     class PileLook < Data.define(:meter, :gravity, :restitution, :friction, :density, :damping, :fling,
                                  :longest_step)

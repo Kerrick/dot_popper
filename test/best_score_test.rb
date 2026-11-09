@@ -32,7 +32,7 @@ class BestScoreTest < Minitest::Test
     assert_equal "small=6\nmedium=30\n", store.read
   end
 
-  def test_a_classs_first_round_sets_its_best_but_is_no_new_best
+  def test_a_classs_first_game_sets_its_best_but_is_no_new_best
     store = BestScore::Memory.new("small=5\n")
     best = BestScore.new(store)
 

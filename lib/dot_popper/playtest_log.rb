@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # One line per finished round, as CSV, for comparing playtests: when it
+  # One line per finished game, as CSV, for comparing playtests: when it
   # ended, the seed its dots were drawn from, its score, how long it ran,
   # its RoundStats, and the day's goal (DailyGoal, for the date +today+
-  # gives) with whether the round met it. It listens to a Cabinet (Cabinet#subscribe) and appends
+  # gives) with whether the game met it. It listens to a Cabinet (Cabinet#subscribe) and appends
   # through a store that answers +read+ and +write(text)+, as BestScore
   # does, so it never touches a file system itself.
   #
   # A log whose first line names other columns, because it was written
   # by an older version, is kept whole in a store of its own, named
-  # rounds-<when>.csv and made by +archive+, and a new log starts under
+  # games-<when>.csv and made by +archive+, and a new log starts under
   # the current header.
   class PlaytestLog
     COLUMNS = %w[time seed score duration pops slips softened mean_wait longest_wait goal goal_met].freeze
@@ -23,12 +23,12 @@ module DotPopper
       @clock = clock
       @today = today
       @archive = archive
-      @recorder = RoundStats::Recorder.new
+      @recorder = GameStats::Recorder.new
     end
 
     def call(event)
       @recorder.call(event)
-      append(row(event, @recorder.stats)) if event.is_a?(Events::RoundEnded)
+      append(row(event, @recorder.stats)) if event.is_a?(Events::GameEnded)
     end
 
     private
@@ -58,7 +58,7 @@ module DotPopper
     end
 
     def set_aside(old)
-      @archive.call("rounds-#{@clock.call.strftime("%Y%m%d-%H%M%S")}.csv").write(old)
+      @archive.call("games-#{@clock.call.strftime("%Y%m%d-%H%M%S")}.csv").write(old)
     end
   end
 end

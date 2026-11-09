@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # The window changing under a round and under Game Over: shrunk and
+  # The window changing under a game and under Game Over: shrunk and
   # grown by the system, switched to fullscreen and back by F11 and by
   # Lota::Window, and every dot kept on screen each time. The game-over
   # pile refits to a window shrunk under it.
@@ -11,21 +11,21 @@ module DotPopperGui
     SIZES = [[800, 500], [1100, 700], [500, 400], [1200, 800]].freeze
 
     def play
-      start_round
+      start_game
       pop_fresh
       SIZES.each do |width, height|
         resize(width, height)
-        check_round_fits
+        check_game_fits
       end
       key(:f11)
       settled_window("F11 fullscreen") { L::Window.fullscreen.first }
-      check_round_fits
+      check_game_fits
       key(:f11)
       settled_window("F11 back to a window") { !L::Window.fullscreen.first }
-      check_round_fits
+      check_game_fits
       fullscreen(true)
       fullscreen(false)
-      check_round_fits
+      check_game_fits
       run_out_the_clock
       pile_refits
       continue_to_title
@@ -33,10 +33,10 @@ module DotPopperGui
 
     private
 
-    def check_round_fits
+    def check_game_fits
       width, height = L::Graphics.dimensions
-      check_equal([width, height], [round.field.width, round.field.height], "the round's field is the window")
-      check(round.dots.all? { inside_window?(it) }, "every dot is inside the #{width}x#{height} window")
+      check_equal([width, height], [game.field.width, game.field.height], "the game's field is the window")
+      check(game.dots.all? { inside_window?(it) }, "every dot is inside the #{width}x#{height} window")
       check_hud_drawn
     end
 

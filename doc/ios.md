@@ -43,15 +43,15 @@ Dots use the whole screen, corners included. Everything else stays inside the sa
 
 ### Rotation and resizing
 
-Rotating the iPad, entering Split View, or resizing a Stage Manager window all reach the game as a `Lota.resize` call. The game then rebuilds the field and the layout, and moves every dot in proportion to the new field (`Dot#refit`), even in the middle of a round: a dot 70% of the way across stays 70% of the way across, so turning a phone and back puts every dot back where it was, and no dot is ever left off screen. The heap of dots at Game Over is moved back inside the window.
+Rotating the iPad, entering Split View, or resizing a Stage Manager window all reach the game as a `Lota.resize` call. The game then rebuilds the field and the layout, and moves every dot in proportion to the new field (`Dot#refit`), even in the middle of a game: a dot 70% of the way across stays 70% of the way across, so turning a phone and back puts every dot back where it was, and no dot is ever left off screen. The heap of dots at Game Over is moved back inside the window.
 
 The rules never change with the window: the radius, the speeds, and the clock stay the same. A portrait field is just taller and narrower, and plays as the field-size table in [decisions.md](decisions.md) predicts. Fonts are rebuilt for the new size and pixel density.
 
 ### Dot size
 
-The standard dot's radius is 50 points, about 8 mm (see `DotSize`), and the game prints that when it starts. Unless the player chooses **Standard**, a round's dots are sized to the screen instead (README, "How big the dots are"): about 30 points on an iPhone 13 mini, 51 on an 11-inch iPad, and 61 on a 13-inch iPad Pro. An iPad Pro 13-inch is 1032 × 1376 points, so a portrait field there is about 21 × 28 radii. An 11-inch iPad's is about 17 × 24.
+The standard dot's radius is 50 points, about 8 mm (see `DotSize`), and the game prints that when it starts. Unless the player chooses **Standard**, a game's dots are sized to the screen instead (README, "How big the dots are"): about 30 points on an iPhone 13 mini, 51 on an 11-inch iPad, and 61 on a 13-inch iPad Pro. An iPad Pro 13-inch is 1032 × 1376 points, so a portrait field there is about 21 × 28 radii. An 11-inch iPad's is about 17 × 24.
 
-Once a round has been played, the title's **Dot size** control appears only where sizing the dots to the screen would change them by more than a tenth. On an iPad Pro 13-inch the fitted radius is about 61 points, so its first segment, **Fit the screen**, says "Bigger, less room" and its second, **Standard**, "Smaller, more room"; on an 11-inch iPad the fitted radius is about 51 points, so the two sizes look alike and the control is left out.
+Once a game has been played, the title's **Dot size** control appears only where sizing the dots to the screen would change them by more than a tenth. On an iPad Pro 13-inch the fitted radius is about 61 points, so its first segment, **Fit the screen**, says "Bigger, less room" and its second, **Standard**, "Smaller, more room"; on an 11-inch iPad the fitted radius is about 51 points, so the two sizes look alike and the control is left out.
 
 ### Input
 
@@ -100,7 +100,7 @@ As a fused app, the game saves into `Library/Application Support/dot_popper` ins
 | `best_score.txt` | The best score |
 | `sound.txt` | `muted` or `on` |
 | `taught.txt` | Present once the first-mistake hint has been shown |
-| `rounds.csv` | The playtest log, one line per finished round (see "The playtest log" in the README) |
+| `games.csv` | The playtest log, one line per finished game (see "The playtest log" in the README) |
 | `shot-N.png` | Screenshots, only when `DOT_POPPER_SHOTS` asks for them |
 
 In the Simulator, this command prints the container's path:
@@ -144,8 +144,8 @@ A good run logs these lines, in this order, under the category `ruby`. Here `<da
 Dot Popper: a dot's radius is 50 points, about 8 mm
 Dot Popper: renderer Metal 2.1 /  / Apple iOS simulator GPU
 Dot Popper: screen 811x375 units, 2338x1080 pixels, dpi scale 2.88 (native 2.8793), safe area 49,0,711,355, mode 812x375 fullscreen desktop, usedpiscale true
-Dot Popper: dots are sized to the screen as each round starts
-Dot Popper: each round is logged in <data>/Library/Application Support/dot_popper/rounds.csv
+Dot Popper: dots are sized to the screen as each game starts
+Dot Popper: each game is logged in <data>/Library/Application Support/dot_popper/games.csv
 Dot Popper: screenshot <data>/Library/Application Support/dot_popper/shot-1.png
 Dot Popper: screenshot <data>/Library/Application Support/dot_popper/shot-2.png
 Dot Popper: screenshot <data>/Library/Application Support/dot_popper/shot-3.png
@@ -185,9 +185,9 @@ Each of these lines means something went wrong, although the game keeps running:
 
 The four screenshots are taken at 3, 12, 25, and 38 seconds of play:
 
-- At 3 seconds, the first round has just begun, with dots and the score bar showing. (The bot starts a round right away.)
-- At 12 and 25 seconds, the round is under way, with popped dots crowding the screen.
-- At 38 seconds, the round is over: the Game Over heading, the score, and the dots in a heap.
+- At 3 seconds, the first game has just begun, with dots and the score bar showing. (The bot starts a game right away.)
+- At 12 and 25 seconds, the game is under way, with popped dots crowding the screen.
+- At 38 seconds, the game is over: the Game Over heading, the score, and the dots in a heap.
 
 In each one, check that:
 
@@ -205,6 +205,6 @@ The kit's `README.txt` gives the full steps: checking and unpacking the kit, sig
 ## What is still unverified
 
 - **Running on a real iPad.** Everything above about devices comes from the Simulator runs and from reading LÖVE's iOS code, SDL 3.4.10's UIKit backend, Lota's iOS engine, and Fledge's device-test guide.
-- **Touch coordinates on a Retina iPad.** They should be in the same units as `Lota::Graphics.dimensions` when `usedpiscale` is on. The bot's taps go straight to the game without passing through touch input, and the UI test's taps only started rounds, which a tap anywhere does. Only a real finger on a dot, or a click on a dot in the Simulator's window, tests it: if a tap on a dot does nothing, the units don't match.
+- **Touch coordinates on a Retina iPad.** They should be in the same units as `Lota::Graphics.dimensions` when `usedpiscale` is on. The bot's taps go straight to the game without passing through touch input, and the UI test's taps only started games, which a tap anywhere does. Only a real finger on a dot, or a click on a dot in the Simulator's window, tests it: if a tap on a dot does nothing, the units don't match.
 - **Whether `set_fullscreen` on iOS sends a resize,** and whether the safe area changes when the status bar hides. The game handles either case.
 - **Sound on a device.** Nobody has heard the game on an iPad, and Apple has deprecated `OpenAL.framework`, so it isn't certain that it still plays on iPadOS 26 and 27.

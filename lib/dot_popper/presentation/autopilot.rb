@@ -3,10 +3,10 @@
 module DotPopper
   module Presentation
     # A player for development runs (DOT_POPPER_AUTOPLAY): it goes from
-    # the title to a round, taps fresh dots where they show, sometimes taps
-    # a popped one by mistake, slows as its score grows so the round ends,
+    # the title to a game, taps fresh dots where they show, sometimes taps
+    # a popped one by mistake, slows as its score grows so the game ends,
     # and goes from Game Over back to the title. Given the Show, it presses
-    # the buttons a player would: Play to start a round, Continue to go
+    # the buttons a player would: Play to start a game, Continue to go
     # on, "Share my score" on every other Game Over, then Copy in the
     # share preview, and Close, a moment apart (on a phone, the system's
     # share sheet opens instead, and the bot goes on), and on its second visit to
@@ -40,7 +40,7 @@ module DotPopper
         case cabinet.state
         when Cabinet::Title then title(cabinet, show)
         when Cabinet::GameOver then finish(cabinet, show)
-        when Cabinet::Playing then play(seconds, cabinet.round)
+        when Cabinet::Playing then play(seconds, cabinet.game)
         end
       end
 
@@ -126,39 +126,39 @@ module DotPopper
 
       def middle(rect) = [rect.center_x, rect.center_y]
 
-      def play(seconds, round)
+      def play(seconds, game)
         @cooldown -= seconds
         return if @cooldown.positive?
 
-        target = (mistake(round) if @random.rand < @look.mistakes) || exposed_fresh(round)
-        @cooldown = target ? @random.rand(@look.think) + (@look.tiring * round.score) : 0.05
+        target = (mistake(game) if @random.rand < @look.mistakes) || exposed_fresh(game)
+        @cooldown = target ? @random.rand(@look.think) + (@look.tiring * game.score) : 0.05
         target
       end
 
       # A point on the fresh dot where a popped one lies over it, or nil.
-      def covered_fresh(round)
-        fresh = round.dots.find(&:fresh?)
+      def covered_fresh(game)
+        fresh = game.dots.find(&:fresh?)
         return unless fresh
 
-        probes(fresh).find { |x, y| round.dots.top_at(x, y)&.popped? }
+        probes(fresh).find { |x, y| game.dots.top_at(x, y)&.popped? }
       end
 
       def probes(dot) = PROBES.lazy.map { |dx, dy| [dot.x + (dx * dot.radius), dot.y + (dy * dot.radius)] }
 
-      def exposed_fresh(round)
-        fresh = round.dots.find(&:fresh?)
+      def exposed_fresh(game)
+        fresh = game.dots.find(&:fresh?)
         return unless fresh
 
-        probes(fresh).find { |x, y| round.dots.top_at(x, y)&.id == fresh.id }
+        probes(fresh).find { |x, y| game.dots.top_at(x, y)&.id == fresh.id }
       end
 
       # A player's usual mistake is impatience: tapping the fresh dot
       # before it has come out. Failing that, any popped dot in view.
-      def mistake(round)
-        hidden = covered_fresh(round)
+      def mistake(game)
+        hidden = covered_fresh(game)
         return hidden if hidden
 
-        popped = round.dots.select { |dot| dot.popped? && round.dots.top_at(dot.x, dot.y)&.id == dot.id }
+        popped = game.dots.select { |dot| dot.popped? && game.dots.top_at(dot.x, dot.y)&.id == dot.id }
         dot = popped.sample(random: @random)
         dot && [dot.x, dot.y]
       end

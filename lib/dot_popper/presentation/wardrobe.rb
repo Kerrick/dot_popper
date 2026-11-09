@@ -3,7 +3,7 @@
 module DotPopper
   module Presentation
     # Which look the game wears. A holiday theme (Theme) appears during its
-    # season, and one round played then earns it for good; an earned theme
+    # season, and one game played then earns it for good; an earned theme
     # is kept whether or not the player has bought the paid version, and
     # is worn the day they do. Wearing a theme is the paid version's, so
     # the wardrobe asks the +entitlement+ and nothing else: for a free
@@ -14,7 +14,7 @@ module DotPopper
     #
     # What is worn is settled when the wardrobe is made, when the title
     # shows (#refresh), and when the player chooses, never in the middle of
-    # a round, so a round is never dressed twice. Until the player chooses,
+    # a game, so a game is never dressed twice. Until the player chooses,
     # the theme in season is worn; once they do, their choice is, all year.
     #
     # The store answers +read+ and +write(text)+ as BestScore's does, and
@@ -45,8 +45,8 @@ module DotPopper
 
       def palette = worn.palette
 
-      # One round has been played: every theme in season is earned.
-      def round_played
+      # One game has been played: every theme in season is earned.
+      def game_played
         fresh = in_season.map(&:key) - @earned
         return if fresh.empty?
 

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # The tutorial skipped: by Escape, which goes on to the round and never
+  # The tutorial skipped: by Escape, which goes on to the game and never
   # quits the game, and by a tap on its skip button, drawn in its corner.
-  # Each skip starts the round at once, as a Play would. DOT_POPPER_TUTORIAL=1
+  # Each skip starts the game at once, as a Play would. DOT_POPPER_TUTORIAL=1
   # opens the tutorial on every Play, so one session tries both.
   class TutorialSkipScenario < Scenario
     scenario :tutorial_skip
@@ -11,7 +11,7 @@ module DotPopperGui
     def play
       open_tutorial
       key(:escape)
-      check(show.playing?, "Escape skips it, and the round starts at once")
+      check(show.playing?, "Escape skips it, and the game starts at once")
       run_out_the_clock
       continue_to_title
       open_tutorial
@@ -20,9 +20,9 @@ module DotPopperGui
       lit = screenshot.lit_in(button)
       check(lit >= 10, "the skip button is drawn (#{lit} light pixels)")
       click(button.center_x, button.center_y)
-      check(show.playing?, "a tap on the skip button skips it, and the round starts at once")
-      check_equal(0, round.score, "the round starts at 0")
-      check_equal(2, story.count(:RoundStarted), "each skip starts one round")
+      check(show.playing?, "a tap on the skip button skips it, and the game starts at once")
+      check_equal(0, game.score, "the game starts at 0")
+      check_equal(2, story.count(:GameStarted), "each skip starts one game")
     end
 
     private

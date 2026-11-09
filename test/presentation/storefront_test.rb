@@ -58,10 +58,10 @@ class StorefrontTest < Minitest::Test
     assert_predicate Storefront, :test_build?
     %w[iOS Android].each do |os|
       store = Storefront.for(os, **stores, entitlement: @entitlement)
-      plays = DotPopper::FreePlays.new(DotPopper::BestScore::Memory.new, today: -> { Date.today }, entitlement: @entitlement,
+      games = DotPopper::FreeGames.new(DotPopper::BestScore::Memory.new, today: -> { Date.today }, entitlement: @entitlement,
                                                                          metered: store.offered?)
 
-      assert_predicate plays, :metered?, os
+      assert_predicate games, :metered?, os
     end
   end
 
@@ -276,7 +276,7 @@ class StorefrontTest < Minitest::Test
     refute_includes show.controls.map(&:name), :offer
   end
 
-  def test_a_store_is_not_read_during_a_round
+  def test_a_store_is_not_read_during_a_game
     show, = offer_show
     @answers.text = "answer=0\nowned=1\nstate=ready\n"
     show.primary

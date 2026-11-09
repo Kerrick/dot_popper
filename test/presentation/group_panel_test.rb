@@ -240,7 +240,7 @@ class GroupPanelTest < Minitest::Test
     assert_equal [2], @show.group_plan.rows.map { it.change.id }
   end
 
-  def test_an_announcement_waits_for_game_over_or_the_title_and_stays_quiet_during_a_round
+  def test_an_announcement_waits_for_game_over_or_the_title_and_stays_quiet_during_a_game
     join!
     tap_control(:back)
     tap_control(:back)
@@ -264,7 +264,7 @@ class GroupPanelTest < Minitest::Test
     join!
     tap_control(:back)
     tap_control(:back)
-    @session.round_finished(score: 30, sized_to_screen: true)
+    @session.game_finished(score: 30, sized_to_screen: true)
 
     assert_equal " ", panel.game_line
     tick
@@ -275,7 +275,7 @@ class GroupPanelTest < Minitest::Test
 
   def test_no_line_is_held_for_a_game_that_does_not_count
     join!
-    @session.round_finished(score: 30, sized_to_screen: false)
+    @session.game_finished(score: 30, sized_to_screen: false)
 
     assert_nil panel.game_line
   end

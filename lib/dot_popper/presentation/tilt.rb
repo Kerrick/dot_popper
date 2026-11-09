@@ -2,7 +2,7 @@
 
 module DotPopper
   module Presentation
-    # How tilting the game-over pile feels. Once a round is over its dots
+    # How tilting the game-over pile feels. Once a game is over its dots
     # are a toy, and a player may tilt a tablet, or push a gamepad's right
     # stick, to roll them about (Shell::Tilting).
     #

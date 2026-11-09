@@ -7,7 +7,7 @@ module DotPopper
     # corners pointing out, which in fullscreen point in and say
     # "Window"; and Quit, the power sign (IEC 5009), a ring broken at the
     # top with a stroke down into it. Where the plan has no room for
-    # their words, they are their icons alone, round. Every stroke is
+    # their words, they are their icons alone, game. Every stroke is
     # whole device pixels wide, and the corners' sit on whole pixels.
     class WindowButtonsPainter < Data.define(:pen)
       G = ::Lota::Graphics

@@ -123,7 +123,7 @@ class PlaytestKitTest < Minitest::Test
 
     assert sheet.start_with?("Dot Popper Android playtest results (experimental)\n")
     assert_includes sheet, "Android version (Settings > About device > Version): ->"
-    ["on Your records, it goes back to the title", "during a round, it does nothing",
+    ["on Your records, it goes back to the title", "during a game, it does nothing",
      "at Game Over, it goes on to the title, as Continue does", "on the title screen, it leaves the app"].each { assert_includes sheet, it }
     # On a line of its own, so it copies whole into a terminal.
     assert_match(/^ +adb logcat -d > dot-popper-logcat\.txt$/, sheet)

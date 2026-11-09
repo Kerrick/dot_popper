@@ -29,8 +29,8 @@ class WordsTest < Minitest::Test
 
   # The result to share names a new best or a tie, and otherwise only
   # the score.
-  def test_the_shared_result_says_the_score_and_what_the_round_was
-    stats = DotPopper::RoundStats.start.with(pops: 27, slips: 1, duration: 38.2)
+  def test_the_shared_result_says_the_score_and_what_the_game_was
+    stats = DotPopper::GameStats.start.with(pops: 27, slips: 1, duration: 38.2)
 
     assert_equal "Dot Popper: 25 points, a new best!\n🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds",
                  Look::WORDS.share_text(25, stats, best: 25, new_best: true)
@@ -42,7 +42,7 @@ class WordsTest < Minitest::Test
   end
 
   def test_the_shared_result_names_a_record_on_its_own_line
-    stats = DotPopper::RoundStats.start.with(pops: 27, slips: 1, duration: 38.2)
+    stats = DotPopper::GameStats.start.with(pops: 27, slips: 1, duration: 38.2)
     record = DotPopper::LifetimeStats::Record.new(kind: :longest_run, value: 18)
 
     assert_equal "Dot Popper: 25 points, a new best!\nNew record: 18 pops in a row without a mistake\n" \
@@ -53,7 +53,7 @@ class WordsTest < Minitest::Test
   # A score depends on how crowded the screen gets, so the shared result
   # says how big the screen was, counted in dots side by side.
   def test_the_shared_result_can_say_the_screen_it_was_played_on
-    stats = DotPopper::RoundStats.start.with(pops: 27, slips: 1, duration: 38.2)
+    stats = DotPopper::GameStats.start.with(pops: 27, slips: 1, duration: 38.2)
     screen = Look::WORDS.played_on(DotPopper::Field.new(1200, 800, 50))
 
     assert_equal "Played on a screen about 12 dots wide and 8 dots tall.", screen
@@ -68,7 +68,7 @@ class WordsTest < Minitest::Test
     record = ->(kind, value) { Look::WORDS.record(DotPopper::LifetimeStats::Record.new(kind:, value:)) }
 
     assert_equal "New record: 18 pops in a row without a mistake", record[:longest_run, 18]
-    assert_equal "New record: your longest round, 48 seconds", record[:longest_round, 47.6]
+    assert_equal "New record: your longest game, 48 seconds", record[:longest_game, 47.6]
     assert_equal "New record: you waited 6.2 seconds for a dot, then popped it", record[:longest_wait, 6.24]
     assert_equal "New record: your fastest pop, 0.3 seconds after the dot appeared", record[:fastest_pop, 0.31]
   end
@@ -102,13 +102,13 @@ class WordsTest < Minitest::Test
     assert_equal InputKind::TOUCH, InputKind.starting(touch: true)
   end
 
-  def test_the_round_in_one_line
-    stats = DotPopper::RoundStats.start.with(pops: 14, slips: 2, waits: [1.0, 3.14])
+  def test_the_game_in_one_line
+    stats = DotPopper::GameStats.start.with(pops: 14, slips: 2, waits: [1.0, 3.14])
 
     assert_equal "14 pops, 2 mistakes, slowest pop 3.1 seconds", Look::WORDS.summary(stats)
     assert_equal "1 pop, 1 mistake, slowest pop 0.0 seconds",
-                 Look::WORDS.summary(DotPopper::RoundStats.start.with(pops: 1, slips: 1, waits: [0.0]))
-    assert_equal "0 pops, 0 mistakes", Look::WORDS.summary(DotPopper::RoundStats.start)
+                 Look::WORDS.summary(DotPopper::GameStats.start.with(pops: 1, slips: 1, waits: [0.0]))
+    assert_equal "0 pops, 0 mistakes", Look::WORDS.summary(DotPopper::GameStats.start)
   end
 
   def test_a_long_time_reads_in_the_units_that_suit_it
@@ -119,9 +119,9 @@ class WordsTest < Minitest::Test
     assert_equal "2 hours 5 minutes", Words.duration(7500)
   end
 
-  def test_the_charts_caption_counts_the_rounds
-    assert_equal "Your last 20 rounds", Words.last_rounds(20)
-    assert_equal "Your last round", Words.last_rounds(1)
+  def test_the_charts_caption_counts_the_games
+    assert_equal "Your last 20 games", Words.last_games(20)
+    assert_equal "Your last game", Words.last_games(1)
   end
 
   def test_every_goal_reads_as_a_whole_sentence
@@ -145,7 +145,7 @@ class WordsTest < Minitest::Test
 
   def test_balancing_evens_out_the_lines_so_no_word_is_left_alone
     width = ->(text) { text.size }
-    text = "Today's goal: keep one round going for 40 seconds."
+    text = "Today's goal: keep one game going for 40 seconds."
 
     assert_equal "seconds.", Words.wrap(text, 42, &width).last
     balanced = Words.balance(text, 42, &width)
@@ -159,7 +159,7 @@ class WordsTest < Minitest::Test
     assert_equal "Your best is 28", Look::WORDS.short_of_best(5, 28), "a far-off best isn't a gap to dwell on"
     assert_equal "You tied your best of 27", Look::WORDS.short_of_best(27, 27)
     assert_equal "", Look::WORDS.short_of_best(0, 0), "no best to compare with yet"
-    assert_equal "Your best: 27", Look::WORDS.short_of_best(27, 27, first: true), "a first round tied nothing"
+    assert_equal "Your best: 27", Look::WORDS.short_of_best(27, 27, first: true), "a first game tied nothing"
   end
 
   def test_a_met_goal_still_says_what_it_was

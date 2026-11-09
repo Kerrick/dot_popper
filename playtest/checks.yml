@@ -37,7 +37,7 @@
 
 desktop:
   - id: 1
-    try: Play a round. Click a few bright dots, and listen.
+    try: Play a game. Click a few bright dots, and listen.
     ask: Sound plays through your speakers or headphones.
     answer: yes_no
 
@@ -57,7 +57,7 @@ desktop:
     after: Now press M again to turn the sound back on, for the checks that follow.
 
   - id: 3
-    try: In a round, wait for the bright dot to come near each edge of the window (top, bottom, left and right), and click it there.
+    try: In a game, wait for the bright dot to come near each edge of the window (top, bottom, left and right), and click it there.
     ask: Clicking a bright dot near each edge pops it.
     answer: yes_no
 
@@ -72,12 +72,12 @@ desktop:
 
   - id: 5
     try:
-      default: In the middle of a round, drag an edge or corner of the window to make it much smaller, then much bigger.
+      default: In the middle of a game, drag an edge or corner of the window to make it much smaller, then much bigger.
       windows: >-
-        In the middle of a round, drag an edge or corner of the window to make it
+        In the middle of a game, drag an edge or corner of the window to make it
         much smaller, then much bigger. (Windows pauses the game while you drag
         the window's edge. That is expected.)
-    ask: Resizing the window mid-round keeps every dot on screen.
+    ask: Resizing the window mid-game keeps every dot on screen.
     answer: yes_no
 
   - id: 6
@@ -91,11 +91,11 @@ desktop:
 
   - id: 8
     try: >-
-      After a round, look at the title screen for a "Dot size" choice. If it
-      is there, click its other option ("Bigger" or "Smaller"), then play a round.
+      After a game, look at the title screen for a "Dot size" choice. If it
+      is there, click its other option ("Bigger" or "Smaller"), then play a game.
     ask: >-
       Picking the second option changes the size of the drifting dots on the
-      title, and the next round's dots match. If the title shows no "Dot size"
+      title, and the next game's dots match. If the title shows no "Dot size"
       choice, answer ns, for not shown.
     answer: yes_no_not_shown
     quotes: [Dot size, Bigger, Smaller]
@@ -151,7 +151,7 @@ desktop:
 
   - id: 16
     group: controller
-    ask: Start starts a round from the title screen, and continues after Game Over.
+    ask: Start starts a game from the title screen, and continues after Game Over.
     answer: yes_no
 
   - id: 17
@@ -178,7 +178,7 @@ ios:
     answer: yes_no
 
   - id: 3
-    try: In a round, tap a popped (dark) dot on purpose, ideally one with the bright dot hiding under it.
+    try: In a game, tap a popped (dark) dot on purpose, ideally one with the bright dot hiding under it.
     ask: Tapping a popped dot costs 2 points and 2 seconds, and a dashed outline shows the bright dot it hid.
     answer: yes_no
 
@@ -199,7 +199,7 @@ ios:
         answer: yes_no
 
   - id: 6
-    ask: Rotating the iPhone or iPad in the middle of a round keeps every dot on screen, each about where it was.
+    ask: Rotating the iPhone or iPad in the middle of a game keeps every dot on screen, each about where it was.
     answer: yes_no
 
   - id: 7
@@ -217,8 +217,8 @@ ios:
     quotes: [Continue]
 
   - id: 9
-    try: After a round, look at the title screen for a "Dot size" choice. If it is there, tap its other option ("Bigger" or "Smaller"), then play a round.
-    ask: The Dot size choice changes the next round's dots. If the title shows no "Dot size" choice, write "not shown".
+    try: After a game, look at the title screen for a "Dot size" choice. If it is there, tap its other option ("Bigger" or "Smaller"), then play a game.
+    ask: The Dot size choice changes the next game's dots. If the title shows no "Dot size" choice, write "not shown".
     answer: yes_no_not_shown
     quotes: [Dot size, Bigger, Smaller]
 
@@ -237,7 +237,7 @@ ios:
         answer: yes_no
       - ask: A pops the bright dot under the cursor
         answer: yes_no
-      - ask: Start starts a round
+      - ask: Start starts a game
         answer: yes_no
       - ask: holding A on a pile dot at Game Over drags it
         answer: yes_no
@@ -270,7 +270,7 @@ android:
     answer: yes_no
 
   - id: 3
-    try: In a round, tap a popped (dark) dot on purpose, ideally one with the bright dot hiding under it.
+    try: In a game, tap a popped (dark) dot on purpose, ideally one with the bright dot hiding under it.
     ask: Tapping a popped dot costs 2 points and 2 seconds, and a dashed outline shows the bright dot it hid.
     answer: yes_no
 
@@ -303,12 +303,12 @@ android:
     try: >-
       Press Back (the back button, or a swipe in from the left or right edge)
       on each screen in turn: on "Your records" (tap it on the title screen),
-      during a round, at Game Over, and last on the title screen.
+      during a game, at Game Over, and last on the title screen.
     ask: "What Back does:"
     parts:
       - ask: on Your records, it goes back to the title
         answer: yes_no
-      - ask: during a round, it does nothing, and the round carries on
+      - ask: during a game, it does nothing, and the game carries on
         answer: yes_no
       - ask: at Game Over, it goes on to the title, as Continue does
         answer: yes_no
@@ -317,7 +317,7 @@ android:
     quotes: [Your records]
 
   - id: 8
-    ask: Rotating the phone in the middle of a round keeps every dot on screen.
+    ask: Rotating the phone in the middle of a game keeps every dot on screen.
     answer: yes_no
 
   - id: 9
@@ -335,8 +335,8 @@ android:
     quotes: [Continue]
 
   - id: 11
-    try: After a round, look at the title screen for a "Dot size" choice. If it is there, tap its other option ("Bigger" or "Smaller"), then play a round.
-    ask: The Dot size choice changes the next round's dots. If the title shows no "Dot size" choice, write "not shown".
+    try: After a game, look at the title screen for a "Dot size" choice. If it is there, tap its other option ("Bigger" or "Smaller"), then play a game.
+    ask: The Dot size choice changes the next game's dots. If the title shows no "Dot size" choice, write "not shown".
     answer: yes_no_not_shown
     quotes: [Dot size, Bigger, Smaller]
 
@@ -347,8 +347,8 @@ android:
     quotes: [Share my score, Copy]
 
   - id: 13
-    try: In the middle of a round, go to the Home screen, wait a few seconds, and open Dot Popper again.
-    ask: The round carries on where it was, and the clock did not jump.
+    try: In the middle of a game, go to the Home screen, wait a few seconds, and open Dot Popper again.
+    ask: The game carries on where it was, and the clock did not jump.
     answer: yes_no
 
   - id: 14

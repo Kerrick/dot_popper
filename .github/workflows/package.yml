@@ -293,14 +293,14 @@ jobs:
           Write-Host "ran $([int]$watch.Elapsed.TotalSeconds) s more; still running: $([bool]$left)"
           if ($left) { $left | Stop-Process -Force; Write-Host '::error::it did not quit by itself, so DOT_POPPER_QUIT_AFTER did not reach it' }
 
-          # The game saves only when a round ends, and the autopilot's first
-          # round runs past half a minute, hence 90 s of game time. Inside
+          # The game saves only when a game ends, and the autopilot's first
+          # game runs past half a minute, hence 90 s of game time. Inside
           # the package, Windows redirects roaming AppData to the package's
           # LocalCache; the saves must land there or in the real one.
           $data = Join-Path $env:LOCALAPPDATA "Packages\$family"
-          $saves = @(Get-ChildItem -LiteralPath $data, $env:APPDATA -Recurse -Force -File -ErrorAction SilentlyContinue -Filter 'rounds.csv')
+          $saves = @(Get-ChildItem -LiteralPath $data, $env:APPDATA -Recurse -Force -File -ErrorAction SilentlyContinue -Filter 'games.csv')
           $saves | ForEach-Object { Write-Host "saved: $($_.FullName)" }
-          if (-not $saves) { Write-Host '::error::no rounds.csv was saved anywhere'; $left = $true }
+          if (-not $saves) { Write-Host '::error::no games.csv was saved anywhere'; $left = $true }
           Remove-AppxPackage -Package $package.PackageFullName
           foreach ($name in $variables.Keys) { [Environment]::SetEnvironmentVariable($name, $null, 'User') }
           if ($left) { exit 1 }

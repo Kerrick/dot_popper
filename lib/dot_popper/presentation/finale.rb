@@ -2,28 +2,28 @@
 
 module DotPopper
   module Presentation
-    # Game over, shown since +at+: the round dimming behind, the heading
+    # Game over, shown since +at+: the game dimming behind, the heading
     # arriving, the score counting up, and the prompt to go on, which
     # shows only from +ready_at+, once a press would be heard. A new best
     # is celebrated once, when it has finished counting. +stats+ are the
-    # round's RoundStats, for the line of facts under the score. +record+
-    # is the most impressive lifetime record the round set
+    # game's RoundStats, for the line of facts under the score. +record+
+    # is the most impressive lifetime record the game set
     # (LifetimeStats::Record), or nil, and +goal_met+ whether it was the
-    # first round to meet today's goal, which is celebrated once, also when
-    # the score has counted. +screen+ says what screen the round was
+    # first game to meet today's goal, which is celebrated once, also when
+    # the score has counted. +screen+ says what screen the game was
     # played on, for the result to share (Words#played_on), or is nil.
     # +lesson+ is the wrong tap to teach the stacking rule from (Slip,
     # from the Tutor), on the first Game Overs after a wrong tap with the
     # bright dot hidden beneath, or nil, and +replayed+ how many times it
     # has replayed.
-    # +first+ says the round was the first of its SizeClass, which set the
+    # +first+ says the game was the first of its SizeClass, which set the
     # best without beating one. +achievements+ are the ids of the achievements (Achievement)
-    # the round earned for the first time, which a player who has the
+    # the game earned for the first time, which a player who has the
     # paid version hears of in a line after the score, never during the
-    # round.
+    # game.
     class Finale < Data.define(:look, :score, :best, :new_best, :at, :stats, :record, :goal_met, :ready_at,
                                :celebrated, :goal_celebrated, :screen, :lesson, :replayed, :first, :achievements)
-      def initialize(look:, score:, best:, new_best:, at:, stats: RoundStats.start, record: nil, goal_met: false,
+      def initialize(look:, score:, best:, new_best:, at:, stats: GameStats.start, record: nil, goal_met: false,
                      ready_at: nil, celebrated: false, goal_celebrated: false, screen: nil, lesson: nil, replayed: 0, first: false,
                      achievements: [])
         super

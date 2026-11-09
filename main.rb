@@ -22,8 +22,8 @@
 #
 # Development settings, read from the environment:
 #
-#   DOT_POPPER_AUTOPLAY=1       a bot plays: title, a round, game over, and
-#                               round again. It mostly taps fresh dots and
+#   DOT_POPPER_AUTOPLAY=1       a bot plays: title, a game, game over, and
+#                               game again. It mostly taps fresh dots and
 #                               sometimes a popped one, so penalties show.
 #   DOT_POPPER_NO_SPLASH=1      leaves out setdef's splash before the title
 #   DOT_POPPER_PAID=1           plays as if the paid version were bought
@@ -70,7 +70,7 @@
 #                               slowly when tilted, never thrown by a
 #                               shake (reduced motion). This one is for
 #                               players, too.
-#   DOT_POPPER_SCENARIO=round   plays one of rake test:gui's scripted
+#   DOT_POPPER_SCENARIO=game   plays one of rake test:gui's scripted
 #                               sessions, through the callbacks below,
 #                               checks it as it goes, and quits with 0
 #                               only if every check passed

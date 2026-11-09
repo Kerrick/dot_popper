@@ -20,18 +20,18 @@ module DotPopper
     # A tap hit no dot.
     class Missed < Data.define(:x, :y); end
 
-    # A round began, its dots drawn from +seed+.
-    class RoundStarted < Data.define(:round, :seed); end
+    # A game began, its dots drawn from +seed+.
+    class GameStarted < Data.define(:game, :seed); end
 
-    # A round's clock reached zero; +best+ is the device's best score on
-    # screens of +size_class+ (SizeClass) after this round, +new_best+
-    # whether this round set it, +first+ whether it was the first round on
+    # A game's clock reached zero; +best+ is the device's best score on
+    # screens of +size_class+ (SizeClass) after this game, +new_best+
+    # whether this game set it, +first+ whether it was the first game on
     # such screens, which sets a best but is never a new one, and +seed+
     # the one its dots were drawn from.
-    class RoundEnded < Data.define(:round, :best, :new_best, :seed, :size_class, :first)
-      def initialize(round:, best:, new_best:, seed:, size_class:, first: false) = super
+    class GameEnded < Data.define(:game, :best, :new_best, :seed, :size_class, :first)
+      def initialize(game:, best:, new_best:, seed:, size_class:, first: false) = super
 
-      def score = round.score
+      def score = game.score
     end
 
     # The title screen came up; +best+ is the best score on screens like

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # Which screens a round's records are compared with. With R fixed, a
+  # Which screens a game's records are compared with. With R fixed, a
   # field's size in square radii decides how crowded it gets, so a phone's
-  # round and a big monitor's are different contests: a best is kept for
+  # game and a big monitor's are different contests: a best is kept for
   # each SMALL, MEDIUM, or LARGE field (Rules::SMALL_FIELD_BELOW and
   # LARGE_FIELD_FROM), and one more for dots sized to the screen. +name+ is how a save file writes it.
   class SizeClass < Data.define(:name)
@@ -12,7 +12,7 @@ module DotPopper
     SMALL = new(name: "small")
     MEDIUM = new(name: "medium")
     LARGE = new(name: "large")
-    # Every round with dots sized to the screen (DotSizing): its field is
+    # Every game with dots sized to the screen (DotSizing): its field is
     # always about as crowded, whatever the screen, so they are one class.
     FITTED = new(name: "fitted")
     ALL = [SMALL, MEDIUM, LARGE, FITTED].freeze

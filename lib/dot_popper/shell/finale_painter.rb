@@ -2,10 +2,10 @@
 
 module DotPopper
   module Shell
-    # Game over, over the finished round, each line where the Show's
+    # Game over, over the finished game, each line where the Show's
     # FinalePlan puts it: "Time's up!", "You met today's goal!" if the
-    # round did, the score counting up, a new best or how far short of the
-    # best it fell, a quiet line of the round's facts, a lifetime record
+    # game did, the score counting up, a new best or how far short of the
+    # best it fell, a quiet line of the game's facts, a lifetime record
     # it set, "Share my score", rising in as the score lands, and the
     # Continue button, faint until a press will be heard. Every line
     # above Continue sits on a soft, dark backing, so they read over the
@@ -63,7 +63,7 @@ module DotPopper
       end
 
       # A new best, glowing, once the score has counted up, or how far
-      # short of the best the round fell.
+      # short of the best the game fell.
       def best_line(show, plan, now, alpha)
         rect = plan[:best] or return
         finale = show.finale

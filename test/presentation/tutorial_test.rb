@@ -107,7 +107,7 @@ class TutorialTest < Minitest::Test
     assert_operator @tutorial.rate, :>, 0.0, "then it runs on by itself"
   end
 
-  def test_as_the_bright_dot_peeks_out_the_guide_taps_the_popped_one_and_its_cost_plays
+  def test_as_the_bright_dot_peeks_out_the_guide_taps_the_popped_one_and_its_cost_games
     to_the_peek
     assert_equal :warn, @tutorial.beat
     assert_equal Anchor.dot(Tutorial::BRIGHT), @tutorial.spotlight.to
@@ -243,15 +243,15 @@ class TutorialTest < Minitest::Test
     play_for(SCRIPT.handover + STEP)
     assert @tutorial.over?
     assert_in_delta 1.0, @tutorial.rate, 1e-9, "and time flows as the game's does"
-    assert_equal [1, 10], [@tutorial.score, @tutorial.seconds], "what it leaves the round"
+    assert_equal [1, 10], [@tutorial.score, @tutorial.seconds], "what it leaves the game"
     assert_equal 3, @tutorial.dots.size, "no dot fades or is added"
   end
 
   # However often the player taps the popped dot, the score and the
   # clock stop at 0, as Countdown and the score's floor do in play, and
   # say nothing more once they are there; the clock is still, so it never
-  # runs out, and the last pop's second is what the round starts with.
-  def test_wrong_taps_stop_at_nothing_and_the_round_gets_what_is_left
+  # runs out, and the last pop's second is what the game starts with.
+  def test_wrong_taps_stop_at_nothing_and_the_game_gets_what_is_left
     to_the_peek
     7.times { tap_on(bright) }
 
@@ -291,7 +291,7 @@ class TutorialTest < Minitest::Test
     assert_includes @sounds.names, :bonus
   end
 
-  def test_the_star_dots_reward_shows_and_never_reaches_the_rounds_numbers
+  def test_the_star_dots_reward_shows_and_never_reaches_the_games_numbers
     to_the_streak
     play_until { @tutorial.beat == :practice }
     pop_the_practice_dots

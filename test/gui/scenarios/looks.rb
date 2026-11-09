@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # A holiday look, from the paid version: a round played in its season
+  # A holiday look, from the paid version: a game played in its season
   # earns it and wears it; the Records screen then offers Looks, whose
   # cards choose a look at once, drawn in its colors, and Back and Escape
   # leave one step at a time. Needs DOT_POPPER_PAID=1 and a date in
@@ -12,7 +12,7 @@ module DotPopperGui
     def play
       check(show.worn.key == :halloween, "a paid player wears the theme in season")
       check(!show.looks_offered?, "no records yet, so no Looks")
-      quick_round
+      quick_game
       open_records
       check(show.looks_offered?, "the Records screen offers Looks once a look is earned")
       reach = show.reach_of(:looks)
@@ -32,8 +32,8 @@ module DotPopperGui
       check(show.records? && !show.looks?, "Escape leaves Looks for the Records screen")
       key(:escape)
       check(show.title?, "and then the Records screen for the title")
-      start_round
-      check(show.palette.equal?(show.worn.palette), "the round is dressed in the look worn")
+      start_game
+      check(show.palette.equal?(show.worn.palette), "the game is dressed in the look worn")
     end
 
     private

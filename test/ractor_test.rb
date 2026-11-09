@@ -3,7 +3,7 @@
 require "test_helper"
 
 # The rules' values are deeply frozen, so any Ractor may read them
-# without a copy, and a whole round can be played in a Ractor of its own,
+# without a copy, and a whole game can be played in a Ractor of its own,
 # as script/simulate.rb does.
 class RactorTest < Minitest::Test
   include DotPopperTest
@@ -25,8 +25,8 @@ class RactorTest < Minitest::Test
     assert Ractor.shareable?(DotPopper::DotSize::TOUCH_SYSTEMS)
   end
 
-  def test_a_round_played_in_a_ractor_matches_one_played_here
-    here = RactorTest.play_a_round(field)
+  def test_a_game_played_in_a_ractor_matches_one_played_here
+    here = RactorTest.play_a_game(field)
 
     assert_equal here, played_in_a_ractor(field)
     assert_operator here.first, :>, 0
@@ -34,14 +34,14 @@ class RactorTest < Minitest::Test
 
   # Taps the centre of the fresh dot every half second, from a seeded
   # Random, and answers the score and the dots' final places.
-  def self.play_a_round(field)
-    round = DotPopper::Round.new(field, random: Random.new(7))
-    until round.over?
-      round.update(0.5)
-      fresh = round.dots.find(&:fresh?)
-      round.tap_at(fresh.x, fresh.y) unless round.over?
+  def self.play_a_game(field)
+    game = DotPopper::Game.new(field, random: Random.new(7))
+    until game.over?
+      game.update(0.5)
+      fresh = game.dots.find(&:fresh?)
+      game.tap_at(fresh.x, fresh.y) unless game.over?
     end
-    [round.score, round.dots.map { [it.x, it.y, it.popped?] }]
+    [game.score, game.dots.map { [it.x, it.y, it.popped?] }]
   end
 
   private
@@ -49,7 +49,7 @@ class RactorTest < Minitest::Test
   def played_in_a_ractor(field)
     experimental = Warning[:experimental]
     Warning[:experimental] = false
-    Ractor.new(field) { RactorTest.play_a_round(it) }.value
+    Ractor.new(field) { RactorTest.play_a_game(it) }.value
   ensure
     Warning[:experimental] = experimental
   end

@@ -14,7 +14,7 @@ module DotPopper
 
     def self.fnv: (String text) -> Integer
 
-    def met?: (RoundStats stats) -> bool
+    def met?: (GameStats stats) -> bool
 
     def to_s: () -> String
   end

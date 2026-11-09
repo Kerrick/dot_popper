@@ -5,7 +5,7 @@ module DotPopper
     # What the Tutorial draws over its dots and the HUD, with no word: the
     # dim around its spotlight, the numbers flying to and from the HUD, the
     # guide (GhostPainter), and the skip button; and,
-    # in the round's first moments, its LeadIn's light on the clock. The
+    # in the game's first moments, its LeadIn's light on the clock. The
     # HUD itself is never dimmed, and the number the spotlight is on is
     # haloed. Text and lines sit on whole device pixels.
     #
@@ -41,7 +41,7 @@ module DotPopper
         SkipButton.new(pen:).draw(reach, hover: show.hover.level(:skip)) if reach
       end
 
-      # The clock lit as the round's first second runs (Presentation::
+      # The clock lit as the game's first second runs (Presentation::
       # LeadIn): the dim, under the HUD at +pill+...
       def lead_in_under(lead_in, now, pill, spots, radius)
         x, y = spots.fetch(:time)

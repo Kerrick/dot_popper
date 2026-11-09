@@ -24,7 +24,7 @@ module DotPopper
       end
     end
 
-    # Teaches the stacking rule on Game Over, with no word, after a round
+    # Teaches the stacking rule on Game Over, with no word, after a game
     # in which the player tapped a popped dot with the bright one hidden
     # beneath it, and never in play: the Show replays that tap's penalty on
     # the pile (Slip). It counts the Game Overs it has taught on, up to

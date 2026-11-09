@@ -12,10 +12,10 @@ module DotPopper
     end
 
     # The offer, over the Records screen: the heading, what is included, a
-    # note of the plays left and when more come (+note+), a line for how
+    # note of the games left and when more come (+note+), a line for how
     # the store is getting on (kept even while empty, so nothing moves when
     # it speaks), and the two buttons. Short of room the type shrinks;
-    # what is sold, when free plays come, its price and Restore Purchases
+    # what is sold, when free games come, its price and Restore Purchases
     # always stay. The buttons are the plan's only while +offering+: a player who owns it
     # has nothing left to press here but Back.
     class OfferScreen < Data.define(:layout, :type, :words, :measure, :offering, :note)
@@ -24,7 +24,7 @@ module DotPopper
       WIDE = 7.0 # the widest the buttons are, in their height
 
       def initialize(layout:, type:, words:, measure:, offering:, note: nil)
-        super(layout:, type:, words:, measure:, offering:, note: note || words.offer_note(0, FreePlays::DAILY))
+        super(layout:, type:, words:, measure:, offering:, note: note || words.offer_note(0, FreeGames::DAILY))
       end
 
       def plan

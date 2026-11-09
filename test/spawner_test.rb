@@ -56,7 +56,7 @@ class SpawnerTest < Minitest::Test
   # dot leaving at 120 a second gets there in about a third of a second.
   # The one by the edge would get there at 60 a second, but it bounces
   # 10 units on and comes back, so it is never more than 40 away.
-  def test_the_lookahead_plays_the_dots_forward_with_their_bounces
+  def test_the_lookahead_games_the_dots_forward_with_their_bounces
     leaving = dot(400, 300, velocity_x: 120, popped: true)
     bouncing = dot(740, 300, velocity_x: 60, popped: true)
 
@@ -95,13 +95,13 @@ class SpawnerTest < Minitest::Test
     refute spawn.exhausted?
   end
 
-  def test_a_round_records_how_each_dot_was_spawned
-    round = DotPopper::Round.new(field, random: Random.new(SEED))
-    first = round.dots.first
+  def test_a_game_records_how_each_dot_was_spawned
+    game = DotPopper::Game.new(field, random: Random.new(SEED))
+    first = game.dots.first
 
-    assert_equal [first], round.spawns.map(&:dot)
-    assert_equal plain_draw.with(id: 0), first, "the round's first dot is drawn as ever"
-    round.tap_at(first.x, first.y)
-    assert_equal round.dots.to_a.last, round.spawns.last.dot
+    assert_equal [first], game.spawns.map(&:dot)
+    assert_equal plain_draw.with(id: 0), first, "the game's first dot is drawn as ever"
+    game.tap_at(first.x, first.y)
+    assert_equal game.dots.to_a.last, game.spawns.last.dot
   end
 end

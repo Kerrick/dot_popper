@@ -9,7 +9,7 @@ module DotPopperGui
     scenario :pile
 
     def play
-      start_round
+      start_game
       3.times { pop_fresh }
       run_out_the_clock
       wait(1.0)

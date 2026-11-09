@@ -9,13 +9,13 @@ module DotPopperGui
     scenario :clearing
 
     HOLD = DotPopper::Presentation::Look::RECORDS_CLEAR.hold
-    FILES = %w[best_score.txt lifetime.txt rounds.csv].freeze
+    FILES = %w[best_score.txt lifetime.txt games.csv].freeze
 
     def play
-      quick_round
+      quick_game
       open_records
       before = files
-      check(!show.records.empty, "the Records screen lists the round")
+      check(!show.records.empty, "the Records screen lists the game")
 
       let_go_too_soon(before)
       hold_by_touch
@@ -71,7 +71,7 @@ module DotPopperGui
       wait(0.3)
       keep_screenshot("clearing-cleared")
       check_equal("", File.read(saved("lifetime.txt")), "lifetime.txt is emptied")
-      check(before["rounds.csv"] == File.read(saved("rounds.csv")), "the playtest log is untouched")
+      check(before["games.csv"] == File.read(saved("games.csv")), "the playtest log is untouched")
       backup = Dir[saved("lifetime-*.txt")]
       check_equal(1, backup.size, "one backup of lifetime.txt")
       check(before["lifetime.txt"] == File.read(backup.first), "the backup is an exact copy")

@@ -1,0 +1,261 @@
+# frozen_string_literal: true
+
+require "test_helper"
+
+class GameTest < Minitest::Test
+  include DotPopperTest
+  Events = DotPopper::Events
+
+  def test_a_game_starts_with_one_fresh_dot_no_score_and_ten_seconds
+    game = DotPopper::Game.new(field, random: Random.new(1))
+
+    assert_equal 1, game.dots.size
+    assert game.dots.first.fresh?
+    assert_equal 0, game.score
+    assert_equal 10.0, game.countdown.remaining
+    refute game.over?
+  end
+
+  def test_popping_a_fresh_dot_scores_a_point_adds_a_second_and_spawns_a_dot_underneath
+    target = dot(400, 300)
+    game = game_with(target)
+
+    event = game.tap_at(410, 290)
+
+    assert_instance_of Events::Popped, event
+    assert_equal 1, game.score
+    assert_in_delta 11.0, game.countdown.remaining
+    assert_equal 2, game.dots.size
+    top, bottom = game.dots.to_a
+    assert_equal target.id, top.id, "the popped dot stays on top"
+    assert top.popped?
+    assert_equal event.spawned, bottom, "the new dot goes underneath"
+    assert bottom.fresh?
+    assert_equal top, event.dot
+    assert_equal [1, 1.0], [event.points, event.seconds]
+  end
+
+  def test_tapping_a_popped_dot_costs_two_points_and_two_seconds
+    game = game_with(dot(400, 300, popped: true))
+    score!(game, 5)
+
+    event = game.tap_at(400, 300)
+
+    assert_instance_of Events::Penalized, event
+    assert_equal 3, game.score
+    assert_in_delta 8.0, game.countdown.remaining
+    assert_equal [-2, -2.0], [event.points, event.seconds]
+    refute event.softened?
+  end
+
+  def test_the_score_never_goes_below_zero
+    game = game_with(dot(400, 300, popped: true))
+    score!(game, 1)
+
+    first = game.tap_at(400, 300)
+    second = game.tap_at(400, 300)
+
+    assert_equal 0, game.score
+    assert_equal(-1, first.points)
+    assert_equal 0, second.points
+    assert first.softened?
+    assert_in_delta 6.0, game.countdown.remaining, 1e-9, "time is still lost"
+  end
+
+  def test_tapping_empty_space_does_nothing
+    game = game_with(dot(400, 300))
+
+    event = game.tap_at(100, 100)
+
+    assert_instance_of Events::Missed, event
+    assert_equal 0, game.score
+    assert_equal 10.0, game.countdown.remaining
+    assert game.dots.first.fresh?
+  end
+
+  def test_a_tap_on_overlapping_dots_reaches_only_the_topmost
+    game = game_with(dot(400, 300, popped: true), dot(410, 300))
+
+    event = game.tap_at(405, 300)
+
+    assert_instance_of Events::Penalized, event
+    assert game.dots.to_a.last.fresh?, "the tap does not pass through"
+  end
+
+  def test_a_fresh_dot_out_from_under_the_popped_ones_can_be_popped
+    game = game_with(dot(400, 300, popped: true), dot(480, 300))
+
+    assert_instance_of Events::Popped, game.tap_at(520, 300)
+    assert game.dots.to_a[1].popped?
+  end
+
+  def test_a_fresh_dot_on_top_of_a_popped_one_is_the_one_tapped
+    game = game_with(dot(400, 300), dot(400, 300, popped: true))
+
+    assert_instance_of Events::Popped, game.tap_at(400, 300)
+  end
+
+  def test_each_new_dot_spawns_under_all_the_others
+    game = game_with(dot(400, 300))
+    first = game.tap_at(400, 300).spawned
+    clear_around!(game, first)
+    second = game.tap_at(first.x, first.y).spawned
+
+    assert_equal [first.id, second.id], game.dots.to_a.last(2).map(&:id)
+    assert_equal 3, game.dots.map(&:id).uniq.size, "every dot has its own id"
+  end
+
+  def test_time_runs_down_and_dots_move_with_each_update
+    game = game_with(dot(400, 300, velocity_x: 60))
+
+    game.update(0.5)
+
+    assert_in_delta 9.5, game.countdown.remaining
+    assert_in_delta 430, game.dots.first.x
+  end
+
+  def test_the_game_ends_when_the_clock_reaches_zero_and_shows_zero
+    game = game_with(dot(400, 300))
+
+    game.update(10.4)
+
+    assert game.over?
+    assert_equal 0, game.countdown.whole_seconds
+  end
+
+  def test_a_penalty_can_end_the_game
+    game = game_with(dot(400, 300, popped: true))
+    game.update(8.5)
+
+    game.tap_at(400, 300)
+
+    assert game.over?
+    assert_equal 0.0, game.countdown.remaining
+  end
+
+  def test_nothing_happens_once_the_game_is_over
+    game = game_with(dot(400, 300, velocity_x: 60))
+    game.update(11)
+    resting = game.dots.first
+
+    assert_nil game.tap_at(resting.x, resting.y)
+    game.update(1)
+    assert_equal resting, game.dots.first
+    assert_equal 0, game.score
+  end
+
+  def test_resizing_keeps_every_dot_on_screen
+    game = game_with(dot(780, 590))
+
+    game.field = field(400, 300)
+
+    assert_equal [350.0, 250.0], [game.dots.first.x, game.dots.first.y]
+  end
+
+  # Turning a tall phone and back leaves the dots where they were, not
+  # bunched into the narrow side (the iPhone playtest).
+  def test_turning_keeps_each_dot_where_it_was_in_proportion
+    portrait = field(375, 812)
+    landscape = field(812, 375)
+    near_corner = dot(50 + (0.7 * 275), 50 + (0.2 * 712), velocity_x: 60, velocity_y: -90)
+    game = DotPopper::Game.new(portrait, random: Random.new(1), dots: DotPopper::Stack.new([near_corner]))
+
+    game.field = landscape
+    turned = game.dots.first
+
+    assert_in_delta 50 + (0.7 * 712), turned.x, 1e-9, "70% across stays 70% across"
+    assert_in_delta 50 + (0.2 * 275), turned.y, 1e-9
+    assert_equal [60.0, -90.0], [turned.velocity_x, turned.velocity_y], "velocities stay in radii per second"
+
+    game.field = portrait
+    back = game.dots.first
+
+    assert_in_delta near_corner.x, back.x, 1e-9, "turning back puts it back"
+    assert_in_delta near_corner.y, back.y, 1e-9
+  end
+  # The tutorial's state, as Game.resume carries it into the game: two
+  # popped dots on top, and the fresh one born under both.
+  # Its wrong taps cost what they do in play, so it may leave less: as
+  # little as +score+ 0 and +seconds+ 1.
+  def resumed(score: 2, seconds: 12.0)
+    first = dot(300, 300, popped: true, id: 0)
+    second = dot(340, 300, popped: true, id: 1)
+    fresh = dot(500, 300, velocity_x: 60, id: 2)
+    DotPopper::Game.resume(field, dots: DotPopper::Stack.new(dots: [first, second, fresh]), score:, seconds:,
+                                   random: Random.new(1))
+  end
+
+  def test_a_resumed_game_starts_from_the_dots_score_and_clock_it_is_given
+    game = resumed
+
+    assert_equal [0, 1, 2], game.dots.map(&:id)
+    assert_equal [true, true, false], game.dots.map(&:popped?)
+    assert_equal 2, game.score
+    assert_in_delta 12.0, game.countdown.remaining
+    assert_in_delta 0.0, game.elapsed
+    refute game.over?
+  end
+
+  def test_a_resumed_games_clock_runs_from_its_first_update_and_its_dots_go_on_moving
+    game = resumed
+    game.update(0.5)
+
+    assert_in_delta 11.5, game.countdown.remaining
+    assert_in_delta 0.5, game.elapsed
+    assert_in_delta 530.0, game.dots.to_a.last.x
+  end
+
+  def test_a_resumed_game_games_by_the_usual_rules
+    game = resumed
+
+    missed = game.tap_at(300, 300)
+    assert_instance_of Events::Penalized, missed, "a tap reaches only the topmost dot"
+    assert_equal [0, 10.0], [game.score, game.countdown.remaining]
+
+    popped = game.tap_at(500, 300)
+    assert_instance_of Events::Popped, popped
+    assert_equal [1, 11.0], [game.score, game.countdown.remaining]
+    assert_equal 3, popped.spawned.id, "its new dot takes the next id"
+    assert_equal [0, 1, 2, 3], game.dots.map(&:id), "and goes in under every dot there"
+    assert game.dots.to_a.last.fresh?
+  end
+
+  def test_a_resumed_game_ends_when_its_clock_runs_out
+    game = resumed
+    game.update(12.5)
+
+    assert game.over?
+    assert_in_delta 12.0, game.elapsed
+  end
+
+  def test_a_resumed_game_at_no_points_keeps_the_score_floor
+    game = resumed(score: 0, seconds: 7.0)
+
+    refute game.over?
+    penalty = game.tap_at(300, 300)
+    assert_equal 0, penalty.points, "there was nothing to lose"
+    assert_equal [0, 5.0], [game.score, game.countdown.remaining]
+    game.tap_at(500, 300)
+    assert_equal [1, 6.0], [game.score, game.countdown.remaining]
+  end
+
+  def test_a_resumed_game_with_little_time_left_runs_it_out_and_no_further
+    game = resumed(score: 1, seconds: 1.0)
+
+    refute game.over?, "a second on the clock is a second to play"
+    game.update(0.6)
+    refute game.over?
+    game.update(0.6)
+    assert game.over?
+    assert_in_delta 1.0, game.elapsed
+    assert_nil game.tap_at(500, 300), "and then no tap counts"
+  end
+
+  def test_a_wrong_tap_with_less_than_two_seconds_left_ends_a_resumed_game
+    game = resumed(score: 1, seconds: 1.0)
+    game.tap_at(300, 300)
+
+    assert game.over?
+    assert_equal 0, game.score
+  end
+end

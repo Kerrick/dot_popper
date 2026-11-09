@@ -28,8 +28,8 @@ module DotPopper
 
       def call(event)
         case event
-        when Events::RoundEnded then begin_pile
-        when Events::RoundStarted, Events::TitleShown then end_pile
+        when Events::GameEnded then begin_pile
+        when Events::GameStarted, Events::TitleShown then end_pile
         end
       end
 

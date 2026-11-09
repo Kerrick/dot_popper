@@ -1,22 +1,22 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # A whole round, as a first-time player has it: the title, a round
+  # A whole game, as a first-time player has it: the title, a game
   # with a few pops and one tap too soon on a popped dot over the fresh
   # one, its reveal and Game Over's lesson, replayed on the pile with no
   # word, the clock running out, and
   # back to the title. The score and the clock are worked out alongside,
   # from the rules' numbers, and the save files checked once it is over.
-  # With DOT_POPPER_NO_SHADERS=1, the same round draws without shaders.
-  class RoundScenario < Scenario
-    scenario :round
+  # With DOT_POPPER_NO_SHADERS=1, the same game draws without shaders.
+  class GameScenario < Scenario
+    scenario :game
 
     R = DotPopper::Rules
     POPS = 4
 
     def play
       check(show.title?, "the game opens on the title")
-      start_round
+      start_game
       wait(0.5)
       shot = screenshot
       check_fresh_pixel(fresh_dot, shot)
@@ -30,7 +30,7 @@ module DotPopperGui
       click_empty_space
       continue_to_title
       check_equal(%i[RoundStarted RoundEnded TitleShown], story & %i[RoundStarted RoundEnded TitleShown],
-                  "the screens come in order: title, round, Game Over, title")
+                  "the screens come in order: title, game, Game Over, title")
     end
 
     private
@@ -40,9 +40,9 @@ module DotPopperGui
     # each slip, the score never below zero, and the clock down by the
     # game time that has passed.
     def expect(pops:, slips:)
-      check_equal(expected_score(pops, slips), round.score, "the score after #{pops} pops and #{slips} slips")
+      check_equal(expected_score(pops, slips), game.score, "the score after #{pops} pops and #{slips} slips")
       granted = R::STARTING_SECONDS + (pops * R::POP_SECONDS) - (slips * R::PENALTY_SECONDS)
-      check_close(granted, round.countdown.remaining + round.elapsed, "the clock's time left and time played add up")
+      check_close(granted, game.countdown.remaining + game.elapsed, "the clock's time left and time played add up")
     end
 
     def expected_score(pops, slips)
@@ -65,25 +65,25 @@ module DotPopperGui
       fresh = fresh_dot
       return unless inside_window?(fresh)
 
-      round.dots.each do |dot|
+      game.dots.each do |dot|
         next unless dot.popped? && dot.overlaps?(fresh)
 
         x = (dot.x + fresh.x) / 2.0
         y = (dot.y + fresh.y) / 2.0
-        top = round.dots.top_at(x, y)
-        return [x, y] if top&.popped? && round.dots.fresh_beneath(top, x, y)
+        top = game.dots.top_at(x, y)
+        return [x, y] if top&.popped? && game.dots.fresh_beneath(top, x, y)
       end
       nil
     end
 
     def game_over
-      ended = events.grep(DotPopper::Events::RoundEnded).last
+      ended = events.grep(DotPopper::Events::GameEnded).last
       score = expected_score(POPS, 1)
       check_equal(score, ended.score, "Game Over's score")
-      check_close(R::STARTING_SECONDS + POPS - (R::PENALTY_SECONDS * 1), ended.round.elapsed,
-                  "the round lasted the time it was given")
+      check_close(R::STARTING_SECONDS + POPS - (R::PENALTY_SECONDS * 1), ended.game.elapsed,
+                  "the game lasted the time it was given")
       lesson = show.finale.lesson
-      fresh = ended.round.dots.find(&:fresh?)
+      fresh = ended.game.dots.find(&:fresh?)
       check(lesson && lesson.bright == fresh.id, "Game Over teaches the stacking rule from the wrong tap")
       wait_for("the wrong tap replayed on the pile", within: 300) { show.finale.replayed.positive? }
       check_equal([fresh.id], show.effects.reveals.map(&:follow), "the bright dot it hid is outlined on the pile")
@@ -108,9 +108,9 @@ module DotPopperGui
     end
 
     def check_saves(score)
-      log = File.readlines(saved("rounds.csv"), chomp: true)
-      check_equal(2, log.size, "rounds.csv has its header and the round")
-      check_equal(score.to_s, log.last.split(",")[2], "rounds.csv logs the score")
+      log = File.readlines(saved("games.csv"), chomp: true)
+      check_equal(2, log.size, "games.csv has its header and the game")
+      check_equal(score.to_s, log.last.split(",")[2], "games.csv logs the score")
       check(File.read(saved("best_score.txt")).include?("=#{score}"), "best_score.txt keeps the best")
       check(File.file?(saved("lifetime.txt")), "lifetime.txt is saved")
       check(File.file?(saved("taught.txt")), "taught.txt counts the lesson")

@@ -1,26 +1,26 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # One day's goal, met or not by a single round's RoundStats: +kind+
+  # One day's goal, met or not by a single game's RoundStats: +kind+
   # names what it asks for, and +target+ how much. Each local date picks
   # one from LIST with a hash of the date that is the same on every
   # device and every run, so the day's goal never changes while the day
   # lasts. Each player is judged only by their own play, so the goal is
   # fair whatever the screen. The words for each are Presentation's.
   class DailyGoal < Data.define(:kind, :target)
-    # The goals, each a thing a single round can do. The targets were set
+    # The goals, each a thing a single game can do. The targets were set
     # with the simulator's model player on the 24 × 16 R window (see
-    # doc/decisions.md): reachable on a good round, not on every round.
-    # The bonus dot (Rules::BONUS) lengthens rounds and raises scores, and
+    # doc/decisions.md): reachable on a good game, not on every game.
+    # The bonus dot (Rules::BONUS) lengthens games and raises scores, and
     # the three targets that count those were raised to match.
     LIST = [
       new(kind: :clean_run, target: 15),   # pops in a row without a wrong tap
       new(kind: :patient_pop, target: 3),  # seconds a fresh dot was on screen before its pop
-      new(kind: :quick_start, target: 10), # pops in the round's first 10 seconds
-      new(kind: :long_round, target: 50),  # seconds the round lasts
-      new(kind: :comeback, target: 30),    # points, in a round with a wrong tap
+      new(kind: :quick_start, target: 10), # pops in the game's first 10 seconds
+      new(kind: :long_game, target: 50),  # seconds the game lasts
+      new(kind: :comeback, target: 30),    # points, in a game with a wrong tap
       new(kind: :score, target: 30),       # points
-      new(kind: :clean_round, target: 10)  # points, with no wrong tap at all
+      new(kind: :clean_game, target: 10)  # points, with no wrong tap at all
     ].freeze
 
     QUICK_START_SECONDS = 10
@@ -34,16 +34,16 @@ module DotPopper
       text.each_byte.reduce(0x811c9dc5) { |hash, byte| ((hash ^ byte) * 0x01000193) & 0xffffffff }
     end
 
-    # Whether a round with +stats+ meets the goal.
+    # Whether a game with +stats+ meets the goal.
     def met?(stats)
       case kind
       when :clean_run then stats.longest_run >= target
       when :patient_pop then stats.longest_wait >= target
       when :quick_start then stats.pops_within(QUICK_START_SECONDS) >= target
-      when :long_round then stats.duration >= target
+      when :long_game then stats.duration >= target
       when :comeback then stats.slips.positive? && stats.score >= target
       when :score then stats.score >= target
-      when :clean_round then stats.slips.zero? && stats.score >= target
+      when :clean_game then stats.slips.zero? && stats.score >= target
       else false
       end
     end

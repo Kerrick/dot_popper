@@ -9,7 +9,7 @@ module DotPopper
     # particles, so a burst waits here as a Spray until the shell takes
     # it; +cleared+ counts the clears, so the shell knows to drop the
     # droplets already flying. Sizes and speeds come in radii and leave in
-    # graphics units, scaled by +radius+, the round's dots' (#scale_to).
+    # graphics units, scaled by +radius+, the game's dots' (#scale_to).
     class Effects
       MOST_RINGS = 32
       MOST_FLOATERS = 24
@@ -33,7 +33,7 @@ module DotPopper
 
       # Throws +look.count+ droplets out from (+x+, +y+), shared among
       # +colors+. No droplet outlives +longest+, which only a screen with
-      # no round in play may raise.
+      # no game in play may raise.
       def burst(x, y, look, colors, longest: Burst::LONGEST_LIFE)
         spray = Spray.new(x:, y:, look:, colors:, longest: [longest, look.life.end].min, radius: @radius)
         keep(@sprays, spray, MOST_SPRAYS)
@@ -62,7 +62,7 @@ module DotPopper
         keep(@floaters, Floater.new(text:, x:, y:, color:, look:, scale: @radius, born: now), MOST_FLOATERS)
       end
 
-      # Measures every effect from now on in dots of +radius+, as a round
+      # Measures every effect from now on in dots of +radius+, as a game
       # whose dots are sized to the screen needs. Effects already playing
       # keep the size they began with.
       def scale_to(radius)

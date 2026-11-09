@@ -51,7 +51,7 @@ class WindowButtonsTest < Minitest::Test
   # fullscreen with only a mouse is never stuck there.
   def test_only_the_title_offers_them
     @show.primary
-    refute_window_buttons "a round"
+    refute_window_buttons "a game"
     @cabinet.update(30)
     @show.update(1.0)
     refute_window_buttons "Game Over"

@@ -19,8 +19,8 @@ module DotPopper
     # between the HUD, whose bottom is at +below+, and the safe area's
     # bottom, or higher, so the pile's dots lying on the window's floor
     # show at least their lower half under Continue: "Time's up!", "You met
-    # today's goal!" when the round did, the score, the best or how far
-    # short of it the round fell, the round's facts, a record it set,
+    # today's goal!" when the game did, the score, the best or how far
+    # short of it the game fell, the game's facts, a record it set,
     # "Share my score", closing the score's group, and the Continue
     # button, as big as Layout's primary_size for dots of +radius+. Short
     # of room, the type shrinks first; then the record goes, the facts, the

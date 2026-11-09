@@ -15,7 +15,7 @@ This guide is for Rubyists who want to build Dot Popper from source, change it, 
 - **Rules you can test without a window.** The rules, in `lib/dot_popper`, are 2,350 lines, built mostly from immutable values made with `Data.define`. They draw nothing, play nothing, and read no input. 796 unit tests run without a window, and [Steep](https://github.com/soutaro/steep) checks the rules against RBS signatures in strict mode.
 - **The look and sound as plain values.** `lib/dot_popper/presentation` (8,068 lines) holds every color, word, size, timing, and animation curve, and the synthesizer that makes every sound when the game starts. It never calls Lota, so its tests run without a window too.
 - **LÖVE's engine, from Ruby.** `lib/dot_popper/shell` (4,522 lines) does the drawing, sound, and input through Lota: four GLSL shaders, LÖVE's particle systems for the pop droplets, Box2D physics for the pile at Game Over, stereo sound, mouse, touch, gamepads, and a tablet's accelerometer.
-- **A game that plays itself.** A bot plays rounds by itself. Scripted scenarios play the game in a real window, check it as they go, and quit. A simulator plays the real rules with a model player on screens from an iPhone to a 32-inch monitor.
+- **A game that plays itself.** A bot plays games by itself. Scripted scenarios play the game in a real window, check it as they go, and quit. A simulator plays the real rules with a model player on screens from an iPhone to a 32-inch monitor.
 - **Shipped like any other game.** On every push to `trunk`, CI builds the app for each desktop on that desktop, then plays each one for 20 seconds with no Ruby on the PATH.
 
 If you know LÖVE, [Why Ruby](why_ruby.md) sets Dot Popper's code beside the Lua a LÖVE game would use for the same job, and says where Lua wins.
@@ -26,7 +26,7 @@ If you know LÖVE, [Why Ruby](why_ruby.md) sets Dot Popper's code beside the Lua
 | --- | --- |
 | `main.rb` | Hands each of Lota's callbacks to `DotPopper::Shell::App`. Its comments list every control and development setting |
 | `conf.rb` | Lota's window settings: the title, the 1200 × 800 window, the save folder's name, and which graphics renderers to allow |
-| `lib/dot_popper/` | The rules. `rules.rb` holds every number that sets how the game plays, in dot radii; `round.rb` and `stack.rb` hold a round and its dots |
+| `lib/dot_popper/` | The rules. `rules.rb` holds every number that sets how the game plays, in dot radii; `game.rb` and `stack.rb` hold a game and its dots |
 | `lib/dot_popper/presentation/` | How the game looks and sounds, as values. `look.rb` holds every setting, and `words.rb` writes every sentence the player reads |
 | `lib/dot_popper/groups/` | The friend groups' client, which makes every network call on a thread of its own |
 | `lib/dot_popper/shell/` | Carries out the presentation with Lota: painters, the speaker, input, and save files |
@@ -75,10 +75,10 @@ $ bundle exec lota run
 Dot Popper: a dot's radius is 50 logical pixels
 Dot Popper: renderer Metal 2.1 /  / Apple M1 Max
 Dot Popper: screen 1200x800 units, 2400x1600 pixels, dpi scale 2.0 (native 2.0), safe area 0,0,1200,800, mode 1200x800 windowed, usedpiscale true
-Dot Popper: each round is logged in ~/Library/Application Support/Lota/dot_popper/rounds.csv
+Dot Popper: each game is logged in ~/Library/Application Support/Lota/dot_popper/games.csv
 ```
 
-Run unfused like this, the game saves in a `Lota` folder, apart from the packaged app's save folder, so your test rounds never touch your real records.
+Run unfused like this, the game saves in a `Lota` folder, apart from the packaged app's save folder, so your test games never touch your real records.
 
 ### Development settings
 
@@ -86,7 +86,7 @@ The game reads these from its environment. `main.rb` lists them all.
 
 | Setting | What it does |
 | --- | --- |
-| `DOT_POPPER_AUTOPLAY=1` | A bot plays: the title, a round, Game Over, and again. It sometimes taps a popped dot, so penalties show |
+| `DOT_POPPER_AUTOPLAY=1` | A bot plays: the title, a game, Game Over, and again. It sometimes taps a popped dot, so penalties show |
 | `DOT_POPPER_NO_SPLASH=1` | Skips setdef's splash screen |
 | `DOT_POPPER_SAVE_AS=test` | Saves in a folder of this name, so a run starts with no records |
 | `DOT_POPPER_SEED=42` | Makes the dots' randomness repeatable |
@@ -110,7 +110,7 @@ $ DOT_POPPER_AUTOPLAY=1 DOT_POPPER_NO_SPLASH=1 DOT_POPPER_SAVE_AS=readme_cover D
   DOT_POPPER_SHOTS=$(ruby -e "puts (12..34).step(0.5).to_a.join(%q(,))") DOT_POPPER_QUIT_AFTER=35 bundle exec lota run
 ```
 
-The seed repeats the same rounds, but the game times each screenshot by the clock, not by the frame, so two runs catch slightly different moments. Take many, and choose the one that shows the bright dot under a popped one.
+The seed repeats the same games, but the game times each screenshot by the clock, not by the frame, so two runs catch slightly different moments. Take many, and choose the one that shows the bright dot under a popped one.
 
 ## Tests
 
@@ -124,7 +124,7 @@ No type error detected. 🫖
 
 - `bundle exec rake test` runs the unit tests alone, and `bundle exec rake steep` runs Steep alone.
 - `bundle exec rake test:gui` plays the scenarios in `test/gui/scenarios`, except the galleries, which render screens to compare by eye, in real windows. It needs a display, so `rake` leaves it out. CI runs it on every push and pull request, on Linux, under a virtual display with software OpenGL.
-- `bundle exec ruby script/simulate.rb 20` plays 20 rounds on each of six screens with a model player, with each dot size, and prints a table of scores, round lengths, and penalties. A run of 20 rounds finished in 36 seconds on an M1 Max. [Decisions made overnight](decisions.md) has the rules its numbers set.
+- `bundle exec ruby script/simulate.rb 20` plays 20 games on each of six screens with a model player, with each dot size, and prints a table of scores, game lengths, and penalties. A run of 20 games finished in 36 seconds on an M1 Max. [Decisions made overnight](decisions.md) has the rules its numbers set.
 
 ## Building the app
 

@@ -2,21 +2,21 @@
 
 module DotPopperGui
   # A free player's whole road to the paid version in a test build, on the
-  # code a store build runs: the plays run out, Play leads to the offer,
+  # code a store build runs: the games run out, Play leads to the offer,
   # Buy goes to the fake store and back, and the thanks and the paid
-  # features follow. It needs DOT_POPPER_FREE_PLAYS=1, since a scenario
-  # counts no plays otherwise. PurchaseKeptScenario, run next on the same
+  # features follow. It needs DOT_POPPER_FREE_GAMES=1, since a scenario
+  # counts no games otherwise. PurchaseKeptScenario, run next on the same
   # save (DOT_POPPER_SAVE_AS), checks a relaunch.
   class PurchaseScenario < Scenario
     scenario :purchase
 
     def play
       check(show.title?, "the game opens on the title")
-      check_equal(words.plays_left(2), show.plays_line, "the title counts the plays left")
-      quick_round
-      quick_round
-      check_equal(words.plays_left(0), show.plays_line, "the plays have run out")
-      keep_screenshot("purchase-out-of-plays")
+      check_equal(words.games_left(2), show.games_line, "the title counts the games left")
+      quick_game
+      quick_game
+      check_equal(words.games_left(0), show.games_line, "the games have run out")
+      keep_screenshot("purchase-out-of-games")
       reach = show.play_reach
       click(reach.center_x, reach.center_y)
       check(show.offer?, "Play leads to the offer")
@@ -38,9 +38,9 @@ module DotPopperGui
     def paid
       show.back
       check(show.title?, "Back returns to the title")
-      check_nil_plays
-      start_round
-      check(show.playing?, "Play starts a round with no plays left")
+      check_nil_games
+      start_game
+      check(show.playing?, "Play starts a game with no games left")
       run_out_the_clock
       continue_to_title
       show.open_records
@@ -53,7 +53,7 @@ module DotPopperGui
       keep_screenshot("purchase-paid-looks")
     end
 
-    def check_nil_plays = check(show.plays_line.nil?, "the title no longer counts plays")
+    def check_nil_games = check(show.games_line.nil?, "the title no longer counts plays")
   end
 
   # The purchase kept: the same save, a new launch, and no store to ask.
@@ -62,11 +62,11 @@ module DotPopperGui
 
     def play
       check(show.title?, "the game opens on the title")
-      check(show.plays_line.nil?, "still Paid after a relaunch: the title counts no plays")
+      check(show.games_line.nil?, "still Paid after a relaunch: the title counts no games")
       wait(0.5)
       keep_screenshot("purchase-relaunched")
-      start_round
-      check(show.playing?, "Play starts a round")
+      start_game
+      check(show.playing?, "Play starts a game")
     end
   end
 end

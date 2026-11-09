@@ -15,7 +15,7 @@ module DotPopper
     # and fly into the HUD in +flight+, or +quick+ on the last pop; time
     # holds +hold+ after they land. The last pop's numbers +linger+, and
     # then the spotlight moves to the clock as time flows again, in
-    # +handover+, and the round goes on from there. A beat that waits for
+    # +handover+, and the game goes on from there. A beat that waits for
     # the dots to move never waits more than +longest+, should they
     # bounce. +spotlight+, +ghost+ and +lead+ are the spotlight's look,
     # the guide's, and the lead-in's. +streak+ is how its streak beat goes.
@@ -32,14 +32,14 @@ module DotPopper
     # reward are the game's (Rules::BONUS).
     class StreakLook < Data.define(:practice, :arrive, :sweep, :flight, :ready, :reward, :leave); end
 
-    # How the Tutorial's last beat goes on into the real round: its
+    # How the Tutorial's last beat goes on into the real game: its
     # spotlight on the clock fades out in +dim+ seconds, and a halo stays
     # around the clock for +halo+, then fades in +fade+.
     class LeadLook < Data.define(:dim, :halo, :fade); end
 
-    # The Tutorial's last beat, in the real round's first moments, since
+    # The Tutorial's last beat, in the real game's first moments, since
     # +at+: the spotlight on the clock as it starts to run, fading, and a
-    # halo around it a little longer. Only the clock is lit; the round's
+    # halo around it a little longer. Only the clock is lit; the game's
     # own dots are never covered for more than a moment.
     class LeadIn < Data.define(:at, :look)
       def strength(now) = (1 - ((now - at) / look.dim)).clamp(0.0, 1.0)
@@ -47,10 +47,10 @@ module DotPopper
       def over?(now) = now - at >= look.halo + look.fade
     end
 
-    # The tutorial a player sees on their first Play: the first round's
+    # The tutorial a player sees on their first Play: the first game's
     # opening, while its clock is not yet running. It has the rules' own
     # dots, their real drawing and the slowest real speed, and the real
-    # HUD. The game stays on its title until it ends; then the round goes
+    # HUD. The game stays on its title until it ends; then the game goes
     # on from exactly where it left its dots, its score and its time
     # (Cabinet#resume), and only the clock starts. It teaches without a word,
     # in five beats, and each tap that moves it on is the player's:
@@ -77,36 +77,36 @@ module DotPopper
     #    spotlight moves to the clock and time flows again, it takes its
     #    popped look and spawns the next bright dot under them all, as a
     #    pop in play does (#over?). The Show then hands the scene
-    #    to the round, whose LeadIn lets the clock run.
+    #    to the game, whose LeadIn lets the clock run.
     #
     # Between 4 and that handover goes the streak beat (#show_the_streak),
     # a rehearsal on dots of its own. The row of the streak arrives under
     # the HUD and lights most of the way by itself; the player's own pops
     # light its last few, each "+1" flying out of the dot into the row;
     # the full row turns mint and the star dot arrives; popped, it pays
-    # what it pays in play, as a round's pop floats its numbers. All of it
-    # is put away before the round goes on: its dots leave, and the score
-    # and the time carried into the round never hear of it. A tap on a
+    # what it pays in play, as a game's pop floats its numbers. All of it
+    # is put away before the game goes on: its dots leave, and the score
+    # and the time carried into the game never hear of it. A tap on a
     # popped dot there only shudders.
     #
     # Every wrong tap here, the guide's too, costs what it does in play
     # (Rules): two points, never below zero, and two seconds, the clock
     # never below zero either. The clock is still, so it can never run
-    # out, but the numbers it carries into the round are the true ones.
+    # out, but the numbers it carries into the game are the true ones.
     #
     # It plays its pops, cost, and chimes through the Show's +effects+,
-    # +sounds+, and +haptics+, on a +field+ like a round's, from +center+,
+    # +sounds+, and +haptics+, on a +field+ like a game's, from +center+,
     # the screen's middle, as +look+ (Look) says, on the Show's clock from
-    # +now+. Its last dot is drawn from +random+, as a round's are.
+    # +now+. Its last dot is drawn from +random+, as a game's are.
     class Tutorial
       BRIGHT = 0 # the first bright dot's id
       NEXT = 1 # the one born under it
-      LAST = 2 # the one the next one's pop spawns, which the round goes on with
+      LAST = 2 # the one the next one's pop spawns, which the game goes on with
       SLIDING = %i[peek warn slide aim_next].freeze # the beats the next dot may be popped in
       DONE = %i[runs ending over].freeze # the beats no tap changes
       STREAK = %i[row practice ready bonus reward].freeze # the streak beat's own
 
-      # The streak beat's own dots count down from here, so a round's dots,
+      # The streak beat's own dots count down from here, so a game's dots,
       # counted up from the scene's, are never mistaken for them.
       PRACTICE = -1
       BONUS = -100
@@ -143,10 +143,10 @@ module DotPopper
 
       def radius = field.radius
 
-      # Whether its last beat is over, and the round should go on from it.
+      # Whether its last beat is over, and the game should go on from it.
       def over? = beat == :over
 
-      # The score and the whole seconds it leaves the round, as its HUD
+      # The score and the whole seconds it leaves the game, as its HUD
       # shows them.
       def score = hud.score
       def seconds = hud.seconds
@@ -192,7 +192,7 @@ module DotPopper
       end
 
       # The window changed size: every dot stays where it was in
-      # proportion, as a round's do, on +field+.
+      # proportion, as a game's do, on +field+.
       def refit(field)
         old = @field
         @field = field
@@ -418,7 +418,7 @@ module DotPopper
       end
 
       # A tap in the streak beat. A popped dot only shudders: a slip here
-      # must cost nothing the round would carry on with.
+      # must cost nothing the game would carry on with.
       def streak_tap(x, y)
         dot = dots.top_at(x, y)
         if dot.nil? then @effects.ring(x, y, @look::TOUCH_RIPPLE)
@@ -484,7 +484,7 @@ module DotPopper
 
       # The reward, as a bonus pop in play shows it: a bigger burst and the
       # numbers it pays, floating up from the dot. They stay out of the
-      # HUD, whose numbers are the ones the round goes on with, and the row
+      # HUD, whose numbers are the ones the game goes on with, and the row
       # empties, as a bonus pop's does.
       def bonus_pop(dot, x, y)
         burst(dot, x, y)
@@ -508,7 +508,7 @@ module DotPopper
         @effects.float(Words.seconds(Rules::POP_SECONDS + bonus.seconds), x + spread, y, @palette.gain, @look::GAIN_FLOAT)
       end
 
-      # The rehearsal's dots leave, so the round goes on with only the
+      # The rehearsal's dots leave, so the game goes on with only the
       # scene's own.
       def put_the_rehearsal_away
         rehearsal = dots.select { it.id.negative? }
@@ -521,7 +521,7 @@ module DotPopper
 
       # The light moves to the clock, and time flows again, and the last
       # pop spawns the next bright dot under every dot, as a pop in play
-      # does. The round goes on from here.
+      # does. The game goes on from here.
       def hand_over
         last = Spawner.for(field).spawn(@random, id: LAST, above: dots.to_a).dot
         @dots = dots.slide_under(last)
@@ -577,7 +577,7 @@ module DotPopper
                                from: Anchor.at(x, y), to: Anchor.hud(to), born:, duration:)
       end
 
-      # A wrong tap's cost, as Round#penalize takes it: two points, but
+      # A wrong tap's cost, as Game#penalize takes it: two points, but
       # never below the lowest score, and two seconds, but never below
       # zero. The HUD drops by it at once, and what it lost leaps out of
       # the score and the time; as in play, a floor that kept a number

@@ -25,7 +25,7 @@ module DotPopper
     LOWEST_SCORE = 0
 
     # The one rule that rewards a run. +streak+ pops in a row without a
-    # wrong tap earn a bonus dot: the next fresh dot the round spawns is a
+    # wrong tap earn a bonus dot: the next fresh dot the game spawns is a
     # bonus dot, in place of the ordinary one, never an extra target.
     # Popping it pays +points+ and +seconds+ on top of a pop's own. A
     # wrong tap starts the count over; a bonus dot already earned stays,
@@ -56,7 +56,7 @@ module DotPopper
     LONGEST_FRAME = 0.1
 
     # How long Game Over ignores presses, so a tap meant for a dot in the
-    # round's last moment does not dismiss the final score unseen.
+    # game's last moment does not dismiss the final score unseen.
     GAME_OVER_GRACE = 0.9
 
     # Records are kept by the field's size in square radii (SizeClass),
@@ -73,7 +73,7 @@ module DotPopper
     LARGE_FIELD_FROM = 700
 
     # "Sized to your screen" (DotSizing), which the player may choose in
-    # place of the fixed RADIUS: each round's radius is the one that makes
+    # place of the fixed RADIUS: each game's radius is the one that makes
     # its field FITTED_AREA square radii, the 24 × 16 R desktop window's
     # area, so every screen is as crowded as that one. It is never below
     # SMALLEST_FITTED_RADIUS, 30 units, a dot 60 points across, well over

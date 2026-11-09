@@ -3,7 +3,7 @@
 module DotPopper
   module Shell
     # The title screen: the name, a legend that teaches the rule with one
-    # dot of each kind, and the Play button; under them, once a round has
+    # dot of each kind, and the Play button; under them, once a game has
     # been played, the best score and today's goal; and along the bottom,
     # "Your records", where it changes something the choice of how dots
     # are sized, and "How to play", on a desktop "Full screen" and Quit,
@@ -28,7 +28,7 @@ module DotPopper
                                   plan[:title].y + (title.height / 2.0) - ((1 - intro) * 24), intro)
         legend(layout, plan, under_quit(show, plan, :legend, intro))
         line(plan, :best, words.best_line(marquee.best), pen.palette.soft, under_quit(show, plan, :best, intro))
-        line(plan, :plays, show.plays_line.to_s, show.plays.can_play? ? pen.palette.soft : pen.palette.cream, intro, size: :goal)
+        line(plan, :games, show.games_line.to_s, show.games.can_play? ? pen.palette.soft : pen.palette.cream, intro, size: :goal)
         daily_goal(show, layout, plan, under_quit(show, plan, :goal, intro)) if plan[:goal]
         quit_prompt(show, plan)
         line(plan, :streak, words.streak(show.lifetime.streak), pen.palette.soft, intro, size: :goal)

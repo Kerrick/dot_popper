@@ -10,7 +10,7 @@ module DotPopper
     # a gamepad, the Show hears of it, so its words name that press.
     class App
       Look = Presentation::Look
-      PLAYTEST_LOG = "rounds.csv"
+      PLAYTEST_LOG = "games.csv"
       SMALLEST_WINDOW = [400, 320].freeze
 
       # What the GUI suite's director (test/gui/director.rb) watches as it
@@ -48,7 +48,7 @@ module DotPopper
         sizing_store = SaveFile.new(name: "dot_size.txt")
         @cabinet = Cabinet.new(screen, best: BestScore.new(SaveFile.new(name: "best_score.txt"), legacy:), random:,
                                  sizing: DotSizing.parse(sizing_store.read))
-        puts "Dot Popper: dots are sized to the screen as each round starts" if @cabinet.sizing.sized_to_screen?
+        puts "Dot Popper: dots are sized to the screen as each game starts" if @cabinet.sizing.sized_to_screen?
         lifetime = Lifetime.new(SaveFile.new(name: "lifetime.txt"), today:, legacy:)
         notices = NoticeFiles.new(cabinet: File.expand_path("../../..", __dir__),
                                   starts: [File.dirname(File.expand_path($PROGRAM_NAME))]).notices
@@ -65,7 +65,7 @@ module DotPopper
               native: Presentation::NativeStore.new(opener: UrlOpener.new, answers: StoreAnswers.in_save_folder),
               fake: Presentation::FakeStore.new(SaveFile.new(name: "fake_store.txt"), fails: Presentation::FakeStore.failure(@env))
         )
-        plays = free_plays(entitlement, metered: storefront.offered? && player?)
+        games = free_games(entitlement, metered: storefront.offered? && player?)
         groups = Groups::Session.at(Groups::Settings.server_url(@env, test_build: Presentation::Storefront.test_build?), store: SaveFile.new(name: "group.txt"))
         @show = Presentation::Show.new(groups:, cabinet: @cabinet, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"),
@@ -78,11 +78,11 @@ module DotPopper
                                        tutorial_flag: Presentation::TutorialFlag.new(
                                          SaveFile.new(name: "tutorial.txt"), mode: Presentation::TutorialFlag.mode(@env)
                                        ),
-                                       entitlement:, wardrobe:, storefront:, plays:)
+                                       entitlement:, wardrobe:, storefront:, games:)
         storefront.connect
         @cabinet.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
                                         archive: ->(name) { SaveFile.new(name:) }))
-        puts "Dot Popper: each round is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"
+        puts "Dot Popper: each game is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"
         @pile = Pile.new(flag?("DOT_POPPER_CALM") ? Look::CALM_PILE : Look::PILE)
         @cabinet.subscribe(@pile)
         @gamepads = Gamepads.new(pretend: fake_gamepad?)
@@ -311,8 +311,8 @@ module DotPopper
         # Records screen or Game Over first, on any device.
         return if key == :escape && @show.back
         # On the title Android's Back leaves the app, as Back on an app's
-        # first screen does; in a round it does nothing, so a stray edge
-        # swipe never throws a round away.
+        # first screen does; in a game it does nothing, so a stray edge
+        # swipe never throws a game away.
         return ::Lota::Event.quit if key == :escape && @android && @show.title?
         # A tablet's keyboard neither quits the app nor takes it out of
         # fullscreen: iOS apps are left by the system, never by the app.
@@ -338,9 +338,9 @@ module DotPopper
         @bloom.refresh
         @cabinet.screen = screen
         @show.resize(layout, @cabinet.field)
-        # The heap keeps the finished round's dots, and their radius.
-        round = @cabinet.round
-        @pile.refit(round ? Field.new(screen.width, screen.height, round.field.radius) : @cabinet.field)
+        # The heap keeps the finished game's dots, and their radius.
+        game = @cabinet.game
+        @pile.refit(game ? Field.new(screen.width, screen.height, game.field.radius) : @cabinet.field)
         @renderer.prepare
         @cursor = @cursor.refit(@show.layout.whole)
       end
@@ -372,7 +372,7 @@ module DotPopper
       end
 
       # Puts on the Show's look if it has changed (Presentation::Wardrobe),
-      # which is only ever between rounds.
+      # which is only ever between games.
       def dress
         @renderer.prepare if @pen.wear(@show.palette)
       end
@@ -524,7 +524,7 @@ module DotPopper
       end
 
       # The window as a field of dots at the usual size; the game sizes a
-      # round's dots on it as the player chose (DotSizing).
+      # game's dots on it as the player chose (DotSizing).
       def screen = @dot_size.field(*::Lota::Graphics.dimensions)
 
       # The graphics renderer LÖVE chose, as Vulkan, OpenGL ES, or Metal,
@@ -565,21 +565,21 @@ module DotPopper
       end
 
       # Whether someone is playing, not a machine: not the autoplay bot,
-      # and not a GUI scenario, unless it sets DOT_POPPER_FREE_PLAYS to try
+      # and not a GUI scenario, unless it sets DOT_POPPER_FREE_GAMES to try
       # the limit.
       def player?
         return false if flag?("DOT_POPPER_AUTOPLAY")
 
-        @env.fetch("DOT_POPPER_SCENARIO", "").empty? || @env.key?("DOT_POPPER_FREE_PLAYS")
+        @env.fetch("DOT_POPPER_SCENARIO", "").empty? || @env.key?("DOT_POPPER_FREE_GAMES")
       end
 
-      # The plays a free player has left, counted where the paid version
-      # can be bought, as #player? allows. DOT_POPPER_FREE_PLAYS=n starts a
-      # new save with n plays in the bank and n for the day, to try the
+      # The games a free player has left, counted where the paid version
+      # can be bought, as #player? allows. DOT_POPPER_FREE_GAMES=n starts a
+      # new save with n games in the bank and n for the day, to try the
       # limit.
-      def free_plays(entitlement, metered:)
-        start = Integer(@env.fetch("DOT_POPPER_FREE_PLAYS", ""), exception: false)
-        FreePlays.new(SaveFile.new(name: "plays.txt"), today:, entitlement:, metered:,
+      def free_games(entitlement, metered:)
+        start = Integer(@env.fetch("DOT_POPPER_FREE_GAMES", ""), exception: false)
+        FreeGames.new(SaveFile.new(name: "games.txt"), today:, entitlement:, metered:,
                       **(start ? { bank: start, daily: start } : {}))
       end
 
@@ -644,7 +644,7 @@ module DotPopper
       def screen_name
         if @show.records? then "Your records"
         elsif @show.tutorial? then "the tutorial"
-        elsif @show.playing? then "a round"
+        elsif @show.playing? then "a game"
         elsif @show.finished? then "Game Over"
         else "the title"
         end

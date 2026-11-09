@@ -11,7 +11,7 @@ module DotPopperGui
     UNTOUCHED = "what the player had copied before"
 
     def play
-      start_round
+      start_game
       pop_fresh
       run_out_the_clock
       wait(DotPopper::Presentation::Look::FINALE.tally.duration + 1.0)

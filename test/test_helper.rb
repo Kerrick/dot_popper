@@ -12,18 +12,18 @@ module DotPopperTest
     DotPopper::Dot.new(id:, x:, y:, velocity_x:, velocity_y:, radius: R, popped:, bonus:)
   end
 
-  # A round whose dots are exactly the ones given, top first, in place of
+  # A game whose dots are exactly the ones given, top first, in place of
   # the one it would spawn.
-  def round_with(*dots, random: Random.new(1))
-    DotPopper::Round.new(field, random:, dots: DotPopper::Stack.new(dots:))
+  def game_with(*dots, random: Random.new(1))
+    DotPopper::Game.new(field, random:, dots: DotPopper::Stack.new(dots:))
   end
 
-  # Sets a round's score as if earlier taps had earned it.
-  def score!(round, points) = round.instance_variable_set(:@score, points)
+  # Sets a game's score as if earlier taps had earned it.
+  def score!(game, points) = game.instance_variable_set(:@score, points)
 
-  # Moves every dot of the round but +keep+ far out of the way.
-  def clear_around!(round, keep)
-    moved = round.dots.map_dots { it.id == keep.id ? it : it.with(x: -1000.0) }
-    round.instance_variable_set(:@dots, moved)
+  # Moves every dot of the game but +keep+ far out of the way.
+  def clear_around!(game, keep)
+    moved = game.dots.map_dots { it.id == keep.id ? it : it.with(x: -1000.0) }
+    game.instance_variable_set(:@dots, moved)
   end
 end

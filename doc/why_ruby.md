@@ -42,7 +42,7 @@ tables are equal only if they are the same table (short of writing an
 grows a `deep_equal` helper.
 
 Second, `with`. A tap that pops a dot must change the dot, the score, and
-the clock together. Because each is a value, `Round#pop` builds the new
+the clock together. Because each is a value, `Game#pop` builds the new
 ones and swaps them in; nothing is ever half-changed.
 
 Third, pattern matching. The fuzz test takes apart each event by shape:
@@ -74,9 +74,9 @@ class Title < Data.define
   def update(_game, _seconds) = self
 end
 
-class Playing < Data.define(:round, :seed)
+class Playing < Data.define(:game, :seed)
   def update(game, seconds)
-    round.update(seconds)
+    game.update(seconds)
     settle(game)
   end
 end
@@ -146,22 +146,22 @@ screen:
 ```ruby
 def test_popping_a_fresh_dot_scores_a_point_adds_a_second_and_spawns_a_dot_underneath
   target = dot(400, 300)
-  round = round_with(target)
+  game = round_with(target)
 
-  event = round.tap_at(410, 290)
+  event = game.tap_at(410, 290)
 
   assert_instance_of Events::Popped, event
-  assert_equal 1, round.score
+  assert_equal 1, game.score
   # ...
 end
 ```
 
-The fuzz test goes further. It plays 2,000 random rounds on random fields,
+The fuzz test goes further. It plays 2,000 random games on random fields,
 from a sliver narrower than a dot to a large monitor. After every tap and
 tick it checks the invariants: dots stay on the field, the score never
 drops below zero, exactly one dot is fresh, and a tap reaches only the top
 dot. That is over half a million assertions in under a second. Reverse the
-order `top_at` searches in, and it fails on the tenth round.
+order `top_at` searches in, and it fails on the tenth game.
 
 None of this is impossible in Lua; busted, a popular Lua test framework, is a good one. But LÖVE
 code tends to call `love.graphics` from the same functions that keep score,
@@ -202,7 +202,7 @@ typed core uses `if` where it would rather use `in`.
 sizes. Each size runs in its own Ractor, Ruby's unit of parallel execution:
 
 ```ruby
-DEVICES.map { |device| Ractor.new(device, rounds) { |each, count| Simulation.play(each, count) } }.map(&:value)
+DEVICES.map { |device| Ractor.new(device, games) { |each, count| Simulation.play(each, count) } }.map(&:value)
 ```
 
 That works because the rules are frozen values. A Ractor may read a frozen
@@ -217,7 +217,7 @@ copy every table. There is no way to hand another thread a structure and
 promise it will never change.
 
 The speedup was smaller than the story suggests. With Ruby's default heap,
-the Ractors ran no faster than one loop. A round makes new dots every step,
+the Ractors ran no faster than one loop. A game makes new dots every step,
 and Ruby 4.0 stops every Ractor for each garbage collection: about 1,100 of
 them in a short run. Starting Ruby with a larger heap cut that to about 25,
 and the six devices then ran 2.0 times as fast on a busy ten-core Mac

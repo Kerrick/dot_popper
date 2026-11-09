@@ -3,7 +3,7 @@
 module DotPopper
   module Shell
     # The Tutorial's skip button: a disc with ⏭ drawn on it, two arrows
-    # and a bar, and no word. A tap anywhere on it starts the round (Show#tap).
+    # and a bar, and no word. A tap anywhere on it starts the game (Show#tap).
     # With the mouse over it, +hover+ of the way (Presentation::Hover), it
     # brightens as the title's buttons do.
     class SkipButton < Data.define(:pen)

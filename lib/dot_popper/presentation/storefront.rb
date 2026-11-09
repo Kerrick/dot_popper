@@ -6,7 +6,7 @@ module DotPopper
     # store, so this works as SheetSharing does: the game opens a URL in
     # its own SCHEME, and the store's answer comes back in a small file,
     # named in the URL, rewritten whole, which #update reads a few times a
-    # second, outside a round. Each answer is the whole state, so one that
+    # second, outside a game. Each answer is the whole state, so one that
     # is missed costs nothing: whether the player owns the product, its
     # price as the store writes it, how the last request went, and that
     # request's number.

@@ -23,11 +23,11 @@ module DotPopper
     # The best score on screens of +size_class+, or 0 before there is one.
     def of(size_class) = @values.fetch(size_class, 0)
 
-    # Whether no round has been recorded on screens of +size_class+ yet.
+    # Whether no game has been recorded on screens of +size_class+ yet.
     def first?(size_class) = !@values.key?(size_class)
 
     # Records +score+ as one played on +size_class+, and says whether it
-    # beat that class's best. A class's first round sets its best but
+    # beat that class's best. A class's first game sets its best but
     # beats nothing, so it is never a new best: there was nothing to beat.
     def record(score, size_class)
       first = first?(size_class)

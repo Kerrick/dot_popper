@@ -2,14 +2,14 @@
 
 require "test_helper"
 
-class RoundStatsTest < Minitest::Test
+class GameStatsTest < Minitest::Test
   include DotPopperTest
   Cabinet = DotPopper::Cabinet
-  RoundStats = DotPopper::RoundStats
+  GameStats = DotPopper::GameStats
 
   def setup
     @cabinet = Cabinet.new(field, random: Random.new(9))
-    @recorder = RoundStats::Recorder.new
+    @recorder = GameStats::Recorder.new
     @cabinet.subscribe(@recorder)
     @cabinet.press(0, 0)
   end
@@ -29,8 +29,8 @@ class RoundStatsTest < Minitest::Test
 
   def test_it_counts_slips_and_those_the_floor_softened
     pop!
-    popped = @cabinet.round.dots.first
-    clear_around!(@cabinet.round, popped)
+    popped = @cabinet.game.dots.first
+    clear_around!(@cabinet.game, popped)
     @cabinet.press(popped.x, popped.y) # 1 point to lose: softened
     @cabinet.press(popped.x, popped.y) # 0 points to lose: softened
 
@@ -38,7 +38,7 @@ class RoundStatsTest < Minitest::Test
     assert_equal 2, @recorder.stats.softened
   end
 
-  def test_the_round_ending_records_how_long_it_ran
+  def test_the_game_ending_records_how_long_it_ran
     @cabinet.update(4)
     pop!
     @cabinet.update(20)
@@ -46,19 +46,19 @@ class RoundStatsTest < Minitest::Test
     assert_in_delta 11.0, @recorder.stats.duration
   end
 
-  def test_a_new_round_starts_from_nothing
+  def test_a_new_game_starts_from_nothing
     pop!
     @cabinet.update(20)
     @cabinet.update(1)
     @cabinet.press(0, 0)
     @cabinet.press(0, 0)
 
-    assert_equal RoundStats.start, @recorder.stats
+    assert_equal GameStats.start, @recorder.stats
   end
 
   def test_with_nothing_popped_the_waits_are_zero
-    assert_in_delta 0.0, RoundStats.start.longest_wait
-    assert_in_delta 0.0, RoundStats.start.mean_wait
+    assert_in_delta 0.0, GameStats.start.longest_wait
+    assert_in_delta 0.0, GameStats.start.mean_wait
   end
 
   def test_it_keeps_the_score_and_the_longest_run_of_pops_without_a_wrong_tap
@@ -84,25 +84,25 @@ class RoundStatsTest < Minitest::Test
     assert_in_delta 0.5, stats.fastest_pop
     assert_equal 2, stats.pops_within(10)
     assert_equal 3, stats.pops_within(10.5)
-    assert_nil RoundStats.start.fastest_pop
+    assert_nil GameStats.start.fastest_pop
   end
 
   private
 
   def slip!
-    popped = @cabinet.round.dots.find(&:popped?)
-    clear_around!(@cabinet.round, popped)
+    popped = @cabinet.game.dots.find(&:popped?)
+    clear_around!(@cabinet.game, popped)
     @cabinet.press(popped.x, popped.y)
   end
 
   def pop!
-    fresh = @cabinet.round.dots.find(&:fresh?)
-    clear_around!(@cabinet.round, fresh)
+    fresh = @cabinet.game.dots.find(&:fresh?)
+    clear_around!(@cabinet.game, fresh)
     @cabinet.press(fresh.x, fresh.y)
   end
-  def test_a_resumed_round_counts_the_pops_it_carries_without_a_wait
+  def test_a_resumed_game_counts_the_pops_it_carries_without_a_wait
     cabinet = Cabinet.new(field, random: Random.new(9))
-    recorder = RoundStats::Recorder.new
+    recorder = GameStats::Recorder.new
     cabinet.subscribe(recorder)
     dots = DotPopper::Stack.new(dots: [dot(300, 300, popped: true), dot(340, 300, popped: true), dot(500, 300)])
     cabinet.resume(field: field, dots:, score: 2, seconds: 12.0)
@@ -113,7 +113,7 @@ class RoundStatsTest < Minitest::Test
     assert_nil stats.fastest_pop
 
     cabinet.update(1.5)
-    fresh = cabinet.round.dots.to_a.last
+    fresh = cabinet.game.dots.to_a.last
     cabinet.press(fresh.x, fresh.y)
     assert_equal [3, 3, 3], [recorder.stats.pops, recorder.stats.score, recorder.stats.longest_run]
     assert_equal [1.5], recorder.stats.waits.map { it.round(6) }, "the first wait runs from the clock starting"

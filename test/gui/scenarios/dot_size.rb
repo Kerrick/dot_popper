@@ -2,9 +2,9 @@
 
 module DotPopperGui
   # The choice of dot size on a narrow window (DOT_POPPER_WINDOW=400x850),
-  # where the two sizes differ: a new player's first round with dots sized
+  # where the two sizes differ: a new player's first game with dots sized
   # to the window, then the second segment, Standard, chosen with a click,
-  # remembered, and the next round played with the standard dots.
+  # remembered, and the next game played with the standard dots.
   class DotSizeScenario < Scenario
     scenario :dot_size
 
@@ -14,8 +14,8 @@ module DotPopperGui
       check_equal([400, 850], L::Graphics.dimensions, "the window opens at DOT_POPPER_WINDOW's size")
       check(cabinet.sizing.sized_to_screen?, "a new player's dots are sized to the screen")
       check(!File.exist?(saved("dot_size.txt")), "nothing is saved before the player chooses")
-      start_round
-      check_close(fitted_radius, round.field.radius, "the first round's dots are sized to the window")
+      start_game
+      check_close(fitted_radius, game.field.radius, "the first game's dots are sized to the window")
       check_close(fitted_radius, fresh_dot.radius, "its fresh dot has that radius")
       wait(0.5)
       check_fresh_pixel(fresh_dot)
@@ -27,8 +27,8 @@ module DotPopperGui
       click(second.center_x, second.center_y)
       check(!cabinet.sizing.sized_to_screen?, "a click on the second segment picks the standard size")
       check_equal(cabinet.sizing.to_text, File.read(saved("dot_size.txt")), "dot_size.txt remembers the choice")
-      start_round
-      check_close(R::RADIUS, round.field.radius, "the next round's dots are the standard size")
+      start_game
+      check_close(R::RADIUS, game.field.radius, "the next game's dots are the standard size")
     end
 
     private

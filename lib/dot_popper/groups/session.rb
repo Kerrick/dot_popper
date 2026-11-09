@@ -4,7 +4,7 @@ module DotPopper
   module Groups
     # What this device knows about its friend groups, and everything it
     # asks the server for. Called only from the game's own thread, and
-    # asks for nothing while a round is in play (#update's +quiet+).
+    # asks for nothing while a game is in play (#update's +quiet+).
     #
     # Nothing is sent until the player creates or joins a group: a Session
     # with no saved token makes no connection at all. +store+ answers
@@ -116,7 +116,7 @@ module DotPopper
       # sized to the screen, and not the tutorial's (+sized_to_screen+ is
       # false for the others). If it cannot be sent now, the best such game
       # waits and is sent with the next contact.
-      def round_finished(score:, sized_to_screen:)
+      def game_finished(score:, sized_to_screen:)
         @game_result = nil
         @result_due = false
         return unless member? && sized_to_screen == true && score.positive?
@@ -128,13 +128,13 @@ module DotPopper
         send_pending
       end
 
-      # A round began, so the last game's result is old news.
-      def round_started
+      # A game began, so the last game's result is old news.
+      def game_started
         @game_result = nil
         @result_due = false
       end
 
-      # Moves on: hears what the server said, and unless a round is in play
+      # Moves on: hears what the server said, and unless a game is in play
       # (+quiet+ false), hands over what is waiting.
       def update(quiet:)
         @worker.finished.each { |job, reply| settle(job, reply) }

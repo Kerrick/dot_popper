@@ -19,15 +19,15 @@ module DotPopper
       store.write(stats.to_text) if LifetimeStats.old?(text)
     end
 
-    # Adds a finished round's RoundStats, played on a screen of
-    # +size_class+, saves, and says what the round did: the records it set
+    # Adds a finished game's RoundStats, played on a screen of
+    # +size_class+, saves, and says what the game did: the records it set
     # among that class's bests, most impressive first, and whether it was
     # the first to meet today's goal.
-    def record(round, size_class)
+    def record(game, size_class)
       day = today
-      records = stats.records_set_by(round, size_class)
-      goal_met = !stats.streak.done_on?(day) && DailyGoal.for(day).met?(round)
-      @stats = stats.add(round, day: day.iso8601, size_class:)
+      records = stats.records_set_by(game, size_class)
+      goal_met = !stats.streak.done_on?(day) && DailyGoal.for(day).met?(game)
+      @stats = stats.add(game, day: day.iso8601, size_class:)
       @stats = stats.with(streak: stats.streak.meet(day)) if goal_met
       @store.write(stats.to_text)
       Result.new(records:, goal_met:)
@@ -38,7 +38,7 @@ module DotPopper
     # The store's whole text, as saved, for #restore (RecordKeeper).
     def saved = @store.read
 
-    # Forgets every round, as on a new device: the totals, the chart, each
+    # Forgets every game, as on a new device: the totals, the chart, each
     # class's bests, and the daily goal's streaks and today's goal met.
     def clear
       @stats = LifetimeStats.new
@@ -51,14 +51,14 @@ module DotPopper
       @stats = LifetimeStats.parse(text, legacy: @legacy)
     end
 
-    # Today's goal, and whether a round has met it yet today.
+    # Today's goal, and whether a game has met it yet today.
     def goal = DailyGoal.for(today)
     def goal_done? = stats.streak.done_on?(today)
 
     # The days in a row, up to today, that the goal was met.
     def streak = stats.streak.current_on(today)
 
-    # What one round did to the lifetime: +records+ (LifetimeStats::Record,
+    # What one game did to the lifetime: +records+ (LifetimeStats::Record,
     # most impressive first) and +goal_met+.
     class Result < Data.define(:records, :goal_met); end
   end

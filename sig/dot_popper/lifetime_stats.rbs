@@ -6,7 +6,7 @@ module DotPopper
 
     UNKNOWN: String
 
-    attr_reader rounds: Integer
+    attr_reader games: Integer
 
     attr_reader pops: Integer
 
@@ -26,11 +26,11 @@ module DotPopper
 
     attr_reader bests: Hash[SizeClass, Bests]
 
-    def self.new: (?rounds: Integer, ?pops: Integer, ?slips: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
+    def self.new: (?games: Integer, ?pops: Integer, ?slips: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
                    ?recent: Array[Integer], ?recent_classes: Array[SizeClass?], ?streak: GoalStreak,
                    ?bests: Hash[SizeClass, Bests]) -> instance
 
-    def initialize: (?rounds: Integer, ?pops: Integer, ?slips: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
+    def initialize: (?games: Integer, ?pops: Integer, ?slips: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
                      ?recent: Array[Integer], ?recent_classes: Array[SizeClass?], ?streak: GoalStreak,
                      ?bests: Hash[SizeClass, Bests]) -> void
 
@@ -40,16 +40,16 @@ module DotPopper
 
     def bests_in: (SizeClass size_class) -> Bests
 
-    def add: (RoundStats stats, day: String, size_class: SizeClass) -> LifetimeStats
+    def add: (GameStats stats, day: String, size_class: SizeClass) -> LifetimeStats
 
-    def records_set_by: (RoundStats stats, SizeClass size_class) -> Array[Record]
+    def records_set_by: (GameStats stats, SizeClass size_class) -> Array[Record]
 
     def to_text: () -> String
 
     class Bests < ::Data
-      attr_reader rounds: Integer
+      attr_reader games: Integer
 
-      attr_reader longest_round: Float
+      attr_reader longest_game: Float
 
       attr_reader longest_run: Integer
 
@@ -57,17 +57,17 @@ module DotPopper
 
       attr_reader longest_wait: Float
 
-      def self.new: (?rounds: Integer, ?longest_round: number, ?longest_run: Integer, ?fastest_pop: number?,
+      def self.new: (?games: Integer, ?longest_game: number, ?longest_run: Integer, ?fastest_pop: number?,
                      ?longest_wait: number) -> instance
 
-      def initialize: (?rounds: Integer, ?longest_round: number, ?longest_run: Integer, ?fastest_pop: number?,
+      def initialize: (?games: Integer, ?longest_game: number, ?longest_run: Integer, ?fastest_pop: number?,
                        ?longest_wait: number) -> void
 
       def self.parse: (Pairs pairs) -> Bests
 
-      def add: (RoundStats stats) -> Bests
+      def add: (GameStats stats) -> Bests
 
-      def records_set_by: (RoundStats stats) -> Array[Record]
+      def records_set_by: (GameStats stats) -> Array[Record]
 
       def pairs: () -> Array[[String, number?]]
 

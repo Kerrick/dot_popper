@@ -1,6 +1,6 @@
 module DotPopper
   type event = Events::Popped | Events::Penalized | Events::Missed
-             | Events::RoundStarted | Events::RoundEnded | Events::TitleShown
+             | Events::GameStarted | Events::GameEnded | Events::TitleShown
 
   type tap_event = Events::Popped | Events::Penalized | Events::Missed
 
@@ -45,16 +45,16 @@ module DotPopper
       def self.new: (x: number, y: number) -> instance
     end
 
-    class RoundStarted < ::Data
-      attr_reader round: Round
+    class GameStarted < ::Data
+      attr_reader game: Game
 
       attr_reader seed: Integer
 
-      def self.new: (round: Round, seed: Integer) -> instance
+      def self.new: (game: Game, seed: Integer) -> instance
     end
 
-    class RoundEnded < ::Data
-      attr_reader round: Round
+    class GameEnded < ::Data
+      attr_reader game: Game
 
       attr_reader best: Integer
 
@@ -66,9 +66,9 @@ module DotPopper
 
       attr_reader first: bool
 
-      def self.new: (round: Round, best: Integer, new_best: bool, seed: Integer, size_class: SizeClass, ?first: bool) -> instance
+      def self.new: (game: Game, best: Integer, new_best: bool, seed: Integer, size_class: SizeClass, ?first: bool) -> instance
 
-      def initialize: (round: Round, best: Integer, new_best: bool, seed: Integer, size_class: SizeClass, ?first: bool) -> void
+      def initialize: (game: Game, best: Integer, new_best: bool, seed: Integer, size_class: SizeClass, ?first: bool) -> void
 
       def score: () -> Integer
     end

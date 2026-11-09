@@ -253,7 +253,7 @@ module DotPopper
       # button, so help, the window and sound stand together in the corner
       # where a desktop puts its window buttons, as tall as the others.
       # Labelled, they are as wide as FULL_SCREEN and QUIT heights;
-      # otherwise round, as the mute button is.
+      # otherwise game, as the mute button is.
       def window_buttons(labelled: true)
         height = button_size
         quit_width = labelled ? height * QUIT : height
@@ -268,7 +268,7 @@ module DotPopper
       # "How to play" still beside them, short of "Your records".
       def fits_in_row?(window) = how_to_play_button(window:).y == mute_button.y
 
-      # The same two as only their icons, round, a row above the bottom
+      # The same two as only their icons, game, a row above the bottom
       # row's right end, Quit over the mute button: where the bottom row
       # has no room for them, as on a narrow window.
       def window_icons_above
@@ -278,7 +278,7 @@ module DotPopper
         WindowButtons.new(fullscreen: quit.with(x: quit.x - margin - size), quit:, labelled: false, place: :above)
       end
 
-      # The same two as only their icons, round, in the safe area's top
+      # The same two as only their icons, game, in the safe area's top
       # right corner: where a window too short for a row above the
       # bottom one has no room left for it (TitleScreen).
       def window_icons

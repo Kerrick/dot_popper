@@ -9,7 +9,7 @@ module DotPopper
     class IconShape < Data.define(:points, :tone); end
 
     # A member's face in a group: a disc of two colours, patterned like an
-    # old GitHub identicon but round, and drawn by the game, so it looks the
+    # old GitHub identicon but game, and drawn by the game, so it looks the
     # same everywhere and no emoji is involved. It is worked out from the
     # group's id and the member's number and nothing else, so everyone sees
     # the same icon, and the server stores none.

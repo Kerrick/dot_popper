@@ -2,14 +2,14 @@
 
 module DotPopper
   module Shell
-    # The game-over pile. When a round ends its rules are frozen and its
+    # The game-over pile. When a game ends its rules are frozen and its
     # dots are only scenery, so they are handed to a Box2D world: each dot
     # becomes a ball where it was, going as it went, and falls under
-    # gravity between the window's sides onto its floor. A new round or
+    # gravity between the window's sides onto its floor. A new game or
     # the title throws the world away.
     #
     # It hears the rules' events (Cabinet#subscribe). While a pile is falling,
-    # +stack+ is the round's stack with each dot where its ball is, in the
+    # +stack+ is the game's stack with each dot where its ball is, in the
     # same order, so popped dots still cover fresh ones.
     #
     # Tilting (Shell::Tilting) may turn its gravity, wake its sleeping
@@ -26,8 +26,8 @@ module DotPopper
 
       def call(event)
         case event
-        when Events::RoundEnded then fill(event.round)
-        when Events::RoundStarted, Events::TitleShown then empty
+        when Events::GameEnded then fill(event.game)
+        when Events::GameStarted, Events::TitleShown then empty
         end
       end
 
@@ -92,7 +92,7 @@ module DotPopper
         body.linear_velocity = velocity if velocity
       end
 
-      # The round's stack, every dot moved to its ball; nil with no pile.
+      # The game's stack, every dot moved to its ball; nil with no pile.
       def stack
         return unless @world
 
@@ -116,15 +116,15 @@ module DotPopper
 
       private
 
-      def fill(round)
+      def fill(game)
         empty
-        radius = @radius = round.field.radius
-        @field = round.field
+        radius = @radius = game.field.radius
+        @field = game.field
         @lid = false
         P.meter = @look.meter_for(radius)
         @world = P::World.new(0, @look.gravity_for(radius), true)
-        @walls = walls(round.field)
-        @stack = round.dots
+        @walls = walls(game.field)
+        @stack = game.dots
         @balls = @stack.to_h { [it.id, ball(it)] }
       rescue StandardError => e
         warn "Dot Popper: the dots stay put at game over (#{e.message})"
@@ -149,7 +149,7 @@ module DotPopper
       end
 
       # The lid goes on once, and any ball still above the window, thrown
-      # up as the round ended, comes down inside it first.
+      # up as the game ended, comes down inside it first.
       def close_lid
         return if @lid
 

@@ -14,7 +14,7 @@ module DotPopperGui
       pad(:dpup)
       check_equal("Play (A)", words.play, "the words name the gamepad's button")
       pad(:start)
-      check(show.playing?, "Start starts a round")
+      check(show.playing?, "Start starts a game")
       run_out_the_clock
       high = layout.height * 0.5
       wait_for("the held dot dragged up", within: 300) { pile.stack.any? { it.y < high } }

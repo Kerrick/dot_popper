@@ -40,7 +40,7 @@ module DotPopper
       def seen? = @store.read.to_s.strip == SEEN
 
       # Whether this Play should open the tutorial, for a player who has
-      # +played+ a round before or not.
+      # +played+ a game before or not.
       def due?(played:)
         case mode
         in :forced then true

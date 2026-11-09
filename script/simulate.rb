@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 # Plays Dot Popper's real rules with a model player, without a window,
-# to see how the size of the field, in radii, changes a round. This is a
+# to see how the size of the field, in radii, changes a game. This is a
 # design tool, not a test: its player is a rough model of a person.
 #
-#   bundle exec ruby script/simulate.rb [rounds]
+#   bundle exec ruby script/simulate.rb [games]
 #
 # The model player waits a reaction time, finds the one fresh dot, and
 # taps it when it is exposed (no popped dot covers the point it aims at),
@@ -12,22 +12,22 @@
 # waits, and with a small chance per attempt it taps anyway and hits a
 # popped dot on top. Simulated at 30 updates a second.
 #
-# Run it as "bundle exec ruby script/simulate.rb bonus [rounds [streaks
+# Run it as "bundle exec ruby script/simulate.rb bonus [games [streaks
 # [points [seconds]]]]", each list comma-separated, to compare
 # candidate numbers for the streak's bonus dot (Rules::Bonus) on three
-# devices instead: score, round length, how often a round is endless, how
-# many bonus dots a round earns, and how many of the day's goals
-# (DailyGoal) a round meets, for each candidate and without a bonus dot.
+# devices instead: score, game length, how often a game is endless, how
+# many bonus dots a game earns, and how many of the day's goals
+# (DailyGoal) a game meets, for each candidate and without a bonus dot.
 #
 # Every device plays with each choice of dot size (DotSizing): the
 # standard size, as the spec has it, and sized to the screen. Each plays
 # twice, with the spawn rule (Spawner) and without it, to show how often
 # a new dot is redrawn and what that does to the score. Each run plays in
 # its own Ractor, in parallel, and then again one after
-# another, to show the two give the same rounds and how much sooner the
+# another, to show the two give the same games and how much sooner the
 # Ractors finish.
 
-# Ruby 4.0 stops every Ractor for each garbage collection, and a round
+# Ruby 4.0 stops every Ractor for each garbage collection, and a game
 # makes a great deal of short-lived garbage: new dots and stacks every
 # step. With Ruby's default starting heap that is about a thousand
 # collections, and the Ractors spend their time waiting for one another;
@@ -48,7 +48,7 @@ module Simulation
   FITTS_A = 0.10           # seconds
   FITTS_B = { mouse: 0.15, touch: 0.12 }.freeze # seconds per bit
   IMPATIENCE = 0.04        # chance per 0.1 s of waiting to tap a covered dot
-  GIVE_UP = 240.0         # a round this long counts as endless
+  GIVE_UP = 240.0         # a game this long counts as endless
 
   Device = Data.define(:name, :width_r, :height_r, :pointer)
 
@@ -61,7 +61,7 @@ module Simulation
     Device.new("32\" 6K fullscreen", 60.2, 33.8, :mouse)
   ].freeze
 
-  # How one round went. +covered+ counts the fresh dots that spawned
+  # How one game went. +covered+ counts the fresh dots that spawned
   # under a popped one; +spawns+, how each was drawn (DotPopper::Spawn).
   Result = Data.define(:score, :seconds, :penalties, :dots, :covered, :spawns, :stats) do
     def endless? = seconds > GIVE_UP
@@ -75,7 +75,7 @@ module Simulation
   Job = Data.define(:device, :sizing, :spawn_tries, :bonus) do
     def initialize(device:, sizing:, spawn_tries:, bonus: DotPopper::Rules::BONUS) = super
 
-    # The field a round starts on: the device's screen in graphics
+    # The field a game starts on: the device's screen in graphics
     # units, as the game would see it, with the dots sized as chosen.
     def field
       r = DotPopper::Rules::RADIUS
@@ -101,32 +101,32 @@ module Simulation
     def play
       field = @field
       @hand = [field.width / 2, field.height / 2]
-      round = DotPopper::Round.new(field, random: @random, spawn_tries: @spawn_tries, bonus: @bonus)
-      stats = DotPopper::RoundStats.start
+      game = DotPopper::Game.new(field, random: @random, spawn_tries: @spawn_tries, bonus: @bonus)
+      stats = DotPopper::GameStats.start
       t = 0.0
       penalties = 0
       covered_spawns = 0
-      until round.over? || t > GIVE_UP
-        fresh = round.dots.find(&:fresh?)
-        covered_spawns += 1 if covered?(round, fresh)
-        t = wait(round, REACTION, t)
+      until game.over? || t > GIVE_UP
+        fresh = game.dots.find(&:fresh?)
+        covered_spawns += 1 if covered?(game, fresh)
+        t = wait(game, REACTION, t)
         loop do
-          break if round.over?
+          break if game.over?
 
-          fresh = round.dots.find(&:fresh?)
-          if covered?(round, fresh) && @random.rand > IMPATIENCE
-            round.update(0.1)
+          fresh = game.dots.find(&:fresh?)
+          if covered?(game, fresh) && @random.rand > IMPATIENCE
+            game.update(0.1)
             t += 0.1
             next
           end
           travel = fitts(fresh)
-          t = wait(round, travel, t)
-          break if round.over?
+          t = wait(game, travel, t)
+          break if game.over?
 
-          fresh = round.dots.find(&:fresh?)
+          fresh = game.dots.find(&:fresh?)
           aim = [fresh.x, fresh.y]
-          event = round.tap_at(*aim)
-          stats = stats.record(event, at: round.elapsed) if event
+          event = game.tap_at(*aim)
+          stats = stats.record(event, at: game.elapsed) if event
           @hand = aim
           case event
           in DotPopper::Events::Popped then break
@@ -135,19 +135,19 @@ module Simulation
           end
         end
       end
-      Result.new(score: round.score, seconds: t, penalties:, dots: round.dots.size, covered: covered_spawns,
-                 spawns: round.spawns, stats: stats.with(duration: round.elapsed))
+      Result.new(score: game.score, seconds: t, penalties:, dots: game.dots.size, covered: covered_spawns,
+                 spawns: game.spawns, stats: stats.with(duration: game.elapsed))
     end
 
     private
 
-    def wait(round, seconds, t)
+    def wait(game, seconds, t)
       steps = (seconds / STEP).ceil
-      steps.times { round.update(STEP) unless round.over? }
+      steps.times { game.update(STEP) unless game.over? }
       t + (steps * STEP)
     end
 
-    def covered?(round, fresh) = !round.dots.top_at(fresh.x, fresh.y).fresh?
+    def covered?(game, fresh) = !game.dots.top_at(fresh.x, fresh.y).fresh?
 
     def fitts(target)
       distance = Math.hypot(target.x - @hand[0], target.y - @hand[1])
@@ -155,29 +155,29 @@ module Simulation
     end
   end
 
-  # One job's rounds, from its own seeded Random. The same seed gives the
-  # same rounds whether they run here or in a Ractor.
-  def self.play(job, rounds)
+  # One job's games, from its own seeded Random. The same seed gives the
+  # same games whether they run here or in a Ractor.
+  def self.play(job, games)
     random = Random.new(2026)
-    Array.new(rounds) { Player.new(job, random).play }
+    Array.new(games) { Player.new(job, random).play }
   end
 
   # Every job in its own Ractor. A Ractor shares nothing mutable, so each
-  # makes its own Random, Round, and Player; what it reads from outside
+  # makes its own Random, Game, and Player; what it reads from outside
   # (JOBS, the rule numbers) is deeply frozen, and what it returns is
   # copied back.
-  def self.play_in_parallel(rounds)
-    JOBS.map { |job| Ractor.new(job, rounds) { |each, count| Simulation.play(each, count) } }.map(&:value)
+  def self.play_in_parallel(games)
+    JOBS.map { |job| Ractor.new(job, games) { |each, count| Simulation.play(each, count) } }.map(&:value)
   end
 
-  def self.play_serially(rounds) = JOBS.map { play(it, rounds) }
+  def self.play_serially(games) = JOBS.map { play(it, games) }
 
-  def self.run(rounds)
-    serial, serial_seconds = timed { play_serially(rounds) }
-    parallel, parallel_seconds = timed { play_in_parallel(rounds) }
-    abort "The Ractors' rounds differ from the serial ones." unless parallel == serial
+  def self.run(games)
+    serial, serial_seconds = timed { play_serially(games) }
+    parallel, parallel_seconds = timed { play_in_parallel(games) }
+    abort "The Ractors' games differ from the serial ones." unless parallel == serial
 
-    report(rounds, parallel)
+    report(games, parallel)
     puts format("\n%d runs: %.2f s one after another, %.2f s in Ractors, %.1fx as fast (%d cores)",
                 JOBS.size, serial_seconds, parallel_seconds, serial_seconds / parallel_seconds, Etc.nprocessors)
   end
@@ -188,29 +188,29 @@ module Simulation
   end
 
   # A table for each choice of dot size: each device's radius, its
-  # field's area in square radii, and how its rounds went with the spawn
+  # field's area in square radii, and how its games went with the spawn
   # rule. "redrawn" and "moved" are the share of spawns whose velocity,
   # and then place, were drawn again; "no target" is the share of spawns
   # without the rule that offered no touch target for a second, and
   # "old score" the mean score without it.
-  def self.report(rounds, all_results)
+  def self.report(games, all_results)
     JOBS.zip(all_results).group_by { |job, _| job.sizing }.each do |sizing, rows|
       puts sizing.sized_to_screen? ? "\nDots sized to the screen" : "\nStandard dot size"
       puts format("%-26s %6s %6s %6s %6s %6s %7s %6s %8s %7s %9s %9s", "device", "R", "area", "score", "p90", "secs",
                   "endless", "pen", "redrawn", "moved", "no target", "old score")
-      rows.each_slice(TRIES.size) { |(job, results), (_, unruled)| report_row(job, results, unruled, rounds) }
+      rows.each_slice(TRIES.size) { |(job, results), (_, unruled)| report_row(job, results, unruled, games) }
     end
   end
 
-  def self.report_row(job, results, unruled, rounds)
+  def self.report_row(job, results, unruled, games)
     field = job.field
     scores = results.map(&:score).sort
     puts format("%-26s %6.1f %6.0f %6.1f %6d %6.1f %6.0f%% %6.1f %7.2f%% %6.2f%% %8.2f%% %9.1f",
                 job.device.name, field.radius, field.width * field.height / (field.radius**2),
-                scores.sum.fdiv(rounds), scores[(rounds * 0.9).floor], results.sum(&:seconds) / rounds,
-                100.0 * results.count(&:endless?) / rounds, results.sum(&:penalties).fdiv(rounds),
+                scores.sum.fdiv(games), scores[(games * 0.9).floor], results.sum(&:seconds) / games,
+                100.0 * results.count(&:endless?) / games, results.sum(&:penalties).fdiv(games),
                 share(results, &:redrawn?), share(results, &:moved?), share(unruled, &:exhausted?),
-                unruled.sum(&:score).fdiv(rounds))
+                unruled.sum(&:score).fdiv(games))
   end
 
   # The percentage of all the spawns in +results+ for which the block holds.
@@ -228,29 +228,29 @@ module Simulation
 
   BONUS_DEVICES = DEVICES.values_at(0, 3, 4).freeze
 
-  def self.compare_bonuses(rounds, streaks: nil, points: nil, seconds: nil)
+  def self.compare_bonuses(games, streaks: nil, points: nil, seconds: nil)
     list = candidates(numbers(streaks, [6, 8, 10, 12], :to_i.to_proc), numbers(points, [2, 4], :to_i.to_proc),
                       numbers(seconds, [2.0, 4.0, 6.0], :to_f.to_proc))
     jobs = BONUS_DEVICES.flat_map do |device|
       list.map { Job.new(device:, sizing: DotPopper::DotSizing::SIZED_TO_SCREEN, spawn_tries: DotPopper::Rules::SPAWN_TRIES, bonus: it) }
     end
-    results = jobs.map { |job| Ractor.new(job, rounds) { |each, count| Simulation.play(each, count) } }.map(&:value)
+    results = jobs.map { |job| Ractor.new(job, games) { |each, count| Simulation.play(each, count) } }.map(&:value)
     jobs.zip(results).group_by { |job, _| job.device }.each do |device, rows|
       puts "\n#{device.name}"
       puts format("%-18s %6s %5s %6s %6s %7s %6s %6s  %s", "bonus (n/pts/s)", "score", "p90", "secs", "p90s", "endless",
                   "pen", "bonus", DotPopper::DailyGoal::LIST.map { "#{it.kind}".ljust(12) }.join)
-      rows.each { |job, each| compare_row(job.bonus, each, rounds) }
+      rows.each { |job, each| compare_row(job.bonus, each, games) }
     end
   end
 
-  def self.compare_row(bonus, results, rounds)
+  def self.compare_row(bonus, results, games)
     scores = results.map(&:score).sort
     times = results.map(&:seconds).sort
-    goals = DotPopper::DailyGoal::LIST.map { |goal| format("%-12s", format("%.0f%%", 100.0 * results.count { goal.met?(it.stats) } / rounds)) }
+    goals = DotPopper::DailyGoal::LIST.map { |goal| format("%-12s", format("%.0f%%", 100.0 * results.count { goal.met?(it.stats) } / games)) }
     name = bonus ? "#{bonus.streak}/#{bonus.points}/#{bonus.seconds.to_i}" : "none"
-    puts format("%-18s %6.1f %5d %6.1f %6.1f %6.0f%% %6.1f %6.2f  %s", name, scores.sum.fdiv(rounds), scores[(rounds * 0.9).floor],
-                times.sum / rounds, times[(rounds * 0.9).floor], 100.0 * results.count(&:endless?) / rounds,
-                results.sum(&:penalties).fdiv(rounds), results.sum { it.stats.bonuses }.fdiv(rounds), goals.join)
+    puts format("%-18s %6.1f %5d %6.1f %6.1f %6.0f%% %6.1f %6.2f  %s", name, scores.sum.fdiv(games), scores[(games * 0.9).floor],
+                times.sum / games, times[(games * 0.9).floor], 100.0 * results.count(&:endless?) / games,
+                results.sum(&:penalties).fdiv(games), results.sum { it.stats.bonuses }.fdiv(games), goals.join)
   end
 end
 

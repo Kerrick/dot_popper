@@ -1,5 +1,5 @@
 module DotPopper
-  class FreePlays
+  class FreeGames
     BANK: Integer
     DAILY: Integer
 
@@ -14,7 +14,7 @@ module DotPopper
 
     attr_reader daily: Integer
 
-    def self.unlimited: () -> FreePlays
+    def self.unlimited: () -> FreeGames
     def initialize: (BestScore::_Store store, today: ^() -> Date, entitlement: Entitlement, ?metered: bool, ?bank: Integer, ?daily: Integer) -> void
     def metered?: () -> bool
     def daily_left: () -> Integer

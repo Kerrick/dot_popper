@@ -17,11 +17,11 @@ module DotPopper
     # and names the choices of dot size (DotSizing) by what they do here.
     class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time,
                               :share, :share_heading, :copied, :copy, :close, :records, :how_to_play, :go_back,
-                              :no_rounds, :clear, :keep_holding, :hold_to_clear, :cleared, :undo, :labels, :goals, :goal_done, :goal_met,
+                              :no_games, :clear, :keep_holding, :hold_to_clear, :cleared, :undo, :labels, :goals, :goal_done, :goal_met,
                               :screen_size, :credits, :credits_title, :notice, :quit_again, :full_screen, :windowed, :quit, :looks, :offer,
                               :input)
       MINUS = "−" # a true minus sign, as wide as the plus
-      # How near a round must come to the best for Game Over to say by how
+      # How near a game must come to the best for Game Over to say by how
       # much; further off, the gap is only a number to dwell on.
       CLOSE_TO_BEST = 3
 
@@ -71,25 +71,25 @@ module DotPopper
       # on a gamepad, naming +button+, the one held ("A" or "Y").
       def keep_holding(button) = super().for(input).sub("%s", button.to_s)
 
-      # What the title says of the plays left, where plays are counted: "23
-      # plays left", or "No plays left today".
-      def plays_left(left) = left.positive? ? "#{Words.count(left, "play")} left" : "No plays left today"
+      # What the title says of the games left, where games are counted: "23
+      # games left", or "No games left today".
+      def games_left(left) = left.positive? ? "#{Words.count(left, "game")} left" : "No games left today"
 
       # The offer's note, plain about what free play there is and when more
-      # comes: "No free plays left. 3 new free plays come tomorrow."
+      # comes: "No free games left. 3 new free games come tomorrow."
       def offer_note(left, daily)
-        coming = "#{daily} new free plays"
-        return "No free plays left. #{coming} come tomorrow." unless left.positive?
+        coming = "#{daily} new free games"
+        return "No free games left. #{coming} come tomorrow." unless left.positive?
 
-        "#{Words.count(left, "free play")} left. #{coming} come every day."
+        "#{Words.count(left, "free game")} left. #{coming} come every day."
       end
 
       # "Your best: 27".
       def best_line(best) = "#{self.best}: #{best}"
 
-      # How a finished round compares with the best it did not beat:
+      # How a finished game compares with the best it did not beat:
       # "3 points short of your best of 27". With no best yet, nothing. A
-      # class's +first+ round only says the best it set, "Your best: 18":
+      # class's +first+ game only says the best it set, "Your best: 18":
       # with nothing before it, it neither tied nor beat anything.
       def short_of_best(score, best, first: false)
         return best_line(best) if first
@@ -104,7 +104,7 @@ module DotPopper
         best.positive? ? "You tied your best of #{best}" : ""
       end
 
-      # The round in one quiet line, so a player can see what it was made
+      # The game in one quiet line, so a player can see what it was made
       # of: "14 pops, 2 mistakes, slowest pop 3.1 seconds". The slowest
       # pop is the longest any fresh dot waited before it was popped.
       def summary(stats)
@@ -113,7 +113,7 @@ module DotPopper
         parts.join(", ")
       end
 
-      # The one lifetime record a round set that Game Over names (the most
+      # The one lifetime record a game set that Game Over names (the most
       # impressive, LifetimeStats::Record::ORDER), as a sentence:
       # "New record: 18 pops in a row without a mistake".
       def record(record)
@@ -121,7 +121,7 @@ module DotPopper
         "New record: " +
           case record.kind
           when :longest_run then "#{Words.count(value.to_i, "pop")} in a row without a mistake"
-          when :longest_round then "your longest round, #{Words.count(value.round, "second")}"
+          when :longest_game then "your longest game, #{Words.count(value.round, "second")}"
           when :longest_wait then "you waited #{Words.tenths(value)} seconds for a dot, then popped it"
           else "your fastest pop, #{Words.tenths(value)} seconds after the dot appeared"
           end
@@ -129,7 +129,7 @@ module DotPopper
 
       # What "Share my score" offers to share, and its Copy puts on the
       # clipboard: the score, whether it set or tied the player's +best+,
-      # the lifetime +record+ it set, if any, what the round was made of,
+      # the lifetime +record+ it set, if any, what the game was made of,
       # and the +screen+ it was played on (#played_on), since a score
       # depends on that.
       #
@@ -185,8 +185,8 @@ module DotPopper
       def bests_heading(sizing) = labels.fetch(sizing.sized_to_screen? ? :fitted_bests : :bests)
 
       # The line under the Records screen's chart, when some of its bars
-      # are of rounds that do not count toward the bests shown: "Brighter
-      # bars are rounds with dots sized to the screen."
+      # are of games that do not count toward the bests shown: "Brighter
+      # bars are games with dots sized to the screen."
       def chart_note(sizing) = labels.fetch(sizing.sized_to_screen? ? :fitted_chart_note : :chart_note)
 
       # How many dots fit across +field+ and down it, side by side, to the
@@ -224,7 +224,7 @@ module DotPopper
 
       # Today's goal once it is met, still saying what it was, since a
       # player who met it wants to see what they did: "Done today: keep one
-      # round going for 40 seconds."
+      # game going for 40 seconds."
       def goal_done_line(goal) = "#{goal_done} #{format(goals.fetch(goal.kind), goal.target)}."
 
       # The days in a row the goal has been met, for the title once there
@@ -258,8 +258,8 @@ module DotPopper
         lines
       end
 
-      # The chart's caption: "Your last 20 rounds", or "Your last round".
-      def self.last_rounds(count) = count == 1 ? "Your last round" : "Your last #{count} rounds"
+      # The chart's caption: "Your last 20 games", or "Your last game".
+      def self.last_games(count) = count == 1 ? "Your last game" : "Your last #{count} games"
 
       # "1 pop", "2 pops".
       def self.count(number, noun) = "#{number} #{noun}#{"s" unless number == 1}"

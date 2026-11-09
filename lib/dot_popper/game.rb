@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # One round: the dots, the score, and the clock. It is the one thing in
+  # One game: the dots, the score, and the clock. It is the one thing in
   # the rules that changes, and it changes by swapping in new values, so a
   # tap changes all three at once and says what it did with an event.
-  class Round
+  class Game
     attr_reader :field, :dots, :score, :countdown, :elapsed, :spawns, :streak, :bonus
 
-    # A round that goes on from where it was left before its clock first
+    # A game that goes on from where it was left before its clock first
     # ran, as the tutorial leaves it: +dots+ (a Stack) as they are, its
     # fresh dot under the rest, the +score+ they made, and +seconds+ on
-    # the clock. From there it is a round like any other: its clock runs
+    # the clock. From there it is a game like any other: its clock runs
     # from its first update, each pop spawns a dot under every dot there,
     # and a tap reaches only the topmost.
     # Its streak starts at none: the tutorial's pops were its own.
@@ -46,13 +46,13 @@ module DotPopper
       return if over?
 
       @dots = dots.map_dots { it.move(seconds, field) }
-      @elapsed += [seconds, countdown.remaining].min # a round plays no longer than its clock
+      @elapsed += [seconds, countdown.remaining].min # a game plays no longer than its clock
       @countdown = countdown.tick(seconds)
     end
 
     # Taps the point (+x+, +y+), which reaches only the topmost dot there.
     # Returns the event that describes what happened, or nil once the
-    # round is over.
+    # game is over.
     def tap_at(x, y)
       return if over?
 
@@ -63,7 +63,7 @@ module DotPopper
       end
     end
 
-    # Fits the round to a window that changed size, or a phone turned,
+    # Fits the game to a window that changed size, or a phone turned,
     # keeping every dot where it was in proportion (Dot#refit), and so on
     # screen.
     def field=(field)

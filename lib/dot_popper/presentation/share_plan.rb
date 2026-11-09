@@ -29,7 +29,7 @@ module DotPopper
       GAPS = { heading: 0, message: 14, note: 12, buttons: 18 }.freeze
       LINE = 1.2 # the message's lines apart, in a line's height
       BUTTON = 3.4 # Close's and Copy's widest, in their height
-      FACTS = " · " # what sets the round's facts apart in their line
+      FACTS = " · " # what sets the game's facts apart in their line
       SIDE = 1.5 # the bubble's side padding, in its padding above
       KEEP = " " # a space no line breaks at
 

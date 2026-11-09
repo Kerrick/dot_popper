@@ -72,7 +72,7 @@ module DotPopper
           G.translate(x, y)
           G.scale(pose.scale_x, pose.scale_y)
           # A plain shadow has no soft edge, so it is the dot's own size,
-          # only dropped: a crescent below, never a dark band all round.
+          # only dropped: a crescent below, never a dark band all game.
           pen.color(pen.palette.shadow, sizes.shadow_alpha * opacity)
           G.circle(:fill, 0, radius * sizes.shadow_offset, radius, SEGMENTS)
           pose.freshness >= 0.5 ? flat_fresh(radius, opacity, bonus:) : flat_popped(radius, opacity)

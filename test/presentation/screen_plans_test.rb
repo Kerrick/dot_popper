@@ -3,7 +3,7 @@
 require_relative "presentation_helper"
 
 # The title's and Game Over's words never collide, whatever lines a
-# round leaves them to show and however small the window: each is
+# game leaves them to show and however small the window: each is
 # stacked in the room it has, shrinking its type and then leaving out
 # the least needed lines. And on every screen, a press reaches one
 # button at most, and a press on a button as drawn reaches it.
@@ -56,7 +56,7 @@ class ScreenPlansTest < Minitest::Test
   # row, their icons in the top right corner. Wherever they are, the
   # title's lines still fit, apart from them and from every other button,
   # and they stay put whatever the title shows, the dot-size choice
-  # included, so they never move as a round is played.
+  # included, so they never move as a game is played.
   def test_on_a_desktop_full_screen_and_quit_fit_the_title_at_every_window_size
     DESKTOP_WIDTHS.product(DESKTOP_HEIGHTS) do |width, height|
       screen_layout = layout(width, height)
@@ -176,13 +176,13 @@ class ScreenPlansTest < Minitest::Test
     end
   end
 
-  # The share preview, at every size, with the longest results a round
+  # The share preview, at every size, with the longest results a game
   # can give, and in each input's words: its blocks are apart and inside
   # the card, the card is inside the safe area, every line of the result
   # fits across its bubble, and Close and Copy are side by side, a
   # fingertip tall at least.
   def test_the_share_preview_never_overlaps_or_runs_off_screen
-    stats = DotPopper::RoundStats.start.with(pops: 128, slips: 11, duration: 141.0)
+    stats = DotPopper::GameStats.start.with(pops: 128, slips: 11, duration: 141.0)
     record = DotPopper::LifetimeStats::Record.new(kind: :longest_wait, value: 12.3)
     screen = format(WORDS.screen_size.fetch(:played), 38, 21)
     SIZES.each do |width, height|
@@ -344,7 +344,7 @@ class ScreenPlansTest < Minitest::Test
 
   # A Show on each screen in turn, with every button it can offer, and
   # with +window+'s on the title: the
-  # first title, Game Over, the title after a round with the dot-size
+  # first title, Game Over, the title after a game with the dot-size
   # choice where it shows, the Records screen, and Undo there once the
   # records are cleared.
   def each_screen(width, height, window: NoWindowControl.new)
@@ -360,7 +360,7 @@ class ScreenPlansTest < Minitest::Test
     show.close_share
     cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     show.primary
-    yield "the title after a round", show
+    yield "the title after a game", show
     show.open_records
     yield "the Records screen", show
     show.tap(*middle(show.clear_reach))

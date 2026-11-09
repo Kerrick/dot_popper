@@ -8,7 +8,7 @@ module DotPopperGui
     scenario :hover
 
     def play
-      quick_round
+      quick_game
       reach = show.records_reach
       move(reach.center_x - 20, reach.center_y)
       move(reach.center_x, reach.center_y)

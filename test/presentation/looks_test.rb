@@ -44,7 +44,7 @@ class LooksTest < Minitest::Test
     refute @show.looks_offered?, "nothing earned, and none in season"
   end
 
-  def test_a_round_in_season_wears_the_theme_and_keeps_it_to_choose_after_the_season
+  def test_a_game_in_season_wears_the_theme_and_keeps_it_to_choose_after_the_season
     show(paid: true)
 
     assert_equal :halloween, @show.worn.key
@@ -192,15 +192,15 @@ class LooksTest < Minitest::Test
     @wardrobe = wardrobe
     @show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, entitlement:, wardrobe:,
                      lifetime: DotPopper::Lifetime.new(DotPopper::BestScore::Memory.new, today: -> { @day }), **options)
-    finish_round
+    finish_game
   end
 
   def open_records = @show.open_records
 
-  def finish_round
+  def finish_game
     press_main
-    fresh = @cabinet.round.dots.find(&:fresh?)
-    clear_around!(@cabinet.round, fresh)
+    fresh = @cabinet.game.dots.find(&:fresh?)
+    clear_around!(@cabinet.game, fresh)
     @show.tap(fresh.x, fresh.y)
     @cabinet.update(20)
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)

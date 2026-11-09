@@ -57,7 +57,7 @@ class SessionTest < Minitest::Test
   end
 
   def played(score: 60)
-    @session.round_finished(score:, sized_to_screen: true)
+    @session.game_finished(score:, sized_to_screen: true)
     pump
   end
 
@@ -343,7 +343,7 @@ class SessionTest < Minitest::Test
     refute_predicate @session, :member?
   end
 
-  def test_nothing_is_sent_during_a_round
+  def test_nothing_is_sent_during_a_game
     joined
     @session.refresh
     @session.update(quiet: false)
@@ -353,15 +353,15 @@ class SessionTest < Minitest::Test
 
   def test_only_a_game_that_counts_is_sent
     joined
-    @session.round_finished(score: 10, sized_to_screen: false)
-    @session.round_finished(score: 0, sized_to_screen: true)
+    @session.game_finished(score: 10, sized_to_screen: false)
+    @session.game_finished(score: 0, sized_to_screen: true)
     pump
 
     assert_empty @worker.started
   end
 
   def test_a_non_member_reports_nothing
-    @session.round_finished(score: 10, sized_to_screen: true)
+    @session.game_finished(score: 10, sized_to_screen: true)
     pump
 
     assert_empty @worker.started

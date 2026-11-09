@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # The round's clock at one moment. It counts down in real time, takes
+  # The game's clock at one moment. It counts down in real time, takes
   # rewards and penalties, and never reads less than zero.
   class Countdown < Data.define(:remaining)
     def initialize(remaining:) = super(remaining: [remaining.to_f, 0.0].max)

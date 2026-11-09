@@ -2,7 +2,7 @@
 
 module DotPopperGui
   # "Full screen" and Quit on a desktop's title, by the mouse alone, on
-  # a first title and after a round, with the records and the dot-size
+  # a first title and after a game, with the records and the dot-size
   # choice beside them: a click on "Full screen" fills the screen, where
   # the window's own buttons are gone, and the same button, now
   # "Window", puts the window back; a click on Quit asks Lota to quit at
@@ -20,10 +20,10 @@ module DotPopperGui
       check_drawn(:fullscreen, "Full screen")
       check_drawn(:quit, "Quit")
       keep_screenshot("window-buttons-#{layout.width.round}x#{layout.height.round}")
-      quick_round
+      quick_game
       wait(0.6)
-      check_drawn(:quit, "after a round, with the records and the dot-size choice, Quit")
-      keep_screenshot("window-buttons-#{layout.width.round}x#{layout.height.round}-after-a-round")
+      check_drawn(:quit, "after a game, with the records and the dot-size choice, Quit")
+      keep_screenshot("window-buttons-#{layout.width.round}x#{layout.height.round}-after-a-game")
       check_equal(words.full_screen, words.fullscreen_button(show.window.fullscreen?), "the button says Full screen")
       press_button(:fullscreen)
       settled_window("a click on Full screen fills the screen") { L::Window.fullscreen.first }

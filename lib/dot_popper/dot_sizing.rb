@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # How big a round's dots are, which the player chooses on the title.
+  # How big a game's dots are, which the player chooses on the title.
   # With SIZED_TO_SCREEN, dots sized to the screen and the DEFAULT, each
-  # round's radius is DotSize.fitted to its screen, so every screen has
-  # about the same room in radii, and rounds compare across devices.
+  # game's radius is DotSize.fitted to its screen, so every screen has
+  # about the same room in radii, and games compare across devices.
   # STANDARD, the standard dot size, is the spec's fixed radius: DotSize's
   # on every screen, so a small screen crowds sooner and plays harder.
-  # Either way the radius is set when a round starts and kept until it
+  # Either way the radius is set when a game starts and kept until it
   # ends, and speeds stay in radii per second. A save file still writes
   # STANDARD as "same", its name from before it was called standard.
   class DotSizing < Data.define(:name)
@@ -30,7 +30,7 @@ module DotPopper
     # The other choice.
     def toggled = sized_to_screen? ? STANDARD : SIZED_TO_SCREEN
 
-    # The field a round starts on, given the +screen+ as a Field at the
+    # The field a game starts on, given the +screen+ as a Field at the
     # usual dot size.
     def fit(screen)
       return screen unless sized_to_screen?
@@ -38,7 +38,7 @@ module DotPopper
       Field.new(screen.width, screen.height, DotSize.fitted(screen.width, screen.height).radius)
     end
 
-    # The class of screen a round on +screen+ counts among.
+    # The class of screen a game on +screen+ counts among.
     def size_class(screen) = sized_to_screen? ? SizeClass::FITTED : SizeClass.of(screen)
 
     def to_text = name

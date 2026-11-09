@@ -13,7 +13,7 @@ module DotPopper
     # on whole device pixels.
     class RecordsPainter < Data.define(:pen)
       G = ::Lota::Graphics
-      DIM = 0.3 # how much of a bar shows when its round counts elsewhere
+      DIM = 0.3 # how much of a bar shows when its game counts elsewhere
       MARK = 1.1 # the room a achievement's mark takes before its label, in rows' type
 
       def draw(show, layout)
@@ -50,7 +50,7 @@ module DotPopper
         value = pen.fonts.bold(size)
         sections = [sheet.bests, sheet.totals, sheet.goal, sheet.achievements].compact
         rows = sections.flat_map(&:rows).map { label.width(it.label) + value.width(it.value) + (size * 2) + (it.mark ? size * MARK : 0) }
-        titles = sections.map(&:title) + [Presentation::Words.last_rounds(sheet.scores.size)]
+        titles = sections.map(&:title) + [Presentation::Words.last_games(sheet.scores.size)]
         (rows + titles.map { value.width(it) }).max
       end
 
@@ -179,7 +179,7 @@ module DotPopper
       end
 
       def nothing_yet(words, layout, plan)
-        pen.text(words.no_rounds, pen.fonts.semibold(plan.text_size), layout.center_x, layout.center_y, pen.palette.soft)
+        pen.text(words.no_games, pen.fonts.semibold(plan.text_size), layout.center_x, layout.center_y, pen.palette.soft)
       end
 
       # The rows' type size, shrunk by whole sizes until every row's label
@@ -253,7 +253,7 @@ module DotPopper
       # The last scores as bars on a faint baseline, in a fresh dot's
       # deeper orange, the best of them in its light cream and labelled
       # with its score: lighter, so it stands out by more than its hue. A
-      # bar from a round that does not count toward the bests shown is
+      # bar from a game that does not count toward the bests shown is
       # drawn faint, and never labelled. The chart's title, above it, is
       # placed as a section's is.
       def chart(sheet, placed, size)

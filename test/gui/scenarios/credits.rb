@@ -9,7 +9,7 @@ module DotPopperGui
     scenario :credits
 
     def play
-      quick_round
+      quick_game
       open_records
       click_credits
       check(show.credits?, "a click on Credits opens them")
@@ -53,7 +53,7 @@ module DotPopperGui
       check(show.credits?, "C opens the credits")
       key(:escape)
       key(:escape)
-      check(show.title? && !show.records?, "Escape again goes back to the title, and starts no round")
+      check(show.title? && !show.records?, "Escape again goes back to the title, and starts no game")
     end
 
     private

@@ -5,7 +5,7 @@ module DotPopperGui
   # help sign on it, and pressed, the tutorial at
   # once, though the director never opens it on a Play. It plays as a
   # first Play's does: the guide taps the bright dot, and the player's tap
-  # pops it. Skipped, a round starts; back on the title, H opens it again.
+  # pops it. Skipped, a game starts; back on the title, H opens it again.
   #
   # It plays with the mouse, or with DOT_POPPER_GUI_INPUT=touch, a finger,
   # or with DOT_POPPER_GUI_INPUT=gamepad, Y.
@@ -25,7 +25,7 @@ module DotPopperGui
       keep_screenshot(name("title"))
       press_it(reach)
       check(show.tutorial?, "How to play opens the tutorial at once")
-      check(cabinet.state.is_a?(DotPopper::Cabinet::Title) && cabinet.round.nil?, "the game stays on its title meanwhile")
+      check(cabinet.state.is_a?(DotPopper::Cabinet::Title) && cabinet.game.nil?, "the game stays on its title meanwhile")
       wait_for("the tutorial's first beat", within: 900) { show.tutorial&.beat == :aim }
       wait(0.6)
       keep_screenshot(name("tutorial"))
@@ -35,7 +35,7 @@ module DotPopperGui
       how.call(bright.x, bright.y)
       check_equal(:points, show.tutorial.beat, "a tap on the bright dot pops it")
       key(:escape)
-      check(show.playing?, "Escape skips it, and the round starts")
+      check(show.playing?, "Escape skips it, and the game starts")
       run_out_the_clock
       continue_to_title(how)
       key(:h)

@@ -13,87 +13,87 @@ class BonusTest < Minitest::Test
     assert_equal [8, 3, 3.0], [Rules::BONUS.streak, Rules::BONUS.points, Rules::BONUS.seconds]
   end
 
-  # A round on a field so wide that its dots, which never move here,
+  # A game on a field so wide that its dots, which never move here,
   # rarely cover one another, so each fresh dot can be popped on the spot.
-  def calm_round(**) = DotPopper::Round.new(field(4000, 3000), random: Random.new(3), **)
+  def calm_game(**) = DotPopper::Game.new(field(4000, 3000), random: Random.new(3), **)
 
-  def pop_next(round)
-    fresh = round.dots.find(&:fresh?)
-    round.tap_at(fresh.x, fresh.y)
+  def pop_next(game)
+    fresh = game.dots.find(&:fresh?)
+    game.tap_at(fresh.x, fresh.y)
   end
 
-  def test_a_round_has_no_bonus_dot_before_a_streak
-    round = calm_round
-    events = Array.new(Rules::BONUS.streak - 1) { pop_next(round) }
+  def test_a_game_has_no_bonus_dot_before_a_streak
+    game = calm_game
+    events = Array.new(Rules::BONUS.streak - 1) { pop_next(game) }
 
     assert(events.none? { it.spawned.bonus? })
-    assert_equal Rules::BONUS.streak - 1, round.streak
+    assert_equal Rules::BONUS.streak - 1, game.streak
   end
 
   def test_the_pop_that_completes_the_streak_spawns_a_bonus_dot_in_place_of_the_ordinary_one
-    round = calm_round
-    events = Array.new(Rules::BONUS.streak) { pop_next(round) }
+    game = calm_game
+    events = Array.new(Rules::BONUS.streak) { pop_next(game) }
 
     assert events.last.spawned.bonus?
     assert events.last.spawned.fresh?
-    assert_equal events.size + 1, round.dots.size, "one new dot, not two"
-    assert_equal 1, round.dots.count(&:fresh?), "still one bright dot to pop"
-    assert_equal [events.last.spawned], round.dots.select(&:bonus?)
-    assert_equal 0, round.streak, "the count starts over once a bonus dot is earned"
+    assert_equal events.size + 1, game.dots.size, "one new dot, not two"
+    assert_equal 1, game.dots.count(&:fresh?), "still one bright dot to pop"
+    assert_equal [events.last.spawned], game.dots.select(&:bonus?)
+    assert_equal 0, game.streak, "the count starts over once a bonus dot is earned"
   end
 
   def test_popping_the_bonus_dot_pays_its_points_and_seconds_on_top_of_a_pops_own
-    round = calm_round
-    Rules::BONUS.streak.times { pop_next(round) }
-    score = round.score
-    left = round.countdown.remaining
+    game = calm_game
+    Rules::BONUS.streak.times { pop_next(game) }
+    score = game.score
+    left = game.countdown.remaining
 
-    event = pop_next(round)
+    event = pop_next(game)
 
     assert event.dot.bonus?
     assert_equal Rules::POP_POINTS + Rules::BONUS.points, event.points
     assert_equal Rules::POP_SECONDS + Rules::BONUS.seconds, event.seconds
-    assert_equal score + event.points, round.score
-    assert_in_delta left + event.seconds, round.countdown.remaining
+    assert_equal score + event.points, game.score
+    assert_in_delta left + event.seconds, game.countdown.remaining
     refute event.spawned.bonus?, "the next bright dot is an ordinary one"
   end
 
   def test_a_wrong_tap_starts_the_count_over
-    round = calm_round
-    (Rules::BONUS.streak - 1).times { pop_next(round) }
-    popped = round.dots.find(&:popped?)
+    game = calm_game
+    (Rules::BONUS.streak - 1).times { pop_next(game) }
+    popped = game.dots.find(&:popped?)
 
-    assert_instance_of Events::Penalized, round.tap_at(popped.x, popped.y)
+    assert_instance_of Events::Penalized, game.tap_at(popped.x, popped.y)
 
-    assert_equal 0, round.streak
-    refute pop_next(round).spawned.bonus?, "one more pop would have earned it, had the streak held"
+    assert_equal 0, game.streak
+    refute pop_next(game).spawned.bonus?, "one more pop would have earned it, had the streak held"
   end
 
   def test_a_bonus_dot_already_earned_stays_when_the_streak_breaks
-    round = calm_round
-    Rules::BONUS.streak.times { pop_next(round) }
-    bonus = round.dots.find(&:bonus?)
-    popped = round.dots.find(&:popped?)
+    game = calm_game
+    Rules::BONUS.streak.times { pop_next(game) }
+    bonus = game.dots.find(&:bonus?)
+    popped = game.dots.find(&:popped?)
 
-    assert_instance_of Events::Penalized, round.tap_at(popped.x, popped.y)
+    assert_instance_of Events::Penalized, game.tap_at(popped.x, popped.y)
 
-    assert_equal 0, round.streak
-    assert round.dots.find { it.id == bonus.id }.bonus?
-    assert_equal Rules::POP_POINTS + Rules::BONUS.points, pop_next(round).points
+    assert_equal 0, game.streak
+    assert game.dots.find { it.id == bonus.id }.bonus?
+    assert_equal Rules::POP_POINTS + Rules::BONUS.points, pop_next(game).points
   end
 
   def test_popping_a_bonus_dot_does_not_count_toward_the_next_streak
-    round = calm_round
-    (Rules::BONUS.streak + 1).times { pop_next(round) }
+    game = calm_game
+    (Rules::BONUS.streak + 1).times { pop_next(game) }
 
-    assert_equal 0, round.streak
-    (Rules::BONUS.streak - 1).times { assert_equal false, pop_next(round).spawned.bonus? }
-    assert pop_next(round).spawned.bonus?
+    assert_equal 0, game.streak
+    (Rules::BONUS.streak - 1).times { assert_equal false, pop_next(game).spawned.bonus? }
+    assert pop_next(game).spawned.bonus?
   end
 
   def test_the_bonus_never_changes_where_or_how_fast_any_dot_spawns
-    with = calm_round
-    without = calm_round(bonus: nil)
+    with = calm_game
+    without = calm_game(bonus: nil)
     ((Rules::BONUS.streak + 1) * 2).times do
       pop_next(with)
       pop_next(without)
@@ -105,27 +105,27 @@ class BonusTest < Minitest::Test
   end
 
   def test_without_a_bonus_rule_a_streak_earns_nothing
-    round = calm_round(bonus: nil)
-    events = Array.new(Rules::BONUS.streak * 2) { pop_next(round) }
+    game = calm_game(bonus: nil)
+    events = Array.new(Rules::BONUS.streak * 2) { pop_next(game) }
 
     assert(events.none? { it.spawned.bonus? })
     assert(events.all? { it.points == Rules::POP_POINTS })
   end
 
-  def test_a_round_resumed_from_the_tutorial_starts_its_streak_at_none
+  def test_a_game_resumed_from_the_tutorial_starts_its_streak_at_none
     popped = [dot(300, 300, popped: true), dot(500, 300, popped: true)]
-    round = DotPopper::Round.resume(field, dots: DotPopper::Stack.new(dots: popped + [dot(100, 100)]), score: 2,
+    game = DotPopper::Game.resume(field, dots: DotPopper::Stack.new(dots: popped + [dot(100, 100)]), score: 2,
                                            seconds: 10)
 
-    assert_equal 0, round.streak
+    assert_equal 0, game.streak
   end
 
   def test_stats_count_the_bonus_dots_popped
-    stats = DotPopper::RoundStats.start
-    round = calm_round
+    stats = DotPopper::GameStats.start
+    game = calm_game
     (Rules::BONUS.streak + 1).times do
-      event = pop_next(round)
-      stats = stats.record(event, at: round.elapsed)
+      event = pop_next(game)
+      stats = stats.record(event, at: game.elapsed)
     end
 
     assert_equal 1, stats.bonuses

@@ -17,7 +17,7 @@ class ClearingRecordsTest < Minitest::Test
     @lifetime = DotPopper::Lifetime.new(@folder.call("lifetime"), today: -> { Date.new(2026, 11, 5) })
     @keeper = DotPopper::RecordKeeper.new(best: @cabinet.best, lifetime: @lifetime, folder: @folder)
     @show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, lifetime: @lifetime, keeper: @keeper)
-    finish_round
+    finish_game
     @show.open_records
   end
 
@@ -34,11 +34,11 @@ class ClearingRecordsTest < Minitest::Test
     refute @show.records.empty
 
     @show.update(0.1)
-    assert @show.records.empty, "the screen says there are no rounds yet"
+    assert @show.records.empty, "the screen says there are no games yet"
     assert @show.undo_offer
     refute @show.clear_offered?
     assert_equal 0, @show.marquee.best
-    assert_equal 0, @lifetime.stats.rounds
+    assert_equal 0, @lifetime.stats.games
   end
 
   def test_letting_go_too_soon_changes_nothing
@@ -49,7 +49,7 @@ class ClearingRecordsTest < Minitest::Test
 
     assert @show.records?
     refute @show.records.empty
-    assert_equal 1, @lifetime.stats.rounds
+    assert_equal 1, @lifetime.stats.games
     assert_in_delta HOLD, @show.clearing.let_go_ago(@show.now), 1e-9
   end
 
@@ -86,7 +86,7 @@ class ClearingRecordsTest < Minitest::Test
     assert @show.records?, "where Undo was is empty space, which does nothing"
   end
 
-  def test_a_round_ends_the_offer
+  def test_a_game_ends_the_offer
     clear_by(:mouse)
     @show.close_records
     press_main
@@ -143,10 +143,10 @@ class ClearingRecordsTest < Minitest::Test
 
   def middle(rect) = [rect.center_x, rect.center_y]
 
-  def finish_round
+  def finish_game
     press_main
-    fresh = @cabinet.round.dots.find(&:fresh?)
-    clear_around!(@cabinet.round, fresh)
+    fresh = @cabinet.game.dots.find(&:fresh?)
+    clear_around!(@cabinet.game, fresh)
     @show.tap(fresh.x, fresh.y)
     @cabinet.update(20)
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)

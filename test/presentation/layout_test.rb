@@ -113,7 +113,7 @@ class LayoutTest < Minitest::Test
 
   # A desktop's "Full screen" and Quit stand in the bottom row, between
   # "How to play" and the mute button, as tall as the other buttons and
-  # apart from them: labelled, or as their icons, round, a fingertip
+  # apart from them: labelled, or as their icons, game, a fingertip
   # across. Where the row has no room even for the icons, they stand a
   # row above its right end, or in the top right corner.
   def test_full_screen_and_quit_stand_in_the_bottom_row_between_how_to_play_and_the_mute_button

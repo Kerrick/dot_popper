@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # Watches a Cabinet's events (Cabinet#subscribe) for the Achievements a round earns,
+  # Watches a Cabinet's events (Cabinet#subscribe) for the Achievements a game earns,
   # and decides nothing: it only reads what the rules report and the
-  # round they happened in. #earned lists, in Achievement::IDS order, every achievement
-  # the round in play, or the one just finished, has earned so far.
+  # game they happened in. #earned lists, in Achievement::IDS order, every achievement
+  # the game in play, or the one just finished, has earned so far.
   #
-  # Dots, the clock, and a round's length are read from the round itself
+  # Dots, the clock, and a game's length are read from the game itself
   # when an event arrives, which is when the rules have already settled
   # them: a popped dot's place in the stack, the clock after its second.
   class AchievementWatch
     def initialize
-      @round = nil
+      @game = nil
       @targets = {}
       reset
     end
@@ -19,13 +19,13 @@ module DotPopper
     def earned = Achievement::IDS.select { @found.include?(it) }
 
     def call(event)
-      round = @round
+      game = @game
       case event
-      when Events::RoundStarted then begin_round(event.round)
-      when Events::Popped then popped(event, round) if round
-      when Events::Penalized then penalized(round) if round
+      when Events::GameStarted then begin_game(event.game)
+      when Events::Popped then popped(event, game) if game
+      when Events::Penalized then penalized(game) if game
       when Events::Missed then @tapped = true
-      when Events::RoundEnded then ended(event)
+      when Events::GameEnded then ended(event)
       end
     end
 
@@ -43,33 +43,33 @@ module DotPopper
       @tapped = false
     end
 
-    def begin_round(round)
+    def begin_game(game)
       reset
-      @round = round
+      @game = game
     end
 
-    def popped(event, round)
-      dots = round.dots.to_a
+    def popped(event, game)
+      dots = game.dots.to_a
       sharp(event.dot, dots.take_while { it.id != event.dot.id })
       last = @last_pop
-      waited(round.elapsed - last) if last
+      waited(game.elapsed - last) if last
       streak
-      early(round)
-      clock(round)
-      find(:comeback) if @low && round.countdown.remaining >= Achievement::BACK
-      appeared(event.spawned, dots.take_while { it.id != event.spawned.id }, round)
+      early(game)
+      clock(game)
+      find(:comeback) if @low && game.countdown.remaining >= Achievement::BACK
+      appeared(event.spawned, dots.take_while { it.id != event.spawned.id }, game)
     end
 
-    def penalized(round)
+    def penalized(game)
       @run = 0
       @slipped = true
       @tapped = true
-      clock(round)
+      clock(game)
     end
 
     def ended(event)
       find(:big_score) if event.score >= Achievement::BIG_SCORE
-      find(:long_haul) if event.round.elapsed >= Achievement::LONG_HAUL
+      find(:long_haul) if event.game.elapsed >= Achievement::LONG_HAUL
     end
 
     def sharp(dot, above)
@@ -92,20 +92,20 @@ module DotPopper
       find(:shake_off) if @slipped && @run >= Achievement::SHAKE_OFF
     end
 
-    def early(round)
-      @early += 1 if round.elapsed <= Achievement::FAST_START_SECONDS
+    def early(game)
+      @early += 1 if game.elapsed <= Achievement::FAST_START_SECONDS
       find(:fast_start) if @early >= Achievement::FAST_START
     end
 
-    def clock(round) = (@low ||= round.countdown.remaining <= Achievement::BRINK)
+    def clock(game) = (@low ||= game.countdown.remaining <= Achievement::BRINK)
 
     # A fresh dot has slid under the others: whether it spawned with no
     # room for a fingertip yet, so the wait to pop it is waiting for it to
     # slide out, not for the player.
-    def appeared(dot, above, round)
+    def appeared(dot, above, game)
       @covered = !target(dot.radius).clear_on?(dot.x, dot.y, above.select { it.overlaps?(dot) })
       @tapped = false
-      @last_pop = round.elapsed
+      @last_pop = game.elapsed
     end
 
     def target(radius) = @targets[radius] ||= TouchTarget.on(radius)

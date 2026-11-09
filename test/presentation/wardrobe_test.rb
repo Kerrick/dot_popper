@@ -33,9 +33,9 @@ class WardrobeTest < Minitest::Test
     assert_predicate wardrobe.worn, :ordinary?
   end
 
-  def test_one_round_in_season_earns_a_theme_for_good
+  def test_one_game_in_season_earns_a_theme_for_good
     wardrobe = wardrobe(paid: true)
-    wardrobe.round_played
+    wardrobe.game_played
     @day = Date.new(2026, 11, 8)
 
     assert_equal [:classic, :halloween], wardrobe.choices.map(&:key)
@@ -43,10 +43,10 @@ class WardrobeTest < Minitest::Test
     assert_equal [:classic, :halloween], wardrobe(paid: true).choices.map(&:key), "kept by the store"
   end
 
-  def test_a_round_out_of_season_earns_nothing_and_a_missed_theme_returns_next_year
+  def test_a_game_out_of_season_earns_nothing_and_a_missed_theme_returns_next_year
     @day = Date.new(2026, 11, 8)
     wardrobe = wardrobe(paid: true)
-    wardrobe.round_played
+    wardrobe.game_played
 
     assert_equal [:classic], wardrobe.choices.map(&:key)
     refute wardrobe.offered?
@@ -58,7 +58,7 @@ class WardrobeTest < Minitest::Test
 
   def test_a_theme_earned_while_free_is_kept_and_worn_on_purchase
     free = wardrobe(paid: false)
-    free.round_played
+    free.game_played
     @day = Date.new(2026, 11, 8)
 
     assert_predicate free.worn, :ordinary?
@@ -74,13 +74,13 @@ class WardrobeTest < Minitest::Test
 
   def test_a_chosen_look_is_kept_all_year_and_over_the_seasons_theme
     wardrobe = wardrobe(paid: true)
-    wardrobe.round_played
+    wardrobe.game_played
     wardrobe.wear(THEMES.first)
 
     assert_predicate wardrobe.worn, :ordinary?
 
     @day = Date.new(2026, 12, 20)
-    wardrobe.round_played
+    wardrobe.game_played
 
     assert_predicate wardrobe(paid: true).worn, :ordinary?, "a choice stands over the season"
     wardrobe.wear(THEMES.find { it.key == :winter })
@@ -97,7 +97,7 @@ class WardrobeTest < Minitest::Test
     assert_predicate wardrobe.worn, :ordinary?
   end
 
-  def test_the_look_changes_only_when_refreshed_so_a_round_is_never_dressed_twice
+  def test_the_look_changes_only_when_refreshed_so_a_game_is_never_dressed_twice
     wardrobe = wardrobe(paid: true)
     @day = Date.new(2026, 11, 8)
 

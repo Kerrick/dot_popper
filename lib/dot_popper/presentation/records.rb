@@ -17,7 +17,7 @@ module DotPopper
     # streaks (+streak+ is the current one, as it stands today), and the
     # last few scores for the chart. The bests, and +best+, are those of
     # screens of +size_class+, the screen's now, and +notes+ say how big
-    # +field+, the screen, is, and what +sizing+ (DotSizing) does. With no round played yet, +empty+ is true
+    # +field+, the screen, is, and what +sizing+ (DotSizing) does. With no game played yet, +empty+ is true
     # and there is nothing to list. +mine+ says, for each of the last
     # +scores+, whether it was played in +size_class+, and so counts
     # toward the bests shown; the chart dims the others, and +chart_note+
@@ -48,13 +48,13 @@ module DotPopper
         mine = stats.bests_in(size_class)
         bests = RecordSection.new(title: words.bests_heading(sizing), rows: [
           RecordRow.new(label: labels[:best_score], value: best.to_s),
-          RecordRow.new(label: labels[:longest_round], value: Words.count(mine.longest_round.round, "second")),
+          RecordRow.new(label: labels[:longest_game], value: Words.count(mine.longest_game.round, "second")),
           RecordRow.new(label: labels[:longest_run], value: mine.longest_run.to_s),
           RecordRow.new(label: labels[:fastest_pop], value: words.seconds_or_none(mine.fastest_pop)),
           RecordRow.new(label: labels[:longest_wait], value: words.seconds_or_none(mine.longest_wait))
         ])
         totals = RecordSection.new(title: labels[:totals], rows: [
-          RecordRow.new(label: labels[:rounds], value: stats.rounds.to_s),
+          RecordRow.new(label: labels[:games], value: stats.games.to_s),
           RecordRow.new(label: labels[:pops], value: stats.pops.to_s),
           RecordRow.new(label: labels[:slips], value: stats.slips.to_s),
           RecordRow.new(label: labels[:seconds], value: Words.duration(stats.seconds)),
@@ -65,7 +65,7 @@ module DotPopper
           RecordRow.new(label: labels[:longest_streak], value: Words.count(stats.streak.longest, "day"))
         ])
         mine = stats.recent_classes.map { it == size_class }
-        new(bests:, totals:, goal:, scores: stats.recent, empty: stats.rounds.zero?,
+        new(bests:, totals:, goal:, scores: stats.recent, empty: stats.games.zero?,
             notes: field ? words.screen_notes(field, sizing) : [], mine:,
             chart_note: (words.chart_note(sizing) unless mine.all?), achievements: achievements_section(achievements, paid:))
       end
@@ -79,9 +79,9 @@ module DotPopper
     end
 
     # The last scores as bars, oldest on the left, in +slots+ places of
-    # equal width so the chart fills up as rounds are played. Bars stand
+    # equal width so the chart fills up as games are played. Bars stand
     # on the bottom of their rect, as tall as their score against the
-    # highest; a round of 0 still shows a stub one device pixel high.
+    # highest; a game of 0 still shows a stub one device pixel high.
     # +mine+ says which scores count toward the bests shown (by default,
     # all); the others are dim, and never the best, though they keep
     # their true height, so every bar is drawn to one scale.
@@ -217,7 +217,7 @@ module DotPopper
         y = body_top
         parts.flat_map do |part|
           if part == :chart
-            placed = [Placed.new(item: Words.last_rounds(sheet.scores.size), x:, y: y + (row * 0.5), width:, height: row),
+            placed = [Placed.new(item: Words.last_games(sheet.scores.size), x:, y: y + (row * 0.5), width:, height: row),
                       Placed.new(item: :chart, x:, y: y + row, width:, height: row * look.chart)]
             if sheet.chart_note
               note = ChartNote.new(text: sheet.chart_note)

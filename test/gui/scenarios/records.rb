@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # The Records screen, offered once a round has finished: opened from
+  # The Records screen, offered once a game has finished: opened from
   # the title by a click and by a gamepad's X, and left by a click on
   # Back, by Escape, which must not quit the game from there, and by B. A
   # click elsewhere on it does nothing.
@@ -10,8 +10,8 @@ module DotPopperGui
 
     def play
       check(!show.records_offered?, "a first-time title offers no records")
-      quick_round
-      check(show.records_offered?, "the title offers the records once a round has finished")
+      quick_game
+      check(show.records_offered?, "the title offers the records once a game has finished")
       open_by_click
       lit = screenshot.lit_in(DotPopper::Presentation::Rect.new(x: layout.center_x - 200, y: layout.top,
                                                                 width: 400, height: layout.safe.height * 0.5))
@@ -39,7 +39,7 @@ module DotPopperGui
     end
 
     def closed(how)
-      check(!show.records? && show.title?, "#{how} goes back to the title, and starts no round")
+      check(!show.records? && show.title?, "#{how} goes back to the title, and starts no game")
     end
   end
 end

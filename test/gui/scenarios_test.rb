@@ -16,12 +16,12 @@ require "fileutils"
 class GuiScenariosTest < Minitest::Test
   GAME = File.expand_path("../..", __dir__)
 
-  def test_a_round_from_title_to_title
-    play("round", "screens come in order", "hidden under it is outlined", "Game Over teaches the stacking rule",
-         "a click on empty space at Game Over does nothing", "Continue goes back to the title", "rounds.csv logs the score")
+  def test_a_game_from_title_to_title
+    play("game", "screens come in order", "hidden under it is outlined", "Game Over teaches the stacking rule",
+         "a click on empty space at Game Over does nothing", "Continue goes back to the title", "games.csv logs the score")
   end
 
-  def test_resizing_a_round_and_the_pile
+  def test_resizing_a_game_and_the_pile
     play("resizing", "a resize to 500x400", "F11 fullscreen", "fullscreen off",
          "the pile's dots are all inside the shrunk window")
   end
@@ -60,7 +60,7 @@ class GuiScenariosTest < Minitest::Test
   end
 
   def test_choosing_the_dot_size_on_a_narrow_window
-    play("dot_size", "the first round's dots are sized to the window", "the next round's dots are the standard size",
+    play("dot_size", "the first game's dots are sized to the window", "the next game's dots are the standard size",
          window: "400x850")
   end
 
@@ -97,14 +97,14 @@ class GuiScenariosTest < Minitest::Test
   end
 
   def test_a_free_player_buys_the_paid_version_on_a_test_builds_store
-    play("purchase", "the plays have run out", "Play leads to the offer", "the store gave its price", "Buy waits for the store",
+    play("purchase", "the games have run out", "Play leads to the offer", "the store gave its price", "Buy waits for the store",
          "the Records screen no longer offers the purchase", "Looks opens", "scenario purchase passed",
-         DOT_POPPER_FREE_PLAYS: "1", DOT_POPPER_TODAY: "2026-10-31")
+         DOT_POPPER_FREE_GAMES: "1", DOT_POPPER_TODAY: "2026-10-31")
   end
 
   def test_the_tutorial_played_through_with_a_mouse
     play("tutorial", "the first Play opens the tutorial", "a tap on the popped dot costs two seconds",
-         "the rules hear nothing yet", "a tap on the clear bright dot pops it", "the round goes on with the tutorial's dots",
+         "the rules hear nothing yet", "a tap on the clear bright dot pops it", "the game goes on with the tutorial's dots",
          "and its 8 seconds",
          "the tutorial told the rules nothing", "tutorial.txt remembers", DOT_POPPER_TUTORIAL: "1")
   end
@@ -139,8 +139,8 @@ class GuiScenariosTest < Minitest::Test
          DOT_POPPER_GUI_INPUT: "gamepad", DOT_POPPER_FAKE_GAMEPAD: "1")
   end
 
-  def test_a_round_without_shaders
-    play("round", "screens come in order", DOT_POPPER_NO_SHADERS: "1")
+  def test_a_game_without_shaders
+    play("game", "screens come in order", DOT_POPPER_NO_SHADERS: "1")
   end
 
   private

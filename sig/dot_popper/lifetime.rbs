@@ -10,7 +10,7 @@ module DotPopper
 
     def initialize: (BestScore::_Store store, ?today: ^() -> Date, ?legacy: SizeClass) -> void
 
-    def record: (RoundStats round, SizeClass size_class) -> Result
+    def record: (GameStats game, SizeClass size_class) -> Result
 
     def today: () -> Date
 

@@ -41,26 +41,26 @@ module DotPopper
             now: 0.0)
       end
 
-      # The HUD after reading +round+ at time +now+. Yields the whole
+      # The HUD after reading +game+ at time +now+. Yields the whole
       # seconds left when the clock runs down past a second while urgent.
-      def read(round, now)
-        score = round.score
-        seconds = [round.countdown.whole_seconds, 0].max
+      def read(game, now)
+        score = game.score
+        seconds = [game.countdown.whole_seconds, 0].max
         if self.seconds && seconds < self.seconds && seconds.positive? && seconds <= look.urgent_below && block_given?
           yield seconds
         end
-        showing(score, seconds, now).streaking(round, now)
+        showing(score, seconds, now).streaking(game, now)
       end
 
-      # The HUD showing +round+'s streak at time +now+; a streak that grew
+      # The HUD showing +game+'s streak at time +now+; a streak that grew
       # bumps its newest dot.
-      def streaking(round, now)
-        return with(streak: nil, size: nil, ready: false) unless round.bonus && !round.over?
+      def streaking(game, now)
+        return with(streak: nil, size: nil, ready: false) unless game.bonus && !game.over?
 
-        streak = round.streak
-        ready = round.dots.any? { it.fresh? && it.bonus? }
+        streak = game.streak
+        ready = game.dots.any? { it.fresh? && it.bonus? }
         grew = self.streak && streak > self.streak
-        with(streak:, size: round.bonus.streak, ready:, streak_changed: grew ? now : streak_changed)
+        with(streak:, size: game.bonus.streak, ready:, streak_changed: grew ? now : streak_changed)
       end
 
       # The streak's small dots as they should be drawn, or nil without one.

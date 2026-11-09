@@ -3,7 +3,7 @@
 module DotPopperGui
   # Every look, in the screens it dresses, at the sizes that matter, kept
   # as screenshots to look at side by side: the title, the Records screen,
-  # the Looks screen, a round under way and Game Over, on a desktop's
+  # the Looks screen, a game under way and Game Over, on a desktop's
   # windows and on phone-shaped ones. It checks nothing but that each look
   # can be worn; DOT_POPPER_GALLERY names the shots. Needs
   # DOT_POPPER_PAID=1. Not part of rake test:gui: it is for reviewing the
@@ -17,7 +17,7 @@ module DotPopperGui
     def play
       wardrobe = show.instance_variable_get(:@wardrobe)
       wardrobe.instance_variable_set(:@earned, DotPopper::Presentation::Look::THEMES.map(&:key))
-      quick_round
+      quick_game
       DotPopper::Presentation::Look::THEMES.each { gallery(wardrobe, it) }
     end
 
@@ -40,14 +40,14 @@ module DotPopperGui
           show.close_records
         end
       end
-      ROUNDS.each { |width, height, phone| at(width, height, phone) { round_shots(theme) } }
+      ROUNDS.each { |width, height, phone| at(width, height, phone) { game_shots(theme) } }
     end
 
-    def round_shots(theme)
-      start_round
+    def game_shots(theme)
+      start_game
       4.times { pop_fresh }
       wait(1.2)
-      shoot(theme, "round", settle: 0)
+      shoot(theme, "game", settle: 0)
       run_out_the_clock
       wait(2.5)
       shoot(theme, "over", settle: 0)

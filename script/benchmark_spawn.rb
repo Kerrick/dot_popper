@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Times the spawn rule (DotPopper::Spawner) with 100 popped dots on the
-# field, about as many as a long round on a big monitor ends with. A
+# field, about as many as a long game on a big monitor ends with. A
 # spawn happens once per pop, so it only has to be quick next to a frame.
 # It counts the CPU time of this thread, so a busy machine skews it less.
 #
