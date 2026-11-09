@@ -1398,3 +1398,18 @@ After the second pop, a fifth beat of about five seconds. The row of eight arriv
 **Small departures.** The second pop now takes its popped look when this beat opens, while time is still stopped, so nothing bright is left that can't be tapped. A wrong tap's emptying the row is not taught, to keep the beat to one idea.
 
 **To reverse:** in `Tutorial#pop_next`, cue `hand_over` instead of `show_the_streak`, and put `settle(NEXT)` back at the top of `hand_over`. Playtest whether five seconds feels short, and whether players read the first five lit dots as theirs.
+
+
+## Test builds reach the live group server; store builds stay unset
+
+**Decision:** `Groups::Settings.server_url(env, test_build:)` answers `https://server.dot-popper.setdef.com` when `Presentation::Storefront.test_build?` (`BUILD_CHANNEL` is nil, as every CI kit is today), and `SERVER_URL` (still nil) for any store channel. `DOT_POPPER_SERVER` still overrides either; empty means none. The maintainer approved this for playtests only.
+
+**Certificates:** `Link` uses `Net::HTTP` with OpenSSL's default store, and Fledge's runtimes handle that on phones: the iOS and Android builds carry `libexec/cert.pem` and point OpenSSL at it (android.c answers `X509_get_default_cert_file`, since an Android app reads no `SSL_CERT_FILE`). Read from Fledge's source; not run on a device. The Android manifest already holds INTERNET. The iOS privacy manifest declares no collected data and has no ATS or domain list to change (Ruby's sockets bypass ATS); whether it must declare the dot and scores sent is for the maintainer's store release.
+
+**Test builds are not Paid:** a test build behaves as the final game, with the same free-play limit and paid offer; there is no Paid default and no test-only control (a playtest with switches the final game lacks is not a playtest). Phones are metered whichever the channel, because `Storefront.for` gives iOS and Android a store (`offered?`), and `FreePlays` meters where one is offered (tested). Desktop test builds have no store and are not metered. `DOT_POPPER_PAID` remains a developer setting, so "all holiday looks selectable in test builds" was not done.
+
+**Privacy wording:** the Group screen now shows its privacy line (it was written but never drawn) and adds that the server sees the IP address. README says the proxy and Rails logs see IPs and rate-limit entries keep them up to a day. Policy wording for store release is the maintainer's.
+
+**To reverse:** set `TEST_SERVER_URL` to nil in `Groups::Settings`.
+
+**Checked on 2026-11-08 from the Mac:** with the game's own `Session` and `Link` against the live server, one player registered, created a group, read it, reported a round, and a second joined, reported and left; both then left and sent `DELETE /player` (the token is gone and the server answered every call without error), so no test data remains. Phones were not run.

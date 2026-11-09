@@ -68,7 +68,7 @@ module DotPopper
                                                     channel: Presentation::Storefront.channel(@env))
                      end
         plays = free_plays(entitlement, metered: storefront.offered? && !flag?("DOT_POPPER_AUTOPLAY"))
-        groups = Groups::Session.at(Groups::Settings.server_url(@env), store: SaveFile.new(name: "group.txt"))
+        groups = Groups::Session.at(Groups::Settings.server_url(@env, test_build: Presentation::Storefront.test_build?), store: SaveFile.new(name: "group.txt"))
         @show = Presentation::Show.new(groups:, game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"),
                                        tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt"),

@@ -417,6 +417,11 @@ class SessionTest < Minitest::Test
 
   def test_the_server_url_is_one_setting
     assert_nil Groups::Settings.server_url({})
+    assert_equal Groups::Settings::TEST_SERVER_URL, Groups::Settings.server_url({}, test_build: true)
+    assert_match(%r{\Ahttps://}, Groups::Settings::TEST_SERVER_URL)
+    assert_equal "http://x:1", Groups::Settings.server_url({ "DOT_POPPER_SERVER" => "http://x:1" }, test_build: true)
+    assert_nil Groups::Settings.server_url({ "DOT_POPPER_SERVER" => "" }, test_build: true)
+    assert_nil Groups::Settings::SERVER_URL
     assert_equal "http://x:1", Groups::Settings.server_url({ "DOT_POPPER_SERVER" => "http://x:1" })
     refute_predicate Groups::Session.at(nil, store: @store), :available?
   end

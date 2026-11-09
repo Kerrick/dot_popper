@@ -50,6 +50,10 @@ module DotPopper
       BUILD_CHANNEL = nil
       CHANNEL_SETTING = "DOT_POPPER_CHANNEL"
 
+      # Whether this is a build for playtesters rather than a store: one
+      # with no channel, as every CI kit is today.
+      def self.test_build? = BUILD_CHANNEL.nil?
+
       # The channel this build is sold through, as +env+ and the build say.
       def self.channel(env)
         named = env.fetch(CHANNEL_SETTING, "")

@@ -45,6 +45,17 @@ class StorefrontTest < Minitest::Test
                  Storefront.url(:buy, 3, "/save dir/answer.txt")
   end
 
+  def test_a_phone_test_build_is_metered_like_the_final_game
+    assert_predicate Storefront, :test_build?
+    %w[iOS Android].each do |os|
+      store = Storefront.for(os, opener: @opener, answers: @answers, entitlement: @entitlement, channel: Storefront.channel({}))
+      plays = DotPopper::FreePlays.new(DotPopper::BestScore::Memory.new, today: -> { Date.today }, entitlement: @entitlement,
+                                                                         metered: store.offered?)
+
+      assert_predicate plays, :metered?, os
+    end
+  end
+
   def test_only_phones_have_a_store
     assert_instance_of Storefront, Storefront.for("iOS", opener: @opener, answers: @answers, entitlement: @entitlement)
     assert_instance_of Storefront, Storefront.for("Android", opener: @opener, answers: @answers, entitlement: @entitlement)

@@ -98,6 +98,7 @@ module DotPopper
         x0 = layout.center_x - (span / 2.0)
         x1 = wide ? x0 + room + margin : x0
         blurb = wrapped(GroupWords.blurb, under_heading, :text, span)
+        blurb += wrapped(GroupWords.privacy, blurb.last.y + line_height, :note, span)
         top = blurb.last.y + line_height
         label = GroupLine.new(text: GroupWords.mark_label, y: top, kind: :note)
         marks = mark_buttons(x0, top + (line_height * 0.8), room)

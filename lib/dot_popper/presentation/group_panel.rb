@@ -17,7 +17,7 @@ module DotPopper
       def join(paid) = paid ? "Join" : "Join (paid)"
       def create(paid) = paid ? "Create" : "Create (paid)"
       def needs_paid = "Friend groups come with the paid version."
-      def privacy = "Joining or creating sends your dot and scores to the group's server."
+      def privacy = "Joining or creating sends your dot and scores to the group's server, which also sees your IP address."
       def need_code = "Tap your friend's code."
       def erase = "Erase"
       def you = "You"
