@@ -72,7 +72,7 @@ module DotPopper
       end
 
       # The size a chip's words are set in, at type +scale+.
-      def chip_size(scale = 1.0) = layout.type_size(CHIP_TEXT, scale)
+      def chip_size(scale = 1.0) = [(CHIP_TEXT * scale).round, 12].max
 
       # How wide a chip is for its words: room for its mark, its words,
       # and its arrow when it opens something.
@@ -81,7 +81,7 @@ module DotPopper
         measure.width(:semibold, chip_size(scale), chip.text) + (height * (chip.opens ? 1.9 : 1.4))
       end
 
-      def chip_height(scale = 1.0) = [CHIP * layout.ui * scale, 30.0].max
+      def chip_height(scale = 1.0) = [CHIP * scale, 30.0].max
 
       # The size Share my score's words are set in, on a button +height+ tall.
       def self.share_size(height) = (height * PillLabel::RATIO).round

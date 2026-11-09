@@ -35,7 +35,7 @@ module DotPopper
       # LB and RB, the previous and the next theme, at the top right.
       def steps
         size = layout.control_height
-        width = size * 1.3
+        width = size * 1.6
         right = layout.safe.right - layout.page_margin
         y = layout.short? ? layout.back_button.y : layout.safe.y + layout.page_margin
         [[:theme_prev, Rect.new(x: right - (2 * width) - 8, y:, width:, height: size)], [:theme_next, Rect.new(x: right - width, y:, width:, height: size)]]

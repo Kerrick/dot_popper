@@ -51,7 +51,7 @@ module DotPopper
       def beside(text, icon, x, y, width, height, color, alpha)
         mark = height * GLYPH
         gap = height * GAP
-        font = fit(text, width - (height * 0.6) - mark - gap, height)
+        font = fit(text, width - (height * 0.35) - mark - gap, height)
         group = mark + gap + font.width(text)
         left = x + ((width - group) / 2.0)
         icon.call(left + (mark / 2.0), y + (height / 2.0), height)
