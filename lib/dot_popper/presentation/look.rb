@@ -81,7 +81,7 @@ module DotPopper
         title: "Dot Popper",
         play: ByInput.new(touch: "Play", mouse: "Play", gamepad: "Play (A)"),
         continue: ByInput.new(touch: "Continue", mouse: "Continue", gamepad: "Continue (A)"),
-        time_up: "Time's up!", new_best: "New best!", best: "Your best", score: "SCORE", time: "TIME",
+        time_up: "Time's up!", new_score_record: "New record!", score_record: "Your record", score: "SCORE", time: "TIME",
         share: ByInput.new(touch: "Share my score", mouse: "Share my score", gamepad: "Share my score (Y)"),
         share_heading: "Share your score",
         copied: "Copied! Paste it anywhere.",
@@ -94,9 +94,9 @@ module DotPopper
         clear: ByInput.new(touch: "Clear my records…", mouse: "Clear my records…",
                            gamepad: "Hold Y to clear my records…"),
         keep_holding: ByInput.new(
-          touch: "Keep holding to clear your bests, totals, chart, and goal streak.",
-          mouse: "Keep holding to clear your bests, totals, chart, and goal streak.",
-          gamepad: "Keep holding %s to clear your bests, totals, chart, and goal streak."
+          touch: "Keep holding to clear your records, totals, chart, and goal streak.",
+          mouse: "Keep holding to clear your records, totals, chart, and goal streak.",
+          gamepad: "Keep holding %s to clear your records, totals, chart, and goal streak."
         ),
         quit_again: "Press B again to quit",
         full_screen: "Full screen", windowed: "Window", quit: "Quit",
@@ -111,9 +111,9 @@ module DotPopper
           unavailable: "The store isn't answering.", thanks: "Thank you. It's yours."
         }.freeze,
         hold_to_clear: ByInput.new(
-          touch: "Press and hold to clear your bests, totals, chart, and goal streak.",
-          mouse: "Press and hold to clear your bests, totals, chart, and goal streak.",
-          gamepad: "Hold Y to clear your bests, totals, chart, and goal streak."
+          touch: "Press and hold to clear your records, totals, chart, and goal streak.",
+          mouse: "Press and hold to clear your records, totals, chart, and goal streak.",
+          gamepad: "Hold Y to clear your records, totals, chart, and goal streak."
         ),
         credits: ByInput.new(touch: "Credits", mouse: "Credits", gamepad: "Credits (X)"),
         credits_title: "Credits",
@@ -136,11 +136,11 @@ module DotPopper
         }.freeze,
         cleared: "Records cleared.", undo: ByInput.new(touch: "Undo", mouse: "Undo", gamepad: "Undo (Y)"),
         labels: {
-          bests: "Your bests with standard dots on screens this size",
-          fitted_bests: "Your bests with dots sized to the screen",
+          records: "Your records with standard dots on screens this size",
+          fitted_records: "Your records with dots sized to the screen",
           chart_note: "Brighter bars are games with standard dots on screens this size.",
           fitted_chart_note: "Brighter bars are games with dots sized to the screen.",
-          best_score: "Best score", longest_game: "Longest game",
+          score_record: "Best score", longest_game: "Longest game",
           most_dots_in_a_row: "Most dots in a row without a mistake", shortest_time_to_pop: "Fastest pop",
           longest_time_to_pop: "Longest wait that ended in a pop",
           totals: "All your games", games: "Games played", pops: "Dots popped", mistakes: "Mistakes",
@@ -237,13 +237,13 @@ module DotPopper
       # Sizes are graphics units at a layout scale of 1. A size that
       # animates steps through whole sizes rather than scaling glyphs.
       class Type < Data.define(:bold, :semibold, :title, :heading, :final_score, :hud_number, :hud_label,
-                               :prompt, :legend, :best, :floater, :new_best, :hint, :summary, :wordmark, :mono); end
+                               :prompt, :legend, :score_record, :floater, :new_score_record, :hint, :summary, :wordmark, :mono); end
 
       TYPE = Type.new(
         bold: "assets/fonts/Fredoka-Bold.ttf", semibold: "assets/fonts/Fredoka-SemiBold.ttf",
         wordmark: "assets/fonts/Iosevka-Bold-setdef.ttf", mono: "assets/fonts/Iosevka-Regular-latin.ttf",
         title: 108, heading: 64, final_score: 136, hud_number: 35, hud_label: 12,
-        prompt: 26, legend: 29, best: 26, floater: 34, new_best: 34, hint: 21, summary: 20
+        prompt: 26, legend: 29, score_record: 26, floater: 34, new_score_record: 34, hint: 21, summary: 20
       )
 
       # setdef's splash: the maker's near-black ground and setdef's amber
@@ -275,7 +275,7 @@ module DotPopper
       )
 
       # A pop: droplets, a ring, and the new dot's ripple. The droplets and
-      # the new best's twinkles are LÖVE particles, drawn from sprites
+      # the new record's twinkles are LÖVE particles, drawn from sprites
       # PARTICLE_SPRITE units across, made at the screen's density.
       PARTICLE_SPRITE = 24
       POP_BURST = Burst.new(count: 14, speed: 2.2..5.2, life: 0.25..0.42, size: 0.05..0.11, drag: 3.5,
@@ -381,7 +381,7 @@ module DotPopper
       BLOOM = BloomLook.new(strength: 0.0, sigma: 3.0, passes: 2, resolution: 0.5)
 
       # Game over: how the game dims, how the score counts up, and the
-      # celebration of a new best. Its sparkles may outlive a pop's
+      # celebration of a new record. Its sparkles may outlive a pop's
       # droplets, because no game is in play behind them.
       class FinaleLook < Data.define(:dim, :arrive, :tally, :prompt, :sparkles, :goal_sparkles, :sparkle_life,
                                      :share); end
@@ -396,11 +396,11 @@ module DotPopper
                                  gravity: 2.5, alpha: 0.85, spin: 6.0..1.0, sprite: :twinkle),
         sparkle_life: 1.4,
         # "Share my score" rises into place as the score lands, rings
-        # once, and rises further and rings brighter on a new best.
+        # once, and rises further and rings brighter on a new record.
         share: ShareCueLook.new(arrive: Tween.new(from: 0.0, to: 1.0, duration: 0.5, ease: :out_back), lift: 12,
-                                best_lift: 28, best_delay: 0.15,
+                                score_record_lift: 28, score_record_delay: 0.15,
                                 ring: Tween.new(from: 0.0, to: 1.0, duration: 0.8, ease: :out_cubic),
-                                ring_reach: 10, ring_alpha: 0.45, best_ring_reach: 18, best_ring_alpha: 0.9)
+                                ring_reach: 10, ring_alpha: 0.45, score_record_ring_reach: 18, score_record_ring_alpha: 0.9)
       )
 
       # The share preview, over Game Over: it comes in quickly, lifting
@@ -527,7 +527,7 @@ module DotPopper
           Note.new(wave: :triangle, from: 349.23, start: 0.28, length: 0.4, volume: 0.9)
         ]),
         # A bright arpeggio with a bell's shimmer.
-        new_best: Patch.new(notes: [523.25, 659.25, 783.99, 1046.5].each_with_index.flat_map do |hz, i|
+        new_score_record: Patch.new(notes: [523.25, 659.25, 783.99, 1046.5].each_with_index.flat_map do |hz, i|
           [Note.new(wave: :sine, from: hz, start: i * 0.08, length: 0.4, volume: 0.8),
            Note.new(wave: :sine, from: hz * 2, start: i * 0.08, length: 0.25, volume: 0.25)]
         end + [Note.new(wave: :sine, from: 2093, start: 0.34, length: 0.5, volume: 0.3)])

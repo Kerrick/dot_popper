@@ -2,10 +2,10 @@
 
 module DotPopper
   # This device's Stats, kept in a store that answers +read+ and
-  # +write(text)+, as BestScore's is. +today+ gives the player's local
+  # +write(text)+, as ScoreRecord's is. +today+ gives the player's local
   # date. A store that is missing or damaged starts from nothing, or from
-  # what it could read. A store written before bests were kept by class
-  # gives its bests to +legacy+ and is saved again at once, as BestScore
+  # what it could read. A store written before records were kept by class
+  # gives its records to +legacy+ and is saved again at once, as ScoreRecord
   # does.
   class StatsBook
     attr_reader :stats
@@ -21,7 +21,7 @@ module DotPopper
 
     # Adds a finished game's RoundStats, played on a screen of
     # +size_class+, saves, and says what the game did: the records it set
-    # among that class's bests, most impressive first, and whether it was
+    # among that class's records, most impressive first, and whether it was
     # the first to meet today's goal.
     def record(game, size_class)
       day = today
@@ -39,7 +39,7 @@ module DotPopper
     def saved = @store.read
 
     # Forgets every game, as on a new device: the totals, the chart, each
-    # class's bests, and the daily goal's streaks and today's goal met.
+    # class's records, and the daily goal's streaks and today's goal met.
     def clear
       @stats = Stats.new
       @store.write("")

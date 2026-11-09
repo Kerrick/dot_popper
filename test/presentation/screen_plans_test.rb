@@ -19,12 +19,12 @@ class ScreenPlansTest < Minitest::Test
     SIZES.each do |width, height|
       screen_layout = layout(width, height)
       radii = [R, DotPopper::DotSize.fitted(width, height).radius]
-      [0, 75].product([nil, :open, :done], [0, 5], [true, false], radii) do |best, goal, streak, sizing, radius|
+      [0, 75].product([nil, :open, :done], [0, 5], [true, false], radii) do |score_record, goal, streak, sizing, radius|
         screen = TitleScreen.new(layout: screen_layout, type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
-                                 best:, goal: { open: GOAL, done: WORDS.goal_done_line(DotPopper::DailyGoal.for(Date.new(2026, 11, 1))) }[goal], done: goal == :done,
+                                 score_record:, goal: { open: GOAL, done: WORDS.goal_done_line(DotPopper::DailyGoal.for(Date.new(2026, 11, 1))) }[goal], done: goal == :done,
                                  streak:, stats: !goal.nil?, sizing: sizing && !goal.nil?, radius:)
         plan = screen.plan
-        name = "#{width}x#{height} best #{best}, goal #{goal.inspect}, streak #{streak}, sizing #{sizing}, R #{radius}"
+        name = "#{width}x#{height} best #{score_record}, goal #{goal.inspect}, streak #{streak}, sizing #{sizing}, R #{radius}"
 
         assert plan.placed.fits?, name
         %i[title legend play].each { assert plan[it], "#{name}: #{it} always shows" }
@@ -61,13 +61,13 @@ class ScreenPlansTest < Minitest::Test
     DESKTOP_WIDTHS.product(DESKTOP_HEIGHTS) do |width, height|
       screen_layout = layout(width, height)
       radius = DotPopper::DotSize.fitted(width, height).radius
-      places = [[0, nil, false], [75, :open, false], [75, :done, true], [0, :open, true]].map do |best, goal, sizing|
+      places = [[0, nil, false], [75, :open, false], [75, :done, true], [0, :open, true]].map do |score_record, goal, sizing|
         screen = TitleScreen.new(layout: screen_layout, type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
-                                 best:, goal: { open: GOAL, done: WORDS.goal_done_line(DotPopper::DailyGoal.for(Date.new(2026, 11, 1))) }[goal],
+                                 score_record:, goal: { open: GOAL, done: WORDS.goal_done_line(DotPopper::DailyGoal.for(Date.new(2026, 11, 1))) }[goal],
                                  done: goal == :done, streak: 5, stats: !goal.nil?, sizing:, radius:, window: true)
         plan = screen.plan
         buttons = plan.window_buttons
-        name = "#{width}x#{height} best #{best}, goal #{goal.inspect}, sizing #{sizing}"
+        name = "#{width}x#{height} best #{score_record}, goal #{goal.inspect}, sizing #{sizing}"
 
         assert plan.placed.fits?, name
         %i[title legend play].each { assert plan[it], "#{name}: #{it} always shows" }
@@ -115,12 +115,12 @@ class ScreenPlansTest < Minitest::Test
   # Play.
   def test_play_follows_the_legend_and_the_players_own_lines_stand_apart_under_it
     plan = TitleScreen.new(layout: layout(1200, 800), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
-                           best: 75, goal: GOAL, streak: 5, stats: true, window: true).plan
+                           score_record: 75, goal: GOAL, streak: 5, stats: true, window: true).plan
 
-    assert_equal %i[title legend play best goal streak], plan.placed.rects.keys
-    under_play = plan[:best].y - plan.play_button.bottom
+    assert_equal %i[title legend play score_record goal streak], plan.placed.rects.keys
+    under_play = plan[:score_record].y - plan.play_button.bottom
     assert_operator under_play, :>, plan.play_button.y - plan[:legend].bottom, "the player's own lines stand apart"
-    assert_operator under_play, :>, plan[:goal].y - plan[:best].bottom, "and together"
+    assert_operator under_play, :>, plan[:goal].y - plan[:score_record].bottom, "and together"
     assert_operator plan.backing.bottom, :>=, plan[:streak].bottom, "the backing reaches every line"
   end
 
@@ -154,12 +154,12 @@ class ScreenPlansTest < Minitest::Test
     SIZES.each do |width, height|
       screen_layout = layout(width, height)
       radius = DotPopper::DotSize.fitted(width, height).radius
-      [true, false].repeated_permutation(3) do |goal_met, new_best, record|
+      [true, false].repeated_permutation(3) do |goal_met, new_score_record, record|
         below = screen_layout.top + 60
         plan = FinaleScreen.new(layout: screen_layout, type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
-                                scrim: Look::FINALE_BACKING, finale: finale(goal_met:, new_best:, record:),
+                                scrim: Look::FINALE_BACKING, finale: finale(goal_met:, new_score_record:, record:),
                                 below:, radius:).plan
-        name = "#{width}x#{height} goal #{goal_met}, new best #{new_best}, record #{record}"
+        name = "#{width}x#{height} goal #{goal_met}, new record #{new_score_record}, record #{record}"
 
         assert plan.placed.fits?, name
         %i[score continue].each { assert plan[it], "#{name}: #{it} always shows" }
@@ -189,7 +189,7 @@ class ScreenPlansTest < Minitest::Test
       screen_layout = layout(width, height)
       [InputKind::MOUSE, InputKind::GAMEPAD].product([nil, record], [nil, screen]) do |input, held, played|
         words = WORDS.for(input)
-        text = words.share_text(128, stats, best: 128, new_best: true, record: held, screen: played)
+        text = words.share_text(128, stats, score_record: 128, new_score_record: true, record: held, screen: played)
         plan = ShareScreen.new(layout: screen_layout, type: Look::TYPE, words:, measure: RoughMeasure.new,
                                look: Look::SHARE_PREVIEW, lines: text.split("\n")).plan
         name = "#{width}x#{height} #{input.name}, record #{!held.nil?}, screen #{!played.nil?}"
@@ -224,9 +224,9 @@ class ScreenPlansTest < Minitest::Test
     assert_operator [spare.abs, plan[:message].width - buttons].min, :<=, 1e-6, "#{name}: even side padding"
   end
 
-  def test_short_of_room_the_title_lets_the_streak_go_before_the_goal_and_the_best
+  def test_short_of_room_the_title_lets_the_streak_go_before_the_goal_and_the_score_record
     plan = TitleScreen.new(layout: layout(400, 320), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
-                           best: 75, goal: GOAL, streak: 5, stats: true, sizing: true).plan
+                           score_record: 75, goal: GOAL, streak: 5, stats: true, sizing: true).plan
     dropped = %i[streak goal best].reject { plan[it] }
 
     refute_empty dropped
@@ -262,7 +262,7 @@ class ScreenPlansTest < Minitest::Test
     plan = FinaleScreen.new(layout: layout(1200, 800), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
                             scrim: Look::FINALE_BACKING, finale: finale(goal_met: true), below: 80).plan
 
-    assert_equal %i[heading goal score best summary share continue], plan.placed.rects.keys
+    assert_equal %i[heading goal score score_record summary share continue], plan.placed.rects.keys
     assert_operator plan.backing.bottom, :<=, plan.continue_button.y, "Continue stands on the pile, not the backing"
     assert_operator plan.backing.bottom, :>=, plan.share_button.bottom, "Share my score is backed with the score"
     assert_in_delta 1.0, plan.placed.scale
@@ -372,8 +372,8 @@ class ScreenPlansTest < Minitest::Test
 
   def middle(rect) = [rect.center_x, rect.center_y]
 
-  def finale(goal_met: false, new_best: false, record: false)
-    Finale.new(look: Look::FINALE, score: 128, best: new_best ? 128 : 140, new_best:, at: 0.0, goal_met:,
+  def finale(goal_met: false, new_score_record: false, record: false)
+    Finale.new(look: Look::FINALE, score: 128, score_record: new_score_record ? 128 : 140, new_score_record:, at: 0.0, goal_met:,
                record: (DotPopper::Stats::Record.new(kind: :most_dots_in_a_row, value: 31) if record))
   end
 

@@ -17,7 +17,7 @@ class SessionTest < Minitest::Test
   end
 
   def setup
-    @store = DotPopper::BestScore::Memory.new
+    @store = DotPopper::ScoreRecord::Memory.new
     @worker = HandWorker.new
     @time = Time.at(1_000_000)
     @session = new_session

@@ -32,7 +32,7 @@ module DotPopper
     # Sizes are measured with +measure+ (RoughMeasure's methods).
     class FinaleScreen < Data.define(:layout, :type, :words, :measure, :scrim, :finale, :below, :radius, :group_line)
       # The gaps above each line, in graphics units at full size.
-      GAPS = { heading: 26, goal: 12, score: 4, best: 4, group: 8, summary: 14, record: 8, achievement: 8, share: 16, continue: 22 }.freeze
+      GAPS = { heading: 26, goal: 12, score: 4, score_record: 4, group: 8, summary: 14, record: 8, achievement: 8, share: 16, continue: 22 }.freeze
       # "Share my score"'s share glyph and the room around its words, in
       # the button's height.
       SHARE_GLYPH = 0.62
@@ -60,9 +60,9 @@ module DotPopper
       end
 
       # The best line's face and size, and what it says.
-      def best_line(size)
-        if finale.new_best? then [:bold, size, words.new_best]
-        else [:semibold, size, words.short_of_best(finale.score, finale.best, first: finale.first)]
+      def score_record_line(size)
+        if finale.new_score_record? then [:bold, size, words.new_score_record]
+        else [:semibold, size, words.short_of_score_record(finale.score, finale.score_record, first: finale.first)]
         end
       end
 
@@ -72,7 +72,7 @@ module DotPopper
         [line(:heading, :bold, sizes[:heading], words.time_up, scale, drop: 6),
          (line(:goal, :bold, sizes[:goal], words.goal_met, scale, drop: 4, mark: true) if finale.goal_met),
          line(:score, :bold, sizes[:score], finale.score.to_s, scale, depth: 1.06),
-         line(:best, *best_line(sizes[:best]), scale, drop: 5),
+         line(:score_record, *score_record_line(sizes[:score_record]), scale, drop: 5),
          (line(:group, :semibold, sizes[:summary], group_line, scale, drop: 3.5) if group_line),
          line(:summary, :semibold, sizes[:summary], words.summary(finale.stats), scale, drop: 3),
          (line(:record, :semibold, sizes[:summary], words.record(finale.record), scale, drop: 2) if finale.record),
@@ -115,8 +115,8 @@ module DotPopper
 
       def sizes(scale)
         size = ->(nominal) { layout.type_size(nominal, scale) }
-        { heading: size[type.heading], goal: size[type.best], score: size[type.final_score],
-          best: size[finale.new_best? ? type.new_best : type.best], summary: size[type.summary] }
+        { heading: size[type.heading], goal: size[type.score_record], score: size[type.final_score],
+          score_record: size[finale.new_score_record? ? type.new_score_record : type.score_record], summary: size[type.summary] }
       end
 
       # Around every line above Continue, and never past the safe area

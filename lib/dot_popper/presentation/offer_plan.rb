@@ -90,7 +90,7 @@ module DotPopper
 
       def sizes(scale)
         size = ->(nominal) { layout.type_size(nominal, scale) }
-        { heading: size[type.new_best], item: size[type.hint], note: size[type.summary] }
+        { heading: size[type.new_score_record], item: size[type.hint], note: size[type.summary] }
       end
     end
   end

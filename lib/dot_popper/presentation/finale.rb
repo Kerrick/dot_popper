@@ -4,7 +4,7 @@ module DotPopper
   module Presentation
     # Game over, shown since +at+: the game dimming behind, the heading
     # arriving, the score counting up, and the prompt to go on, which
-    # shows only from +ready_at+, once a press would be heard. A new best
+    # shows only from +ready_at+, once a press would be heard. A new record
     # is celebrated once, when it has finished counting. +stats+ are the
     # game's RoundStats, for the line of facts under the score. +record+
     # is the most impressive lifetime record the game set
@@ -21,9 +21,9 @@ module DotPopper
     # the game earned for the first time, which a player who has the
     # paid version hears of in a line after the score, never during the
     # game.
-    class Finale < Data.define(:look, :score, :best, :new_best, :at, :stats, :record, :goal_met, :ready_at,
+    class Finale < Data.define(:look, :score, :score_record, :new_score_record, :at, :stats, :record, :goal_met, :ready_at,
                                :celebrated, :goal_celebrated, :screen, :lesson, :replayed, :first, :achievements)
-      def initialize(look:, score:, best:, new_best:, at:, stats: GameStats.start, record: nil, goal_met: false,
+      def initialize(look:, score:, score_record:, new_score_record:, at:, stats: GameStats.start, record: nil, goal_met: false,
                      ready_at: nil, celebrated: false, goal_celebrated: false, screen: nil, lesson: nil, replayed: 0, first: false,
                      achievements: [])
         super
@@ -37,9 +37,9 @@ module DotPopper
       def afterword(now) = counted?(now) ? look.prompt.at(now - at - look.tally.duration) : 0.0
 
       # How "Share my score" comes in (ShareCue), once the score lands.
-      def share_cue(now) = ShareCue.at(now - at - look.tally.duration, look.share, best: new_best?)
+      def share_cue(now) = ShareCue.at(now - at - look.tally.duration, look.share, score_record: new_score_record?)
 
-      def new_best? = new_best
+      def new_score_record? = new_score_record
 
       def dim(now) = look.dim.at(now - at)
       def arrival(now) = look.arrive.at(now - at)
@@ -51,7 +51,7 @@ module DotPopper
       def ready(now) = ready_at ? self : with(ready_at: now)
       def prompt(now) = ready_at ? look.prompt.at(now - ready_at) : 0.0
 
-      def celebration_due?(now) = new_best? && !celebrated && counted?(now)
+      def celebration_due?(now) = new_score_record? && !celebrated && counted?(now)
       def celebrate = with(celebrated: true)
 
       # The finale once its lesson has replayed once more.
@@ -61,11 +61,11 @@ module DotPopper
     # How "Share my score" comes in (FinaleLook's +share+): it rises
     # +lift+ units into place along +arrive+, bouncing a little past it,
     # and as it settles a ring spreads out from its edge and fades,
-    # +ring_reach+ units at most and +ring_alpha+ bright. On a new best it
+    # +ring_reach+ units at most and +ring_alpha+ bright. On a new record it
     # waits +best_delay+ more, for the celebration, rises further, and
     # rings brighter and wider.
-    class ShareCueLook < Data.define(:arrive, :lift, :best_lift, :best_delay, :ring, :ring_reach, :ring_alpha,
-                                     :best_ring_reach, :best_ring_alpha); end
+    class ShareCueLook < Data.define(:arrive, :lift, :score_record_lift, :score_record_delay, :ring, :ring_reach, :ring_alpha,
+                                     :score_record_ring_reach, :score_record_ring_alpha); end
 
     # Where "Share my score" is in its arrival: how much of it shows
     # (+alpha+), how far below its place it is (+drop+, in units), and its
@@ -73,17 +73,17 @@ module DotPopper
     # opacity (+ring_alpha+, 0 for no ring).
     class ShareCue < Data.define(:alpha, :drop, :ring, :ring_alpha)
       # The cue +elapsed+ seconds after the score landed, negative before
-      # then, by +look+ (ShareCueLook); +best+ for a new best.
-      def self.at(elapsed, look, best: false)
-        elapsed -= look.best_delay if best
+      # then, by +look+ (ShareCueLook); +best+ for a new record.
+      def self.at(elapsed, look, score_record: false)
+        elapsed -= look.score_record_delay if score_record
         return new(alpha: 0.0, drop: 0.0, ring: 0.0, ring_alpha: 0.0) unless elapsed.positive?
 
         ringing = elapsed - (look.arrive.duration * 0.4)
         spread = look.ring.progress(ringing)
         new(alpha: (elapsed / (look.arrive.duration * 0.5)).clamp(0.0, 1.0),
-            drop: (1 - look.arrive.progress(elapsed)) * (best ? look.best_lift : look.lift),
-            ring: spread * (best ? look.best_ring_reach : look.ring_reach),
-            ring_alpha: ringing.positive? ? (1 - spread) * (best ? look.best_ring_alpha : look.ring_alpha) : 0.0)
+            drop: (1 - look.arrive.progress(elapsed)) * (score_record ? look.score_record_lift : look.lift),
+            ring: spread * (score_record ? look.score_record_ring_reach : look.ring_reach),
+            ring_alpha: ringing.positive? ? (1 - spread) * (score_record ? look.score_record_ring_alpha : look.ring_alpha) : 0.0)
       end
     end
   end

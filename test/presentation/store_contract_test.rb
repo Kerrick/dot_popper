@@ -11,7 +11,7 @@ class FakeStoreContractTest < Minitest::Test
 
   FakeStore = DotPopper::Presentation::FakeStore
 
-  def new_store(fails: nil, ledger: DotPopper::BestScore::Memory.new)
+  def new_store(fails: nil, ledger: DotPopper::ScoreRecord::Memory.new)
     FakeStore.new(ledger, fails:).tap { (@ledgers ||= {})[it] = ledger }
   end
 

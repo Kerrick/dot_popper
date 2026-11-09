@@ -28,14 +28,14 @@ module DotPopper
     # whether this game set it, +first+ whether it was the first game on
     # such screens, which sets a best but is never a new one, and +seed+
     # the one its dots were drawn from.
-    class GameEnded < Data.define(:game, :best, :new_best, :seed, :size_class, :first)
-      def initialize(game:, best:, new_best:, seed:, size_class:, first: false) = super
+    class GameEnded < Data.define(:game, :score_record, :new_score_record, :seed, :size_class, :first)
+      def initialize(game:, score_record:, new_score_record:, seed:, size_class:, first: false) = super
 
       def score = game.score
     end
 
-    # The title screen came up; +best+ is the best score on screens like
+    # The title screen came up; +best+ is the score record on screens like
     # this one.
-    class TitleShown < Data.define(:best); end
+    class TitleShown < Data.define(:score_record); end
   end
 end

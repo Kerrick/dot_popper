@@ -7,7 +7,7 @@ require_relative "presentation_helper"
 class AchievementsOnStatsTest < Minitest::Test
   include PresentationTest
 
-  Memory = DotPopper::BestScore::Memory
+  Memory = DotPopper::ScoreRecord::Memory
   MEDIUM = DotPopper::SizeClass::MEDIUM
 
   def setup
@@ -16,9 +16,9 @@ class AchievementsOnStatsTest < Minitest::Test
   end
 
   def show(paid:)
-    @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), best: DotPopper::BestScore.new(@folder.call("best")))
-    stats_book = DotPopper::StatsBook.new(@folder.call("lifetime"), today: -> { Date.new(2026, 11, 8) })
-    keeper = DotPopper::StatsKeeper.new(best: @cabinet.best, stats_book:, achievements: @achievements, folder: @folder)
+    @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), score_record: DotPopper::ScoreRecord.new(@folder.call("best")))
+    stats_book = DotPopper::StatsBook.new(@folder.call("stats"), today: -> { Date.new(2026, 11, 8) })
+    keeper = DotPopper::StatsKeeper.new(score_record: @cabinet.score_record, stats_book:, achievements: @achievements, folder: @folder)
     entitlement = DotPopper::Entitlement.new(Memory.new(paid ? "paid" : nil))
     @show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, stats_book:, keeper:,
                      achievements: @achievements, entitlement:)
@@ -100,7 +100,7 @@ class AchievementsOnStatsTest < Minitest::Test
   end
 
   def test_a_sheet_with_no_achievements_lists_no_achievements
-    assert_nil StatsSheet.build(stats, best: 1, words: Look::WORDS).achievements
+    assert_nil StatsSheet.build(stats, score_record: 1, words: Look::WORDS).achievements
   end
 
   def test_the_stats_screen_puts_the_achievements_in_a_column_of_their_own_where_there_is_room
@@ -167,7 +167,7 @@ class AchievementsOnStatsTest < Minitest::Test
   end
 
   def build_sheet(paid:)
-    StatsSheet.build(stats, best: 9, words: Look::WORDS, size_class: MEDIUM, field: DotPopper::Field.new(1200, 800, R),
+    StatsSheet.build(stats, score_record: 9, words: Look::WORDS, size_class: MEDIUM, field: DotPopper::Field.new(1200, 800, R),
                               achievements: @achievements, paid:)
   end
 end

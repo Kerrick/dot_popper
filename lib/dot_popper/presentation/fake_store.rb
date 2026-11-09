@@ -11,7 +11,7 @@ module DotPopper
     # later, as a store takes a moment. Everything above it, the offer and
     # the price and the thanks, is the code a store build runs.
     #
-    # The +ledger+ (read and write(text), as BestScore's store) is the
+    # The +ledger+ (read and write(text), as ScoreRecord's store) is the
     # store's own record of what this install bought, apart from the
     # game's Entitlement, as Apple's and Google's are; so Restore finds a
     # purchase, and a launch sees one, the way a real store would.

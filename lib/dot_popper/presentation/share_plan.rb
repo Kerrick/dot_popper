@@ -117,7 +117,7 @@ module DotPopper
 
       def sizes(scale)
         size = ->(nominal) { layout.type_size(nominal, scale) }
-        { heading: size[type.best], message: size[type.hint], note: size[type.summary] }
+        { heading: size[type.score_record], message: size[type.hint], note: size[type.summary] }
       end
 
       # Close and Copy, each as tall as a button and half the row at

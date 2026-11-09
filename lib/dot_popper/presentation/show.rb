@@ -37,11 +37,11 @@ module DotPopper
                   :stats_book, :input, :words, :clearing, :tutorial, :lead_in, :window, :games
 
       def initialize(cabinet:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false,
-                     tutor: Tutor.new(BestScore::Memory.new, times: look::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
-                     stats_book: StatsBook.new(BestScore::Memory.new), sizing_store: BestScore::Memory.new,
+                     tutor: Tutor.new(ScoreRecord::Memory.new, times: look::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
+                     stats_book: StatsBook.new(ScoreRecord::Memory.new), sizing_store: ScoreRecord::Memory.new,
                      input: InputKind::MOUSE, measure: RoughMeasure.new,
-                     achievements: Achievements.new(BestScore::Memory.new),
-                     keeper: StatsKeeper.new(best: cabinet.best, stats_book:, achievements:), notices: Notices.none,
+                     achievements: Achievements.new(ScoreRecord::Memory.new),
+                     keeper: StatsKeeper.new(score_record: cabinet.score_record, stats_book:, achievements:), notices: Notices.none,
                      sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never, window: NoWindowControl.new,
                      entitlement: Entitlement.free, wardrobe: Wardrobe.plain(look::THEMES),
                      groups: Groups::Session.off, storefront: NoStorefront.new, games: FreeGames.unlimited)
@@ -81,7 +81,7 @@ module DotPopper
         @hud = Hud.blank(look::HUD, words)
         @attract = Attract.spawn(cabinet.field, look::TITLE)
         @now = 0.0
-        @marquee = Marquee.new(look: look::TITLE, best: cabinet.best.of(cabinet.size_class), at: @now)
+        @marquee = Marquee.new(look: look::TITLE, score_record: cabinet.score_record.of(cabinet.size_class), at: @now)
         @finale = nil
         @tutor = tutor
         @clipboard = clipboard
@@ -434,7 +434,7 @@ module DotPopper
         cabinet.sizing = sizing
         @sizing_store.write(cabinet.sizing.to_text)
         @attract = Attract.spawn(cabinet.field, look::TITLE)
-        @marquee = marquee.with(best: cabinet.best.of(cabinet.size_class))
+        @marquee = marquee.with(score_record: cabinet.score_record.of(cabinet.size_class))
         sounds.play(:tick, pitch: cabinet.sizing.sized_to_screen? ? 1.2 : 0.9)
       end
 
@@ -696,7 +696,7 @@ module DotPopper
       # Dot size choice beside it never moves or resizes it.
       def title_plan
         goal = stats_book.goal_done? ? words.goal_done_line(stats_book.goal) : words.goal(stats_book.goal) if played?
-        planned(TitleScreen.new(layout:, type: look::TYPE, words:, measure: @measure, best: marquee.best, goal:,
+        planned(TitleScreen.new(layout:, type: look::TYPE, words:, measure: @measure, score_record: marquee.score_record, goal:,
                                 done: stats_book.goal_done?, streak: stats_book.streak, stats: stats_offered?,
                                 sizing: sizing_offered?, radius: DotSize.fitted(layout.width, layout.height).radius,
                                 window: window.offered?, games: games_line))
@@ -929,12 +929,12 @@ module DotPopper
       # best, show them as they are now.
       def stats_changed
         @stats = stats_sheet if stats?
-        @marquee = marquee.with(best: cabinet.best.of(cabinet.size_class))
+        @marquee = marquee.with(score_record: cabinet.score_record.of(cabinet.size_class))
       end
 
       def stats_sheet
         size_class = cabinet.size_class
-        StatsSheet.build(stats_book.stats, best: cabinet.best.of(size_class), words:, streak: stats_book.streak,
+        StatsSheet.build(stats_book.stats, score_record: cabinet.score_record.of(size_class), words:, streak: stats_book.streak,
                            size_class:, field: cabinet.field, sizing: cabinet.sizing, achievements: @achievements,
                            paid: @entitlement.paid?)
       end
@@ -1036,7 +1036,7 @@ module DotPopper
 
       # The finished game's result, as Words#share_text says it.
       def share_text
-        words.share_text(finale.score, finale.stats, best: finale.best, new_best: finale.new_best?,
+        words.share_text(finale.score, finale.stats, score_record: finale.score_record, new_score_record: finale.new_score_record?,
                          record: finale.record, screen: finale.screen, first: finale.first)
       end
 
@@ -1047,10 +1047,10 @@ module DotPopper
         achievements = @achievements.award(@achievement_watch.earned, day: stats_book.today.iso8601)
         achievements = [] unless @entitlement.paid? # kept, and shown once the paid version is bought
         lesson = @tutor.lesson(@mistake) if @mistake&.among(event.game.dots)
-        @finale = Finale.new(look: look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now,
+        @finale = Finale.new(look: look::FINALE, score: event.score, score_record: event.score_record, new_score_record: event.new_score_record, at: now,
                              stats: game_stats, record: result.records.first, goal_met: result.goal_met, lesson:, achievements:,
                              first: event.first, screen: words.played_on(event.game.field, sized: event.size_class == SizeClass::FITTED))
-        sounds.play(event.new_best ? :new_best : :game_over)
+        sounds.play(event.new_score_record ? :new_score_record : :game_over)
       end
 
       def title_shown(event)
@@ -1063,7 +1063,7 @@ module DotPopper
         effects.clear
         @finale = nil
         @preview = nil
-        @marquee = Marquee.new(look: look::TITLE, best: event.best, at: now)
+        @marquee = Marquee.new(look: look::TITLE, score_record: event.score_record, at: now)
       end
 
       # A tap on the title away from its buttons: a fresh dot there pops

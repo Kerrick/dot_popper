@@ -3,7 +3,7 @@ module DotPopper
     BANK: Integer
     DAILY: Integer
 
-    @store: BestScore::_Store
+    @store: ScoreRecord::_Store
     @today: ^() -> Date
     @entitlement: Entitlement
     @metered: bool
@@ -15,7 +15,7 @@ module DotPopper
     attr_reader daily: Integer
 
     def self.unlimited: () -> FreeGames
-    def initialize: (BestScore::_Store store, today: ^() -> Date, entitlement: Entitlement, ?metered: bool, ?bank: Integer, ?daily: Integer) -> void
+    def initialize: (ScoreRecord::_Store store, today: ^() -> Date, entitlement: Entitlement, ?metered: bool, ?bank: Integer, ?daily: Integer) -> void
     def metered?: () -> bool
     def daily_left: () -> Integer
     def bank_left: () -> Integer

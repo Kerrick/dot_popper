@@ -5,7 +5,7 @@ require_relative "presentation_helper"
 class WardrobeTest < Minitest::Test
   include PresentationTest
 
-  Memory = DotPopper::BestScore::Memory
+  Memory = DotPopper::ScoreRecord::Memory
   THEMES = Look::THEMES
 
   def setup

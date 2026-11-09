@@ -5,7 +5,7 @@ module DotPopper
   # again. Each state is a value that answers +press+ and +update+ with
   # the state that follows it, so each transition reads in one place.
   # The Cabinet is the shell around them: it holds the current state, makes
-  # games, keeps the best scores, and tells its listeners every event, in
+  # games, keeps the score records, and tells its listeners every event, in
   # order. A game's records count among those of its SizeClass, the
   # class of the field it started on.
   #
@@ -14,13 +14,13 @@ module DotPopper
   class Cabinet
     LARGEST_SEED = 2_147_483_648 # 2**31
 
-    attr_reader :state, :best, :screen, :sizing
+    attr_reader :state, :score_record, :screen, :sizing
 
-    def initialize(screen, best: BestScore.new(BestScore::Memory.new), random: Random.new,
+    def initialize(screen, score_record: ScoreRecord.new(ScoreRecord::Memory.new), random: Random.new,
                    sizing: DotSizing::STANDARD)
       @screen = screen
       @sizing = sizing
-      @best = best
+      @score_record = score_record
       @random = random
       @listeners = []
       @state = show_title
@@ -65,7 +65,7 @@ module DotPopper
     # The transitions, each with the event that says it happened.
 
     def show_title
-      announce(Events::TitleShown.new(best: best.of(size_class)))
+      announce(Events::TitleShown.new(score_record: score_record.of(size_class)))
       Title.new
     end
 
@@ -90,13 +90,13 @@ module DotPopper
       advance(begin_game(Game.resume(field, dots:, score:, seconds:, random: Random.new(seed)), seed))
     end
 
-    # The game's score counts among the bests of +size_class+, the class
+    # The game's score counts among the records of +size_class+, the class
     # it started in, even if the window changed size meanwhile.
     def finish(game, seed, size_class)
-      first = best.first?(size_class)
-      new_best = best.record(game.score, size_class)
-      announce(Events::GameEnded.new(game:, best: best.of(size_class), new_best:, seed:, size_class:, first:))
-      GameOver.new(game:, new_best:)
+      first = score_record.first?(size_class)
+      new_score_record = score_record.record(game.score, size_class)
+      announce(Events::GameEnded.new(game:, score_record: score_record.of(size_class), new_score_record:, seed:, size_class:, first:))
+      GameOver.new(game:, new_score_record:)
     end
 
     private
@@ -139,8 +139,8 @@ module DotPopper
     # The game is over and its score is shown. Presses are ignored for a
     # moment so a last frantic tap does not skip it; after that, a press
     # goes back to the title.
-    class GameOver < Data.define(:game, :new_best, :shown)
-      def initialize(game:, new_best:, shown: 0.0) = super
+    class GameOver < Data.define(:game, :new_score_record, :shown)
+      def initialize(game:, new_score_record:, shown: 0.0) = super
 
       def score = game.score
       def ready? = shown >= Rules::GAME_OVER_GRACE

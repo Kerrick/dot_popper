@@ -56,9 +56,9 @@ module DotPopper
     class GameEnded < ::Data
       attr_reader game: Game
 
-      attr_reader best: Integer
+      attr_reader score_record: Integer
 
-      attr_reader new_best: bool
+      attr_reader new_score_record: bool
 
       attr_reader seed: Integer
 
@@ -66,17 +66,17 @@ module DotPopper
 
       attr_reader first: bool
 
-      def self.new: (game: Game, best: Integer, new_best: bool, seed: Integer, size_class: SizeClass, ?first: bool) -> instance
+      def self.new: (game: Game, score_record: Integer, new_score_record: bool, seed: Integer, size_class: SizeClass, ?first: bool) -> instance
 
-      def initialize: (game: Game, best: Integer, new_best: bool, seed: Integer, size_class: SizeClass, ?first: bool) -> void
+      def initialize: (game: Game, score_record: Integer, new_score_record: bool, seed: Integer, size_class: SizeClass, ?first: bool) -> void
 
       def score: () -> Integer
     end
 
     class TitleShown < ::Data
-      attr_reader best: Integer
+      attr_reader score_record: Integer
 
-      def self.new: (best: Integer) -> instance
+      def self.new: (score_record: Integer) -> instance
     end
   end
 end

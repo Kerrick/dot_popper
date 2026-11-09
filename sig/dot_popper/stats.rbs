@@ -24,21 +24,21 @@ module DotPopper
 
     attr_reader streak: GoalStreak
 
-    attr_reader bests: Hash[SizeClass, Bests]
+    attr_reader records: Hash[SizeClass, Records]
 
     def self.new: (?games: Integer, ?pops: Integer, ?mistakes: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
                    ?recent: Array[Integer], ?recent_classes: Array[SizeClass?], ?streak: GoalStreak,
-                   ?bests: Hash[SizeClass, Bests]) -> instance
+                   ?records: Hash[SizeClass, Records]) -> instance
 
     def initialize: (?games: Integer, ?pops: Integer, ?mistakes: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
                      ?recent: Array[Integer], ?recent_classes: Array[SizeClass?], ?streak: GoalStreak,
-                     ?bests: Hash[SizeClass, Bests]) -> void
+                     ?records: Hash[SizeClass, Records]) -> void
 
     def self.parse: (String? text, ?legacy: SizeClass) -> Stats
 
     def self.old?: (String? text) -> bool
 
-    def bests_in: (SizeClass size_class) -> Bests
+    def records_in: (SizeClass size_class) -> Records
 
     def add: (GameStats stats, day: String, size_class: SizeClass) -> Stats
 
@@ -46,7 +46,7 @@ module DotPopper
 
     def to_text: () -> String
 
-    class Bests < ::Data
+    class Records < ::Data
       attr_reader games: Integer
 
       attr_reader longest_game: Float
@@ -63,9 +63,9 @@ module DotPopper
       def initialize: (?games: Integer, ?longest_game: number, ?most_dots_in_a_row: Integer, ?shortest_time_to_pop: number?,
                        ?longest_time_to_pop: number) -> void
 
-      def self.parse: (Pairs pairs) -> Bests
+      def self.parse: (Pairs pairs) -> Records
 
-      def add: (GameStats stats) -> Bests
+      def add: (GameStats stats) -> Records
 
       def records_set_by: (GameStats stats) -> Array[Record]
 
@@ -73,7 +73,7 @@ module DotPopper
 
       private
 
-      def beats?: (number value, number best, Integer digits) -> bool
+      def beats?: (number value, number score_record, Integer digits) -> bool
 
       def faster: (Float? pop) -> Record?
     end

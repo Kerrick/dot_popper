@@ -4,7 +4,7 @@ module DotPopper
   module Presentation
     # Whether the first Play opens the Tutorial. It does once, on a fresh
     # install, and never again: the store, which answers +read+ and
-    # +write(text)+ as BestScore's does, keeps that it was seen, apart from
+    # +write(text)+ as ScoreRecord's does, keeps that it was seen, apart from
     # the records, so clearing them leaves it. A player who has played
     # before, as everyone on 0.9 has, has seen enough of the game already,
     # so the tutorial is never due for them either (#due?).
@@ -18,7 +18,7 @@ module DotPopper
       FORCED_BY = "DOT_POPPER_TUTORIAL"
 
       # A flag that is never due, for a Show that teaches nothing.
-      def self.never = new(BestScore::Memory.new, mode: :skipped)
+      def self.never = new(ScoreRecord::Memory.new, mode: :skipped)
 
       # The mode +env+ asks for: DOT_POPPER_TUTORIAL=1 forces it, and the
       # bot, the GUI director and DOT_POPPER_NO_TUTORIAL leave it out.

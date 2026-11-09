@@ -39,7 +39,7 @@ class AchievementWatchTest < Minitest::Test
   end
 
   def end_game
-    @watch.call(Events::GameEnded.new(game: @game, best: @game.score, new_best: false, seed: 1,
+    @watch.call(Events::GameEnded.new(game: @game, score_record: @game.score, new_score_record: false, seed: 1,
                                        size_class: DotPopper::SizeClass::MEDIUM))
   end
 

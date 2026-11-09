@@ -13,9 +13,9 @@ class ClearingStatsTest < Minitest::Test
   def setup
     @sounds = FakeSounds.new
     @folder = DotPopper::StatsKeeper::Folder.new
-    @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), best: DotPopper::BestScore.new(@folder.call("best")))
-    @stats_book = DotPopper::StatsBook.new(@folder.call("lifetime"), today: -> { Date.new(2026, 11, 5) })
-    @keeper = DotPopper::StatsKeeper.new(best: @cabinet.best, stats_book: @stats_book, folder: @folder)
+    @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), score_record: DotPopper::ScoreRecord.new(@folder.call("best")))
+    @stats_book = DotPopper::StatsBook.new(@folder.call("stats"), today: -> { Date.new(2026, 11, 5) })
+    @keeper = DotPopper::StatsKeeper.new(score_record: @cabinet.score_record, stats_book: @stats_book, folder: @folder)
     @show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, stats_book: @stats_book, keeper: @keeper)
     finish_game
     @show.open_stats
@@ -37,7 +37,7 @@ class ClearingStatsTest < Minitest::Test
     assert @show.stats.empty, "the screen says there are no games yet"
     assert @show.undo_offer
     refute @show.clear_offered?
-    assert_equal 0, @show.marquee.best
+    assert_equal 0, @show.marquee.score_record
     assert_equal 0, @stats_book.stats.games
   end
 
@@ -63,15 +63,15 @@ class ClearingStatsTest < Minitest::Test
 
   def test_undo_puts_everything_back
     before = @stats_book.stats
-    best = @cabinet.best.of(@cabinet.size_class)
+    score_record = @cabinet.score_record.of(@cabinet.size_class)
     clear_by(:mouse)
     @show.tap(*middle(@show.undo_reach), by: :mouse)
 
     assert @show.stats?, "Undo never goes back"
     refute @show.stats.empty
     assert_equal before, @stats_book.stats
-    assert_equal best, @cabinet.best.of(@cabinet.size_class)
-    assert_equal best, @show.marquee.best
+    assert_equal score_record, @cabinet.score_record.of(@cabinet.size_class)
+    assert_equal score_record, @show.marquee.score_record
     assert @show.clear_offered?
   end
 
@@ -120,12 +120,12 @@ class ClearingStatsTest < Minitest::Test
 
   # A cleared device's title is a new player's, but for "Your records"
   # and the dot-size choice: those are the player's, not records.
-  def test_the_title_after_clearing_shows_no_best_or_goal_but_keeps_its_buttons
+  def test_the_title_after_clearing_shows_no_score_record_or_goal_but_keeps_its_buttons
     clear_by(:mouse)
     @show.close_stats
     plan = @show.title_plan
 
-    assert_nil plan[:best]
+    assert_nil plan[:score_record]
     assert_nil plan[:goal]
     assert @show.stats_offered?
     refute @show.played?

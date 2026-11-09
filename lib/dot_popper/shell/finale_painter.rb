@@ -4,7 +4,7 @@ module DotPopper
   module Shell
     # Game over, over the finished game, each line where the Show's
     # FinalePlan puts it: "Time's up!", "You met today's goal!" if the
-    # game did, the score counting up, a new best or how far short of the
+    # game did, the score counting up, a new record or how far short of the
     # best it fell, a quiet line of the game's facts, a lifetime record
     # it set, "Share my score", rising in as the score lands, and the
     # Continue button, faint until a press will be heard. Every line
@@ -29,7 +29,7 @@ module DotPopper
         score = pen.fonts.bold(plan.size(:score))
         Lettering.new(pen:).candy(finale.shown_score(now).to_s, score, layout.center_x,
                                   plan[:score].y + (score.height / 2.0), shown)
-        best_line(show, plan, now, shown)
+        score_record_line(show, plan, now, shown)
         line(plan, :group, show.group_panel.game_line.to_s, palette.gain, shown) if plan[:group]
         line(plan, :summary, words.summary(finale.stats), palette.soft, shown * 0.8)
         line(plan, :record, words.record(finale.record), palette.gain, finale.afterword(now)) if finale.record && finale.counted?(now)
@@ -62,16 +62,16 @@ module DotPopper
         Check.new(pen:).labelled(words.goal_met, font, rect.center_x, rect.center_y, finale.afterword(now))
       end
 
-      # A new best, glowing, once the score has counted up, or how far
+      # A new record, glowing, once the score has counted up, or how far
       # short of the best the game fell.
-      def best_line(show, plan, now, alpha)
-        rect = plan[:best] or return
+      def score_record_line(show, plan, now, alpha)
+        rect = plan[:score_record] or return
         finale = show.finale
-        return if finale.new_best? && !finale.counted?(now)
+        return if finale.new_score_record? && !finale.counted?(now)
 
-        face, size, text = show.finale_screen.best_line(plan.size(:best))
-        color = finale.new_best? ? pen.palette.gain : pen.palette.soft
-        alpha = 0.85 + (0.15 * Math.sin(now * 6)) if finale.new_best?
+        face, size, text = show.finale_screen.score_record_line(plan.size(:score_record))
+        color = finale.new_score_record? ? pen.palette.gain : pen.palette.soft
+        alpha = 0.85 + (0.15 * Math.sin(now * 6)) if finale.new_score_record?
         pen.text(text, pen.fonts.public_send(face, size), rect.center_x, rect.center_y, color, alpha)
       end
     end

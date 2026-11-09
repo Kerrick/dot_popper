@@ -10,7 +10,7 @@ module DotPopper
 
     attr_reader state: state
 
-    attr_reader best: BestScore
+    attr_reader score_record: ScoreRecord
 
     attr_reader screen: Field
 
@@ -20,7 +20,7 @@ module DotPopper
 
     @listeners: Array[_Listener]
 
-    def initialize: (Field screen, ?best: BestScore, ?random: Random, ?sizing: DotSizing) -> void
+    def initialize: (Field screen, ?score_record: ScoreRecord, ?random: Random, ?sizing: DotSizing) -> void
 
     def subscribe: (?_Listener? listener) ?{ (event event) -> void } -> self
 
@@ -85,13 +85,13 @@ module DotPopper
     class GameOver < ::Data
       attr_reader game: Game
 
-      attr_reader new_best: bool
+      attr_reader new_score_record: bool
 
       attr_reader shown: Float
 
-      def self.new: (game: Game, new_best: bool, ?shown: Float) -> instance
+      def self.new: (game: Game, new_score_record: bool, ?shown: Float) -> instance
 
-      def initialize: (game: Game, new_best: bool, ?shown: Float) -> void
+      def initialize: (game: Game, new_score_record: bool, ?shown: Float) -> void
 
       def score: () -> Integer
 

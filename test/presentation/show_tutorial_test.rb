@@ -12,10 +12,10 @@ class ShowTutorialTest < Minitest::Test
 
   def setup
     @sounds = FakeSounds.new
-    @store = DotPopper::BestScore::Memory.new
-    @best = DotPopper::BestScore.new(DotPopper::BestScore::Memory.new)
-    @stats_book = DotPopper::StatsBook.new(DotPopper::BestScore::Memory.new)
-    @cabinet = DotPopper::Cabinet.new(field, best: @best, random: Random.new(2))
+    @store = DotPopper::ScoreRecord::Memory.new
+    @score_record = DotPopper::ScoreRecord.new(DotPopper::ScoreRecord::Memory.new)
+    @stats_book = DotPopper::StatsBook.new(DotPopper::ScoreRecord::Memory.new)
+    @cabinet = DotPopper::Cabinet.new(field, score_record: @score_record, random: Random.new(2))
     @events = []
     @cabinet.subscribe { @events << it.class }
     @show = show
@@ -60,7 +60,7 @@ class ShowTutorialTest < Minitest::Test
     assert_equal [1, 1], [@show.hud.score, @show.hud.seconds]
     update_for(1.1)
     assert @show.finished?
-    assert_equal 1, @best.of(@cabinet.size_class)
+    assert_equal 1, @score_record.of(@cabinet.size_class)
   end
 
   def test_the_game_it_goes_on_into_counts_as_any_game_does
@@ -70,7 +70,7 @@ class ShowTutorialTest < Minitest::Test
     assert_equal 1, @stats_book.stats.games
     assert_operator @show.game_stats.pops, :>=, 2, "its two pops are the game's"
     assert_equal @cabinet.game.score, @show.game_stats.score
-    assert_equal @cabinet.game.score, @best.of(@cabinet.size_class)
+    assert_equal @cabinet.game.score, @score_record.of(@cabinet.size_class)
   end
 
   def test_its_end_starts_the_game_with_the_clock_lit_and_its_first_second_ticking
@@ -149,7 +149,7 @@ class ShowTutorialTest < Minitest::Test
   def test_it_never_opens_again_not_even_after_the_stats_are_cleared
     play_through
     finish_game
-    keeper = DotPopper::StatsKeeper.new(best: @best, stats_book: @stats_book)
+    keeper = DotPopper::StatsKeeper.new(score_record: @score_record, stats_book: @stats_book)
     keeper.clear
     @show = show(keeper:)
     press_main
@@ -188,7 +188,7 @@ class ShowTutorialTest < Minitest::Test
 
   def test_how_to_play_is_offered_on_a_first_title_too_and_even_when_the_flag_never_opens_it
     @show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3),
-                     stats_book: @stats_book, keeper: DotPopper::StatsKeeper.new(best: @best, stats_book: @stats_book))
+                     stats_book: @stats_book, keeper: DotPopper::StatsKeeper.new(score_record: @score_record, stats_book: @stats_book))
 
     assert_includes @show.controls.map(&:name), :how_to_play
     @show.how_to_play
@@ -214,7 +214,7 @@ class ShowTutorialTest < Minitest::Test
 
   private
 
-  def show(keeper: DotPopper::StatsKeeper.new(best: @best, stats_book: @stats_book))
+  def show(keeper: DotPopper::StatsKeeper.new(score_record: @score_record, stats_book: @stats_book))
     Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3), stats_book: @stats_book,
              keeper:, tutorial_flag: TutorialFlag.new(@store))
   end

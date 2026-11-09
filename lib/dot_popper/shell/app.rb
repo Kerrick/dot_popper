@@ -42,18 +42,18 @@ module DotPopper
         report_renderer
         report_screen
         random = seed ? Random.new(seed) : Random.new
-        # Bests saved before they were kept by size of screen go to this
+        # Records saved before they were kept by size of screen go to this
         # screen's class.
         legacy = SizeClass.of(screen)
         sizing_store = SaveFile.new(name: "dot_size.txt")
-        @cabinet = Cabinet.new(screen, best: BestScore.new(SaveFile.new(name: "best_score.txt"), legacy:), random:,
+        @cabinet = Cabinet.new(screen, score_record: ScoreRecord.new(SaveFile.new(name: "score_record.txt"), legacy:), random:,
                                  sizing: DotSizing.parse(sizing_store.read))
         puts "Dot Popper: dots are sized to the screen as each game starts" if @cabinet.sizing.sized_to_screen?
-        stats_book = StatsBook.new(SaveFile.new(name: "lifetime.txt"), today:, legacy:)
+        stats_book = StatsBook.new(SaveFile.new(name: "stats.txt"), today:, legacy:)
         notices = NoticeFiles.new(cabinet: File.expand_path("../../..", __dir__),
                                   starts: [File.dirname(File.expand_path($PROGRAM_NAME))]).notices
         achievements = Achievements.new(SaveFile.new(name: "achievements.txt"))
-        keeper = StatsKeeper.new(best: @cabinet.best, stats_book:, achievements:, folder: ->(name) { SaveFile.new(name:) })
+        keeper = StatsKeeper.new(score_record: @cabinet.score_record, stats_book:, achievements:, folder: ->(name) { SaveFile.new(name:) })
         entitlement = Entitlement.new(SaveFile.new(name: "entitlement.txt"), forced: Entitlement.forced?(@env, os:))
         wardrobe = Presentation::Wardrobe.new(SaveFile.new(name: "looks.txt"), themes: Look::THEMES, entitlement:, today:)
         @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))

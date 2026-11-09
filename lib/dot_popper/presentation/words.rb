@@ -15,7 +15,7 @@ module DotPopper
     # the end of "Today's goal: ...", with %d for its target. +screen_size+
     # says how big a screen is, in dots, with %d for its width and height,
     # and names the choices of dot size (DotSizing) by what they do here.
-    class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time,
+    class Words < Data.define(:title, :play, :continue, :time_up, :new_score_record, :score_record, :score, :time,
                               :share, :share_heading, :copied, :copy, :close, :stats, :how_to_play, :go_back,
                               :no_games, :clear, :keep_holding, :hold_to_clear, :cleared, :undo, :labels, :goals, :goal_done, :goal_met,
                               :screen_size, :credits, :credits_title, :notice, :quit_again, :full_screen, :windowed, :quit, :looks, :offer,
@@ -23,7 +23,7 @@ module DotPopper
       MINUS = "−" # a true minus sign, as wide as the plus
       # How near a game must come to the best for Game Over to say by how
       # much; further off, the gap is only a number to dwell on.
-      CLOSE_TO_BEST = 3
+      CLOSE_TO_SCORE_RECORD = 3
 
       # +1, −2, or 0 for a number of points.
       def self.points(points) = signed(points)
@@ -84,24 +84,24 @@ module DotPopper
         "#{Words.count(left, "free game")} left. #{coming} come every day."
       end
 
-      # "Your best: 27".
-      def best_line(best) = "#{self.best}: #{best}"
+      # "Your record: 27".
+      def score_record_line(score_record) = "#{self.score_record}: #{score_record}"
 
       # How a finished game compares with the best it did not beat:
-      # "3 points short of your best of 27". With no best yet, nothing. A
-      # class's +first+ game only says the best it set, "Your best: 18":
+      # "3 points short of your record of 27". With no best yet, nothing. A
+      # class's +first+ game only says the best it set, "Your record: 18":
       # with nothing before it, it neither tied nor beat anything.
-      def short_of_best(score, best, first: false)
-        return best_line(best) if first
+      def short_of_score_record(score, score_record, first: false)
+        return score_record_line(score_record) if first
 
-        gap = best - score
+        gap = score_record - score
         if gap.positive?
-          return "Just #{Words.count(gap, "point")} short of your best of #{best}" if gap <= CLOSE_TO_BEST
+          return "Just #{Words.count(gap, "point")} short of your record of #{score_record}" if gap <= CLOSE_TO_SCORE_RECORD
 
-          return "Your best is #{best}"
+          return "Your record is #{score_record}"
         end
 
-        best.positive? ? "You tied your best of #{best}" : ""
+        score_record.positive? ? "You tied your record of #{score_record}" : ""
       end
 
       # The game in one quiet line, so a player can see what it was made
@@ -133,12 +133,12 @@ module DotPopper
       # and the +screen+ it was played on (#played_on), since a score
       # depends on that.
       #
-      #   Dot Popper: 25 points, a new best!
+      #   Dot Popper: 25 points, a new record!
       #   New record: 18 dots in a row without a mistake
       #   🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds
       #   Played on a screen about 12 dots wide and 8 dots tall.
-      def share_text(score, stats, best:, new_best:, record: nil, screen: nil, first: false)
-        ["Dot Popper: #{Words.count(score, "point")}#{best_note(score, best, new_best) unless first}",
+      def share_text(score, stats, score_record:, new_score_record:, record: nil, screen: nil, first: false)
+        ["Dot Popper: #{Words.count(score, "point")}#{score_record_note(score, score_record, new_score_record) unless first}",
          (self.record(record) if record),
          "🟡 #{Words.count(stats.pops, "pop")} · ⚫ #{Words.count(stats.mistakes, "mistake")} · " \
          "⏱ #{Words.count(stats.duration.round, "second")}",
@@ -180,12 +180,12 @@ module DotPopper
       # The control's label: "Dot size".
       def sizing_label = screen_size.fetch(:choice)
 
-      # The Stats screen's heading for the bests it shows: "Your bests
+      # The Stats screen's heading for the records it shows: "Your records
       # with standard dots on screens this size".
-      def bests_heading(sizing) = labels.fetch(sizing.sized_to_screen? ? :fitted_bests : :bests)
+      def records_heading(sizing) = labels.fetch(sizing.sized_to_screen? ? :fitted_records : :records)
 
       # The line under the Stats screen's chart, when some of its bars
-      # are of games that do not count toward the bests shown: "Brighter
+      # are of games that do not count toward the records shown: "Brighter
       # bars are games with dots sized to the screen."
       def chart_note(sizing) = labels.fetch(sizing.sized_to_screen? ? :fitted_chart_note : :chart_note)
 
@@ -267,9 +267,9 @@ module DotPopper
 
       private
 
-      def best_note(score, best, new_best)
-        if new_best then ", a new best!"
-        elsif score == best && best.positive? then ", tying my best!"
+      def score_record_note(score, score_record, new_score_record)
+        if new_score_record then ", a new record!"
+        elsif score == score_record && score_record.positive? then ", tying my best!"
         else ""
         end
       end

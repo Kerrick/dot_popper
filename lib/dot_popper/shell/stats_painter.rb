@@ -4,7 +4,7 @@ module DotPopper
   module Shell
     # The Stats screen, over the title's dimmed dots: the heading, the
     # notes on the screen's size under it, the chart of the last scores,
-    # the bests and totals as rows with their labels on the left and
+    # the records and totals as rows with their labels on the left and
     # their numbers lined up on the right, a faint dotted leader between,
     # and along the bottom, Back in one corner, quiet Credits beside it and "Clear my records…" or,
     # once they are cleared, Undo in the other. While "Clear my records…"
@@ -48,7 +48,7 @@ module DotPopper
       def widest(sheet, size)
         label = pen.fonts.semibold(size)
         value = pen.fonts.bold(size)
-        sections = [sheet.bests, sheet.totals, sheet.goal, sheet.achievements].compact
+        sections = [sheet.records, sheet.totals, sheet.goal, sheet.achievements].compact
         rows = sections.flat_map(&:rows).map { label.width(it.label) + value.width(it.value) + (size * 2) + (it.mark ? size * MARK : 0) }
         titles = sections.map(&:title) + [Presentation::Words.last_games(sheet.scores.size)]
         (rows + titles.map { value.width(it) }).max
@@ -253,7 +253,7 @@ module DotPopper
       # The last scores as bars on a faint baseline, in a fresh dot's
       # deeper orange, the best of them in its light cream and labelled
       # with its score: lighter, so it stands out by more than its hue. A
-      # bar from a game that does not count toward the bests shown is
+      # bar from a game that does not count toward the records shown is
       # drawn faint, and never labelled. The chart's title, above it, is
       # placed as a section's is.
       def chart(sheet, placed, size)
@@ -264,13 +264,13 @@ module DotPopper
                                      height: placed.height - label.height)
         bars = Presentation::ScoreBars.new(scores: sheet.scores, mine: sheet.mine).bars(box, pixels)
         bars.each do |bar|
-          pen.color(bar.best ? palette.fresh_light : palette.fresh_deep, bar.dim ? DIM : 1.0)
+          pen.color(bar.score_record ? palette.fresh_light : palette.fresh_deep, bar.dim ? DIM : 1.0)
           corner = [bar.width / 2.0, 2 / pixels.scale].min
           G.rectangle(:fill, bar.x, bar.y, bar.width, bar.height, corner, corner, 8)
         end
         baseline(box)
-        best = bars.find(&:best)
-        pen.text(best.score.to_s, label, best.x + (best.width / 2.0), best.y - (label.height * 0.6), palette.cream) if best
+        score_record = bars.find(&:score_record)
+        pen.text(score_record.score.to_s, label, score_record.x + (score_record.width / 2.0), score_record.y - (label.height * 0.6), palette.cream) if score_record
       end
 
       # The note under the chart, in the notes' smaller, softer type,

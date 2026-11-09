@@ -12,7 +12,7 @@ module DotPopper
   # test build has a store, a fake one, so it is metered like the final
   # game.
   #
-  # The store answers +read+ and +write(text)+ as BestScore's does; its
+  # The store answers +read+ and +write(text)+ as ScoreRecord's does; its
   # lines are +day=2026-11-08+, +spent=2+ and +bank=17+. A store with
   # nothing in it, as on every save made before games were counted, is a
   # full bank. A player's clock is trusted, as the other saves trust it.
@@ -23,7 +23,7 @@ module DotPopper
     DAILY = 3
 
     # Games that never count and never show: for a Show made without any.
-    def self.unlimited = new(BestScore::Memory.new, today: -> { Date.today }, entitlement: Entitlement.free, metered: false)
+    def self.unlimited = new(ScoreRecord::Memory.new, today: -> { Date.today }, entitlement: Entitlement.free, metered: false)
 
     # +today+ answers the player's local Date; +bank+ and +daily+ are what a
     # new save starts with and each day gives.

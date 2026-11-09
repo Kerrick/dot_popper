@@ -8,7 +8,7 @@ module DotPopper
       def restore: (String? text) -> void
     end
 
-    type folder = ^(String name) -> BestScore::_Removable
+    type folder = ^(String name) -> ScoreRecord::_Removable
 
     NOTE: String
 
@@ -22,7 +22,7 @@ module DotPopper
 
     @cleared: bool
 
-    def initialize: (best: _Kept, stats_book: _Kept, ?achievements: _Kept?, ?folder: folder | Folder, ?clock: ^() -> Time) -> void
+    def initialize: (score_record: _Kept, stats_book: _Kept, ?achievements: _Kept?, ?folder: folder | Folder, ?clock: ^() -> Time) -> void
 
     def cleared?: () -> bool
 
@@ -37,11 +37,11 @@ module DotPopper
     end
 
     class Folder
-      @stores: Hash[String, BestScore::Memory]
+      @stores: Hash[String, ScoreRecord::Memory]
 
       def initialize: () -> void
 
-      def call: (String name) -> BestScore::Memory
+      def call: (String name) -> ScoreRecord::Memory
     end
 
     private

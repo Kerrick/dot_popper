@@ -4,7 +4,7 @@ require_relative "test_helper"
 
 class FreeGamesTest < Minitest::Test
   FreeGames = DotPopper::FreeGames
-  Memory = DotPopper::BestScore::Memory
+  Memory = DotPopper::ScoreRecord::Memory
 
   def setup
     @store = Memory.new

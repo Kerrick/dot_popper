@@ -17,7 +17,7 @@ module DotPopper
     # a game, so a game is never dressed twice. Until the player chooses,
     # the theme in season is worn; once they do, their choice is, all year.
     #
-    # The store answers +read+ and +write(text)+ as BestScore's does, and
+    # The store answers +read+ and +write(text)+ as ScoreRecord's does, and
     # keeps two lines: "earned: halloween winter" and "chosen: halloween".
     # +today+ answers the date.
     class Wardrobe
@@ -27,7 +27,7 @@ module DotPopper
       # A wardrobe that keeps nothing and has bought nothing, for a Show
       # made without one.
       def self.plain(themes)
-        new(BestScore::Memory.new, themes:, entitlement: Entitlement.free, today: -> { Date.today })
+        new(ScoreRecord::Memory.new, themes:, entitlement: Entitlement.free, today: -> { Date.today })
       end
 
       attr_reader :worn

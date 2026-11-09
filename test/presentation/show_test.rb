@@ -9,7 +9,7 @@ class ShowTest < Minitest::Test
     @sounds = FakeSounds.new
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2))
     @clipboard = MemoryClipboard.new
-    @sizing_store = DotPopper::BestScore::Memory.new
+    @sizing_store = DotPopper::ScoreRecord::Memory.new
     @show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3),
                      clipboard: @clipboard, sizing_store: @sizing_store)
   end
@@ -223,7 +223,7 @@ class ShowTest < Minitest::Test
     assert_equal [1], @show.stats_book.stats.recent
   end
 
-  def test_game_over_names_the_best_record_the_game_set
+  def test_game_over_names_the_score_record_record_the_game_set
     start_and_pop
     @cabinet.update(20)
     assert_nil @show.finale.record, "a first game has nothing to beat"
@@ -240,7 +240,7 @@ class ShowTest < Minitest::Test
 
   # 2026-11-01's goal is to pop 10 bright dots in the first 10 seconds.
   def test_the_game_that_meets_todays_goal_celebrates_it_once_the_score_has_counted
-    stats_book = DotPopper::StatsBook.new(DotPopper::BestScore::Memory.new, today: -> { Date.new(2026, 11, 1) })
+    stats_book = DotPopper::StatsBook.new(DotPopper::ScoreRecord::Memory.new, today: -> { Date.new(2026, 11, 1) })
     show = Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3), stats_book:)
     press_main(show)
     10.times do
@@ -343,14 +343,14 @@ class ShowTest < Minitest::Test
   # 800 by 600 fits a radius of about 35 when dots are sized to it.
   def test_the_dot_size_choice_switches_on_the_title_and_is_remembered
     finish_game
-    assert_operator @show.marquee.best, :>, 0
+    assert_operator @show.marquee.score_record, :>, 0
 
     @show.tap(*middle(reach(DotPopper::DotSizing::SIZED_TO_SCREEN)))
     assert @show.title?, "the tap never starts a game"
     assert @cabinet.sizing.sized_to_screen?
     assert_equal DotPopper::DotSizing::SIZED_TO_SCREEN.to_text, @sizing_store.read
     assert_in_delta 35.4, @show.attract.dots.first.radius, 0.1
-    assert_equal 0, @show.marquee.best, "the title shows this choice's best"
+    assert_equal 0, @show.marquee.score_record, "the title shows this choice's best"
 
     press_main
     assert_in_delta 35.4, @cabinet.game.field.radius, 0.1
@@ -638,7 +638,7 @@ class ShowTest < Minitest::Test
   # The stacking rule is taught on Game Over, never in play, and only
   # after a game whose wrong tap had the bright dot hidden beneath.
   def test_game_over_teaches_the_stack_after_a_wrong_tap_over_the_fresh_dot
-    store = DotPopper::BestScore::Memory.new
+    store = DotPopper::ScoreRecord::Memory.new
     @show = Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3),
                      tutor: Tutor.new(store, times: 1))
     start_and_pop
@@ -697,7 +697,7 @@ class ShowTest < Minitest::Test
   # Once the bright dot it hid has been popped, the pile can't show which
   # it was, so Game Over shows nothing, and that Game Over doesn't count.
   def test_a_wrong_tap_whose_bright_dot_was_popped_later_teaches_nothing
-    store = DotPopper::BestScore::Memory.new
+    store = DotPopper::ScoreRecord::Memory.new
     @show = Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3),
                      tutor: Tutor.new(store, times: 2))
     hide_fresh_under_a_popped_dot_and_tap_it

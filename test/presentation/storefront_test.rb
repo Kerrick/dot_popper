@@ -40,7 +40,7 @@ class StorefrontTest < Minitest::Test
   # The two adapters a build chooses between, at the composition root.
   def stores
     @native ||= port
-    @fake ||= DotPopper::Presentation::FakeStore.new(DotPopper::BestScore::Memory.new)
+    @fake ||= DotPopper::Presentation::FakeStore.new(DotPopper::ScoreRecord::Memory.new)
     { native: @native, fake: @fake }
   end
 
@@ -58,7 +58,7 @@ class StorefrontTest < Minitest::Test
     assert_predicate Storefront, :test_build?
     %w[iOS Android].each do |os|
       store = Storefront.for(os, **stores, entitlement: @entitlement)
-      games = DotPopper::FreeGames.new(DotPopper::BestScore::Memory.new, today: -> { Date.today }, entitlement: @entitlement,
+      games = DotPopper::FreeGames.new(DotPopper::ScoreRecord::Memory.new, today: -> { Date.today }, entitlement: @entitlement,
                                                                          metered: store.offered?)
 
       assert_predicate games, :metered?, os

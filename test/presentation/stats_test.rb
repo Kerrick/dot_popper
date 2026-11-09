@@ -6,18 +6,18 @@ class StatsSheetTest < Minitest::Test
   include PresentationTest
 
   def stats
-    bests = DotPopper::Stats::Bests.new(games: 40, longest_game: 47.6, most_dots_in_a_row: 18, shortest_time_to_pop: 0.34,
+    records = DotPopper::Stats::Records.new(games: 40, longest_game: 47.6, most_dots_in_a_row: 18, shortest_time_to_pop: 0.34,
                                                 longest_time_to_pop: 6.2)
-    phone = DotPopper::Stats::Bests.new(games: 2, longest_game: 12.0, most_dots_in_a_row: 3)
+    phone = DotPopper::Stats::Records.new(games: 2, longest_game: 12.0, most_dots_in_a_row: 3)
     DotPopper::Stats.new(games: 42, pops: 812, mistakes: 61, seconds: 1890.0, days: 5, recent: [3, 9, 27, 12],
                                  recent_classes: [MEDIUM] * 4,
                                  streak: DotPopper::GoalStreak.new(current: 3, longest: 7, last_met: "2026-11-04"),
-                                 bests: { MEDIUM => bests, DotPopper::SizeClass::SMALL => phone })
+                                 records: { MEDIUM => records, DotPopper::SizeClass::SMALL => phone })
   end
 
   MEDIUM = DotPopper::SizeClass::MEDIUM
 
-  def sheet = StatsSheet.build(stats, best: 27, words: Look::WORDS, streak: 3, size_class: MEDIUM,
+  def sheet = StatsSheet.build(stats, score_record: 27, words: Look::WORDS, streak: 3, size_class: MEDIUM,
                                         field: DotPopper::Field.new(1200, 800, R))
 
   def test_the_sheet_shows_the_daily_goals_streaks
@@ -25,10 +25,10 @@ class StatsSheetTest < Minitest::Test
                  sheet.goal.rows.map { [it.label, it.value] }
   end
 
-  def test_the_sheet_lists_the_bests_and_the_totals_in_plain_words
-    rows = sheet.bests.rows.to_h { [it.label, it.value] }
+  def test_the_sheet_lists_the_records_and_the_totals_in_plain_words
+    rows = sheet.records.rows.to_h { [it.label, it.value] }
 
-    assert_equal "Your bests with standard dots on screens this size", sheet.bests.title
+    assert_equal "Your records with standard dots on screens this size", sheet.records.title
     assert_equal({ "Best score" => "27", "Longest game" => "48 seconds",
                    "Most dots in a row without a mistake" => "18", "Fastest pop" => "0.3 seconds",
                    "Longest wait that ended in a pop" => "6.2 seconds" }, rows)
@@ -38,11 +38,11 @@ class StatsSheetTest < Minitest::Test
     refute sheet.empty
   end
 
-  def test_the_bests_are_this_screens_and_the_totals_every_screens
-    phone = StatsSheet.build(stats, best: 6, words: Look::WORDS, size_class: DotPopper::SizeClass::SMALL,
+  def test_the_records_are_this_screens_and_the_totals_every_screens
+    phone = StatsSheet.build(stats, score_record: 6, words: Look::WORDS, size_class: DotPopper::SizeClass::SMALL,
                                       field: DotPopper::Field.new(395, 850, R))
 
-    assert_equal ["6", "12 seconds", "3", "None yet"], phone.bests.rows.first(4).map(&:value)
+    assert_equal ["6", "12 seconds", "3", "None yet"], phone.records.rows.first(4).map(&:value)
     assert_equal "42", phone.totals.rows.first.value
     assert_equal "This screen is about 4 dots wide and 9 dots tall.", phone.notes.first
     assert_equal "This screen is about 12 dots wide and 8 dots tall.", sheet.notes.first
@@ -50,28 +50,28 @@ class StatsSheetTest < Minitest::Test
   end
 
   def test_with_dots_sized_to_the_screen_the_sheet_says_so
-    fitted = StatsSheet.build(stats, best: 0, words: Look::WORDS, size_class: DotPopper::SizeClass::FITTED,
+    fitted = StatsSheet.build(stats, score_record: 0, words: Look::WORDS, size_class: DotPopper::SizeClass::FITTED,
                                        field: DotPopper::Field.new(395, 850, 30),
                                        sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
 
-    assert_equal "Your bests with dots sized to the screen", fitted.bests.title
-    assert_equal ["None yet"], fitted.bests.rows.map(&:value).values_at(3)
+    assert_equal "Your records with dots sized to the screen", fitted.records.title
+    assert_equal ["None yet"], fitted.records.rows.map(&:value).values_at(3)
     assert_equal ["This screen is about 7 dots wide and 14 dots tall.",
                   "Dots are sized to fit this screen, so scores compare across devices."], fitted.notes
   end
 
   def test_with_no_games_the_sheet_is_empty_and_says_none_yet
-    empty = StatsSheet.build(DotPopper::Stats.new, best: 0, words: Look::WORDS)
+    empty = StatsSheet.build(DotPopper::Stats.new, score_record: 0, words: Look::WORDS)
 
     assert empty.empty
-    assert_equal "None yet", empty.bests.rows[3].value
+    assert_equal "None yet", empty.records.rows[3].value
   end
 
-  def test_bars_stand_on_whole_pixels_with_the_best_marked
+  def test_bars_stand_on_whole_pixels_with_the_score_record_marked
     pixels = Pixels.new(scale: 2)
     bars = ScoreBars.new(scores: [5, 10, 0, 10]).bars(Rect.new(x: 10.3, y: 0, width: 200, height: 100), pixels)
 
-    assert_equal [false, false, false, true], bars.map(&:best), "the latest of a tie is the one marked"
+    assert_equal [false, false, false, true], bars.map(&:score_record), "the latest of a tie is the one marked"
     assert_in_delta 100.0, bars[1].height
     assert_in_delta 50.0, bars[0].height
     assert_in_delta 0.5, bars[2].height, 0.001, "a 0 is a stub one device pixel high"
@@ -85,25 +85,25 @@ class StatsSheetTest < Minitest::Test
   # A game from another group of screen and dot size is drawn faint and
   # is never the best, but keeps its true height, so the chart has one
   # scale.
-  def test_bars_from_other_groups_are_dim_and_never_the_best
+  def test_bars_from_other_groups_are_dim_and_never_the_score_record
     bars = ScoreBars.new(scores: [5, 10, 8], mine: [true, false, true])
                     .bars(Rect.new(x: 0, y: 0, width: 200, height: 100), Pixels.new(scale: 1))
 
     assert_equal [false, true, false], bars.map(&:dim)
-    assert_equal [false, false, true], bars.map(&:best)
+    assert_equal [false, false, true], bars.map(&:score_record)
     assert_in_delta 100.0, bars[1].height
   end
 
   def test_the_chart_dims_other_groups_games_and_says_so
     mixed = stats.with(recent_classes: [nil, DotPopper::SizeClass::SMALL, MEDIUM, MEDIUM])
-    sheet = StatsSheet.build(mixed, best: 27, words: Look::WORDS, size_class: MEDIUM)
-    fitted = StatsSheet.build(mixed, best: 0, words: Look::WORDS, size_class: DotPopper::SizeClass::FITTED,
+    sheet = StatsSheet.build(mixed, score_record: 27, words: Look::WORDS, size_class: MEDIUM)
+    fitted = StatsSheet.build(mixed, score_record: 0, words: Look::WORDS, size_class: DotPopper::SizeClass::FITTED,
                                        sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
 
     assert_equal [false, false, true, true], sheet.mine, "an old game's group is unknown"
     assert_equal "Brighter bars are games with standard dots on screens this size.", sheet.chart_note
     assert_equal "Brighter bars are games with dots sized to the screen.", fitted.chart_note
-    assert_nil StatsSheet.build(stats, best: 27, words: Look::WORDS, size_class: MEDIUM).chart_note,
+    assert_nil StatsSheet.build(stats, score_record: 27, words: Look::WORDS, size_class: MEDIUM).chart_note,
                "with every bar bright there is nothing to explain"
     plan = StatsLayout.new(layout: layout(400, 850), sheet:, look: Look::RECORDS)
     assert_equal ["Your last 4 games", :chart, ChartNote.new(text: sheet.chart_note)],
@@ -145,7 +145,7 @@ class StatsSheetTest < Minitest::Test
   def test_the_chart_leads_when_there_are_scores
     plan = StatsLayout.new(layout: layout(400, 850), sheet:, look: Look::RECORDS)
 
-    assert_equal ["Your last 4 games", :chart, "Your bests with standard dots on screens this size"],
+    assert_equal ["Your last 4 games", :chart, "Your records with standard dots on screens this size"],
                  plan.placements.first(3).map(&:item)
   end
 

@@ -3,7 +3,7 @@
 module DotPopper
   module Shell
     # A small text file in the game's save folder, as a store for
-    # BestScore and for settings: it answers read, write(text), and
+    # ScoreRecord and for settings: it answers read, write(text), and
     # remove, for RecordKeeper's backups. A save
     # folder that cannot be read or written loses the value, never the
     # game.

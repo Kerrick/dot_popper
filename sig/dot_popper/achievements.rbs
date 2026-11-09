@@ -1,10 +1,10 @@
 module DotPopper
   class Achievements
-    @store: BestScore::_Store
+    @store: ScoreRecord::_Store
 
     @days: Hash[Achievement::id, String]
 
-    def initialize: (BestScore::_Store store) -> void
+    def initialize: (ScoreRecord::_Store store) -> void
 
     def earned?: (Achievement::id id) -> bool
 

@@ -6,7 +6,7 @@ class PlaytestLogTest < Minitest::Test
   include DotPopperTest
 
   def setup
-    @store = DotPopper::BestScore::Memory.new
+    @store = DotPopper::ScoreRecord::Memory.new
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(9))
     @cabinet.subscribe(DotPopper::PlaytestLog.new(@store, clock: -> { Time.utc(2026, 11, 5, 9, 30) },
                                                today: -> { Date.new(2026, 11, 5) }))
@@ -29,11 +29,11 @@ class PlaytestLogTest < Minitest::Test
 
   def test_a_log_with_other_columns_is_set_aside_and_a_new_one_begins
     old = "time,mode,seed,score\n2026-11-04T20:00:00Z,daily,7,12\n"
-    store = DotPopper::BestScore::Memory.new(old)
+    store = DotPopper::ScoreRecord::Memory.new(old)
     archives = {}
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(9))
     cabinet.subscribe(DotPopper::PlaytestLog.new(store, clock: -> { Time.utc(2026, 11, 5, 9, 30, 15) },
-                                              archive: ->(name) { archives[name] = DotPopper::BestScore::Memory.new }))
+                                              archive: ->(name) { archives[name] = DotPopper::ScoreRecord::Memory.new }))
     @cabinet = cabinet
     play_game(pops: 1)
     play_game(pops: 1)

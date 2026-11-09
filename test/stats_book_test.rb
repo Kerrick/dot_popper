@@ -8,7 +8,7 @@ class StatsBookTest < Minitest::Test
   MEDIUM = DotPopper::SizeClass::MEDIUM
 
   def setup
-    @store = DotPopper::BestScore::Memory.new
+    @store = DotPopper::ScoreRecord::Memory.new
     @stats_book = StatsBook.new(@store, today: -> { Date.new(2026, 11, 5) })
   end
 
@@ -55,16 +55,16 @@ class StatsBookTest < Minitest::Test
   end
 
   def test_an_older_file_is_given_to_this_screens_class_and_saved_again_at_once
-    store = DotPopper::BestScore::Memory.new("games=3\nlongest_game=20.0\nmost_dots_in_a_row=5\n")
+    store = DotPopper::ScoreRecord::Memory.new("games=3\nlongest_game=20.0\nmost_dots_in_a_row=5\n")
     small = DotPopper::SizeClass::SMALL
     stats_book = StatsBook.new(store, legacy: small)
 
-    assert_equal 5, stats_book.stats.bests_in(small).most_dots_in_a_row
+    assert_equal 5, stats_book.stats.records_in(small).most_dots_in_a_row
     assert_includes store.read, "small.most_dots_in_a_row=5\n"
-    assert_equal 5, StatsBook.new(store, legacy: MEDIUM).stats.bests_in(small).most_dots_in_a_row
+    assert_equal 5, StatsBook.new(store, legacy: MEDIUM).stats.records_in(small).most_dots_in_a_row
   end
 
   def test_a_store_holding_nonsense_starts_from_nothing
-    assert_equal DotPopper::Stats.new, StatsBook.new(DotPopper::BestScore::Memory.new("\xFF\xFE".b)).stats
+    assert_equal DotPopper::Stats.new, StatsBook.new(DotPopper::ScoreRecord::Memory.new("\xFF\xFE".b)).stats
   end
 end

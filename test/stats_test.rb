@@ -14,17 +14,17 @@ class StatsTest < Minitest::Test
 
   def add(stats, game, day: "d", size_class: MEDIUM) = stats.add(game, day:, size_class:)
 
-  def test_a_game_adds_to_the_totals_and_the_bests
+  def test_a_game_adds_to_the_totals_and_the_records
     stats = add(Stats.new, game, day: "2026-11-05")
-    bests = stats.bests_in(MEDIUM)
+    records = stats.records_in(MEDIUM)
 
     assert_equal [1, 12, 1, 1, "2026-11-05"], [stats.games, stats.pops, stats.mistakes, stats.days, stats.last_day]
     assert_in_delta 30.0, stats.seconds
-    assert_equal 1, bests.games
-    assert_in_delta 30.0, bests.longest_game
-    assert_equal 8, bests.most_dots_in_a_row
-    assert_in_delta 0.8, bests.shortest_time_to_pop
-    assert_in_delta 2.5, bests.longest_time_to_pop
+    assert_equal 1, records.games
+    assert_in_delta 30.0, records.longest_game
+    assert_equal 8, records.most_dots_in_a_row
+    assert_in_delta 0.8, records.shortest_time_to_pop
+    assert_in_delta 2.5, records.longest_time_to_pop
     assert_equal [10], stats.recent
   end
 
@@ -36,27 +36,27 @@ class StatsTest < Minitest::Test
     assert_equal 3, stats.games
   end
 
-  def test_bests_keep_the_better_of_old_and_new
+  def test_records_keep_the_better_of_old_and_new
     stats = add(add(Stats.new, game), game(duration: 12.0, most_dots_in_a_row: 3, times_to_pop: [4.0]))
-    bests = stats.bests_in(MEDIUM)
+    records = stats.records_in(MEDIUM)
 
-    assert_in_delta 30.0, bests.longest_game
-    assert_equal 8, bests.most_dots_in_a_row
-    assert_in_delta 0.8, bests.shortest_time_to_pop
-    assert_in_delta 4.0, bests.longest_time_to_pop
+    assert_in_delta 30.0, records.longest_game
+    assert_equal 8, records.most_dots_in_a_row
+    assert_in_delta 0.8, records.shortest_time_to_pop
+    assert_in_delta 4.0, records.longest_time_to_pop
   end
 
   # A phone's crowded field and a big monitor's roomy one are different
-  # contests, so each class of screen keeps bests of its own; the totals
+  # contests, so each class of screen keeps records of its own; the totals
   # and the last scores take in every game.
-  def test_each_class_of_screen_keeps_its_own_bests_and_shares_the_totals
+  def test_each_class_of_screen_keeps_its_own_records_and_shares_the_totals
     stats = add(add(Stats.new, game(most_dots_in_a_row: 20, score: 30)), game(most_dots_in_a_row: 4, score: 5),
                 size_class: SMALL)
 
-    assert_equal 20, stats.bests_in(MEDIUM).most_dots_in_a_row
-    assert_equal 4, stats.bests_in(SMALL).most_dots_in_a_row
-    assert_equal 1, stats.bests_in(SMALL).games
-    assert_equal 0, stats.bests_in(DotPopper::SizeClass::LARGE).games
+    assert_equal 20, stats.records_in(MEDIUM).most_dots_in_a_row
+    assert_equal 4, stats.records_in(SMALL).most_dots_in_a_row
+    assert_equal 1, stats.records_in(SMALL).games
+    assert_equal 0, stats.records_in(DotPopper::SizeClass::LARGE).games
     assert_equal 2, stats.games
     assert_equal [30, 5], stats.recent
   end
@@ -91,7 +91,7 @@ class StatsTest < Minitest::Test
   end
 
   def test_a_game_with_no_pops_has_no_shortest_time_to_pop
-    assert_nil add(Stats.new, game(pops: 0, times_to_pop: [])).bests_in(MEDIUM).shortest_time_to_pop
+    assert_nil add(Stats.new, game(pops: 0, times_to_pop: [])).records_in(MEDIUM).shortest_time_to_pop
   end
 
   def test_only_the_last_twenty_scores_are_kept
@@ -130,19 +130,19 @@ class StatsTest < Minitest::Test
     refute Stats.old?(stats.to_text)
   end
 
-  # Before bests were kept by class, the file named them without one.
+  # Before records were kept by class, the file named them without one.
   # They go to the class the game is told is this screen's.
-  def test_an_older_file_gives_its_bests_to_this_screens_class
+  def test_an_older_file_gives_its_records_to_this_screens_class
     old = "games=7\npops=80\nlongest_game=41.5\nmost_dots_in_a_row=12\nshortest_time_to_pop=0.4\nlongest_time_to_pop=5.5\nrecent=3,9\n"
     stats = Stats.parse(old, legacy: SMALL)
 
     assert Stats.old?(old)
     assert_equal 7, stats.games
     assert_equal [3, 9], stats.recent
-    assert_equal [SMALL], stats.bests.keys
-    bests = stats.bests_in(SMALL)
+    assert_equal [SMALL], stats.records.keys
+    records = stats.records_in(SMALL)
     assert_equal [7, 41.5, 12, 0.4, 5.5],
-                 [bests.games, bests.longest_game, bests.most_dots_in_a_row, bests.shortest_time_to_pop, bests.longest_time_to_pop]
+                 [records.games, records.longest_game, records.most_dots_in_a_row, records.shortest_time_to_pop, records.longest_time_to_pop]
     assert_equal stats, Stats.parse(stats.to_text)
   end
 
@@ -160,10 +160,10 @@ class StatsTest < Minitest::Test
     assert_equal 7, stats.games
     assert_equal 0, stats.pops
     assert_equal 0, stats.mistakes
-    assert_in_delta 0.0, stats.bests_in(MEDIUM).longest_time_to_pop
+    assert_in_delta 0.0, stats.records_in(MEDIUM).longest_time_to_pop
     assert_nil stats.last_day
     assert_equal [4, 9, 5], stats.recent
-    assert_in_delta 0.5, stats.bests_in(MEDIUM).shortest_time_to_pop
-    assert_equal [MEDIUM], stats.bests.keys
+    assert_in_delta 0.5, stats.records_in(MEDIUM).shortest_time_to_pop
+    assert_equal [MEDIUM], stats.records.keys
   end
 end

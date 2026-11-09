@@ -29,7 +29,7 @@ module DotPopper
     # beneath it, and never in play: the Show replays that tap's penalty on
     # the pile (Mistake). It counts the Game Overs it has taught on, up to
     # +times+, and keeps the count in a store that answers +read+ and
-    # +write(text)+, as BestScore does.
+    # +write(text)+, as ScoreRecord does.
     class Tutor
       # What an older version saved once it had shown its hint, in play.
       # A player who saw that has been taught.

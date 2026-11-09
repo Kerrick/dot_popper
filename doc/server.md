@@ -8,7 +8,7 @@ Dot Popper is a one-minute arcade game. Friends form small groups that compete f
 - Any game scoring strictly higher than the group's top score wins the title, in every group of the player's where that is true. Ties never win.
 - A champion's own higher game raises the top score and carries on the same reign; it is not a title change.
 - Nothing decays and nothing happens daily.
-- If a champion leaves, the title passes to the remaining member with the best score above 0, or goes vacant if nobody has scored.
+- If a champion leaves, the title passes to the remaining member with the score record above 0, or goes vacant if nobody has scored.
 - Every title change stays visible to every member, permanently, with nothing to acknowledge.
 - Only games played with dots sized to the screen are sent. A score is a whole number from 0 to 100,000.
 

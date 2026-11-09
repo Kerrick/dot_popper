@@ -14,7 +14,7 @@ class LooksTest < Minitest::Test
   def setup
     @sounds = FakeSounds.new
     @day = Date.new(2026, 10, 31)
-    @paid = DotPopper::BestScore::Memory.new
+    @paid = DotPopper::ScoreRecord::Memory.new
   end
 
   def test_looks_are_offered_to_a_free_player_always_and_to_a_paid_one_with_a_look_to_choose
@@ -186,12 +186,12 @@ class LooksTest < Minitest::Test
   def show(paid:, **options)
     @paid.write("paid") if paid
     entitlement = DotPopper::Entitlement.new(@paid)
-    store = DotPopper::BestScore::Memory.new
+    store = DotPopper::ScoreRecord::Memory.new
     wardrobe = Wardrobe.new(store, themes: Look::THEMES, entitlement:, today: -> { @day })
-    @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), best: DotPopper::BestScore.new(DotPopper::BestScore::Memory.new))
+    @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), score_record: DotPopper::ScoreRecord.new(DotPopper::ScoreRecord::Memory.new))
     @wardrobe = wardrobe
     @show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, entitlement:, wardrobe:,
-                     stats_book: DotPopper::StatsBook.new(DotPopper::BestScore::Memory.new, today: -> { @day }), **options)
+                     stats_book: DotPopper::StatsBook.new(DotPopper::ScoreRecord::Memory.new, today: -> { @day }), **options)
     finish_game
   end
 

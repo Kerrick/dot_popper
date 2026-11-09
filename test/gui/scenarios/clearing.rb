@@ -9,7 +9,7 @@ module DotPopperGui
     scenario :clearing
 
     HOLD = DotPopper::Presentation::Look::RECORDS_CLEAR.hold
-    FILES = %w[best_score.txt lifetime.txt games.csv].freeze
+    FILES = %w[score_record.txt stats.txt games.csv].freeze
 
     def play
       quick_game
@@ -70,12 +70,12 @@ module DotPopperGui
       check(show.undo_offer, "Undo is offered")
       wait(0.3)
       keep_screenshot("clearing-cleared")
-      check_equal("", File.read(saved("lifetime.txt")), "lifetime.txt is emptied")
+      check_equal("", File.read(saved("stats.txt")), "stats.txt is emptied")
       check(before["games.csv"] == File.read(saved("games.csv")), "the playtest log is untouched")
-      backup = Dir[saved("lifetime-*.txt")]
-      check_equal(1, backup.size, "one backup of lifetime.txt")
-      check(before["lifetime.txt"] == File.read(backup.first), "the backup is an exact copy")
-      check_equal(0, show.marquee.best, "the title's best is cleared too")
+      backup = Dir[saved("stats-*.txt")]
+      check_equal(1, backup.size, "one backup of stats.txt")
+      check(before["stats.txt"] == File.read(backup.first), "the backup is an exact copy")
+      check_equal(0, show.marquee.score_record, "the title's best is cleared too")
     end
   end
 end

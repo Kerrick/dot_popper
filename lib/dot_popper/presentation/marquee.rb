@@ -4,7 +4,7 @@ module DotPopper
   module Presentation
     # The title screen, shown since +at+, with the device's +best+ score:
     # how far its entrance has come, and the prompt's breath.
-    class Marquee < Data.define(:look, :best, :at)
+    class Marquee < Data.define(:look, :score_record, :at)
       def intro(now) = look.intro.at(now - at)
 
       # The prompt breathes, between +faintest+ and fully opaque, once

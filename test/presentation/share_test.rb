@@ -3,7 +3,7 @@
 require_relative "presentation_helper"
 
 # Sharing a result: "Share my score" comes in once the score lands, a
-# little more strongly on a new best, and the preview it opens holds
+# little more strongly on a new record, and the preview it opens holds
 # exactly the text Copy will copy, its emoji drawn as shapes.
 class ShareTest < Minitest::Test
   include PresentationTest
@@ -108,20 +108,20 @@ class ShareTest < Minitest::Test
     assert_in_delta 0.0, settled.ring_alpha, 1e-9, "the ring has faded"
   end
 
-  def test_on_a_new_best_it_comes_a_little_later_and_more_strongly
+  def test_on_a_new_score_record_it_comes_a_little_later_and_more_strongly
     plain = ShareCue.at(0.05, CUE)
-    best = ShareCue.at(0.05 + CUE.best_delay, CUE, best: true)
-    assert_operator best.drop, :>, plain.drop
+    score_record = ShareCue.at(0.05 + CUE.score_record_delay, CUE, score_record: true)
+    assert_operator score_record.drop, :>, plain.drop
 
     ringing = CUE.arrive.duration * 0.6
     plain_ring = ShareCue.at(ringing, CUE)
-    best_ring = ShareCue.at(ringing + CUE.best_delay, CUE, best: true)
-    assert_operator best_ring.ring_alpha, :>, plain_ring.ring_alpha
-    assert_operator best_ring.ring, :>, plain_ring.ring
+    score_record_ring = ShareCue.at(ringing + CUE.score_record_delay, CUE, score_record: true)
+    assert_operator score_record_ring.ring_alpha, :>, plain_ring.ring_alpha
+    assert_operator score_record_ring.ring, :>, plain_ring.ring
   end
 
   def test_the_finale_starts_the_cue_when_the_score_has_counted
-    finale = Finale.new(look: Look::FINALE, score: 9, best: 12, new_best: false, at: 1.0)
+    finale = Finale.new(look: Look::FINALE, score: 9, score_record: 12, new_score_record: false, at: 1.0)
 
     assert_in_delta 0.0, finale.share_cue(1.0 + Look::FINALE.tally.duration).alpha
     assert_in_delta 1.0, finale.share_cue(1.0 + Look::FINALE.tally.duration + 2.0).alpha

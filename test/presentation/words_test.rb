@@ -23,31 +23,31 @@ class WordsTest < Minitest::Test
     assert_equal "0", Words.clock(DotPopper::Countdown.new(remaining: -3))
   end
 
-  def test_the_best_score_is_named
-    assert_equal "Your best: 12", Look::WORDS.best_line(12)
+  def test_the_score_record_is_named
+    assert_equal "Your record: 12", Look::WORDS.score_record_line(12)
   end
 
-  # The result to share names a new best or a tie, and otherwise only
+  # The result to share names a new record or a tie, and otherwise only
   # the score.
   def test_the_shared_result_says_the_score_and_what_the_game_was
     stats = DotPopper::GameStats.start.with(pops: 27, mistakes: 1, duration: 38.2)
 
-    assert_equal "Dot Popper: 25 points, a new best!\n🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds",
-                 Look::WORDS.share_text(25, stats, best: 25, new_best: true)
+    assert_equal "Dot Popper: 25 points, a new record!\n🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds",
+                 Look::WORDS.share_text(25, stats, score_record: 25, new_score_record: true)
     assert_equal "Dot Popper: 25 points, tying my best!\n🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds",
-                 Look::WORDS.share_text(25, stats, best: 25, new_best: false)
-    assert_match(/\ADot Popper: 1 point\n/, Look::WORDS.share_text(1, stats, best: 25, new_best: false))
-    assert_match(/\ADot Popper: 0 points\n/, Look::WORDS.share_text(0, stats, best: 0, new_best: false))
-    assert_match(/\ADot Popper: 25 points\n/, Look::WORDS.share_text(25, stats, best: 25, new_best: false, first: true))
+                 Look::WORDS.share_text(25, stats, score_record: 25, new_score_record: false)
+    assert_match(/\ADot Popper: 1 point\n/, Look::WORDS.share_text(1, stats, score_record: 25, new_score_record: false))
+    assert_match(/\ADot Popper: 0 points\n/, Look::WORDS.share_text(0, stats, score_record: 0, new_score_record: false))
+    assert_match(/\ADot Popper: 25 points\n/, Look::WORDS.share_text(25, stats, score_record: 25, new_score_record: false, first: true))
   end
 
   def test_the_shared_result_names_a_record_on_its_own_line
     stats = DotPopper::GameStats.start.with(pops: 27, mistakes: 1, duration: 38.2)
     record = DotPopper::Stats::Record.new(kind: :most_dots_in_a_row, value: 18)
 
-    assert_equal "Dot Popper: 25 points, a new best!\nNew record: 18 dots in a row without a mistake\n" \
+    assert_equal "Dot Popper: 25 points, a new record!\nNew record: 18 dots in a row without a mistake\n" \
                  "🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds",
-                 Look::WORDS.share_text(25, stats, best: 25, new_best: true, record:)
+                 Look::WORDS.share_text(25, stats, score_record: 25, new_score_record: true, record:)
   end
 
   # A score depends on how crowded the screen gets, so the shared result
@@ -58,7 +58,7 @@ class WordsTest < Minitest::Test
 
     assert_equal "Played on a screen about 12 dots wide and 8 dots tall.", screen
     assert_equal "Dot Popper: 25 points\n🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds\n#{screen}",
-                 Look::WORDS.share_text(25, stats, best: 30, new_best: false, screen:)
+                 Look::WORDS.share_text(25, stats, score_record: 30, new_score_record: false, screen:)
     assert_equal "This screen is about 4 dots wide and 9 dots tall.",
                  Look::WORDS.screen_here(DotPopper::Field.new(395, 850, 50))
     assert_equal [1, 1], Words.dots_across(DotPopper::Field.new(40, 20, 50)), "never no dots at all"
@@ -91,8 +91,8 @@ class WordsTest < Minitest::Test
     mouse = Look::WORDS.for(InputKind::MOUSE)
     pad = Look::WORDS.for(InputKind::GAMEPAD)
 
-    assert_equal "Keep holding to clear your bests, totals, chart, and goal streak.", mouse.keep_holding("A")
-    assert_equal "Keep holding Y to clear your bests, totals, chart, and goal streak.", pad.keep_holding("Y")
+    assert_equal "Keep holding to clear your records, totals, chart, and goal streak.", mouse.keep_holding("A")
+    assert_equal "Keep holding Y to clear your records, totals, chart, and goal streak.", pad.keep_holding("Y")
     assert_equal ["Clear my records…", "Hold Y to clear my records…"], [mouse.clear, pad.clear]
     assert_equal ["Undo", "Undo (Y)"], [mouse.undo, pad.undo]
   end
@@ -153,13 +153,13 @@ class WordsTest < Minitest::Test
     assert_operator balanced.map(&:size).minmax.then { |least, most| most - least }, :<=, 8
   end
 
-  def test_how_far_short_of_the_best
-    assert_equal "Just 3 points short of your best of 27", Look::WORDS.short_of_best(24, 27)
-    assert_equal "Just 1 point short of your best of 27", Look::WORDS.short_of_best(26, 27)
-    assert_equal "Your best is 28", Look::WORDS.short_of_best(5, 28), "a far-off best isn't a gap to dwell on"
-    assert_equal "You tied your best of 27", Look::WORDS.short_of_best(27, 27)
-    assert_equal "", Look::WORDS.short_of_best(0, 0), "no best to compare with yet"
-    assert_equal "Your best: 27", Look::WORDS.short_of_best(27, 27, first: true), "a first game tied nothing"
+  def test_how_far_short_of_the_score_record
+    assert_equal "Just 3 points short of your record of 27", Look::WORDS.short_of_score_record(24, 27)
+    assert_equal "Just 1 point short of your record of 27", Look::WORDS.short_of_score_record(26, 27)
+    assert_equal "Your record is 28", Look::WORDS.short_of_score_record(5, 28), "a far-off best isn't a gap to dwell on"
+    assert_equal "You tied your record of 27", Look::WORDS.short_of_score_record(27, 27)
+    assert_equal "", Look::WORDS.short_of_score_record(0, 0), "no best to compare with yet"
+    assert_equal "Your record: 27", Look::WORDS.short_of_score_record(27, 27, first: true), "a first game tied nothing"
   end
 
   def test_a_met_goal_still_says_what_it_was

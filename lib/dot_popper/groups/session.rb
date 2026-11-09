@@ -52,7 +52,7 @@ module DotPopper
       end.new
 
       # A Session with no server, for a game that offers no groups.
-      def self.off = new(store: BestScore::Memory.new, worker: NO_WORKER, available: false)
+      def self.off = new(store: ScoreRecord::Memory.new, worker: NO_WORKER, available: false)
 
       # The Session for a game whose server is at +url+, or Session.off.
       def self.at(url, store:) = url ? new(store:, worker: Worker.new(Link.new(url))) : off

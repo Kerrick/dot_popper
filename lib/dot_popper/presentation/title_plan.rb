@@ -54,7 +54,7 @@ module DotPopper
     # as big as Layout's primary_size for dots of +radius+ (or, on a window
     # too small for that, as small as a button), which say what the game
     # is and how to start it; then, apart from them and quieter, the
-    # player's own: the best score (+best+, shown from 1), today's goal
+    # player's own: the score record (+best+, shown from 1), today's goal
     # (+goal+, its sentence or "Today's goal is done." once +done+), and
     # the days in a row it has been met (+streak+, from 2). Under Play,
     # where games are counted, stands how many are left (+games+). Along the
@@ -67,20 +67,20 @@ module DotPopper
     # then the goal, then the best, then the games left, and last the name shrinks on. The
     # legend and Play always stay, since they are how to play.
     # Sizes are measured with +measure+ (RoughMeasure's methods).
-    class TitleScreen < Data.define(:layout, :type, :words, :measure, :best, :goal, :done, :streak, :stats,
+    class TitleScreen < Data.define(:layout, :type, :words, :measure, :score_record, :goal, :done, :streak, :stats,
                                     :sizing, :radius, :window, :games)
       # The gaps above each line, in graphics units at full size.
       # The name, the legend and Play are near each other, one group; the
       # player's own lines stand further off under Play, and closer to
       # each other, another.
-      GAPS = { legend: 30, play: 30, games: 12, best: 44, best_room: 44, goal: 14, streak: 8 }.freeze
+      GAPS = { legend: 30, play: 30, games: 12, score_record: 44, score_record_room: 44, goal: 14, streak: 8 }.freeze
       # How far the name shrinks on, once everything else has made room.
       # The games line goes last of the optional lines: a player at the limit
       # needs it most.
       GAMES_DROP = 4
       NAME_SHRINKS = [1.0, 0.82, 0.66, 0.5, 0.4].freeze
 
-      def initialize(layout:, type:, words:, measure:, best: 0, goal: nil, done: false, streak: 0, stats: false,
+      def initialize(layout:, type:, words:, measure:, score_record: 0, goal: nil, done: false, streak: 0, stats: false,
                      sizing: false, radius: Rules::RADIUS, window: false, games: nil)
         super
       end
@@ -131,7 +131,7 @@ module DotPopper
         return in_row if in_row
 
         above = layout.window_icons_above
-        fits = with(sizing: true, best: 0, goal: nil, streak: 0).stack(above).first.fits?
+        fits = with(sizing: true, score_record: 0, goal: nil, streak: 0).stack(above).first.fits?
         fits ? above : layout.window_icons
       end
 
@@ -170,25 +170,25 @@ module DotPopper
       end
 
       def blocks(sizes, scale, play_height)
-        title, legend, line = sizes.values_at(:title, :legend, :best)
+        title, legend, line = sizes.values_at(:title, :legend, :score_record)
         goal = goal_lines(sizes[:goal]) if self.goal
         [Block.new(name: :title, height: measure.height(:bold, title) * 1.06, width: measure.width(:bold, title, words.title)),
          Block.new(name: :legend, height: measure.height(:bold, legend) * Legend::HEIGHT, gap: gap(:legend, scale),
                    width: legend_width(legend)),
          play(scale, play_height),
          (block(:games, :semibold, sizes[:goal], games, scale, drop: GAMES_DROP) if games),
-         best_block(line, scale),
+         score_record_block(line, scale),
          (goal_block(goal, sizes[:goal], scale) if goal),
          (block(:streak, :semibold, sizes[:goal], words.streak(streak), scale, drop: 1) if goal && streak >= 2)].compact
       end
 
-      # "Your best: 25", or none yet. While the Dot size choice shows, each
-      # size has bests of its own, so a size with none yet keeps the
+      # "Your record: 25", or none yet. While the Dot size choice shows, each
+      # size has records of its own, so a size with none yet keeps the
       # line's room empty: switching sizes then never moves Play.
-      def best_block(size, scale)
-        return block(:best, :semibold, size, words.best_line(best), scale, drop: 3) if best.positive?
+      def score_record_block(size, scale)
+        return block(:score_record, :semibold, size, words.score_record_line(score_record), scale, drop: 3) if score_record.positive?
 
-        block(:best_room, :semibold, size, "", scale, drop: 3) if sizing
+        block(:score_record_room, :semibold, size, "", scale, drop: 3) if sizing
       end
 
       # Play, as wide as a main button is, whatever the type's scale.
@@ -216,7 +216,7 @@ module DotPopper
       def sizes(scale, shrink, buttons)
         { title: title_size((layout.type_size(type.title, scale) * shrink).round, buttons),
           legend: legend_size(layout.type_size(type.legend, scale)),
-          best: layout.type_size(type.best, scale), goal: layout.type_size(type.summary * 1.1, scale) }
+          score_record: layout.type_size(type.score_record, scale), goal: layout.type_size(type.summary * 1.1, scale) }
       end
 
       # Today's goal broken into lines that fit across. Once it is done, a

@@ -6,7 +6,7 @@ class TutorialFlagTest < Minitest::Test
   include PresentationTest
 
   def setup
-    @store = DotPopper::BestScore::Memory.new
+    @store = DotPopper::ScoreRecord::Memory.new
   end
 
   def test_it_is_due_once_on_a_fresh_install_and_remembered_across_sessions
@@ -33,7 +33,7 @@ class TutorialFlagTest < Minitest::Test
     @store.write("seen")
 
     assert TutorialFlag.new(@store, mode: :forced).due?(played: true)
-    refute TutorialFlag.new(DotPopper::BestScore::Memory.new, mode: :skipped).due?(played: false)
+    refute TutorialFlag.new(DotPopper::ScoreRecord::Memory.new, mode: :skipped).due?(played: false)
   end
 
   def test_the_environment_chooses_the_mode

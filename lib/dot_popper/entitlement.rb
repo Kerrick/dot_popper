@@ -2,7 +2,7 @@
 
 module DotPopper
   # Whether this player has bought the paid version. The store, which
-  # answers +read+ and +write(text)+ as BestScore's does, keeps it. Paid
+  # answers +read+ and +write(text)+ as ScoreRecord's does, keeps it. Paid
   # features ask +paid?+ and nothing else, so the store's purchase is one
   # call, +unlock!+, away from every one of them. DOT_POPPER_PAID=1 stands
   # in for a purchase, to try them out, and DOT_POPPER_PAID=0 is a free
@@ -20,7 +20,7 @@ module DotPopper
     STORE_SYSTEMS = %w[iOS Android].freeze
 
     # An entitlement that has bought nothing and keeps nothing.
-    def self.free = new(BestScore::Memory.new)
+    def self.free = new(ScoreRecord::Memory.new)
 
     # Whether this copy is paid without a purchase: by DOT_POPPER_PAID when
     # it is set, and otherwise on a computer (+os+ as Lota::System.os names

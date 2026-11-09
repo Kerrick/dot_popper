@@ -46,7 +46,7 @@ Unpack the `.tar.gz` anywhere and run `Dot Popper` in the folder it makes, or ma
 
 ### Where a packaged build saves its files
 
-A packaged build saves the best score, the sound setting, and the playtest log in a `dot_popper` folder in the system's application-data folder: `%APPDATA%\dot_popper` on Windows, `~/Library/Application Support/dot_popper` on macOS, and `~/.local/share/dot_popper` (or `$XDG_DATA_HOME/dot_popper`) on Linux. The game prints the playtest log's full path when it starts. This is a different folder from the one `bundle exec lota run` uses, so a packaged build and a development run keep separate scores.
+A packaged build saves the score record, the sound setting, and the playtest log in a `dot_popper` folder in the system's application-data folder: `%APPDATA%\dot_popper` on Windows, `~/Library/Application Support/dot_popper` on macOS, and `~/.local/share/dot_popper` (or `$XDG_DATA_HOME/dot_popper`) on Linux. The game prints the playtest log's full path when it starts. This is a different folder from the one `bundle exec lota run` uses, so a packaged build and a development run keep separate scores.
 
 ## Cutting a release
 

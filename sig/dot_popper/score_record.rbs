@@ -1,5 +1,5 @@
 module DotPopper
-  class BestScore
+  class ScoreRecord
     interface _Store
       def read: () -> String?
 
@@ -36,7 +36,7 @@ module DotPopper
 
     def save: () -> void
 
-    module Best
+    module Table
       OLD: Regexp
 
       def self.parse: (String text, legacy: SizeClass) -> Hash[SizeClass, Integer]

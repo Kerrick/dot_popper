@@ -2,7 +2,7 @@
 
 module DotPopper
   module Shell
-    # The droplets of a pop and the twinkles of a new best, flown and drawn
+    # The droplets of a pop and the twinkles of a new record, flown and drawn
     # by LÖVE's ParticleSystem. Each sprite is drawn in code into an
     # ImageData at the screen's density, so it is as sharp as the dots.
     # A system's colors run through each particle's life, so there is one

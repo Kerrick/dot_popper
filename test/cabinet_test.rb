@@ -8,8 +8,8 @@ class CabinetTest < Minitest::Test
   Events = DotPopper::Events
 
   def setup
-    @store = DotPopper::BestScore::Memory.new
-    @cabinet = Cabinet.new(field, best: DotPopper::BestScore.new(@store), random: Random.new(9))
+    @store = DotPopper::ScoreRecord::Memory.new
+    @cabinet = Cabinet.new(field, score_record: DotPopper::ScoreRecord.new(@store), random: Random.new(9))
     @heard = []
     @cabinet.subscribe { @heard << it }
   end
@@ -99,43 +99,43 @@ class CabinetTest < Minitest::Test
 
   # 800 by 600 is 16 by 12 radii, a phone-sized field, and 1200 by 800 a
   # tablet-sized one.
-  def test_a_game_counts_among_the_bests_of_the_screen_it_started_on
+  def test_a_game_counts_among_the_records_of_the_screen_it_started_on
     assert_equal DotPopper::SizeClass::SMALL, @cabinet.size_class
     play_to_score(2)
     @cabinet.screen = field(1200, 800)
     @cabinet.update(20)
 
     assert_equal DotPopper::SizeClass::SMALL, @heard.last.size_class
-    assert_equal 2, @cabinet.best.of(DotPopper::SizeClass::SMALL)
-    assert_equal 0, @cabinet.best.of(DotPopper::SizeClass::MEDIUM)
+    assert_equal 2, @cabinet.score_record.of(DotPopper::SizeClass::SMALL)
+    assert_equal 0, @cabinet.score_record.of(DotPopper::SizeClass::MEDIUM)
     assert_equal DotPopper::SizeClass::MEDIUM, @cabinet.size_class, "the next game counts with the new size"
   end
 
   # A class's first game sets its best, but beat nothing, so it is not
   # announced as a new one.
-  def test_the_best_score_is_kept_and_only_a_beaten_one_is_a_new_best
+  def test_the_score_record_is_kept_and_only_a_beaten_one_is_a_new_score_record
     play_to_score(2)
     @cabinet.update(20)
 
-    assert_equal 2, @cabinet.best.of(DotPopper::SizeClass::SMALL)
+    assert_equal 2, @cabinet.score_record.of(DotPopper::SizeClass::SMALL)
     assert_equal "small=2\n", @store.read
     assert @heard.last.first
-    refute @heard.last.new_best
+    refute @heard.last.new_score_record
 
     @cabinet.update(1)
     @cabinet.press(0, 0)
     @cabinet.press(0, 0)
     @cabinet.update(20)
     refute @heard.last.first
-    refute @heard.last.new_best
-    assert_equal 2, @heard.last.best
+    refute @heard.last.new_score_record
+    assert_equal 2, @heard.last.score_record
 
     @cabinet.update(1)
     @cabinet.press(0, 0)
     play_to_score(3)
     @cabinet.update(20)
-    assert @heard.last.new_best
-    assert_equal 3, @heard.last.best
+    assert @heard.last.new_score_record
+    assert_equal 3, @heard.last.score_record
   end
 
   def test_a_new_game_uses_the_field_as_it_is_when_the_game_starts
@@ -207,7 +207,7 @@ class CabinetTest < Minitest::Test
     @cabinet.update(20)
     assert_instance_of Cabinet::GameOver, @cabinet.state
     assert_equal 1, @cabinet.state.score
-    assert_equal 1, @cabinet.best.of(@cabinet.size_class), "it counts toward the bests as any game does"
+    assert_equal 1, @cabinet.score_record.of(@cabinet.size_class), "it counts toward the records as any game does"
   end
 
   def test_only_the_title_resumes_a_game

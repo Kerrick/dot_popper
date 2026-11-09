@@ -111,8 +111,8 @@ module DotPopperGui
       log = File.readlines(saved("games.csv"), chomp: true)
       check_equal(2, log.size, "games.csv has its header and the game")
       check_equal(score.to_s, log.last.split(",")[2], "games.csv logs the score")
-      check(File.read(saved("best_score.txt")).include?("=#{score}"), "best_score.txt keeps the best")
-      check(File.file?(saved("lifetime.txt")), "lifetime.txt is saved")
+      check(File.read(saved("score_record.txt")).include?("=#{score}"), "score_record.txt keeps the best")
+      check(File.file?(saved("stats.txt")), "stats.txt is saved")
       check(File.file?(saved("taught.txt")), "taught.txt counts the lesson")
     end
   end

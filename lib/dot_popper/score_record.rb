@@ -11,13 +11,13 @@ module DotPopper
   # number. That best belongs to +legacy+, the class of the screen the
   # game opens on, and is saved again in the new form at once, so it
   # stays there whichever screen the game opens on next.
-  class BestScore
+  class ScoreRecord
     def initialize(store, legacy: SizeClass::MEDIUM)
       @store = store
       @legacy = legacy
       text = store.read.to_s
-      @values = Best.parse(text, legacy:)
-      save if Best.old?(text)
+      @values = Table.parse(text, legacy:)
+      save if Table.old?(text)
     end
 
     # The best score on screens of +size_class+, or 0 before there is one.
@@ -28,7 +28,7 @@ module DotPopper
 
     # Records +score+ as one played on +size_class+, and says whether it
     # beat that class's best. A class's first game sets its best but
-    # beats nothing, so it is never a new best: there was nothing to beat.
+    # beats nothing, so it is never a new record: there was nothing to beat.
     def record(score, size_class)
       first = first?(size_class)
       return false unless first || score > of(size_class)
@@ -50,15 +50,15 @@ module DotPopper
     # Puts back +text+, the store's whole text as #saved gave it.
     def restore(text)
       @store.write(text.to_s)
-      @values = Best.parse(text.to_s, legacy: @legacy)
+      @values = Table.parse(text.to_s, legacy: @legacy)
     end
 
     private
 
-    def save = @store.write(Best.to_text(@values))
+    def save = @store.write(Table.to_text(@values))
 
     # How a store's text reads and writes.
-    module Best
+    module Table
       OLD = /\A\s*\d+\s*\z/
 
       # Each class's score, read leniently: a line that is not

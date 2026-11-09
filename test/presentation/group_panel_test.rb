@@ -27,8 +27,8 @@ class GroupPanelTest < Minitest::Test
   def setup
     @sounds = FakeSounds.new
     @worker = HandWorker.new
-    @session = Groups::Session.new(store: DotPopper::BestScore::Memory.new, worker: @worker)
-    @paid = DotPopper::Entitlement.new(DotPopper::BestScore::Memory.new, forced: true)
+    @session = Groups::Session.new(store: DotPopper::ScoreRecord::Memory.new, worker: @worker)
+    @paid = DotPopper::Entitlement.new(DotPopper::ScoreRecord::Memory.new, forced: true)
     @cabinet = DotPopper::Cabinet.new(field)
     build
   end
@@ -155,7 +155,7 @@ class GroupPanelTest < Minitest::Test
     assert_equal 1, panel.group_id
   end
 
-  def test_the_standings_are_best_first_with_the_champion_and_you_clear
+  def test_the_standings_are_score_record_first_with_the_champion_and_you_clear
     join!(group(numbers: [1, 2, 3], you: 3, champion: 2, top: 90))
     rows = @show.group_plan.rows
 
@@ -208,7 +208,7 @@ class GroupPanelTest < Minitest::Test
   end
 
   def test_a_list_too_long_for_a_page_goes_in_pages
-    @session = Groups::Session.new(store: DotPopper::BestScore::Memory.new, worker: @worker)
+    @session = Groups::Session.new(store: DotPopper::ScoreRecord::Memory.new, worker: @worker)
     build(width: 400, height: 500)
     join!
     groups = (1..20).map { group(id: it) }

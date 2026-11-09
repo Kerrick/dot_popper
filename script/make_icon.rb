@@ -76,7 +76,7 @@ def chunk(type, data) = [data.bytesize].pack("N") + type + data + [Zlib.crc32(ty
 def png(size, raw)
   "\x89PNG\r\n\x1A\n".b +
     chunk("IHDR", [size, size, 8, 6, 0, 0, 0].pack("NNC5")) +
-    chunk("IDAT", Zlib::Deflate.deflate(raw, Zlib::BEST_COMPRESSION)) +
+    chunk("IDAT", Zlib::Deflate.deflate(raw, Zlib::SCORE_RECORD_COMPRESSION)) +
     chunk("IEND", "")
 end
 

@@ -6,12 +6,12 @@ module DotPopper
     STORE_SYSTEMS: Array[String]
 
 
-    @store: BestScore::_Store
+    @store: ScoreRecord::_Store
     @forced: bool
 
     def self.free: () -> Entitlement
     def self.forced?: (untyped env, ?os: String?) -> bool
-    def initialize: (BestScore::_Store store, ?forced: bool) -> void
+    def initialize: (ScoreRecord::_Store store, ?forced: bool) -> void
     def paid?: () -> bool
     def unlock!: () -> untyped
   end
