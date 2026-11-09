@@ -63,8 +63,8 @@ class HoverTest < Minitest::Test
     @show.update(0.1)
     @show.pointer_at(*middle(@show.share_reach))
     assert_equal :share, @show.hovered
-    @show.pointer_at(*middle(@show.continue_reach))
-    assert_equal :continue, @show.hovered
+    @show.pointer_at(*middle(@show.play_again_reach))
+    assert_equal :play_again, @show.hovered
     @show.share
     @show.pointer_at(*middle(@show.copy_reach))
     assert_equal :copy, @show.hovered

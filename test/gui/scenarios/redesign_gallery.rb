@@ -51,6 +51,19 @@ module DotPopperGui
       shoot("ach-open")
       show.back
       show.back
+      game_over
+    end
+
+    # Game Over with its lines, a met goal and, for Pro, a new achievement.
+    def game_over
+      start_game
+      3.times { pop_fresh }
+      run_out_the_clock
+      lines = { goal_met: true }
+      lines[:achievements] = [:sharpshooter] if show.pro?
+      show.instance_variable_set(:@game_over, show.game_over.with(**lines))
+      shoot("over", settle: 3.0)
+      continue_to_home
     end
 
     def page(opener, name)

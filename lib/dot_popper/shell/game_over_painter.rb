@@ -2,16 +2,18 @@
 
 module DotPopper
   module Shell
-    # Game over, over the finished game, each line where the Show's
-    # FinalePlan puts it: "Time's up!", "You met today's goal!" if the
-    # game did, the score counting up, a new record or how far short of the
-    # best it fell, a quiet line of the game's facts, a lifetime record
-    # it set, "Share my score", rising in as the score lands, and the
-    # Continue button, faint until a press will be heard. Every line
-    # above Continue sits on a soft, dark backing, so they read over the
-    # pile without hiding it. The stacking rule is taught on the pile
-    # itself, with no word (Show#replay_slip).
+    # Game Over, over the finished game, each part where the Show's
+    # GameOverPlan puts it: "Time's up!", the score counting up, a new
+    # record or how far short of the best it fell, a quiet line of the
+    # game's facts, a lifetime record it set, its lines in pills (today's
+    # goal met, a new achievement, a friend group's title), those that open
+    # something with an arrow, then Play again, faint until a press will
+    # be heard, and Home beside Share my score, all over the dimmed pile,
+    # as the mocks draw it, with no backing of their own. The stacking
+    # rule is taught on the pile itself, with no word (Show#replay_mistake).
     class GameOverPainter < Data.define(:pen)
+      G = ::Lota::Graphics
+
       def draw(show, layout)
         game_over = show.game_over or return
         plan = show.game_over_plan
@@ -20,46 +22,76 @@ module DotPopper
         words = show.words
         arrival = game_over.arrival(now)
         shown = arrival.clamp(0.0, 1.0)
-        ScrimPainter.new(pen:).draw(plan.backing, pen.style::GAME_OVER_BACKING, layout, alpha: shown)
         if (heading = plan[:heading])
-          pen.text(words.time_up, pen.fonts.bold(plan.size(:heading)), layout.center_x,
+          pen.text(words.time_up, pen.fonts.bold(plan.size(:heading)), heading.center_x,
                    heading.center_y - ((1 - arrival) * 30), palette.soft, shown)
         end
-        goal_met(game_over, words, plan, now)
         score = pen.fonts.bold(plan.size(:score))
-        Lettering.new(pen:).candy(game_over.shown_score(now).to_s, score, layout.center_x,
+        Lettering.new(pen:).candy(game_over.shown_score(now).to_s, score, plan[:score].center_x,
                                   plan[:score].y + (score.height / 2.0), shown)
         score_record_line(show, plan, now, shown)
-        line(plan, :group, show.group_panel.game_line.to_s, palette.gain, shown) if plan[:group]
         line(plan, :summary, words.summary(game_over.stats), palette.soft, shown * 0.8)
         line(plan, :record, words.record(game_over.record), palette.gain, game_over.afterword(now)) if game_over.record && game_over.counted?(now)
-        line(plan, :achievement, Presentation::AchievementWords.earned(game_over.achievements), palette.gain, game_over.afterword(now)) if game_over.achievements.any? && game_over.counted?(now)
-        if (button = plan.share_button)
-          ShareButton.new(pen:).draw(button, words.share, cue: game_over.share_cue(now), ui: layout.ui,
-                                     hover: show.hover.level(:share))
-        end
-        PrimaryButton.new(pen:).draw(plan.continue_button, words.continue, alpha: [shown * 0.35, game_over.prompt(now)].max,
-                                     hover: show.hover.level(:continue))
+        chips(show, plan, game_over.afterword(now)) if game_over.counted?(now)
+        buttons(show, plan, game_over, now, shown, layout)
       end
 
       private
+
+      def buttons(show, plan, game_over, now, shown, layout)
+        words = show.words
+        if (home = plan.home_button)
+          PillButton.new(pen:).draw(home, words.button(:home), alpha: shown, hover: show.hover.level(:home),
+                                    icon: ->(x, y, size) { Glyphs.new(pen:).draw(:home, x, y, size * 0.42, alpha: shown) })
+        end
+        if (button = plan.share_button)
+          ShareButton.new(pen:).draw(button, words.share, cue: game_over.share_cue(now), ui: layout.ui, hover: show.hover.level(:share))
+        end
+        play = plan.play_button or return
+        PrimaryButton.new(pen:).draw(play, show.game_over_screen.play_word, alpha: [shown * 0.35, game_over.prompt(now)].max,
+                                     hover: show.hover.level(:play_again), note: show.game_over_screen.play_note)
+      end
+
+      # Each of the game's lines in a pill: its mark, its words, and an
+      # arrow where a press opens what it names.
+      def chips(show, plan, alpha)
+        return unless alpha.positive?
+
+        font = pen.fonts.semibold(plan.size(:chip))
+        show.game_over_chips.each_with_index do |chip, i|
+          rect = plan[[:chip, i]] or next
+          hover = chip.opens ? show.hover.level(chip.name) : 0.0
+          Card.new(pen:).draw(rect, corner: rect.height / 2.0, alpha:, lit: hover)
+          mark = rect.height * 0.42
+          room = rect.width - (rect.height * (chip.opens ? 1.9 : 1.4))
+          text = font.width(chip.text) > room ? fitted(chip.text, font, room) : chip.text
+          left = rect.x + (rect.height * 0.5)
+          glyph(chip, left + (mark / 2.0), rect.center_y, mark, alpha)
+          pen.text(text, font, left + mark + (rect.height * 0.22) + (font.width(text) / 2.0), rect.center_y, pen.palette.cream, alpha)
+          Glyphs.new(pen:).draw(:chevron_right, rect.right - (rect.height * 0.45), rect.center_y, mark * 0.7, alpha:) if chip.opens
+        end
+      end
+
+      def glyph(chip, x, y, size, alpha)
+        case chip.glyph
+        when :check then Glyphs.new(pen:).draw(:check, x, y, size, color: pen.palette.gain, alpha:, weight: 2.2)
+        when :achievement then Glyphs.new(pen:).draw(:ribbon, x, y, size, color: pen.palette.fresh_body, alpha:)
+        else Glyphs.new(pen:).draw(:crown, x, y, size, color: pen.palette.fresh_body, alpha:)
+        end
+      end
+
+      # +text+ cut short with an ellipsis to fit +room+.
+      def fitted(text, font, room)
+        cut = text
+        cut = cut[0...-1] while cut.size > 1 && font.width("#{cut}…") > room
+        "#{cut.rstrip}…"
+      end
 
       # A semibold line of +text+ in its place in +plan+, if it has one.
       def line(plan, name, text, color, alpha)
         rect = plan[name] or return
 
         pen.text(text, pen.fonts.semibold(plan.size(:summary)), rect.center_x, rect.center_y, color, alpha)
-      end
-
-      # "You met today's goal!", with a check, between "Time's up!" and the
-      # score, once the score has counted up; the Show bursts twinkles
-      # there as it appears.
-      def goal_met(game_over, words, plan, now)
-        rect = plan[:goal]
-        return unless rect && game_over.counted?(now)
-
-        font = pen.fonts.bold(plan.size(:goal))
-        Check.new(pen:).labelled(words.goal_met, font, rect.center_x, rect.center_y, game_over.afterword(now))
       end
 
       # A new record, glowing, once the score has counted up, or how far

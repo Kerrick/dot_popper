@@ -15,7 +15,7 @@ module DotPopper
     # the end of "Today's goal: ...", with %d for its target. +screen_size+
     # says how big a screen is, in dots, with %d for its width and height,
     # and names the choices of dot size (DotSizing) by what they do here.
-    class Words < Data.define(:game_name, :play, :continue, :time_up, :new_score_record, :score_record, :score, :time,
+    class Words < Data.define(:game_name, :play, :play_again, :time_up, :new_score_record, :score_record, :score, :time,
                               :share, :share_heading, :copied, :copy, :close, :stats, :how_to_play, :go_back,
                               :no_games, :clear, :keep_holding, :hold_to_clear, :cleared, :undo, :labels, :goals, :goal_done, :goal_met,
                               :screen_size, :credits, :credits_title, :notice, :quit_again, :quit, :themes, :offer, :buttons,
@@ -49,7 +49,7 @@ module DotPopper
       def for(input) = with(input:)
 
       def play = super.for(input)
-      def continue = super.for(input)
+      def play_again = super.for(input)
       def go_back = super.for(input)
       def clear = super.for(input)
       def hold_to_clear = super.for(input)

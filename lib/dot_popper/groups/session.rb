@@ -391,7 +391,8 @@ module DotPopper
         raised = outcomes.count { |_, _, raised| raised }
         chasing = outcomes.reject { |group, won, _| won || group.champion? }
         GameResult.new(won:, raised:, short: chasing.map { |group, _, _| group.score_to_win - score }.select(&:positive?).min,
-                       reigning: !outcomes.empty? && won.zero? && raised.zero? && chasing.empty?)
+                       reigning: !outcomes.empty? && won.zero? && raised.zero? && chasing.empty?,
+                       taken: outcomes.select { |_, won, _| won }.map { |group, _, _| group.id })
       end
 
       def give_up_pending

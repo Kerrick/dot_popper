@@ -6,8 +6,8 @@ module DotPopper
     # the title to a game, taps fresh dots where they show, sometimes taps
     # a popped one by mistake, slows as its score grows so the game ends,
     # and goes from Game Over back to the title. Given the Show, it presses
-    # the buttons a player would: Play to start a game, Continue to go
-    # on, "Share my score" on every other Game Over, then Copy in the
+    # the buttons a player would: Play to start a game, Home to go
+    # back, "Share my score" on every other Game Over, then Copy in the
     # share preview, and Close, a moment apart (on a phone, the system's
     # share sheet opens instead, and the bot goes on), and on its second visit to
     # the title, "Your stats", and Back after a while. The first time the title offers
@@ -123,7 +123,7 @@ module DotPopper
       # the game itself takes as a start.
       def start(cabinet, show) = show ? middle(show.play_reach) : center(cabinet.field)
 
-      # Shares and copies every other result first, then presses Continue
+      # Shares and copies every other result first, then presses Home
       # once the game will hear.
       def finish(cabinet, show)
         return in_preview(show) if show&.sharing?
@@ -133,7 +133,7 @@ module DotPopper
           @pressed_at = @waited
           return middle(show.share_reach)
         end
-        press_once(@style.game_over_wait) { show ? middle(show.continue_reach) : center(cabinet.field) } if cabinet.state.ready?
+        press_once(@style.game_over_wait) { show ? middle(show.home_reach) : center(cabinet.field) } if cabinet.state.ready?
       end
 
       # In the share preview, a moment after each press: Copy, then Close.

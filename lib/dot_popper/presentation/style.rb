@@ -39,7 +39,7 @@ module DotPopper
       WORDS = Words.new(
         game_name: "Dot Popper",
         play: ByInput.new(touch: "Play", mouse: "Play", gamepad: "Play (A)"),
-        continue: ByInput.new(touch: "Continue", mouse: "Continue", gamepad: "Continue (A)"),
+        play_again: ByInput.new(touch: "Play again", mouse: "Play again", gamepad: "Play again (A)"),
         time_up: "Time's up!", new_score_record: "New record!", score_record: "Your record", score: "SCORE", time: "TIME",
         share: ByInput.new(touch: "Share my score", mouse: "Share my score", gamepad: "Share my score (Y)"),
         share_heading: "Share your score",

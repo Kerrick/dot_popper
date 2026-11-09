@@ -86,7 +86,10 @@ module DotPopper
     # titles it +won+ and how many it +raised+ (a champion beat their own
     # score), and the fewest points short of a title it fell (+short+, nil
     # if it was not short of any). +reigning+ is true when the player
-    # already holds every title it could have won.
-    class GameResult < Data.define(:won, :raised, :short, :reigning); end
+    # already holds every title it could have won. +taken+ are the ids of
+    # the groups whose titles it won, so Game Over can name and open one.
+    class GameResult < Data.define(:won, :raised, :short, :reigning, :taken)
+      def initialize(won:, raised:, short:, reigning:, taken: []) = super
+    end
   end
 end

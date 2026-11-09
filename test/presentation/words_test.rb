@@ -77,11 +77,11 @@ class WordsTest < Minitest::Test
   def test_the_prompts_name_the_press_the_player_is_making
     said = [InputKind::TOUCH, InputKind::MOUSE, InputKind::GAMEPAD].map do |kind|
       words = Style::WORDS.for(kind)
-      [words.play, words.continue, words.go_back, words.how_to_play]
+      [words.play, words.play_again, words.go_back, words.how_to_play]
     end
 
-    assert_equal [["Play", "Continue", "Back", "How to play"], ["Play", "Continue", "Back", "How to play"],
-                  ["Play (A)", "Continue (A)", "Back (B)", "How to play (Y)"]], said
+    assert_equal [["Play", "Play again", "Back", "How to play"], ["Play", "Play again", "Back", "How to play"],
+                  ["Play (A)", "Play again (A)", "Back (B)", "How to play (Y)"]], said
     refute(said.flatten.any? { it.include?("anywhere") }, "no press goes anywhere")
   end
 

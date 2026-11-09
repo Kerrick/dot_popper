@@ -5,7 +5,7 @@ module DotPopperGui
   # opens a preview of the result that leaves the system's clipboard
   # alone until Copy is pressed, by a click, a finger, Enter, or a
   # gamepad's Y. The preview closes by Close, Escape, B, and a tap beside
-  # its card, back to Game Over, and Continue goes on as ever.
+  # its card, back to Game Over, and Home goes on as ever.
   class ShareScenario < Scenario
     scenario :share
     UNTOUCHED = "what the player had copied before"

@@ -191,7 +191,7 @@ class CreditsTest < Minitest::Test
     cabinet.update(30)
     show.update(1.0)
     cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
-    show.primary
+    show.back
     show
   end
 end

@@ -43,6 +43,12 @@ module DotPopper
         "Beat #{group.top_score} to take the title."
       end
 
+      # "You took the Brave Puffins title!", naming the group where it is known.
+      def took(result)
+        id = result.taken.first
+        id ? "You took the #{Names.group(id)} title!" : "You took the title!"
+      end
+
       # The one line a title change makes, by its kind (Groups::Announcement).
       def announcement(item)
         case item.kind
@@ -54,7 +60,7 @@ module DotPopper
 
       # Game Over's line for a game (Groups::GameResult).
       def game_line(result)
-        if result.won.positive? then result.won == 1 ? "You took the title!" : "You took #{result.won} titles!"
+        if result.won.positive? then result.won == 1 ? took(result) : "You took #{result.won} titles!"
         elsif result.raised.positive? then "You raised the bar!"
         elsif result.reigning then "The title stays yours."
         elsif result.short then "#{result.short} short of the title."
@@ -182,6 +188,19 @@ module DotPopper
         return GroupWords.game_line(result) if result
 
         groups.result_due? ? " " : nil
+      end
+
+      # The group whose title the last game took, for Game Over's line to
+      # open, or nil when it took none, or more than one.
+      def game_title_taken
+        result = groups.game_result or return
+        result.taken.first if result.taken.size == 1
+      end
+
+      # Opens the friend groups at +id+'s screen, from Game Over's line.
+      def open_at(id)
+        open
+        open_group(id)
       end
 
       # A control this screen offers was pressed; +by+ is what pressed it

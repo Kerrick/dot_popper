@@ -222,13 +222,21 @@ module DotPopperGui
       check(show.game_over?, "the game ends when its clock runs out")
     end
 
-    # Waits out Game Over's grace and presses Continue.
+    # Waits out Game Over's grace and presses Home.
     def continue_to_home(how = method(:click))
       wait_for("Game Over ready for a press") { cabinet.state.ready? }
-      button = show.continue_reach
+      button = show.home_reach
       how.call(button.center_x, button.center_y)
-      wait_for("the title again", within: 5) { show.home? }
-      check(show.home?, "Continue goes back to the title")
+      wait_for("Home again", within: 5) { show.home? }
+      check(show.home?, "Home goes back Home")
+    end
+
+    # Waits out Game Over's grace and presses Play again.
+    def play_again(how = method(:click))
+      wait_for("Game Over ready for a press") { cabinet.state.ready? }
+      button = show.play_again_reach
+      how.call(button.center_x, button.center_y)
+      check(show.playing?, "Play again starts the next game at once")
     end
 
     # A whole game, played quickly: one pop, then the clock runs out.

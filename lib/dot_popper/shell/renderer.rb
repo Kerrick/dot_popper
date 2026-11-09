@@ -84,7 +84,7 @@ module DotPopper
             @tutorial.lead_in_under(lead_in, @show.now, pill, @hud.spots(@show.hud, layout),
                                      @show.cabinet.game.field.radius)
           end
-          hud(layout)
+          hud(layout) unless @show.game_over&.then { it.arrival(@show.now) >= 1.0 }
           @tutorial.lead_in_over(lead_in, @show.now, pill) if lead_in
           @share.draw(@show, layout, width, height)
           banner(layout) unless @show.playing?
@@ -163,8 +163,9 @@ module DotPopper
       # after time's up, wherever they have tumbled to in the Pile.
       def dots = @pile.stack || @show.cabinet.game&.dots
 
-      # The score and clock, on top of everything, through Game Over too,
-      # so a game ended by a penalty is seen to reach 0. After a wrong tap
+      # The score and clock, on top of everything, until Game Over has
+      # arrived, so a game ended by a penalty is seen to reach 0; Game
+      # Over then shows the score itself. After a wrong tap
       # the HUD shakes, by whole device pixels; the dots never do, since a
       # tap is judged where a dot really is.
       def hud(layout)

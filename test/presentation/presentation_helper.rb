@@ -48,10 +48,9 @@ module PresentationTest
     def buzz(seconds) = @buzzes << seconds
   end
 
-  # Presses the main button of the screen +show+ is on: Play on the
-  # title, or Continue on Game Over.
+  # Presses Play on Home, or Home on Game Over.
   def press_main(show = @show)
-    reach = show.play_reach || show.continue_reach
+    reach = show.play_reach || show.home_reach
     show.tap(reach.center_x, reach.center_y)
   end
 

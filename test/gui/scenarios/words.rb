@@ -27,13 +27,13 @@ module DotPopperGui
       pop_fresh(method(:touch))
       run_out_the_clock
       check_equal(TOUCH, show.input, "Game Over follows a game played by touch")
-      check_equal("Continue", words.continue, "and says Continue")
+      check_equal("Play again", words.play_again, "and says Play again")
       move(layout.center_x, layout.center_y)
       move(layout.center_x + 30, layout.center_y)
       check_equal(MOUSE, show.input, "a real move of the mouse makes it the mouse")
       pad(:dpdown)
-      check_equal("Continue (A)", words.continue, "a gamepad makes it Press A, on Continue's button")
-      continue_to_home(->(*) { pad(:start) })
+      check_equal("Play again (A)", words.play_again, "a gamepad makes it Press A, on Play again's button")
+      continue_to_home(->(*) { pad(:b) })
       quit_prompt
     end
 

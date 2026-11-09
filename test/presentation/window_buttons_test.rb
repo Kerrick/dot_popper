@@ -66,9 +66,9 @@ class WindowButtonsTest < Minitest::Test
     @cabinet.update(30)
     @show.update(1.0)
     refute_includes names, :quit, "Game Over"
-    assert @show.continue_reach, "Game Over goes back Home"
+    assert @show.home_reach, "Game Over goes back Home"
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
-    @show.primary
+    @show.back
     @show.open_stats
     refute_includes names, :quit, "the Stats screen"
     assert @show.back_reach, "Back goes back Home"

@@ -304,7 +304,9 @@ class GroupPanelTest < Minitest::Test
     tick
     reply(200, { "groups" => [{ "group" => group(top: 30, champion: 2), "won_title" => true }] })
 
-    assert_equal "You took the title!", panel.game_line
+    id = panel.groups.groups.first.id
+    assert_equal "You took the #{DotPopper::Presentation::Names.group(id)} title!", panel.game_line
+    assert_equal id, panel.game_title_taken, "Game Over's line opens that group"
   end
 
   def test_no_line_is_held_for_a_game_that_does_not_count

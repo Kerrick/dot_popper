@@ -28,6 +28,8 @@ module DotPopperGui
       run_out_the_clock
       game_over
       click_empty_space
+      play_again
+      run_out_the_clock
       continue_to_home
       check_equal(%i[GameStarted GameEnded HomeShown], story & %i[GameStarted GameEnded HomeShown],
                   "the screens come in order: title, game, Game Over, title")

@@ -2,55 +2,60 @@
 
 module DotPopper
   module Presentation
-    # Where Game Over's words go, worked out by FinaleScreen#plan: each
-    # line's Rect by name (Stacked), the font size each is set in, and the
-    # backing behind them all.
+    # One of Game Over's short lines in a pill of its own: today's goal
+    # met, a new achievement, or a friend group's title. +name+ is the
+    # control it is when +opens+ (:over_achievement or :over_group), and
+    # +glyph+ the mark before its words (:check, :achievement, :crown).
+    class GameOverChip < Data.define(:name, :text, :glyph, :opens); end
+
+    # Where Game Over's parts go, worked out by GameOverScreen#plan: each
+    # block's Rect by name (Stacked), the font size each is set in, the
+    # backing behind the result, and Play again, Home and Share my score.
     # A line the screen had no room for, or that is not shown, has no
-    # Rect; Continue is the Rect named :continue, and "Share my score" the
-    # one named :share.
-    class GameOverPlan < Data.define(:placed, :sizes, :backing)
+    # Rect.
+    class GameOverPlan < Data.define(:placed, :sizes, :backing, :home, :share)
       def [](name) = placed[name]
       def size(name) = sizes.fetch(name)
-      def share_button = placed[:share]
-      def continue_button = placed[:continue]
+      def play_button = placed[:play_again]
+      def home_button = home
+      def share_button = share
     end
 
-    # Game Over's words for +finale+ (Game Over), stacked as one group
-    # between the HUD, whose bottom is at +below+, and the safe area's
-    # bottom, or higher, so the pile's dots lying on the window's floor
-    # show at least their lower half under Continue: "Time's up!", "You met
-    # today's goal!" when the game did, the score, the best or how far
-    # short of it the game fell, the game's facts, a record it set,
-    # "Share my score", closing the score's group, and the Continue
-    # button, as big as Layout's primary_size for dots of +radius+. Short
-    # of room, the type shrinks first; then the record goes, the facts, the
-    # goal, the best, "Time's up!", and last "Share my score".
-    # The score and Continue always stay. The backing (+scrim+, a
-    # ScrimStyle) is drawn around everything above Continue, so "Share my
-    # score" reads as part of the score, and Continue, which needs none,
-    # stands apart on the pile; it hides no more of the pile than it must.
-    # Sizes are measured with +measure+ (RoughMeasure's methods).
-    class GameOverScreen < Data.define(:layout, :type, :words, :measure, :scrim, :game_over, :below, :radius, :group_line)
+    # Game Over, read top down: "Time's up!", the score, a new record or
+    # how far short of it the game fell, the game's facts, a record it
+    # set, then its +chips+ (GameOverChip), each a line of its own, then
+    # Play again, as big as Layout's primary_size for dots of +radius+, with
+    # +play_note+ under its word, and Home beside Share my score. Short of
+    # room, the type shrinks first; then the record goes, the facts, the
+    # chips, the best and "Time's up!". The score and the buttons always
+    # stay. A short window held sideways puts the result on the left and
+    # the rest on the right. Nothing goes lower than the middle of the
+    # pile's bottom row, a radius above the window's floor, so the pile
+    # still shows. Sizes are measured with +measure+ (RoughMeasure's
+    # methods).
+    class GameOverScreen < Data.define(:layout, :type, :words, :measure, :scrim, :game_over, :below, :radius, :chips,
+                                       :play_word, :play_note)
       # The gaps above each line, in graphics units at full size.
-      GAPS = { heading: 26, goal: 12, score: 4, score_record: 4, group: 8, summary: 14, record: 8, achievement: 8, share: 16, continue: 22 }.freeze
-      # "Share my score"'s share glyph and the room around its words, in
-      # the button's height.
-      SHARE_GLYPH = 0.62
+      GAPS = { heading: 26, score: 4, score_record: 4, summary: 14, record: 8, chip: 10, play_again: 34, buttons: 14 }.freeze
+      # A chip's height and its words' size, in units at full size.
+      CHIP = 38.0
+      CHIP_TEXT = 15
+      # Share my score's glyph and the room around its words, in the
+      # button's height (Shell::ShareButton).
+      SHARE_GLYPH = 0.45
       SHARE_SIDES = 1.1
 
-      def initialize(layout:, type:, words:, measure:, scrim:, game_over:, below:, radius: Rules::RADIUS, group_line: nil) = super
-
-      def plan
-        placed = Column.new(room:).fit(layout.type_scales) { blocks(sizes(it), it) }
-        sizes = sizes(placed.scale)
-        GameOverPlan.new(placed:, sizes:, backing: backing(placed))
+      def initialize(layout:, type:, words:, measure:, scrim:, game_over:, below:, radius: Rules::RADIUS, chips: [], play_word: "Play again",
+                     play_note: nil)
+        super
       end
 
-      # From a margin under the HUD to a margin above the safe area's
-      # bottom, or to the middle of the pile's bottom row, a radius above
-      # the window's floor, if that is higher. Continue, the lowest block,
-      # is filled, and on a short window it would otherwise hide whatever
-      # lies on the floor under the middle of the screen.
+      def plan
+        layout.short? ? sideways : upright
+      end
+
+      # From under the HUD to a margin above the safe area's bottom, or to
+      # the middle of the pile's bottom row, if that is higher.
       def room
         margin = layout.margin
         safe = layout.safe
@@ -66,66 +71,133 @@ module DotPopper
         end
       end
 
+      # The size a chip's words are set in, at type +scale+.
+      def chip_size(scale = 1.0) = layout.type_size(CHIP_TEXT, scale)
+
+      # How wide a chip is for its words: room for its mark, its words,
+      # and its arrow when it opens something.
+      def chip_width(chip, scale = 1.0)
+        height = chip_height(scale)
+        measure.width(:semibold, chip_size(scale), chip.text) + (height * (chip.opens ? 1.9 : 1.4))
+      end
+
+      def chip_height(scale = 1.0) = [CHIP * layout.ui * scale, 30.0].max
+
+      # The size Share my score's words are set in, on a button +height+ tall.
+      def self.share_size(height) = (height * PillLabel::RATIO).round
+
       private
 
-      def blocks(sizes, scale)
+      def upright
+        placed = Column.new(room:).fit(layout.type_scales) { result(sizes(it), it) + rest(it) }
+        finish(placed)
+      end
+
+      # The result on the left, the rest on the right, each a column of
+      # its own, with a shared type scale.
+      def sideways
+        whole = room
+        gap = layout.margin
+        split = lambda do |scale|
+          widest = result(sizes(scale), scale).map(&:width).max
+          left = whole.with(width: widest.clamp(whole.width * 0.38, whole.width * 0.5))
+          [left, whole.with(x: left.right + gap, width: whole.right - left.right - gap)]
+        end
+        scale = layout.type_scales.find do |each|
+          left, right = split.(each)
+          blocks = result(sizes(each), each)
+          Column.new(room: left).fits?(blocks) && blocks.all? { |block| block.width <= left.width } && Column.new(room: right).fits?(rest(each, right.width))
+        end
+        scale ||= layout.type_scales.last
+        left, right = split.(scale)
+        one = Column.new(room: left).fit([scale]) { result(sizes(it), it) }
+        two = Column.new(room: right).fit([scale]) { rest(it, right.width) }
+        finish(Stacked.new(scale:, rects: one.rects.merge(two.rects), fits: one.fits? && two.fits?))
+      end
+
+      def finish(placed)
+        sizes = sizes(placed.scale)
+        home, share = buttons(placed[:buttons])
+        GameOverPlan.new(placed:, sizes: sizes.merge(chip: chip_size(placed.scale)), backing: backing(placed), home:, share:)
+      end
+
+      # "Time's up!", the score, and the best line.
+      def result(sizes, scale)
         [line(:heading, :bold, sizes[:heading], words.time_up, scale, drop: 6),
-         (line(:goal, :bold, sizes[:goal], words.goal_met, scale, drop: 4, mark: true) if game_over.goal_met),
          line(:score, :bold, sizes[:score], game_over.score.to_s, scale, depth: 1.06),
-         line(:score_record, *score_record_line(sizes[:score_record]), scale, drop: 5),
-         (line(:group, :semibold, sizes[:summary], group_line, scale, drop: 3.5) if group_line),
-         line(:summary, :semibold, sizes[:summary], words.summary(game_over.stats), scale, drop: 3),
+         line(:score_record, *score_record_line(sizes[:score_record]), scale, drop: 5)]
+      end
+
+      # The facts, a record, the chips, Play again, and Home with Share my
+      # score.
+      def rest(scale, across = room.width)
+        sizes = sizes(scale)
+        [line(:summary, :semibold, sizes[:summary], words.summary(game_over.stats), scale, drop: 3),
          (line(:record, :semibold, sizes[:summary], words.record(game_over.record), scale, drop: 2) if game_over.record),
-         (line(:achievement, :semibold, sizes[:summary], AchievementWords.earned(game_over.achievements), scale, drop: 2.5) if game_over.achievements.any?),
-         share(scale),
-         continue(scale)].compact
+         *chips.each_with_index.map { |chip, i| chip_block(chip, i, scale, across) },
+         play_again(scale, across),
+         buttons_block(scale, across)].compact.reject { it.width > across + 1e-6 } # a line too wide for the room is left out
       end
 
-      # A line of +text+, with room for a check mark before it if +mark+,
-      # and for the candy's extruded copy under it as +depth+ of its height.
-      def line(name, face, size, text, scale, drop: nil, mark: false, depth: 1.0)
-        height = measure.height(face, size)
-        width = measure.width(face, size, text) + (mark ? height * 0.75 : 0.0)
-        Block.new(name:, height: height * depth, gap: gap(name, scale), width:, drop:)
+      def chip_block(chip, index, scale, across)
+        Block.new(name: [:chip, index], height: chip_height(scale), width: [chip_width(chip, scale), across].min, gap: gap(:chip, scale),
+                  drop: 4 - (index * 0.1))
       end
 
-      # Continue, as big as a main button is, whatever the type's scale.
-      def continue(scale)
-        width, height = layout.primary_size(radius)
-        Block.new(name: :continue, height:, width:, gap: gap(:continue, scale))
+      # A line of +text+, and for the candy's extruded copy under it,
+      # +depth+ of its height.
+      def line(name, face, size, text, scale, drop: nil, depth: 1.0)
+        Block.new(name:, height: measure.height(face, size) * depth, gap: gap(name, scale), width: measure.width(face, size, text), drop:)
       end
 
-      # "Share my score" and its glyph, as tall as a button at any type
-      # scale, and as wide as its words need.
-      def share(scale)
-        height = layout.button_size
-        Block.new(name: :share, height:, width: share_width(height), gap: gap(:share, scale), drop: 7)
+      # Play again, as big as a main button is, whatever the type's scale.
+      # Play again, as tall as Home's Play at full size, and never less
+      # than a main button is (Layout#primary_size).
+      def play_again(scale, across)
+        width, least = layout.primary_size(radius)
+        height = [least, (layout.phone? ? 100.0 : 104.0) * scale].max
+        Block.new(name: :play_again, height:, width: [[width, 560.0].max, across].min, gap: gap(:play_again, scale))
       end
 
-      def share_width(height)
-        words_width = measure.width(:semibold, GameOverScreen.share_size(height), words.share)
-        [words_width + (height * (SHARE_GLYPH + SHARE_SIDES)), height * 4.2].max
+      # Home and Share my score side by side, each as wide as its words.
+      def buttons_block(scale, across)
+        widths = button_widths
+        Block.new(name: :buttons, height: layout.control_height, width: [widths.sum + gap_between, across].min, gap: gap(:buttons, scale))
       end
 
-      # The size "Share my score"'s words are set in, on a button +height+
-      # tall.
-      def self.share_size(height) = (height * 0.4).round
+      def gap_between = 10.0
+
+      def button_widths
+        height = layout.control_height
+        size = (height * PillLabel::RATIO).round
+        [words.button(:home), words.share].map { PillLabel.width_with_icon(measure.width(:semibold, size, it), height) }
+      end
+
+      # Home's and Share my score's Rects in the row +row+ gives them.
+      def buttons(row)
+        return [nil, nil] unless row
+
+        widths = button_widths
+        scale = [(row.width - gap_between) / widths.sum, 1.0].min
+        home = row.with(width: widths[0] * scale)
+        [home, row.with(x: home.right + gap_between, width: widths[1] * scale)]
+      end
 
       def gap(name, scale) = GAPS.fetch(name) * layout.ui * scale
 
       def sizes(scale)
         size = ->(nominal) { layout.type_size(nominal, scale) }
-        { heading: size[type.heading], goal: size[type.score_record], score: size[type.final_score],
+        { heading: size[type.heading], score: size[type.final_score],
           score_record: size[game_over.new_score_record? ? type.new_score_record : type.score_record], summary: size[type.summary] }
       end
 
-      # Around every line above Continue, and never past the safe area
-      # once padded.
+      # Around the result and its lines, short of Play again, and never
+      # past the safe area once padded.
       def backing(placed)
-        bounds = placed.with(rects: placed.rects.except(:continue)).bounds
-        most = layout.safe.width - (2 * (scrim.pad + scrim.feather) * layout.ui)
-        width = [bounds.width, most].min
-        bounds.with(x: layout.center_x - (width / 2.0), width:)
+        kept = placed.rects.except(:play_again, :buttons)
+        bounds = placed.with(rects: kept).bounds or return
+        edge = (scrim.pad + scrim.feather) * layout.ui
+        bounds.cut(left: layout.safe.x + edge, right: layout.safe.right - edge)
       end
     end
   end

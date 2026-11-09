@@ -33,28 +33,32 @@ class ScreenPlansTest < Minitest::Test
     end
   end
 
-  def test_game_overs_lines_never_overlap_each_other_or_the_hud
+  CHIPS = [GameOverChip.new(name: :over_goal, text: WORDS.goal_met, glyph: :check, opens: false),
+           GameOverChip.new(name: :over_achievement, text: "New achievement: Back from the brink", glyph: :achievement, opens: true),
+           GameOverChip.new(name: :over_group, text: "You took the Adventurous Albatrosses title!", glyph: :crown, opens: true)].freeze
+
+  # Game Over at every size, with every line a game can give it: nothing
+  # overlaps, everything is inside the safe area, Play again, Home and
+  # Share my score always show, and nothing hides the lower half of the
+  # pile's bottom row.
+  def test_game_overs_lines_never_overlap_each_other
     SIZES.each do |width, height|
       screen_layout = layout(width, height)
       radius = DotPopper::DotSize.fitted(width, height).radius
-      [true, false].repeated_permutation(3) do |goal_met, new_score_record, record|
-        below = screen_layout.top + 60
+      [true, false].repeated_permutation(2).to_a.product([[], CHIPS.first(1), CHIPS]) do |(new_score_record, record), chips|
         plan = GameOverScreen.new(layout: screen_layout, type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
-                                scrim: Style::GAME_OVER_BACKING, game_over: game_over(goal_met:, new_score_record:, record:),
-                                below:, radius:).plan
-        name = "#{width}x#{height} goal #{goal_met}, new record #{new_score_record}, record #{record}"
+                                  scrim: Style::GAME_OVER_BACKING, game_over: game_over(new_score_record:, record:),
+                                  below: screen_layout.safe.y, radius:, chips:, play_note: "22 games left").plan
+        name = "#{width}x#{height} new record #{new_score_record}, record #{record}, #{chips.size} chips"
 
         assert plan.placed.fits?, name
-        %i[score continue].each { assert plan[it], "#{name}: #{it} always shows" }
-        assert_apart plan.placed.rects.values, name
-        plan.placed.rects.each_value do |rect|
-          assert_operator rect.y, :>=, below, name
-          assert_inside rect, screen_layout.safe, name
-        end
-        assert_operator plan.backing.width, :<=, screen_layout.safe.width, name
-        # The filled Continue leaves the lower half of the pile's bottom
-        # row clear: on a short window it once hid the bright dot there.
-        assert_operator plan.continue_button.bottom, :<=, height - radius, "#{name}: Continue clears the pile's floor"
+        %i[score play_again].each { assert plan[it], "#{name}: #{it} always shows" }
+        assert plan.home_button && plan.share_button, "#{name}: Home and Share my score always show"
+        rects = plan.placed.rects.except(:buttons).values + [plan.home_button, plan.share_button]
+        assert_apart rects, name
+        rects.each { assert_inside it, screen_layout.safe, name }
+        assert_operator plan.home_button.right, :<=, plan.share_button.x, "#{name}: Home, then Share my score"
+        assert_operator [plan.play_button, plan.home_button].map(&:bottom).max, :<=, height - radius + 1e-6, "#{name}: the pile's floor shows"
       end
     end
   end
@@ -121,24 +125,23 @@ class ScreenPlansTest < Minitest::Test
   end
 
   def test_short_of_room_game_over_lets_the_record_go_first_and_keeps_the_score
-    plan = GameOverScreen.new(layout: layout(640, 330), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
-                            scrim: Style::GAME_OVER_BACKING, game_over: game_over(goal_met: true, record: true), below: 70).plan
-    order = %i[record summary goal best heading share]
+    plan = GameOverScreen.new(layout: layout(400, 520), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
+                              scrim: Style::GAME_OVER_BACKING, game_over: game_over(record: true), below: 0, chips: CHIPS).plan
+    order = [:record, :summary, [:chip, 2], [:chip, 1], [:chip, 0], :score_record, :heading]
     dropped = order.reject { plan[it] }
 
     refute_empty dropped
     assert_equal order.first(dropped.size), dropped
     assert plan[:score]
-    assert plan[:continue]
+    assert plan[:play_again]
   end
 
   def test_a_roomy_game_over_shows_every_line_at_full_size
     plan = GameOverScreen.new(layout: layout(1200, 800), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
-                            scrim: Style::GAME_OVER_BACKING, game_over: game_over(goal_met: true), below: 80).plan
+                              scrim: Style::GAME_OVER_BACKING, game_over: game_over, below: 0, chips: CHIPS).plan
 
-    assert_equal %i[heading goal score score_record summary share continue], plan.placed.rects.keys
-    assert_operator plan.backing.bottom, :<=, plan.continue_button.y, "Continue stands on the pile, not the backing"
-    assert_operator plan.backing.bottom, :>=, plan.share_button.bottom, "Share my score is backed with the score"
+    assert_equal [:heading, :score, :score_record, :summary, [:chip, 0], [:chip, 1], [:chip, 2], :play_again, :buttons], plan.placed.rects.keys
+    assert_operator plan.backing.bottom, :<=, plan.play_button.y, "Play again stands on the pile, not the backing"
     assert_in_delta 1.0, plan.placed.scale
   end
 
@@ -234,7 +237,7 @@ class ScreenPlansTest < Minitest::Test
     cabinet.update(30)
     show.update(1.0)
     cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
-    show.primary
+    show.back
     show.open_settings
     show
   end
@@ -256,7 +259,7 @@ class ScreenPlansTest < Minitest::Test
     yield "the share preview", show
     show.close_share
     cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
-    show.primary
+    show.back
     yield "Home after a game", show
     show.open_stats
     yield "the Stats screen", show

@@ -284,7 +284,10 @@ module DotPopper
       def press(name, x, y, by)
         case name
         in :play then play
-        in :continue then continue_on
+        in :play_again then play_again
+        in :home then continue_on
+        in :over_achievement then open_from_game_over(:achievement)
+        in :over_group then open_from_game_over(:group)
         in :back then leave
         in :credits then open_credits
         in :privacy then open_privacy
@@ -366,7 +369,7 @@ module DotPopper
         elsif group_open? then @groups.primary
         elsif page then leave
         elsif home? then play
-        elsif game_over? then continue_on
+        elsif game_over? then play_again
         end
       end
 
@@ -398,10 +401,46 @@ module DotPopper
       # Where a tap reaches the Tutorial's skip button, where it is drawn.
       def skip_reach = reach_of(:skip)
 
-      # Game Over's Continue: back to the title, once the game will hear a
-      # press (Rules::GAME_OVER_GRACE).
+      # Game Over's Home: back Home, once the game will hear a press
+      # (Rules::GAME_OVER_GRACE).
       def continue_on
         cabinet.press(layout.center_x, layout.center_y) if game_over?
+      end
+
+      # Game Over's Play again: Home, and at once Play, so another game is
+      # one press; with no game left, Play's offer of Pro.
+      def play_again
+        return unless game_over? && cabinet.state.ready?
+
+        continue_on
+        play
+      end
+
+      # One of Game Over's lines that opens something: a new achievement
+      # in its dialog, or the friend group whose title the game took.
+      def open_from_game_over(what)
+        return unless game_over? && cabinet.state.ready?
+
+        achievement = game_over.achievements.first
+        group = @groups.game_title_taken
+        continue_on
+        case what
+        when :achievement
+          open_achievements
+          open_achievement(achievement) if achievement
+        when :group then group ? @groups.open_at(group) : @groups.open
+        end
+      end
+
+      # Game Over's lines in pills of their own (GameOverChip): today's
+      # goal met, a new achievement, which opens it, and what the game did
+      # in the friend groups, which opens the group whose title it took.
+      def game_over_chips
+        over = game_over or return []
+        group = @groups.game_line.to_s.strip
+        [(GameOverChip.new(name: :over_goal, text: words.goal_met, glyph: :check, opens: false) if over.goal_met),
+         (GameOverChip.new(name: :over_achievement, text: AchievementWords.earned(over.achievements), glyph: :achievement, opens: true) if over.achievements.any?),
+         (GameOverChip.new(name: :over_group, text: group, glyph: :crown, opens: !@groups.game_title_taken.nil?) unless group.empty?)].compact
       end
 
       # The mouse moved to +x+, +y+, without a button held or with one.
@@ -793,8 +832,9 @@ module DotPopper
       def copy_reach = reach_of(:copy)
       def close_reach = reach_of(:close)
 
-      # Where a tap reaches Game Over's Continue and the title's Play.
-      def continue_reach = reach_of(:continue)
+      # Where a tap reaches Game Over's Play again and Home, and Home's Play.
+      def play_again_reach = reach_of(:play_again)
+      def home_reach = reach_of(:home)
       def play_reach = reach_of(:play)
 
       # Where a tap reaches "Your stats": never less than a dot's width
@@ -952,6 +992,7 @@ module DotPopper
       # A gamepad's button (+name+, a GamepadButtons intent) on this
       # screen, as +by+, for a button that is held.
       def pad(name)
+        return pad_game_over(name) if game_over? && !sharing?
         return @groups.pad(name) if group_open? && !offer?
         return pad_offer(name) if offer?
         return pad_dialog(name) if dialog
@@ -1001,7 +1042,8 @@ module DotPopper
         return unless game_over
 
         GameOverScreen.new(layout:, type: style::TYPE, words:, measure: @measure, scrim: style::GAME_OVER_BACKING, game_over:,
-                         below: hud_bottom, radius: cabinet.game&.field&.radius || @radius, group_line: @groups.game_line)
+                           below: layout.safe.y, radius: cabinet.game&.field&.radius || @radius, chips: game_over_chips,
+                           play_word: games.can_play? ? words.play_again : words.button(:get_pro), play_note:)
       end
 
       # The window changed size. The title's dots are respawned if their
@@ -1128,8 +1170,9 @@ module DotPopper
 
       def game_over_controls
         plan = game_over_plan or return []
-        [(button(:share, plan.share_button) if plan.share_button),
-         (primary_button(:continue, plan.continue_button) if plan.continue_button)].compact
+        chips = game_over_chips.each_with_index.filter_map { |chip, i| button(chip.name, plan[[:chip, i]]) if chip.opens && plan[[:chip, i]] }
+        [*chips, (button(:home, plan.home_button) if plan.home_button), (button(:share, plan.share_button) if plan.share_button),
+         (primary_button(:play_again, plan.play_button) if plan.play_button)].compact
       end
 
       # The Credits text broken into lines for this screen, and the scroll
@@ -1229,6 +1272,13 @@ module DotPopper
         [button(:policy, plan.policy), (button(:privacy_delete, plan.delete) if plan.delete), button(:back, layout.back_button)].compact
       end
 
+      # LB opens the new achievement, and RB the friend group, as their
+      # lines on Game Over say.
+      def pad_game_over(name)
+        chip = { lb: :over_achievement, rb: :over_group }[name] or return
+        open_from_game_over(chip == :over_achievement ? :achievement : :group) if game_over_chips.any? { it.name == chip && it.opens }
+      end
+
       def pad_offer(name)
         case name
         when :x then @storefront.restore
@@ -1297,13 +1347,6 @@ module DotPopper
         StatsSheet.build(stats_book.stats, score_record: cabinet.score_record.of(size_class), words:, streak: stats_book.streak,
                            size_class:, field: cabinet.field, sizing: cabinet.sizing, achievements: @achievements,
 )
-      end
-
-      # Where the HUD's pill ends, at the safe area's top.
-      def hud_bottom
-        type = style::TYPE
-        layout.top + Hud.height(@measure.height(:bold, layout.scaled(type.hud_number)),
-                                @measure.height(:semibold, layout.scaled(type.hud_label)))
       end
 
       def within_safe(reach) = reach.with(height: [reach.height, layout.safe.bottom - reach.y].min)
@@ -1502,7 +1545,7 @@ module DotPopper
       def goal_burst
         @game_over = game_over.goal_celebrate
         sounds.play(:tick, pitch: 1.5)
-        line = game_over_plan[:goal] or return
+        line = game_over_plan[[:chip, 0]] or return
         effects.burst(line.center_x, line.center_y, style::GAME_OVER.goal_sparkles, palette.confetti,
                       longest: style::GAME_OVER.sparkle_life)
       end

@@ -99,7 +99,7 @@ class ShowTest < Minitest::Test
     @show.tap(5, 5, by: :mouse)
     assert @show.game_over?, "a click on empty space is the pile's"
     @show.tap(5, 5, by: :gamepad)
-    assert @show.home?
+    assert @show.playing?, "Play again starts the next game at once"
   end
 
   # The words name the press the player last made: a click to start,
@@ -110,8 +110,8 @@ class ShowTest < Minitest::Test
     assert_equal "Play (A)", @show.words.play
     @show.input = InputKind::TOUCH
     assert_equal "Play", @show.words.play
-    assert_equal "Continue",
-                 Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, input: InputKind::TOUCH).words.continue
+    assert_equal "Play again",
+                 Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, input: InputKind::TOUCH).words.play_again
   end
 
   RESULT = "Dot Popper: 1 point\n🟡 1 dot · ⚫ 0 mistakes · ⏱ 11 seconds\n" \
@@ -178,10 +178,10 @@ class ShowTest < Minitest::Test
 
   # The preview is the presentation's alone: the game stays on Game
   # Over, its grace runs as ever, nothing under the preview takes a
-  # press, and once it closes, Continue goes on as before.
-  def test_the_share_preview_leaves_game_over_and_continue_as_they_were
+  # press, and once it closes, Home goes on as before.
+  def test_the_share_preview_leaves_game_over_and_home_as_they_were
     finish_game(back_to_title: false)
-    continue = middle(@show.continue_reach)
+    continue = middle(@show.home_reach)
     @show.share
     assert_equal %i[close copy], @show.controls.map(&:name).sort, "only the preview's buttons take a press"
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
@@ -292,7 +292,8 @@ class ShowTest < Minitest::Test
 
     assert @show.waits_for_release?(10, 10)
     refute @show.waits_for_release?(*middle(@show.share_reach))
-    refute @show.waits_for_release?(*middle(@show.continue_reach))
+    refute @show.waits_for_release?(*middle(@show.home_reach))
+    refute @show.waits_for_release?(*middle(@show.play_again_reach))
   end
 
   def test_share_my_score_takes_taps_where_its_plan_draws_it
@@ -302,10 +303,9 @@ class ShowTest < Minitest::Test
     reach = @show.share_reach
     assert reach.contains?(button.center_x, button.center_y)
     assert_operator reach.height, :>=, button.height
-    refute reach.overlaps?(@show.continue_reach), "a press reaches one button"
-    assert_operator @show.game_over_plan.backing.bottom, :<=, @show.game_over_plan.continue_button.y,
-                    "the backing ends above Continue"
-    assert_operator @show.game_over_plan.backing.bottom, :>=, button.bottom, "and holds Share my score, with the score"
+    refute reach.overlaps?(@show.home_reach), "a press reaches one button"
+    assert_operator @show.game_over_plan.backing.bottom, :<=, @show.game_over_plan.play_button.y,
+                    "the backing ends above Play again"
   end
 
   def test_the_share_buttons_place_on_the_title_shares_nothing
@@ -435,7 +435,7 @@ class ShowTest < Minitest::Test
     assert_equal [score, clock], [@cabinet.game.score, @cabinet.game.countdown]
   end
 
-  def test_start_continues_from_game_over_after_the_grace
+  def test_start_plays_again_from_game_over_after_the_grace
     @show.start
     @cabinet.update(20)
     @show.start
@@ -443,7 +443,22 @@ class ShowTest < Minitest::Test
 
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     @show.start
-    assert @show.home?
+    assert @show.playing?
+  end
+
+  # Game Over's Home goes Home, and B does too.
+  def test_home_and_b_go_home_from_game_over
+    @show.start
+    @cabinet.update(20)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @show.tap(*middle(@show.home_reach))
+    assert @show.on_home?
+
+    @show.start
+    @cabinet.update(20)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
+    assert @show.back
+    assert @show.on_home?
   end
 
   def test_a_gamepads_y_shares_the_result_on_game_over_and_nothing_else

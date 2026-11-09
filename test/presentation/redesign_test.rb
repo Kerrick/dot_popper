@@ -28,6 +28,19 @@ class RedesignTest < Minitest::Test
              entitlement: pro ? DotPopper::Entitlement.new(DotPopper::ScoreRecord::Memory.new, forced: true) : DotPopper::Entitlement.free)
   end
 
+  def middle(rect) = [rect.center_x, rect.center_y]
+
+  # A Pro player's Game Over, ready for a press, with these lines.
+  def game_over_with(**lines)
+    s = show(pro: true)
+    s.primary
+    @cabinet.update(30)
+    s.update(1.0)
+    s.instance_variable_set(:@game_over, s.game_over.with(**lines))
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
+    s
+  end
+
   def click(show, name)
     reach = show.reach_of(name)
     assert reach, "#{name} is offered"
@@ -135,6 +148,30 @@ class RedesignTest < Minitest::Test
     refute_includes s.controls.map(&:name), :buy
     s.back
     assert s.themes?
+  end
+
+  # Game Over's line of a new achievement opens it, by a tap or by LB;
+  # today's goal met opens nothing.
+  def test_game_overs_new_achievement_opens_it_and_the_goal_opens_nothing
+    [->(s) { s.tap(*middle(s.reach_of(:over_achievement))) }, ->(s) { s.pad(:lb) }].each do |press|
+      s = game_over_with(achievements: [:blink], goal_met: true)
+      assert_equal %i[over_goal over_achievement], s.game_over_chips.map(&:name)
+      refute_includes s.controls.map(&:name), :over_goal
+      press.call(s)
+      assert s.achievements_open?
+      assert_equal :blink, s.dialog
+    end
+  end
+
+  def test_game_overs_play_again_starts_the_next_game_and_home_goes_home
+    s = game_over_with
+    assert_equal "Play again", s.game_over_screen.play_word
+    s.tap(*middle(s.play_again_reach))
+    assert s.playing?
+
+    s = game_over_with
+    s.tap(*middle(s.home_reach))
+    assert s.on_home?
   end
 
   def test_the_controller_label_for_settings

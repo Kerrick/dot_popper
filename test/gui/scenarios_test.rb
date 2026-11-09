@@ -18,7 +18,8 @@ class GuiScenariosTest < Minitest::Test
 
   def test_a_game_from_title_to_title
     play("game", "screens come in order", "hidden under it is outlined", "Game Over teaches the stacking rule",
-         "a click on empty space at Game Over does nothing", "Continue goes back to the title", "games.csv logs the score")
+         "a click on empty space at Game Over does nothing", "Play again starts the next game at once",
+         "Home goes back Home", "games.csv logs the score")
   end
 
   def test_resizing_a_game_and_the_pile
@@ -71,7 +72,7 @@ class GuiScenariosTest < Minitest::Test
   end
 
   def test_dragging_the_pile_with_a_gamepad
-    output = play("pile_gamepad", "A held on a dot drags it up", "a quick press of A goes on",
+    output = play("pile_gamepad", "A held on a dot drags it up", "a quick press of A plays again",
                   DOT_POPPER_FAKE_GAMEPAD: "1", DOT_POPPER_FAKE_DRAG: "0.5,0.9,0.3,0.3")
     assert_includes output, "the fake drag takes a dot"
     assert_includes output, "the fake drag throws a dot"
@@ -89,7 +90,7 @@ class GuiScenariosTest < Minitest::Test
   def test_sharing_shows_the_result_and_copies_only_on_copy
     play("share", "Share my score is drawn", "opening the preview leaves the clipboard alone",
          "a click on Copy copies exactly the text shown", "Escape closes the preview", "Y again copies",
-         "a gamepad's B closes the preview", "a tap beside the card closes", "Continue goes back to the title")
+         "a gamepad's B closes the preview", "a tap beside the card closes", "Home goes back Home")
   end
 
   def test_sharing_on_an_upright_phone_sized_window

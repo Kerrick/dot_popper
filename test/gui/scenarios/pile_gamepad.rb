@@ -4,7 +4,7 @@ module DotPopperGui
   # Dragging the game-over pile with a gamepad, as
   # DOT_POPPER_FAKE_GAMEPAD=1 and DOT_POPPER_FAKE_DRAG=0.5,0.9,0.3,0.3
   # make it: A held on the dot at the bottom drags it up and to the left
-  # and lets it go, and Game Over stays; then a quick press of A goes on.
+  # and lets it go, and Game Over stays; then a quick press of A plays again.
   class PileGamepadScenario < Scenario
     scenario :pile_gamepad
 
@@ -23,7 +23,7 @@ module DotPopperGui
       wait(1.5)
       check(show.game_over?, "the drag stays on Game Over")
       pad(:a)
-      check(show.home?, "a quick press of A goes on to the title")
+      check(show.playing?, "a quick press of A plays again")
     end
   end
 end
