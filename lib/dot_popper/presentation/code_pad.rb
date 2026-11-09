@@ -36,11 +36,20 @@ module DotPopper
     # The digits of a code so far, as a player reads them: in groups, with
     # a dash for each digit still to come.
     module CodeText
+      FIRST = 3 # a seven-digit code reads 482-1073, its first three apart
+
       module_function
 
       def of(code, length, group: length)
         (code + ("-" * (length - code.size))).chars.each_slice(group).map(&:join).join(" ")
       end
+
+      # A code as it is shown and shared: 482-1073.
+      def hyphenated(code) = code.size > FIRST ? "#{code[0, FIRST]}-#{code[FIRST..]}" : code.to_s
+
+      # Each of the +length+ places of a code, its digit or nil while it is
+      # still to come.
+      def places(code, length) = Array.new(length) { code[it] }
     end
   end
 end

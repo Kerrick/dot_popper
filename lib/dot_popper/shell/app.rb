@@ -310,6 +310,7 @@ module DotPopper
       def key_pressed(key)
         return skip_splash if @splash
 
+        return if @show.type_key(key)
         return @speaker.toggle_mute if key == :m
         return @show.how_to_play if key == :h
         return @show.open_credits if key == :c && @show.settings?

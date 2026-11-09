@@ -18,8 +18,7 @@ module DotPopper
       def join = "Join"
       def create = "Create"
       def privacy = "Joining or creating sends your scores to the groups' server, which also sees your IP address."
-      def need_code = "Tap your friend's code."
-      def erase = "Erase"
+      def erase = "Delete"
       def submit = "Join"
       def you = "You"
       def champion = "Champion"
@@ -227,6 +226,23 @@ module DotPopper
       # the keypad, which joins with a whole code.
       def primary = page == :join ? submit_join : back
 
+      # Whether Join can be pressed: once all seven digits are in.
+      def code_complete? = code.size == GroupWords::CODE_LENGTH
+
+      # A key typed on a keyboard, on the keypad's screen: a digit adds
+      # itself, Backspace or Delete takes the last one away. Says whether
+      # the key was one of those.
+      def type(key)
+        return false unless open? && page == :join
+
+        name = key.to_s
+        if (digit = name[/\A(?:kp)?(\d)\z/, 1]) then tap_digit(digit)
+        elsif %w[backspace delete].include?(name) then erase
+        else return false
+        end
+        true
+      end
+
       # A gamepad's button on this screen (Show#pad).
       def pad(name) = nil
 
@@ -299,7 +315,7 @@ module DotPopper
 
       def submit_join
         return @pro_offer.call(:groups) unless pro?
-        return @note = GroupWords.need_code if code.size < GroupWords::CODE_LENGTH
+        return @sounds.play(:tick, pitch: 0.8) unless code_complete? # Join looks disabled until then
 
         groups.join(code)
       end

@@ -280,6 +280,11 @@ module DotPopper
         press(control_at(x, y)&.name, x, y, by)
       end
 
+      # A key typed on a keyboard that the open screen takes as text: the
+      # digits and Backspace on the keypad that joins a friend group.
+      # Says whether it took it.
+      def type_key(key) = group_open? && !offer? && @groups.type(key)
+
       # What a control does when pressed.
       def press(name, x, y, by)
         case name

@@ -168,8 +168,32 @@ class GroupPanelTest < Minitest::Test
     tap_code("23")
     tap_control(:code_submit)
 
-    assert_equal Words.need_code, panel.note
+    assert_nil panel.note, "Join looks disabled until then, and says nothing"
+    refute panel.code_complete?
     assert_empty @worker.started
+  end
+
+  # On a keyboard the keypad takes typed digits, the keypad's own too,
+  # Backspace takes the last away, and Enter joins.
+  def test_typed_digits_fill_the_code_and_enter_joins
+    open_join
+    "2345".each_char { assert @show.type_key(it) }
+    %w[kp6 kp7 8].each { @show.type_key(it) }
+    assert_equal "2345678", panel.code, "the eighth digit has no place"
+    assert panel.code_complete?
+    assert @show.type_key("backspace")
+    assert_equal "234567", panel.code
+    refute @show.type_key("m"), "a letter is not the keypad's"
+    @show.type_key("8")
+    @show.primary
+    tick
+    refute_empty @worker.started
+  end
+
+  def test_a_code_reads_as_it_is_shared
+    assert_equal "482-1073", DotPopper::Presentation::CodeText.hyphenated("4821073")
+    assert_equal ["4", "8", nil], DotPopper::Presentation::CodeText.places("48", 3)
+    assert_equal "Delete", Words.erase
   end
 
   def test_the_code_stops_at_seven_and_erases

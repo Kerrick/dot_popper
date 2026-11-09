@@ -72,22 +72,60 @@ module DotPopper
         plan.lines.each { pen.text(it.text, font, layout.center_x, it.y, colors.fetch(it.kind)) }
       end
 
-      # The code tapped so far, with a dash for each digit still to come.
+      # The code tapped so far, one box for each of its seven places, a
+      # hyphen after the third, as a code is shared: 482-1073. The next
+      # place to fill is outlined, and a place still to come shows a dash.
       def code_box(show, plan)
         rect = plan.code_box or return
         panel = show.group_panel
-        text = Presentation::CodeText.of(panel.code, Presentation::GroupWords::CODE_LENGTH)
-        CodeBox.new(pen:).draw(rect, text, pen.fonts.semibold(plan.size), empty: panel.code.empty?)
+        places = Presentation::CodeText.places(panel.code, Presentation::GroupWords::CODE_LENGTH)
+        gap = 6.0
+        hyphen = rect.height * 0.35
+        width = [(rect.width - hyphen - (gap * places.size)) / places.size, rect.height * 0.85].min
+        x = rect.center_x - (((width * places.size) + hyphen + (gap * places.size)) / 2.0)
+        font = pen.fonts.bold((rect.height * 0.5).round)
+        places.each_with_index do |digit, i|
+          if i == Presentation::CodeText::FIRST
+            pen.text("-", font, x + (hyphen / 2.0), rect.center_y, pen.palette.soft)
+            x += hyphen + gap
+          end
+          box = Presentation::Rect.new(x:, y: rect.y, width:, height: rect.height)
+          Card.new(pen:).draw(box, corner: 10.0, edge: (pen.palette.cream if i == panel.code.size))
+          pen.text(digit || "–", font, box.center_x, box.center_y, digit ? pen.palette.cream : pen.palette.soft)
+          x += width + gap
+        end
       end
 
-      # Every button but a row's: a row is drawn as a row.
+      # Every button but a row's: a row is drawn as a row, and the
+      # keypad's keys as keys.
       def buttons(show, plan)
         plan.actions.each do |action|
           next unless action.text
+          next key(show, action) if key?(action.name)
 
           PillButton.new(pen:).draw(action.rect, action.text, hover: show.hover.level(action.name),
                                     color: quiet?(action.name) ? pen.palette.soft : pen.palette.cream)
         end
+      end
+
+      def key?(name) = name in [:code_digit, String] | :code_erase | :code_submit
+
+      # A key of the keypad: a digit, Delete with its sign, or Join, which
+      # looks disabled until all seven digits are in.
+      def key(show, action)
+        rect = action.rect
+        open = action.name != :code_submit || show.group_panel.code_complete?
+        hover = open ? show.hover.level(action.name) : 0.0
+        Card.new(pen:).draw(rect, corner: [rect.height * 0.22, 14.0].min, alpha: open ? 1.0 : 0.5, lit: hover)
+        digit = action.name.is_a?(Array)
+        font = digit ? pen.fonts.bold((rect.height * 0.42).round) : pen.fonts.semibold((rect.height * 0.3).round)
+        color = open ? pen.palette.cream : pen.palette.soft
+        return pen.text(action.text, font, rect.center_x, rect.center_y, color, open ? 1.0 : 0.6) unless action.name == :code_erase
+
+        mark = rect.height * 0.36
+        left = rect.center_x - ((mark + 8 + font.width(action.text)) / 2.0)
+        Glyphs.new(pen:).draw(:backspace, left + (mark / 2.0), rect.center_y, mark)
+        pen.text(action.text, font, left + mark + 8 + (font.width(action.text) / 2.0), rect.center_y, color)
       end
 
       def quiet?(name) = %i[group_delete group_leave].include?(name)
