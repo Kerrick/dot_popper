@@ -148,7 +148,7 @@ jobs:
           mkdir -p "$game"
           git archive HEAD | tar -x -C "$game"
           (cd "$game" && rm -rf .github vendor android ios test doc playtest script sig server Steepfile Rakefile \
-            Gemfile Gemfile.lock mise.toml .ruby-version GLOSSARY.md INSIPIRATION.md PACKAGING.md README.md)
+            Gemfile Gemfile.lock mise.toml .ruby-version AGENTS.md GLOSSARY.md INSIPIRATION.md PACKAGING.md README.md)
           cp android/android_kit "$phone/main.rb"
           cp -R "$LOTA_GEM/ext/lota/phone/host" "$phone/host"
           rm -rf "$phone/host/ios"
