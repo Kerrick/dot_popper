@@ -796,13 +796,16 @@ module DotPopper
 
       private
 
-      # A game starts, and costs a game (FreeGames); with none left, the
-      # offer of Pro opens in its place.
-      def start_game
+      # The one way into a real game: Play, Skip, and the Tutorial's end
+      # all come through here. It spends a game (FreeGames) and starts it
+      # with the block; with none left, the offer of Pro opens instead.
+      def with_a_game
         return offer_for_play unless games.spend!
 
-        cabinet.press(layout.center_x, layout.center_y)
+        yield
       end
+
+      def start_game = with_a_game { cabinet.press(layout.center_x, layout.center_y) }
 
       # Opens the offer straight from the title, as Play does when no play
       # is left; Back from it returns to the title.
@@ -840,7 +843,8 @@ module DotPopper
         return unless @tutorial.over?
 
         scene, @tutorial = @tutorial, nil
-        go_on_from(scene)
+        effects.clear unless games.can_play?
+        with_a_game { go_on_from(scene) }
       end
 
       def go_on_from(scene)

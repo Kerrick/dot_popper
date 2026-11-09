@@ -1511,3 +1511,11 @@ The fifth beat is gone. The tutorial is Good, Bad, Good again, as long as before
 **The handover to the player** is the moment time stops, the light finds the dot, the guide goes to it, and a ripple opens from the dot (`hand_the_turn_to_the_player`). Saffer: a trigger, plainly marked. Johnson and Hodent: attention goes where things move; only the dot that now answers moves. No words, so it works muted and unread. A real mistake still costs what it does in play, but only on the player's turn.
 
 **To reverse:** add beats to `Tutorial::TURNS`.
+
+## Every way into a real game spends one, in one place
+
+*The maintainer found How to Play gave unlimited games: its end started a real game through `Cabinet#resume`, which never touched `FreeGames`.*
+
+`Show#with_a_game` is now the only door: Play, Skip, and the Tutorial's end (first Play and How to Play alike) go through it, and it spends a game or, with none left, opens the offer as Play does. The Tutorial's practice stays free; the game it goes on into costs one, like any other. This changes "Free plays", which said the tutorial and How to play never cost one: watching them doesn't, but the game after does. A first Play's tutorial, which also ends in a game, now spends one at its end (it used to be free, by the same hole).
+
+**To reverse:** call `go_on_from(scene)` directly in `Show#follow_tutorial`.

@@ -2,8 +2,8 @@
 
 module DotPopper
   # How many games a player who has not bought Pro may still
-  # start. A free game is one started game; the Tutorial and "How to play"
-  # never cost one. A fresh install holds BANK games for good, which never
+  # start. A free game is one started game. Watching the Tutorial or "How
+  # to play" costs nothing; the game either goes on into costs one. A fresh install holds BANK games for good, which never
   # refill, and DAILY games for each local day, which do not carry over.
   # Each game spends the day's own first, so the bank lasts. There is no
   # way to earn more. Paying makes play unlimited (+entitlement+), and
