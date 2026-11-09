@@ -79,15 +79,15 @@ module DotPopper
     end
 
     # From the title, the game that goes on from where the tutorial left
-    # its +dots+, +score+ and +seconds+, on its +field+ (Game.resume). The
+    # its +dots+, +score+, +seconds+ and +dots_in_a_row+, on its +field+ (Game.resume). The
     # clock was never running before, so nothing was scored or timed
     # outside Playing; from here the game counts as any other does. Its
     # new dots are drawn from a seed of its own, as #start_game's are.
-    def resume(field:, dots:, score:, seconds:)
+    def resume(field:, dots:, score:, seconds:, dots_in_a_row: 0)
       return self unless state.is_a?(Title)
 
       seed = @random.rand(LARGEST_SEED)
-      advance(begin_game(Game.resume(field, dots:, score:, seconds:, random: Random.new(seed)), seed))
+      advance(begin_game(Game.resume(field, dots:, score:, seconds:, dots_in_a_row:, random: Random.new(seed)), seed))
     end
 
     # The game's score counts among the records of +size_class+, the class

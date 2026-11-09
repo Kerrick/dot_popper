@@ -9,14 +9,13 @@ module DotPopper
 
     # A game that goes on from where it was left before its clock first
     # ran, as the tutorial leaves it: +dots+ (a Stack) as they are, its
-    # fresh dot under the rest, the +score+ they made, and +seconds+ on
-    # the clock. From there it is a game like any other: its clock runs
+    # fresh dot under the rest, the +score+ they made, +seconds+ on the
+    # clock, and +dots_in_a_row+, the row the player was shown. From there it is a game like any other: its clock runs
     # from its first update, each pop spawns a dot under every dot there,
     # and a tap reaches only the topmost.
-    # Its row starts at none: the tutorial's pops were its own.
-    def self.resume(field, dots:, score:, seconds:, random: Random.new, spawn_tries: Rules::SPAWN_TRIES,
+    def self.resume(field, dots:, score:, seconds:, dots_in_a_row: 0, random: Random.new, spawn_tries: Rules::SPAWN_TRIES,
                     bonus: Rules::BONUS)
-      new(field, random:, dots:, score:, seconds:, spawn_tries:, bonus:)
+      new(field, random:, dots:, score:, seconds:, spawn_tries:, bonus:, dots_in_a_row:)
     end
 
     # +spawn_tries+ is how hard a spawn works for a touch target (Spawner);
@@ -25,10 +24,10 @@ module DotPopper
     # +row+ counts the dots in a row since the last wrong tap or bonus
     # dot, toward the next bonus dot.
     def initialize(field, random: Random.new, dots: nil, score: Rules::LOWEST_SCORE,
-                   seconds: Rules::STARTING_SECONDS, spawn_tries: Rules::SPAWN_TRIES, bonus: Rules::BONUS)
+                   seconds: Rules::STARTING_SECONDS, spawn_tries: Rules::SPAWN_TRIES, bonus: Rules::BONUS, dots_in_a_row: 0)
       @field = field
       @bonus = bonus
-      @dots_in_a_row = 0
+      @dots_in_a_row = dots_in_a_row
       @random = random
       @spawner = Spawner.for(field, tries: spawn_tries)
       @spawns = []

@@ -28,7 +28,6 @@ module DotPopperGui
       wait_for_the_bright_dot
       wait_for("the last pop's numbers", within: 120) { shown == [1, 8] }
       check_equal([true, false], tutorial.dots.map(&:popped?), "it bursts still bright as its numbers land")
-      the_dots_in_a_row
       now_it_runs
       check_equal("seen", File.read(saved("tutorial.txt")).strip, "tutorial.txt remembers it was seen")
       run_out_the_clock
@@ -99,8 +98,10 @@ module DotPopperGui
       wait_for("the point to land", within: 120) { shown == [1, 10] }
       check_equal([1, 10], shown, "the point lands in the score")
       wait_for("the second to land", within: 120) { shown == [1, 11] }
+      check_equal(1, tutorial.hud.dots_in_a_row, "the row counts the pop as the stopwatch lands")
+      check_equal(:gain, tutorial.row_notice&.tone, "and rings")
       wait(0.3)
-      keep_screenshot(name("2-time"))
+      keep_screenshot(name("2-row"))
       check_equal([1, 11], shown, "the stopwatch lands in the time")
       check(cabinet.game.nil?, "nothing is scored for real")
       wait_for("time to flow again", within: 120) { tutorial.beat == :peek }
@@ -113,13 +114,17 @@ module DotPopperGui
       freeze_on(:warn)
       wait_for("the guide's tap on the popped dot", within: 200) { tutorial.flights.any? }
       check_equal([0, 9], shown, "the guide's tap costs the point there was and two seconds")
+      check_equal(0, tutorial.hud.dots_in_a_row, "the row is empty again")
+      check_equal(:alarm, tutorial.row_notice&.tone, "and rings red")
       wait(0.2)
       keep_screenshot(name("3-cost"))
+      unheard_while_the_guide_shows
       wag = tutorial.ghost.style.wag
       wait_for("the guide's finger-wag", within: 300) { tutorial.ghost_pose&.turn.to_f.abs > wag.angle * 0.8 }
       keep_screenshot(name("3-wag"))
-      too_soon
       wait_for("the bright dot clear", within: 900) { tutorial.beat == :aim_next }
+      check(tutorial.players_turn?, "the turn is the player's again")
+      too_soon
       wait(0.7)
       keep_screenshot(name("3-clear"))
       bright = dot(T::NEXT)
@@ -127,9 +132,17 @@ module DotPopperGui
       check_equal(:runs, tutorial.beat, "a tap on the clear bright dot pops it")
     end
 
-    # A tap on the popped dot, on its side away from the bright one: its
-    # cost flies out of the HUD, which drops by it, the score no lower than
-    # 0, and the beat goes on.
+    # While the guide shows the cost, a tap on the popped dot does nothing.
+    def unheard_while_the_guide_shows
+      popped = dot(T::BRIGHT)
+      how.call(popped.x, popped.y)
+      check_equal([0, 9], shown, "a tap while the guide shows is not heard")
+      check_equal(:warn, tutorial.beat, "and the beat goes on")
+    end
+
+    # The player's turn: a tap on the popped dot, on its side away from
+    # the bright one, costs what it does in play, the score no lower than
+    # 0.
     def too_soon
       popped = dot(T::BRIGHT)
       peeking = dot(T::NEXT)
@@ -139,42 +152,8 @@ module DotPopperGui
       wait(0.25)
       keep_screenshot(name("3-slip"))
       check(cabinet.game.nil? && story.none?(:Penalized), "the rules hear nothing yet: no clock is running")
-      check(tutorial.beat == :warn || tutorial.beat == :slide, "the beat goes on")
+      check_equal(:aim_next, tutorial.beat, "the turn goes on")
     end
-
-    # The row beat, on dots of its own: the row fills as the player
-    # pops, the star dot comes, its reward shows, and nothing of it reaches
-    # the numbers the game goes on with.
-    def the_dots_in_a_row
-      wait_for("the streak's row", within: 300) { tutorial.beat == :practice }
-      keep_screenshot(name("5-row"))
-      before = tutorial.hud.dots_in_a_row
-      T::PRACTICE.downto(T::PRACTICE - 1).each do |id|
-        target = dot(id)
-        how.call(target.x, target.y)
-        wait(style.flight + 0.05)
-      end
-      check_equal(before + 2, tutorial.hud.dots_in_a_row, "the row fills as the player pops")
-      keep_screenshot(name("5-fills"))
-      last = dot(T::PRACTICE - 2)
-      how.call(last.x, last.y)
-      wait_for("the star dot", within: 300) { tutorial.beat == :bonus }
-      check(tutorial.hud.ready, "the full row turns to the star")
-      check(dot(T::BONUS).bonus?, "the star dot arrives")
-      wait(0.3)
-      keep_screenshot(name("5-star"))
-      kept = shown
-      star = dot(T::BONUS)
-      how.call(star.x, star.y)
-      check_equal(:reward, tutorial.beat, "popping the star dot shows its reward")
-      wait(0.25)
-      keep_screenshot(name("5-reward"))
-      check_equal(kept, shown, "the reward stays out of the score and time")
-      wait_for("the rehearsal to leave", within: 300) { tutorial.nil? || tutorial.beat == :ending }
-      check(tutorial.nil? || tutorial.dots.none? { it.id.negative? }, "its dots are put away")
-    end
-
-    def style = DotPopper::Presentation::Style::TUTORIAL.dots_in_a_row
 
     # The last pop spawns a bright dot under the two popped ones, and the
     # game goes on from there: the same dots, the point and the 8 seconds
@@ -189,6 +168,7 @@ module DotPopperGui
       check_equal([T::BRIGHT, T::NEXT, T::LAST], game.dots.map(&:id), "the game goes on with the tutorial's dots")
       check_equal([true, true, false], game.dots.map(&:popped?), "popped and fresh as they were")
       check_equal(1, game.score, "and its point")
+      check_equal(1, game.dots_in_a_row, "and its row")
       check(game.countdown.remaining <= 8.0 && game.countdown.remaining > 7.8,
             "and its 8 seconds, the clock only now starting (#{game.countdown.remaining})")
       check_equal([1, 8], [show.hud.score, show.hud.seconds], "the HUD shows the same numbers")

@@ -26,7 +26,7 @@ module DotPopper
     # The score and the time left as the player last saw them, and when
     # each last changed, so a number can bump and the clock can tick. The
     # row (+row+ dots in a row of +size+ that earn a bonus dot, or
-    # nil before the tutorial's row beat and where there is no bonus) works the same way,
+    # nil where there is no bonus) works the same way,
     # and +ready+ says a bonus dot is on the field.
     class Hud < Data.define(:style, :words, :score, :seconds, :dots_in_a_row, :size, :ready, :score_changed, :seconds_changed,
                             :dots_in_a_row_changed, :now)
@@ -70,10 +70,10 @@ module DotPopper
         DotsInARow.new(lit: dots_in_a_row, size:, ready:, scale: style.bump.at(now - dots_in_a_row_changed))
       end
 
-      # The HUD showing +lit+ of a row of +size+, the row all mint when
-      # +ready+, as the Tutorial's rehearsal sets it; a dot newly lit bumps.
-      def counting(lit, size, ready, now)
-        with(dots_in_a_row: lit, size:, ready:, dots_in_a_row_changed: dots_in_a_row && lit > dots_in_a_row ? now : dots_in_a_row_changed)
+      # The HUD showing +lit+ of a row of +size+, as the Tutorial sets it;
+      # a dot newly lit bumps.
+      def counting(lit, size, now)
+        with(dots_in_a_row: lit, size:, ready: false, dots_in_a_row_changed: dots_in_a_row && lit > dots_in_a_row ? now : dots_in_a_row_changed)
       end
 
       # The HUD showing +score+ and +seconds+ at time +now+, as the Tutorial

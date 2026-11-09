@@ -33,7 +33,7 @@ module DotPopper
         now = scene.now
         light = scene.spotlight
         halo(light.to.name, pill, light.strength(now), now - light.at) if light.to&.hud? && light.to.name != :dots_in_a_row
-        label(scene.dots_in_a_row_label, layout, spots.fetch(:dots_in_a_row), pill) if scene.dots_in_a_row_label
+        row_ring(scene.row_notice, now, spots.fetch(:dots_in_a_row), pill, scene.hud.size) if scene.row_notice
         font = pen.fonts.bold(layout.scaled(pen.style::TYPE.floater))
         scene.flights.each { flight(it, now, scene.dots, spots, scene.radius, font) }
         GhostPainter.new(pen:).draw(scene.ghost_pose, show.input, scene.radius)
@@ -74,11 +74,23 @@ module DotPopper
         G.rectangle(:line, left, top, width, height, corner, corner, 32)
       end
 
-      # The row's short label, under its row of dots.
-      def label(text, layout, spot, pill)
-        font = pen.fonts.semibold(layout.scaled(pen.style::TYPE.hud_label))
-        pen.outlined(text, font, spot[0], spot[1] + (pill.height * Presentation::Hud::PIP * 1.2) + font.height,
-                     pen.palette.soft)
+      # A ring around the row of dots in a row of +size+, hung at +spot+ as
+      # the HUD draws it, pulsing as it fades: mint as it counts a pop, the
+      # alarm's color as a mistake empties it.
+      def row_ring(notice, now, spot, pill, size)
+        strength = notice.strength(now)
+        return unless strength.positive?
+
+        palette = pen.palette
+        pixels = pen.pixels
+        radius = pill.height * Presentation::Hud::PIP
+        reach = radius * 1.9
+        half = (radius * Presentation::Hud::PIP_STEP * (size - 1) / 2.0) + reach
+        pulse = (Math.cos((now - notice.at) * 2 * Math::PI * 2.0) + 1) / 2
+        pen.color(notice.tone == :alarm ? palette.alarm : palette.gain, strength * (0.55 + (0.4 * pulse)))
+        G.line_width = pixels.line_width(2)
+        G.rectangle(:line, pixels.line_at(spot[0] - half, 2), pixels.line_at(spot[1] - reach, 2),
+                    pixels.snap(2 * half), pixels.snap(2 * reach), reach, reach, 32)
       end
 
       # The light moves from one place to the next, its size with it; with

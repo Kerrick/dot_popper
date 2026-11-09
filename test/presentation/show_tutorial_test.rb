@@ -44,6 +44,7 @@ class ShowTutorialTest < Minitest::Test
     assert_operator game.countdown.remaining, :<=, 10.0
     assert_operator game.countdown.remaining, :>, 9.9, "the clock has only just started"
     assert_equal [1, 10], [@show.hud.score, @show.hud.seconds], "the HUD shows the same numbers"
+    assert_equal [1, 1], [game.dots_in_a_row, @show.hud.dots_in_a_row], "and the row goes on as the player left it"
     assert_same scene.animations, @show.animations, "and the dots are drawn as they were"
     assert_equal 0, @stats_book.stats.games
     assert_equal [DotPopper::Events::GameStarted], @events.uniq - [DotPopper::Events::TitleShown]
@@ -100,19 +101,38 @@ class ShowTutorialTest < Minitest::Test
     assert_in_delta DotPopper::Rules::STARTING_SECONDS, @cabinet.game.countdown.remaining
   end
 
-  def test_its_dots_in_a_row_beat_can_be_skipped_and_leaves_nothing_behind
+  def test_a_skip_leaves_the_row_behind
     press_main
-    [Tutorial::BRIGHT, Tutorial::NEXT].each do |id|
-      update_for(0.1) until %i[aim aim_next].include?(@show.tutorial.beat) && !tapped?(id)
-      tap_dot(dots_in_a_row_dot(id))
-    end
-    update_for(0.05) until @show.tutorial.beat == :practice
-    tap_dot(dots_in_a_row_dot(Tutorial::PRACTICE))
+    update_for(0.1) until @show.tutorial.beat == :aim
+    tap_dot(@show.tutorial.dots.find { it.id == Tutorial::BRIGHT })
+    update_for(0.05) until @show.tutorial.hud.dots_in_a_row == 1
     @show.back
 
     assert @show.playing?
     assert_equal [0, 1, 0], [@cabinet.game.score, @cabinet.game.dots.size, @cabinet.game.dots_in_a_row]
-    assert_in_delta DotPopper::Rules::STARTING_SECONDS, @cabinet.game.countdown.remaining
+    update_for(STEP)
+    assert_equal 0, @show.hud.dots_in_a_row
+  end
+
+  # The guide's wrong tap, whatever the hand: touch, a mouse, and a
+  # gamepad's A all reach it the same way, and none is heard.
+  def test_no_kind_of_tap_is_heard_while_the_guide_demonstrates
+    press_main
+    update_for(0.1) until @show.tutorial.beat == :aim
+    dot = @show.tutorial.dots.find { it.id == Tutorial::BRIGHT }
+    @show.tap(dot.x, dot.y)
+    update_for(0.05) until @show.tutorial.beat == :warn
+    popped = @show.tutorial.dots.find { it.id == Tutorial::BRIGHT }
+    kept = @show.tutorial.hud.then { [it.score, it.seconds] }
+    @sounds.played.clear
+
+    %i[tap touch mouse gamepad].each { @show.tap(popped.x, popped.y, by: it) }
+
+    assert_equal kept, @show.tutorial.hud.then { [it.score, it.seconds] }
+    assert_equal :warn, @show.tutorial.beat
+    assert_empty @sounds.names
+    assert @show.back, "the skip still works"
+    assert @show.playing?
   end
 
   def test_escape_or_a_gamepads_b_skips_it
@@ -232,24 +252,13 @@ class ShowTutorialTest < Minitest::Test
     press_main unless opened
     [Tutorial::BRIGHT, Tutorial::NEXT].each do |id|
       update_for(0.1) until %i[aim aim_next].include?(@show.tutorial.beat) && !tapped?(id)
+      mistake(mistakes) if id == Tutorial::NEXT
       dot = @show.tutorial.dots.find { it.id == id }
       @show.tap(dot.x, dot.y)
-      mistake(mistakes) if id == Tutorial::BRIGHT
     end
-    through_the_dots_in_a_row
     update_for(STEP) while @show.tutorial? if hand_over
   end
 
-  def through_the_dots_in_a_row
-    Style::TUTORIAL.dots_in_a_row.practice.times do |pop|
-      update_for(0.05) until @show.tutorial.beat == :practice && dots_in_a_row_dot(Tutorial::PRACTICE - pop)&.fresh?
-      tap_dot(dots_in_a_row_dot(Tutorial::PRACTICE - pop))
-    end
-    update_for(0.05) until @show.tutorial.beat == :bonus
-    tap_dot(dots_in_a_row_dot(Tutorial::BONUS))
-  end
-
-  def dots_in_a_row_dot(id) = @show.tutorial.dots.find { it.id == id }
   def tap_dot(dot) = @show.tap(dot.x, dot.y)
 
   def tapped?(id) = @show.tutorial.dots.find { it.id == id }.popped?
@@ -257,7 +266,6 @@ class ShowTutorialTest < Minitest::Test
   def mistake(times)
     return if times.zero?
 
-    update_for(0.1) until @show.tutorial.beat == :warn
     popped = @show.tutorial.dots.find { it.id == Tutorial::BRIGHT }
     times.times { @show.tap(popped.x, popped.y) }
   end

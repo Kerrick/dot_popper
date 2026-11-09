@@ -833,15 +833,20 @@ module DotPopper
       end
 
       # The Tutorial moves on, and once it is over, the game goes on from
-      # exactly where it left its dots, score and time (Cabinet#resume), and
+      # exactly where it left its dots, score, time and row (Cabinet#resume), and
       # only its clock starts, lit as it starts to run (LeadIn).
       def follow_tutorial(seconds)
         @tutorial.update(seconds)
         return unless @tutorial.over?
 
-        @handing_over, @tutorial = @tutorial, nil
-        scene = @handing_over
-        cabinet.resume(field: scene.field, dots: scene.dots, score: scene.score, seconds: scene.seconds)
+        scene, @tutorial = @tutorial, nil
+        go_on_from(scene)
+      end
+
+      def go_on_from(scene)
+        @handing_over = scene
+        cabinet.resume(field: scene.field, dots: scene.dots, score: scene.score, seconds: scene.seconds,
+                       dots_in_a_row: scene.dots_in_a_row)
         @lead_in = LeadIn.new(at: now, style: style::TUTORIAL.lead)
       end
 

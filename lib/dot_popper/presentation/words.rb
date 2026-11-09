@@ -31,9 +31,6 @@ module DotPopper
       # +1s or −2s for a number of seconds.
       def self.seconds(seconds) = "#{signed(seconds)}s"
 
-      # The streak a bonus dot takes, as the Tutorial labels its row.
-      def self.in_a_row(count) = "#{count} in a row"
-
       # The whole seconds left on a clock, never below zero.
       def self.clock(countdown) = [countdown.whole_seconds, 0].max.to_s
 

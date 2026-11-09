@@ -1487,3 +1487,27 @@ The public privacy policy and the store labels must be accurate, and nobody can 
 - **The themes check is declared before it is built:** `UNBUILT_REQUESTS` keeps it out of the wire test, `in_this_build` says so in the document, and a test fails once `started_on` appears in the game's code, so it can't ship unplayed.
 
 **To reverse:** delete `lib/dot_popper/privacy`, `test/privacy` and `doc/privacy.json`, have `Session` build its jobs inline again, and drop the check in `SaveFile`.
+
+## The tutorial is short again, and a full row is left as a surprise
+
+*Replaces "The tutorial teaches the streak and the star dot, by a short rehearsal", on the maintainer's word: it was oddly long, and needn't show what a row earns.*
+
+The fifth beat is gone. The tutorial is Good, Bad, Good again, as long as before. The real game's row of eight small dots hangs under the HUD from the first moment. On the first pop it lights its first dot as the stopwatch lands, the light moves to it, and it rings mint for 0.9 s; on the guide's wrong tap it goes dark and rings red. The ring runs under the beat and adds no time (`TutorialStyle#notice`). The last pop lights it again.
+
+**What the real counter is.** The game shows no number and no words for dots in a row, only the row of eight. So the tutorial shows that row, no label, and the rehearsal's "8 in a row" is gone. A "1 in a row" number would have to be added to the game itself first.
+
+**Why, by the books.** Koster: fun is finding the pattern, so a full row is left for the player to find, and what it brings is a surprise the first time. Salen and Zimmerman's meaningful play: the row visibly answers each right and wrong tap. Pinker's classic style and Hodent: show one thing at a time, by pointing at it, not by reading. Schreier on scope: cut the beat rather than trim it. Nothing in the tutorial, How to play or the README says what a full row does.
+
+**The game takes the row the tutorial left.** The last pop's dot would otherwise go out as the game begins, a loss with no mistake (Juul: failure must be the player's own). `Game.resume` takes `dots_in_a_row:`, so a first game starts with 1 lit (`Tutorial#dots_in_a_row`). A skip still starts at 0. This changes "The bonus dot is built", which said the tutorial's pops don't count.
+
+**To reverse:** bring back the entry above's beat from 2c3558b; pass no `dots_in_a_row:` to `Cabinet#resume`.
+
+## The player's turn is the player's: the hand demonstrates uninterrupted
+
+*The maintainer: "the player should NOT be able to make meaningful taps when the tutorial-hand is doing its thang." A playtester tapped the dark dot as soon as the hand did.*
+
+`Tutorial#tap` answers only in `:aim` and `:aim_next` (`TURNS`, `players_turn?`). In the drift, the pop's flight, the guide's wrong tap and its wag, the slide, and the end, a tap is not heard, with no pop, cost, ripple or sound; Skip goes through the Show and still works. Every input (touch, mouse, gamepad's A) reaches the same `Tutorial#tap`.
+
+**The handover to the player** is the moment time stops, the light finds the dot, the guide goes to it, and a ripple opens from the dot (`hand_the_turn_to_the_player`). Saffer: a trigger, plainly marked. Johnson and Hodent: attention goes where things move; only the dot that now answers moves. No words, so it works muted and unread. A real mistake still costs what it does in play, but only on the player's turn.
+
+**To reverse:** add beats to `Tutorial::TURNS`.

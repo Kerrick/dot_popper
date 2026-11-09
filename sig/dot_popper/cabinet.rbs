@@ -44,7 +44,7 @@ module DotPopper
 
     def start_game: (?Integer seed) -> Playing
 
-    def resume: (field: Field, dots: Stack, score: Integer, seconds: number) -> self
+    def resume: (field: Field, dots: Stack, score: Integer, seconds: number, ?dots_in_a_row: Integer) -> self
 
     def finish: (Game game, Integer seed, SizeClass size_class) -> GameOver
 
