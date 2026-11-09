@@ -32,7 +32,16 @@ class StorefrontTest < Minitest::Test
     @opener = FakeOpener.new
     @answers = FakeAnswers.new
     @entitlement = DotPopper::Entitlement.free
-    @store = Storefront.new(opener: @opener, answers: @answers, entitlement: @entitlement)
+    @store = Storefront.new(port: port, entitlement: @entitlement)
+  end
+
+  def port = DotPopper::Presentation::NativeStore.new(opener: @opener, answers: @answers)
+
+  # The two adapters a build chooses between, at the composition root.
+  def stores
+    @native ||= port
+    @fake ||= DotPopper::Presentation::FakeStore.new(DotPopper::BestScore::Memory.new)
+    { native: @native, fake: @fake }
   end
 
   def hear(text)
@@ -48,7 +57,7 @@ class StorefrontTest < Minitest::Test
   def test_a_phone_test_build_is_metered_like_the_final_game
     assert_predicate Storefront, :test_build?
     %w[iOS Android].each do |os|
-      store = Storefront.for(os, opener: @opener, answers: @answers, entitlement: @entitlement, channel: Storefront.channel({}))
+      store = Storefront.for(os, **stores, entitlement: @entitlement)
       plays = DotPopper::FreePlays.new(DotPopper::BestScore::Memory.new, today: -> { Date.today }, entitlement: @entitlement,
                                                                          metered: store.offered?)
 
@@ -56,10 +65,21 @@ class StorefrontTest < Minitest::Test
     end
   end
 
-  def test_only_phones_have_a_store
-    assert_instance_of Storefront, Storefront.for("iOS", opener: @opener, answers: @answers, entitlement: @entitlement)
-    assert_instance_of Storefront, Storefront.for("Android", opener: @opener, answers: @answers, entitlement: @entitlement)
-    refute_predicate Storefront.for("OS X", opener: @opener, answers: @answers, entitlement: @entitlement), :offered?
+  def test_a_test_build_uses_the_fake_store_on_every_system
+    assert_nil Storefront::BUILD_CHANNEL
+    ["iOS", "Android", "Linux", "Windows", "OS X"].each do |os|
+      store = Storefront.for(os, **stores, entitlement: @entitlement)
+
+      assert_same @fake, store.instance_variable_get(:@port), os
+    end
+  end
+
+  def test_a_store_build_uses_the_native_store_on_phones
+    %w[iOS Android].each do |os|
+      store = Storefront.for(os, **stores, entitlement: @entitlement, channel: "app-store")
+
+      assert_same @native, store.instance_variable_get(:@port), os
+    end
   end
 
   def test_connecting_asks_the_store_and_a_paid_player_needs_no_asking
@@ -165,27 +185,14 @@ class StorefrontTest < Minitest::Test
     assert DotPopper::Entitlement.forced?({ "DOT_POPPER_PAID" => "1" })
   end
 
-  def test_a_computer_has_no_channel_by_default_so_offers_nothing
-    assert_nil Storefront::BUILD_CHANNEL
-    assert_nil Storefront.channel({})
-    assert_empty Storefront::CHANNELS
-    ["Linux", "Windows", "OS X"].each do |os|
-      refute_predicate Storefront.for(os, opener: @opener, answers: @answers, entitlement: @entitlement, channel: Storefront.channel({})), :offered?
-    end
-  end
-
-  def test_a_channel_nobody_built_offers_nothing_but_a_built_one_is_used_without_touching_features
-    named = Storefront.channel({ "DOT_POPPER_CHANNEL" => "steam" })
-
-    assert_equal "steam", named
-    refute_predicate Storefront.for("Linux", opener: @opener, answers: @answers, entitlement: @entitlement, channel: named), :offered?
-
+  def test_a_computer_store_build_uses_its_channel_or_offers_nothing
+    refute_predicate Storefront.for("Linux", **stores, entitlement: @entitlement, channel: "steam"), :offered?
     made = Object.new
     channels = { "steam" => ->(entitlement:) { made.tap { @given = entitlement } } }
 
-    assert_same made, Storefront.for("Linux", opener: @opener, answers: @answers, entitlement: @entitlement, channel: "steam", channels:)
+    assert_same made, Storefront.for("Linux", **stores, entitlement: @entitlement, channel: "steam", channels:)
     assert_same @entitlement, @given
-    assert_instance_of Storefront, Storefront.for("iOS", opener: @opener, answers: @answers, entitlement: @entitlement, channel: "steam", channels:)
+    assert_instance_of Storefront, Storefront.for("iOS", **stores, entitlement: @entitlement, channel: "steam", channels:)
   end
 
   def test_no_word_of_the_offer_calls_it_a_trial_or_a_demo
@@ -278,7 +285,7 @@ class StorefrontTest < Minitest::Test
     refute_predicate @entitlement, :paid?
   end
 
-  def test_a_computer_offers_nothing
+  def test_a_build_with_no_store_offers_nothing
     show = build_show(storefront: NoStorefront.new)
     show.open_records
 
@@ -298,7 +305,7 @@ class StorefrontTest < Minitest::Test
 
   def offer_show
     opener = FakeOpener.new
-    store = Storefront.new(opener:, answers: @answers, entitlement: @entitlement)
+    store = Storefront.new(port: DotPopper::Presentation::NativeStore.new(opener:, answers: @answers), entitlement: @entitlement)
     show = build_show(storefront: store, entitlement: @entitlement)
     [show, opener]
   end

@@ -60,14 +60,12 @@ module DotPopper
         @pen.wear(wardrobe.palette)
         @speaker = Speaker.new(Look::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Look::SOUND.volume)
         @splash = @splash.with(sounding: !@speaker.muted?) if @splash
-        storefront = if flag?("DOT_POPPER_FAKE_STORE")
-                       rehearsal = Presentation::RehearsalStore.new
-                       Presentation::Storefront.new(opener: rehearsal, answers: rehearsal, entitlement:)
-                     else
-                       Presentation::Storefront.for(os, opener: UrlOpener.new, answers: StoreAnswers.in_save_folder, entitlement:,
-                                                    channel: Presentation::Storefront.channel(@env))
-                     end
-        plays = free_plays(entitlement, metered: storefront.offered? && !flag?("DOT_POPPER_AUTOPLAY"))
+        storefront = Presentation::Storefront.for(
+          os, entitlement:,
+              native: Presentation::NativeStore.new(opener: UrlOpener.new, answers: StoreAnswers.in_save_folder),
+              fake: Presentation::FakeStore.new(SaveFile.new(name: "fake_store.txt"), fails: Presentation::FakeStore.failure(@env))
+        )
+        plays = free_plays(entitlement, metered: storefront.offered? && player?)
         groups = Groups::Session.at(Groups::Settings.server_url(@env, test_build: Presentation::Storefront.test_build?), store: SaveFile.new(name: "group.txt"))
         @show = Presentation::Show.new(groups:, game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"),
@@ -566,10 +564,19 @@ module DotPopper
         [[width, SMALLEST_WINDOW[0]].max, [height, SMALLEST_WINDOW[1]].max] if width && height
       end
 
-      # The plays a free player has left, counted only where the paid version
-      # can be bought and not under the autoplay bot. DOT_POPPER_FREE_PLAYS=n
-      # starts a new save with n plays in the bank and n for the day, to try
+      # Whether someone is playing, not a machine: not the autoplay bot,
+      # and not a GUI scenario, unless it sets DOT_POPPER_FREE_PLAYS to try
       # the limit.
+      def player?
+        return false if flag?("DOT_POPPER_AUTOPLAY")
+
+        @env.fetch("DOT_POPPER_SCENARIO", "").empty? || @env.key?("DOT_POPPER_FREE_PLAYS")
+      end
+
+      # The plays a free player has left, counted where the paid version
+      # can be bought, as #player? allows. DOT_POPPER_FREE_PLAYS=n starts a
+      # new save with n plays in the bank and n for the day, to try the
+      # limit.
       def free_plays(entitlement, metered:)
         start = Integer(@env.fetch("DOT_POPPER_FREE_PLAYS", ""), exception: false)
         FreePlays.new(SaveFile.new(name: "plays.txt"), today:, entitlement:, metered:,

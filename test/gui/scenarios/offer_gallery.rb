@@ -3,9 +3,8 @@
 module DotPopperGui
   # The offer of the paid version, kept as screenshots to look at: the way
   # to it on the Records screen, the offer as a phone and a desktop window
-  # lay it out, and the thanks after the rehearsal's purchase. It needs
-  # DOT_POPPER_PAID=0 and DOT_POPPER_FAKE_STORE=1, since a computer has
-  # no store. Not part of rake test:gui: it is for reviewing the screen.
+  # lay it out, and the thanks after the purchase, from a test build's
+  # fake store. Not part of rake test:gui: it is for reviewing the screen.
   class OfferGalleryScenario < Scenario
     scenario :offer_gallery
 
@@ -23,7 +22,7 @@ module DotPopperGui
       wait_for("the price", within: 600) { show.offer_price }
       buy = show.reach_of(:buy)
       click(buy.center_x, buy.center_y)
-      wait_for("the rehearsal's purchase", within: 600) { show.offer_status == show.words.offer[:thanks] }
+      wait_for("the purchase", within: 600) { show.offer_status == show.words.offer[:thanks] }
       keep_screenshot("offer-thanks-1200x800")
     end
 

@@ -6,9 +6,11 @@ module DotPopper
   # never cost one. A fresh install holds BANK plays for good, which never
   # refill, and DAILY plays for each local day, which do not carry over.
   # Each round spends the day's own first, so the bank lasts. There is no
-  # way to earn more. Paying makes play unlimited (+entitlement+), and a
-  # build with no store to pay in (+metered+ false) counts nothing, since
-  # no one could then get past the limit.
+  # way to earn more. Paying makes play unlimited (+entitlement+), and
+  # +metered+ false counts nothing: for a machine playing, and for a build
+  # with no store to pay in, as no one could then get past the limit. A
+  # test build has a store, a fake one, so it is metered like the final
+  # game.
   #
   # The store answers +read+ and +write(text)+ as BestScore's does; its
   # lines are +day=2026-11-08+, +spent=2+ and +bank=17+. A store with
@@ -20,7 +22,7 @@ module DotPopper
     BANK = 20
     DAILY = 3
 
-    # Plays that never count and never show: for a build that cannot sell.
+    # Plays that never count and never show: for a Show made without any.
     def self.unlimited = new(BestScore::Memory.new, today: -> { Date.today }, entitlement: Entitlement.free, metered: false)
 
     # +today+ answers the player's local Date; +bank+ and +daily+ are what a

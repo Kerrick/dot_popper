@@ -1380,7 +1380,7 @@ The maintainer's decision: joining a group needs the paid version, as creating o
 
 **Books:** Schell (the player should always know what they have and what comes), Norman (visible state), Johnson (plain words, one name for one thing); nothing hides the limit, nags, expires bought play or sells a way around it, in the spirit of INSIPIRATION.md's warnings about dark patterns.
 
-**To try it:** `DOT_POPPER_FAKE_STORE=1 DOT_POPPER_PAID=0 DOT_POPPER_FREE_PLAYS=0` starts a fresh save with no plays; `DOT_POPPER_TODAY` moves the day. `test/gui/scenarios/plays_gallery.rb` keeps the screens.
+**To try it:** `DOT_POPPER_PAID=0 DOT_POPPER_FREE_PLAYS=0` starts a fresh save with no plays; `DOT_POPPER_TODAY` moves the day. `test/gui/scenarios/plays_gallery.rb` keeps the screens.
 
 **To change it:** the numbers are `FreePlays::BANK` and `FreePlays::DAILY` (then update README.md and doc/publishing.md, which state them). To meter desktops too, count when `Storefront#offered?` is false as well, in `Shell::App#free_plays`, once a channel sells. To remove the limit, build `Show` with `FreePlays.unlimited` (its default) and hide `Look::WORDS.offer[:includes]`'s first line.
 ## The tutorial teaches the streak and the star dot, by a short rehearsal
@@ -1413,3 +1413,21 @@ After the second pop, a fifth beat of about five seconds. The row of eight arriv
 **To reverse:** set `TEST_SERVER_URL` to nil in `Groups::Settings`.
 
 **Checked on 2026-11-08 from the Mac:** with the game's own `Session` and `Link` against the live server, one player registered, created a group, read it, reported a round, and a second joined, reported and left; both then left and sent `DELETE /player` (the token is gone and the server answered every call without error), so no test data remains. Phones were not run.
+
+## The store is a port
+
+*Changes "Desktop is free until a channel sells it" and "Free plays": a test build, on any system, now has a store, a fake one, so a desktop test build sells and is limited. `DOT_POPPER_FAKE_STORE=1` and `DOT_POPPER_CHANNEL` are gone.*
+
+**Decision.** A playtest build runs the game exactly as the final game does, so the store is a boundary. The game's half (`Storefront`, the offer, Buy, Restore, the thanks, `Entitlement#unlock!`, the plays-left line and the limit) is one body of code, and its only way to a store is one port: a request URL (`open`) and an answer file (`read`, `remove`, `path`). Freeman and Pryce's ports and adapters; Feathers' seam. `NativeStore` adapts the app's host (`Host/Store.swift`, `PaidStore.java`). `FakeStore` is the same shape: it answers "loading" or "working" at once and the real answer a couple of reads later, so a purchase in a test build goes the same asynchronous road, and keeps its own ledger (`fake_store.txt`, what this install bought), so Restore and a launch answer as a store would. Its price is a plausible `$1.99`. Nothing on screen says it is a fake: no label, no test screen, no switch.
+
+**Chosen once, from the build.** `Storefront.for`, called only in `Shell::App`, reads `BUILD_CHANNEL`: nil is a test build, the fake on every system; a channel is the native adapter on phones, or that channel's store on a computer, or `NoStorefront` for a channel nobody built. No environment variable selects it. **Before any store submission, that build must set `BUILD_CHANNEL`,** or it ships the fake store; a test build and a store build are told apart by that constant and nothing else, and it is nil in every CI kit today.
+
+**Metering.** The limit counts where a storefront is offered and something is playing that a limit could mean anything to, `storefront.offered? && player?`: not the autoplay bot, and not a GUI scenario unless it sets `DOT_POPPER_FREE_PLAYS` to try the limit. Test builds therefore count, desktop included. Holiday looks stay in their seasons, as in the final game; no test build unlocks one.
+
+**Failure.** The port's failures (a request refused, a store not answering, a purchase failed, cancelled or pending) are reachable by a developer only, with `DOT_POPPER_FAKE_STORE_FAILS=refused|unavailable|failed|cancelled|pending`. It works only in a test build and shows nothing of itself on any screen.
+
+**Contract tests (Beck; Freeman and Pryce).** `test/presentation/store_contract.rb` is one suite of what any adapter must do: answer later than asked, the whole state each time, each request named, the price, buying, restoring, a relaunch, and each failure, and all of it again through `Storefront`. `FakeStore` passes it, and so does `NativeStore` over a real answer file and a stand-in for the host written from the two native files.
+
+**What this leaves unverified.** The native adapters against real stores. The contract's host stand-in is a transcription of `Store.swift` and `PaidStore.java`, so it shows `NativeStore`'s Ruby half and the suite's fairness, and nothing about the hosts. Whether StoreKit and Play Billing answer as those files expect, and the host's URL and file handling on a device, are only checked by `ios/store_check` against StoreKit's local test session, by CI's build of those files, and by hand with a sandbox purchase on a real phone, which has not been done. Because test builds no longer touch a real store, a playtest finds nothing here either: a real purchase on a phone must be tried before a store release.
+
+**To reverse:** in `Storefront.for`, drop the `channel.nil?` line and a build with no channel goes back to native on phones and none on computers.

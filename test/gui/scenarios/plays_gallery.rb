@@ -2,9 +2,9 @@
 
 module DotPopperGui
   # The limit on free plays, kept as screenshots to look at: the title with
-  # none left, and the offer Play leads to then. It needs DOT_POPPER_PAID=0,
-  # DOT_POPPER_FAKE_STORE=1 and DOT_POPPER_FREE_PLAYS=0, since a computer
-  # has no store and counts nothing. Not part of rake test:gui: it is for
+  # none left, and the offer Play leads to then. It needs
+  # DOT_POPPER_FREE_PLAYS=0, since a scenario counts no plays otherwise.
+  # Not part of rake test:gui: it is for
   # reviewing the screens.
   class PlaysGalleryScenario < Scenario
     scenario :plays_gallery

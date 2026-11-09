@@ -96,6 +96,12 @@ class GuiScenariosTest < Minitest::Test
     play("share", "a tap on Copy copies", window: "400x850")
   end
 
+  def test_a_free_player_buys_the_paid_version_on_a_test_builds_store
+    play("purchase", "the plays have run out", "Play leads to the offer", "the store gave its price", "Buy waits for the store",
+         "the Records screen no longer offers the purchase", "Looks opens", "scenario purchase passed",
+         DOT_POPPER_FREE_PLAYS: "1", DOT_POPPER_TODAY: "2026-10-31")
+  end
+
   def test_the_tutorial_played_through_with_a_mouse
     play("tutorial", "the first Play opens the tutorial", "a tap on the popped dot costs two seconds",
          "the rules hear nothing yet", "a tap on the clear bright dot pops it", "the round goes on with the tutorial's dots",
