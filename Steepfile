@@ -8,6 +8,7 @@
 target :core do
   signature "sig"
   library "date"
+  library "socket"
   check "lib/dot_popper.rb", "lib/dot_popper/*.rb"
   configure_code_diagnostics(Steep::Diagnostic::Ruby.strict) do |hash|
     hash[Steep::Diagnostic::Ruby::UnsupportedSyntax] = :error

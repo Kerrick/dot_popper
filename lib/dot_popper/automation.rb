@@ -44,14 +44,14 @@ module DotPopper
       raise OutsideConnection, message unless @exit_on_attempt
 
       warn message
-      Process.exit!(70)
+      Kernel.exit!(70)
     end
 
     # TCPSocket.new and .open, which Net::HTTP uses.
     module Guard
       def new(host, *rest, **options)
         Automation.refuse(host)
-        super
+        super # steep:ignore UnexpectedSuper
       end
 
       def open(host, *rest, **options)
@@ -64,7 +64,7 @@ module DotPopper
     module SocketGuard
       def tcp(host, *rest, **options, &block)
         Automation.refuse(host)
-        super
+        super # steep:ignore UnexpectedSuper
       end
     end
   end

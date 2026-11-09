@@ -1,0 +1,39 @@
+module DotPopper
+  module Automation
+    # ENV, or a Hash standing in for it.
+    interface _EnvLike
+      def fetch: (String, String) -> String
+      def []: (String) -> String?
+    end
+
+    FLAGS: Array[String]
+    LOCAL: Array[String]
+
+    class OutsideConnection < Exception
+    end
+
+    self.@exit_on_attempt: bool
+    self.@guarded: bool
+    @exit_on_attempt: bool
+    @guarded: bool
+
+    def self.on?: (?_EnvLike env) -> bool
+    def self.local?: (untyped host) -> bool
+    def self.guard!: (?exit_on_attempt: bool) -> void
+    def self.refuse: (untyped host) -> void
+
+    def on?: (?_EnvLike env) -> bool
+    def local?: (untyped host) -> bool
+    def guard!: (?exit_on_attempt: bool) -> void
+    def refuse: (untyped host) -> void
+
+    module Guard
+      def new: (untyped host, *untyped rest, **untyped options) -> untyped
+      def open: (untyped host, *untyped rest, **untyped options) -> untyped
+    end
+
+    module SocketGuard
+      def tcp: (untyped host, *untyped rest, **untyped options) ?{ (*untyped) -> untyped } -> untyped
+    end
+  end
+end
