@@ -139,7 +139,7 @@ module DotPopper
         list_actions = rows.map { GroupAction.new(name: [:group_show, it.group.id], rect: it.rect, text: nil) }
         controls = pager(groups, per_page, bottom - button)
         plan_with(heading: GroupWords.heading, lines: lines + alert, rows:,
-                  actions: [*list_actions, *row_of(action_y, [[:group_join_open, GroupWords.join(panel.paid?)], [:group_create, GroupWords.create(panel.paid?)]]),
+                  actions: [*list_actions, *row_of(action_y, [[:group_join_open, GroupWords.join(panel.pro?)], [:group_create, GroupWords.create(panel.pro?)]]),
                             *controls, back_action, *delete_action])
       end
 

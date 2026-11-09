@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # A holiday look, from the paid version: a game played in its season
+  # A holiday look, from Pro: a game played in its season
   # earns it and wears it; the Stats screen then offers Looks, whose
   # cards choose a look at once, drawn in its colors, and Back and Escape
-  # leave one step at a time. Needs DOT_POPPER_PAID=1 and a date in
+  # leave one step at a time. Needs DOT_POPPER_PRO=1 and a date in
   # Halloween's season (DOT_POPPER_TODAY=2026-10-31).
   class ThemesScenario < Scenario
     scenario :themes
 
     def play
-      check(show.worn.key == :halloween, "a paid player wears the theme in season")
+      check(show.worn.key == :halloween, "a pro player wears the theme in season")
       check(!show.themes_offered?, "no records yet, so no Looks")
       quick_game
       open_stats

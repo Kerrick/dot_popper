@@ -25,7 +25,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 /**
- * Buying the paid version, with Play Billing. Neither Lota nor LÖVE knows
+ * Buying Pro, with Play Billing. Neither Lota nor LÖVE knows
  * a store, so the game opens a dotpopper-store: URL
  * (Presentation::Storefront) and MainActivity#startActivity hands it here.
  * The answer goes into the file the URL names, the whole state each time,
@@ -46,7 +46,7 @@ import java.util.List;
  * runs on the main thread: requests are posted to it, and Play Billing
  * calls its listeners on it.
  */
-final class PaidStore implements PurchasesUpdatedListener {
+final class ProStore implements PurchasesUpdatedListener {
     private static final String TAG = "DotPopperStore";
 
     private final Activity activity;
@@ -59,7 +59,7 @@ final class PaidStore implements PurchasesUpdatedListener {
     private String price = "";
     private ProductDetails details;
 
-    PaidStore(Activity activity) {
+    ProStore(Activity activity) {
         this.activity = activity;
         client = BillingClient.newBuilder(activity)
             .setListener(this)

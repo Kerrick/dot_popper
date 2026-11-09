@@ -90,7 +90,7 @@ The game reads these from its environment. `main.rb` lists them all.
 | `DOT_POPPER_NO_SPLASH=1` | Skips setdef's splash screen |
 | `DOT_POPPER_SAVE_AS=test` | Saves in a folder of this name, so a run starts with no records |
 | `DOT_POPPER_SEED=42` | Makes the dots' randomness repeatable |
-| `DOT_POPPER_TODAY=2026-11-07` | Plays as if it were that date, for the daily goal and its streak, and for which holiday look is in season (try `2026-10-31`, `2026-12-25` or `2027-02-14` with `DOT_POPPER_PAID=1`) |
+| `DOT_POPPER_TODAY=2026-11-07` | Plays as if it were that date, for the daily goal and its streak, and for which holiday look is in season (try `2026-10-31`, `2026-12-25` or `2027-02-14` with `DOT_POPPER_PRO=1`) |
 | `DOT_POPPER_WINDOW=400x850` | Opens the window at this size, to check a narrow screen |
 | `DOT_POPPER_SHOTS=0.5,3,6.5` | Saves a screenshot at each of these seconds after start, in the save folder |
 | `DOT_POPPER_QUIT_AFTER=20` | Quits after this many seconds |
@@ -98,7 +98,7 @@ The game reads these from its environment. `main.rb` lists them all.
 | `DOT_POPPER_NO_SHADERS=1` | Draws with plain shapes, as on a GPU whose driver cannot compile the shaders |
 | `DOT_POPPER_FAKE_GAMEPAD=1` | Plays as if a gamepad were in hand: the words name its buttons, and its cursor shows |
 | `DOT_POPPER_FAKE_TILT=0.6,0` | Stands in for a tablet's accelerometer, to roll the pile at Game Over |
-| `DOT_POPPER_PAID=1` | Plays as if the paid version were bought. `0` plays free |
+| `DOT_POPPER_PRO=1` | Plays as if Pro were bought. `0` plays free |
 | `DOT_POPPER_FAKE_STORE_FAILS=failed` | In a test build, makes the fake store go wrong: `refused`, `unavailable`, `failed`, `cancelled` or `pending` |
 | `DOT_POPPER_SERVER=URL` | Uses this friend-group server, in place of the one set in the game |
 | `DOT_POPPER_CALM=1` | Turns off the screen shake, and makes the pile settle gently. Players use this one too |

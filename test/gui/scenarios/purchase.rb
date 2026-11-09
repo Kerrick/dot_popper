@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # A free player's whole road to the paid version in a test build, on the
+  # A free player's whole road to Pro in a test build, on the
   # code a store build runs: the games run out, Play leads to the offer,
-  # Buy goes to the fake store and back, and the thanks and the paid
+  # Buy goes to the fake store and back, and the thanks and the pro
   # features follow. It needs DOT_POPPER_FREE_GAMES=1, since a scenario
   # counts no games otherwise. PurchaseKeptScenario, run next on the same
   # save (DOT_POPPER_SAVE_AS), checks a relaunch.
@@ -30,12 +30,12 @@ module DotPopperGui
       wait_for("the thanks") { show.offer_status == words.offer[:thanks] }
       keep_screenshot("purchase-thanks")
       check_equal(%i[back], show.controls.map(&:name), "the offer leaves only Back")
-      paid
+      pro
     end
 
     private
 
-    def paid
+    def pro
       show.back
       check(show.title?, "Back returns to the title")
       check_nil_games
@@ -46,11 +46,11 @@ module DotPopperGui
       show.open_stats
       check(!show.controls.map(&:name).include?(:offer), "the Records screen no longer offers the purchase")
       check(!show.themes_locked?, "the looks are the player's to wear")
-      check(show.group_panel.paid?, "the player can create a friend group")
+      check(show.group_panel.pro?, "the player can create a friend group")
       show.open_themes
       check(show.themes?, "Looks opens")
       wait(0.5)
-      keep_screenshot("purchase-paid-looks")
+      keep_screenshot("purchase-pro-looks")
     end
 
     def check_nil_games = check(show.games_line.nil?, "the title no longer counts plays")
@@ -62,7 +62,7 @@ module DotPopperGui
 
     def play
       check(show.title?, "the game opens on the title")
-      check(show.games_line.nil?, "still Paid after a relaunch: the title counts no games")
+      check(show.games_line.nil?, "still Pro after a relaunch: the title counts no games")
       wait(0.5)
       keep_screenshot("purchase-relaunched")
       start_game

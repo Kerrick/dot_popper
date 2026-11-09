@@ -3,7 +3,7 @@
 require_relative "presentation_helper"
 
 # The Looks screen: offered on the Stats screen to a free player always,
-# who sees every look and which are earned but wears none, and to a paid
+# who sees every look and which are earned but wears none, and to a pro
 # player once there is a look to choose; a card for each look, and the
 # choice shown at once.
 class ThemesTest < Minitest::Test
@@ -14,38 +14,38 @@ class ThemesTest < Minitest::Test
   def setup
     @sounds = FakeSounds.new
     @day = Date.new(2026, 10, 31)
-    @paid = DotPopper::ScoreRecord::Memory.new
+    @pro = DotPopper::ScoreRecord::Memory.new
   end
 
-  def test_themes_are_offered_to_a_free_player_always_and_to_a_paid_one_with_a_style_to_choose
-    show(paid: false)
+  def test_themes_are_offered_to_a_free_player_always_and_to_a_pro_one_with_a_style_to_choose
+    show(pro: false)
     open_stats
 
     assert @show.themes_offered?
     assert @show.reach_of(:themes)
 
     @day = Date.new(2026, 11, 8)
-    show(paid: false)
+    show(pro: false)
     open_stats
 
     assert @show.themes_offered?, "a free player is shown that looks exist, in season or not"
 
     @day = Date.new(2026, 10, 31)
-    show(paid: true)
+    show(pro: true)
     open_stats
 
     assert @show.themes_offered?
     assert @show.reach_of(:themes)
 
     @day = Date.new(2026, 11, 8)
-    show(paid: true)
+    show(pro: true)
     open_stats
 
     refute @show.themes_offered?, "nothing earned, and none in season"
   end
 
   def test_a_game_in_season_wears_the_theme_and_keeps_it_to_choose_after_the_season
-    show(paid: true)
+    show(pro: true)
 
     assert_equal :halloween, @show.worn.key
     assert_same Style::THEMES[1].palette, @show.palette
@@ -60,7 +60,7 @@ class ThemesTest < Minitest::Test
   end
 
   def test_choosing_a_style_wears_it_at_once_and_leaving_goes_back_to_the_stats
-    show(paid: true)
+    show(pro: true)
     open_stats
     @show.open_themes
 
@@ -85,7 +85,7 @@ class ThemesTest < Minitest::Test
   end
 
   def test_a_tap_on_a_card_of_a_style_not_offered_does_nothing_and_play_cannot_start_under_themes
-    show(paid: true)
+    show(pro: true)
     open_stats
     @show.open_themes
     before = @show.palette
@@ -96,7 +96,7 @@ class ThemesTest < Minitest::Test
   end
 
   def test_a_free_player_sees_every_style_and_which_are_earned_and_wears_none
-    show(paid: false)
+    show(pro: false)
     open_stats
     @show.open_themes
 
@@ -113,18 +113,18 @@ class ThemesTest < Minitest::Test
   end
 
   def test_a_theme_earned_while_free_shows_as_earned_and_is_worn_on_purchase
-    show(paid: false)
+    show(pro: false)
 
     assert(@theme_keeper.earned?(Style::THEMES.find { it.key == :halloween }))
     refute(@theme_keeper.earned?(Style::THEMES.find { it.key == :winter }))
-    @paid.write("paid")
+    @pro.write("pro")
     @theme_keeper.refresh
 
     assert_equal :halloween, @theme_keeper.worn.key
   end
 
   def test_the_themes_screen_leads_to_the_offer_only_where_a_store_can_complete_one
-    show(paid: false)
+    show(pro: false)
     open_stats
     @show.open_themes
 
@@ -135,7 +135,7 @@ class ThemesTest < Minitest::Test
       def connect = nil
       def update(_seconds) = nil
     end.new(:ready, "$1.99")
-    show(paid: false, storefront: store)
+    show(pro: false, storefront: store)
     open_stats
     @show.open_themes
     reach = @show.controls.find { it.name == :offer }.reach
@@ -183,9 +183,9 @@ class ThemesTest < Minitest::Test
     [rect.center_x, rect.center_y]
   end
 
-  def show(paid:, **options)
-    @paid.write("paid") if paid
-    entitlement = DotPopper::Entitlement.new(@paid)
+  def show(pro:, **options)
+    @pro.write("pro") if pro
+    entitlement = DotPopper::Entitlement.new(@pro)
     store = DotPopper::ScoreRecord::Memory.new
     theme_keeper = ThemeKeeper.new(store, themes: Style::THEMES, entitlement:, today: -> { @day })
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), score_record: DotPopper::ScoreRecord.new(DotPopper::ScoreRecord::Memory.new))

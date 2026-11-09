@@ -157,21 +157,21 @@ module StoreContract
     settle(front) { front.price }
 
     assert_equal :ready, front.status
-    refute_predicate entitlement, :paid?
+    refute_predicate entitlement, :pro?
 
     front.buy
 
     assert_equal :busy, front.status
-    settle(front) { entitlement.paid? }
+    settle(front) { entitlement.pro? }
 
     assert_equal :ready, front.status
 
     again = DotPopper::Entitlement.free
     other = Storefront.new(port: relaunched(store), entitlement: again)
     other.connect
-    settle(other) { again.paid? }
+    settle(other) { again.pro? }
 
-    assert_predicate again, :paid?, "a relaunch sees what was bought"
+    assert_predicate again, :pro?, "a relaunch sees what was bought"
   end
 
   def test_through_the_storefront_a_failure_is_said_and_unlocks_nothing
@@ -184,7 +184,7 @@ module StoreContract
     settle(front) { front.status != :busy }
 
     assert_equal :failed, front.status
-    refute_predicate entitlement, :paid?
+    refute_predicate entitlement, :pro?
   end
 
   private

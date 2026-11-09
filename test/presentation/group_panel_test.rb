@@ -28,12 +28,12 @@ class GroupPanelTest < Minitest::Test
     @sounds = FakeSounds.new
     @worker = HandWorker.new
     @session = Groups::Session.new(store: DotPopper::ScoreRecord::Memory.new, worker: @worker)
-    @paid = DotPopper::Entitlement.new(DotPopper::ScoreRecord::Memory.new, forced: true)
+    @pro = DotPopper::Entitlement.new(DotPopper::ScoreRecord::Memory.new, forced: true)
     @cabinet = DotPopper::Cabinet.new(field)
     build
   end
 
-  def build(width: 800, height: 600, entitlement: @paid)
+  def build(width: 800, height: 600, entitlement: @pro)
     @show = Show.new(cabinet: @cabinet, layout: layout(width, height), sounds: @sounds, radius: R,
                      entitlement:, groups: @session)
   end
@@ -97,22 +97,22 @@ class GroupPanelTest < Minitest::Test
     refute_includes names, :group_report
   end
 
-  def test_joining_needs_the_paid_version
+  def test_joining_needs_the_pro_version
     build(entitlement: DotPopper::Entitlement.free)
     panel.open
     tap_control(:group_join_open)
 
-    assert_equal Words.needs_paid, panel.note
+    assert_equal Words.needs_pro, panel.note
     assert_equal :list, panel.page
     assert_empty @worker.started
   end
 
-  def test_creating_needs_the_paid_version
+  def test_creating_needs_the_pro_version
     build(entitlement: DotPopper::Entitlement.free)
     panel.open
     tap_control(:group_create)
 
-    assert_equal Words.needs_paid, panel.note
+    assert_equal Words.needs_pro, panel.note
     assert_empty @worker.started
   end
 
@@ -121,8 +121,8 @@ class GroupPanelTest < Minitest::Test
     tap_control(:group_leave)
 
     assert_predicate panel.hold, :held?
-    @paid = DotPopper::Entitlement.free
-    build(entitlement: @paid)
+    @pro = DotPopper::Entitlement.free
+    build(entitlement: @pro)
     panel.open
     tick
 

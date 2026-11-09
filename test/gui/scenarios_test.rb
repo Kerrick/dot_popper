@@ -48,10 +48,10 @@ class GuiScenariosTest < Minitest::Test
          "a gamepad's B goes back to the Records screen", "Escape again goes back to the title")
   end
 
-  def test_choosing_a_holiday_style_from_the_paid_version
-    play("themes", "a paid player wears the theme in season", "the Records screen offers Looks once a look is earned",
+  def test_choosing_a_holiday_style_from_the_pro_version
+    play("themes", "a pro player wears the theme in season", "the Records screen offers Looks once a look is earned",
          "a click on the ordinary look's card wears it at once", "Escape leaves Looks for the Records screen",
-         DOT_POPPER_PAID: "1", DOT_POPPER_TODAY: "2026-10-31")
+         DOT_POPPER_PRO: "1", DOT_POPPER_TODAY: "2026-10-31")
   end
 
   def test_clearing_the_stats_and_undoing_it
@@ -96,7 +96,7 @@ class GuiScenariosTest < Minitest::Test
     play("share", "a tap on Copy copies", window: "400x850")
   end
 
-  def test_a_free_player_buys_the_paid_version_on_a_test_builds_store
+  def test_a_free_player_buys_the_pro_version_on_a_test_builds_store
     play("purchase", "the games have run out", "Play leads to the offer", "the store gave its price", "Buy waits for the store",
          "the Records screen no longer offers the purchase", "Looks opens", "scenario purchase passed",
          DOT_POPPER_FREE_GAMES: "1", DOT_POPPER_TODAY: "2026-10-31")

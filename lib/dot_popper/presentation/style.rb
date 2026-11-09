@@ -103,7 +103,7 @@ module DotPopper
         # The Looks screen: its button's word and heading, and each look's name.
         themes: { title: "Looks", locked: "Looks come with the full game", classic: "Classic", halloween: "Halloween", winter: "Winter", valentine: "Hearts" }.freeze,
         offer: {
-          entry: "Paid version", heading: "The paid version",
+          entry: "Pro", heading: "Pro",
           includes: ["Unlimited play", "Achievements to earn", "Looks to choose from", "Create friend groups"].freeze,
           buy: "Buy for %s", retry: "Try again", restore: "Restore Purchases",
           loading: "Asking the store…", busy: "One moment…", pending: "Waiting for approval.",

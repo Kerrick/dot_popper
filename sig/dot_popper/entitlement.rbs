@@ -1,8 +1,8 @@
 module DotPopper
   class Entitlement
-    PAID: String
+    PRO: String
     FORCED_BY: String
-    DESKTOP_PAID: bool
+    DESKTOP_PRO: bool
     STORE_SYSTEMS: Array[String]
 
 
@@ -12,7 +12,7 @@ module DotPopper
     def self.free: () -> Entitlement
     def self.forced?: (untyped env, ?os: String?) -> bool
     def initialize: (ScoreRecord::_Store store, ?forced: bool) -> void
-    def paid?: () -> bool
+    def pro?: () -> bool
     def unlock!: () -> untyped
   end
 end

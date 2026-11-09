@@ -3,7 +3,7 @@
 //
 // Dot Popper's copy of Fledge v0.10.0's template (lib/fledge/templates/android),
 // which android.yml lays over it, with one change: Play Billing, for
-// buying the paid version (PaidStore).
+// buying Pro (ProStore).
 //
 // Written by fledge build (ADR 012): the app, with its identity from
 // fledge.yml, targeting API 36, as Google Play requires of new apps and

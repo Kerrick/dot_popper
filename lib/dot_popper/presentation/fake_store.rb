@@ -6,7 +6,7 @@ module DotPopper
     # (Storefront; test/presentation/store_contract.rb), for a build with
     # no channel: what playtesters run. It answers +open+, +read+, +remove+
     # and +path+ as the app's host does, and writes the host's own answers
-    # (Host/Store.swift, PaidStore.java): the whole state each time, a
+    # (Host/Store.swift, ProStore.java): the whole state each time, a
     # "loading" or "working" answer first and the real one a few reads
     # later, as a store takes a moment. Everything above it, the offer and
     # the price and the thanks, is the code a store build runs.

@@ -4,7 +4,7 @@ module DotPopper
   # The Achievements this device has earned, and the day each was first earned
   # (an ISO date), kept in a store that answers +read+ and +write(text)+,
   # as ScoreRecord's does. They are earned and kept whether or not the
-  # player has bought the paid version; only showing them waits for that.
+  # player has bought Pro; only showing them waits for that.
   # Text it cannot read is left out, and a achievement a newer version knows and
   # this one does not is dropped.
   class Achievements

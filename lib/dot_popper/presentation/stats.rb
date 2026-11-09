@@ -4,7 +4,7 @@ module DotPopper
   module Presentation
     # One line of the Stats screen: what it counts, and how many. A
     # achievement's line (AchievementWords) also has a +mark+ before its label, :earned,
-    # :open, or :locked, for one the paid version has not shown yet.
+    # :open, or :locked, for one Pro has not shown yet.
     class StatsRow < Data.define(:label, :value, :mark)
       def initialize(label:, value:, mark: nil) = super
     end
@@ -26,24 +26,24 @@ module DotPopper
     class StatsSheet < Data.define(:records, :totals, :goal, :scores, :empty, :notes, :mine, :chart_note, :achievements)
       # The achievements as a section, each with its mark filled if earned,
       # which a free player is shown too (what was earned while free is
-      # kept, Achievements). With the paid version the rest are open, and
+      # kept, Achievements). With Pro the rest are open, and
       # the heading counts; without it the rest are locked, under a heading
       # that says where they come from.
-      def self.achievements_section(achievements, paid:)
+      def self.achievements_section(achievements, pro:)
         return unless achievements
 
         rows = Achievement::IDS.map do |id|
           mark = if achievements.earned?(id) then :earned
-                 else paid ? :open : :locked
+                 else pro ? :open : :locked
                  end
           StatsRow.new(label: AchievementWords.name(id), value: AchievementWords.mark(id), mark:)
         end
-        heading = paid ? AchievementWords.heading(achievements.count) : AchievementWords::LOCKED_HEADING
+        heading = pro ? AchievementWords.heading(achievements.count) : AchievementWords::LOCKED_HEADING
         StatsSection.new(title: heading, rows:)
       end
 
       def self.build(stats, score_record:, words:, streak: 0, size_class: SizeClass::MEDIUM, field: nil,
-                     sizing: DotSizing::STANDARD, achievements: nil, paid: false)
+                     sizing: DotSizing::STANDARD, achievements: nil, pro: false)
         labels = words.labels
         mine = stats.records_in(size_class)
         records = StatsSection.new(title: words.records_heading(sizing), rows: [
@@ -67,7 +67,7 @@ module DotPopper
         mine = stats.recent_classes.map { it == size_class }
         new(records:, totals:, goal:, scores: stats.recent, empty: stats.games.zero?,
             notes: field ? words.screen_notes(field, sizing) : [], mine:,
-            chart_note: (words.chart_note(sizing) unless mine.all?), achievements: achievements_section(achievements, paid:))
+            chart_note: (words.chart_note(sizing) unless mine.all?), achievements: achievements_section(achievements, pro:))
       end
     end
 

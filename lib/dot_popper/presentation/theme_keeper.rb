@@ -4,8 +4,8 @@ module DotPopper
   module Presentation
     # Which look the game wears. A holiday theme (Theme) appears during its
     # season, and one game played then earns it for good; an earned theme
-    # is kept whether or not the player has bought the paid version, and
-    # is worn the day they do. Wearing a theme is the paid version's, so
+    # is kept whether or not the player has bought Pro, and
+    # is worn the day they do. Wearing a theme is Pro's, so
     # the wardrobe asks the +entitlement+ and nothing else: for a free
     # player the ordinary look is always worn. A free player is still shown
     # every look, and which of them they have earned (#shown): the same
@@ -63,16 +63,16 @@ module DotPopper
         @themes.select { it.ordinary? || earned?(it) || it.in_season?(@today.call) }
       end
 
-      # What the Looks screen shows: what a paid player can wear, and for a
+      # What the Looks screen shows: what a pro player can wear, and for a
       # free player every look, the ones they have earned marked as such
       # (#earned?), none to wear.
       def shown = locked? ? @themes : choices
 
       # Whether the looks are shown but not to wear, as for a free player.
-      def locked? = !@entitlement.paid?
+      def locked? = !@entitlement.pro?
 
       # Whether the Stats screen offers the Looks screen: to a free
-      # player always, since there are looks to see, and to a paid player
+      # player always, since there are looks to see, and to a pro player
       # once there is one besides the ordinary look to choose.
       def offered? = locked? || choices.size > 1
 
@@ -89,7 +89,7 @@ module DotPopper
       # season, else the ordinary look; and always the ordinary look
       # before the purchase.
       def refresh
-        @worn = if !@entitlement.paid? then ordinary
+        @worn = if !@entitlement.pro? then ordinary
                 else choices.find { it.key == @chosen } || in_season.first || ordinary
                 end
       end

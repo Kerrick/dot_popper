@@ -8,7 +8,7 @@ import XCTest
 /// Drives Store.swift as the game does, through its URLs and answer file,
 /// against StoreKit's local test session and DotPopper.storekit.
 final class StoreCheckTests: XCTestCase {
-  private let product = "com.setdef.DotPopper.paid"
+  private let product = "com.setdef.DotPopper.pro"
   private static var shared: SKTestSession?
   private var session: SKTestSession!
   private var file: URL!

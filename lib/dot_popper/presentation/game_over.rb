@@ -19,7 +19,7 @@ module DotPopper
     # +first+ says the game was the first of its SizeClass, which set the
     # best without beating one. +achievements+ are the ids of the achievements (Achievement)
     # the game earned for the first time, which a player who has the
-    # paid version hears of in a line after the score, never during the
+    # Pro hears of in a line after the score, never during the
     # game.
     class GameOver < Data.define(:style, :score, :score_record, :new_score_record, :at, :stats, :record, :goal_met, :ready_at,
                                :celebrated, :goal_celebrated, :screen, :lesson, :replayed, :first, :achievements)

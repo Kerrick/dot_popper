@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # How many games a player who has not bought the paid version may still
+  # How many games a player who has not bought Pro may still
   # start. A free game is one started game; the Tutorial and "How to play"
   # never cost one. A fresh install holds BANK games for good, which never
   # refill, and DAILY games for each local day, which do not carry over.
@@ -43,9 +43,9 @@ module DotPopper
       @bank = count(values["bank"], bank)
     end
 
-    # Whether games are counted and shown: where the paid version can be
+    # Whether games are counted and shown: where Pro can be
     # bought, and has not been.
-    def metered? = @metered && !@entitlement.paid?
+    def metered? = @metered && !@entitlement.pro?
 
     # The games left today, those the bank holds, and both together.
     def daily_left = @day == today ? [@daily - @spent, 0].max : @daily
@@ -58,7 +58,7 @@ module DotPopper
     def can_play? = !metered? || left.positive?
 
     # Spends the game that starting one would use, and says whether there
-    # was one. Paid or unmetered, it counts nothing and always is.
+    # was one. Pro or unmetered, it counts nothing and always is.
     def spend!
       return true unless metered?
       return false unless left.positive?

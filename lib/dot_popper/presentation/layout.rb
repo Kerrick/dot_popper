@@ -216,7 +216,7 @@ module DotPopper
         [back_button.y, credits_button.y, clear_stats_button.y, (themes_button.y if themes), (offer_button.y if offer)].compact.min
       end
 
-      # The Stats screen's way to the paid version, a quiet pill at the
+      # The Stats screen's way to Pro, a quiet pill at the
       # right, on a row of its own above every other button there, so it
       # never takes the place of Credits or Looks.
       def offer_button

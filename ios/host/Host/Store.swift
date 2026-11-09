@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 setdef <kerrick@setdef.com>
 // SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
 //
-// Buying the paid version, with StoreKit 2, which is Swift's alone, so
+// Buying Pro, with StoreKit 2, which is Swift's alone, so
 // this file is Swift beside main.m. Neither Lota nor LÖVE knows a store,
 // so the game opens a dotpopper-store: URL (Presentation::Storefront) and
 // DotPopperApplication, in main.m, hands it here on the main thread, as

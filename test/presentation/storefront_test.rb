@@ -2,7 +2,7 @@
 
 require_relative "presentation_helper"
 
-# Buying the paid version: the URLs the hosts catch, the answers they
+# Buying Pro: the URLs the hosts catch, the answers they
 # write back, and the calm screen that offers it.
 class StorefrontTest < Minitest::Test
   include PresentationTest
@@ -50,7 +50,7 @@ class StorefrontTest < Minitest::Test
   end
 
   def test_a_url_names_the_action_the_request_the_product_and_where_to_answer
-    assert_equal "dotpopper-store://buy?n=3&product=com.setdef.DotPopper.paid&file=%2Fsave%20dir%2Fanswer.txt",
+    assert_equal "dotpopper-store://buy?n=3&product=com.setdef.DotPopper.pro&file=%2Fsave%20dir%2Fanswer.txt",
                  Storefront.url(:buy, 3, "/save dir/answer.txt")
   end
 
@@ -82,7 +82,7 @@ class StorefrontTest < Minitest::Test
     end
   end
 
-  def test_connecting_asks_the_store_and_a_paid_player_needs_no_asking
+  def test_connecting_asks_the_store_and_a_pro_player_needs_no_asking
     @store.connect
 
     assert @answers.removed
@@ -101,7 +101,7 @@ class StorefrontTest < Minitest::Test
 
     assert_equal "$1.99", @store.price
     assert_equal :ready, @store.status
-    refute_predicate @entitlement, :paid?
+    refute_predicate @entitlement, :pro?
   end
 
   def test_owning_it_unlocks_whatever_request_the_answer_is_to
@@ -109,7 +109,7 @@ class StorefrontTest < Minitest::Test
     @store.connect
     hear("answer=1\nowned=1\nstate=ready\nprice=$1.99\n")
 
-    assert_predicate @entitlement, :paid?
+    assert_predicate @entitlement, :pro?
   end
 
   def test_an_older_answer_does_not_overturn_a_newer_request
@@ -160,29 +160,29 @@ class StorefrontTest < Minitest::Test
     @entitlement.unlock!
     hear("answer=9\nowned=0\nstate=ready\n")
 
-    assert_predicate @entitlement, :paid?
+    assert_predicate @entitlement, :pro?
   end
 
   def test_the_answer_is_read_only_every_so_often
     @answers.text = "answer=0\nowned=1\nstate=ready\n"
     @store.update(Storefront::EVERY / 2)
 
-    refute_predicate @entitlement, :paid?
+    refute_predicate @entitlement, :pro?
     @store.update(Storefront::EVERY)
 
-    assert_predicate @entitlement, :paid?
+    assert_predicate @entitlement, :pro?
   end
 
   def test_a_computer_is_free_by_default_and_the_setting_still_stands_in
     refute DotPopper::Entitlement.forced?({}, os: "Linux")
     refute DotPopper::Entitlement.forced?({}, os: "Windows")
     refute DotPopper::Entitlement.forced?({}, os: "OS X")
-    assert DotPopper::Entitlement.forced?({ "DOT_POPPER_PAID" => "1" }, os: "Linux")
+    assert DotPopper::Entitlement.forced?({ "DOT_POPPER_PRO" => "1" }, os: "Linux")
     refute DotPopper::Entitlement.forced?({}, os: "iOS")
     refute DotPopper::Entitlement.forced?({}, os: "Android")
-    refute DotPopper::Entitlement.forced?({ "DOT_POPPER_PAID" => "0" }, os: "Windows")
-    assert DotPopper::Entitlement.forced?({ "DOT_POPPER_PAID" => "1" }, os: "iOS")
-    assert DotPopper::Entitlement.forced?({ "DOT_POPPER_PAID" => "1" })
+    refute DotPopper::Entitlement.forced?({ "DOT_POPPER_PRO" => "0" }, os: "Windows")
+    assert DotPopper::Entitlement.forced?({ "DOT_POPPER_PRO" => "1" }, os: "iOS")
+    assert DotPopper::Entitlement.forced?({ "DOT_POPPER_PRO" => "1" })
   end
 
   def test_a_computer_store_build_uses_its_channel_or_offers_nothing
@@ -282,7 +282,7 @@ class StorefrontTest < Minitest::Test
     show.primary
     show.update(Storefront::EVERY * 2)
 
-    refute_predicate @entitlement, :paid?
+    refute_predicate @entitlement, :pro?
   end
 
   def test_a_build_with_no_store_offers_nothing

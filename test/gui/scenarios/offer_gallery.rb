@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # The offer of the paid version, kept as screenshots to look at: the way
+  # The offer of Pro, kept as screenshots to look at: the way
   # to it on the Stats screen, the offer as a phone and a desktop window
   # lay it out, and the thanks after the purchase, from a test build's
   # fake store. Not part of rake test:gui: it is for reviewing the screen.

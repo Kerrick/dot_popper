@@ -62,8 +62,8 @@ import org.setdef.fledge.FledgeRuby;
  * the sheet in its place. The window asks for the screen's fastest
  * refresh rate (preferFastestRefresh). And vibrate buzzes from a thread
  * of its own, so the game's thread never waits for the vibrator. And
- * Buying the paid version: the game opens a dotpopper-store: URL
- * (Storefront), and startActivity hands it to PaidStore, beside this file,
+ * Buying Pro: the game opens a dotpopper-store: URL
+ * (Storefront), and startActivity hands it to ProStore, beside this file,
  * which asks Play Billing.
  */
 public class MainActivity extends SDLActivity {
@@ -97,7 +97,7 @@ public class MainActivity extends SDLActivity {
     // game a frame at 120 Hz. One thread keeps the buzzes in order.
     private final ExecutorService buzzer = Executors.newSingleThreadExecutor();
     private boolean shortEdgesMode;
-    private PaidStore store;
+    private ProStore store;
 
     @Override
     protected String[] getLibraries() {
@@ -276,7 +276,7 @@ public class MainActivity extends SDLActivity {
      * sheet, a chooser over ACTION_SEND with the text as plain text,
      * starts in its place. A URL with no text throws, as an unknown URL
      * would, and SDL answers false, so the game falls back on its own
-     * preview. A store URL is caught the same way and goes to PaidStore; one
+     * preview. A store URL is caught the same way and goes to ProStore; one
      * that is malformed throws as well, so the game says the store isn't
      * answering.
      */
@@ -285,7 +285,7 @@ public class MainActivity extends SDLActivity {
         Uri uri = intent.getData();
         if (Intent.ACTION_VIEW.equals(intent.getAction()) && uri != null && STORE_SCHEME.equalsIgnoreCase(uri.getScheme())) {
             if (store == null) {
-                store = new PaidStore(this);
+                store = new ProStore(this);
             }
             if (!store.handle(uri)) {
                 throw new IllegalArgumentException("a store URL with parts missing");

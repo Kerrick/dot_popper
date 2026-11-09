@@ -18,7 +18,7 @@ Dot Popper is a one-minute arcade game. Friends form small groups that compete f
 - A player can be in at most 20 groups; a group holds at most 8 at once. Each has a 7-digit join code that players share themselves.
 - Within a group a member is a number, in join order, never reused. The game draws it as an icon.
 - A player can leave any group, and delete everything about themselves, at any time.
-- Creating and joining a group need the paid version; the game alone decides that. Leaving and deleting never do.
+- Creating and joining a group need Pro; the game alone decides that. Leaving and deleting never do.
 
 ## Not included
 

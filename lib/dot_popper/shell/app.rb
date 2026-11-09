@@ -573,7 +573,7 @@ module DotPopper
         @env.fetch("DOT_POPPER_SCENARIO", "").empty? || @env.key?("DOT_POPPER_FREE_GAMES")
       end
 
-      # The games a free player has left, counted where the paid version
+      # The games a free player has left, counted where Pro
       # can be bought, as #player? allows. DOT_POPPER_FREE_GAMES=n starts a
       # new save with n games in the bank and n for the day, to try the
       # limit.

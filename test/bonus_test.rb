@@ -3,7 +3,7 @@
 require "test_helper"
 
 # The row's bonus dot (Rules::BONUS): earned by dots in a row, never by
-# chance, in place of the next fresh dot, paid on top of a pop.
+# chance, in place of the next fresh dot, pro on top of a pop.
 class BonusTest < Minitest::Test
   include DotPopperTest
   Events = DotPopper::Events

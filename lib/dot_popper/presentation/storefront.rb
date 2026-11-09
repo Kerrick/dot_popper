@@ -2,7 +2,7 @@
 
 module DotPopper
   module Presentation
-    # The store behind the paid version. Neither Lota nor LÖVE knows a
+    # The store behind Pro. Neither Lota nor LÖVE knows a
     # store, so this works as SheetSharing does: the game opens a URL in
     # its own SCHEME, and the store's answer comes back in a small file,
     # named in the URL, rewritten whole, which #update reads a few times a
@@ -26,7 +26,7 @@ module DotPopper
       SCHEME = "dotpopper-store"
       # The one product, as App Store Connect and the Play Console must
       # name it (and ios/store_check's StoreKit configuration file).
-      PRODUCT_ID = "com.setdef.DotPopper.paid"
+      PRODUCT_ID = "com.setdef.DotPopper.pro"
       # The systems whose hosts catch SCHEME, as Lota::System.os names them.
       SYSTEMS = %w[iOS Android].freeze
       # How often, in seconds, the answer file is read.
@@ -40,14 +40,14 @@ module DotPopper
 
       attr_reader :status, :price
 
-      # The distribution channels that can sell the paid version on a
+      # The distribution channels that can sell Pro on a
       # computer, by name, each a callable that takes +entitlement:+ and
       # answers a store like this class (offered?, status, price, connect,
       # buy, restore, update). None is built yet, so every desktop build is
       # free. To add one: write its store, register it here under its name,
       # and set BUILD_CHANNEL for the build that ships through it. Nothing
-      # that is paid for needs to change, since features ask only
-      # Entitlement#paid?.
+      # that is pro for needs to change, since features ask only
+      # Entitlement#pro?.
       CHANNELS = {}.freeze
       # The channel this build is sold through, or nil for a test build.
       # A build for a store MUST set it, or it ships with the fake store
@@ -97,7 +97,7 @@ module DotPopper
       # appears, and each time the offer opens, which also clears a request
       # the store never answered. An old answer is thrown away first.
       def connect
-        return if @entitlement.paid?
+        return if @entitlement.pro?
 
         @port.remove
         request(:open, :loading)
@@ -131,7 +131,7 @@ module DotPopper
         return unless text
 
         answer = text.lines.to_h { it.chomp.split("=", 2) }
-        @entitlement.unlock! if answer["owned"] == "1" && !@entitlement.paid?
+        @entitlement.unlock! if answer["owned"] == "1" && !@entitlement.pro?
         return unless answer["answer"].to_i >= @number
 
         @price = answer["price"] unless answer["price"].to_s.empty?

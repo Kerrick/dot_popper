@@ -15,9 +15,9 @@ module DotPopper
       def history_heading = "Title history"
       def join_heading = "Join with a code"
       def blurb = "Beat your friends and take the title."
-      def join(paid) = paid ? "Join" : "Join (paid)"
-      def create(paid) = paid ? "Create" : "Create (paid)"
-      def needs_paid = "Friend groups come with the paid version."
+      def join(pro) = pro ? "Join" : "Join (pro)"
+      def create(pro) = pro ? "Create" : "Create (pro)"
+      def needs_pro = "Friend groups come with Pro."
       def privacy = "Joining or creating sends your scores to the groups' server, which also sees your IP address."
       def need_code = "Tap your friend's code."
       def erase = "Erase"
@@ -84,7 +84,7 @@ module DotPopper
     # tapped so far, what a long press would do, and what to tell the
     # player next. Nothing here is typed, so a controller can do all of it.
     # It asks the Session (Groups) for everything, and never waits for it.
-    # Paid changes only whether Create and Join do anything (+entitlement+);
+    # Pro changes only whether Create and Join do anything (+entitlement+);
     # leaving and deleting never need it.
     class GroupPanel
       BANNER_SECONDS = 4.0
@@ -112,7 +112,7 @@ module DotPopper
       def open? = @open
       def available? = groups.available?
       def member? = groups.member?
-      def paid? = @entitlement.paid?
+      def pro? = @entitlement.pro?
       def group = @group_id && groups.group(@group_id)
 
       # Opens on the list of groups, or at the code pad for someone with
@@ -229,7 +229,7 @@ module DotPopper
       end
 
       def open_join
-        return @note = GroupWords.needs_paid unless paid?
+        return @note = GroupWords.needs_pro unless pro?
 
         @code = ""
         show(:join)
@@ -264,14 +264,14 @@ module DotPopper
       end
 
       def submit_join
-        return @note = GroupWords.needs_paid unless paid?
+        return @note = GroupWords.needs_pro unless pro?
         return @note = GroupWords.need_code if code.size < GroupWords::CODE_LENGTH
 
         groups.join(code)
       end
 
       def create
-        return @note = GroupWords.needs_paid unless paid?
+        return @note = GroupWords.needs_pro unless pro?
 
         groups.create
       end

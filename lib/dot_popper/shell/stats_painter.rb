@@ -104,7 +104,7 @@ module DotPopper
         G.circle(:line, pen.pixels.snap(x + (radius * 0.6)), pen.pixels.snap(y), radius, 32)
       end
 
-      # The way to the paid version, as quiet as Credits, where there is a store.
+      # The way to Pro, as quiet as Credits, where there is a store.
       def offer(show, layout)
         return unless show.offer_offered?
 
@@ -216,7 +216,7 @@ module DotPopper
 
       # A achievement's mark, a small dot in the game's own shape: filled in the
       # fresh dot's orange when earned, a ring while there is more to do,
-      # and a fainter one while the paid version has yet to show them.
+      # and a fainter one while Pro has yet to show them.
       def mark(kind, x, y, size)
         pixels = pen.pixels
         radius = size * 0.28

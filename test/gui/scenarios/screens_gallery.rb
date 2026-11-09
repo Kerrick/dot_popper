@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # The screens a free or a paid player meets, kept as screenshots to look
+  # The screens a free or a pro player meets, kept as screenshots to look
   # at: the friend groups' screens (against a server named by
   # DOT_POPPER_SERVER, such as script/group_stub.rb, with
   # DOT_POPPER_GROUP_CODE the seven digits of a group on it), Records,
   # Looks, and Game Over. DOT_POPPER_GALLERY names the shots. Run it once
-  # with DOT_POPPER_PAID=1 and once with 0. Not part of rake test:gui: it
+  # with DOT_POPPER_PRO=1 and once with 0. Not part of rake test:gui: it
   # is for reviewing the screens.
   class ScreensGalleryScenario < Scenario
     scenario :screens_gallery
@@ -23,7 +23,7 @@ module DotPopperGui
       shoot("over", settle: 2.5)
       continue_to_title
       theme_keeper = show.instance_variable_get(:@theme_keeper)
-      theme_keeper.instance_variable_set(:@earned, P::Style::THEMES.map(&:key).first(2)) if ENV["DOT_POPPER_PAID"] == "1"
+      theme_keeper.instance_variable_set(:@earned, P::Style::THEMES.map(&:key).first(2)) if ENV["DOT_POPPER_PRO"] == "1"
       SIZES.each { |width, height, phone| screens(width, height, phone) }
       join
       SIZES.each { |width, height, phone| member(width, height, phone) }
@@ -60,7 +60,7 @@ module DotPopperGui
 
       panel.open
       shoot("group-list")
-      return show.back unless panel.paid?
+      return show.back unless panel.pro?
 
       panel.press(:group_join_open, :touch, 0.0)
       code.each_char { panel.press([:code_digit, it], :touch, 0.0) }

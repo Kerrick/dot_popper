@@ -6,7 +6,7 @@ module DotPopper
   # and goal streak, and the Achievements, the achievements earned, which are
   # records of what the player did as much as a best is. Nothing else is
   # a record, so the playtest log, the settings, what the game has taught,
-  # and whether the paid version was bought stay as they are.
+  # and whether Pro was bought stay as they are.
   #
   # Clearing copies each store's text, exactly, to a backup named for
   # when it happened (best_score-20261105-093000.txt), through +folder+,

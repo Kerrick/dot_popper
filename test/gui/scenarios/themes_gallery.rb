@@ -6,7 +6,7 @@ module DotPopperGui
   # the Looks screen, a game under way and Game Over, on a desktop's
   # windows and on phone-shaped ones. It checks nothing but that each look
   # can be worn; DOT_POPPER_GALLERY names the shots. Needs
-  # DOT_POPPER_PAID=1. Not part of rake test:gui: it is for reviewing the
+  # DOT_POPPER_PRO=1. Not part of rake test:gui: it is for reviewing the
   # looks' design.
   class ThemesGalleryScenario < Scenario
     scenario :themes_gallery

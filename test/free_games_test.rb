@@ -94,7 +94,7 @@ class FreeGamesTest < Minitest::Test
     assert_equal FreeGames::DAILY + FreeGames::BANK, games().left
   end
 
-  def test_the_paid_version_counts_nothing_and_never_refuses
+  def test_the_pro_version_counts_nothing_and_never_refuses
     @entitlement.unlock!
     games = games(bank: 0, daily: 0)
 
@@ -121,7 +121,7 @@ class FreeGamesTest < Minitest::Test
     assert_predicate games, :can_play?
   end
 
-  def test_forcing_the_paid_version_counts_nothing
+  def test_forcing_the_pro_version_counts_nothing
     forced = DotPopper::Entitlement.new(Memory.new, forced: true)
     games = FreeGames.new(@store, today: -> { @day }, entitlement: forced)
 

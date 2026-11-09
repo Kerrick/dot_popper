@@ -2,7 +2,7 @@
 
 module DotPopper
   module Presentation
-    # Where the offer of the paid version puts its parts, worked out by
+    # Where the offer of Pro puts its parts, worked out by
     # OfferScreen#plan: each block's Rect by name (Stacked) and the font
     # size each is set in, and the note broken into lines.
     class OfferPlan < Data.define(:placed, :sizes, :note_lines)

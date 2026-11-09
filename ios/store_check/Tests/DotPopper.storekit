@@ -9,12 +9,12 @@
       "localizations" : [
         {
           "description" : "Achievements, themes, and creating friend groups.",
-          "displayName" : "The paid version",
+          "displayName" : "Dot Popper Pro",
           "locale" : "en_US"
         }
       ],
-      "productID" : "com.setdef.DotPopper.paid",
-      "referenceName" : "Paid version",
+      "productID" : "com.setdef.DotPopper.pro",
+      "referenceName" : "Pro",
       "type" : "NonConsumable"
     }
   ],

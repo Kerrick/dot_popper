@@ -27,7 +27,7 @@
 // that SDL reads from UIApplication, which DotPopperApplication answers
 // from the scene (see its statusBarOrientation; Lota 0.3.1's host will
 // answer it for itself, and this can go then). And the store, for
-// buying the paid version: the game opens a dotpopper-store: URL
+// buying Pro: the game opens a dotpopper-store: URL
 // (Storefront), and DotPopperApplication hands it to DotPopperStore, in
 // Store.swift beside this file, since StoreKit 2 is Swift's alone.
 // Lota's host already sets the audio session to Ambient (Info.plist's

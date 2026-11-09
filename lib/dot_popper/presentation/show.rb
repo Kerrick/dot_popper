@@ -21,13 +21,13 @@ module DotPopper
     # Over's result to share, in a preview or a phone's own sheet, and
     # +clipboard+ takes it when the player copies it. +achievements+
     # (Achievements) keeps the achievements a game earns, as it ends, and the
-    # Stats screen lists them once the +entitlement+ says the paid
+    # Stats screen lists them once the +entitlement+ says the pro
     # version was bought. +tutorial_flag+
     # (TutorialFlag) says whether Play opens the Tutorial first. +window+
     # (NoWindowControl's methods) is the desktop's window, which the
     # title's "Full screen" and Quit switch and close where it offers them.
     # +games+ (FreeGames) counts the games a free player may start: Play
-    # spends one, and with none left leads to the offer of the paid version.
+    # spends one, and with none left leads to the offer of Pro.
     class Show
       # The dot-size choices in the order the title draws their segments:
       # the default, dots sized to the screen, first.
@@ -123,7 +123,7 @@ module DotPopper
 
       # Whether the Stats screen offers Looks: always to a free player,
       # who is shown what looks there are and which they have earned, and
-      # to a paid one once there is a look besides the ordinary one to
+      # to a pro one once there is a look besides the ordinary one to
       # choose.
       def themes_offered? = stats? && !credits? && !themes? && @theme_keeper.offered?
 
@@ -476,13 +476,13 @@ module DotPopper
         sounds.play(:tick, pitch: 0.8)
       end
 
-      # Whether the Stats screen offers the way to the paid version: where
+      # Whether the Stats screen offers the way to Pro: where
       # there is a store, to a player who has not bought it. It is offered
       # here and nowhere else, and asks for nothing; a player finds it or
       # does not (doc/decisions.md).
-      def offer_offered? = @storefront.offered? && !@entitlement.paid?
+      def offer_offered? = @storefront.offered? && !@entitlement.pro?
 
-      # Whether the offer of the paid version is open, over the Stats screen.
+      # Whether the offer of Pro is open, over the Stats screen.
       def offer? = @offer
 
       # Opens the offer over the Stats screen, and asks the store for the
@@ -501,7 +501,7 @@ module DotPopper
       def offer_plan
         return unless offer?
 
-        OfferScreen.new(layout:, type: style::TYPE, words:, measure: @measure, offering: !@entitlement.paid?,
+        OfferScreen.new(layout:, type: style::TYPE, words:, measure: @measure, offering: !@entitlement.pro?,
                         note: words.offer_note(games.left, games.daily)).plan
       end
 
@@ -512,7 +512,7 @@ module DotPopper
       # player owns it, and otherwise a word only when there is something to
       # say.
       def offer_status
-        return words.offer[:thanks] if @entitlement.paid?
+        return words.offer[:thanks] if @entitlement.pro?
 
         words.offer.fetch(@storefront.status, "")
       end
@@ -767,7 +767,7 @@ module DotPopper
       private
 
       # A game starts, and costs a game (FreeGames); with none left, the
-      # offer of the paid version opens in its place.
+      # offer of Pro opens in its place.
       def start_game
         return offer_for_play unless games.spend!
 
@@ -882,9 +882,9 @@ module DotPopper
       # Hears the store, outside a game; a tick marks the purchase landing
       # while the offer is open.
       def follow_store(seconds)
-        free = !@entitlement.paid?
+        free = !@entitlement.pro?
         @storefront.update(seconds)
-        sounds.play(:tick, pitch: 1.3) if free && offer? && @entitlement.paid?
+        sounds.play(:tick, pitch: 1.3) if free && offer? && @entitlement.pro?
       end
 
       def stats_controls
@@ -936,7 +936,7 @@ module DotPopper
         size_class = cabinet.size_class
         StatsSheet.build(stats_book.stats, score_record: cabinet.score_record.of(size_class), words:, streak: stats_book.streak,
                            size_class:, field: cabinet.field, sizing: cabinet.sizing, achievements: @achievements,
-                           paid: @entitlement.paid?)
+                           pro: @entitlement.pro?)
       end
 
       # Where the HUD's pill ends, at the safe area's top.
@@ -1045,7 +1045,7 @@ module DotPopper
         @groups.game_finished(score: event.score, sized_to_screen: event.size_class == SizeClass::FITTED && !@tutorial_game)
         @theme_keeper.game_played
         achievements = @achievements.award(@achievement_watch.earned, day: stats_book.today.iso8601)
-        achievements = [] unless @entitlement.paid? # kept, and shown once the paid version is bought
+        achievements = [] unless @entitlement.pro? # kept, and shown once Pro is bought
         lesson = @tutor.lesson(@mistake) if @mistake&.among(event.game.dots)
         @game_over = GameOver.new(style: style::GAME_OVER, score: event.score, score_record: event.score_record, new_score_record: event.new_score_record, at: now,
                              stats: game_stats, record: result.records.first, goal_met: result.goal_met, lesson:, achievements:,
