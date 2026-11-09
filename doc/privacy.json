@@ -2,109 +2,193 @@
   "game": "Dot Popper",
   "game_version": "0.9.9",
   "on_device": {
+    "for_players": [
+      "Your best score",
+      "Your statistics",
+      "Your achievements",
+      "Whether you bought Pro",
+      "Your themes",
+      "How many free games you have left",
+      "A history of your games",
+      "A copy of your records, if you clear them",
+      "Your settings",
+      "What the game has shown you",
+      "Your private code and any unsent score, if you use friend groups"
+    ],
     "files": [
       {
         "name": "score_record.txt",
+        "label": "Your best score",
+        "not_for_players": null,
         "holds": "your best score for each dot size",
-        "made_by": "the game"
+        "made_by": "the game",
+        "also_sent": []
       },
       {
         "name": "stats.txt",
+        "label": "Your statistics",
+        "not_for_players": null,
         "holds": "your statistics: totals, chart bars and goal streak",
-        "made_by": "the game"
+        "made_by": "the game",
+        "also_sent": []
       },
       {
         "name": "achievements.txt",
+        "label": "Your achievements",
+        "not_for_players": null,
         "holds": "your achievements and the day each was earned",
-        "made_by": "the game"
+        "made_by": "the game",
+        "also_sent": []
       },
       {
         "name": "entitlement.txt",
+        "label": "Whether you bought Pro",
+        "not_for_players": null,
         "holds": "whether Pro was bought",
-        "made_by": "the game"
-      },
-      {
-        "name": "themes.txt",
-        "holds": "your themes and which is chosen",
-        "made_by": "the game"
-      },
-      {
-        "name": "games.txt",
-        "holds": "how many free games are left and used today",
-        "made_by": "the game"
-      },
-      {
-        "name": "games.csv",
-        "holds": "a history of your games: when, score, and how each went",
-        "made_by": "the game"
-      },
-      {
-        "name": "dot_size.txt",
-        "holds": "your choice of dot size",
-        "made_by": "the game"
-      },
-      {
-        "name": "sound.txt",
-        "holds": "your sound setting",
-        "made_by": "the game"
-      },
-      {
-        "name": "taught.txt",
-        "holds": "what the game has already shown you",
-        "made_by": "the game"
-      },
-      {
-        "name": "tutorial.txt",
-        "holds": "whether you have played the tutorial",
-        "made_by": "the game"
-      },
-      {
-        "name": "group.txt",
-        "holds": "your anonymous group token, an unsent score, whether you were in a group, and the newest title change you were shown of each",
-        "made_by": "the game"
-      },
-      {
-        "name": "cleared.txt",
-        "holds": "the names of the backups made by the last clearing of your records",
-        "made_by": "the game"
-      },
-      {
-        "name": "vulkan_failed.txt",
-        "holds": "that the Vulkan renderer failed on this device, and when",
-        "made_by": "the game"
-      },
-      {
-        "name": "fake_store.txt",
-        "holds": "a pretend purchase, in test builds only",
-        "made_by": "the game"
+        "made_by": "the game",
+        "also_sent": []
       },
       {
         "name": "store_answer.txt",
-        "holds": "what the store last answered about Pro",
-        "made_by": "the iOS or Android host, read by the game"
+        "label": "Whether you bought Pro",
+        "not_for_players": null,
+        "holds": "what the store last answered about Pro, and its price",
+        "made_by": "the iOS or Android host, read by the game",
+        "also_sent": []
       },
       {
-        "name": "<record>-YYYYMMDD-HHMMSS.txt",
-        "holds": "a backup of your records from when you cleared them",
-        "made_by": "the game"
+        "name": "themes.txt",
+        "label": "Your themes",
+        "not_for_players": null,
+        "holds": "your themes and which is chosen",
+        "made_by": "the game",
+        "also_sent": []
+      },
+      {
+        "name": "games.txt",
+        "label": "How many free games you have left",
+        "not_for_players": null,
+        "holds": "how many free games are left and used today",
+        "made_by": "the game",
+        "also_sent": []
+      },
+      {
+        "name": "games.csv",
+        "label": "A history of your games",
+        "not_for_players": null,
+        "holds": "a history of your games: when, score, and how each went",
+        "made_by": "the game",
+        "also_sent": []
       },
       {
         "name": "games-YYYYMMDD-HHMMSS.csv",
+        "label": "A history of your games",
+        "not_for_players": null,
         "holds": "an older game history, kept whole when its columns changed",
-        "made_by": "the game"
+        "made_by": "the game",
+        "also_sent": []
+      },
+      {
+        "name": "<record>-YYYYMMDD-HHMMSS.txt",
+        "label": "A copy of your records, if you clear them",
+        "not_for_players": null,
+        "holds": "a backup of your records from when you cleared them",
+        "made_by": "the game",
+        "also_sent": []
+      },
+      {
+        "name": "dot_size.txt",
+        "label": "Your settings",
+        "not_for_players": null,
+        "holds": "your choice of dot size",
+        "made_by": "the game",
+        "also_sent": []
+      },
+      {
+        "name": "sound.txt",
+        "label": "Your settings",
+        "not_for_players": null,
+        "holds": "your sound setting",
+        "made_by": "the game",
+        "also_sent": []
+      },
+      {
+        "name": "taught.txt",
+        "label": "What the game has shown you",
+        "not_for_players": null,
+        "holds": "what the game has already shown you",
+        "made_by": "the game",
+        "also_sent": []
+      },
+      {
+        "name": "tutorial.txt",
+        "label": "What the game has shown you",
+        "not_for_players": null,
+        "holds": "whether you have played the tutorial",
+        "made_by": "the game",
+        "also_sent": []
+      },
+      {
+        "name": "group.txt",
+        "label": "Your private code and any unsent score, if you use friend groups",
+        "not_for_players": null,
+        "holds": "your anonymous group token, an unsent score, whether you were in a group, and the newest title change you were shown of each",
+        "made_by": "the game",
+        "also_sent": [
+          "your private code",
+          "your scores from games that count"
+        ]
+      },
+      {
+        "name": "cleared.txt",
+        "label": null,
+        "not_for_players": {
+          "kind": "diagnostics",
+          "reason": "Only the names of the backups to replace next time."
+        },
+        "holds": "the names of the backups made by the last clearing of your records",
+        "made_by": "the game",
+        "also_sent": []
+      },
+      {
+        "name": "vulkan_failed.txt",
+        "label": null,
+        "not_for_players": {
+          "kind": "diagnostics",
+          "reason": "A note that lets the game recover after its graphics fail to start."
+        },
+        "holds": "that the game's graphics failed to start on this device, and when",
+        "made_by": "the game",
+        "also_sent": []
+      },
+      {
+        "name": "fake_store.txt",
+        "label": null,
+        "not_for_players": {
+          "kind": "test_only",
+          "reason": "Used only in test builds, never with a real purchase."
+        },
+        "holds": "a pretend purchase, in test builds only",
+        "made_by": "the game",
+        "also_sent": []
       },
       {
         "name": "shot-<number>.png",
+        "label": null,
+        "not_for_players": {
+          "kind": "developer_only",
+          "reason": "Made only under a developer setting that players never use."
+        },
         "holds": "a screenshot",
-        "made_by": "the game, only under the developer setting DOT_POPPER_SHOTS"
+        "made_by": "the game, only under the developer setting DOT_POPPER_SHOTS",
+        "also_sent": []
       }
     ],
-    "stays_on_the_device": "Everything in these files stays on the device, until the game is uninstalled or the player removes it."
+    "stays_on_the_device": "These stay on your device until you uninstall the game or remove them. If you use friend groups, your private code and your scores from games that count also go to the game's server."
   },
   "network": {
     "server": "https://server.dot-popper.setdef.com",
-    "every_request": "Sent to this server over HTTPS, and shows the server the device's IP address.",
-    "ip_addresses": "The server's proxy and request log see the IP address of every request, and its rate-limit notes can hold it. The game neither reads nor sends it as data, and it is not used to work out a location. How long each is kept is stated by the server's own privacy policy.",
+    "every_request": "Sent to this server over HTTPS.",
     "outside_services": "The game has no analytics, crash-reporting, advertising or attribution services.",
     "requests": [
       {
@@ -215,20 +299,41 @@
       }
     ]
   },
+  "purchases": "When you buy Pro, your purchase goes straight from your device to Apple or Google. The game sends nothing about it.",
   "sdks": {
+    "for_players": [
+      "On Android, Google Play handles buying Pro.",
+      "On iPhone and iPad, Apple handles buying Pro."
+    ],
     "ruby_gems": {
-      "lota": "the game engine: draws, plays sound, reads input"
+      "lota": {
+        "note": "the game engine: draws, plays sound, reads input",
+        "plain": null,
+        "record_only": "It is the game's own engine, and reaches no outside service."
+      }
     },
     "android_dependencies": {
-      "files('libs/FledgeRuby.aar')": "runs the game's Ruby",
-      "com.android.billingclient:billing:9.1.0": "Google Play Billing, to buy Pro"
+      "files('libs/FledgeRuby.aar')": {
+        "note": "runs the game's Ruby",
+        "plain": null,
+        "record_only": "It is the game's own engine, and reaches no outside service."
+      },
+      "com.android.billingclient:billing:9.1.0": {
+        "note": "Google Play Billing, to buy Pro",
+        "plain": "On Android, Google Play handles buying Pro.",
+        "record_only": null
+      }
     },
-    "ios": "None beyond Apple's frameworks, StoreKit among them.",
+    "ios": {
+      "note": "None beyond Apple's frameworks, StoreKit among them.",
+      "plain": "On iPhone and iPad, Apple handles buying Pro.",
+      "record_only": null
+    },
     "outside_services": "The game has no analytics, crash-reporting, advertising or attribution services."
   },
   "permissions": {
     "android_manifest": {
-      "android.permission.INTERNET": "to reach the friend-group and themes server",
+      "android.permission.INTERNET": "to reach the game's server for friend groups",
       "android.permission.VIBRATE": "for haptic feedback"
     },
     "android_added_by_libraries": {
@@ -249,10 +354,10 @@
     }
   },
   "sensors": {
-    "accelerometer": "The accelerometer is read only while the game-over pile is on screen, to tilt the dots. It is neither stored nor sent."
+    "accelerometer": "The game reads your device's tilt only on the Game Over screen, to roll the dots. It never stores or sends that."
   },
   "sharing": {
-    "how": "Only when the player chooses \"Share my score\". On a phone the text goes to the system's own share sheet, and elsewhere to a preview with a copy button. The game does not send it anywhere itself.",
+    "how": "A result is shared only when you choose \"Share my score\". The game doesn't send it anywhere itself.",
     "example": "Dot Popper: 25 points, a new record!\n🟡 27 dots · ⚫ 1 mistake · ⏱ 38 seconds"
   },
   "deletion": {
@@ -361,11 +466,30 @@
     }
   },
   "declared_but_not_enforced": [
-    "What Apple and Google do with a purchase: it goes straight from the device to their store, in the iOS and Android hosts, and this game's server never sees it.",
-    "How the iOS and Android hosts, and the operating system's share sheet, behave beyond what their source shows: no test here runs them.",
-    "What Lota, LÖVE, SDL and Fledge's runtime do inside the app: audited by hand for their required-reason APIs, not by a test.",
-    "Permissions a library's own manifest adds when Android merges it in: ANDROID_MERGED records what billing 9.1.0's manifest says, and its transitive libraries are unchecked. Read the merged manifest of a release build.",
-    "What the server does with what it receives: its own privacy policy states that, and this repository cannot check it.",
-    "That a store's label definitions still fit these answers: Apple and Google change them, so re-read them when entering."
+    {
+      "note": "What Apple and Google do with a purchase: it goes straight from the device to their store, in the iOS and Android hosts.",
+      "plain": "Apple and Google handle your purchase under their own privacy terms.",
+      "record_only": null
+    },
+    {
+      "note": "How the iOS and Android hosts, and the operating system's share sheet, behave beyond what their source shows: no test here runs them.",
+      "plain": "When you share a result, your device's own sharing screen takes over. We can't see what happens next.",
+      "record_only": null
+    },
+    {
+      "note": "What Lota, LÖVE, SDL and Fledge's runtime do inside the app: audited by hand for their required-reason APIs, not by a test.",
+      "plain": null,
+      "record_only": "A note for developers about how the game is built."
+    },
+    {
+      "note": "Permissions a library's own manifest adds when Android merges it in: ANDROID_MERGED records what billing 9.1.0's manifest says, and its transitive libraries are unchecked. Read the merged manifest of a release build.",
+      "plain": null,
+      "record_only": "A release checklist item for developers."
+    },
+    {
+      "note": "That a store's label definitions still fit these answers: Apple and Google change them, so re-read them when entering.",
+      "plain": null,
+      "record_only": "A note for whoever fills in the store forms."
+    }
   ]
 }

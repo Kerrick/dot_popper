@@ -19,8 +19,14 @@ module DotPopper
       def self.current_json = "#{JSON.pretty_generate(new.to_h)}\n"
 
       def to_h
-        { game: "Dot Popper", game_version: version, on_device: on_device, network: network, sdks: sdks, permissions: permissions, sensors: { accelerometer: SENSOR },
-          sharing: sharing, deletion: deletion, store_labels: store_labels, declared_but_not_enforced: NOT_ENFORCED }
+        { game: "Dot Popper", game_version: version, on_device: on_device, network: network, purchases: PURCHASES, sdks: sdks, permissions: permissions,
+          sensors: { accelerometer: SENSOR }, sharing: sharing, deletion: deletion, store_labels: store_labels,
+          declared_but_not_enforced: NOT_ENFORCED.map { item(it) } }
+      end
+
+      # Every sentence meant for a player, for the test that keeps them plain.
+      def player_words
+        [*for_players, stays_on_the_device, PURCHASES, SENSOR, NO_OUTSIDE_SERVICES, sharing_how, *plain_sdks, *NOT_ENFORCED.filter_map(&:plain)]
       end
 
       private
@@ -28,13 +34,23 @@ module DotPopper
       def version = File.read(FLEDGE)[/^version:\s*"([^"]+)"/, 1]
 
       def on_device
-        { files: SAVE_FILES.map { { name: it.name, holds: it.holds, made_by: it.made_by } },
-          stays_on_the_device: "Everything in these files stays on the device, until the game is uninstalled or the player removes it." }
+        { for_players: for_players, files: SAVE_FILES.map { file(it) }, stays_on_the_device: stays_on_the_device }
+      end
+
+      def for_players = SAVE_FILES.filter_map(&:label).uniq
+
+      def file(kept)
+        { name: kept.name, label: kept.label, not_for_players: kept.aside&.to_h, holds: kept.holds, made_by: kept.made_by, also_sent: kept.sent.values }
+      end
+
+      def stays_on_the_device
+        sent = SAVE_FILES.flat_map { it.sent.values }.join(" and ")
+        "These stay on your device until you uninstall the game or remove them. If you use friend groups, #{sent} also go to the game's server."
       end
 
       def network
-        { server: Groups::Settings::SERVER_URL, every_request: "Sent to this server over HTTPS, and shows the server the device's IP address.",
-          ip_addresses: IP_ADDRESSES, outside_services: NO_OUTSIDE_SERVICES, requests: Groups::REQUESTS.values.map { request(it) } }
+        { server: Groups::Settings::SERVER_URL, every_request: "Sent to this server over HTTPS.",
+          outside_services: NO_OUTSIDE_SERVICES, requests: Groups::REQUESTS.values.map { request(it) } }
       end
 
       def request(req)
@@ -45,9 +61,13 @@ module DotPopper
       def fields(hash) = hash.transform_values(&:what)
 
       def sdks
-        { ruby_gems: SHIPPED_GEMS, android_dependencies: ANDROID_DEPENDENCIES, ios: "None beyond Apple's frameworks, StoreKit among them.",
-          outside_services: NO_OUTSIDE_SERVICES }
+        { for_players: plain_sdks, ruby_gems: SHIPPED_GEMS.transform_values { item(it) }, android_dependencies: ANDROID_DEPENDENCIES.transform_values { item(it) },
+          ios: item(IOS_FRAMEWORKS), outside_services: NO_OUTSIDE_SERVICES }
       end
+
+      def plain_sdks = [*ANDROID_DEPENDENCIES.values, IOS_FRAMEWORKS].filter_map(&:plain)
+
+      def item(entry) = { note: entry.note, plain: entry.plain, record_only: entry.record_only }
 
       def permissions
         { android_manifest: ANDROID_PERMISSIONS, android_added_by_libraries: ANDROID_MERGED, ios_usage_strings: IOS_USAGE_STRINGS,
@@ -56,9 +76,10 @@ module DotPopper
 
       def sharing
         stats = GameStats.start.with(pops: 27, mistakes: 1, duration: 38.2)
-        { how: "Only when the player chooses \"#{Presentation::Style::WORDS.share}\". On a phone the text goes to the system's own share sheet, and elsewhere to a preview with a copy button. The game does not send it anywhere itself.",
-          example: Presentation::Style::WORDS.share_text(25, stats, score_record: 25, new_score_record: true) }
+        { how: sharing_how, example: Presentation::Style::WORDS.share_text(25, stats, score_record: 25, new_score_record: true) }
       end
+
+      def sharing_how = "A result is shared only when you choose \"#{Presentation::Style::WORDS.share}\". The game doesn't send it anywhere itself."
 
       def deletion
         words = Presentation::GroupWords

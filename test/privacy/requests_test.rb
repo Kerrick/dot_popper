@@ -94,6 +94,19 @@ class PrivacyRequestsTest < Minitest::Test
     assert_empty undeclared.map(&:first), "sent, but declared nowhere"
   end
 
+  # group.txt's +sent+: its token and unsent score really go out.
+  def test_the_saved_token_and_unsent_score_leave_the_device
+    store = DotPopper::ScoreRecord::Memory.new("tok\n7\n1\n")
+    @session = Groups::Session.new(store:, worker: Instant.new(Groups::Link.new("http://127.0.0.1:#{@server.addr[1]}")))
+    @session.refresh
+    pump
+
+    game = @heard.find { |head, _| head.start_with?("POST /games") }
+
+    assert_match(/authorization: Bearer tok/i, game.first)
+    assert_equal({ "score" => 7 }, JSON.parse(game.last))
+  end
+
   def test_a_job_can_only_be_made_from_a_declaration
     assert_raises(KeyError) { Groups::Session::Job.of(:brand_new) }
     assert_raises(ArgumentError) { Groups::Session::Job.of(:join, body: { other: 1 }) }

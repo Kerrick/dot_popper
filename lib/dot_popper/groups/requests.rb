@@ -11,8 +11,8 @@ module DotPopper
     # fields, whether it sends the player's +token+, and when it +happens+.
     # Session's jobs are made from these, so a job cannot go out undeclared
     # and doc/privacy.json is generated from what the game really does.
-    class Request < Data.define(:kind, :verb, :path, :query, :body, :token, :happens)
-      def initialize(kind:, verb:, path:, happens:, query: {}, body: {}, token: true) = super
+    class Request < Data.define(:kind, :verb, :path, :query, :body, :token, :happens, :feature)
+      def initialize(kind:, verb:, path:, happens:, query: {}, body: {}, token: true, feature: "friend groups") = super
 
       def path_for(group_id) = path.sub(":id", group_id.to_s)
 
@@ -42,7 +42,7 @@ module DotPopper
       Request.new(kind: :cabinet, verb: :post, path: "/games",
                   body: { score: Field.new(what: "the score of a game that counts: played by a group member, with dots sized to the screen, not the tutorial's", label: :gameplay_content) },
                   happens: "After a game that counts, or at the next contact if it could not be sent then, while the player is in a group."),
-      Request.new(kind: :themes, verb: :get, path: "/themes", token: false,
+      Request.new(kind: :themes, verb: :get, path: "/themes", token: false, feature: "themes",
                   query: { started_on: Field.new(what: "the date this device first played", label: :other_usage) },
                   happens: "When the game is online, to learn which themes are available; for every player, Free too, with no token.")
     ].to_h { [it.kind, it] }.freeze
@@ -51,5 +51,8 @@ module DotPopper
     # test/privacy/requests_test.rb fails as soon as one is built, so it
     # cannot go out unplayed.
     UNBUILT_REQUESTS = %i[themes].freeze
+
+    # What the game reaches its server for, in this build.
+    def self.features_built = REQUESTS.values.reject { UNBUILT_REQUESTS.include?(it.kind) }.map(&:feature).uniq
   end
 end

@@ -1486,6 +1486,8 @@ The public privacy policy and the store labels must be accurate, and nobody can 
 - **`doc/publishing.md` no longer keeps a copy.** Its privacy facts and label answers moved to the generated document, IP addresses included (the server's proxy, request log and rate-limit notes). Apple's list has no IP category, so the document says that and leaves the choice of Device ID to the maintainer; retention is left to the server's own policy, since the old "up to a day" was the server's fact and its policy says a note can last longer.
 - **The themes check is declared before it is built:** `UNBUILT_REQUESTS` keeps it out of the wire test, `in_this_build` says so in the document, and a test fails once `started_on` appears in the game's code, so it can't ship unplayed.
 
+- **Written for players, too.** Each file carries a `label` or an `Aside` with its reason, each SDK and limit plain words or a `record_only` reason, and a test keeps what players read short and free of developer terms (Zinsser; Williams; Pinker's curse of knowledge). The document says nothing of the server's own behaviour, except the IP-address answers on the store forms, which the maintainer asked for.
+
 **To reverse:** delete `lib/dot_popper/privacy`, `test/privacy` and `doc/privacy.json`, have `Session` build its jobs inline again, and drop the check in `SaveFile`.
 
 ## The tutorial is short again, and a full row is left as a surprise

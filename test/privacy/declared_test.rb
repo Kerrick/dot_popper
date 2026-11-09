@@ -121,6 +121,55 @@ class PrivacyDeclaredTest < Minitest::Test
     assert_equal [words.heading, words.delete, words.hold_to_delete], deletion.values_at(:screen, :control, :prompt)
   end
 
+  def test_every_file_is_labelled_for_players_or_set_aside_with_a_reason
+    assert_raises(ArgumentError) { Privacy::KeptFile.new(name: "x.txt", holds: "x") }
+    assert_raises(ArgumentError) { Privacy::KeptFile.new(name: "x.txt", holds: "x", label: "X", aside: Privacy::Aside.new(kind: :diagnostics, reason: "y")) }
+    assert_raises(ArgumentError) { Privacy::Aside.new(kind: :because, reason: "y") }
+    Privacy::SAVE_FILES.each { assert it.label || it.aside.reason, it.name }
+  end
+
+  def test_what_a_file_also_sends_is_really_sent
+    sent = Privacy::SAVE_FILES.flat_map { it.sent.keys }
+    requests = DotPopper::Groups::REQUESTS.values
+
+    assert_equal %i[score token], sent.sort
+    assert(requests.any?(&:token))
+    assert(requests.any? { it.body.key?(:score) })
+  end
+
+  def test_stays_on_the_device_excepts_what_leaves_it
+    stays = Privacy::Document.new.to_h.dig(:on_device, :stays_on_the_device)
+
+    Privacy::SAVE_FILES.flat_map { it.sent.values }.each { assert_includes stays, it }
+  end
+
+  def test_each_item_is_plain_or_record_only
+    assert_raises(ArgumentError) { Privacy::Item.new(note: "x") }
+    assert_raises(ArgumentError) { Privacy::Item.new(note: "x", plain: "y", record_only: "z") }
+  end
+
+  def test_what_a_player_reads_is_short_and_plain
+    jargon = /renderer|vulkan|lota|l[oö]ve\b|\bsdl\b|fledge|\bsdks?\b|\bapi\b|\btoken\b|manifest|\.txt|\.csv|\bhttps?\b/i
+
+    Privacy::Document.new.player_words.each do |sentence|
+      refute_match jargon, sentence
+      sentence.split(/(?<=[.!?])\s+/).each { assert_operator it.split.size, :<=, 25, it }
+    end
+  end
+
+  def test_nothing_sent_concerns_a_purchase
+    words = DotPopper::Groups::REQUESTS.values.flat_map { [it.path, *it.body.keys, *it.query.keys] }.join(" ")
+
+    refute_match(/purchase|receipt|entitlement|\bpro\b/i, words)
+  end
+
+  def test_the_network_permission_says_what_this_build_reaches
+    purpose = Privacy::ANDROID_PERMISSIONS.fetch("android.permission.INTERNET")
+    groups = DotPopper::Groups
+
+    groups::REQUESTS.each_value { |request| assert_equal groups.features_built.include?(request.feature), purpose.include?(request.feature), request.kind }
+  end
+
   def test_the_document_is_current
     assert_equal Privacy::Document.current_json, File.read(Privacy::Document::PATH), Privacy::Document::STALE
   end
