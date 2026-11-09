@@ -46,7 +46,7 @@ class AutopilotTest < Minitest::Test
     assert_match(/\ADot Popper: \d+ points?/, copies[1])
   end
 
-  def test_on_its_second_title_it_looks_at_the_records_and_goes_back
+  def test_on_its_second_title_it_looks_at_the_stats_and_goes_back
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
     show = Show.new(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R)
     pilot = Autopilot.new(Look::AUTOPILOT, random: Random.new(5))
@@ -56,14 +56,14 @@ class AutopilotTest < Minitest::Test
     12_000.times do
       x, y = pilot.update(1 / 60.0, cabinet, show)
       show.tap(x, y) if x
-      opened ||= show.records?
+      opened ||= show.stats?
       cabinet.update(1 / 60.0)
       show.update(1 / 60.0)
       break if games >= 2
     end
 
     assert opened
-    refute show.records?
+    refute show.stats?
     assert_equal 2, games
   end
 

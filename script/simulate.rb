@@ -12,9 +12,9 @@
 # waits, and with a small chance per attempt it taps anyway and hits a
 # popped dot on top. Simulated at 30 updates a second.
 #
-# Run it as "bundle exec ruby script/simulate.rb bonus [games [streaks
+# Run it as "bundle exec ruby script/simulate.rb bonus [games [rows
 # [points [seconds]]]]", each list comma-separated, to compare
-# candidate numbers for the streak's bonus dot (Rules::Bonus) on three
+# candidate numbers for the row's bonus dot (Rules::Bonus) on three
 # devices instead: score, game length, how often a game is endless, how
 # many bonus dots a game earns, and how many of the day's goals
 # (DailyGoal) a game meets, for each candidate and without a bonus dot.
@@ -218,18 +218,18 @@ module Simulation
     100.0 * results.sum { it.count(&) } / results.sum { it.spawns.size }
   end
 
-  # The streak lengths, bonus points and bonus seconds to compare.
-  # With no lists given: streaks of 6 to 12, 2 or 4 points, 2, 4 or 6 seconds.
-  def self.candidates(streaks, points, seconds)
-    [nil, *streaks.product(points, seconds).map { |args| DotPopper::Rules::Bonus.new(*args) }]
+  # The row lengths, bonus points and bonus seconds to compare.
+  # With no lists given: rows of 6 to 12, 2 or 4 points, 2, 4 or 6 seconds.
+  def self.candidates(dots_in_a_rows, points, seconds)
+    [nil, *dots_in_a_rows.product(points, seconds).map { |args| DotPopper::Rules::Bonus.new(*args) }]
   end
 
   def self.numbers(text, default, convert) = text ? text.split(",").map { convert.call(it) } : default
 
   BONUS_DEVICES = DEVICES.values_at(0, 3, 4).freeze
 
-  def self.compare_bonuses(games, streaks: nil, points: nil, seconds: nil)
-    list = candidates(numbers(streaks, [6, 8, 10, 12], :to_i.to_proc), numbers(points, [2, 4], :to_i.to_proc),
+  def self.compare_bonuses(games, dots_in_a_rows: nil, points: nil, seconds: nil)
+    list = candidates(numbers(dots_in_a_rows, [6, 8, 10, 12], :to_i.to_proc), numbers(points, [2, 4], :to_i.to_proc),
                       numbers(seconds, [2.0, 4.0, 6.0], :to_f.to_proc))
     jobs = BONUS_DEVICES.flat_map do |device|
       list.map { Job.new(device:, sizing: DotPopper::DotSizing::SIZED_TO_SCREEN, spawn_tries: DotPopper::Rules::SPAWN_TRIES, bonus: it) }
@@ -247,7 +247,7 @@ module Simulation
     scores = results.map(&:score).sort
     times = results.map(&:seconds).sort
     goals = DotPopper::DailyGoal::LIST.map { |goal| format("%-12s", format("%.0f%%", 100.0 * results.count { goal.met?(it.stats) } / games)) }
-    name = bonus ? "#{bonus.streak}/#{bonus.points}/#{bonus.seconds.to_i}" : "none"
+    name = bonus ? "#{bonus.dots_in_a_row}/#{bonus.points}/#{bonus.seconds.to_i}" : "none"
     puts format("%-18s %6.1f %5d %6.1f %6.1f %6.0f%% %6.1f %6.2f  %s", name, scores.sum.fdiv(games), scores[(games * 0.9).floor],
                 times.sum / games, times[(games * 0.9).floor], 100.0 * results.count(&:endless?) / games,
                 results.sum(&:penalties).fdiv(games), results.sum { it.stats.bonuses }.fdiv(games), goals.join)
@@ -255,7 +255,7 @@ module Simulation
 end
 
 if ARGV.first == "bonus"
-  Simulation.compare_bonuses(Integer(ARGV.fetch(1, 200)), streaks: ARGV[2], points: ARGV[3], seconds: ARGV[4])
+  Simulation.compare_bonuses(Integer(ARGV.fetch(1, 200)), dots_in_a_rows: ARGV[2], points: ARGV[3], seconds: ARGV[4])
 else
   Simulation.run(Integer(ARGV.fetch(0, 200)))
 end

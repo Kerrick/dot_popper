@@ -230,7 +230,7 @@ class TutorialTest < Minitest::Test
     play_for(SCRIPT.linger)
     assert_equal :row, @tutorial.beat
     assert_equal [true, true], @tutorial.dots.map(&:popped?), "the last pop has its popped look, so nothing bright waits"
-    through_the_streak
+    through_the_dots_in_a_row
     play_until { @tutorial.beat == :ending }
     assert_equal [Tutorial::BRIGHT, Tutorial::NEXT, Tutorial::LAST], @tutorial.dots.map(&:id)
     assert_equal [true, true, false], @tutorial.dots.map(&:popped?), "as it flows, a bright dot goes in under them all"
@@ -259,40 +259,40 @@ class TutorialTest < Minitest::Test
     assert_equal %w[−1 −2 −2 −2 −2 −2 −1], @tutorial.flights.map(&:text), "what was left, then nothing"
     play_until { @tutorial.beat == :aim_next }
     tap_on(next_dot)
-    through_the_streak
+    through_the_dots_in_a_row
     play_until(within: 900) { @tutorial.over? }
     assert_equal [1, 1], [@tutorial.score, @tutorial.seconds]
   end
 
-  def test_the_streak_row_fills_as_the_player_pops_then_the_star_dot_comes
-    to_the_streak
-    streak = DotPopper::Rules::BONUS.streak
-    practice = SCRIPT.streak.practice
+  def test_the_dots_in_a_row_row_fills_as_the_player_pops_then_the_star_dot_comes
+    to_the_dots_in_a_row
+    dots_in_a_row = DotPopper::Rules::BONUS.dots_in_a_row
+    practice = SCRIPT.dots_in_a_row.practice
     play_until { @tutorial.beat == :practice }
-    assert_equal streak - practice, @tutorial.hud.streak, "it fills most of the way by itself"
-    assert_equal streak, @tutorial.hud.size, "and is as long as the rule"
-    assert_equal "#{streak} in a row", @tutorial.streak_label
+    assert_equal dots_in_a_row - practice, @tutorial.hud.dots_in_a_row, "it fills most of the way by itself"
+    assert_equal dots_in_a_row, @tutorial.hud.size, "and is as long as the rule"
+    assert_equal "#{dots_in_a_row} in a row", @tutorial.dots_in_a_row_label
 
     practice.times do |pop|
       target = @tutorial.dots.find { it.id == Tutorial::PRACTICE - pop }
       assert target.fresh?, "each practice dot is there to pop"
-      before = @tutorial.hud.streak
+      before = @tutorial.hud.dots_in_a_row
       tap_on(target)
       assert target_popped?(target.id), "and pops at once"
       assert_equal "+1", @tutorial.flights.last.text
-      play_for(SCRIPT.streak.flight + STEP)
-      assert_equal before + 1, @tutorial.hud.streak, "its point lights the next dot in the row"
+      play_for(SCRIPT.dots_in_a_row.flight + STEP)
+      assert_equal before + 1, @tutorial.hud.dots_in_a_row, "its point lights the next dot in the row"
     end
 
     assert @tutorial.hud.ready, "the full row turns mint"
-    assert_nil @tutorial.streak_label, "the star needs no label"
+    assert_nil @tutorial.dots_in_a_row_label, "the star needs no label"
     play_until { @tutorial.beat == :bonus }
     assert star.bonus?
     assert_includes @sounds.names, :bonus
   end
 
   def test_the_star_dots_reward_shows_and_never_reaches_the_games_numbers
-    to_the_streak
+    to_the_dots_in_a_row
     play_until { @tutorial.beat == :practice }
     pop_the_practice_dots
     play_until { @tutorial.beat == :bonus }
@@ -303,22 +303,22 @@ class TutorialTest < Minitest::Test
     assert_includes @sounds.names, :bonus_pop
     assert_equal %w[+4 +4s], @effects.floaters.map(&:text).last(2), "it pays what it pays in play"
     assert_equal kept, shown, "the reward stays out of the HUD's numbers"
-    assert_equal 0, @tutorial.hud.streak, "and the row starts over"
+    assert_equal 0, @tutorial.hud.dots_in_a_row, "and the row starts over"
     play_until { @tutorial.beat == :ending }
     assert_equal kept, shown
     assert_empty @tutorial.dots.select { it.id.negative? }, "its dots are put away"
     assert_equal [Tutorial::BRIGHT, Tutorial::NEXT, Tutorial::LAST], @tutorial.dots.map(&:id)
   end
 
-  def test_a_tap_on_a_popped_dot_in_the_streak_beat_costs_nothing
-    to_the_streak
+  def test_a_tap_on_a_popped_dot_in_the_dots_in_a_row_beat_costs_nothing
+    to_the_dots_in_a_row
     play_until { @tutorial.beat == :practice }
     kept = shown
-    lit = @tutorial.hud.streak
+    lit = @tutorial.hud.dots_in_a_row
     tap_on(bright)
 
     assert_equal kept, shown
-    assert_equal lit, @tutorial.hud.streak
+    assert_equal lit, @tutorial.hud.dots_in_a_row
     assert_includes @sounds.names, :bonk
   end
 
@@ -384,7 +384,7 @@ class TutorialTest < Minitest::Test
   def star = @tutorial.dots.find { it.id == Tutorial::BONUS }
   def target_popped?(id) = @tutorial.dots.find { it.id == id }.popped?
 
-  def to_the_streak
+  def to_the_dots_in_a_row
     to_the_peek
     play_until { @tutorial.beat == :aim_next }
     tap_on(next_dot)
@@ -392,12 +392,12 @@ class TutorialTest < Minitest::Test
   end
 
   def pop_the_practice_dots
-    SCRIPT.streak.practice.times do |pop|
+    SCRIPT.dots_in_a_row.practice.times do |pop|
       tap_on(@tutorial.dots.find { it.id == Tutorial::PRACTICE - pop })
     end
   end
 
-  def through_the_streak
+  def through_the_dots_in_a_row
     play_until(within: 900) { @tutorial.beat == :practice }
     pop_the_practice_dots
     play_until(within: 900) { @tutorial.beat == :bonus }

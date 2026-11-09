@@ -4,7 +4,7 @@ module DotPopper
   module Presentation
     # The words for the achievements (Achievement): each one's name, and its mark, the
     # short figure that says what it asks, which reads the same in any
-    # language, the Records screen's heading over them, and Game Over's
+    # language, the Stats screen's heading over them, and Game Over's
     # line for the ones a game earned.
     module AchievementWords
       NAMES = {

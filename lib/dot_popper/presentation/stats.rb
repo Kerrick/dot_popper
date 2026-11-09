@@ -2,17 +2,17 @@
 
 module DotPopper
   module Presentation
-    # One line of the Records screen: what it counts, and how many. A
+    # One line of the Stats screen: what it counts, and how many. A
     # achievement's line (AchievementWords) also has a +mark+ before its label, :earned,
     # :open, or :locked, for one the paid version has not shown yet.
-    class RecordRow < Data.define(:label, :value, :mark)
+    class StatsRow < Data.define(:label, :value, :mark)
       def initialize(label:, value:, mark: nil) = super
     end
 
     # A titled group of RecordRows.
-    class RecordSection < Data.define(:title, :rows); end
+    class StatsSection < Data.define(:title, :rows); end
 
-    # What the Records screen says, worked out from LifetimeStats and the
+    # What the Stats screen says, worked out from Stats and the
     # best score: the player's bests, their totals, the daily goal's
     # streaks (+streak+ is the current one, as it stands today), and the
     # last few scores for the chart. The bests, and +best+, are those of
@@ -23,7 +23,7 @@ module DotPopper
     # toward the bests shown; the chart dims the others, and +chart_note+
     # says so whenever there are any. +achievements+ lists the achievements, or is nil
     # when the sheet is built with no Achievements to list.
-    class RecordsSheet < Data.define(:bests, :totals, :goal, :scores, :empty, :notes, :mine, :chart_note, :achievements)
+    class StatsSheet < Data.define(:bests, :totals, :goal, :scores, :empty, :notes, :mine, :chart_note, :achievements)
       # The achievements as a section, each with its mark filled if earned,
       # which a free player is shown too (what was earned while free is
       # kept, Achievements). With the paid version the rest are open, and
@@ -36,33 +36,33 @@ module DotPopper
           mark = if achievements.earned?(id) then :earned
                  else paid ? :open : :locked
                  end
-          RecordRow.new(label: AchievementWords.name(id), value: AchievementWords.mark(id), mark:)
+          StatsRow.new(label: AchievementWords.name(id), value: AchievementWords.mark(id), mark:)
         end
         heading = paid ? AchievementWords.heading(achievements.count) : AchievementWords::LOCKED_HEADING
-        RecordSection.new(title: heading, rows:)
+        StatsSection.new(title: heading, rows:)
       end
 
       def self.build(stats, best:, words:, streak: 0, size_class: SizeClass::MEDIUM, field: nil,
                      sizing: DotSizing::STANDARD, achievements: nil, paid: false)
         labels = words.labels
         mine = stats.bests_in(size_class)
-        bests = RecordSection.new(title: words.bests_heading(sizing), rows: [
-          RecordRow.new(label: labels[:best_score], value: best.to_s),
-          RecordRow.new(label: labels[:longest_game], value: Words.count(mine.longest_game.round, "second")),
-          RecordRow.new(label: labels[:longest_run], value: mine.longest_run.to_s),
-          RecordRow.new(label: labels[:fastest_pop], value: words.seconds_or_none(mine.fastest_pop)),
-          RecordRow.new(label: labels[:longest_wait], value: words.seconds_or_none(mine.longest_wait))
+        bests = StatsSection.new(title: words.bests_heading(sizing), rows: [
+          StatsRow.new(label: labels[:best_score], value: best.to_s),
+          StatsRow.new(label: labels[:longest_game], value: Words.count(mine.longest_game.round, "second")),
+          StatsRow.new(label: labels[:most_dots_in_a_row], value: mine.most_dots_in_a_row.to_s),
+          StatsRow.new(label: labels[:shortest_time_to_pop], value: words.seconds_or_none(mine.shortest_time_to_pop)),
+          StatsRow.new(label: labels[:longest_time_to_pop], value: words.seconds_or_none(mine.longest_time_to_pop))
         ])
-        totals = RecordSection.new(title: labels[:totals], rows: [
-          RecordRow.new(label: labels[:games], value: stats.games.to_s),
-          RecordRow.new(label: labels[:pops], value: stats.pops.to_s),
-          RecordRow.new(label: labels[:slips], value: stats.slips.to_s),
-          RecordRow.new(label: labels[:seconds], value: Words.duration(stats.seconds)),
-          RecordRow.new(label: labels[:days], value: stats.days.to_s)
+        totals = StatsSection.new(title: labels[:totals], rows: [
+          StatsRow.new(label: labels[:games], value: stats.games.to_s),
+          StatsRow.new(label: labels[:pops], value: stats.pops.to_s),
+          StatsRow.new(label: labels[:mistakes], value: stats.mistakes.to_s),
+          StatsRow.new(label: labels[:seconds], value: Words.duration(stats.seconds)),
+          StatsRow.new(label: labels[:days], value: stats.days.to_s)
         ])
-        goal = RecordSection.new(title: labels[:goal], rows: [
-          RecordRow.new(label: labels[:streak], value: Words.count(streak, "day")),
-          RecordRow.new(label: labels[:longest_streak], value: Words.count(stats.streak.longest, "day"))
+        goal = StatsSection.new(title: labels[:goal], rows: [
+          StatsRow.new(label: labels[:streak], value: Words.count(streak, "day")),
+          StatsRow.new(label: labels[:longest_streak], value: Words.count(stats.streak.longest, "day"))
         ])
         mine = stats.recent_classes.map { it == size_class }
         new(bests:, totals:, goal:, scores: stats.recent, empty: stats.games.zero?,
@@ -86,7 +86,7 @@ module DotPopper
     # all); the others are dim, and never the best, though they keep
     # their true height, so every bar is drawn to one scale.
     class ScoreBars < Data.define(:scores, :slots, :mine)
-      def initialize(scores:, slots: LifetimeStats::RECENT, mine: [true] * scores.size) = super
+      def initialize(scores:, slots: Stats::RECENT, mine: [true] * scores.size) = super
 
       def bars(rect, pixels)
         highest = scores.max || 0
@@ -107,20 +107,20 @@ module DotPopper
     # The line under the score chart that says what its dim bars are.
     class ChartNote < Data.define(:text); end
 
-    # Where a part of the Records screen goes: +item+ is a section's title
+    # Where a part of the Stats screen goes: +item+ is a section's title
     # or the chart's (a String), a RecordRow, :chart, or a ChartNote. A text line is
     # centred on +y+; the chart's box starts at +y+ and is +height+ tall.
     class Placed < Data.define(:item, :x, :y, :width, :height)
       def right = x + width
     end
 
-    # Sizes for the Records screen, in graphics units at a scale of 1:
+    # Sizes for the Stats screen, in graphics units at a scale of 1:
     # the heading's and the rows' type, a row's height as a multiple of
     # its type, the chart's height in rows, the gap between two columns,
     # a column's widest, and how dark the title's dots are behind it.
-    class RecordsLook < Data.define(:heading, :text, :line, :chart, :gap, :column, :veil); end
+    class StatsLook < Data.define(:heading, :text, :line, :chart, :gap, :column, :veil); end
 
-    # The Records screen laid out in the safe area: the heading at the
+    # The Stats screen laid out in the safe area: the heading at the
     # top, the prompt to go back at the bottom, over the row of "Clear my
     # records…" (Layout#clear_records_button), and between them the
     # chart and the sections, in centred columns no wider than +widest+,
@@ -131,7 +131,7 @@ module DotPopper
     # below a readable size, to fit a short screen. Under the heading go
     # the sheet's notes, in +note_lines+ lines once the shell has wrapped
     # them to fit across.
-    class RecordsLayout < Data.define(:layout, :sheet, :look, :note_lines, :widest, :looks, :offer)
+    class StatsLayout < Data.define(:layout, :sheet, :look, :note_lines, :widest, :looks, :offer)
       SMALLEST_TEXT = 11
 
       def initialize(layout:, sheet:, look:, note_lines: sheet.notes.size, widest: nil, looks: false, offer: false) = super
@@ -144,7 +144,7 @@ module DotPopper
       def note_y(i) = heading_y + (heading_size * 0.75) + (note_size * 1.3 * (i + 0.5))
       def prompt_size = layout.scaled(Look::TYPE.prompt)
       # The prompt to go back sits over the row of "Clear my records…".
-      def prompt_y = layout.records_floor(looks:, offer:) - layout.margin - (prompt_size * 0.6)
+      def prompt_y = layout.stats_floor(looks:, offer:) - layout.margin - (prompt_size * 0.6)
 
       # The rows' type size, and the height of a row.
       def text_size = [(row / look.line).floor, SMALLEST_TEXT].max

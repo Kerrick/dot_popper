@@ -41,10 +41,10 @@ class LayoutTest < Minitest::Test
     assert_equal 12, rect.inset(2).x
   end
 
-  def test_your_records_sits_across_from_the_mute_button_in_the_safe_area
+  def test_your_stats_sits_across_from_the_mute_button_in_the_safe_area
     safe = Rect.new(x: 40, y: 20, width: 320, height: 800)
     narrow = Layout.new(width: 400, height: 850, safe:, look: Look::LAYOUT)
-    button = narrow.records_button
+    button = narrow.stats_button
 
     assert_operator button.x, :>=, safe.x
     assert_operator button.bottom, :<=, safe.bottom
@@ -67,7 +67,7 @@ class LayoutTest < Minitest::Test
       [control.label, control.frame].each do |part|
         assert_operator part.x, :>=, 0, "#{width}x#{height}"
         assert_operator part.right, :<=, width, "#{width}x#{height}"
-        [plan.records_button, plan.mute_button].each { assert apart?(part, it), "#{width}x#{height}" }
+        [plan.stats_button, plan.mute_button].each { assert apart?(part, it), "#{width}x#{height}" }
       end
       assert apart?(control.label, control.frame), "#{width}x#{height}"
     end
@@ -93,10 +93,10 @@ class LayoutTest < Minitest::Test
 
       assert_operator button.height, :>=, 44, name
       assert_operator button.width, :>=, button.height * Layout::HOW_TO_PLAY_LEAST, name
-      assert_operator plan.records_button.width, :>=, button.height * Layout::HOW_TO_PLAY_LEAST, name
+      assert_operator plan.stats_button.width, :>=, button.height * Layout::HOW_TO_PLAY_LEAST, name
       assert_operator button.x, :>=, 0, name
       assert_operator button.right, :<=, width, name
-      [plan.records_button, plan.mute_button, plan.sizing_control.label, plan.sizing_control.frame].each do
+      [plan.stats_button, plan.mute_button, plan.sizing_control.label, plan.sizing_control.frame].each do
         assert apart?(button, it), "#{name}: #{button.to_h} overlaps #{it.to_h}"
       end
     end
@@ -129,7 +129,7 @@ class LayoutTest < Minitest::Test
       assert_operator buttons.fullscreen.right, :<, buttons.quit.x, name
       assert_operator buttons.quit.right, :<, plan.mute_button.x, name
       control = plan.sizing_control(window: buttons)
-      [how, plan.mute_button, plan.records_button, control.label, control.frame].each do |other|
+      [how, plan.mute_button, plan.stats_button, control.label, control.frame].each do |other|
         buttons.rects.each { assert apart?(it, other), "#{name}: #{it.to_h} overlaps #{other.to_h}" }
       end
     end

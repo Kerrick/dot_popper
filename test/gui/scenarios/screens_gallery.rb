@@ -46,12 +46,12 @@ module DotPopperGui
       fit(width, height, phone)
       shoot("title")
       group_door
-      show.open_records
+      show.open_stats
       shoot("records")
       show.open_looks
       shoot("looks")
       show.close_looks
-      show.close_records
+      show.close_stats
       game_over
     end
 

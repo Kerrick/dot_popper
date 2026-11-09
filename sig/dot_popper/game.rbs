@@ -14,10 +14,10 @@ module DotPopper
     # Every dot spawned this game, oldest first, with how it was drawn.
     attr_reader spawns: Array[Spawn]
 
-    # Pops in a row toward the next bonus dot.
-    attr_reader streak: Integer
+    # Dots in a row toward the next bonus dot.
+    attr_reader dots_in_a_row: Integer
 
-    # The streak's reward, or nil when the game has none.
+    # The dots_in_a_row's reward, or nil when the game has none.
     attr_reader bonus: Rules::Bonus?
 
     @random: Random

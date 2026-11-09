@@ -28,7 +28,7 @@ module DotPopperGui
       wait_for_the_bright_dot
       wait_for("the last pop's numbers", within: 120) { shown == [1, 8] }
       check_equal([true, false], tutorial.dots.map(&:popped?), "it bursts still bright as its numbers land")
-      the_streak
+      the_dots_in_a_row
       now_it_runs
       check_equal("seen", File.read(saved("tutorial.txt")).strip, "tutorial.txt remembers it was seen")
       run_out_the_clock
@@ -142,19 +142,19 @@ module DotPopperGui
       check(tutorial.beat == :warn || tutorial.beat == :slide, "the beat goes on")
     end
 
-    # The streak beat, on dots of its own: the row fills as the player
+    # The row beat, on dots of its own: the row fills as the player
     # pops, the star dot comes, its reward shows, and nothing of it reaches
     # the numbers the game goes on with.
-    def the_streak
+    def the_dots_in_a_row
       wait_for("the streak's row", within: 300) { tutorial.beat == :practice }
       keep_screenshot(name("5-row"))
-      before = tutorial.hud.streak
+      before = tutorial.hud.dots_in_a_row
       T::PRACTICE.downto(T::PRACTICE - 1).each do |id|
         target = dot(id)
         how.call(target.x, target.y)
         wait(look.flight + 0.05)
       end
-      check_equal(before + 2, tutorial.hud.streak, "the row fills as the player pops")
+      check_equal(before + 2, tutorial.hud.dots_in_a_row, "the row fills as the player pops")
       keep_screenshot(name("5-fills"))
       last = dot(T::PRACTICE - 2)
       how.call(last.x, last.y)
@@ -174,7 +174,7 @@ module DotPopperGui
       check(tutorial.nil? || tutorial.dots.none? { it.id.negative? }, "its dots are put away")
     end
 
-    def look = DotPopper::Presentation::Look::TUTORIAL.streak
+    def look = DotPopper::Presentation::Look::TUTORIAL.dots_in_a_row
 
     # The last pop spawns a bright dot under the two popped ones, and the
     # game goes on from there: the same dots, the point and the 8 seconds

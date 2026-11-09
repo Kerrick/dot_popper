@@ -13,7 +13,7 @@ module DotPopper
   # games-<when>.csv and made by +archive+, and a new log starts under
   # the current header.
   class PlaytestLog
-    COLUMNS = %w[time seed score duration pops slips softened mean_wait longest_wait goal goal_met].freeze
+    COLUMNS = %w[time seed score duration pops mistakes softened mean_time_to_pop longest_time_to_pop goal goal_met].freeze
 
     HEADER = COLUMNS.join(",")
 
@@ -35,8 +35,8 @@ module DotPopper
 
     def row(ended, stats)
       goal = DailyGoal.for(@today.call)
-      [@clock.call.iso8601, ended.seed, ended.score, seconds(stats.duration), stats.pops, stats.slips, stats.softened,
-       seconds(stats.mean_wait), seconds(stats.longest_wait), goal, goal.met?(stats)].join(",")
+      [@clock.call.iso8601, ended.seed, ended.score, seconds(stats.duration), stats.pops, stats.mistakes, stats.softened,
+       seconds(stats.mean_time_to_pop), seconds(stats.longest_time_to_pop), goal, goal.met?(stats)].join(",")
     end
 
     def seconds(value) = format("%.2f", value)

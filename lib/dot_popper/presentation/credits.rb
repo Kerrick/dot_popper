@@ -211,7 +211,7 @@ module DotPopper
     end
 
     # The Credits screen laid out in the safe area: the heading at the
-    # top as the Records screen has it, Back along the bottom, and between
+    # top as the Stats screen has it, Back along the bottom, and between
     # them the window the text scrolls in, as wide as +look+'s column.
     # +wanted+ is how wide the text would like to be: the widest line of a
     # license to show as written, if wider than the look's column.
@@ -219,7 +219,7 @@ module DotPopper
       def initialize(layout:, look:, wanted: 0.0) = super
       def heading_size = layout.scaled(Look::RECORDS.heading)
       def heading_y = layout.top + (heading_size * 0.6)
-      def text_size = [layout.scaled(look.text), RecordsLayout::SMALLEST_TEXT].max
+      def text_size = [layout.scaled(look.text), StatsLayout::SMALLEST_TEXT].max
       def line = text_size * look.line
       def room = [layout.safe.width - (layout.margin * 2), [layout.scaled(look.column), wanted.ceil].max].min
 

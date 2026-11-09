@@ -58,7 +58,7 @@ class WindowButtonsTest < Minitest::Test
     assert @show.continue_reach, "Continue goes back to the title"
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     @show.primary
-    @show.open_records
+    @show.open_stats
     refute_window_buttons "the Records screen"
     assert @show.back_reach, "Back goes back to the title"
   end

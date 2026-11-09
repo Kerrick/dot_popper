@@ -87,7 +87,7 @@ module DotPopper
         copied: "Copied! Paste it anywhere.",
         copy: ByInput.new(touch: "Copy", mouse: "Copy", gamepad: "Copy (A)"),
         close: ByInput.new(touch: "Close", mouse: "Close", gamepad: "Close (B)"),
-        records: "Your records",
+        stats: "Your records",
         how_to_play: ByInput.new(touch: "How to play", mouse: "How to play", gamepad: "How to play (Y)"),
         go_back: ByInput.new(touch: "Back", mouse: "Back", gamepad: "Back (B)"),
         no_games: "Play a game, and your records will appear here.",
@@ -141,9 +141,9 @@ module DotPopper
           chart_note: "Brighter bars are games with standard dots on screens this size.",
           fitted_chart_note: "Brighter bars are games with dots sized to the screen.",
           best_score: "Best score", longest_game: "Longest game",
-          longest_run: "Most pops in a row without a mistake", fastest_pop: "Fastest pop",
-          longest_wait: "Longest wait that ended in a pop",
-          totals: "All your games", games: "Games played", pops: "Dots popped", slips: "Mistakes",
+          most_dots_in_a_row: "Most dots in a row without a mistake", shortest_time_to_pop: "Fastest pop",
+          longest_time_to_pop: "Longest wait that ended in a pop",
+          totals: "All your games", games: "Games played", pops: "Dots popped", mistakes: "Mistakes",
           seconds: "Time played", days: "Days played", none: "None yet",
           goal: "Daily goal", streak: "Days in a row you've met it", longest_streak: "Most days in a row"
         }.freeze,
@@ -168,14 +168,14 @@ module DotPopper
         }.freeze
       )
 
-      # The Records screen, opened from the title: the heading's and the
+      # The Stats screen, opened from the title: the heading's and the
       # rows' sizes, a row's height in its type size, the chart's height in
       # rows, the gap between columns and a column's widest, and how far
       # the title's dots dim behind it. A column is only as wide as its
       # longest row needs, so each label stays near its number.
-      RECORDS = RecordsLook.new(heading: 48, text: 23, line: 1.6, chart: 4.2, gap: 56, column: 520, veil: 0.9)
+      RECORDS = StatsLook.new(heading: 48, text: 23, line: 1.6, chart: 4.2, gap: 56, column: 520, veil: 0.9)
 
-      # The Looks screen, over the Records screen: its heading's size, the
+      # The Looks screen, over the Stats screen: its heading's size, the
       # gap between cards in margins, a card's height in its width, and the
       # widest a card grows (in units at a scale of 1).
       LOOKS = LooksLook.new(heading: 48, gap: 1.0, ratio: 0.78, widest: 260, note: 20)
@@ -183,11 +183,11 @@ module DotPopper
       # The Friend group screen, opened from the title.
       GROUPS = GroupLook.new(heading: 44, text: 20, column: 560, veil: 0.9)
 
-      # The Credits screen, over the Records screen: its type, the lines a
+      # The Credits screen, over the Stats screen: its type, the lines a
       # wheel's notch and a stick at full tilt move it.
       CREDITS = CreditsLook.new(text: 20, line: 1.5, column: 680, wheel: 3, stick: 14)
 
-      # Clearing the records, from the Records screen: "Clear my records…"
+      # Clearing the records, from the Stats screen: "Clear my records…"
       # is held for two seconds, never only tapped, and Undo is offered
       # for ten after. A press let go too soon leaves its hint, to hold
       # it, for a moment.
@@ -227,7 +227,7 @@ module DotPopper
         ghost: GhostLook.new(loop: 1.6, glide: 0.5, fade: 0.25, rest: [0.75, 0.9].freeze, hover: [-0.2, -4.6].freeze,
                              wag: WagLook.new(cycles: 2, time: 0.8, angle: 0.21), settle: 0.25),
         lead: LeadLook.new(dim: 0.6, halo: 1.3, fade: 0.4),
-        streak: StreakLook.new(practice: 3, arrive: 0.25, sweep: 0.07, flight: 0.3, ready: 0.3, reward: 1.1, leave: 0.25)
+        dots_in_a_row: DotsInARowLook.new(practice: 3, arrive: 0.25, sweep: 0.07, flight: 0.3, ready: 0.3, reward: 1.1, leave: 0.25)
       )
       # A calm tutorial's guide (DOT_POPPER_CALM) wags gentler: half as
       # far, and slower.
@@ -297,7 +297,7 @@ module DotPopper
         alpha: Tween.new(from: 0.3, to: 0.0, duration: 0.25, ease: :out_quad), color: PALETTE.soft
       )
 
-      # A bonus dot (Rules::BONUS), earned by a streak: it appears in a
+      # A bonus dot (Rules::BONUS), earned by a row: it appears in a
       # wider mint ripple, and pulses a ring now and then while it waits,
       # so the eye finds it among the dots (outlines only; they hide no
       # dot). Popped, it bursts larger and in more colors, with a second,
@@ -534,11 +534,11 @@ module DotPopper
       }.freeze
 
       # The autoplay bot, for development (main.rb): how long it waits on
-      # each screen, the Records screen too, how long it thinks before each
+      # each screen, the Stats screen too, how long it thinks before each
       # tap (which grows with the score, so a game ends), and how often it
       # taps a popped dot.
-      class AutopilotLook < Data.define(:title_wait, :finale_wait, :records_wait, :think, :tiring, :mistakes); end
-      AUTOPILOT = AutopilotLook.new(title_wait: 1.6, finale_wait: 3.2, records_wait: 3.0, think: 0.22..0.45,
+      class AutopilotLook < Data.define(:title_wait, :finale_wait, :stats_wait, :think, :tiring, :mistakes); end
+      AUTOPILOT = AutopilotLook.new(title_wait: 1.6, finale_wait: 3.2, stats_wait: 3.0, think: 0.22..0.45,
                                     tiring: 0.07, mistakes: 0.2)
     end
   end

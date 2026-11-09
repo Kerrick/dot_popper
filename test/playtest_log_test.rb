@@ -17,13 +17,13 @@ class PlaytestLogTest < Minitest::Test
     play_game(pops: 0)
 
     lines = @store.read.lines(chomp: true)
-    assert_equal "time,seed,score,duration,pops,slips,softened,mean_wait,longest_wait,goal,goal_met", lines.first
+    assert_equal "time,seed,score,duration,pops,mistakes,softened,mean_time_to_pop,longest_time_to_pop,goal,goal_met", lines.first
     assert_equal 3, lines.size
-    time, seed, score, duration, pops, slips, softened, mean_wait, longest_wait, goal, met = lines[1].split(",")
+    time, seed, score, duration, pops, mistakes, softened, mean_time_to_pop, longest_time_to_pop, goal, met = lines[1].split(",")
     assert_equal "2026-11-05T09:30:00Z", time
     assert_match(/\A\d+\z/, seed)
-    assert_equal %w[2 12.00 2 0 0], [score, duration, pops, slips, softened]
-    assert_equal %w[0.50 1.00], [mean_wait, longest_wait]
+    assert_equal %w[2 12.00 2 0 0], [score, duration, pops, mistakes, softened]
+    assert_equal %w[0.50 1.00], [mean_time_to_pop, longest_time_to_pop]
     assert_equal [DotPopper::DailyGoal.for(Date.new(2026, 11, 5)).to_s, "false"], [goal, met]
   end
 

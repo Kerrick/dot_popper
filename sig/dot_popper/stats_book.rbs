@@ -1,6 +1,6 @@
 module DotPopper
-  class Lifetime
-    attr_reader stats: LifetimeStats
+  class StatsBook
+    attr_reader stats: Stats
 
     @store: BestScore::_Store
 
@@ -27,11 +27,11 @@ module DotPopper
     def streak: () -> Integer
 
     class Result < ::Data
-      attr_reader records: Array[LifetimeStats::Record]
+      attr_reader records: Array[Stats::Record]
 
       attr_reader goal_met: bool
 
-      def self.new: (records: Array[LifetimeStats::Record], goal_met: bool) -> instance
+      def self.new: (records: Array[Stats::Record], goal_met: bool) -> instance
     end
   end
 end

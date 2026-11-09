@@ -13,8 +13,8 @@ module DotPopper
 
     # The wrong tap Game Over teaches from: the popped dot it hit
     # (+popped+, its id) and the bright dot hidden under it (+bright+).
-    class Slip < Data.define(:popped, :bright)
-      # The slip, if Game Over can still point at it among +dots+ (a
+    class Mistake < Data.define(:popped, :bright)
+      # The mistake, if Game Over can still point at it among +dots+ (a
       # Stack): its popped dot is there, and its bright dot is still the
       # bright one. Once that dot was popped, nothing on the pile shows
       # which one it was.
@@ -27,7 +27,7 @@ module DotPopper
     # Teaches the stacking rule on Game Over, with no word, after a game
     # in which the player tapped a popped dot with the bright one hidden
     # beneath it, and never in play: the Show replays that tap's penalty on
-    # the pile (Slip). It counts the Game Overs it has taught on, up to
+    # the pile (Mistake). It counts the Game Overs it has taught on, up to
     # +times+, and keeps the count in a store that answers +read+ and
     # +write(text)+, as BestScore does.
     class Tutor

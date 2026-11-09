@@ -1,5 +1,5 @@
 module DotPopper
-  class RecordKeeper
+  class StatsKeeper
     interface _Kept
       def saved: () -> String?
 
@@ -22,7 +22,7 @@ module DotPopper
 
     @cleared: bool
 
-    def initialize: (best: _Kept, lifetime: _Kept, ?achievements: _Kept?, ?folder: folder | Folder, ?clock: ^() -> Time) -> void
+    def initialize: (best: _Kept, stats_book: _Kept, ?achievements: _Kept?, ?folder: folder | Folder, ?clock: ^() -> Time) -> void
 
     def cleared?: () -> bool
 

@@ -8,9 +8,9 @@ module DotPopper
 
     @sharp: Integer
 
-    @run: Integer
+    @dots_in_a_row: Integer
 
-    @slipped: bool
+    @mistaken: bool
 
     @low: bool
 
@@ -42,9 +42,9 @@ module DotPopper
 
     def sharp: (Dot dot, Array[Dot] above) -> void
 
-    def waited: (Float seconds) -> void
+    def time_to_pop: (Float seconds) -> void
 
-    def streak: () -> void
+    def dots_in_a_row: () -> void
 
     def early: (Game game) -> void
 

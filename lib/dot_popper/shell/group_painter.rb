@@ -175,7 +175,7 @@ module DotPopper
       # While a long press is held, what it will do.
       def hold(show, layout)
         font = pen.fonts.semibold(layout.scaled(pen.look::GROUPS.text))
-        y = layout.records_floor - (font.height * 2)
+        y = layout.stats_floor - (font.height * 2)
         pen.text(show.group_panel.holding_words, font, layout.center_x, y, pen.palette.cream)
       end
     end

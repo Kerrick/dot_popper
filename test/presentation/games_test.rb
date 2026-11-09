@@ -55,7 +55,7 @@ class GamesTest < Minitest::Test
 
     assert_predicate @show, :title?
     refute_predicate @show, :offer?
-    refute_predicate @show, :records?
+    refute_predicate @show, :stats?
   end
 
   def test_tomorrow_the_games_come_back

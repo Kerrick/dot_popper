@@ -2,7 +2,7 @@
 
 require_relative "presentation_helper"
 
-# The Looks screen: offered on the Records screen to a free player always,
+# The Looks screen: offered on the Stats screen to a free player always,
 # who sees every look and which are earned but wears none, and to a paid
 # player once there is a look to choose; a card for each look, and the
 # choice shown at once.
@@ -19,27 +19,27 @@ class LooksTest < Minitest::Test
 
   def test_looks_are_offered_to_a_free_player_always_and_to_a_paid_one_with_a_look_to_choose
     show(paid: false)
-    open_records
+    open_stats
 
     assert @show.looks_offered?
     assert @show.reach_of(:looks)
 
     @day = Date.new(2026, 11, 8)
     show(paid: false)
-    open_records
+    open_stats
 
     assert @show.looks_offered?, "a free player is shown that looks exist, in season or not"
 
     @day = Date.new(2026, 10, 31)
     show(paid: true)
-    open_records
+    open_stats
 
     assert @show.looks_offered?
     assert @show.reach_of(:looks)
 
     @day = Date.new(2026, 11, 8)
     show(paid: true)
-    open_records
+    open_stats
 
     refute @show.looks_offered?, "nothing earned, and none in season"
   end
@@ -52,16 +52,16 @@ class LooksTest < Minitest::Test
 
     @day = Date.new(2027, 3, 1)
     @wardrobe.refresh
-    open_records
+    open_stats
 
     assert_predicate @show.worn, :ordinary?
     assert_equal [:classic, :halloween], @show.looks.map(&:key)
     assert @show.looks_offered?
   end
 
-  def test_choosing_a_look_wears_it_at_once_and_leaving_goes_back_to_the_records
+  def test_choosing_a_look_wears_it_at_once_and_leaving_goes_back_to_the_stats
     show(paid: true)
-    open_records
+    open_stats
     @show.open_looks
 
     assert_predicate @show, :looks?
@@ -78,15 +78,15 @@ class LooksTest < Minitest::Test
     @show.back
 
     refute @show.looks?
-    assert @show.records?
+    assert @show.stats?
     @show.back
 
-    refute @show.records?
+    refute @show.stats?
   end
 
   def test_a_tap_on_a_card_of_a_look_not_offered_does_nothing_and_play_cannot_start_under_looks
     show(paid: true)
-    open_records
+    open_stats
     @show.open_looks
     before = @show.palette
     @show.tap(1, 1)
@@ -97,7 +97,7 @@ class LooksTest < Minitest::Test
 
   def test_a_free_player_sees_every_look_and_which_are_earned_and_wears_none
     show(paid: false)
-    open_records
+    open_stats
     @show.open_looks
 
     assert_predicate @show, :looks?
@@ -125,7 +125,7 @@ class LooksTest < Minitest::Test
 
   def test_the_looks_screen_leads_to_the_offer_only_where_a_store_can_complete_one
     show(paid: false)
-    open_records
+    open_stats
     @show.open_looks
 
     refute(@show.controls.any? { it.name == :offer }, "no store, so nothing is offered")
@@ -136,7 +136,7 @@ class LooksTest < Minitest::Test
       def update(_seconds) = nil
     end.new(:ready, "$1.99")
     show(paid: false, storefront: store)
-    open_records
+    open_stats
     @show.open_looks
     reach = @show.controls.find { it.name == :offer }.reach
     @show.tap(reach.center_x, reach.center_y)
@@ -164,10 +164,10 @@ class LooksTest < Minitest::Test
     end
   end
 
-  def test_the_looks_button_stays_clear_of_the_other_records_buttons_at_every_size
+  def test_the_looks_button_stays_clear_of_the_other_stats_buttons_at_every_size
     SIZES.each do |width, height|
       page = layout(width, height)
-      others = [page.back_button, page.credits_button, page.clear_records_button]
+      others = [page.back_button, page.credits_button, page.clear_stats_button]
 
       others.each { refute page.looks_button.overlaps?(it), "#{width}x#{height}" }
       assert_operator page.looks_button.x, :>=, page.safe.x, "#{width}x#{height}"
@@ -191,11 +191,11 @@ class LooksTest < Minitest::Test
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), best: DotPopper::BestScore.new(DotPopper::BestScore::Memory.new))
     @wardrobe = wardrobe
     @show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, entitlement:, wardrobe:,
-                     lifetime: DotPopper::Lifetime.new(DotPopper::BestScore::Memory.new, today: -> { @day }), **options)
+                     stats_book: DotPopper::StatsBook.new(DotPopper::BestScore::Memory.new, today: -> { @day }), **options)
     finish_game
   end
 
-  def open_records = @show.open_records
+  def open_stats = @show.open_stats
 
   def finish_game
     press_main

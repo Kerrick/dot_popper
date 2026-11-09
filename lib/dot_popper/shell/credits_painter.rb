@@ -3,7 +3,7 @@
 module DotPopper
   module Shell
     # The Credits screen, over the title's dimmed dots: the heading as
-    # the Records screen has it, Back in the bottom left corner, and between
+    # the Stats screen has it, Back in the bottom left corner, and between
     # them the license texts, scrolled, in the same type and palette, each
     # line on whole device pixels and clipped to its window. A faint bar
     # beside the window shows where in the page it is.

@@ -126,12 +126,12 @@ class CreditsTest < Minitest::Test
 
   def test_the_show_opens_scrolls_and_goes_back_a_step_at_a_time
     show = a_show
-    show.open_records
+    show.open_stats
     reach = show.reach_of(:credits)
     show.tap(reach.center_x, reach.center_y)
 
     assert show.credits?
-    assert show.records?
+    assert show.stats?
     assert_equal [:back], show.controls.map(&:name), "only Back, over the text"
     assert_operator show.credits.farthest, :>, 0.0
 
@@ -155,14 +155,14 @@ class CreditsTest < Minitest::Test
 
     assert show.back
     refute show.credits?
-    assert show.records?
+    assert show.stats?
     assert show.back
-    refute show.records?
+    refute show.stats?
   end
 
   def test_y_clears_nothing_while_credits_are_open
     show = a_show
-    show.open_records
+    show.open_stats
     show.open_credits
     show.clear_or_undo(:y)
 
@@ -171,7 +171,7 @@ class CreditsTest < Minitest::Test
 
   def test_a_resize_keeps_the_screen_open_and_laid_out_for_the_new_size
     show = a_show
-    show.open_records
+    show.open_stats
     show.open_credits
     show.credits_key(:end)
     show.resize(layout(400, 850), field(400, 850))

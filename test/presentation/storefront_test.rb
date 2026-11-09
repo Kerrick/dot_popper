@@ -216,22 +216,22 @@ class StorefrontTest < Minitest::Test
     end
   end
 
-  def test_the_way_to_the_offer_clears_the_records_buttons
+  def test_the_way_to_the_offer_clears_the_stats_buttons
     [[390, 844], [844, 390], [1920, 1080], [400, 320], [320, 568]].each do |width, height|
       layout = layout(width, height)
-      others = [layout.back_button, layout.credits_button, layout.looks_button, layout.clear_records_button]
+      others = [layout.back_button, layout.credits_button, layout.looks_button, layout.clear_stats_button]
 
       others.each { refute overlap?(layout.offer_button, it), "the pill clears #{it} at #{width}x#{height}" }
     end
   end
 
-  def test_the_offer_opens_only_from_the_records_and_buys_where_it_is_offered
+  def test_the_offer_opens_only_from_the_stats_and_buys_where_it_is_offered
     show, opener = offer_show
     show.open_offer
 
     refute_predicate show, :offer?, "the offer needs the Records screen open"
 
-    show.open_records
+    show.open_stats
     show.open_offer
 
     assert_predicate show, :offer?
@@ -250,19 +250,19 @@ class StorefrontTest < Minitest::Test
 
   def test_enter_on_the_offer_goes_back_and_never_buys
     show, opener = offer_show
-    show.open_records
+    show.open_stats
     show.open_offer
     answer("answer=1\nowned=0\nstate=ready\nprice=$1.99\n", show)
     show.primary
 
     refute_predicate show, :offer?
-    assert_predicate show, :records?
+    assert_predicate show, :stats?
     refute(opener.urls.any? { it.include?("://buy") })
   end
 
   def test_the_purchase_landing_thanks_the_player_and_takes_the_button_away
     show, = offer_show
-    show.open_records
+    show.open_stats
 
     assert_includes show.controls.map(&:name), :offer
 
@@ -287,7 +287,7 @@ class StorefrontTest < Minitest::Test
 
   def test_a_build_with_no_store_offers_nothing
     show = build_show(storefront: NoStorefront.new)
-    show.open_records
+    show.open_stats
 
     refute_includes show.controls.map(&:name), :offer
   end

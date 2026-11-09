@@ -43,7 +43,7 @@ module DotPopperGui
       check(show.playing?, "Play starts a game with no games left")
       run_out_the_clock
       continue_to_title
-      show.open_records
+      show.open_stats
       check(!show.controls.map(&:name).include?(:offer), "the Records screen no longer offers the purchase")
       check(!show.looks_locked?, "the looks are the player's to wear")
       check(show.group_panel.paid?, "the player can create a friend group")

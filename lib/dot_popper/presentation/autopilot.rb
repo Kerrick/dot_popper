@@ -67,7 +67,7 @@ module DotPopper
       def center(field) = [field.width / 2.0, field.height * 0.62]
 
       def title(cabinet, show)
-        return browse(show) if show && (show.records? || (@titles == 2 && !@browsed))
+        return browse(show) if show && (show.stats? || (@titles == 2 && !@browsed))
         return choose_size(show) if show && !@resized && show.sizing_offered?
 
         press_once(@look.title_wait) { start(cabinet, show) }
@@ -86,17 +86,17 @@ module DotPopper
       # Opens "Your records" once it is offered, and presses Back after
       # +records_wait+; the title's own wait then starts again.
       def browse(show)
-        if show.records?
-          return if @waited < @look.records_wait
+        if show.stats?
+          return if @waited < @look.stats_wait
 
           @waited = 0.0
           return middle(show.back_reach)
         end
-        return unless show.records_offered? && @waited >= @look.title_wait / 2
+        return unless show.stats_offered? && @waited >= @look.title_wait / 2
 
         @browsed = true
         @waited = 0.0
-        middle(show.records_reach)
+        middle(show.stats_reach)
       end
 
       # Play's middle; without the Show, the middle of the screen, which

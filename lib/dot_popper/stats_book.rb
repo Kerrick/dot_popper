@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # This device's LifetimeStats, kept in a store that answers +read+ and
+  # This device's Stats, kept in a store that answers +read+ and
   # +write(text)+, as BestScore's is. +today+ gives the player's local
   # date. A store that is missing or damaged starts from nothing, or from
   # what it could read. A store written before bests were kept by class
   # gives its bests to +legacy+ and is saved again at once, as BestScore
   # does.
-  class Lifetime
+  class StatsBook
     attr_reader :stats
 
     def initialize(store, today: -> { Date.today }, legacy: SizeClass::MEDIUM)
@@ -15,8 +15,8 @@ module DotPopper
       @today = today
       @legacy = legacy
       text = store.read
-      @stats = LifetimeStats.parse(text, legacy:)
-      store.write(stats.to_text) if LifetimeStats.old?(text)
+      @stats = Stats.parse(text, legacy:)
+      store.write(stats.to_text) if Stats.old?(text)
     end
 
     # Adds a finished game's RoundStats, played on a screen of
@@ -41,14 +41,14 @@ module DotPopper
     # Forgets every game, as on a new device: the totals, the chart, each
     # class's bests, and the daily goal's streaks and today's goal met.
     def clear
-      @stats = LifetimeStats.new
+      @stats = Stats.new
       @store.write("")
     end
 
     # Puts back +text+, the store's whole text as #saved gave it.
     def restore(text)
       @store.write(text.to_s)
-      @stats = LifetimeStats.parse(text, legacy: @legacy)
+      @stats = Stats.parse(text, legacy: @legacy)
     end
 
     # Today's goal, and whether a game has met it yet today.
@@ -58,7 +58,7 @@ module DotPopper
     # The days in a row, up to today, that the goal was met.
     def streak = stats.streak.current_on(today)
 
-    # What one game did to the lifetime: +records+ (LifetimeStats::Record,
+    # What one game did to the lifetime: +records+ (Stats::Record,
     # most impressive first) and +goal_met+.
     class Result < Data.define(:records, :goal_met); end
   end

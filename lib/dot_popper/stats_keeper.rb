@@ -2,7 +2,7 @@
 
 module DotPopper
   # Clears the player's records, and brings them back: the BestScore and
-  # the Lifetime, the two stores that hold every best, total, chart bar,
+  # the StatsBook, the two stores that hold every best, total, chart bar,
   # and goal streak, and the Achievements, the achievements earned, which are
   # records of what the player did as much as a best is. Nothing else is
   # a record, so the playtest log, the settings, what the game has taught,
@@ -15,12 +15,12 @@ module DotPopper
   # the next clearing removes them, so the folder only ever keeps one.
   # Lota's save folder cannot rename a file, so nothing is moved: the
   # copies are written, then the stores are emptied.
-  class RecordKeeper
+  class StatsKeeper
     NOTE = "cleared.txt"
     BACKUP = /\A(?:best_score|lifetime|achievements)-\d{8}-\d{6}\.txt\z/
 
-    def initialize(best:, lifetime:, achievements: nil, folder: Folder.new, clock: -> { Time.now })
-      @kept = { "best_score" => best, "lifetime" => lifetime, "achievements" => achievements }.compact
+    def initialize(best:, stats_book:, achievements: nil, folder: Folder.new, clock: -> { Time.now })
+      @kept = { "best_score" => best, "lifetime" => stats_book, "achievements" => achievements }.compact
       @folder = folder
       @clock = clock
       @cleared = !folder.call(NOTE).read.to_s.empty?

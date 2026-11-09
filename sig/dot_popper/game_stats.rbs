@@ -2,11 +2,11 @@ module DotPopper
   class GameStats < ::Data
     attr_reader pops: Integer
 
-    attr_reader slips: Integer
+    attr_reader mistakes: Integer
 
     attr_reader softened: Integer
 
-    attr_reader waits: Array[Float]
+    attr_reader times_to_pop: Array[Float]
 
     attr_reader fresh_since: Float
 
@@ -14,9 +14,9 @@ module DotPopper
 
     attr_reader score: Integer
 
-    attr_reader run: Integer
+    attr_reader dots_in_a_row: Integer
 
-    attr_reader longest_run: Integer
+    attr_reader most_dots_in_a_row: Integer
 
     attr_reader bonuses: Integer
 
@@ -24,17 +24,17 @@ module DotPopper
 
     def self.opening: (Game game) -> GameStats
 
-    def self.new: (pops: Integer, slips: Integer, softened: Integer, waits: Array[Float], fresh_since: number, duration: number, ?score: Integer, ?run: Integer, ?longest_run: Integer, ?bonuses: Integer) -> instance
+    def self.new: (pops: Integer, mistakes: Integer, softened: Integer, times_to_pop: Array[Float], fresh_since: number, duration: number, ?score: Integer, ?dots_in_a_row: Integer, ?most_dots_in_a_row: Integer, ?bonuses: Integer) -> instance
 
-    def initialize: (pops: Integer, slips: Integer, softened: Integer, waits: Array[Float], fresh_since: number, duration: number, ?score: Integer, ?run: Integer, ?longest_run: Integer, ?bonuses: Integer) -> void
+    def initialize: (pops: Integer, mistakes: Integer, softened: Integer, times_to_pop: Array[Float], fresh_since: number, duration: number, ?score: Integer, ?dots_in_a_row: Integer, ?most_dots_in_a_row: Integer, ?bonuses: Integer) -> void
 
     def record: (event event, at: Float) -> GameStats
 
-    def longest_wait: () -> Float
+    def longest_time_to_pop: () -> Float
 
-    def fastest_pop: () -> Float?
+    def shortest_time_to_pop: () -> Float?
 
-    def mean_wait: () -> Float
+    def mean_time_to_pop: () -> Float
 
     def pops_within: (number seconds) -> Integer
 

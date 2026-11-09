@@ -17,7 +17,7 @@ module DotPopper
       SEGMENTS = 64
       LAYERS = 8 # rings in the dim's soft edge
       HUD_LIGHT = 0.8 # the light's reach around a HUD number, in the HUD's height
-      STREAK_LIGHT = 1.35 # the same, around the streak's row
+      DOTS_IN_A_ROW_LIGHT = 1.35 # the same, around the row's row
 
       # What goes under the HUD, which is never dimmed, so its numbers
       # always show where they live: the dim around the Tutorial's (+scene+)
@@ -32,8 +32,8 @@ module DotPopper
       def over_hud(show, scene, layout, pill, spots)
         now = scene.now
         light = scene.spotlight
-        halo(light.to.name, pill, light.strength(now), now - light.at) if light.to&.hud? && light.to.name != :streak
-        label(scene.streak_label, layout, spots.fetch(:streak), pill) if scene.streak_label
+        halo(light.to.name, pill, light.strength(now), now - light.at) if light.to&.hud? && light.to.name != :dots_in_a_row
+        label(scene.dots_in_a_row_label, layout, spots.fetch(:dots_in_a_row), pill) if scene.dots_in_a_row_label
         font = pen.fonts.bold(layout.scaled(pen.look::TYPE.floater))
         scene.flights.each { flight(it, now, scene.dots, spots, scene.radius, font) }
         GhostPainter.new(pen:).draw(scene.ghost_pose, show.input, scene.radius)
@@ -74,7 +74,7 @@ module DotPopper
         G.rectangle(:line, left, top, width, height, corner, corner, 32)
       end
 
-      # The streak's short label, under its row of dots.
+      # The row's short label, under its row of dots.
       def label(text, layout, spot, pill)
         font = pen.fonts.semibold(layout.scaled(pen.look::TYPE.hud_label))
         pen.outlined(text, font, spot[0], spot[1] + (pill.height * Presentation::Hud::PIP * 1.2) + font.height,
@@ -104,12 +104,12 @@ module DotPopper
         [x, y, reach(anchor, pill, radius)]
       end
 
-      # How far the light reaches around +anchor+: the streak's row is wider
+      # How far the light reaches around +anchor+: the row's row is wider
       # than one number.
       def reach(anchor, pill, radius)
         return radius * pen.look::TUTORIAL.spotlight.dot unless anchor.hud?
 
-        pill.height * (anchor.name == :streak ? STREAK_LIGHT : HUD_LIGHT)
+        pill.height * (anchor.name == :dots_in_a_row ? DOTS_IN_A_ROW_LIGHT : HUD_LIGHT)
       end
 
       # The night's ink over everything but a circle of +light+ around +x+,

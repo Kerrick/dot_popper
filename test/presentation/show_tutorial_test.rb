@@ -14,7 +14,7 @@ class ShowTutorialTest < Minitest::Test
     @sounds = FakeSounds.new
     @store = DotPopper::BestScore::Memory.new
     @best = DotPopper::BestScore.new(DotPopper::BestScore::Memory.new)
-    @lifetime = DotPopper::Lifetime.new(DotPopper::BestScore::Memory.new)
+    @stats_book = DotPopper::StatsBook.new(DotPopper::BestScore::Memory.new)
     @cabinet = DotPopper::Cabinet.new(field, best: @best, random: Random.new(2))
     @events = []
     @cabinet.subscribe { @events << it.class }
@@ -45,14 +45,14 @@ class ShowTutorialTest < Minitest::Test
     assert_operator game.countdown.remaining, :>, 9.9, "the clock has only just started"
     assert_equal [1, 10], [@show.hud.score, @show.hud.seconds], "the HUD shows the same numbers"
     assert_same scene.animations, @show.animations, "and the dots are drawn as they were"
-    assert_equal 0, @lifetime.stats.games
+    assert_equal 0, @stats_book.stats.games
     assert_equal [DotPopper::Events::GameStarted], @events.uniq - [DotPopper::Events::TitleShown]
   end
 
   # A player's own wrong taps cost too, so the game may start with no
   # time to spare: the clock it is handed runs out as any game's does.
   def test_a_tutorial_left_with_a_second_hands_the_game_that_second
-    play_through(slips: 7)
+    play_through(mistakes: 7)
 
     assert @show.playing?
     assert_equal 1, @cabinet.game.score
@@ -67,9 +67,9 @@ class ShowTutorialTest < Minitest::Test
     play_through
     update_for(0.1) until @show.finished?
 
-    assert_equal 1, @lifetime.stats.games
-    assert_operator @show.stats.pops, :>=, 2, "its two pops are the game's"
-    assert_equal @cabinet.game.score, @show.stats.score
+    assert_equal 1, @stats_book.stats.games
+    assert_operator @show.game_stats.pops, :>=, 2, "its two pops are the game's"
+    assert_equal @cabinet.game.score, @show.game_stats.score
     assert_equal @cabinet.game.score, @best.of(@cabinet.size_class)
   end
 
@@ -100,18 +100,18 @@ class ShowTutorialTest < Minitest::Test
     assert_in_delta DotPopper::Rules::STARTING_SECONDS, @cabinet.game.countdown.remaining
   end
 
-  def test_its_streak_beat_can_be_skipped_and_leaves_nothing_behind
+  def test_its_dots_in_a_row_beat_can_be_skipped_and_leaves_nothing_behind
     press_main
     [Tutorial::BRIGHT, Tutorial::NEXT].each do |id|
       update_for(0.1) until %i[aim aim_next].include?(@show.tutorial.beat) && !tapped?(id)
-      tap_dot(streak_dot(id))
+      tap_dot(dots_in_a_row_dot(id))
     end
     update_for(0.05) until @show.tutorial.beat == :practice
-    tap_dot(streak_dot(Tutorial::PRACTICE))
+    tap_dot(dots_in_a_row_dot(Tutorial::PRACTICE))
     @show.back
 
     assert @show.playing?
-    assert_equal [0, 1, 0], [@cabinet.game.score, @cabinet.game.dots.size, @cabinet.game.streak]
+    assert_equal [0, 1, 0], [@cabinet.game.score, @cabinet.game.dots.size, @cabinet.game.dots_in_a_row]
     assert_in_delta DotPopper::Rules::STARTING_SECONDS, @cabinet.game.countdown.remaining
   end
 
@@ -140,16 +140,16 @@ class ShowTutorialTest < Minitest::Test
     assert_equal :points, @show.tutorial.beat
 
     @show.primary
-    @show.open_records
+    @show.open_stats
     @show.choose_sizing(DotPopper::DotSizing::STANDARD)
     assert @show.tutorial?
-    refute @show.records?
+    refute @show.stats?
   end
 
-  def test_it_never_opens_again_not_even_after_the_records_are_cleared
+  def test_it_never_opens_again_not_even_after_the_stats_are_cleared
     play_through
     finish_game
-    keeper = DotPopper::RecordKeeper.new(best: @best, lifetime: @lifetime)
+    keeper = DotPopper::StatsKeeper.new(best: @best, stats_book: @stats_book)
     keeper.clear
     @show = show(keeper:)
     press_main
@@ -159,7 +159,7 @@ class ShowTutorialTest < Minitest::Test
   end
 
   def test_a_player_who_has_played_before_goes_straight_to_the_game
-    @lifetime.record(DotPopper::GameStats.start.with(pops: 3, duration: 13.0, score: 3), DotPopper::SizeClass::MEDIUM)
+    @stats_book.record(DotPopper::GameStats.start.with(pops: 3, duration: 13.0, score: 3), DotPopper::SizeClass::MEDIUM)
     press_main
 
     refute @show.tutorial?
@@ -188,7 +188,7 @@ class ShowTutorialTest < Minitest::Test
 
   def test_how_to_play_is_offered_on_a_first_title_too_and_even_when_the_flag_never_opens_it
     @show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3),
-                     lifetime: @lifetime, keeper: DotPopper::RecordKeeper.new(best: @best, lifetime: @lifetime))
+                     stats_book: @stats_book, keeper: DotPopper::StatsKeeper.new(best: @best, stats_book: @stats_book))
 
     assert_includes @show.controls.map(&:name), :how_to_play
     @show.how_to_play
@@ -214,8 +214,8 @@ class ShowTutorialTest < Minitest::Test
 
   private
 
-  def show(keeper: DotPopper::RecordKeeper.new(best: @best, lifetime: @lifetime))
-    Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3), lifetime: @lifetime,
+  def show(keeper: DotPopper::StatsKeeper.new(best: @best, stats_book: @stats_book))
+    Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3), stats_book: @stats_book,
              keeper:, tutorial_flag: TutorialFlag.new(@store))
   end
 
@@ -227,34 +227,34 @@ class ShowTutorialTest < Minitest::Test
   end
 
   # Plays the whole tutorial, tapping each bright dot as it is shown, and
-  # the popped one +slips+ times as the next peeks out from under it.
-  def play_through(hand_over: true, slips: 0, opened: false)
+  # the popped one +mistakes+ times as the next peeks out from under it.
+  def play_through(hand_over: true, mistakes: 0, opened: false)
     press_main unless opened
     [Tutorial::BRIGHT, Tutorial::NEXT].each do |id|
       update_for(0.1) until %i[aim aim_next].include?(@show.tutorial.beat) && !tapped?(id)
       dot = @show.tutorial.dots.find { it.id == id }
       @show.tap(dot.x, dot.y)
-      slip(slips) if id == Tutorial::BRIGHT
+      mistake(mistakes) if id == Tutorial::BRIGHT
     end
-    through_the_streak
+    through_the_dots_in_a_row
     update_for(STEP) while @show.tutorial? if hand_over
   end
 
-  def through_the_streak
-    Look::TUTORIAL.streak.practice.times do |pop|
-      update_for(0.05) until @show.tutorial.beat == :practice && streak_dot(Tutorial::PRACTICE - pop)&.fresh?
-      tap_dot(streak_dot(Tutorial::PRACTICE - pop))
+  def through_the_dots_in_a_row
+    Look::TUTORIAL.dots_in_a_row.practice.times do |pop|
+      update_for(0.05) until @show.tutorial.beat == :practice && dots_in_a_row_dot(Tutorial::PRACTICE - pop)&.fresh?
+      tap_dot(dots_in_a_row_dot(Tutorial::PRACTICE - pop))
     end
     update_for(0.05) until @show.tutorial.beat == :bonus
-    tap_dot(streak_dot(Tutorial::BONUS))
+    tap_dot(dots_in_a_row_dot(Tutorial::BONUS))
   end
 
-  def streak_dot(id) = @show.tutorial.dots.find { it.id == id }
+  def dots_in_a_row_dot(id) = @show.tutorial.dots.find { it.id == id }
   def tap_dot(dot) = @show.tap(dot.x, dot.y)
 
   def tapped?(id) = @show.tutorial.dots.find { it.id == id }.popped?
 
-  def slip(times)
+  def mistake(times)
     return if times.zero?
 
     update_for(0.1) until @show.tutorial.beat == :warn

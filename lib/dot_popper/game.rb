@@ -5,7 +5,7 @@ module DotPopper
   # the rules that changes, and it changes by swapping in new values, so a
   # tap changes all three at once and says what it did with an event.
   class Game
-    attr_reader :field, :dots, :score, :countdown, :elapsed, :spawns, :streak, :bonus
+    attr_reader :field, :dots, :score, :countdown, :elapsed, :spawns, :dots_in_a_row, :bonus
 
     # A game that goes on from where it was left before its clock first
     # ran, as the tutorial leaves it: +dots+ (a Stack) as they are, its
@@ -13,7 +13,7 @@ module DotPopper
     # the clock. From there it is a game like any other: its clock runs
     # from its first update, each pop spawns a dot under every dot there,
     # and a tap reaches only the topmost.
-    # Its streak starts at none: the tutorial's pops were its own.
+    # Its row starts at none: the tutorial's pops were its own.
     def self.resume(field, dots:, score:, seconds:, random: Random.new, spawn_tries: Rules::SPAWN_TRIES,
                     bonus: Rules::BONUS)
       new(field, random:, dots:, score:, seconds:, spawn_tries:, bonus:)
@@ -21,14 +21,14 @@ module DotPopper
 
     # +spawn_tries+ is how hard a spawn works for a touch target (Spawner);
     # 0 turns the rule off, as the simulator does to measure it. +bonus+
-    # (Rules::Bonus) is the streak's reward; nil turns it off, likewise.
-    # +streak+ counts the pops in a row since the last wrong tap or bonus
+    # (Rules::Bonus) is the row's reward; nil turns it off, likewise.
+    # +row+ counts the dots in a row since the last wrong tap or bonus
     # dot, toward the next bonus dot.
     def initialize(field, random: Random.new, dots: nil, score: Rules::LOWEST_SCORE,
                    seconds: Rules::STARTING_SECONDS, spawn_tries: Rules::SPAWN_TRIES, bonus: Rules::BONUS)
       @field = field
       @bonus = bonus
-      @streak = 0
+      @dots_in_a_row = 0
       @random = random
       @spawner = Spawner.for(field, tries: spawn_tries)
       @spawns = []
@@ -105,20 +105,20 @@ module DotPopper
       [Rules::POP_POINTS + rule.points, Rules::POP_SECONDS + rule.seconds]
     end
 
-    # Counts the pop of +dot+ in the streak, and says whether the streak
+    # Counts the pop of +dot+ in the row, and says whether the row
     # is now long enough that the next fresh dot is a bonus dot. Earning
     # one, or popping one, starts the count over.
     def count_toward_bonus(dot)
       rule = bonus or return false
 
-      @streak = dot.bonus? ? 0 : streak + 1
-      earned = streak >= rule.streak
-      @streak = 0 if earned
+      @dots_in_a_row = dot.bonus? ? 0 : dots_in_a_row + 1
+      earned = dots_in_a_row >= rule.dots_in_a_row
+      @dots_in_a_row = 0 if earned
       earned
     end
 
     def penalize(dot, x, y)
-      @streak = 0
+      @dots_in_a_row = 0
       lost = [Rules::PENALTY_POINTS, score - Rules::LOWEST_SCORE].min
       @score -= lost
       @countdown = countdown.adjust(-Rules::PENALTY_SECONDS)

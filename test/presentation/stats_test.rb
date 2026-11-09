@@ -2,14 +2,14 @@
 
 require_relative "presentation_helper"
 
-class RecordsTest < Minitest::Test
+class StatsSheetTest < Minitest::Test
   include PresentationTest
 
   def stats
-    bests = DotPopper::LifetimeStats::Bests.new(games: 40, longest_game: 47.6, longest_run: 18, fastest_pop: 0.34,
-                                                longest_wait: 6.2)
-    phone = DotPopper::LifetimeStats::Bests.new(games: 2, longest_game: 12.0, longest_run: 3)
-    DotPopper::LifetimeStats.new(games: 42, pops: 812, slips: 61, seconds: 1890.0, days: 5, recent: [3, 9, 27, 12],
+    bests = DotPopper::Stats::Bests.new(games: 40, longest_game: 47.6, most_dots_in_a_row: 18, shortest_time_to_pop: 0.34,
+                                                longest_time_to_pop: 6.2)
+    phone = DotPopper::Stats::Bests.new(games: 2, longest_game: 12.0, most_dots_in_a_row: 3)
+    DotPopper::Stats.new(games: 42, pops: 812, mistakes: 61, seconds: 1890.0, days: 5, recent: [3, 9, 27, 12],
                                  recent_classes: [MEDIUM] * 4,
                                  streak: DotPopper::GoalStreak.new(current: 3, longest: 7, last_met: "2026-11-04"),
                                  bests: { MEDIUM => bests, DotPopper::SizeClass::SMALL => phone })
@@ -17,7 +17,7 @@ class RecordsTest < Minitest::Test
 
   MEDIUM = DotPopper::SizeClass::MEDIUM
 
-  def sheet = RecordsSheet.build(stats, best: 27, words: Look::WORDS, streak: 3, size_class: MEDIUM,
+  def sheet = StatsSheet.build(stats, best: 27, words: Look::WORDS, streak: 3, size_class: MEDIUM,
                                         field: DotPopper::Field.new(1200, 800, R))
 
   def test_the_sheet_shows_the_daily_goals_streaks
@@ -30,7 +30,7 @@ class RecordsTest < Minitest::Test
 
     assert_equal "Your bests with standard dots on screens this size", sheet.bests.title
     assert_equal({ "Best score" => "27", "Longest game" => "48 seconds",
-                   "Most pops in a row without a mistake" => "18", "Fastest pop" => "0.3 seconds",
+                   "Most dots in a row without a mistake" => "18", "Fastest pop" => "0.3 seconds",
                    "Longest wait that ended in a pop" => "6.2 seconds" }, rows)
     assert_equal [["Games played", "42"], ["Dots popped", "812"], ["Mistakes", "61"], ["Time played", "31 minutes"],
                   ["Days played", "5"]], sheet.totals.rows.map { [it.label, it.value] }
@@ -39,7 +39,7 @@ class RecordsTest < Minitest::Test
   end
 
   def test_the_bests_are_this_screens_and_the_totals_every_screens
-    phone = RecordsSheet.build(stats, best: 6, words: Look::WORDS, size_class: DotPopper::SizeClass::SMALL,
+    phone = StatsSheet.build(stats, best: 6, words: Look::WORDS, size_class: DotPopper::SizeClass::SMALL,
                                       field: DotPopper::Field.new(395, 850, R))
 
     assert_equal ["6", "12 seconds", "3", "None yet"], phone.bests.rows.first(4).map(&:value)
@@ -50,7 +50,7 @@ class RecordsTest < Minitest::Test
   end
 
   def test_with_dots_sized_to_the_screen_the_sheet_says_so
-    fitted = RecordsSheet.build(stats, best: 0, words: Look::WORDS, size_class: DotPopper::SizeClass::FITTED,
+    fitted = StatsSheet.build(stats, best: 0, words: Look::WORDS, size_class: DotPopper::SizeClass::FITTED,
                                        field: DotPopper::Field.new(395, 850, 30),
                                        sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
 
@@ -61,7 +61,7 @@ class RecordsTest < Minitest::Test
   end
 
   def test_with_no_games_the_sheet_is_empty_and_says_none_yet
-    empty = RecordsSheet.build(DotPopper::LifetimeStats.new, best: 0, words: Look::WORDS)
+    empty = StatsSheet.build(DotPopper::Stats.new, best: 0, words: Look::WORDS)
 
     assert empty.empty
     assert_equal "None yet", empty.bests.rows[3].value
@@ -96,16 +96,16 @@ class RecordsTest < Minitest::Test
 
   def test_the_chart_dims_other_groups_games_and_says_so
     mixed = stats.with(recent_classes: [nil, DotPopper::SizeClass::SMALL, MEDIUM, MEDIUM])
-    sheet = RecordsSheet.build(mixed, best: 27, words: Look::WORDS, size_class: MEDIUM)
-    fitted = RecordsSheet.build(mixed, best: 0, words: Look::WORDS, size_class: DotPopper::SizeClass::FITTED,
+    sheet = StatsSheet.build(mixed, best: 27, words: Look::WORDS, size_class: MEDIUM)
+    fitted = StatsSheet.build(mixed, best: 0, words: Look::WORDS, size_class: DotPopper::SizeClass::FITTED,
                                        sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
 
     assert_equal [false, false, true, true], sheet.mine, "an old game's group is unknown"
     assert_equal "Brighter bars are games with standard dots on screens this size.", sheet.chart_note
     assert_equal "Brighter bars are games with dots sized to the screen.", fitted.chart_note
-    assert_nil RecordsSheet.build(stats, best: 27, words: Look::WORDS, size_class: MEDIUM).chart_note,
+    assert_nil StatsSheet.build(stats, best: 27, words: Look::WORDS, size_class: MEDIUM).chart_note,
                "with every bar bright there is nothing to explain"
-    plan = RecordsLayout.new(layout: layout(400, 850), sheet:, look: Look::RECORDS)
+    plan = StatsLayout.new(layout: layout(400, 850), sheet:, look: Look::RECORDS)
     assert_equal ["Your last 4 games", :chart, ChartNote.new(text: sheet.chart_note)],
                  plan.placements.first(3).map(&:item)
   end
@@ -117,8 +117,8 @@ class RecordsTest < Minitest::Test
   end
 
   def test_a_wide_window_has_two_columns_and_a_narrow_one_stacks
-    wide = RecordsLayout.new(layout: layout(1200, 800), sheet:, look: Look::RECORDS)
-    narrow = RecordsLayout.new(layout: layout(400, 850), sheet:, look: Look::RECORDS)
+    wide = StatsLayout.new(layout: layout(1200, 800), sheet:, look: Look::RECORDS)
+    narrow = StatsLayout.new(layout: layout(400, 850), sheet:, look: Look::RECORDS)
 
     assert wide.wide?
     assert_equal 2, wide.placements.map(&:x).uniq.size
@@ -128,7 +128,7 @@ class RecordsTest < Minitest::Test
 
   def test_everything_fits_between_the_heading_and_the_prompt
     [[1200, 800], [400, 850], [400, 320], [800, 600], [2560, 1440]].each do |width, height|
-      plan = RecordsLayout.new(layout: layout(width, height), sheet:, look: Look::RECORDS)
+      plan = StatsLayout.new(layout: layout(width, height), sheet:, look: Look::RECORDS)
       assert_operator plan.note_y(0), :>, plan.heading_y, "#{width}x#{height}"
       plan.placements.each do |placed|
         assert_operator placed.y, :>, plan.note_y(0), "#{width}x#{height}"
@@ -138,12 +138,12 @@ class RecordsTest < Minitest::Test
         bottom = placed.item == :chart ? placed.y + placed.height : placed.y
         assert_operator bottom, :<, plan.prompt_y, "#{width}x#{height}"
       end
-      assert_operator plan.text_size, :>=, RecordsLayout::SMALLEST_TEXT
+      assert_operator plan.text_size, :>=, StatsLayout::SMALLEST_TEXT
     end
   end
 
   def test_the_chart_leads_when_there_are_scores
-    plan = RecordsLayout.new(layout: layout(400, 850), sheet:, look: Look::RECORDS)
+    plan = StatsLayout.new(layout: layout(400, 850), sheet:, look: Look::RECORDS)
 
     assert_equal ["Your last 4 games", :chart, "Your bests with standard dots on screens this size"],
                  plan.placements.first(3).map(&:item)
@@ -152,7 +152,7 @@ class RecordsTest < Minitest::Test
   # A column is only as wide as its longest row needs, so a label stays
   # near its number, and the columns stay centred together.
   def test_columns_are_as_wide_as_their_rows_need_and_centred
-    plan = RecordsLayout.new(layout: layout(1200, 800), sheet:, look: Look::RECORDS, widest: 400)
+    plan = StatsLayout.new(layout: layout(1200, 800), sheet:, look: Look::RECORDS, widest: 400)
     lefts = plan.placements.map(&:x).uniq
 
     assert plan.wide?
@@ -161,7 +161,7 @@ class RecordsTest < Minitest::Test
   end
 
   def test_two_columns_only_when_both_fit_side_by_side
-    refute RecordsLayout.new(layout: layout(1000, 800), sheet:, look: Look::RECORDS, widest: 520).wide?
-    assert RecordsLayout.new(layout: layout(1000, 800), sheet:, look: Look::RECORDS, widest: 420).wide?
+    refute StatsLayout.new(layout: layout(1000, 800), sheet:, look: Look::RECORDS, widest: 520).wide?
+    assert StatsLayout.new(layout: layout(1000, 800), sheet:, look: Look::RECORDS, widest: 420).wide?
   end
 end

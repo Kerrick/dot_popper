@@ -24,7 +24,7 @@ module DotPopper
 
     LOWEST_SCORE = 0
 
-    # The one rule that rewards a run. +streak+ pops in a row without a
+    # The one rule that rewards a run. +row+ dots in a row without a
     # wrong tap earn a bonus dot: the next fresh dot the game spawns is a
     # bonus dot, in place of the ordinary one, never an extra target.
     # Popping it pays +points+ and +seconds+ on top of a pop's own. A
@@ -32,9 +32,9 @@ module DotPopper
     # and popping it starts the count over too. Nothing about it is
     # random: the same pops always earn it. The numbers were chosen with
     # script/simulate.rb (see doc/decisions.md).
-    class Bonus < Data.define(:streak, :points, :seconds); end
+    class Bonus < Data.define(:dots_in_a_row, :points, :seconds); end
 
-    BONUS = Bonus.new(streak: 8, points: 3, seconds: 3.0)
+    BONUS = Bonus.new(dots_in_a_row: 8, points: 3, seconds: 3.0)
 
     # A fresh dot spawns at a uniformly random place with a random
     # velocity, but must offer a touch target within SPAWN_LOOKAHEAD

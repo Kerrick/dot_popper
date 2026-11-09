@@ -22,9 +22,9 @@ class GameStatsTest < Minitest::Test
 
     stats = @recorder.stats
     assert_equal 2, stats.pops
-    assert_equal [1.5, 0.5], stats.waits.map { it.round(6) }
-    assert_in_delta 1.5, stats.longest_wait
-    assert_in_delta 1.0, stats.mean_wait
+    assert_equal [1.5, 0.5], stats.times_to_pop.map { it.round(6) }
+    assert_in_delta 1.5, stats.longest_time_to_pop
+    assert_in_delta 1.0, stats.mean_time_to_pop
   end
 
   def test_it_counts_slips_and_those_the_floor_softened
@@ -34,11 +34,11 @@ class GameStatsTest < Minitest::Test
     @cabinet.press(popped.x, popped.y) # 1 point to lose: softened
     @cabinet.press(popped.x, popped.y) # 0 points to lose: softened
 
-    assert_equal 2, @recorder.stats.slips
+    assert_equal 2, @recorder.stats.mistakes
     assert_equal 2, @recorder.stats.softened
   end
 
-  def test_the_game_ending_records_how_long_it_ran
+  def test_the_game_ending_stats_how_long_it_ran
     @cabinet.update(4)
     pop!
     @cabinet.update(20)
@@ -57,22 +57,22 @@ class GameStatsTest < Minitest::Test
   end
 
   def test_with_nothing_popped_the_waits_are_zero
-    assert_in_delta 0.0, GameStats.start.longest_wait
-    assert_in_delta 0.0, GameStats.start.mean_wait
+    assert_in_delta 0.0, GameStats.start.longest_time_to_pop
+    assert_in_delta 0.0, GameStats.start.mean_time_to_pop
   end
 
-  def test_it_keeps_the_score_and_the_longest_run_of_pops_without_a_wrong_tap
+  def test_it_keeps_the_score_and_the_most_dots_in_a_row_of_pops_without_a_wrong_tap
     3.times { pop! }
     slip!
     pop!
 
     stats = @recorder.stats
     assert_equal 2, stats.score # 4 pops, and a wrong tap at 3 that cost 2
-    assert_equal 1, stats.run
-    assert_equal 3, stats.longest_run
+    assert_equal 1, stats.dots_in_a_row
+    assert_equal 3, stats.most_dots_in_a_row
   end
 
-  def test_it_knows_the_fastest_pop_and_the_pops_in_the_first_seconds
+  def test_it_knows_the_shortest_time_to_pop_and_the_pops_in_the_first_seconds
     @cabinet.update(2.0)
     pop!
     @cabinet.update(0.5)
@@ -81,10 +81,10 @@ class GameStatsTest < Minitest::Test
     pop!
 
     stats = @recorder.stats
-    assert_in_delta 0.5, stats.fastest_pop
+    assert_in_delta 0.5, stats.shortest_time_to_pop
     assert_equal 2, stats.pops_within(10)
     assert_equal 3, stats.pops_within(10.5)
-    assert_nil GameStats.start.fastest_pop
+    assert_nil GameStats.start.shortest_time_to_pop
   end
 
   private
@@ -108,14 +108,14 @@ class GameStatsTest < Minitest::Test
     cabinet.resume(field: field, dots:, score: 2, seconds: 12.0)
 
     stats = recorder.stats
-    assert_equal [2, 2, 2, 2], [stats.pops, stats.score, stats.run, stats.longest_run]
-    assert_empty stats.waits
-    assert_nil stats.fastest_pop
+    assert_equal [2, 2, 2, 2], [stats.pops, stats.score, stats.dots_in_a_row, stats.most_dots_in_a_row]
+    assert_empty stats.times_to_pop
+    assert_nil stats.shortest_time_to_pop
 
     cabinet.update(1.5)
     fresh = cabinet.game.dots.to_a.last
     cabinet.press(fresh.x, fresh.y)
-    assert_equal [3, 3, 3], [recorder.stats.pops, recorder.stats.score, recorder.stats.longest_run]
-    assert_equal [1.5], recorder.stats.waits.map { it.round(6) }, "the first wait runs from the clock starting"
+    assert_equal [3, 3, 3], [recorder.stats.pops, recorder.stats.score, recorder.stats.most_dots_in_a_row]
+    assert_equal [1.5], recorder.stats.times_to_pop.map { it.round(6) }, "the first wait runs from the clock starting"
   end
 end

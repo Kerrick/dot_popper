@@ -41,7 +41,7 @@ class ShowTest < Minitest::Test
 
   def test_a_streak_earns_a_bonus_dot_that_arrives_with_a_chime_and_pays_with_a_chord
     show = calm_show
-    DotPopper::Rules::BONUS.streak.times { pop_fresh(show) }
+    DotPopper::Rules::BONUS.dots_in_a_row.times { pop_fresh(show) }
 
     assert_equal 1, @sounds.names.count(:bonus), "the bonus dot arrives with a chime"
     refute_includes @sounds.names, :bonus_pop
@@ -214,13 +214,13 @@ class ShowTest < Minitest::Test
     assert_nil @clipboard.text
   end
 
-  def test_each_finished_game_is_added_to_the_lifetime_stats
+  def test_each_finished_game_is_added_to_the_stats
     start_and_pop
     @cabinet.update(20)
 
-    assert_equal 1, @show.lifetime.stats.games
-    assert_equal 1, @show.lifetime.stats.pops
-    assert_equal [1], @show.lifetime.stats.recent
+    assert_equal 1, @show.stats_book.stats.games
+    assert_equal 1, @show.stats_book.stats.pops
+    assert_equal [1], @show.stats_book.stats.recent
   end
 
   def test_game_over_names_the_best_record_the_game_set
@@ -234,14 +234,14 @@ class ShowTest < Minitest::Test
     2.times { start_and_pop(started: true) }
     @cabinet.update(30)
 
-    assert_equal :longest_run, @show.finale.record.kind
+    assert_equal :most_dots_in_a_row, @show.finale.record.kind
     assert_equal 2, @show.finale.record.value
   end
 
   # 2026-11-01's goal is to pop 10 bright dots in the first 10 seconds.
   def test_the_game_that_meets_todays_goal_celebrates_it_once_the_score_has_counted
-    lifetime = DotPopper::Lifetime.new(DotPopper::BestScore::Memory.new, today: -> { Date.new(2026, 11, 1) })
-    show = Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3), lifetime:)
+    stats_book = DotPopper::StatsBook.new(DotPopper::BestScore::Memory.new, today: -> { Date.new(2026, 11, 1) })
+    show = Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3), stats_book:)
     press_main(show)
     10.times do
       fresh = @cabinet.game.dots.find(&:fresh?)
@@ -254,7 +254,7 @@ class ShowTest < Minitest::Test
     refute show.finale.goal_due?(show.now), "not before the score has counted"
     show.update(Look::FINALE.tally.duration)
     assert show.finale.goal_celebrated
-    assert lifetime.goal_done?
+    assert stats_book.goal_done?
   end
 
   def test_continue_goes_on_once_the_grace_is_over_and_empty_space_never_does
@@ -330,14 +330,14 @@ class ShowTest < Minitest::Test
     assert @show.title?
   end
 
-  def test_your_records_is_offered_only_once_a_game_has_finished
-    refute @show.records_offered?
-    assert_nil @show.records_reach
-    @show.tap(*middle(@show.layout.records_button))
+  def test_your_stats_is_offered_only_once_a_game_has_finished
+    refute @show.stats_offered?
+    assert_nil @show.stats_reach
+    @show.tap(*middle(@show.layout.stats_button))
     assert @show.title?, "before then, its corner is empty space, which does nothing"
 
     finish_game
-    assert @show.records_offered?
+    assert @show.stats_offered?
   end
 
   # 800 by 600 fits a radius of about 35 when dots are sized to it.
@@ -426,7 +426,7 @@ class ShowTest < Minitest::Test
     assert_equal :asked, @show.ask_to_quit
   end
 
-  def test_b_never_quits_from_a_game_or_the_records
+  def test_b_never_quits_from_a_game_or_the_stats
     finish_game(back_to_title: false)
 
     assert_nil @show.ask_to_quit
@@ -450,7 +450,7 @@ class ShowTest < Minitest::Test
     cabinet.update(20)
     cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     cabinet.press(10, 10)
-    assert show.records_offered?
+    assert show.stats_offered?
     refute show.sizing_offered?
 
     show.toggle_sizing
@@ -476,38 +476,38 @@ class ShowTest < Minitest::Test
     assert_equal :smaller, @show.sizing_preview.effect
   end
 
-  def test_your_records_opens_over_the_title_and_back_goes_back
+  def test_your_stats_opens_over_the_title_and_back_goes_back
     finish_game
-    @show.tap(*middle(@show.records_reach))
-    assert @show.records?
+    @show.tap(*middle(@show.stats_reach))
+    assert @show.stats?
     assert @show.title?
-    assert_equal 1, @show.records.totals.rows.first.value.to_i
+    assert_equal 1, @show.stats.totals.rows.first.value.to_i
 
     @show.tap(10, 300)
-    assert @show.records?, "empty space does nothing"
+    assert @show.stats?, "empty space does nothing"
     @show.tap(*middle(@show.back_reach))
-    refute @show.records?
+    refute @show.stats?
     assert @show.title?, "Back never starts a game"
   end
 
-  def test_start_and_back_leave_the_records_screen_and_only_it
+  def test_start_and_back_leave_the_stats_screen_and_only_it
     finish_game
-    @show.open_records
+    @show.open_stats
     @show.start
-    refute @show.records?
+    refute @show.stats?
     assert @show.title?
 
-    @show.open_records
+    @show.open_stats
     assert @show.back
     refute @show.back, "with no Records screen, back has nothing to do"
     assert @show.title?
   end
 
-  def test_the_records_screen_opens_only_from_the_title
+  def test_the_stats_screen_opens_only_from_the_title
     finish_game(back_to_title: false)
-    @show.open_records
+    @show.open_stats
 
-    refute @show.records?
+    refute @show.stats?
   end
 
   def test_a_gamepads_start_begins_the_usual_game_without_popping_a_title_dot
@@ -654,7 +654,7 @@ class ShowTest < Minitest::Test
     popped = @cabinet.game.dots.first
     fresh = @cabinet.game.dots.find(&:fresh?)
     @cabinet.update(20)
-    assert_equal Slip.new(popped: popped.id, bright: fresh.id), @show.finale.lesson, "the wrong tap is the lesson"
+    assert_equal Mistake.new(popped: popped.id, bright: fresh.id), @show.finale.lesson, "the wrong tap is the lesson"
     assert_equal "1", store.read
     refute @show.finale_plan.placed.key?(:lesson), "with no word"
 

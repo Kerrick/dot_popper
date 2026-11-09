@@ -11,7 +11,7 @@ module DotPopper
       def size(name) = sizes.fetch(name)
     end
 
-    # The offer, over the Records screen: the heading, what is included, a
+    # The offer, over the Stats screen: the heading, what is included, a
     # note of the games left and when more come (+note+), a line for how
     # the store is getting on (kept even while empty, so nothing moves when
     # it speaks), and the two buttons. Short of room the type shrinks;

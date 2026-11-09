@@ -74,13 +74,13 @@ module DotPopperGui
     # A returning player's records: a best of 24, three days in a row of
     # today's goal, and today's met once +done+.
     def returning(done:)
-      today = show.lifetime.today
-      stats = show.lifetime.stats
+      today = show.stats_book.today
+      stats = show.stats_book.stats
       met = done ? today : today - 1
       streak = stats.streak.with(current: done ? 4 : 3, longest: 4, last_met: met.iso8601)
-      show.lifetime.restore(stats.with(streak:).to_text)
+      show.stats_book.restore(stats.with(streak:).to_text)
       cabinet.best.restore("#{cabinet.size_class.name}=24\n#{DotPopper::SizeClass::FITTED.name}=24\n")
-      show.send(:records_changed)
+      show.send(:stats_changed)
     end
   end
 end

@@ -8,11 +8,11 @@ module DotPopper
     # is celebrated once, when it has finished counting. +stats+ are the
     # game's RoundStats, for the line of facts under the score. +record+
     # is the most impressive lifetime record the game set
-    # (LifetimeStats::Record), or nil, and +goal_met+ whether it was the
+    # (Stats::Record), or nil, and +goal_met+ whether it was the
     # first game to meet today's goal, which is celebrated once, also when
     # the score has counted. +screen+ says what screen the game was
     # played on, for the result to share (Words#played_on), or is nil.
-    # +lesson+ is the wrong tap to teach the stacking rule from (Slip,
+    # +lesson+ is the wrong tap to teach the stacking rule from (Mistake,
     # from the Tutor), on the first Game Overs after a wrong tap with the
     # bright dot hidden beneath, or nil, and +replayed+ how many times it
     # has replayed.

@@ -22,9 +22,9 @@ module DotPopperGui
       check_fresh_pixel(fresh_dot, shot)
       check_hud_drawn(shot)
       POPS.times { pop_fresh }
-      expect(pops: POPS, slips: 0)
+      expect(pops: POPS, mistakes: 0)
       tap_too_soon
-      expect(pops: POPS, slips: 1)
+      expect(pops: POPS, mistakes: 1)
       run_out_the_clock
       game_over
       click_empty_space
@@ -36,17 +36,17 @@ module DotPopperGui
     private
 
     # Checks the score and the clock are what the rules make of +pops+
-    # and +slips+: a point and a second for each pop, two of each lost to
-    # each slip, the score never below zero, and the clock down by the
+    # and +mistakes+: a point and a second for each pop, two of each lost to
+    # each mistake, the score never below zero, and the clock down by the
     # game time that has passed.
-    def expect(pops:, slips:)
-      check_equal(expected_score(pops, slips), game.score, "the score after #{pops} pops and #{slips} slips")
-      granted = R::STARTING_SECONDS + (pops * R::POP_SECONDS) - (slips * R::PENALTY_SECONDS)
+    def expect(pops:, mistakes:)
+      check_equal(expected_score(pops, mistakes), game.score, "the score after #{pops} pops and #{mistakes} mistakes")
+      granted = R::STARTING_SECONDS + (pops * R::POP_SECONDS) - (mistakes * R::PENALTY_SECONDS)
       check_close(granted, game.countdown.remaining + game.elapsed, "the clock's time left and time played add up")
     end
 
-    def expected_score(pops, slips)
-      [(pops * R::POP_POINTS) - (slips * R::PENALTY_POINTS), R::LOWEST_SCORE].max
+    def expected_score(pops, mistakes)
+      [(pops * R::POP_POINTS) - (mistakes * R::PENALTY_POINTS), R::LOWEST_SCORE].max
     end
 
     # Waits for a popped dot to lie over the fresh one, and taps between

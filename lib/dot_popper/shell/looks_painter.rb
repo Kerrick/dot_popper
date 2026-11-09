@@ -19,7 +19,7 @@ module DotPopper
                  pen.palette.cream)
         note(show, plan, layout) if plan.note
         plan.cards.each { card(it, show) }
-        PillButton.new(pen:).draw(layout.clear_records_button, show.words.offer[:entry], alpha: 0.8 + (0.2 * show.hover.level(:offer)),
+        PillButton.new(pen:).draw(layout.clear_stats_button, show.words.offer[:entry], alpha: 0.8 + (0.2 * show.hover.level(:offer)),
                                   hover: show.hover.level(:offer), color: pen.palette.soft) if plan.note && show.offer_offered?
         PillButton.new(pen:).draw(layout.back_button, show.words.go_back, hover: show.hover.level(:back))
       end

@@ -85,7 +85,7 @@ module DotPopper
       HOW_TO_PLAY_LEAST = 3.1 # ...and the least it is drawn at in the bottom row
       FULL_SCREEN = 3.8 # "Full screen"'s width, in its heights, as wide as "How to play"
       QUIT = 2.4 # "Quit"'s width, in its heights
-      LOOKS = 3.0 # the Records screen's "Looks" width, in its height
+      LOOKS = 3.0 # the Stats screen's "Looks" width, in its height
 
       # The scale for text and the HUD: 1 on a mid-sized window, smaller on
       # a phone, a little larger on a big screen.
@@ -130,7 +130,7 @@ module DotPopper
       # buttons' heights across, or, where the row is short of room for it
       # and "How to play" both at that width, as on an upright phone, as
       # little as HOW_TO_PLAY_LEAST.
-      def records_button
+      def stats_button
         height = button_size
         shared = (safe.width - (4 * margin) - height) / 2.0
         width = shared.clamp(height * HOW_TO_PLAY_LEAST, height * HOW_TO_PLAY)
@@ -148,7 +148,7 @@ module DotPopper
       def how_to_play_button(window: nil)
         height = button_size
         right = (window&.in_row? ? window.fullscreen.x : mute_button.x) - margin
-        room = right - (records_button.right + margin)
+        room = right - (stats_button.right + margin)
         if room >= height * HOW_TO_PLAY_LEAST
           width = [height * HOW_TO_PLAY, room].min
           return Rect.new(x: right - width, y: mute_button.y, width:, height:)
@@ -158,31 +158,31 @@ module DotPopper
         Rect.new(x: safe.right - margin - width, y: mute_button.y - row_apart(height) - height, width:, height:)
       end
 
-      # The Records screen's "Clear my records…": small, in the safe
+      # The Stats screen's "Clear my records…": small, in the safe
       # area's bottom right corner, across from where "Your records" was
       # pressed, and on a row of its own under the prompt to go back.
-      def clear_records_button
+      def clear_stats_button
         height = button_size
         width = [height * 4.6, safe.width - (2 * margin)].min
         Rect.new(x: safe.right - margin - width, y: safe.bottom - margin - height, width:, height:)
       end
 
-      # The Records screen's Back, in the bottom left corner, where "Your
+      # The Stats screen's Back, in the bottom left corner, where "Your
       # records" was pressed, across from "Clear my records…" and never
       # into it.
       def back_button
         height = button_size
-        room = safe.width - (3 * margin) - clear_records_button.width
+        room = safe.width - (3 * margin) - clear_stats_button.width
         Rect.new(x: safe.x + margin, y: safe.bottom - margin - height, width: [height * 2.4, room].min, height:)
       end
 
-      # The Records screen's Credits, a quiet pill beside Back, between it
+      # The Stats screen's Credits, a quiet pill beside Back, between it
       # and "Clear my records…", when there is room for it there; and
       # otherwise, as on an upright phone, on a row of its own above Back.
       def credits_button
         height = button_size
         wanted = height * 3.0
-        room = clear_records_button.x - margin - back_button.right - margin
+        room = clear_stats_button.x - margin - back_button.right - margin
         if room >= wanted
           Rect.new(x: back_button.right + margin, y: back_button.y, width: wanted, height:)
         else
@@ -190,7 +190,7 @@ module DotPopper
         end
       end
 
-      # The Records screen's Looks, a quiet pill of the same kind, offered
+      # The Stats screen's Looks, a quiet pill of the same kind, offered
       # once there is a look to choose. It follows Credits along the bottom
       # row when there is room for both, and otherwise takes the row above
       # Back, beside Credits if that is there too and has room, or over it.
@@ -200,7 +200,7 @@ module DotPopper
         credits = credits_button
         if credits.y == back_button.y
           x = credits.right + margin
-          return Rect.new(x:, y: credits.y, width:, height:) if clear_records_button.x - margin - x >= width
+          return Rect.new(x:, y: credits.y, width:, height:) if clear_stats_button.x - margin - x >= width
 
           return Rect.new(x: back_button.x, y: back_button.y - margin - height, width: [width, safe.width - (2 * margin)].min, height:)
         end
@@ -211,18 +211,18 @@ module DotPopper
         Rect.new(x: credits.x, y: credits.y - margin - height, width: [width, safe.width - (2 * margin)].min, height:)
       end
 
-      # The top of the Records screen's buttons, whichever row they are on.
-      def records_floor(looks: false, offer: false)
-        [back_button.y, credits_button.y, clear_records_button.y, (looks_button.y if looks), (offer_button.y if offer)].compact.min
+      # The top of the Stats screen's buttons, whichever row they are on.
+      def stats_floor(looks: false, offer: false)
+        [back_button.y, credits_button.y, clear_stats_button.y, (looks_button.y if looks), (offer_button.y if offer)].compact.min
       end
 
-      # The Records screen's way to the paid version, a quiet pill at the
+      # The Stats screen's way to the paid version, a quiet pill at the
       # right, on a row of its own above every other button there, so it
       # never takes the place of Credits or Looks.
       def offer_button
         height = button_size
         width = [height * 3.4, safe.width - (2 * margin)].min
-        top = [credits_button.y, looks_button.y, clear_records_button.y].min
+        top = [credits_button.y, looks_button.y, clear_stats_button.y].min
         Rect.new(x: safe.right - margin - width, y: top - margin - height, width:, height:)
       end
 
@@ -301,7 +301,7 @@ module DotPopper
         height = button_size
         segment = height * 4.2
         label = height * 2.1
-        left = records_button.right + margin
+        left = stats_button.right + margin
         how = how_to_play_button(window:)
         right = (how.y == mute_button.y ? how.x : mute_button.x) - margin
         above = window&.above? ? window.rects : []

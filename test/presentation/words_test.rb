@@ -30,7 +30,7 @@ class WordsTest < Minitest::Test
   # The result to share names a new best or a tie, and otherwise only
   # the score.
   def test_the_shared_result_says_the_score_and_what_the_game_was
-    stats = DotPopper::GameStats.start.with(pops: 27, slips: 1, duration: 38.2)
+    stats = DotPopper::GameStats.start.with(pops: 27, mistakes: 1, duration: 38.2)
 
     assert_equal "Dot Popper: 25 points, a new best!\n🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds",
                  Look::WORDS.share_text(25, stats, best: 25, new_best: true)
@@ -42,10 +42,10 @@ class WordsTest < Minitest::Test
   end
 
   def test_the_shared_result_names_a_record_on_its_own_line
-    stats = DotPopper::GameStats.start.with(pops: 27, slips: 1, duration: 38.2)
-    record = DotPopper::LifetimeStats::Record.new(kind: :longest_run, value: 18)
+    stats = DotPopper::GameStats.start.with(pops: 27, mistakes: 1, duration: 38.2)
+    record = DotPopper::Stats::Record.new(kind: :most_dots_in_a_row, value: 18)
 
-    assert_equal "Dot Popper: 25 points, a new best!\nNew record: 18 pops in a row without a mistake\n" \
+    assert_equal "Dot Popper: 25 points, a new best!\nNew record: 18 dots in a row without a mistake\n" \
                  "🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds",
                  Look::WORDS.share_text(25, stats, best: 25, new_best: true, record:)
   end
@@ -53,7 +53,7 @@ class WordsTest < Minitest::Test
   # A score depends on how crowded the screen gets, so the shared result
   # says how big the screen was, counted in dots side by side.
   def test_the_shared_result_can_say_the_screen_it_was_played_on
-    stats = DotPopper::GameStats.start.with(pops: 27, slips: 1, duration: 38.2)
+    stats = DotPopper::GameStats.start.with(pops: 27, mistakes: 1, duration: 38.2)
     screen = Look::WORDS.played_on(DotPopper::Field.new(1200, 800, 50))
 
     assert_equal "Played on a screen about 12 dots wide and 8 dots tall.", screen
@@ -65,12 +65,12 @@ class WordsTest < Minitest::Test
   end
 
   def test_each_record_reads_as_a_sentence
-    record = ->(kind, value) { Look::WORDS.record(DotPopper::LifetimeStats::Record.new(kind:, value:)) }
+    record = ->(kind, value) { Look::WORDS.record(DotPopper::Stats::Record.new(kind:, value:)) }
 
-    assert_equal "New record: 18 pops in a row without a mistake", record[:longest_run, 18]
+    assert_equal "New record: 18 dots in a row without a mistake", record[:most_dots_in_a_row, 18]
     assert_equal "New record: your longest game, 48 seconds", record[:longest_game, 47.6]
-    assert_equal "New record: you waited 6.2 seconds for a dot, then popped it", record[:longest_wait, 6.24]
-    assert_equal "New record: your fastest pop, 0.3 seconds after the dot appeared", record[:fastest_pop, 0.31]
+    assert_equal "New record: you waited 6.2 seconds for a dot, then popped it", record[:longest_time_to_pop, 6.24]
+    assert_equal "New record: your fastest pop, 0.3 seconds after the dot appeared", record[:shortest_time_to_pop, 0.31]
   end
 
   # The main buttons name the gamepad's button that presses them.
@@ -87,7 +87,7 @@ class WordsTest < Minitest::Test
 
   # Holding "Clear my records…" says what will go, and on a gamepad
   # names the button being held.
-  def test_clearing_the_records_says_what_goes_and_names_the_button
+  def test_clearing_the_stats_says_what_goes_and_names_the_button
     mouse = Look::WORDS.for(InputKind::MOUSE)
     pad = Look::WORDS.for(InputKind::GAMEPAD)
 
@@ -103,11 +103,11 @@ class WordsTest < Minitest::Test
   end
 
   def test_the_game_in_one_line
-    stats = DotPopper::GameStats.start.with(pops: 14, slips: 2, waits: [1.0, 3.14])
+    stats = DotPopper::GameStats.start.with(pops: 14, mistakes: 2, times_to_pop: [1.0, 3.14])
 
     assert_equal "14 pops, 2 mistakes, slowest pop 3.1 seconds", Look::WORDS.summary(stats)
     assert_equal "1 pop, 1 mistake, slowest pop 0.0 seconds",
-                 Look::WORDS.summary(DotPopper::GameStats.start.with(pops: 1, slips: 1, waits: [0.0]))
+                 Look::WORDS.summary(DotPopper::GameStats.start.with(pops: 1, mistakes: 1, times_to_pop: [0.0]))
     assert_equal "0 pops, 0 mistakes", Look::WORDS.summary(DotPopper::GameStats.start)
   end
 

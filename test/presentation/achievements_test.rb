@@ -2,25 +2,25 @@
 
 require_relative "presentation_helper"
 
-# The achievements on the Records screen and at Game Over: shown with the paid
+# The achievements on the Stats screen and at Game Over: shown with the paid
 # version, earned and kept without it, and cleared with the records.
-class AchievementsOnRecordsTest < Minitest::Test
+class AchievementsOnStatsTest < Minitest::Test
   include PresentationTest
 
   Memory = DotPopper::BestScore::Memory
   MEDIUM = DotPopper::SizeClass::MEDIUM
 
   def setup
-    @folder = DotPopper::RecordKeeper::Folder.new
+    @folder = DotPopper::StatsKeeper::Folder.new
     @achievements = DotPopper::Achievements.new(@folder.call("achievements"))
   end
 
   def show(paid:)
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), best: DotPopper::BestScore.new(@folder.call("best")))
-    lifetime = DotPopper::Lifetime.new(@folder.call("lifetime"), today: -> { Date.new(2026, 11, 8) })
-    keeper = DotPopper::RecordKeeper.new(best: @cabinet.best, lifetime:, achievements: @achievements, folder: @folder)
+    stats_book = DotPopper::StatsBook.new(@folder.call("lifetime"), today: -> { Date.new(2026, 11, 8) })
+    keeper = DotPopper::StatsKeeper.new(best: @cabinet.best, stats_book:, achievements: @achievements, folder: @folder)
     entitlement = DotPopper::Entitlement.new(Memory.new(paid ? "paid" : nil))
-    @show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, lifetime:, keeper:,
+    @show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, stats_book:, keeper:,
                      achievements: @achievements, entitlement:)
   end
 
@@ -62,7 +62,7 @@ class AchievementsOnRecordsTest < Minitest::Test
     assert_empty @show.finale.achievements
   end
 
-  def test_the_records_list_every_achievement_open_before_any_is_earned
+  def test_the_stats_list_every_achievement_open_before_any_is_earned
     show(paid: true)
     sheet = build_sheet(paid: true)
     marks = sheet.achievements.rows.map(&:mark)
@@ -100,74 +100,74 @@ class AchievementsOnRecordsTest < Minitest::Test
   end
 
   def test_a_sheet_with_no_achievements_lists_no_achievements
-    assert_nil RecordsSheet.build(stats, best: 1, words: Look::WORDS).achievements
+    assert_nil StatsSheet.build(stats, best: 1, words: Look::WORDS).achievements
   end
 
-  def test_the_records_screen_puts_the_achievements_in_a_column_of_their_own_where_there_is_room
+  def test_the_stats_screen_puts_the_achievements_in_a_column_of_their_own_where_there_is_room
     sheet = build_sheet(paid: true)
-    plan = RecordsLayout.new(layout: layout(1400, 700), sheet:, look: Look::RECORDS, widest: 360)
-    achievements = plan.placements.select { it.item.is_a?(RecordRow) && it.item.mark }
-    others = plan.placements.reject { it.item.is_a?(RecordRow) && it.item.mark }.select { it.item.is_a?(RecordRow) }
+    plan = StatsLayout.new(layout: layout(1400, 700), sheet:, look: Look::RECORDS, widest: 360)
+    achievements = plan.placements.select { it.item.is_a?(StatsRow) && it.item.mark }
+    others = plan.placements.reject { it.item.is_a?(StatsRow) && it.item.mark }.select { it.item.is_a?(StatsRow) }
 
     assert_equal DotPopper::Achievement::IDS.size, achievements.size
     assert_equal 1, achievements.map(&:x).uniq.size
     assert_empty achievements.map(&:x) & others.map(&:x)
   end
 
-  def test_a_free_players_records_fit_with_the_achievements_looks_and_the_offer_at_phone_and_desktop_sizes
+  def test_a_free_players_stats_fit_with_the_achievements_looks_and_the_offer_at_phone_and_desktop_sizes
     sheet = build_sheet(paid: false)
 
     [[1200, 800], [800, 500], [400, 320], [400, 850], [850, 400], [844, 390], [2560, 1440]].each do |width, height|
-      plan = RecordsLayout.new(layout: layout(width, height), sheet:, look: Look::RECORDS, widest: 360, looks: true, offer: true)
+      plan = StatsLayout.new(layout: layout(width, height), sheet:, look: Look::RECORDS, widest: 360, looks: true, offer: true)
       page = layout(width, height)
 
-      assert_operator plan.prompt_y, :<=, page.records_floor(looks: true, offer: true), "#{width}x#{height}"
+      assert_operator plan.prompt_y, :<=, page.stats_floor(looks: true, offer: true), "#{width}x#{height}"
       plan.placements.each do |placed|
         assert_operator placed.x, :>=, 0, "#{width}x#{height}"
         assert_operator placed.right, :<=, width, "#{width}x#{height}"
         assert_operator placed.y, :<, plan.prompt_y, "#{width}x#{height}"
       end
-      assert_equal DotPopper::Achievement::IDS.size, plan.placements.count { it.item.is_a?(RecordRow) && it.item.mark }, "#{width}x#{height}"
+      assert_equal DotPopper::Achievement::IDS.size, plan.placements.count { it.item.is_a?(StatsRow) && it.item.mark }, "#{width}x#{height}"
     end
   end
 
   def test_on_a_narrow_screen_the_achievements_stack_under_the_rest_and_all_fit
     sheet = build_sheet(paid: true)
-    plan = RecordsLayout.new(layout: layout(395, 850), sheet:, look: Look::RECORDS, widest: 300)
+    plan = StatsLayout.new(layout: layout(395, 850), sheet:, look: Look::RECORDS, widest: 300)
     placed = plan.placements
 
-    assert_equal DotPopper::Achievement::IDS.size, placed.count { it.item.is_a?(RecordRow) && it.item.mark }
+    assert_equal DotPopper::Achievement::IDS.size, placed.count { it.item.is_a?(StatsRow) && it.item.mark }
     assert_equal 1, placed.map(&:x).uniq.size, "one column"
     assert_operator placed.map(&:y).max, :<, plan.prompt_y
   end
 
-  def test_clearing_the_records_clears_the_achievements_and_undo_brings_them_back
+  def test_clearing_the_stats_clears_the_achievements_and_undo_brings_them_back
     show(paid: true)
     play_a_sharp_game
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
-    @show.open_records
-    assert_equal :earned, @show.records.achievements.rows.first.mark
+    @show.open_stats
+    assert_equal :earned, @show.stats.achievements.rows.first.mark
 
-    @show.send(:clear_records)
+    @show.send(:clear_stats)
     assert_empty @achievements.earned
-    assert_equal :open, @show.records.achievements.rows.first.mark
+    assert_equal :open, @show.stats.achievements.rows.first.mark
     assert_equal 1, @folder.call("cleared.txt").read.scan("achievements-").size
 
     @show.undo_offer && @show.send(:undo)
     assert_equal [:sharpshooter], @achievements.earned
-    assert_equal :earned, @show.records.achievements.rows.first.mark
+    assert_equal :earned, @show.stats.achievements.rows.first.mark
   end
 
   private
 
   def stats
-    DotPopper::LifetimeStats.new(games: 4, pops: 40, slips: 2, seconds: 100.0, days: 2, recent: [3, 9],
+    DotPopper::Stats.new(games: 4, pops: 40, mistakes: 2, seconds: 100.0, days: 2, recent: [3, 9],
                                  recent_classes: [MEDIUM] * 2)
   end
 
   def build_sheet(paid:)
-    RecordsSheet.build(stats, best: 9, words: Look::WORDS, size_class: MEDIUM, field: DotPopper::Field.new(1200, 800, R),
+    StatsSheet.build(stats, best: 9, words: Look::WORDS, size_class: MEDIUM, field: DotPopper::Field.new(1200, 800, R),
                               achievements: @achievements, paid:)
   end
 end

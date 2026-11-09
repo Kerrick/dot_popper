@@ -19,7 +19,7 @@ module DotPopper
           readout(readout, pill.x + (cell * (i + 0.5)), pill.y + (pad * 0.55), number, label, layout)
         end
         divider(pill.x + cell, pill.y + (pad * 0.7), pill.bottom - (pad * 0.7))
-        streak(hud.streak_readout, pill) if hud.streak_readout
+        dots_in_a_row(hud.dots_in_a_row_readout, pill) if hud.dots_in_a_row_readout
         pill
       end
 
@@ -41,7 +41,7 @@ module DotPopper
         rect = bounds(hud, layout)
         y = number_middle(rect.y + (padding(number) * 0.55), number, label)
         { score: [rect.x + (cell * 0.5), y], time: [rect.x + (cell * 1.5), y],
-          streak: [rect.center_x, streak_top(rect)] }
+          dots_in_a_row: [rect.center_x, dots_in_a_row_top(rect)] }
       end
 
       # Makes every size a bump or an urgent pulse passes through, an
@@ -55,16 +55,16 @@ module DotPopper
 
       private
 
-      # The streak toward a bonus dot, as a row of the game's own small
+      # The row toward a bonus dot, as a row of the game's own small
       # dots hung under the pill: bright ones are the pops so far, dark
       # ones are still to come, and all of them mint when the bonus dot is
       # out there to pop.
-      def streak(readout, pill)
+      def dots_in_a_row(readout, pill)
         pixels = pen.pixels
         radius = pill.height * Presentation::Hud::PIP
         step = radius * Presentation::Hud::PIP_STEP
         left = pill.center_x - (step * (readout.size - 1) / 2.0)
-        top = streak_top(pill)
+        top = dots_in_a_row_top(pill)
         readout.size.times do |i|
           grown = readout.bumping?(i) ? radius * readout.scale : radius
           dots.icon(pixels.snap(left + (step * i)), pixels.snap(top), grown, fresh: readout.lit?(i),
@@ -72,8 +72,8 @@ module DotPopper
         end
       end
 
-      # The middle of the streak's row of dots, hung under the +pill+.
-      def streak_top(pill) = pill.bottom + (pill.height * Presentation::Hud::PIP * 1.7)
+      # The middle of the row's row of dots, hung under the +pill+.
+      def dots_in_a_row_top(pill) = pill.bottom + (pill.height * Presentation::Hud::PIP * 1.7)
 
       def fonts(layout)
         type = pen.look::TYPE

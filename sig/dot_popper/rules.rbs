@@ -17,14 +17,14 @@ module DotPopper
     LOWEST_SCORE: Integer
 
     class Bonus < ::Data
-      attr_reader streak: Integer
+      attr_reader dots_in_a_row: Integer
 
       attr_reader points: Integer
 
       attr_reader seconds: Float
 
-      def self.new: (streak: Integer, points: Integer, seconds: Float) -> instance
-                  | (Integer streak, Integer points, Float seconds) -> instance
+      def self.new: (dots_in_a_row: Integer, points: Integer, seconds: Float) -> instance
+                  | (Integer dots_in_a_row, Integer points, Float seconds) -> instance
     end
 
     BONUS: Bonus

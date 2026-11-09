@@ -1,5 +1,5 @@
 module DotPopper
-  class LifetimeStats < ::Data
+  class Stats < ::Data
     RECENT: Integer
 
     DAY: Regexp
@@ -10,7 +10,7 @@ module DotPopper
 
     attr_reader pops: Integer
 
-    attr_reader slips: Integer
+    attr_reader mistakes: Integer
 
     attr_reader seconds: Float
 
@@ -26,21 +26,21 @@ module DotPopper
 
     attr_reader bests: Hash[SizeClass, Bests]
 
-    def self.new: (?games: Integer, ?pops: Integer, ?slips: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
+    def self.new: (?games: Integer, ?pops: Integer, ?mistakes: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
                    ?recent: Array[Integer], ?recent_classes: Array[SizeClass?], ?streak: GoalStreak,
                    ?bests: Hash[SizeClass, Bests]) -> instance
 
-    def initialize: (?games: Integer, ?pops: Integer, ?slips: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
+    def initialize: (?games: Integer, ?pops: Integer, ?mistakes: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
                      ?recent: Array[Integer], ?recent_classes: Array[SizeClass?], ?streak: GoalStreak,
                      ?bests: Hash[SizeClass, Bests]) -> void
 
-    def self.parse: (String? text, ?legacy: SizeClass) -> LifetimeStats
+    def self.parse: (String? text, ?legacy: SizeClass) -> Stats
 
     def self.old?: (String? text) -> bool
 
     def bests_in: (SizeClass size_class) -> Bests
 
-    def add: (GameStats stats, day: String, size_class: SizeClass) -> LifetimeStats
+    def add: (GameStats stats, day: String, size_class: SizeClass) -> Stats
 
     def records_set_by: (GameStats stats, SizeClass size_class) -> Array[Record]
 
@@ -51,17 +51,17 @@ module DotPopper
 
       attr_reader longest_game: Float
 
-      attr_reader longest_run: Integer
+      attr_reader most_dots_in_a_row: Integer
 
-      attr_reader fastest_pop: Float?
+      attr_reader shortest_time_to_pop: Float?
 
-      attr_reader longest_wait: Float
+      attr_reader longest_time_to_pop: Float
 
-      def self.new: (?games: Integer, ?longest_game: number, ?longest_run: Integer, ?fastest_pop: number?,
-                     ?longest_wait: number) -> instance
+      def self.new: (?games: Integer, ?longest_game: number, ?most_dots_in_a_row: Integer, ?shortest_time_to_pop: number?,
+                     ?longest_time_to_pop: number) -> instance
 
-      def initialize: (?games: Integer, ?longest_game: number, ?longest_run: Integer, ?fastest_pop: number?,
-                       ?longest_wait: number) -> void
+      def initialize: (?games: Integer, ?longest_game: number, ?most_dots_in_a_row: Integer, ?shortest_time_to_pop: number?,
+                       ?longest_time_to_pop: number) -> void
 
       def self.parse: (Pairs pairs) -> Bests
 

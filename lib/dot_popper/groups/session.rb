@@ -43,7 +43,7 @@ module DotPopper
       NEVER_TAKEN = [400, 404, 422].freeze
       # The longest a Retry-After is believed, in seconds, and how long to
       # wait when a 429 names no time.
-      LONGEST_WAIT = 3_600
+      LONGEST_TIME_TO_POP = 3_600
       USUAL_WAIT = 60
       # A Worker that is never asked to do anything.
       NO_WORKER = Struct.new(:none) do
@@ -188,7 +188,7 @@ module DotPopper
       def waiting_out? = @wait_until && @clock.call.to_i < @wait_until
 
       def wait_out(seconds)
-        @wait_until = @clock.call.to_i + (seconds || USUAL_WAIT).clamp(0, LONGEST_WAIT)
+        @wait_until = @clock.call.to_i + (seconds || USUAL_WAIT).clamp(0, LONGEST_TIME_TO_POP)
       end
 
       def settle(job, reply)

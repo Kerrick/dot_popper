@@ -73,7 +73,7 @@ module DotPopper
       def line_height = size * 1.35
       def heading_y = layout.top + (heading_size * 0.5)
       def under_heading = layout.top + (heading_size * 1.3) + (size * 0.5)
-      def floor = layout.records_floor - (margin * 0.5)
+      def floor = layout.stats_floor - (margin * 0.5)
       def short? = layout.safe.height < TALL && layout.safe.width > layout.safe.height
 
       def back_action = GroupAction.new(name: :back, rect: layout.back_button, text: back_text)
@@ -146,7 +146,7 @@ module DotPopper
       def delete_action
         return [] unless panel.groups.known?
 
-        [GroupAction.new(name: :group_delete, rect: layout.clear_records_button, text: GroupWords.delete)]
+        [GroupAction.new(name: :group_delete, rect: layout.clear_stats_button, text: GroupWords.delete)]
       end
 
       def group_plan
@@ -162,7 +162,7 @@ module DotPopper
         end
         plan_with(heading: GroupWords.group_heading, lines:, rows:,
                   actions: [back_action, GroupAction.new(name: :group_leave, rect: layout.credits_button, text: GroupWords.leave),
-                            GroupAction.new(name: :group_history, rect: layout.clear_records_button, text: GroupWords.history)])
+                            GroupAction.new(name: :group_history, rect: layout.clear_stats_button, text: GroupWords.history)])
       end
 
       def history_plan
@@ -187,7 +187,7 @@ module DotPopper
         box = Rect.new(x: left, y: under_heading, width: column_width, height: button)
         message = alert_text ? wrapped(alert_text, box.bottom + (size * 0.9), :alert) : []
         top = box.bottom + (line_height * 1.5)
-        keys = pad(Rect.new(x: left, y: top, width: column_width, height: pad_height(layout.records_floor - margin - top))).keys
+        keys = pad(Rect.new(x: left, y: top, width: column_width, height: pad_height(layout.stats_floor - margin - top))).keys
         plan_with(heading: GroupWords.join_heading, lines: message, code_box: box, actions: [*keys, back_action])
       end
 
@@ -196,7 +196,7 @@ module DotPopper
         x = layout.center_x - (((2 * each) + margin) / 2.0)
         box = Rect.new(x:, y: under_heading, width: each, height: button)
         message = alert_text ? wrapped(alert_text, box.bottom + (size * 0.9), :alert, each) : []
-        room = layout.records_floor - margin - layout.top
+        room = layout.stats_floor - margin - layout.top
         keys = pad(Rect.new(x: x + each + margin, y: layout.top, width: each, height: pad_height(room))).keys
         plan_with(heading: GroupWords.join_heading, heading_x: box.center_x, lines: message, code_box: box, actions: [*keys, back_action])
       end

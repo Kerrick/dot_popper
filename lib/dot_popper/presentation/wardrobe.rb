@@ -71,7 +71,7 @@ module DotPopper
       # Whether the looks are shown but not to wear, as for a free player.
       def locked? = !@entitlement.paid?
 
-      # Whether the Records screen offers the Looks screen: to a free
+      # Whether the Stats screen offers the Looks screen: to a free
       # player always, since there are looks to see, and to a paid player
       # once there is one besides the ordinary look to choose.
       def offered? = locked? || choices.size > 1

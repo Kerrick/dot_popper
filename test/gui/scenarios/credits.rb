@@ -1,19 +1,19 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # The Credits screen, opened from the Records screen by a click on
+  # The Credits screen, opened from the Stats screen by a click on
   # Credits, by the gamepad's X, and by L; scrolled by the mouse wheel,
   # the keys, and a finger's drag; and left by Back, Escape, and B, each
-  # time to the Records screen, never past it.
+  # time to the Stats screen, never past it.
   class CreditsScenario < Scenario
     scenario :credits
 
     def play
       quick_game
-      open_records
+      open_stats
       click_credits
       check(show.credits?, "a click on Credits opens them")
-      check(show.records?, "over the Records screen")
+      check(show.stats?, "over the Records screen")
       page = show.credits_layout.window
       check(show.credits.farthest.positive?, "the page is longer than the window")
       lit = screenshot.lit_in(page)
@@ -40,28 +40,28 @@ module DotPopperGui
       keep_screenshot("credits")
 
       key(:escape)
-      check(show.records? && !show.credits?, "Escape goes back to the Records screen")
+      check(show.stats? && !show.credits?, "Escape goes back to the Records screen")
       click_credits
       back = show.back_reach
       click(back.center_x, back.center_y)
-      check(show.records? && !show.credits?, "a click on Back goes back to the Records screen")
+      check(show.stats? && !show.credits?, "a click on Back goes back to the Records screen")
       pad(:x)
       check(show.credits?, "a gamepad's X opens the credits")
       pad(:b)
-      check(show.records? && !show.credits?, "a gamepad's B goes back to the Records screen")
+      check(show.stats? && !show.credits?, "a gamepad's B goes back to the Records screen")
       key(:c)
       check(show.credits?, "C opens the credits")
       key(:escape)
       key(:escape)
-      check(show.title? && !show.records?, "Escape again goes back to the title, and starts no game")
+      check(show.title? && !show.stats?, "Escape again goes back to the title, and starts no game")
     end
 
     private
 
-    def open_records
-      reach = show.records_reach
+    def open_stats
+      reach = show.stats_reach
       click(reach.center_x, reach.center_y)
-      check(show.records?, "a click on Your records opens them")
+      check(show.stats?, "a click on Your records opens them")
     end
 
     def click_credits

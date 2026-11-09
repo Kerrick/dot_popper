@@ -33,7 +33,7 @@ class AchievementWatchTest < Minitest::Test
     tap_at(fresh.x, fresh.y)
   end
 
-  def slip
+  def mistake
     popped = @game.dots.find(&:popped?)
     tap_at(popped.x, popped.y)
   end
@@ -43,7 +43,7 @@ class AchievementWatchTest < Minitest::Test
                                        size_class: DotPopper::SizeClass::MEDIUM))
   end
 
-  # A game with a popped dot to slip on and a fresh one to pop.
+  # A game with a popped dot to mistake on and a fresh one to pop.
   def open_game
     watch(game_with(dot(100, 100, popped: true), dot(600, 400)))
   end
@@ -175,7 +175,7 @@ class AchievementWatchTest < Minitest::Test
   def test_a_mistake_starts_the_run_again
     open_game
     10.times { pop_fresh(after: 0.5) }
-    slip
+    mistake
     refute_includes @watch.earned, :shake_off
     10.times { pop_fresh(after: 0.5) }
     assert_includes @watch.earned, :shake_off
@@ -266,7 +266,7 @@ class AchievementWatchTest < Minitest::Test
     assert_empty @watch.earned
   end
 
-  def test_achievements_are_listed_in_the_order_the_records_screen_lists_them
+  def test_achievements_are_listed_in_the_order_the_stats_screen_lists_them
     open_game
     @game.instance_variable_set(:@elapsed, 95.0)
     score!(@game, 80)

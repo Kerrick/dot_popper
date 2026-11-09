@@ -2,7 +2,7 @@
 
 module DotPopper
   module Shell
-    # The Records screen, over the title's dimmed dots: the heading, the
+    # The Stats screen, over the title's dimmed dots: the heading, the
     # notes on the screen's size under it, the chart of the last scores,
     # the bests and totals as rows with their labels on the left and
     # their numbers lined up on the right, a faint dotted leader between,
@@ -11,21 +11,21 @@ module DotPopper
     # is held, the prompt says what will go, and a bar under it fills.
     # Presentation::RecordsLayout decides where each goes; this only draws,
     # on whole device pixels.
-    class RecordsPainter < Data.define(:pen)
+    class StatsPainter < Data.define(:pen)
       G = ::Lota::Graphics
       DIM = 0.3 # how much of a bar shows when its game counts elsewhere
       MARK = 1.1 # the room a achievement's mark takes before its label, in rows' type
 
       def draw(show, layout)
-        sheet = show.records or return
+        sheet = show.stats or return
         words = show.words
         palette = pen.palette
-        plan = Presentation::RecordsLayout.new(layout:, sheet:, look: pen.look::RECORDS,
+        plan = Presentation::StatsLayout.new(layout:, sheet:, look: pen.look::RECORDS,
                                                widest: widest(sheet, layout.scaled(pen.look::RECORDS.text)),
                                                looks: show.looks_offered?, offer: show.offer_offered?)
         notes = note_lines(sheet, plan, layout)
         plan = plan.with(note_lines: notes.size)
-        pen.text(words.records, pen.fonts.bold(plan.heading_size), layout.center_x, plan.heading_y, palette.cream)
+        pen.text(words.stats, pen.fonts.bold(plan.heading_size), layout.center_x, plan.heading_y, palette.cream)
         font = pen.fonts.semibold(plan.note_size)
         notes.each_with_index { |line, i| pen.text(line, font, layout.center_x, plan.note_y(i), palette.soft) }
         prompt(show, plan, layout)
@@ -134,7 +134,7 @@ module DotPopper
       # itself fills from the left in the alarm's pink, so how far along
       # the hold is can't be missed, and its words are drawn again on top.
       def clear(show, layout)
-        rect = layout.clear_records_button
+        rect = layout.clear_stats_button
         held = show.clearing.held?
         hover = show.hover.level(:clear)
         PillButton.new(pen:).draw(rect, show.words.clear, alpha: held ? 1.0 : 0.8 + (0.2 * hover),
@@ -185,9 +185,9 @@ module DotPopper
       # The rows' type size, shrunk by whole sizes until every row's label
       # and number fit across its column with room between them.
       def fit(plan)
-        rows = plan.placements.select { it.item.is_a?(Presentation::RecordRow) }
+        rows = plan.placements.select { it.item.is_a?(Presentation::StatsRow) }
         size = plan.text_size
-        size -= 1 while size > Presentation::RecordsLayout::SMALLEST_TEXT && rows.any? { !fits?(it, size) }
+        size -= 1 while size > Presentation::StatsLayout::SMALLEST_TEXT && rows.any? { !fits?(it, size) }
         size
       end
 
@@ -201,7 +201,7 @@ module DotPopper
         palette = pen.palette
         case placed.item
         in String => title then left(title, pen.fonts.bold(size), placed.x, placed.y, palette.gain)
-        in Presentation::RecordRow => row
+        in Presentation::StatsRow => row
           label = pen.fonts.semibold(size)
           value = pen.fonts.bold(size)
           start = placed.x + (row.mark ? size * MARK : 0)
@@ -276,7 +276,7 @@ module DotPopper
       # The note under the chart, in the notes' smaller, softer type,
       # broken into even lines that fit across it.
       def chart_note(text, placed, size)
-        font = pen.fonts.semibold([(size * 0.8).floor, Presentation::RecordsLayout::SMALLEST_TEXT].max)
+        font = pen.fonts.semibold([(size * 0.8).floor, Presentation::StatsLayout::SMALLEST_TEXT].max)
         lines = Presentation::Words.balance(text, placed.width) { font.width(it) }.first(2)
         top = placed.y - (font.height * (lines.size - 1) / 2.0)
         lines.each_with_index do |line, i|

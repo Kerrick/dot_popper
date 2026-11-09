@@ -2,7 +2,7 @@
 
 module DotPopperGui
   # The offer of the paid version, kept as screenshots to look at: the way
-  # to it on the Records screen, the offer as a phone and a desktop window
+  # to it on the Stats screen, the offer as a phone and a desktop window
   # lay it out, and the thanks after the purchase, from a test build's
   # fake store. Not part of rake test:gui: it is for reviewing the screen.
   class OfferGalleryScenario < Scenario
@@ -17,7 +17,7 @@ module DotPopperGui
       show.input = P::InputKind::TOUCH
       SIZES.each { |width, height| shots(width, height) }
       resize(1200, 800)
-      show.open_records
+      show.open_stats
       show.open_offer
       wait_for("the price", within: 600) { show.offer_price }
       buy = show.reach_of(:buy)
@@ -30,7 +30,7 @@ module DotPopperGui
 
     def shots(width, height)
       resize(width, height)
-      show.open_records
+      show.open_stats
       wait(1.0)
       keep_screenshot("offer-records-#{width}x#{height}")
       show.open_offer

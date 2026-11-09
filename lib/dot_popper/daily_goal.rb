@@ -14,7 +14,7 @@ module DotPopper
     # The bonus dot (Rules::BONUS) lengthens games and raises scores, and
     # the three targets that count those were raised to match.
     LIST = [
-      new(kind: :clean_run, target: 15),   # pops in a row without a wrong tap
+      new(kind: :clean_run, target: 15),   # dots in a row without a wrong tap
       new(kind: :patient_pop, target: 3),  # seconds a fresh dot was on screen before its pop
       new(kind: :quick_start, target: 10), # pops in the game's first 10 seconds
       new(kind: :long_game, target: 50),  # seconds the game lasts
@@ -37,13 +37,13 @@ module DotPopper
     # Whether a game with +stats+ meets the goal.
     def met?(stats)
       case kind
-      when :clean_run then stats.longest_run >= target
-      when :patient_pop then stats.longest_wait >= target
+      when :clean_run then stats.most_dots_in_a_row >= target
+      when :patient_pop then stats.longest_time_to_pop >= target
       when :quick_start then stats.pops_within(QUICK_START_SECONDS) >= target
       when :long_game then stats.duration >= target
-      when :comeback then stats.slips.positive? && stats.score >= target
+      when :comeback then stats.mistakes.positive? && stats.score >= target
       when :score then stats.score >= target
-      when :clean_game then stats.slips.zero? && stats.score >= target
+      when :clean_game then stats.mistakes.zero? && stats.score >= target
       else false
       end
     end

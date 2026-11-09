@@ -13,31 +13,31 @@ module DotPopper
     # stretching glyphs), and how urgent it is, from 0 (calm) to 1.
     class Readout < Data.define(:label, :text, :scale, :urgency); end
 
-    # The streak toward a bonus dot, as small dots under the pill: +size+
+    # The row toward a bonus dot, as small dots under the pill: +size+
     # of them, the first +lit+ bright like fresh dots, the rest dark like
     # popped ones, the newest +scale+ big as it bumps. While a bonus dot is
-    # on the field (+ready+) all are lit in its mint, the streak cashed in
+    # on the field (+ready+) all are lit in its mint, the row cashed in
     # as the dot to pop.
-    class Streak < Data.define(:lit, :size, :ready, :scale)
+    class DotsInARow < Data.define(:lit, :size, :ready, :scale)
       def lit?(index) = ready || index < lit
       def bumping?(index) = !ready && index == lit - 1
     end
 
     # The score and the time left as the player last saw them, and when
     # each last changed, so a number can bump and the clock can tick. The
-    # streak (+streak+ pops in a row of +size+ that earn a bonus dot, or
-    # nil before the tutorial's streak beat and where there is no bonus) works the same way,
+    # row (+row+ dots in a row of +size+ that earn a bonus dot, or
+    # nil before the tutorial's row beat and where there is no bonus) works the same way,
     # and +ready+ says a bonus dot is on the field.
-    class Hud < Data.define(:look, :words, :score, :seconds, :streak, :size, :ready, :score_changed, :seconds_changed,
-                            :streak_changed, :now)
-      # A streak dot's radius as a share of the pill's height, and the
+    class Hud < Data.define(:look, :words, :score, :seconds, :dots_in_a_row, :size, :ready, :score_changed, :seconds_changed,
+                            :dots_in_a_row_changed, :now)
+      # A row dot's radius as a share of the pill's height, and the
       # distance between two, in their radii.
       PIP = 0.11
       PIP_STEP = 2.8
 
       def self.blank(look, words)
-        new(look:, words:, score: nil, seconds: nil, streak: nil, size: nil, ready: false,
-            score_changed: -Float::INFINITY, seconds_changed: -Float::INFINITY, streak_changed: -Float::INFINITY,
+        new(look:, words:, score: nil, seconds: nil, dots_in_a_row: nil, size: nil, ready: false,
+            score_changed: -Float::INFINITY, seconds_changed: -Float::INFINITY, dots_in_a_row_changed: -Float::INFINITY,
             now: 0.0)
       end
 
@@ -52,28 +52,28 @@ module DotPopper
         showing(score, seconds, now).streaking(game, now)
       end
 
-      # The HUD showing +game+'s streak at time +now+; a streak that grew
+      # The HUD showing +game+'s row at time +now+; a row that grew
       # bumps its newest dot.
       def streaking(game, now)
-        return with(streak: nil, size: nil, ready: false) unless game.bonus && !game.over?
+        return with(dots_in_a_row: nil, size: nil, ready: false) unless game.bonus && !game.over?
 
-        streak = game.streak
+        dots_in_a_row = game.dots_in_a_row
         ready = game.dots.any? { it.fresh? && it.bonus? }
-        grew = self.streak && streak > self.streak
-        with(streak:, size: game.bonus.streak, ready:, streak_changed: grew ? now : streak_changed)
+        grew = self.dots_in_a_row && dots_in_a_row > self.dots_in_a_row
+        with(dots_in_a_row:, size: game.bonus.dots_in_a_row, ready:, dots_in_a_row_changed: grew ? now : dots_in_a_row_changed)
       end
 
-      # The streak's small dots as they should be drawn, or nil without one.
-      def streak_readout
-        return unless streak
+      # The row's small dots as they should be drawn, or nil without one.
+      def dots_in_a_row_readout
+        return unless dots_in_a_row
 
-        Streak.new(lit: streak, size:, ready:, scale: look.bump.at(now - streak_changed))
+        DotsInARow.new(lit: dots_in_a_row, size:, ready:, scale: look.bump.at(now - dots_in_a_row_changed))
       end
 
-      # The HUD showing +lit+ of a streak of +size+, the row all mint when
+      # The HUD showing +lit+ of a row of +size+, the row all mint when
       # +ready+, as the Tutorial's rehearsal sets it; a dot newly lit bumps.
       def counting(lit, size, ready, now)
-        with(streak: lit, size:, ready:, streak_changed: streak && lit > streak ? now : streak_changed)
+        with(dots_in_a_row: lit, size:, ready:, dots_in_a_row_changed: dots_in_a_row && lit > dots_in_a_row ? now : dots_in_a_row_changed)
       end
 
       # The HUD showing +score+ and +seconds+ at time +now+, as the Tutorial

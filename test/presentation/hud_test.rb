@@ -41,44 +41,44 @@ class HudTest < Minitest::Test
     assert_in_delta 0.0, @hud.time_readout.urgency
   end
 
-  def test_it_shows_the_streak_toward_a_bonus_dot_as_dots_and_bumps_the_newest
-    readout = @hud.streak_readout
+  def test_it_shows_the_dots_in_a_row_toward_a_bonus_dot_as_dots_and_bumps_the_newest
+    readout = @hud.dots_in_a_row_readout
 
-    assert_equal [0, DotPopper::Rules::BONUS.streak, false], [readout.lit, readout.size, readout.ready]
-    @game.instance_variable_set(:@streak, 3)
+    assert_equal [0, DotPopper::Rules::BONUS.dots_in_a_row, false], [readout.lit, readout.size, readout.ready]
+    @game.instance_variable_set(:@dots_in_a_row, 3)
     hud = @hud.read(@game, 1.0)
 
-    assert_equal 3, hud.streak_readout.lit
-    assert hud.streak_readout.lit?(2)
-    refute hud.streak_readout.lit?(3)
-    assert hud.streak_readout.bumping?(2)
-    assert_operator hud.streak_readout.scale, :>, 1.2
-    assert_in_delta 1.0, hud.read(@game, 2.0).streak_readout.scale
+    assert_equal 3, hud.dots_in_a_row_readout.lit
+    assert hud.dots_in_a_row_readout.lit?(2)
+    refute hud.dots_in_a_row_readout.lit?(3)
+    assert hud.dots_in_a_row_readout.bumping?(2)
+    assert_operator hud.dots_in_a_row_readout.scale, :>, 1.2
+    assert_in_delta 1.0, hud.read(@game, 2.0).dots_in_a_row_readout.scale
   end
 
-  def test_a_wrong_tap_empties_the_streak_without_a_bump
-    @game.instance_variable_set(:@streak, 5)
+  def test_a_wrong_tap_empties_the_dots_in_a_row_without_a_bump
+    @game.instance_variable_set(:@dots_in_a_row, 5)
     hud = @hud.read(@game, 1.0)
-    @game.instance_variable_set(:@streak, 0)
+    @game.instance_variable_set(:@dots_in_a_row, 0)
     after = hud.read(@game, 5.0)
 
-    assert_equal 0, after.streak_readout.lit
-    assert_in_delta 1.0, after.streak_readout.scale
+    assert_equal 0, after.dots_in_a_row_readout.lit
+    assert_in_delta 1.0, after.dots_in_a_row_readout.scale
   end
 
-  def test_with_a_bonus_dot_on_the_field_every_dot_of_the_streak_is_lit
+  def test_with_a_bonus_dot_on_the_field_every_dot_of_the_dots_in_a_row_is_lit
     game = game_with(dot(100, 100, bonus: true))
-    readout = @hud.read(game, 0.0).streak_readout
+    readout = @hud.read(game, 0.0).dots_in_a_row_readout
 
     assert readout.ready
     assert(Array.new(readout.size) { readout.lit?(it) }.all?)
   end
 
-  def test_there_is_no_streak_without_a_bonus_rule_or_after_the_game
+  def test_there_is_no_dots_in_a_row_without_a_bonus_rule_or_after_the_game
     plain = DotPopper::Game.new(field, random: Random.new(1), bonus: nil)
 
-    assert_nil @hud.read(plain, 0.0).streak_readout
+    assert_nil @hud.read(plain, 0.0).dots_in_a_row_readout
     @game.update(60)
-    assert_nil @hud.read(@game, 60.0).streak_readout
+    assert_nil @hud.read(@game, 60.0).dots_in_a_row_readout
   end
 end

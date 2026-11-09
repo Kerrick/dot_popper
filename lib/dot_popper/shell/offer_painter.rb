@@ -2,7 +2,7 @@
 
 module DotPopper
   module Shell
-    # The offer of the paid version, over the Records screen: what it
+    # The offer of the paid version, over the Stats screen: what it
     # includes, a dot before each, the price from the store on its button,
     # and Restore Purchases; or, once it is the player's, thanks. Calm: no
     # motion, no countdown, and Back always there. Presentation::OfferScreen

@@ -16,7 +16,7 @@ module DotPopper
     # says how big a screen is, in dots, with %d for its width and height,
     # and names the choices of dot size (DotSizing) by what they do here.
     class Words < Data.define(:title, :play, :continue, :time_up, :new_best, :best, :score, :time,
-                              :share, :share_heading, :copied, :copy, :close, :records, :how_to_play, :go_back,
+                              :share, :share_heading, :copied, :copy, :close, :stats, :how_to_play, :go_back,
                               :no_games, :clear, :keep_holding, :hold_to_clear, :cleared, :undo, :labels, :goals, :goal_done, :goal_met,
                               :screen_size, :credits, :credits_title, :notice, :quit_again, :full_screen, :windowed, :quit, :looks, :offer,
                               :input)
@@ -67,7 +67,7 @@ module DotPopper
       # a window, and back in fullscreen, "Window".
       def fullscreen_button(fullscreen) = fullscreen ? windowed : full_screen
 
-      # What the Records screen says while "Clear my records…" is held:
+      # What the Stats screen says while "Clear my records…" is held:
       # on a gamepad, naming +button+, the one held ("A" or "Y").
       def keep_holding(button) = super().for(input).sub("%s", button.to_s)
 
@@ -108,21 +108,21 @@ module DotPopper
       # of: "14 pops, 2 mistakes, slowest pop 3.1 seconds". The slowest
       # pop is the longest any fresh dot waited before it was popped.
       def summary(stats)
-        parts = [Words.count(stats.pops, "pop"), Words.count(stats.slips, "mistake")]
-        parts << "slowest pop #{format("%.1f", stats.longest_wait)} seconds" if stats.pops.positive?
+        parts = [Words.count(stats.pops, "pop"), Words.count(stats.mistakes, "mistake")]
+        parts << "slowest pop #{format("%.1f", stats.longest_time_to_pop)} seconds" if stats.pops.positive?
         parts.join(", ")
       end
 
       # The one lifetime record a game set that Game Over names (the most
-      # impressive, LifetimeStats::Record::ORDER), as a sentence:
-      # "New record: 18 pops in a row without a mistake".
+      # impressive, Stats::Record::ORDER), as a sentence:
+      # "New record: 18 dots in a row without a mistake".
       def record(record)
         value = record.value
         "New record: " +
           case record.kind
-          when :longest_run then "#{Words.count(value.to_i, "pop")} in a row without a mistake"
+          when :most_dots_in_a_row then "#{Words.count(value.to_i, "dot")} in a row without a mistake"
           when :longest_game then "your longest game, #{Words.count(value.round, "second")}"
-          when :longest_wait then "you waited #{Words.tenths(value)} seconds for a dot, then popped it"
+          when :longest_time_to_pop then "you waited #{Words.tenths(value)} seconds for a dot, then popped it"
           else "your fastest pop, #{Words.tenths(value)} seconds after the dot appeared"
           end
       end
@@ -134,18 +134,18 @@ module DotPopper
       # depends on that.
       #
       #   Dot Popper: 25 points, a new best!
-      #   New record: 18 pops in a row without a mistake
+      #   New record: 18 dots in a row without a mistake
       #   🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds
       #   Played on a screen about 12 dots wide and 8 dots tall.
       def share_text(score, stats, best:, new_best:, record: nil, screen: nil, first: false)
         ["Dot Popper: #{Words.count(score, "point")}#{best_note(score, best, new_best) unless first}",
          (self.record(record) if record),
-         "🟡 #{Words.count(stats.pops, "pop")} · ⚫ #{Words.count(stats.slips, "mistake")} · " \
+         "🟡 #{Words.count(stats.pops, "pop")} · ⚫ #{Words.count(stats.mistakes, "mistake")} · " \
          "⏱ #{Words.count(stats.duration.round, "second")}",
          screen].compact.join("\n")
       end
 
-      # What the Records screen says about the screen, given its +field+
+      # What the Stats screen says about the screen, given its +field+
       # and the player's DotSizing: how big it is, counted in dots side by
       # side, and, with the dots fitted to it, what that does.
       #
@@ -180,11 +180,11 @@ module DotPopper
       # The control's label: "Dot size".
       def sizing_label = screen_size.fetch(:choice)
 
-      # The Records screen's heading for the bests it shows: "Your bests
+      # The Stats screen's heading for the bests it shows: "Your bests
       # with standard dots on screens this size".
       def bests_heading(sizing) = labels.fetch(sizing.sized_to_screen? ? :fitted_bests : :bests)
 
-      # The line under the Records screen's chart, when some of its bars
+      # The line under the Stats screen's chart, when some of its bars
       # are of games that do not count toward the bests shown: "Brighter
       # bars are games with dots sized to the screen."
       def chart_note(sizing) = labels.fetch(sizing.sized_to_screen? ? :fitted_chart_note : :chart_note)

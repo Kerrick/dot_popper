@@ -37,7 +37,7 @@ class GuiScenariosTest < Minitest::Test
          "a click on Quit asks Lota to quit at once", window: "400x320")
   end
 
-  def test_the_records_screen
+  def test_the_stats_screen
     play("records", "a click on Back goes back", "Escape goes back", "a gamepad's B goes back",
          "a click elsewhere does nothing")
   end
@@ -54,7 +54,7 @@ class GuiScenariosTest < Minitest::Test
          DOT_POPPER_PAID: "1", DOT_POPPER_TODAY: "2026-10-31")
   end
 
-  def test_clearing_the_records_and_undoing_it
+  def test_clearing_the_stats_and_undoing_it
     play("clearing", "letting go too soon clears nothing", "Undo restores every file exactly",
          "the playtest log is untouched", "a press of Y undoes")
   end

@@ -10,18 +10,18 @@ module DotPopper
     # itself.
     #
     # +sounds+ answers play(name, pitch:, pan:), muted?, and toggle_mute;
-    # +haptics+ answers buzz(seconds). +lifetime+ (Lifetime) adds up every
+    # +haptics+ answers buzz(seconds). +lifetime+ (StatsBook) adds up every
     # game the device has played. +sizing_store+ keeps the player's
     # DotSizing, chosen on the title. +radius+ is the usual dot's, which
     # sizes the buttons' reach; a game's effects follow its own dots.
     # +input+ (InputKind) is what the player last pressed with, and the
     # words follow it. +keeper+ (RecordKeeper) clears the records, from
-    # the Records screen, and puts them back. +measure+ sizes the screens' words (RoughMeasure's
+    # the Stats screen, and puts them back. +measure+ sizes the screens' words (RoughMeasure's
     # methods). +sharing+ (InGameSharing's methods) offers Game
     # Over's result to share, in a preview or a phone's own sheet, and
     # +clipboard+ takes it when the player copies it. +achievements+
     # (Achievements) keeps the achievements a game earns, as it ends, and the
-    # Records screen lists them once the +entitlement+ says the paid
+    # Stats screen lists them once the +entitlement+ says the paid
     # version was bought. +tutorial_flag+
     # (TutorialFlag) says whether Play opens the Tutorial first. +window+
     # (NoWindowControl's methods) is the desktop's window, which the
@@ -34,14 +34,14 @@ module DotPopper
       SIZINGS = [DotSizing::SIZED_TO_SCREEN, DotSizing::STANDARD].freeze
 
       attr_reader :cabinet, :effects, :animations, :hud, :attract, :layout, :marquee, :finale, :sounds, :now, :look,
-                  :lifetime, :input, :words, :clearing, :tutorial, :lead_in, :window, :games
+                  :stats_book, :input, :words, :clearing, :tutorial, :lead_in, :window, :games
 
       def initialize(cabinet:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false,
                      tutor: Tutor.new(BestScore::Memory.new, times: look::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
-                     lifetime: Lifetime.new(BestScore::Memory.new), sizing_store: BestScore::Memory.new,
+                     stats_book: StatsBook.new(BestScore::Memory.new), sizing_store: BestScore::Memory.new,
                      input: InputKind::MOUSE, measure: RoughMeasure.new,
                      achievements: Achievements.new(BestScore::Memory.new),
-                     keeper: RecordKeeper.new(best: cabinet.best, lifetime:, achievements:), notices: Notices.none,
+                     keeper: StatsKeeper.new(best: cabinet.best, stats_book:, achievements:), notices: Notices.none,
                      sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never, window: NoWindowControl.new,
                      entitlement: Entitlement.free, wardrobe: Wardrobe.plain(look::THEMES),
                      groups: Groups::Session.off, storefront: NoStorefront.new, games: FreeGames.unlimited)
@@ -64,7 +64,7 @@ module DotPopper
         @notices = notices
         @measure = measure
         @plans = {}
-        @lifetime = lifetime
+        @stats_book = stats_book
         @layout = layout
         @sounds = sounds
         @haptics = haptics
@@ -87,11 +87,11 @@ module DotPopper
         @clipboard = clipboard
         @sharing = sharing
         @preview = nil
-        @slip = nil
+        @mistake = nil
         @penalized_at = -Float::INFINITY
         @beckoned_at = nil
         @recorder = GameStats::Recorder.new
-        @records = nil
+        @stats = nil
         @credits = nil
         @credits_drag = nil
         @keeper = keeper
@@ -104,13 +104,13 @@ module DotPopper
       end
 
       # The numbers of the game in play, or of the one just finished.
-      def stats = @recorder.stats
+      def game_stats = @recorder.stats
 
       # The colors of the look being worn (Wardrobe), which only changes
       # between games.
       def palette = @wardrobe.palette
 
-      # Whether the Looks screen is open over the Records screen, and what
+      # Whether the Looks screen is open over the Stats screen, and what
       # it shows: every look the player can wear, and the one worn.
       def looks? = @looks
       def looks = @wardrobe.shown
@@ -121,11 +121,11 @@ module DotPopper
       def looks_locked? = @wardrobe.locked?
       def look_earned?(theme) = @wardrobe.earned?(theme)
 
-      # Whether the Records screen offers Looks: always to a free player,
+      # Whether the Stats screen offers Looks: always to a free player,
       # who is shown what looks there are and which they have earned, and
       # to a paid one once there is a look besides the ordinary one to
       # choose.
-      def looks_offered? = records? && !credits? && !looks? && @wardrobe.offered?
+      def looks_offered? = stats? && !credits? && !looks? && @wardrobe.offered?
 
       # Where the Looks screen's cards go (LooksLayout).
       def looks_layout = LooksLayout.new(layout:, themes: looks, look: look::LOOKS, note: looks_locked?)
@@ -171,10 +171,10 @@ module DotPopper
       # left its dots, score and time.
       def tutorial? = !@tutorial.nil?
 
-      # Whether the Records screen is open over the title. It is the
+      # Whether the Stats screen is open over the title. It is the
       # presentation's alone: the game stays on its title meanwhile, and
       # no tap there reaches the game.
-      def records? = !@records.nil?
+      def stats? = !@stats.nil?
 
       # The friend groups' screens' state and their announcements (GroupPanel).
       def group_panel = @groups
@@ -190,7 +190,7 @@ module DotPopper
 
       # Whether the title offers the way in to groups: where there is a
       # server, once a game has finished, or for someone in a group.
-      def group_offered? = @groups.available? && (records_offered? || @groups.member?)
+      def group_offered? = @groups.available? && (stats_offered? || @groups.member?)
 
       # The title's way in to groups.
       def group_button = GroupScreen.button(layout, labelled: layout.safe.width >= 480)
@@ -199,26 +199,26 @@ module DotPopper
       # the top of the title, clear of the Group button's row.
       def banner_y = finished? ? hud_bottom + layout.margin : layout.top + layout.button_size + layout.margin
 
-      # What the Records screen shows, while it is open.
-      def records = @records
+      # What the Stats screen shows, while it is open.
+      def stats = @stats
 
       # Whether the title offers "Your records" and the choice of dot size:
       # only once a game has finished, so a first-time player's title says
       # only how to play. A player who cleared their records has played, so
       # it still offers them, though it shows no best or goal until their
       # next game (#played?).
-      def records_offered? = played? || @keeper.cleared?
+      def stats_offered? = played? || @keeper.cleared?
 
       # Whether a game has finished since the records were last cleared:
       # the title shows today's goal only then.
-      def played? = lifetime.stats.games.positive?
+      def played? = stats_book.stats.games.positive?
 
-      # Whether the Records screen offers "Clear my records…": while it has
+      # Whether the Stats screen offers "Clear my records…": while it has
       # records to clear, and no Undo is offered.
-      def clear_offered? = records? && !records.empty && !undo_offer
+      def clear_offered? = stats? && !stats.empty && !undo_offer
 
-      # Undo, while it is offered on the Records screen (UndoOffer), or nil.
-      def undo_offer = (@undo if records?)
+      # Undo, while it is offered on the Stats screen (UndoOffer), or nil.
+      def undo_offer = (@undo if stats?)
 
       # What the choice of dot size would do on this screen, worked out
       # afresh each time, so a resized window is always seen as it is now.
@@ -227,7 +227,7 @@ module DotPopper
       # Whether the title offers the choice of dot size: once a game has
       # finished, and only where the two sizes look different. Where they
       # look alike, the saved choice stays as it was, and games follow it.
-      def sizing_offered? = records_offered? && sizing_preview.offered?
+      def sizing_offered? = stats_offered? && sizing_preview.offered?
       def playing? = cabinet.state.is_a?(Cabinet::Playing)
       def finished? = cabinet.state.is_a?(Cabinet::GameOver)
 
@@ -239,7 +239,7 @@ module DotPopper
       # and Quit; on Game Over, Continue and
       # "Share my score", and over it, the share preview's Copy and Close;
       # and on the
-      # Records screen, Back, Undo, or "Clear my records…", which a press
+      # Stats screen, Back, Undo, or "Clear my records…", which a press
       # starts holding. Empty space does nothing, but a tap on one of the
       # title's fresh dots pops it, for fun, and a tap away from the share
       # preview's card closes it. A gamepad's A, which aims at no button,
@@ -259,7 +259,7 @@ module DotPopper
         in :how_to_play then how_to_play
         in :fullscreen then window.toggle_fullscreen
         in :quit then window.quit
-        in :records then open_records
+        in :stats then open_stats
         in :group_open then @groups.open
         in :offer then open_offer
         in :buy then buy
@@ -289,7 +289,7 @@ module DotPopper
           elsif group_open? then group_controls
           elsif looks? then looks_controls
           elsif offer? then offer_controls
-          elsif records? then records_controls
+          elsif stats? then stats_controls
           elsif title? then title_controls
           elsif sharing? then share_controls
           elsif finished? then finale_controls
@@ -308,13 +308,13 @@ module DotPopper
 
       # Presses this screen's main button, as Enter, Space, a gamepad's
       # Start, or its A aimed at no button do: Play on the title, Back on
-      # the Records screen, Continue on Game Over, once its grace is over,
+      # the Stats screen, Continue on Game Over, once its grace is over,
       # and Copy in the share preview. In a game it does nothing, since
       # only a press at a place may touch the score.
       def primary
         if group_open? then leave
         elsif sharing? then copy_result
-        elsif offer? || records? then leave
+        elsif offer? || stats? then leave
         elsif title? then play
         elsif finished? then continue_on
         end
@@ -323,8 +323,8 @@ module DotPopper
       # The title's Play: a game starts, or on a first Play, the Tutorial
       # (TutorialFlag), which is seen from then on.
       def play
-        return unless title? && !records? && !group_open?
-        return open_tutorial if @tutorial_flag.due?(played: records_offered?)
+        return unless title? && !stats? && !group_open?
+        return open_tutorial if @tutorial_flag.due?(played: stats_offered?)
 
         start_game
       end
@@ -333,7 +333,7 @@ module DotPopper
       # at once, whether it was seen or not, handing over into a game as
       # it does on a first Play.
       def how_to_play
-        open_tutorial if title? && !records? && !group_open?
+        open_tutorial if title? && !stats? && !group_open?
       end
 
       # The Tutorial's skip button, Escape, or a gamepad's B: the game
@@ -387,7 +387,7 @@ module DotPopper
       # first press asks, and :quit if a second comes within QUIT_ASK
       # seconds, so a stray press never closes the game.
       def ask_to_quit
-        return unless title? && !records? && !group_open?
+        return unless title? && !stats? && !group_open?
         return :quit if quit_asked?
 
         @quit_asked_at = now
@@ -406,14 +406,14 @@ module DotPopper
       def quit_asked? = @quit_asked_at && now - @quit_asked_at <= QUIT_ASK
 
       # Escape, Android's Back, or a gamepad's B: closes the share
-      # preview, leaves the Records screen, and goes on from Game Over to
+      # preview, leaves the Stats screen, and goes on from Game Over to
       # the title, as Continue does. Says whether there was somewhere to go
       # back from, so that elsewhere the key can do its usual job.
       def back
         if tutorial? then skip_tutorial
         elsif group_open? then leave
         elsif sharing? then close_share
-        elsif records? then leave
+        elsif stats? then leave
         elsif finished? then continue_on
         else return false
         end
@@ -438,17 +438,17 @@ module DotPopper
         sounds.play(:tick, pitch: cabinet.sizing.sized_to_screen? ? 1.2 : 0.9)
       end
 
-      # Opens the Records screen over the title, with the stats as they
+      # Opens the Stats screen over the title, with the stats as they
       # are now.
-      def open_records
+      def open_stats
         return unless title?
 
-        @records = records_sheet
+        @stats = stats_sheet
         sounds.play(:tick)
       end
 
-      def close_records
-        @records = nil
+      def close_stats
+        @stats = nil
         @looks = false
         @credits = nil
         @offer = false
@@ -457,38 +457,38 @@ module DotPopper
         sounds.play(:tick, pitch: 0.8)
       end
 
-      # Back, from the Credits screen to the Records screen, or from the
-      # Records screen to the title.
+      # Back, from the Credits screen to the Stats screen, or from the
+      # Stats screen to the title.
       def leave
         return @groups.back if group_open?
 
         if offer? then close_offer
         elsif credits? then close_credits
         elsif looks? then close_looks
-        else close_records
+        else close_stats
         end
       end
 
       def close_offer
-        return close_records if @offer_for_play
+        return close_stats if @offer_for_play
 
         @offer = false
         sounds.play(:tick, pitch: 0.8)
       end
 
-      # Whether the Records screen offers the way to the paid version: where
+      # Whether the Stats screen offers the way to the paid version: where
       # there is a store, to a player who has not bought it. It is offered
       # here and nowhere else, and asks for nothing; a player finds it or
       # does not (doc/decisions.md).
       def offer_offered? = @storefront.offered? && !@entitlement.paid?
 
-      # Whether the offer of the paid version is open, over the Records screen.
+      # Whether the offer of the paid version is open, over the Stats screen.
       def offer? = @offer
 
-      # Opens the offer over the Records screen, and asks the store for the
+      # Opens the offer over the Stats screen, and asks the store for the
       # price, or asks again if an earlier request was never answered.
       def open_offer
-        return unless records? && !credits? && offer_offered?
+        return unless stats? && !credits? && offer_offered?
 
         @looks = false
         @offer = true
@@ -525,7 +525,7 @@ module DotPopper
         @storefront.buy
       end
 
-      # Whether the Credits screen is open over the Records screen.
+      # Whether the Credits screen is open over the Stats screen.
       def credits? = !@credits.nil?
 
       # How far down the Credits screen is scrolled (CreditsScroll), while
@@ -544,9 +544,9 @@ module DotPopper
 
       def credits_book = (@credits_book ||= CreditsBook.compose(words, @notices))
 
-      # Opens the Credits screen over the Records screen, at the top.
+      # Opens the Credits screen over the Stats screen, at the top.
       def open_credits
-        return unless records? && !credits? && !offer?
+        return unless stats? && !credits? && !offer?
 
         @credits = CreditsScroll.at_top(content: 0.0, window: 0.0)
         lay_out_credits
@@ -589,7 +589,7 @@ module DotPopper
         @credits_drag = [by, y]
       end
 
-      # A gamepad's Y on the Records screen, held by +by+: Undo while it is
+      # A gamepad's Y on the Stats screen, held by +by+: Undo while it is
       # offered, or else the start of holding "Clear my records…".
       def clear_or_undo(by)
         return if credits? || offer?
@@ -682,9 +682,9 @@ module DotPopper
 
       # Where a tap reaches "Your records": never less than a dot's width
       # where it has room, and never past the safe area's bottom.
-      def records_reach = reach_of(:records)
+      def stats_reach = reach_of(:stats)
 
-      # Where a tap reaches the Records screen's Back.
+      # Where a tap reaches the Stats screen's Back.
       def back_reach = reach_of(:back)
 
       # Where a tap reaches each segment of the dot-size choice, as a
@@ -695,9 +695,9 @@ module DotPopper
       # from dots fitted to the screen, whichever size is chosen, so the
       # Dot size choice beside it never moves or resizes it.
       def title_plan
-        goal = lifetime.goal_done? ? words.goal_done_line(lifetime.goal) : words.goal(lifetime.goal) if played?
+        goal = stats_book.goal_done? ? words.goal_done_line(stats_book.goal) : words.goal(stats_book.goal) if played?
         planned(TitleScreen.new(layout:, type: look::TYPE, words:, measure: @measure, best: marquee.best, goal:,
-                                done: lifetime.goal_done?, streak: lifetime.streak, records: records_offered?,
+                                done: stats_book.goal_done?, streak: stats_book.streak, stats: stats_offered?,
                                 sizing: sizing_offered?, radius: DotSize.fitted(layout.width, layout.height).radius,
                                 window: window.offered?, games: games_line))
       end
@@ -739,9 +739,9 @@ module DotPopper
 
       def update(seconds)
         @now += seconds
-        @groups.update(now, quiet: !playing?, showing: (title? && !records?) || finished?)
+        @groups.update(now, quiet: !playing?, showing: (title? && !stats?) || finished?)
         follow_store(seconds) unless playing?
-        clear_records if clearing.done?(now)
+        clear_stats if clearing.done?(now)
         @undo = nil unless @undo&.open?(now)
         @hover = hover.at(hovered).update(seconds, look::HOVER)
         effects.update(seconds)
@@ -779,7 +779,7 @@ module DotPopper
       def offer_for_play
         return unless title? && offer_offered?
 
-        @records = records_sheet
+        @stats = stats_sheet
         @offer_for_play = true
         open_offer
       end
@@ -834,7 +834,7 @@ module DotPopper
         buttons = [Control.new(name: :mute, reach: layout.mute_button)]
         buttons << button(:group_open, group_button) if group_offered?
         buttons << button(:how_to_play, plan.how_to_play_button)
-        buttons << button(:records, plan.records_button) if records_offered?
+        buttons << button(:stats, plan.stats_button) if stats_offered?
         if (window_buttons = plan.window_buttons)
           buttons << button(:fullscreen, window_buttons.fullscreen) << button(:quit, window_buttons.quit)
         end
@@ -868,7 +868,7 @@ module DotPopper
 
       def looks_controls
         buttons = looks_layout.cards.map { button(it.theme, it.rect) } << button(:back, layout.back_button)
-        buttons << button(:offer, layout.clear_records_button) if looks_locked? && offer_offered?
+        buttons << button(:offer, layout.clear_stats_button) if looks_locked? && offer_offered?
         buttons
       end
 
@@ -887,12 +887,12 @@ module DotPopper
         sounds.play(:tick, pitch: 1.3) if free && offer? && @entitlement.paid?
       end
 
-      def records_controls
+      def stats_controls
         [(button(:credits, layout.credits_button)),
          (button(:looks, layout.looks_button) if looks_offered?),
          (button(:offer, layout.offer_button) if offer_offered?),
          (button(:undo, layout.undo_button) if undo_offer),
-         (button(:clear, layout.clear_records_button) if clear_offered?),
+         (button(:clear, layout.clear_stats_button) if clear_offered?),
          button(:back, layout.back_button)].compact
       end
 
@@ -910,10 +910,10 @@ module DotPopper
 
       # "Clear my records…" was held long enough: the records go, and Undo
       # is offered.
-      def clear_records
+      def clear_stats
         @clearing = clearing.cancel
         @undo = UndoOffer.new(cleared: @keeper.clear, at: now, seconds: look::RECORDS_CLEAR.undo)
-        records_changed
+        stats_changed
         sounds.play(:bonk, pitch: 0.7)
         @haptics.buzz(look::HAPTICS.penalty)
       end
@@ -921,20 +921,20 @@ module DotPopper
       def undo
         @keeper.restore(@undo.cleared)
         @undo = nil
-        records_changed
+        stats_changed
         sounds.play(:tick, pitch: 1.2)
       end
 
-      # The records changed under the Records screen: it, and the title's
+      # The records changed under the Stats screen: it, and the title's
       # best, show them as they are now.
-      def records_changed
-        @records = records_sheet if records?
+      def stats_changed
+        @stats = stats_sheet if stats?
         @marquee = marquee.with(best: cabinet.best.of(cabinet.size_class))
       end
 
-      def records_sheet
+      def stats_sheet
         size_class = cabinet.size_class
-        RecordsSheet.build(lifetime.stats, best: cabinet.best.of(size_class), words:, streak: lifetime.streak,
+        StatsSheet.build(stats_book.stats, best: cabinet.best.of(size_class), words:, streak: stats_book.streak,
                            size_class:, field: cabinet.field, sizing: cabinet.sizing, achievements: @achievements,
                            paid: @entitlement.paid?)
       end
@@ -968,7 +968,7 @@ module DotPopper
         @groups.game_started
         @finale = nil
         @preview = nil
-        @slip = nil
+        @mistake = nil
         @undo = nil # the game's records would be lost to an undo
         @lead_in = nil
         @beckoned_at = nil
@@ -990,7 +990,7 @@ module DotPopper
         bonus_earned(event.spawned) if event.spawned.bonus?
       end
 
-      # The streak's payoff: a larger burst and a second, wider shockwave
+      # The row's payoff: a larger burst and a second, wider shockwave
       # over the pop's own, and a chord.
       def bonus_popped(event)
         effects.burst(event.x, event.y, look::BONUS_BURST, look::BONUS_CONFETTI)
@@ -999,7 +999,7 @@ module DotPopper
         @haptics.buzz(look::HAPTICS.penalty)
       end
 
-      # The streak's result: the bonus dot arrives in place of the ordinary
+      # The row's result: the bonus dot arrives in place of the ordinary
       # one, in a wide ripple and a chime, and keeps a ring pulsing about
       # it (#beckon).
       def bonus_earned(dot)
@@ -1023,7 +1023,7 @@ module DotPopper
         effects.ring(event.dot.x, event.dot.y, look::ALARM_RING, follow: event.dot.id)
         hidden = cabinet.game.dots.fresh_beneath(event.dot, event.x, event.y)
         effects.reveal(hidden, look::REVEAL) if hidden
-        @slip = Slip.new(popped: event.dot.id, bright: hidden.id) if hidden
+        @mistake = Mistake.new(popped: event.dot.id, bright: hidden.id) if hidden
         effects.kick(look::PENALTY_SHAKE)
         effects.light(look::PENALTY_FLASH)
         # The floor can keep the score from falling; say only what was lost.
@@ -1041,21 +1041,21 @@ module DotPopper
       end
 
       def game_ended(event)
-        result = lifetime.record(stats, event.size_class)
+        result = stats_book.record(game_stats, event.size_class)
         @groups.game_finished(score: event.score, sized_to_screen: event.size_class == SizeClass::FITTED && !@tutorial_game)
         @wardrobe.game_played
-        achievements = @achievements.award(@achievement_watch.earned, day: lifetime.today.iso8601)
+        achievements = @achievements.award(@achievement_watch.earned, day: stats_book.today.iso8601)
         achievements = [] unless @entitlement.paid? # kept, and shown once the paid version is bought
-        lesson = @tutor.lesson(@slip) if @slip&.among(event.game.dots)
+        lesson = @tutor.lesson(@mistake) if @mistake&.among(event.game.dots)
         @finale = Finale.new(look: look::FINALE, score: event.score, best: event.best, new_best: event.new_best, at: now,
-                             stats:, record: result.records.first, goal_met: result.goal_met, lesson:, achievements:,
+                             stats: game_stats, record: result.records.first, goal_met: result.goal_met, lesson:, achievements:,
                              first: event.first, screen: words.played_on(event.game.field, sized: event.size_class == SizeClass::FITTED))
         sounds.play(event.new_best ? :new_best : :game_over)
       end
 
       def title_shown(event)
         @wardrobe.refresh
-        @records = nil
+        @stats = nil
         @looks = false
         @groups.close if group_open?
         @credits = nil
@@ -1069,7 +1069,7 @@ module DotPopper
       # A tap on the title away from its buttons: a fresh dot there pops
       # for fun, with no score; anywhere else, nothing happens.
       def toy_tap(x, y)
-        return unless title? && !records? && !group_open?
+        return unless title? && !stats? && !group_open?
 
         dot = attract.dots.top_at(x, y)
         toy_pop(dot, x, y) if dot&.fresh?
@@ -1109,7 +1109,7 @@ module DotPopper
 
       def follow_finale
         @finale = finale.ready(now) if cabinet.state.ready?
-        replay_slip if finale.lesson && finale.counted?(now) &&
+        replay_mistake if finale.lesson && finale.counted?(now) &&
                        look::LESSON.replay_due?(finale.replayed, now - finale.at - look::FINALE.tally.duration)
         goal_burst if finale.goal_due?(now)
         return unless finale.celebration_due?(now)
@@ -1119,16 +1119,16 @@ module DotPopper
       end
 
       # The stacking rule, taught with no word: the wrong tap the game
-      # ended up teaching (Slip) replays on the pile as it played, the
+      # ended up teaching (Mistake) replays on the pile as it played, the
       # popped dot's shudder and alarm ring and the dashed outline of the
       # bright dot under it, and the bright dot pulses gently. Its effects
       # follow both dots wherever the pile has them, are only outlines, so
       # they hide no dot, and the screen never shakes.
-      def replay_slip
-        slip = finale.lesson
+      def replay_mistake
+        mistake = finale.lesson
         @finale = finale.replay
         dots = cabinet.game.dots
-        popped, bright = [slip.popped, slip.bright].map { |id| dots.find { it.id == id } }
+        popped, bright = [mistake.popped, mistake.bright].map { |id| dots.find { it.id == id } }
         animations.wobble(popped.id, now)
         effects.ring(popped.x, popped.y, look::ALARM_RING, follow: popped.id)
         effects.reveal(bright, look::REVEAL)

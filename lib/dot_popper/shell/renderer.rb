@@ -28,7 +28,7 @@ module DotPopper
         @effects = EffectsPainter.new(pen:, sparks:)
         @hud = HudPainter.new(pen:, dots: @dots)
         @title = TitlePainter.new(pen:, dots: @dots)
-        @records = RecordsPainter.new(pen:)
+        @stats = StatsPainter.new(pen:)
         @credits = CreditsPainter.new(pen:)
         @looks = LooksPainter.new(pen:, dots: @dots)
         @offer = OfferPainter.new(pen:)
@@ -50,10 +50,10 @@ module DotPopper
           tutorial(width, height, layout)
         elsif @show.title?
           @dots.draw(@show.attract.dots, @at_rest, @show.now, radius)
-          if @show.records?
+          if @show.stats?
             veil(width, height, @pen.look::RECORDS.veil)
             if @show.offer? then @offer.draw(@show, layout)
-            else records_screen.draw(@show, layout)
+            else stats_screen.draw(@show, layout)
             end
           elsif @show.group_open?
             veil(width, height, @pen.look::GROUPS.veil)
@@ -81,7 +81,7 @@ module DotPopper
           @share.draw(@show, layout, width, height)
           banner(layout) unless @show.playing?
         end
-        banner(layout) if @show.title? && !@show.group_open? && !@show.records?
+        banner(layout) if @show.title? && !@show.group_open? && !@show.stats?
         splash ? @splash.draw(splash) : @cursor.draw(cursor)
       end
 
@@ -93,11 +93,11 @@ module DotPopper
       def radius = @show.cabinet.field.radius
 
       # The screen open over the title's dimmed dots: Credits, Looks, or
-      # the Records screen they were opened from.
-      def records_screen
+      # the Stats screen they were opened from.
+      def stats_screen
         if @show.credits? then @credits
         elsif @show.looks? then @looks
-        else @records
+        else @stats
         end
       end
 

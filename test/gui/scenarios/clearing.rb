@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # Clearing the records from the Records screen: a press of "Clear my
+  # Clearing the records from the Stats screen: a press of "Clear my
   # records…" let go too soon changes nothing; held two seconds, by a
   # finger or a gamepad's Y, it clears them, and Undo puts them back. The
   # playtest log stays as it was throughout.
@@ -13,48 +13,48 @@ module DotPopperGui
 
     def play
       quick_game
-      open_records
+      open_stats
       before = files
-      check(!show.records.empty, "the Records screen lists the game")
+      check(!show.stats.empty, "the Records screen lists the game")
 
       let_go_too_soon(before)
       hold_by_touch
       check_cleared(before)
       undo = show.undo_reach
       click(undo.center_x, undo.center_y)
-      check(show.records? && !show.records.empty, "Undo brings the records back, and stays on the Records screen")
+      check(show.stats? && !show.stats.empty, "Undo brings the records back, and stays on the Records screen")
       check(before == files, "Undo restores every file exactly")
 
       pad_down(:y)
       wait(HOLD + 0.1)
       pad_up(:y)
-      check(show.records.empty && show.undo_offer, "holding a gamepad's Y clears the records too")
+      check(show.stats.empty && show.undo_offer, "holding a gamepad's Y clears the records too")
       pad(:y)
-      check(!show.records.empty, "a press of Y undoes")
+      check(!show.stats.empty, "a press of Y undoes")
       back = show.back_reach
       click(back.center_x, back.center_y)
-      check(!show.records? && show.title?, "a click on Back goes back")
+      check(!show.stats? && show.title?, "a click on Back goes back")
     end
 
     private
 
     def files = FILES.to_h { [it, File.read(saved(it))] }
 
-    def open_records
-      reach = show.records_reach
+    def open_stats
+      reach = show.stats_reach
       click(reach.center_x, reach.center_y)
-      check(show.records?, "a click on Your records opens them")
+      check(show.stats?, "a click on Your records opens them")
     end
 
     def let_go_too_soon(before)
       reach = show.clear_reach
       press(reach.center_x, reach.center_y)
       wait(HOLD / 2)
-      check(show.records? && show.clearing.held?, "a press on Clear my records starts a hold and never goes back")
+      check(show.stats? && show.clearing.held?, "a press on Clear my records starts a hold and never goes back")
       keep_screenshot("clearing-held")
       release(reach.center_x, reach.center_y)
       wait(HOLD)
-      check(!show.records.empty && !show.undo_offer, "letting go too soon clears nothing")
+      check(!show.stats.empty && !show.undo_offer, "letting go too soon clears nothing")
       check(before == files, "letting go too soon leaves every file as it was")
     end
 
@@ -66,7 +66,7 @@ module DotPopperGui
     end
 
     def check_cleared(before)
-      check(show.records? && show.records.empty, "held two seconds, the records clear, to the empty Records screen")
+      check(show.stats? && show.stats.empty, "held two seconds, the records clear, to the empty Records screen")
       check(show.undo_offer, "Undo is offered")
       wait(0.3)
       keep_screenshot("clearing-cleared")

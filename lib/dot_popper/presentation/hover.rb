@@ -7,7 +7,7 @@ module DotPopper
     # :mute, :how_to_play and :records, and on a desktop :fullscreen and
     # :quit, a segment of its dot-size choice (named by the DotSizing it
     # chooses), Game Over's :continue and :share, the share
-    # preview's :copy and :close, and the Records screen's :back, :clear
+    # preview's :copy and :close, and the Stats screen's :back, :clear
     # and :undo. The Show answers taps and
     # the mouse's hover from the same ones (Show#controls), so a button
     # lights up exactly where a click would press it.

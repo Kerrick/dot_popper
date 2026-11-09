@@ -2,7 +2,7 @@
 
 module DotPopperGui
   # Every look, in the screens it dresses, at the sizes that matter, kept
-  # as screenshots to look at side by side: the title, the Records screen,
+  # as screenshots to look at side by side: the title, the Stats screen,
   # the Looks screen, a game under way and Game Over, on a desktop's
   # windows and on phone-shaped ones. It checks nothing but that each look
   # can be worn; DOT_POPPER_GALLERY names the shots. Needs
@@ -30,14 +30,14 @@ module DotPopperGui
       check(show.worn == theme, "#{theme.key} is worn")
       SIZES.each do |width, height, phone|
         at(width, height, phone) do
-          show.close_records if show.records?
+          show.close_stats if show.stats?
           shoot(theme, "title")
-          show.open_records
+          show.open_stats
           shoot(theme, "records")
           show.open_looks
           shoot(theme, "looks")
           show.close_looks
-          show.close_records
+          show.close_stats
         end
       end
       ROUNDS.each { |width, height, phone| at(width, height, phone) { game_shots(theme) } }

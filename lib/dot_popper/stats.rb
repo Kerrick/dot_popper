@@ -10,9 +10,9 @@ module DotPopper
   # Bests a game on such a screen can set. Days are ISO 8601 dates
   # ("2026-11-05"), local to the player. The best score stays with
   # BestScore. It saves as lines of +key=value+, a class's bests under
-  # its name ("medium.longest_run=18"), and reads back whatever it can of
+  # its name ("medium.most_dots_in_a_row=18"), and reads back whatever it can of
   # a damaged file.
-  class LifetimeStats < Data.define(:games, :pops, :slips, :seconds, :days, :last_day, :recent, :recent_classes,
+  class Stats < Data.define(:games, :pops, :mistakes, :seconds, :days, :last_day, :recent, :recent_classes,
                                     :streak, :bests)
     RECENT = 20
     DAY = /\A\d{4}-\d{2}-\d{2}\z/
@@ -20,10 +20,10 @@ module DotPopper
 
     # +recent_classes+ line up with +recent+ from the newest back; a score
     # with none is of an unknown class.
-    def initialize(games: 0, pops: 0, slips: 0, seconds: 0.0, days: 0, last_day: nil, recent: [], recent_classes: [],
+    def initialize(games: 0, pops: 0, mistakes: 0, seconds: 0.0, days: 0, last_day: nil, recent: [], recent_classes: [],
                    streak: GoalStreak.new, bests: {})
       classes = ([nil] * recent.size) + recent_classes
-      super(games:, pops:, slips:, seconds: seconds.to_f, days:, last_day:, recent: recent.dup.freeze,
+      super(games:, pops:, mistakes:, seconds: seconds.to_f, days:, last_day:, recent: recent.dup.freeze,
             recent_classes: classes.last(recent.size).freeze, streak:, bests: bests.dup.freeze)
     end
 
@@ -35,7 +35,7 @@ module DotPopper
       pairs = Pairs.parse(text)
       bests = SizeClass::ALL.to_h { [it, Bests.parse(pairs.within(it.name))] }
       bests[legacy] = Bests.parse(pairs) if old?(text)
-      new(games: pairs.count(:games), pops: pairs.count(:pops), slips: pairs.count(:slips),
+      new(games: pairs.count(:games), pops: pairs.count(:pops), mistakes: pairs.count(:mistakes),
           seconds: pairs.time(:seconds) || 0.0, days: pairs.count(:days), last_day: pairs.day(:last_day),
           recent: pairs.counts(:recent).last(RECENT), recent_classes: pairs.classes(:recent_classes).last(RECENT),
           streak: GoalStreak.new(current: pairs.count(:goal_streak), longest: pairs.count(:longest_goal_streak),
@@ -53,7 +53,7 @@ module DotPopper
     # The stats after one more game, played on +day+ on a screen of
     # +size_class+.
     def add(stats, day:, size_class:)
-      with(games: games + 1, pops: pops + stats.pops, slips: slips + stats.slips, seconds: seconds + stats.duration,
+      with(games: games + 1, pops: pops + stats.pops, mistakes: mistakes + stats.mistakes, seconds: seconds + stats.duration,
            days: day == last_day ? days : days + 1, last_day: day, recent: (recent + [stats.score]).last(RECENT),
            recent_classes: (recent_classes + [size_class]).last(RECENT),
            bests: bests.merge(size_class => bests_in(size_class).add(stats)))
@@ -64,7 +64,7 @@ module DotPopper
     def records_set_by(stats, size_class) = bests_in(size_class).records_set_by(stats)
 
     def to_text
-      totals = [["games", games], ["pops", pops], ["slips", slips], ["seconds", seconds], ["days", days],
+      totals = [["games", games], ["pops", pops], ["mistakes", mistakes], ["seconds", seconds], ["days", days],
                 ["last_day", last_day], ["recent", recent.join(",")],
                 ["recent_classes", recent_classes.map { it&.name || UNKNOWN }.join(",")],
                 ["goal_streak", streak.current],
@@ -74,26 +74,26 @@ module DotPopper
     end
 
     # The bests a game can set on one class of screen: its length, the
-    # most pops in a row without a wrong tap, the fastest pop, and the
+    # most dots in a row without a wrong tap, the fastest pop, and the
     # longest wait that still ended in a pop, with how many +games+ have
     # been played on such screens.
-    class Bests < Data.define(:games, :longest_game, :longest_run, :fastest_pop, :longest_wait)
-      def initialize(games: 0, longest_game: 0.0, longest_run: 0, fastest_pop: nil, longest_wait: 0.0)
-        super(games:, longest_game: longest_game.to_f, longest_run:, fastest_pop: fastest_pop&.to_f,
-              longest_wait: longest_wait.to_f)
+    class Bests < Data.define(:games, :longest_game, :most_dots_in_a_row, :shortest_time_to_pop, :longest_time_to_pop)
+      def initialize(games: 0, longest_game: 0.0, most_dots_in_a_row: 0, shortest_time_to_pop: nil, longest_time_to_pop: 0.0)
+        super(games:, longest_game: longest_game.to_f, most_dots_in_a_row:, shortest_time_to_pop: shortest_time_to_pop&.to_f,
+              longest_time_to_pop: longest_time_to_pop.to_f)
       end
 
       def self.parse(pairs)
         new(games: pairs.count(:games), longest_game: pairs.time(:longest_game) || 0.0,
-            longest_run: pairs.count(:longest_run), fastest_pop: pairs.time(:fastest_pop),
-            longest_wait: pairs.time(:longest_wait) || 0.0)
+            most_dots_in_a_row: pairs.count(:most_dots_in_a_row), shortest_time_to_pop: pairs.time(:shortest_time_to_pop),
+            longest_time_to_pop: pairs.time(:longest_time_to_pop) || 0.0)
       end
 
       def add(stats)
         with(games: games + 1, longest_game: [longest_game, stats.duration].max,
-             longest_run: [longest_run, stats.longest_run].max,
-             fastest_pop: [fastest_pop, stats.fastest_pop].compact.min,
-             longest_wait: [longest_wait, stats.longest_wait].max)
+             most_dots_in_a_row: [most_dots_in_a_row, stats.most_dots_in_a_row].max,
+             shortest_time_to_pop: [shortest_time_to_pop, stats.shortest_time_to_pop].compact.min,
+             longest_time_to_pop: [longest_time_to_pop, stats.longest_time_to_pop].max)
       end
 
       # The records a game with +stats+ would set. A first game sets
@@ -104,17 +104,17 @@ module DotPopper
         return [] if games.zero?
 
         [
-          (Record.new(kind: :longest_run, value: stats.longest_run) if beats?(stats.longest_run, longest_run, 0)),
+          (Record.new(kind: :most_dots_in_a_row, value: stats.most_dots_in_a_row) if beats?(stats.most_dots_in_a_row, most_dots_in_a_row, 0)),
           (Record.new(kind: :longest_game, value: stats.duration) if beats?(stats.duration, longest_game, 0)),
-          (Record.new(kind: :longest_wait, value: stats.longest_wait) if beats?(stats.longest_wait, longest_wait, 1)),
-          faster(stats.fastest_pop)
+          (Record.new(kind: :longest_time_to_pop, value: stats.longest_time_to_pop) if beats?(stats.longest_time_to_pop, longest_time_to_pop, 1)),
+          faster(stats.shortest_time_to_pop)
         ].compact
       end
 
-      # The bests as +key=value+ pairs, for LifetimeStats#to_text.
+      # The bests as +key=value+ pairs, for Stats#to_text.
       def pairs
-        [["games", games], ["longest_game", longest_game], ["longest_run", longest_run],
-         ["fastest_pop", fastest_pop], ["longest_wait", longest_wait]]
+        [["games", games], ["longest_game", longest_game], ["most_dots_in_a_row", most_dots_in_a_row],
+         ["shortest_time_to_pop", shortest_time_to_pop], ["longest_time_to_pop", longest_time_to_pop]]
       end
 
       private
@@ -124,8 +124,8 @@ module DotPopper
       def beats?(value, best, digits) = best.positive? && value.round(digits) > best.round(digits)
 
       def faster(pop)
-        best = fastest_pop
-        Record.new(kind: :fastest_pop, value: pop) if pop && best && pop.round(1) < best.round(1)
+        best = shortest_time_to_pop
+        Record.new(kind: :shortest_time_to_pop, value: pop) if pop && best && pop.round(1) < best.round(1)
       end
     end
 
@@ -134,7 +134,7 @@ module DotPopper
       # The records from most impressive to least. A long run of clean pops
       # is the game's whole skill, and a long game follows from it; a long
       # wait shows patience, and the fastest pop owes the most to luck.
-      ORDER = %i[longest_run longest_game longest_wait fastest_pop].freeze
+      ORDER = %i[most_dots_in_a_row longest_game longest_time_to_pop shortest_time_to_pop].freeze
     end
 
     # The +key=value+ lines of a saved file, read leniently: a value that

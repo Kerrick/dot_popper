@@ -95,7 +95,7 @@ class SpawnerTest < Minitest::Test
     refute spawn.exhausted?
   end
 
-  def test_a_game_records_how_each_dot_was_spawned
+  def test_a_game_stats_how_each_dot_was_spawned
     game = DotPopper::Game.new(field, random: Random.new(SEED))
     first = game.dots.first
 

@@ -34,8 +34,8 @@ module DotPopper
     def reset
       @found = []
       @sharp = 0
-      @run = 0
-      @slipped = false
+      @dots_in_a_row = 0
+      @mistaken = false
       @low = false
       @early = 0
       @last_pop = nil
@@ -52,8 +52,8 @@ module DotPopper
       dots = game.dots.to_a
       sharp(event.dot, dots.take_while { it.id != event.dot.id })
       last = @last_pop
-      waited(game.elapsed - last) if last
-      streak
+      time_to_pop(game.elapsed - last) if last
+      dots_in_a_row
       early(game)
       clock(game)
       find(:comeback) if @low && game.countdown.remaining >= Achievement::BACK
@@ -61,8 +61,8 @@ module DotPopper
     end
 
     def penalized(game)
-      @run = 0
-      @slipped = true
+      @dots_in_a_row = 0
+      @mistaken = true
       @tapped = true
       clock(game)
     end
@@ -80,16 +80,16 @@ module DotPopper
     end
 
     # +seconds+ passed between the last pop and this one.
-    def waited(seconds)
+    def time_to_pop(seconds)
       find(:patience) if @covered && !@tapped && seconds >= Achievement::PATIENCE
       find(:blink) if seconds < Achievement::BLINK
     end
 
-    def streak
-      @run += 1
-      find(:steady) if @run >= Achievement::STEADY
-      find(:unshaken) if @run >= Achievement::UNSHAKEN
-      find(:shake_off) if @slipped && @run >= Achievement::SHAKE_OFF
+    def dots_in_a_row
+      @dots_in_a_row += 1
+      find(:steady) if @dots_in_a_row >= Achievement::STEADY
+      find(:unshaken) if @dots_in_a_row >= Achievement::UNSHAKEN
+      find(:shake_off) if @mistaken && @dots_in_a_row >= Achievement::SHAKE_OFF
     end
 
     def early(game)

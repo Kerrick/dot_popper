@@ -49,11 +49,11 @@ module DotPopper
         @cabinet = Cabinet.new(screen, best: BestScore.new(SaveFile.new(name: "best_score.txt"), legacy:), random:,
                                  sizing: DotSizing.parse(sizing_store.read))
         puts "Dot Popper: dots are sized to the screen as each game starts" if @cabinet.sizing.sized_to_screen?
-        lifetime = Lifetime.new(SaveFile.new(name: "lifetime.txt"), today:, legacy:)
+        stats_book = StatsBook.new(SaveFile.new(name: "lifetime.txt"), today:, legacy:)
         notices = NoticeFiles.new(cabinet: File.expand_path("../../..", __dir__),
                                   starts: [File.dirname(File.expand_path($PROGRAM_NAME))]).notices
         achievements = Achievements.new(SaveFile.new(name: "achievements.txt"))
-        keeper = RecordKeeper.new(best: @cabinet.best, lifetime:, achievements:, folder: ->(name) { SaveFile.new(name:) })
+        keeper = StatsKeeper.new(best: @cabinet.best, stats_book:, achievements:, folder: ->(name) { SaveFile.new(name:) })
         entitlement = Entitlement.new(SaveFile.new(name: "entitlement.txt"), forced: Entitlement.forced?(@env, os:))
         wardrobe = Presentation::Wardrobe.new(SaveFile.new(name: "looks.txt"), themes: Look::THEMES, entitlement:, today:)
         @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
@@ -73,7 +73,7 @@ module DotPopper
                                                                     times: Look::LESSON.times),
                                        haptics: Haptics.for(os), clipboard: Clipboard.new, notices:,
                                        sharing: Presentation::SheetSharing.for(os, opener: UrlOpener.new),
-                                       lifetime:, achievements:, keeper:, sizing_store:, input: starting_input, measure: FontMeasure.new(@pen.fonts),
+                                       stats_book:, achievements:, keeper:, sizing_store:, input: starting_input, measure: FontMeasure.new(@pen.fonts),
                                        window: @window,
                                        tutorial_flag: Presentation::TutorialFlag.new(
                                          SaveFile.new(name: "tutorial.txt"), mode: Presentation::TutorialFlag.mode(@env)
@@ -239,7 +239,7 @@ module DotPopper
         in :press then gamepad_down(:a)
         in :start then @show.start
         in :share then share_pressed
-        in :records then @show.records? ? @show.open_credits : (@show.open_records if @show.records_offered?)
+        in :stats then @show.stats? ? @show.open_credits : (@show.open_stats if @show.stats_offered?)
         in :leave then @show.back || leave_title
         in :mute then @speaker.toggle_mute
         in :sizing then @show.toggle_sizing
@@ -247,11 +247,11 @@ module DotPopper
         end
       end
 
-      # Y: on the Records screen, "Clear my records…" held, or Undo; on the
+      # Y: on the Stats screen, "Clear my records…" held, or Undo; on the
       # title, where there is nothing to share, "How to play"; and
       # elsewhere, "Share my score".
       def share_pressed
-        if @show.records? then @show.clear_or_undo(:y)
+        if @show.stats? then @show.clear_or_undo(:y)
         elsif @show.title? then @show.how_to_play
         else @show.share
         end
@@ -301,14 +301,14 @@ module DotPopper
 
         return @speaker.toggle_mute if key == :m
         return @show.how_to_play if key == :h
-        return @show.open_looks if key == :l && @show.records?
-        return @show.open_credits if key == :c && @show.records?
+        return @show.open_looks if key == :l && @show.stats?
+        return @show.open_credits if key == :c && @show.stats?
         return if @show.credits_key(key)
         # Enter or Space presses the screen's main button, on any device;
         # Alt+Enter (Cmd+Enter on a Mac) is fullscreen's instead.
         return @show.primary if PRIMARY_KEYS.include?(key) && !(key != :space && fullscreen_chord?)
         # Escape, which Android's Back arrives as, goes back from the
-        # Records screen or Game Over first, on any device.
+        # Stats screen or Game Over first, on any device.
         return if key == :escape && @show.back
         # On the title Android's Back leaves the app, as Back on an app's
         # first screen does; in a game it does nothing, so a stray edge
@@ -642,7 +642,7 @@ module DotPopper
       end
 
       def screen_name
-        if @show.records? then "Your records"
+        if @show.stats? then "Your records"
         elsif @show.tutorial? then "the tutorial"
         elsif @show.playing? then "a game"
         elsif @show.finished? then "Game Over"

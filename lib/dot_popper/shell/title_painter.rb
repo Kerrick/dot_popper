@@ -31,7 +31,7 @@ module DotPopper
         line(plan, :games, show.games_line.to_s, show.games.can_play? ? pen.palette.soft : pen.palette.cream, intro, size: :goal)
         daily_goal(show, layout, plan, under_quit(show, plan, :goal, intro)) if plan[:goal]
         quit_prompt(show, plan)
-        line(plan, :streak, words.streak(show.lifetime.streak), pen.palette.soft, intro, size: :goal)
+        line(plan, :streak, words.streak(show.stats_book.streak), pen.palette.soft, intro, size: :goal)
         hover = show.hover
         PrimaryButton.new(pen:).draw(plan.play_button, words.play, alpha: intro, hover: hover.level(:play))
         MuteButton.new(pen:).draw(plan.mute_button, show.sounds.muted?, hover: hover.level(:mute))
@@ -40,9 +40,9 @@ module DotPopper
                                   icon: ->(x, y, size) { help(x, y, size, intro) })
         WindowButtonsPainter.new(pen:).draw(plan.window_buttons, show, intro) if plan.window_buttons
         group_button(show, intro) if show.group_offered?
-        return unless show.records_offered?
+        return unless show.stats_offered?
 
-        PillButton.new(pen:).draw(plan.records_button, words.records, alpha: intro, hover: hover.level(:records))
+        PillButton.new(pen:).draw(plan.stats_button, words.stats, alpha: intro, hover: hover.level(:stats))
         sizing_choice(show, plan.sizing_control, intro) if show.sizing_offered?
       end
 
@@ -114,7 +114,7 @@ module DotPopper
         top = plan[:goal].y + (font.height / 2.0)
         plan.goal_lines.each_with_index do |line, i|
           y = top + (font.height * 1.2 * i)
-          if show.lifetime.goal_done? && i.zero?
+          if show.stats_book.goal_done? && i.zero?
             Check.new(pen:).labelled(line, font, layout.center_x, y, alpha)
           else
             pen.text(line, font, layout.center_x, y, pen.palette.soft, alpha)
