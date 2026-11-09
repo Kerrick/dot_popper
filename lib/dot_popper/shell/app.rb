@@ -66,7 +66,7 @@ module DotPopper
               fake: Presentation::FakeStore.new(SaveFile.new(name: "fake_store.txt"), fails: Presentation::FakeStore.failure(@env))
         )
         games = free_games(entitlement, metered: storefront.offered? && player?)
-        groups = Groups::Session.at(Groups::Settings.server_url(@env, test_build: Presentation::Storefront.test_build?), store: SaveFile.new(name: "group.txt"))
+        groups = Groups::Session.at(Groups::Settings.server_url(@env), store: SaveFile.new(name: "group.txt"))
         @show = Presentation::Show.new(groups:, cabinet: @cabinet, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"),
                                        tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt"),

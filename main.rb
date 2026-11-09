@@ -29,7 +29,7 @@
 #   DOT_POPPER_PRO=1           plays as if Pro were bought
 #   DOT_POPPER_SERVER=http://localhost:9292
 #                               talks to this friend-group server instead
-#                               of Groups::Settings::SERVER_URL.
+#                               of Groups::Settings::SERVER_URL (empty: none).
 #   DOT_POPPER_GROUP_SCREEN=1   opens the Friend group screen at launch,
 #                               to check how it looks.
 #   DOT_POPPER_NO_TUTORIAL=1    never opens the tutorial on a first Play (the
