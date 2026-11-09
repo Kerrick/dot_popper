@@ -21,12 +21,14 @@ module DotPopperGui
       check_fresh_pixel(fresh_dot)
       run_out_the_clock
       continue_to_home
-      check(show.sizing_offered?, "the title offers the dot size on a narrow window")
-      sizing, second = show.sizing_reaches.last
-      check_equal(DotPopper::DotSizing::STANDARD, sizing, "the second segment is Standard")
+      check(show.sizing_offered?, "Settings offers the dot size on a narrow window")
+      settings = show.reach_of(:settings)
+      click(settings.center_x, settings.center_y)
+      second = show.reach_of(DotPopper::DotSizing::STANDARD) or fail!("Settings offers no standard size")
       click(second.center_x, second.center_y)
       check(!cabinet.sizing.sized_to_screen?, "a click on the second segment picks the standard size")
       check_equal(cabinet.sizing.to_text, File.read(saved("dot_size.txt")), "dot_size.txt remembers the choice")
+      key(:escape)
       start_game
       check_close(R::RADIUS, game.field.radius, "the next game's dots are the standard size")
     end

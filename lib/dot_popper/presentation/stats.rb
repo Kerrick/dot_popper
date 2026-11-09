@@ -110,154 +110,76 @@ module DotPopper
       def right = x + width
     end
 
-    # Sizes for the Stats screen, in graphics units at a scale of 1:
-    # the heading's and the rows' type, a row's height as a multiple of
-    # its type, the chart's height in rows, the gap between two columns,
-    # a column's widest, and how dark the title's dots are behind it.
+    # A card of the Stats screen: +kind+ is :chart, :records, :goal or
+    # :totals, and +rect+ is where it goes, by the list's top.
+    class StatsCard < Data.define(:kind, :rect); end
+
+    # Sizes for the Stats screen, in graphics units at a scale of 1.
     class StatsStyle < Data.define(:heading, :text, :line, :chart, :gap, :column, :veil); end
 
-    # The Stats screen laid out in the safe area: the heading at the
-    # top, the prompt to go back at the bottom, over the row of "Clear my
-    # records…" (Layout#clear_records_button), and between them the
-    # chart and the sections, in centred columns no wider than +widest+,
-    # the room the longest row needs as the shell measures it, so a label
-    # sits near its number. A wide screen puts the records and the daily
-    # goal on the left and the chart and totals on the right, when the two
-    # columns fit side by side; otherwise they stack. Rows shrink, never
-    # below a readable size, to fit a short screen. Under the heading go
-    # the sheet's notes, in +note_lines+ lines once the shell has wrapped
-    # them to fit across.
-    class StatsLayout < Data.define(:layout, :sheet, :style, :note_lines, :widest, :themes, :offer)
+    # The Stats screen laid out in cards, in the list's window under the
+    # heading and its note: one column on a phone, two on a wide window,
+    # three on a short one, as tall as their rows need. It scrolls where
+    # the cards are taller than the window.
+    class StatsLayout < Data.define(:layout, :sheet, :style)
       SMALLEST_TEXT = 11
+      RECORD_ROW = 33.0
+      TOTAL_ROW = 28.0
+      GAP = 12.0
 
-      def initialize(layout:, sheet:, style:, note_lines: sheet.notes.size, widest: nil, themes: false, offer: false) = super
+      def self.measured(layout:, sheet:, style:, measure: nil) = new(layout:, sheet:, style:)
 
-      MARK = 1.1 # the room an achievement's mark takes before its label, in rows' type
+      def heading_size = layout.heading_size
+      def heading_y = layout.heading_y
+      def note_y = layout.short? ? layout.safe.y + layout.page_margin + layout.control_height + 12.0 : heading_y + (heading_size * 0.72)
 
-      # The layout with its widest row and its notes' lines worked out as
-      # +measure+ (Measure) sees the type, as the shell draws it.
-      def self.measured(layout:, sheet:, style:, measure:, themes: false, offer: false)
-        size = layout.scaled(style.text)
-        sections = [sheet.records, sheet.totals, sheet.goal, sheet.achievements].compact
-        rows = sections.flat_map(&:rows).map do |row|
-          measure.width(:semibold, size, row.label) + measure.width(:bold, size, row.value) + (size * 2) + (row.mark ? size * MARK : 0)
-        end
-        titles = (sections.map(&:title) + [Words.last_games(sheet.scores.size)]).map { measure.width(:bold, size, it) }
-        plan = new(layout:, sheet:, style:, widest: (rows + titles).max, themes:, offer:)
-        room = layout.safe.width - (layout.margin * 2)
-        lines = sheet.notes.flat_map { |note| Words.balance(note, room) { measure.width(:semibold, plan.note_size, it) } }
-        plan.with(note_lines: lines.size)
+      def window
+        page = layout.page
+        top = layout.short? ? note_y + 10.0 : [page.y, note_y + 18.0].max
+        page.with(y: top, height: [page.bottom - top, 0.0].max)
       end
 
-      # The box around the achievements section, title and rows, or nil
-      # where it is not laid out.
-      def achievements_frame
-        section = sheet.achievements or return
-        parts = placements.select { it.item == section.title || section.rows.include?(it.item) }
-        return if parts.empty?
+      def columns = layout.short? ? 3 : (layout.safe.width >= 900 ? 2 : 1)
 
-        left = parts.map(&:x).min
-        top = parts.map { it.y - (it.height / 2.0) }.min
-        Rect.new(x: left, y: top, width: parts.map(&:right).max - left, height: parts.map { it.y + (it.height / 2.0) }.max - top)
+      # Each card where it goes in the list, and the list's height.
+      def cards
+        column_cards, height = arranged
+        [column_cards.flatten, height]
       end
 
-      def heading_size = layout.scaled(style.heading)
-      def heading_y = layout.top + (heading_size * 0.6)
-
-      # The notes' type size, and where the middle of their line +i+ goes.
-      def note_size = [layout.scaled(style.text * 0.9), SMALLEST_TEXT].max
-      def note_y(i) = heading_y + (heading_size * 0.75) + (note_size * 1.3 * (i + 0.5))
-      def prompt_size = layout.scaled(Style::TYPE.prompt)
-      # The prompt to go back sits over the row of "Clear my stats…".
-      def prompt_y = layout.stats_floor(themes:, offer:) - layout.margin - (prompt_size * 0.6)
-
-      # The rows' type size, and the height of a row.
-      def text_size = [(row / style.line).floor, SMALLEST_TEXT].max
-      def row = [layout.scaled(style.text) * style.line, room / columns.map { lines(it) }.max].min
-
-      def wide? = layout.safe.width >= layout.safe.height * 1.2 && fits?(2)
-
-      # Whether +count+ columns, of the width they want, fit side by side.
-      def fits?(count) = layout.safe.width - (layout.margin * 2) >= (wanted * count) + (gap * (count - 1))
-
-      # Each column's parts, as Placed, top to bottom.
-      def placements
-        widths = column_width
-        left = layout.center_x - (((columns.size * widths) + ((columns.size - 1) * gap)) / 2.0)
-        columns.each_with_index.flat_map { |parts, i| place(parts, left + (i * (widths + gap)), widths) }
-      end
+      def content_height = arranged.last
 
       private
 
-      # The achievements take a column of their own where three fit, or else go
-      # under whichever of two is shorter.
-      def columns
-        chart = sheet.scores.empty? ? [] : [:chart]
-        return [chart + [sheet.records, sheet.totals, sheet.goal, *sheet.achievements]] unless wide?
+      def chart_height = columns == 1 ? 183.0 : (columns == 3 ? 180.0 : 277.0)
+      def records_height = 28.0 + (RECORD_ROW * 4) + 8
+      def goal_height = columns == 3 ? 96.0 : 84.0
+      def totals_height = 28.0 + (TOTAL_ROW * 5) + 8
 
-        two = [[sheet.records, sheet.goal], chart + [sheet.totals]]
-        return two unless sheet.achievements
-        return two + [[sheet.achievements]] if fits?(3)
+      def groups
+        return [%i[chart records goal totals]] if columns == 1
+        return [%i[chart goal], %i[records totals]] if columns == 2
 
-        shorter = two.each_index.min_by { lines(two[it]) }
-        two.each_with_index.map { |parts, i| i == shorter ? parts + [sheet.achievements] : parts }
+        [%i[chart], %i[records], %i[goal totals]]
       end
 
-      def gap = layout.scaled(style.gap)
+      def height_of(kind) = { chart: chart_height, records: records_height, goal: goal_height, totals: totals_height }.fetch(kind)
 
-      def column_width
-        room = layout.safe.width - (layout.margin * 2) - ((columns.size - 1) * gap)
-        [room / columns.size, wanted].min
-      end
-
-      # How wide a column would like to be: as its longest row needs, and
-      # never past the theme's widest.
-      def wanted = [widest || Float::INFINITY, layout.scaled(style.column)].min
-
-      # The body starts under the heading, lowered by a third of the room
-      # its tallest column leaves, so it sits a little above the middle.
-      def body_top
-        top = heading_bottom
-        top + [(room - (columns.map { lines(it) }.max * row)) / 3.0, 0.0].max
-      end
-
-      def body_bottom = prompt_y - (prompt_size * 1.1)
-      def room = body_bottom - heading_bottom
-
-      # Where the heading and its notes end.
-      def heading_bottom
-        notes = note_lines.positive? ? (note_size * 1.3 * note_lines) + (note_size * 0.5) : 0.0
-        heading_y + (heading_size * 0.8) + notes
-      end
-
-      # How many rows a column's parts take, a section's title and the
-      # space after it included.
-      def lines(parts) = parts.sum { it == :chart ? chart_lines : it.rows.size + 1.6 }
-
-      # The chart's rows: its title, its bars, and the note under it, if
-      # any, which may take two lines of its smaller type.
-      def chart_lines = style.chart + 1.6 + (sheet.chart_note ? 1.4 : 0.0)
-
-      def place(parts, x, width)
-        y = body_top
-        parts.flat_map do |part|
-          if part == :chart
-            placed = [Placed.new(item: Words.last_games(sheet.scores.size), x:, y: y + (row * 0.5), width:, height: row),
-                      Placed.new(item: :chart, x:, y: y + row, width:, height: row * style.chart)]
-            if sheet.chart_note
-              note = ChartNote.new(text: sheet.chart_note)
-              placed << Placed.new(item: note, x:, y: y + (row * (style.chart + 1.75)), width:, height: row * 1.2)
-            end
-            y += row * chart_lines
-            next placed
+      def arranged
+        area = window
+        width = [(area.width - ((columns - 1) * GAP)) / columns, columns == 2 ? 552.0 : Float::INFINITY].min
+        total = (columns * width) + ((columns - 1) * GAP)
+        left = area.center_x - (total / 2.0)
+        column_cards = groups.each_with_index.map do |kinds, c|
+          y = 0.0
+          kinds.map do |kind|
+            card = StatsCard.new(kind:, rect: Rect.new(x: left + (c * (width + GAP)), y:, width:, height: height_of(kind)))
+            y += height_of(kind) + GAP
+            card
           end
-
-          placed = [part.title, *part.rows].each_with_index.map do |item, i|
-            Placed.new(item:, x:, y: y + (row * (i + 0.5)), width:, height: row)
-          end
-          y += row * (part.rows.size + 1.6)
-          placed
         end
+        height = column_cards.map { |cards| cards.map { it.rect.bottom }.max.to_f }.max
+        [column_cards, height]
       end
     end
   end

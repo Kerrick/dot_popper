@@ -2,137 +2,45 @@
 
 module DotPopper
   module Shell
-    # The title screen: the name, a legend that teaches the rule with one
-    # dot of each kind, and the Play button; under them, once a game has
-    # been played, the score record and today's goal; and along the bottom,
-    # "Your stats", where it changes something the choice of how dots
-    # are sized, and "How to play", on a desktop "Full screen" and Quit,
-    # and the mute button, each where the Show's HomePlan puts it. From
-    # the name to the last line, the words sit on a faint backing, so the
-    # dots drifting behind them dim further.
+    # Home, as Presentation::HomeScreen lays it out: the name, the first
+    # launch's legend, Play with what it leaves to say under it, today's
+    # goal and the days in a row on their card, the four large buttons,
+    # and the bottom row. Each large button shows one value.
     class HomePainter < Data.define(:pen, :dots)
       G = ::Lota::Graphics
-      HELP = 0.3 # the help sign's ring's radius, in the button's height
-      HELP_MARK = 0.42 # its question mark's size, in the button's height
-      HELP_LINE = 0.035 # its ring's width, in the button's height, at least a device pixel
 
       def draw(show, layout)
         now = show.now
-        marquee = show.marquee
-        intro = marquee.intro(now)
-        words = show.words
+        intro = show.marquee.intro(now)
         plan = show.home_plan
-        ScrimPainter.new(pen:).draw(plan.backing, pen.style::HOME_BACKING, layout, alpha: intro)
-        title = pen.fonts.bold(plan.size(:title))
-        y = plan[:title].y + (title.height / 2.0) - ((1 - intro) * 24)
-        if pen.art then ThemedTitle.new(pen:, dots:).draw(words.title, layout.center_x, y, plan.size(:title), intro, room: layout.safe.width * 0.92)
-        else Lettering.new(pen:).candy(words.title, title, layout.center_x, y, intro)
-        end
-        legend(layout, plan, under_quit(show, plan, :legend, intro))
-        line(plan, :score_record, words.score_record_line(marquee.score_record), pen.palette.soft, under_quit(show, plan, :score_record, intro))
-        line(plan, :games, show.games_line.to_s, show.games.can_play? ? pen.palette.soft : pen.palette.cream, intro, size: :goal)
-        daily_goal(show, layout, plan, under_quit(show, plan, :goal, intro)) if plan[:goal]
-        quit_prompt(show, plan)
-        line(plan, :streak, words.streak(show.stats_book.streak), pen.palette.soft, intro, size: :goal)
+        name(show, plan, layout, intro)
+        legend(plan, intro) if plan.legend
         hover = show.hover
-        PrimaryButton.new(pen:).draw(plan.play_button, words.play, alpha: intro, hover: hover.level(:play))
-        MuteButton.new(pen:).draw(plan.mute_button, show.sounds.muted?, hover: hover.level(:mute))
-        PillButton.new(pen:).draw(plan.how_to_play_button, words.how_to_play, alpha: intro,
-                                  hover: hover.level(:how_to_play),
-                                  icon: ->(x, y, size) { help(x, y, size, intro) })
-        WindowButtonsPainter.new(pen:).draw(plan.window_buttons, show, intro) if plan.window_buttons
-        group_button(show, intro) if show.group_offered?
-        return unless show.stats_offered?
-
-        PillButton.new(pen:).draw(plan.stats_button, words.stats, alpha: intro, hover: hover.level(:stats))
-        sizing_choice(show, plan.sizing_control, intro) if show.sizing_offered?
+        PrimaryButton.new(pen:).draw(plan.play, show.play_word, note: show.play_note, alpha: intro, hover: hover.level(:play))
+        goal(show, plan.goal, intro) if plan.goal
+        plan.tiles.each { |tile, rect| tile(show, tile, rect, intro) }
+        plan.pills.each { |pill, rect| pill(show, pill, rect, intro) }
+        quit_prompt(show, plan)
       end
 
       private
 
-      # The way in to friend groups, in the top left corner: a trophy,
-      # with its word where the screen has room.
-      def group_button(show, alpha)
-        rect = show.group_button
-        text = Presentation::GroupWords.button if rect.width > rect.height
-        PillButton.new(pen:).draw(rect, text, alpha:, hover: show.hover.level(:group_open),
-                                  icon: ->(x, y, size) { TrophyIcon.new(pen:).draw(x, y, size * 0.72, alpha) })
-      end
-
-      # "How to play"'s icon: the help sign, a question mark in a thin
-      # ring, in a square +size+ across around +x+, +y+, the same for every
-      # input. The ring and the mark sit on whole device pixels.
-      def help(x, y, size, alpha)
-        pixels = pen.pixels
-        width = [(size * HELP_LINE * pixels.scale).round, 1].max
-        pen.color(pen.palette.cream, alpha)
-        G.line_width = pixels.line_width(width)
-        G.circle(:line, pixels.line_at(x, width), pixels.line_at(y, width), pixels.snap(size * HELP), 48)
-        mark = pen.fonts.semibold(Presentation::Pixels.font_size(size * HELP_MARK))
-        pen.text("?", mark, x, y, pen.palette.cream, alpha)
-      end
-
-      # The choice of dot size, each segment named, saying what it does
-      # here, and showing a dot at the size it gives, in true proportion.
-      def sizing_choice(show, control, alpha)
-        preview = show.sizing_preview
+      def name(show, plan, layout, alpha)
+        rect = plan.name
         words = show.words
-        height = control.options.first.height
-        choices = Presentation::Show::SIZINGS.map do
-          [words.sizing(it, preview), words.sizing_note(it, preview), it == show.cabinet.sizing, preview.icon(it, height),
-           show.hover.level(it)]
-        end
-        SegmentedPainter.new(pen:, dots:).draw(control, show.words.sizing_label, choices, alpha:)
-      end
-
-      # A line of +text+ in its place in +plan+, if it has one, in the
-      # semibold size the plan gives +size+.
-      def line(plan, name, text, color, alpha, size: name)
-        rect = plan[name] or return
-
-        pen.text(text, pen.fonts.semibold(plan.size(size)), rect.center_x, rect.center_y, color, alpha)
-      end
-
-      # How much of the line +name+ shows, +alpha+ of it, less as "Press B
-      # again to quit" shows in its place, where the plan puts it there.
-      def under_quit(show, plan, name, alpha) = plan.quit_over == name ? alpha * (1 - show.quit_prompt) : alpha
-
-      # "Press B again to quit", where the plan puts it, while a second B
-      # would quit.
-      def quit_prompt(show, plan)
-        alpha = show.quit_prompt
-        return unless alpha.positive?
-
-        rect = plan.quit_line
-        pen.text(show.words.quit_again, pen.fonts.semibold(plan.size(:goal)), rect.center_x, rect.center_y,
-                 pen.palette.cream, alpha)
-      end
-
-      # Today's goal in the lines the plan broke it into; once it is met,
-      # the same goal, "Done today: ...", with a check before its first
-      # line.
-      def daily_goal(show, layout, plan, alpha)
-        font = pen.fonts.semibold(plan.size(:goal))
-        top = plan[:goal].y + (font.height / 2.0)
-        plan.goal_lines.each_with_index do |line, i|
-          y = top + (font.height * 1.2 * i)
-          if show.stats_book.goal_done? && i.zero?
-            Check.new(pen:).labelled(line, font, layout.center_x, y, alpha)
-          else
-            pen.text(line, font, layout.center_x, y, pen.palette.soft, alpha)
-          end
+        if pen.art then ThemedTitle.new(pen:, dots:).draw(words.game_name, rect.center_x, rect.center_y, plan.name_size, alpha, room: rect.width)
+        else Lettering.new(pen:).candy(words.game_name, pen.fonts.bold(plan.name_size), rect.center_x, rect.center_y, alpha)
         end
       end
 
-      # A bright dot, then "+1" and "+1" with a stopwatch, and beneath it a
-      # popped dot, then "−2" and "−2" with a stopwatch, in the colours the
-      # Tutorial flies them in (Presentation::Legend).
-      def legend(layout, plan, alpha)
-        font = pen.fonts.bold(plan.size(:legend))
+      # A bright dot, then "+1" and "+1" with a stopwatch; under it a
+      # popped dot, then "−2" and "−2" with a stopwatch.
+      def legend(plan, alpha)
+        font = pen.fonts.bold(plan.legend_size)
         legend = Presentation::Legend.measure(font.height) { font.width(it) }
         radius = legend.radius
-        x = layout.center_x - (legend.width / 2.0)
-        y = plan[:legend].center_y
+        x = plan.legend.center_x - (legend.width / 2.0)
+        y = plan.legend.center_y
         tallies = TallyPainter.new(pen:)
         Presentation::Legend.rows.each_with_index do |(fresh, points, seconds), i|
           row = y + ((i - 0.5) * radius * Presentation::Legend::ROW)
@@ -140,6 +48,106 @@ module DotPopper
           tallies.left(points, font, x + legend.points, row, fresh ? pen.palette.cream : pen.palette.alarm, alpha)
           tallies.left(seconds, font, x + legend.seconds, row, fresh ? pen.palette.gain : pen.palette.alarm, alpha)
         end
+      end
+
+      def goal(show, rect, alpha)
+        palette = pen.palette
+        Card.new(pen:).draw(rect, alpha:)
+        pad = [rect.height * 0.18, 16.0].min
+        streak_width = rect.height * 1.1
+        divider = rect.right - streak_width
+        label = pen.fonts.semibold([(rect.height * 0.15).round, 12].max)
+        text = pen.fonts.bold([(rect.height * 0.2).round, 14].max)
+        done = show.stats_book.goal_done?
+        tone = done ? palette.gain : palette.soft
+        title = show.words.goal_card_label
+        pen.text(title, label, rect.x + pad + (label.width(title) / 2.0), rect.y + pad + (label.height / 2.0), tone, alpha)
+        Glyphs.new(pen:).draw(:check, rect.x + pad + label.width(title) + (label.height * 0.9), rect.y + pad + (label.height / 2.0), label.height * 0.9, color: palette.gain, alpha:) if done
+        lines = Presentation::Words.wrap(show.words.goal_sentence(show.stats_book.goal), divider - rect.x - (2 * pad)) { text.width(it) }.first(2)
+        lines.each_with_index do |line, i|
+          y = rect.y + pad + (label.height * 1.25) + (text.height * (i + 0.5))
+          pen.text(line, text, rect.x + pad + (text.width(line) / 2.0), y, done ? palette.gain : palette.cream, alpha)
+        end
+        pen.color(palette.soft, 0.25 * alpha)
+        G.line_width = pen.pixels.line_width(1)
+        G.line(pen.pixels.snap(divider), rect.y + pad, pen.pixels.snap(divider), rect.bottom - pad)
+        streak(show, rect, divider, label, alpha)
+      end
+
+      def streak(show, rect, divider, label, alpha)
+        palette = pen.palette
+        x = (divider + rect.right) / 2.0
+        digits = pen.fonts.bold([(rect.height * 0.32).round, 16].max)
+        days = show.stats_book.streak
+        top = rect.y + (rect.height * 0.3)
+        Lettering.new(pen:).candy(days.to_s, digits, x, top, alpha, face: palette.fresh_body, side: palette.fresh_deep)
+        pen.text(show.words.streak_days(days), label, x, top + (digits.height * 0.72), palette.soft, alpha)
+        pen.text(show.words.streak_in_a_row, label, x, top + (digits.height * 0.72) + label.height, palette.soft, alpha)
+      end
+
+      # A large button: its icon, its name, one value, and on a controller
+      # its button in the corner.
+      def tile(show, tile, rect, alpha)
+        palette = pen.palette
+        Card.new(pen:).draw(rect, alpha:, lit: show.hover.level(tile))
+        size = [rect.height * 0.46, 20.0].max
+        icon_x = rect.x + (rect.height * 0.32) + (size * 0.3)
+        text_x = icon_x + (size * 0.72) + 8
+        icon(show, tile, icon_x, rect.center_y, size, alpha)
+        room = rect.right - text_x - 8
+        heading = fit_bold(show.tile_word(tile), [(rect.height * 0.23).round, 18].min, room)
+        note = fit(show.tile_note(tile), [(rect.height * 0.18).round, 16].min, room)
+        pen.text(show.tile_word(tile), heading, text_x + (heading.width(show.tile_word(tile)) / 2.0), rect.center_y - (note.height * 0.5), palette.cream, alpha)
+        pen.text(show.tile_note(tile), note, text_x + (note.width(show.tile_note(tile)) / 2.0), rect.center_y + (heading.height * 0.55), palette.soft, alpha)
+        badge(show, tile, rect, alpha) if show.input == Presentation::InputKind::GAMEPAD
+      end
+
+      def icon(show, tile, x, y, size, alpha)
+        case tile
+        when :themes then dots.icon(x, y, size * 0.6, fresh: true, opacity: alpha)
+        else Glyphs.new(pen:).draw({ stats: :bars, achievements: :ribbon, groups: :crown }.fetch(tile), x, y, size, color: pen.palette.fresh_body, alpha:, weight: 1.8)
+        end
+      end
+
+      def badge(show, tile, rect, alpha)
+        text = show.words.tile_badge(tile)
+        font = pen.fonts.semibold(13)
+        width = font.width(text) + 14
+        height = font.height + 4
+        x = rect.right - width - 8
+        y = rect.y - (height / 2.0)
+        pen.color(pen.palette.ink_top, alpha)
+        G.rectangle(:fill, x, y, width, height, height / 2.0, height / 2.0, 12)
+        pen.color(pen.palette.soft, 0.5 * alpha)
+        G.rectangle(:line, x, y, width, height, height / 2.0, height / 2.0, 12)
+        pen.text(text, font, x + (width / 2.0), y + (height / 2.0), pen.palette.soft, alpha)
+      end
+
+      def pill(show, name, rect, alpha)
+        glyph = { how_to_play: :question, settings: :gear, quit: :power }.fetch(name)
+        PillButton.new(pen:).draw(rect, show.words.public_send(name), alpha:, hover: show.hover.level(name),
+                                  icon: ->(x, y, size) { Glyphs.new(pen:).draw(glyph, x, y, size * 0.42, alpha:) })
+      end
+
+      def fit(text, size, room)
+        size -= 1 while size > 11 && pen.fonts.semibold(size).width(text) > room
+        pen.fonts.semibold(size)
+      end
+
+      def fit_bold(text, size, room)
+        size -= 1 while size > 11 && pen.fonts.bold(size).width(text) > room
+        pen.fonts.bold(size)
+      end
+
+      # "Press B again to quit", above the bottom row, while a second B
+      # would quit.
+      def quit_prompt(show, plan)
+        alpha = show.quit_prompt
+        return unless alpha.positive?
+
+        x, y = plan.quit_line
+        font = pen.fonts.semibold(18)
+        pen.text(show.words.quit_again, font, x, y, pen.palette.cream, alpha)
       end
     end
   end

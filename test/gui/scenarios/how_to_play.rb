@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # "How to play" on the title: drawn beside the mute button with the
-  # help sign on it, and pressed, the tutorial at
-  # once, though the director never opens it on a Play. It plays as a
+  # "How to play" on Home: hidden on a first launch, where Play teaches
+  # the game, and offered once a game has been played; pressed, the
+  # tutorial at once, though the director never opens it on a Play. It plays as a
   # first Play's does: the guide taps the bright dot, and the player's tap
   # pops it. Skipped, a game starts; back on the title, H opens it again.
   #
@@ -15,11 +15,13 @@ module DotPopperGui
     T = DotPopper::Presentation::Tutorial
 
     def play
-      check(show.home?, "the game opens on the title")
-      touch(layout.safe.x + 4, layout.safe.y + 4) if hand == "touch" # a finger in hand, so the tutorial's guide is one
+      check(show.home?, "the game opens on Home")
+      check(show.reach_of(:how_to_play).nil?, "a first Home offers no How to play, since Play teaches it")
+      quick_game
+      touch(*empty_point) if hand == "touch" # a finger in hand, so the tutorial's guide is one
       wait(0.6)
       reach = show.reach_of(:how_to_play)
-      check(reach, "the title offers How to play")
+      check(reach, "after a game, Home offers How to play")
       lit = screenshot.lit_in(reach)
       check(lit >= 40, "How to play is drawn (#{lit} light pixels)")
       keep_screenshot(name("title"))

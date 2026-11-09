@@ -90,26 +90,6 @@ class AchievementsOnStatsTest < Minitest::Test
     assert_equal "Achievements: 1 of 11", sheet.achievements.title
   end
 
-  def test_a_free_player_taps_the_achievements_to_ask_for_pro_and_back_returns_to_the_stats
-    show(pro: false)
-    play_a_sharp_game
-    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
-    press_main
-    @show.open_stats
-    reach = @show.reach_of(:achievements)
-
-    refute_nil reach
-    @show.tap(reach.center_x, reach.center_y)
-
-    assert_predicate @show, :offer?
-    assert_equal :achievements, @show.offer_focus
-    assert_equal "Achievements", @show.words.offer_items(@show.offer_focus).first
-    @show.back
-
-    refute_predicate @show, :offer?
-    assert_predicate @show, :stats?
-  end
-
   def test_a_pro_player_has_nothing_to_tap_among_the_achievements
     show(pro: true)
     play_a_sharp_game
@@ -122,44 +102,6 @@ class AchievementsOnStatsTest < Minitest::Test
 
   def test_a_sheet_with_no_achievements_lists_no_achievements
     assert_nil StatsSheet.build(stats, score_record: 1, words: Style::WORDS).achievements
-  end
-
-  def test_the_stats_screen_puts_the_achievements_in_a_column_of_their_own_where_there_is_room
-    sheet = build_sheet
-    plan = StatsLayout.new(layout: layout(1400, 700), sheet:, style: Style::RECORDS, widest: 360)
-    achievements = plan.placements.select { it.item.is_a?(StatsRow) && it.item.mark }
-    others = plan.placements.reject { it.item.is_a?(StatsRow) && it.item.mark }.select { it.item.is_a?(StatsRow) }
-
-    assert_equal DotPopper::Achievement::IDS.size, achievements.size
-    assert_equal 1, achievements.map(&:x).uniq.size
-    assert_empty achievements.map(&:x) & others.map(&:x)
-  end
-
-  def test_a_free_players_stats_fit_with_the_achievements_themes_and_the_offer_at_phone_and_desktop_sizes
-    sheet = build_sheet
-
-    [[1200, 800], [800, 500], [400, 320], [400, 850], [850, 400], [844, 390], [2560, 1440]].each do |width, height|
-      plan = StatsLayout.new(layout: layout(width, height), sheet:, style: Style::RECORDS, widest: 360, themes: true, offer: true)
-      page = layout(width, height)
-
-      assert_operator plan.prompt_y, :<=, page.stats_floor(themes: true, offer: true), "#{width}x#{height}"
-      plan.placements.each do |placed|
-        assert_operator placed.x, :>=, 0, "#{width}x#{height}"
-        assert_operator placed.right, :<=, width, "#{width}x#{height}"
-        assert_operator placed.y, :<, plan.prompt_y, "#{width}x#{height}"
-      end
-      assert_equal DotPopper::Achievement::IDS.size, plan.placements.count { it.item.is_a?(StatsRow) && it.item.mark }, "#{width}x#{height}"
-    end
-  end
-
-  def test_on_a_narrow_screen_the_achievements_stack_under_the_rest_and_all_fit
-    sheet = build_sheet
-    plan = StatsLayout.new(layout: layout(395, 850), sheet:, style: Style::RECORDS, widest: 300)
-    placed = plan.placements
-
-    assert_equal DotPopper::Achievement::IDS.size, placed.count { it.item.is_a?(StatsRow) && it.item.mark }
-    assert_equal 1, placed.map(&:x).uniq.size, "one column"
-    assert_operator placed.map(&:y).max, :<, plan.prompt_y
   end
 
   def test_clearing_the_stats_clears_the_achievements_and_undo_brings_them_back

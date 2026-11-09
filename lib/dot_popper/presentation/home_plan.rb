@@ -2,30 +2,21 @@
 
 module DotPopper
   module Presentation
-    # Where the title's words go, worked out by HomeScreen#plan: each
-    # line's Rect by name (Stacked), the Play button's as :play, the font
-    # size each is set in, today's goal broken into lines, the faint
-    # backing behind them, the bottom row's buttons, which the words keep
-    # above, the window buttons on a desktop (WindowButtons, or nil), and
-    # where "Press B again to quit" goes while it shows (+quit_line+), with
-    # the name of the line it stands in for there, if any (+quit_over+). A
-    # line the screen had no room for, or that is not shown, has no Rect.
-    class HomePlan < Data.define(:placed, :sizes, :goal_lines, :backing, :stats_button, :sizing_control,
-                                  :mute_button, :how_to_play_button, :window_buttons, :quit_line, :quit_over)
-      def [](name) = placed[name]
-      def size(name) = sizes.fetch(name)
-      def play_button = placed[:play]
+    # Where Home's parts go, worked out by HomeScreen#plan: the name and its
+    # type size, the first launch's +legend+ and its type size (nil after
+    # the first game), Play, the daily goal's card, the four large +tiles+
+    # by name, the bottom row's +pills+ by name, and +quit_line+, the middle
+    # of "Press B again to quit". Parts a screen does not show are nil.
+    class HomePlan < Data.define(:name, :name_size, :legend, :legend_size, :play, :goal, :tiles, :pills, :quit_line)
+      def play_button = play
     end
 
-    # The title's legend, a reminder of the scoring with no word, in the
-    # Tutorial's own signs (Tally): a bright dot, then "+1" and "+1" with a
-    # stopwatch; under it a popped dot, then "−2" and "−2" with a
-    # stopwatch, the numbers in two columns. On a line +height+ tall, it
-    # is +width+ across, and its columns start +points+ and +seconds+
-    # from its left. Its dots' radius is DOT of the line's height, with
-    # AFTER_DOT of that radius after them; its columns are APART lines'
-    # heights apart, its rows ROW radii apart, and the whole HEIGHT lines
-    # tall.
+    # The first launch's legend, a reminder of the scoring with no word, in
+    # the Tutorial's own signs (Tally): a bright dot, then "+1" and "+1"
+    # with a stopwatch; under it a popped dot, then "−2" and "−2" with a
+    # stopwatch, the numbers in two columns. On a line +height+ tall, it is
+    # +width+ across, and its columns start +points+ and +seconds+ from its
+    # left.
     class Legend < Data.define(:height, :points, :seconds, :width)
       DOT = 0.5
       AFTER_DOT = 0.7
@@ -33,12 +24,8 @@ module DotPopper
       ROW = 2.8
       HEIGHT = 2.4
 
-      # Each row, top first: whether its dot is fresh, then what its tap
-      # does to the score and to the clock.
       def self.rows = [[true, *Tally.pop], [false, *Tally.penalty]]
 
-      # The legend on a line +height+ tall, its numbers as wide as the
-      # block measures them.
       def self.measure(height, &measure)
         first = height * DOT * (2 + AFTER_DOT)
         widest = ->(column) { rows.map { it[column].width(height, &measure) }.max }
@@ -49,241 +36,211 @@ module DotPopper
       def radius = height * DOT
     end
 
-    # The title screen, short of its dots, in two parts. In the middle,
-    # one column read top down: its name, the legend, and the Play button,
-    # as big as Layout's primary_size for dots of +radius+ (or, on a window
-    # too small for that, as small as a button), which say what the game
-    # is and how to start it; then, apart from them and quieter, the
-    # player's own: the score record (+best+, shown from 1), today's goal
-    # (+goal+, its sentence or "Today's goal is done." once +done+), and
-    # the days in a row it has been met (+streak+, from 2). Under Play,
-    # where games are counted, stands how many are left (+games+). Along the
-    # bottom, one row in three groups: "Your stats" at the left once
-    # +records+ is offered, the dot-size choice in the middle where
-    # +sizing+ is, and at the right "How to play", on a desktop
-    # (+window+) "Full screen" and Quit (#window_buttons), and the mute
-    # button. The bottom row is laid out first, and the words fit in what
-    # is left above it: their type shrinks first, then the streak goes,
-    # then the goal, then the best, then the games left, and last the name shrinks on. The
-    # legend and Play always stay, since they are how to play.
-    # Sizes are measured with +measure+ (RoughMeasure's methods).
-    class HomeScreen < Data.define(:layout, :type, :words, :measure, :score_record, :goal, :done, :streak, :stats,
-                                    :sizing, :radius, :window, :games)
-      # The gaps above each line, in graphics units at full size.
-      # The name, the legend and Play are near each other, one group; the
-      # player's own lines stand further off under Play, and closer to
-      # each other, another.
-      GAPS = { legend: 30, play: 30, games: 12, score_record: 44, score_record_room: 44, goal: 14, streak: 8 }.freeze
-      # How far the name shrinks on, once everything else has made room.
-      # The games line goes last of the optional lines: a player at the limit
-      # needs it most.
-      GAMES_DROP = 4
-      NAME_SHRINKS = [1.0, 0.82, 0.66, 0.5, 0.4].freeze
+    # Home, read top down: the name, Play, today's goal with the days in a
+    # row, four large buttons (+tile_names+), then How to play, Settings
+    # and, on a computer (+window+), Quit. Before the first game (+played+
+    # false) it is the name, the legend, Play and Settings alone, so
+    # nothing has to be read to begin. A short landscape window puts the
+    # name and Play on the left and the rest on the right.
+    class HomeScreen < Data.define(:layout, :type, :words, :measure, :played, :tile_names, :window)
+      NAME_WIDTH = 615.0 # how wide the name may be on a large window
+      PLAY = [560.0, 104.0].freeze
 
-      def initialize(layout:, type:, words:, measure:, score_record: 0, goal: nil, done: false, streak: 0, stats: false,
-                     sizing: false, radius: Rules::RADIUS, window: false, games: nil)
-        super
-      end
+      def initialize(layout:, type:, words:, measure:, played: false, tile_names: [], window: false) = super
 
       def plan
-        buttons = window_buttons
-        placed, sizes = stack(buttons)
-        HomePlan.new(placed:, sizes:, goal_lines: goal_lines(sizes[:goal]), backing: backing(placed, sizes),
-                      stats_button: layout.stats_button, sizing_control: layout.sizing_control(window: buttons),
-                      mute_button: layout.mute_button, how_to_play_button: layout.how_to_play_button(window: buttons),
-                      window_buttons: buttons, **quit_line(placed, sizes, buttons))
-      end
-
-      # The middle of the screen, from the safe area's top margin down to
-      # a margin above the bottom row.
-      def room(buttons = window_buttons)
-        margin = layout.margin
-        top = layout.top
-        Rect.new(x: layout.safe.x + margin, y: top, width: layout.safe.width - (2 * margin),
-                 height: bottom_row(buttons).map(&:y).min - margin - top)
-      end
-
-      # The bottom row's parts that show, the window buttons among them
-      # unless they are in the top corner, and the dot-size choice's label
-      # and segments too, which take a row above the buttons where they do
-      # not fit between them, as "How to play" does.
-      def bottom_row(buttons = window_buttons)
-        parts = [layout.mute_button, layout.how_to_play_button(window: buttons), *row_of(buttons)]
-        parts << layout.stats_button if stats
-        sizing_control = layout.sizing_control(window: buttons)
-        parts.push(sizing_control.label, sizing_control.frame) if sizing
-        parts
-      end
-
-      # Where "Full screen" and Quit go on a desktop's title (Layout's
-      # WindowButtons), or nil where the title has none: in the bottom
-      # row, labelled where it has room for their words, and as their
-      # icons where it has room for those; otherwise their icons a row
-      # above its right end, wherever the name, the legend and Play fit
-      # above that with the dot-size choice shown too, so that they stay
-      # put once it shows; and only on a window too short even for that,
-      # as the smallest, their icons in the top right corner beside the
-      # name, which keeps clear of them.
-      def window_buttons
-        return unless window
-
-        in_row = [true, false].map { layout.window_buttons(labelled: it) }.find { layout.fits_in_row?(it) }
-        return in_row if in_row
-
-        above = layout.window_icons_above
-        fits = with(sizing: true, score_record: 0, goal: nil, streak: 0).stack(above).first.fits?
-        fits ? above : layout.window_icons
-      end
-
-      protected
-
-      # The words stacked in the room above the bottom row, as the window
-      # buttons +buttons+ leave it: where they went, and the type's sizes.
-      def stack(buttons)
-        column = Column.new(room: room(buttons))
-        placed = sizes = nil
-        play_heights.each do |play|
-          NAME_SHRINKS.each do |shrink|
-            placed = column.fit(layout.type_scales) { blocks(sizes(it, shrink, buttons), it, play) }
-            sizes = sizes(placed.scale, shrink, buttons)
-            break if placed.fits?
-          end
-          break if placed.fits?
-        end
-        [placed, sizes]
+        layout.short? ? landscape : upright
       end
 
       private
 
-      # The window buttons standing in the bottom row's rows; none where
-      # they are icons in the corner.
-      def row_of(buttons) = buttons && !buttons.cornered? ? buttons.rects : []
+      def margin = layout.page_margin
+      def safe = layout.safe
+      def wide? = safe.width >= 900 && !layout.short?
+      def tile_names = played ? super : []
+      def pill_names = (played ? %i[how_to_play settings] : %i[settings]) + (window ? %i[quit] : [])
 
-      # Whether the window buttons are their icons in the top right corner.
-      def cornered?(buttons) = buttons&.cornered?
-
-      # How tall Play may be, from the first choice down: a dot across, or,
-      # on a window too small for that, as tall as a button.
-      def play_heights
-        _, height = layout.primary_size(radius)
-        [height, (height + layout.button_size) / 2.0, layout.button_size].uniq
+      # Laid out as the mocks draw it, or where that does not fit the
+      # window, tighter, and on the smallest windows without the goal's
+      # card, which Stats shows too.
+      def upright
+        plans = [0, 1, 2].lazy.map { upright_at(it) }
+        plans.find { fits?(it) } || upright_at(2)
       end
 
-      def blocks(sizes, scale, play_height)
-        title, legend, line = sizes.values_at(:title, :legend, :score_record)
-        goal = goal_lines(sizes[:goal]) if self.goal
-        [Block.new(name: :title, height: measure.height(:bold, title) * 1.06, width: measure.width(:bold, title, words.title)),
-         Block.new(name: :legend, height: measure.height(:bold, legend) * Legend::HEIGHT, gap: gap(:legend, scale),
-                   width: legend_width(legend)),
-         play(scale, play_height),
-         (block(:games, :semibold, sizes[:goal], games, scale, drop: GAMES_DROP) if games),
-         score_record_block(line, scale),
-         (goal_block(goal, sizes[:goal], scale) if goal),
-         (block(:streak, :semibold, sizes[:goal], words.streak(streak), scale, drop: 1) if goal && streak >= 2)].compact
+      def fits?(plan)
+        parts = [plan.name, plan.legend, plan.play, plan.goal, *plan.tiles.values, *plan.pills.values].compact
+        x, y = plan.quit_line
+        quit = Rect.new(x: x - 100, y: y - 9, width: 200, height: 18)
+        parts.all? { it.y >= safe.y - 1e-6 && it.bottom <= safe.bottom + 1e-6 } &&
+          (parts + [quit]).combination(2).none? { |one, other| one.overlaps?(other) }
       end
 
-      # "Your record: 25", or none yet. While the Dot size choice shows, each
-      # size has records of its own, so a size with none yet keeps the
-      # line's room empty: switching sizes then never moves Play.
-      def score_record_block(size, scale)
-        return block(:score_record, :semibold, size, words.score_record_line(score_record), scale, drop: 3) if score_record.positive?
-
-        block(:score_record_room, :semibold, size, "", scale, drop: 3) if sizing
+      # +tight+: 0 as drawn, 1 with less room between the parts, 2 also
+      # without the goal's card.
+      def upright_at(tight)
+        left = safe.x + margin
+        full = safe.width - (2 * margin)
+        columns = self.columns(full)
+        tile_top_gap = tight.positive? ? 8.0 : (wide? ? 17.0 : 12.0)
+        tile_height = tight.positive? ? [56.0, layout.button_size].max : (wide? ? 105.0 : 76.0)
+        gap = tight.positive? ? 8.0 : (wide? ? 12.0 : 10.0)
+        bottom = safe.bottom - margin
+        tall = tight.positive? ? [48.0, layout.button_size].max : (wide? ? 60.0 : 56.0)
+        pill_y = bottom - tall
+        pills = pill_row(layout.center_x, pill_y, tall)
+        tile_width = [(full - (gap * (columns - 1))) / columns, wide? ? 255.0 : Float::INFINITY].min
+        rows = tile_names.each_slice(columns).to_a
+        tiles_height = (rows.size * tile_height) + ([rows.size - 1, 0].max * gap)
+        tiles_left = layout.center_x - ((columns * tile_width) + ((columns - 1) * gap)) / 2.0
+        tiles_top = pill_y - (tight.positive? ? 12.0 : (wide? ? 63.0 : 14.0)) - tiles_height
+        tiles = tile_rects(rows, tiles_left, tiles_top, tile_width, tile_height, gap)
+        card_height = tight.positive? ? 72.0 : (wide? ? 101.0 : 87.0)
+        card_width = wide? ? [768.0, full].min : full
+        card = (Rect.new(x: layout.center_x - (card_width / 2.0), y: tiles_top - tile_top_gap - card_height, width: card_width, height: card_height) if played && tight < 2)
+        above = card ? card.y : (played ? tiles_top - tile_top_gap : pill_y - tall)
+        top_group(left, full, card, above, tiles, pills, tight:)
       end
 
-      # Play, as wide as a main button is, whatever the type's scale.
-      def play(scale, height)
-        width, = layout.primary_size(radius)
-        Block.new(name: :play, height:, width:, gap: gap(:play, scale))
+      # As many columns as there are large buttons where each has room for
+      # its words, and otherwise two.
+      def columns(full)
+        count = [tile_names.size, 1].max
+        return count if wide?
+
+        (full - (10.0 * (count - 1))) / count >= 170.0 ? count : 2
       end
 
-      def block(name, face, size, text, scale, drop: nil)
-        Block.new(name:, height: measure.height(face, size), gap: gap(name, scale), width: measure.width(face, size, text),
-                  drop:)
+      # The name and Play above the card, or the name, legend and Play on the
+      # first launch.
+      def top_group(left, full, card, above, tiles, pills, tight: 0)
+        play_width = wide? ? [PLAY[0], full].min : full
+        play_height = (wide? ? PLAY[1] : 100.0).clamp(0.0, [(above - safe.y - margin) * 0.45, layout.button_size].max)
+        play_height = [play_height, [64.0, layout.button_size].max].min if tight.positive?
+        size = name_size(wide? ? [NAME_WIDTH, full].min : full)
+        name_height = measure.height(:bold, size)
+        under = card || played
+        gap_after = under ? (tight.positive? ? 28.0 : (wide? ? 56.0 : 105.0)) : 0.0
+        play_y = under ? [above - gap_after - play_height, safe.y + margin + name_height + 12].max : centered_play(above, name_height, play_height)
+        legend, legend_size = legend_for(play_y, name_height, size) unless under
+        name_y = if under then [play_y - (tight.positive? ? (name_height * 0.5) + 10 : (wide? ? 95.0 : 108.0)), safe.y + margin + (name_height / 2.0)].max
+                 else legend ? legend.y - (name_height * 0.7) : play_y - (name_height * 0.9)
+                 end
+        HomePlan.new(name: Rect.new(x: left, y: name_y - (name_height / 2.0), width: full, height: name_height), name_size: size, legend:, legend_size:,
+                     play: Rect.new(x: layout.center_x - (play_width / 2.0), y: play_y, width: play_width, height: play_height), goal: card, tiles:,
+                     pills:, quit_line: [layout.center_x, (play_y + play_height + (under ? above : (pills.values.first&.y || safe.bottom))) / 2.0])
       end
 
-      # The goal's lines, 1.2 lines apart, and with the check mark when it
-      # is done.
-      def goal_block(lines, size, scale)
-        line = measure.height(:semibold, size)
-        check = done ? line * 0.75 : 0.0
-        Block.new(name: :goal, height: (line * 1.2 * (lines.size - 1)) + line, gap: gap(:goal, scale), drop: 2,
-                  width: lines.map { measure.width(:semibold, size, it) }.max + check)
+      def centered_play(above, name_height, play_height)
+        legend_size = layout.type_size(type.legend)
+        legend_height = measure.height(:bold, legend_size) * Legend::HEIGHT
+        total = name_height + 24 + legend_height + 30 + play_height
+        top = safe.y + [(above - safe.y - total) * 0.42, margin].max
+        top + name_height + 24 + legend_height + 30
       end
 
-      def gap(name, scale) = GAPS.fetch(name) * layout.ui * scale
-
-      def sizes(scale, shrink, buttons)
-        { title: title_size((layout.type_size(type.title, scale) * shrink).round, buttons),
-          legend: legend_size(layout.type_size(type.legend, scale)),
-          score_record: layout.type_size(type.score_record, scale), goal: layout.type_size(type.summary * 1.1, scale) }
+      def legend_for(play_y, _name_height, _size)
+        size = layout.type_size(type.legend)
+        height = measure.height(:bold, size) * Legend::HEIGHT
+        width = Legend.measure(measure.height(:bold, size)) { measure.width(:bold, size, it) }.width
+        [Rect.new(x: layout.center_x - (width / 2.0), y: play_y - 30 - height, width:, height:), size]
       end
 
-      # Today's goal broken into lines that fit across. Once it is done, a
-      # check stands before its first line (Shell::Check, half a line's
-      # height and a quarter more of gap), so the lines leave it room.
-      def goal_lines(size)
-        return [] unless goal
+      def landscape
+        gap = 22.0
+        left_width = [(safe.width - (2 * margin) - gap) / 2.0, 398.0].min
+        right_x = safe.x + margin + left_width + gap
+        right_width = safe.right - margin - right_x
+        room = safe.height - (2 * margin)
+        card_height, tile_height, pill_height = shares(room)
+        between = [(room - card_height - (tile_height * 2) - 10 - pill_height) / 2.0, 6.0].max
+        card_y = safe.y + margin
+        tile_y = card_y + card_height + between
+        pill_y = tile_y + (tile_height * 2) + 10 + between
+        tile_width = (right_width - 10) / 2.0
+        tiles = tile_rects(tile_names.each_slice(2).to_a, right_x, tile_y, tile_width, tile_height, 10.0)
+        pills = pill_row(right_x + (right_width / 2.0), pill_y, pill_height)
+        return first_landscape(left_width, tiles, pills) unless played
 
-        room = done ? across - (measure.height(:semibold, size) * 0.75) : across
-        Words.balance(goal, room) { measure.width(:semibold, size, it) }
+        size = name_size(left_width)
+        name_height = measure.height(:bold, size)
+        play_height = [78.0, layout.button_size, safe.height * 0.22].sort[1]
+        play_y = (safe.y + (safe.height / 2.0)) + (name_height * 0.15)
+        name = Rect.new(x: safe.x + margin, y: play_y - name_height - 4, width: left_width, height: name_height)
+        HomePlan.new(name:, name_size: size, legend: nil, legend_size: nil,
+                     play: Rect.new(x: safe.x + margin, y: play_y, width: left_width, height: play_height),
+                     goal: Rect.new(x: right_x, y: card_y, width: right_width, height: card_height), tiles:, pills:,
+                     quit_line: [safe.x + margin + (left_width / 2.0), play_y + play_height + 18.0])
       end
 
-      # How wide a line of the middle may be.
-      def across = layout.safe.width - (layout.margin * 4)
-
-      # The name's +size+, shrunk if it would not fit across, or, with the
-      # window buttons' icons in the corner beside it, between them and as
-      # far from the other side, a margin clear of them.
-      def title_size(size, buttons)
-        room = across
-        room = [room, 2 * (buttons.fullscreen.x - layout.margin - layout.center_x)].min if cornered?(buttons)
-        width = measure.width(:bold, size, words.title)
-        width > room ? (size * room / width).floor : size
+      def first_landscape(left_width, _tiles, pills)
+        size = name_size(left_width)
+        name_height = measure.height(:bold, size)
+        legend_size = layout.type_size(type.legend) - 2
+        legend_height = measure.height(:bold, legend_size) * Legend::HEIGHT
+        play_height = [78.0, layout.button_size, safe.height * 0.22].sort[1]
+        total = name_height + legend_height + play_height + 24
+        top = [safe.y + ((safe.height - total) / 2.0), safe.y + margin].max
+        width = Legend.measure(measure.height(:bold, legend_size)) { measure.width(:bold, legend_size, it) }.width
+        legend = Rect.new(x: safe.x + margin + (left_width / 2.0) - (width / 2.0), y: top + name_height + 8, width:, height: legend_height)
+        HomePlan.new(name: Rect.new(x: safe.x + margin, y: top, width: left_width, height: name_height), name_size: size, legend:, legend_size:,
+                     play: Rect.new(x: safe.x + margin, y: legend.bottom + 12, width: left_width, height: play_height), goal: nil, tiles: {}, pills:,
+                     quit_line: [safe.x + margin + (left_width / 2.0), legend.bottom + play_height + 30.0])
       end
 
-      # How wide the legend is (Legend), its numbers set in bold +size+.
-      def legend_width(size) = Legend.measure(measure.height(:bold, size)) { measure.width(:bold, size, it) }.width
+      # Heights for the card, a tile and the pills on a short window.
+      def shares(room)
+        scale = (room / (87.0 + 76 + 10 + 76 + 56 + 48)).clamp(0.5, 1.0)
+        [[87.0 * scale, layout.button_size].max, [76.0 * scale, layout.button_size].max, [56.0 * scale, layout.button_size].max]
+      end
 
-      # The legend's +size+, shrunk by whole sizes until its longer line
-      # fits across.
-      def legend_size(size)
-        room = layout.safe.width - (layout.margin * 2)
-        size -= 1 while size > layout.style.least && legend_width(size) > room
+      def tile_rects(rows, left, top, width, height, gap)
+        rows.each_with_index.flat_map do |row, r|
+          row.each_with_index.map { |name, c| [name, Rect.new(x: left + (c * (width + gap)), y: top + (r * (height + gap)), width:, height:)] }
+        end.to_h
+      end
+
+      # The bottom row, centred on +center+, each as wide as its words.
+      def pill_row(center, y, height)
+        widths = pill_names.map { pill_width(it, height) }
+        gap = 10.0
+        most = (2 * (safe.width - margin - (center - safe.x)).clamp(0.0, safe.width)) - gap
+        total = widths.sum + ((widths.size - 1) * gap)
+        widths = widths.map { it * most / total } if total > most
+        total = widths.sum + ((widths.size - 1) * gap)
+        x = center - (total / 2.0)
+        pill_names.zip(widths).to_h do |name, width|
+          rect = Rect.new(x:, y:, width:, height:)
+          x += width + gap
+          [name, rect]
+        end
+      end
+
+      def pill_width(name, height)
+        size = (height * PillLabel::RATIO).round
+        PillLabel.width_with_icon(measure.width(:semibold, size, words.public_send(name)), height)
+      end
+
+      # The name's type size, so it fills +width+ and never exceeds what
+      # the window's height allows.
+      def name_size(width)
+        size = layout.type_size(type.game_name)
+        size -= 1 while size > 22 && measure.width(:bold, size, words.game_name) > width * 0.96
+        grow = width * 0.96
+        size += 1 while size < 200 && measure.width(:bold, size + 1, words.game_name) < grow && measure.height(:bold, size + 1) < safe.height * 0.28
         size
       end
+    end
 
-      # "Press B again to quit", in the goal's type: a gap under the
-      # column's last line, or a gap above the name. It shows only for a moment, so it takes no
-      # room from the others; where neither has room for it, it stands in
-      # for a line that is already there: today's goal, the best, or, on
-      # the smallest windows, the legend. Above the name is the window
-      # buttons' corner, where they are icons there.
-      def quit_line(placed, sizes, buttons)
-        size = sizes[:goal]
-        height = measure.height(:semibold, size)
-        width = measure.width(:semibold, size, words.quit_again)
-        gap = gap(:goal, placed.scale)
-        line = ->(y) { Rect.new(x: layout.center_x - (width / 2.0), y:, width:, height:) }
-        below = placed.rects.values.map(&:bottom).max + gap
-        above = placed[:title].y - gap - height
-        return { quit_line: line[below], quit_over: nil } if below + height + gap <= bottom_row(buttons).map(&:y).min
-        return { quit_line: line[above], quit_over: nil } if above >= layout.safe.y && !cornered?(buttons)
+    # How big a pill's word is, in the pill's height.
+    module PillLabel
+      RATIO = 0.32 # the word's size, in the pill's height, as the mocks set it
+      GLYPH = 0.45 # how wide an icon beside the word is, in the pill's height
+      GAP = 0.22 # the room between the icon and the word, in the pill's height
 
-        over = %i[goal best legend].find { placed.key?(it) }
-        { quit_line: line[placed[over].center_y - (height / 2.0)], quit_over: over }
-      end
-
-      # From near the name's top to the bottom of the column's last line,
-      # as wide as its widest line, so the dots drifting behind the words
-      # dim further.
-      def backing(placed, sizes)
-        name = placed[:title]
-        width = [*placed.rects.except(:play).values.map(&:width), legend_width(sizes[:legend])].max
-        top = name.y + (name.height * 0.1)
-        bottom = placed.rects.values.map(&:bottom).max
-        Rect.new(x: layout.center_x - (width / 2.0), y: top, width:, height: bottom - top)
-      end
+      # How wide a pill with an icon is for +word_width+ of words, on a pill
+      # +height+ tall, with room at either end.
+      def self.width_with_icon(word_width, height) = word_width + (height * (GLYPH + GAP + 1.0))
     end
   end
 end

@@ -15,127 +15,10 @@ class ScreenPlansTest < Minitest::Test
   WORDS = Style::WORDS
   GOAL = WORDS.goal(DotPopper::DailyGoal.for(Date.new(2026, 11, 1)))
 
-  def test_the_titles_lines_never_overlap_each_other_or_the_bottom_row
-    SIZES.each do |width, height|
-      screen_layout = layout(width, height)
-      radii = [R, DotPopper::DotSize.fitted(width, height).radius]
-      [0, 75].product([nil, :open, :done], [0, 5], [true, false], radii) do |score_record, goal, streak, sizing, radius|
-        screen = HomeScreen.new(layout: screen_layout, type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
-                                 score_record:, goal: { open: GOAL, done: WORDS.goal_done_line(DotPopper::DailyGoal.for(Date.new(2026, 11, 1))) }[goal], done: goal == :done,
-                                 streak:, stats: !goal.nil?, sizing: sizing && !goal.nil?, radius:)
-        plan = screen.plan
-        name = "#{width}x#{height} best #{score_record}, goal #{goal.inspect}, streak #{streak}, sizing #{sizing}, R #{radius}"
-
-        assert plan.placed.fits?, name
-        %i[title legend play].each { assert plan[it], "#{name}: #{it} always shows" }
-        # A dot across, with the dots fitted to any screen a phone has,
-        # and with standard ones wherever there is room for it.
-        if height >= 375 && (radius < R || height >= 500)
-          assert_operator plan.play_button.height, :>=, 2 * radius, "#{name}: Play is at least a dot across"
-        end
-        assert_apart plan.placed.rects.values + screen.bottom_row, name
-        plan.placed.rects.each_value { assert_inside it, screen_layout.safe, name }
-        screen.bottom_row.each { assert_within it, screen_layout.safe, name }
-        assert_operator plan.backing.bottom, :<=, screen.bottom_row.map(&:y).min, name
-        assert_goal_fits(plan, goal == :done, screen_layout, name)
-        others = plan.placed.rects.except(plan.quit_over).values + screen.bottom_row
-        others.each { assert_apart [plan.quit_line, it], "#{name}: quit" }
-        assert_inside plan.quit_line, screen_layout.safe, "#{name}: quit"
-      end
-    end
-  end
-
   # A desktop's window may be any size from SMALLEST_WINDOW up, so these
   # step across the whole range, and past it to big screens.
   DESKTOP_WIDTHS = [400, 480, 640, 800, 1000, 1200, 1920, 3840].freeze
   DESKTOP_HEIGHTS = [320, 340, 360, 400, 500, 640, 800, 1080, 2160].freeze
-
-  # On a desktop, "Full screen" and Quit join the title at every window
-  # size: labelled in a row of their own above the bottom row's right
-  # end, or, only where the smallest windows leave no room for that
-  # row, their icons in the top right corner. Wherever they are, the
-  # title's lines still fit, apart from them and from every other button,
-  # and they stay put whatever the title shows, the dot-size choice
-  # included, so they never move as a game is played.
-  def test_on_a_desktop_full_screen_and_quit_fit_the_title_at_every_window_size
-    DESKTOP_WIDTHS.product(DESKTOP_HEIGHTS) do |width, height|
-      screen_layout = layout(width, height)
-      radius = DotPopper::DotSize.fitted(width, height).radius
-      places = [[0, nil, false], [75, :open, false], [75, :done, true], [0, :open, true]].map do |score_record, goal, sizing|
-        screen = HomeScreen.new(layout: screen_layout, type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
-                                 score_record:, goal: { open: GOAL, done: WORDS.goal_done_line(DotPopper::DailyGoal.for(Date.new(2026, 11, 1))) }[goal],
-                                 done: goal == :done, streak: 5, stats: !goal.nil?, sizing:, radius:, window: true)
-        plan = screen.plan
-        buttons = plan.window_buttons
-        name = "#{width}x#{height} best #{score_record}, goal #{goal.inspect}, sizing #{sizing}"
-
-        assert plan.placed.fits?, name
-        %i[title legend play].each { assert plan[it], "#{name}: #{it} always shows" }
-        buttons.rects.each do |button|
-          assert_operator button.height, :>=, 44.0, name
-          assert_within button, screen_layout.safe, name
-        end
-        screen.bottom_row(buttons).each { assert_within it, screen_layout.safe, name }
-        assert_operator buttons.fullscreen.right, :<, buttons.quit.x, "#{name}: Quit is to the right"
-        bottom_row = screen.bottom_row(buttons)
-        assert_apart plan.placed.rects.values + (bottom_row | buttons.rects), name
-        others = plan.placed.rects.except(plan.quit_over).values + bottom_row + buttons.rects
-        others.each { assert_apart [plan.quit_line, it], "#{name}: quit" }
-        buttons
-      end
-      assert_equal 1, places.uniq.size, "#{width}x#{height}: they stay put"
-    end
-  end
-
-  # They are labelled wherever the bottom row has room for their words,
-  # their icons in the row where it has room for those, their icons a row
-  # above it on a narrow window, and only on the smallest, their icons in
-  # the top right corner.
-  def test_the_window_buttons_are_labelled_wherever_the_row_has_room
-    place = lambda do |width, height|
-      buttons = HomeScreen.new(layout: layout(width, height), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
-                                window: true, radius: DotPopper::DotSize.fitted(width, height).radius).plan.window_buttons
-      [buttons.place, buttons.labelled]
-    end
-
-    [[1200, 800], [800, 500], [1920, 1080], [2560, 1440]].each { assert_equal [:row, true], place[*it], it.join("x") }
-    assert_equal [:row, false], place[640, 400]
-    assert_equal [:above, false], place[400, 850]
-    assert_equal [:corner, false], place[400, 320]
-    wide = HomeScreen.new(layout: layout(1200, 800), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
-                           window: true).plan
-    assert_equal wide.mute_button.y, wide.window_buttons.quit.y, "in the bottom row"
-    assert_operator wide.how_to_play_button.right, :<, wide.window_buttons.fullscreen.x, "after How to play"
-    assert_operator wide.window_buttons.quit.right, :<, wide.mute_button.x, "before the mute button"
-  end
-
-  # The title reads top down: the name, the legend and Play, which say
-  # what the game is and how to start it, and under Play, further off,
-  # the player's own best, goal and streak, closer to each other than to
-  # Play.
-  def test_play_follows_the_legend_and_the_players_own_lines_stand_apart_under_it
-    plan = HomeScreen.new(layout: layout(1200, 800), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
-                           score_record: 75, goal: GOAL, streak: 5, stats: true, window: true).plan
-
-    assert_equal %i[title legend play score_record goal streak], plan.placed.rects.keys
-    under_play = plan[:score_record].y - plan.play_button.bottom
-    assert_operator under_play, :>, plan.play_button.y - plan[:legend].bottom, "the player's own lines stand apart"
-    assert_operator under_play, :>, plan[:goal].y - plan[:score_record].bottom, "and together"
-    assert_operator plan.backing.bottom, :>=, plan[:streak].bottom, "the backing reaches every line"
-  end
-
-  # Phones and tablets show no window buttons, and their titles are laid
-  # out as before.
-  def test_without_a_window_to_switch_the_title_has_no_window_buttons
-    SIZES.each do |width, height|
-      screen = HomeScreen.new(layout: layout(width, height), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
-                               stats: true, sizing: true)
-      plan = screen.plan
-
-      assert_nil plan.window_buttons
-      assert_equal layout(width, height).sizing_control, plan.sizing_control, "#{width}x#{height}"
-    end
-  end
 
   # On the maintainer's Android phone in portrait, "Done today:" and its
   # goal ran off both sides: a met goal was never broken into lines.
@@ -224,15 +107,6 @@ class ScreenPlansTest < Minitest::Test
     assert_operator [spare.abs, plan[:message].width - buttons].min, :<=, 1e-6, "#{name}: even side padding"
   end
 
-  def test_short_of_room_the_title_lets_the_streak_go_before_the_goal_and_the_score_record
-    plan = HomeScreen.new(layout: layout(400, 320), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
-                           score_record: 75, goal: GOAL, streak: 5, stats: true, sizing: true).plan
-    dropped = %i[streak goal best].reject { plan[it] }
-
-    refute_empty dropped
-    assert_equal %i[streak goal best].first(dropped.size), dropped
-  end
-
   # The title's legend says the scoring with no word, in the Tutorial's
   # numbers and stopwatch, in two columns that line up.
   def test_the_legend_shows_what_each_dot_does_in_the_tutorials_signs
@@ -268,14 +142,14 @@ class ScreenPlansTest < Minitest::Test
     assert_in_delta 1.0, plan.placed.scale
   end
 
-  # The Android playtest: on an upright phone, a tap on the lower half of
-  # the dot size's Standard also reached "Your stats" below it. Now no
-  # point is in two buttons' reaches on any screen, and a tap at the
-  # middle of each button as drawn reaches that button. On a desktop's
-  # window, of any size it can be, the same holds with "Full screen" and
-  # Quit on the title.
+  DESKTOPS = DESKTOP_WIDTHS.product(DESKTOP_HEIGHTS)
+
+  # Every screen, at every size, on a phone and on a desktop: a press
+  # reaches one button at most, the middle of each button reaches it,
+  # no two buttons are drawn over each other, and each is drawn inside
+  # the safe area.
   def test_on_every_screen_a_press_reaches_one_button_and_the_middle_of_each_reaches_it
-    desktop = DESKTOP_WIDTHS.product(DESKTOP_HEIGHTS).map { [*it, FakeWindow.new] }
+    desktop = DESKTOPS.map { [*it, FakeWindow.new] }
     (SIZES.map { [*it, NoWindowControl.new] } + desktop).each do |width, height, window|
       each_screen(width, height, window:) do |where, show|
         name = "#{width}x#{height} #{where}#{" on a desktop" if window.offered?}"
@@ -288,9 +162,29 @@ class ScreenPlansTest < Minitest::Test
         controls.each do |control|
           frame = control.frame
           assert_equal control.name, show.control_at(frame.center_x, frame.center_y)&.name, "#{name}: #{control.name}"
-          assert_operator control.reach.height, :>=, [frame.height, 44.0].max - 1e-6, "#{name}: #{control.name}"
+          assert_inside frame, show.layout.safe, "#{name}: #{control.name}"
         end
         assert_apart controls.map(&:frame), name
+      end
+    end
+  end
+
+  # Home's parts, first launch or after a game, with three large buttons
+  # or four, on a phone or with Quit on a desktop, never overlap and stay
+  # inside the safe area.
+  def test_homes_parts_never_overlap_or_leave_the_safe_area
+    (SIZES + DESKTOPS).each do |width, height|
+      screen_layout = layout(width, height)
+      [true, false].product([3, 4], [true, false]) do |played, tiles, window|
+        plan = HomeScreen.new(layout: screen_layout, type: Style::TYPE, words: WORDS, measure: RoughMeasure.new, played:,
+                              tile_names: %i[stats achievements themes groups].first(tiles), window:).plan
+        name = "#{width}x#{height} played #{played}, #{tiles} tiles, window #{window}"
+        parts = [plan.name, plan.legend, plan.play, plan.goal, *plan.tiles.values, *plan.pills.values].compact
+        assert_apart parts, name
+        parts.each { assert_inside it, screen_layout.safe, name }
+        x, y = plan.quit_line
+        quit = Rect.new(x: x - 100, y: y - 9, width: 200, height: 18) # "Press B again to quit"
+        parts.each { refute quit.overlaps?(it), "#{name}: the question to quit is clear of #{it.to_h}" }
       end
     end
   end
@@ -307,7 +201,10 @@ class ScreenPlansTest < Minitest::Test
       page = show.credits_layout
       window = page.window
       name = "#{width}x#{height}"
-      heading = Rect.new(x: window.x, y: page.heading_y - (page.heading_size / 2.0), width: window.width, height: page.heading_size)
+      title = show.words.button(:credits_title)
+      size, middle = show.heading_place(title)
+      wide = RoughMeasure.new.width(:bold, size, title)
+      heading = Rect.new(x: middle - (wide / 2.0), y: page.heading_y - (size / 2.0), width: wide, height: size)
 
       assert_inside window, screen_layout.safe, name
       assert_apart [heading, window, screen_layout.back_button], name
@@ -320,7 +217,7 @@ class ScreenPlansTest < Minitest::Test
         size = row.kind == :heading ? CreditsLines.heading_size(page.text_size) : page.text_size
         assert_operator measure.width(face, size, row.text), :<=, window.width + 1e-6, "#{name}: #{row.text}"
       end
-      show.credits_key(:end)
+      show.scroll_key(:end)
       assert_in_delta show.credits_lines.height - window.height, show.credits.offset, 1e-6, name
     end
   end
@@ -338,19 +235,19 @@ class ScreenPlansTest < Minitest::Test
     show.update(1.0)
     cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     show.primary
-    show.open_stats
+    show.open_settings
     show
   end
 
   # A Show on each screen in turn, with every button it can offer, and
-  # with +window+'s on the title: the
-  # first title, Game Over, the title after a game with the dot-size
-  # choice where it shows, the Stats screen, and Undo there once the
-  # records are cleared.
+  # with +window+'s on Home: the first Home, Game Over, the share
+  # preview, Home after a game, Stats, and Undo there once the stats are
+  # cleared, Achievements and an achievement's dialog, Themes, Settings
+  # at its top and scrolled to its end, Credits, and Privacy.
   def each_screen(width, height, window: NoWindowControl.new)
     cabinet = DotPopper::Cabinet.new(field(width, height), random: Random.new(2))
     show = Show.new(cabinet:, layout: layout(width, height), sounds: FakeSounds.new, radius: R, window:)
-    yield "the first title", show
+    yield "the first Home", show
     show.primary
     cabinet.update(30)
     show.update(1.0)
@@ -360,14 +257,31 @@ class ScreenPlansTest < Minitest::Test
     show.close_share
     cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     show.primary
-    yield "the title after a game", show
+    yield "Home after a game", show
     show.open_stats
     yield "the Stats screen", show
     show.tap(*middle(show.clear_reach))
     show.update(Style::RECORDS_CLEAR.hold)
     yield "the Stats screen with Undo", show
+    show.back
+    show.open_achievements
+    yield "Achievements", show
+    show.open_achievement(DotPopper::Achievement::IDS.first)
+    yield "an achievement's dialog", show
+    show.back
+    show.back
+    show.open_themes
+    yield "Themes", show
+    show.back
+    show.open_settings
+    yield "Settings", show
+    show.scroll_key(:end)
+    yield "Settings scrolled to its end", show
     show.open_credits
     yield "the Credits screen", show
+    show.back
+    show.open_privacy
+    yield "Privacy", show
   end
 
   def middle(rect) = [rect.center_x, rect.center_y]

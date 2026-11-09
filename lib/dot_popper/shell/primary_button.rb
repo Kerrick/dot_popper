@@ -12,7 +12,7 @@ module DotPopper
       G = ::Lota::Graphics
       LABEL = 0.36 # the word's size, in the button's height
 
-      def draw(rect, text, alpha: 1.0, hover: 0.0, ratio: LABEL)
+      def draw(rect, text, alpha: 1.0, hover: 0.0, ratio: LABEL, note: nil)
         return if alpha <= 0.0
 
         palette = pen.palette
@@ -25,7 +25,12 @@ module DotPopper
         G.rectangle(:fill, x, y, width, height, corner, corner, 48)
         edge(x, y, width, height, corner, alpha, hover)
         font = fit(text, width - height, height, ratio)
-        pen.text(text, font, x + (width / 2.0), y + (height / 2.0), palette.ink_bottom, alpha)
+        return pen.text(text, font, x + (width / 2.0), y + (height / 2.0), palette.ink_bottom, alpha) unless note
+
+        small = fit(note, width - (height * 0.6), height, 0.16)
+        top = y + (height / 2.0) - ((font.height + small.height) / 2.0)
+        pen.text(text, font, x + (width / 2.0), top + (font.height / 2.0), palette.ink_bottom, alpha)
+        pen.text(note, small, x + (width / 2.0), top + font.height + (small.height / 2.0), palette.ink_bottom, 0.8 * alpha)
       end
 
       private

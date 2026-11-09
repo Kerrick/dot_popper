@@ -188,26 +188,6 @@ class GamesTest < Minitest::Test
     end
   end
 
-  def test_a_title_with_no_counting_says_nothing_of_games
-    show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R)
-
-    assert_nil show.games_line
-    assert_nil show.home_plan[:games]
-  end
-
-  def test_the_games_line_and_the_offer_fit_on_the_screens_a_player_has
-    [[1200, 800], [400, 850], [850, 400]].each do |width, height|
-      layout = layout(width, height)
-      show = Show.new(cabinet: DotPopper::Cabinet.new(field, random: Random.new(3)), layout:, sounds: FakeSounds.new, radius: R,
-                      games: @games, storefront: Store.new)
-      plan = show.home_plan
-
-      assert plan.placed.fits?, "the title fits #{width}x#{height}"
-      assert plan[:games], "the games show at #{width}x#{height}"
-      assert_operator plan[:games].y, :>=, plan.play_button.bottom
-    end
-  end
-
   def test_no_word_of_the_games_calls_them_a_trial_or_a_demo
     words = [Style::WORDS.games_left(0), Style::WORDS.games_left(5), Style::WORDS.offer_note(0, 3), Style::WORDS.offer_note(4, 3),
              *Style::WORDS.offer_items].join(" ")

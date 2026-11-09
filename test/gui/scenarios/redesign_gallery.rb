@@ -1,0 +1,66 @@
+# frozen_string_literal: true
+
+module DotPopperGui
+  # Home and the screens it opens, kept as screenshots to compare with the
+  # redesign's mocks at 1200x800, 400x850 and 850x400 (the last two as a
+  # phone, by touch), and Home again with a controller's labels.
+  # DOT_POPPER_GALLERY names the shots. Not part of rake test:gui: it is
+  # for reviewing the screens.
+  class RedesignGalleryScenario < Scenario
+    scenario :redesign_gallery
+
+    SIZES = [[1200, 800, false], [400, 850, true], [850, 400, true]].freeze
+    P = DotPopper::Presentation
+
+    def play
+      @size = "1200x800"
+      shoot("home-first", settle: 1.5)
+      quick_game
+      SIZES.each { |width, height, phone| screens(width, height, phone) }
+    end
+
+    private
+
+    def tag = ENV.fetch("DOT_POPPER_GALLERY", "redesign")
+
+    def fit(width, height, phone)
+      show.instance_variable_set(:@window, P::NoWindowControl.new) if phone
+      resize(width, height) unless L::Graphics.dimensions == [width, height]
+      show.input = phone ? P::InputKind::TOUCH : P::InputKind::MOUSE
+      @size = "#{width}x#{height}"
+    end
+
+    def screens(width, height, phone)
+      fit(width, height, phone)
+      shoot("home")
+      show.input = P::InputKind::GAMEPAD
+      shoot("home-gamepad", settle: 0.3)
+      show.input = phone ? P::InputKind::TOUCH : P::InputKind::MOUSE
+      page(:open_settings, "settings")
+      show.open_credits
+      shoot("credits")
+      show.back
+      show.open_privacy
+      shoot("privacy")
+      show.back
+      show.back
+      page(:open_stats, "stats")
+      show.back
+      page(:open_achievements, "achievements")
+      show.open_achievement(DotPopper::Achievement::IDS.first)
+      shoot("ach-open")
+      show.back
+      show.back
+    end
+
+    def page(opener, name)
+      show.public_send(opener)
+      shoot(name)
+    end
+
+    def shoot(state, settle: 0.8)
+      wait(settle)
+      keep_screenshot("#{tag}-#{@size}-#{state}")
+    end
+  end
+end

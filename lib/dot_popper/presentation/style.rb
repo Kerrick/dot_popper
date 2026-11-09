@@ -37,7 +37,7 @@ module DotPopper
       ].freeze
 
       WORDS = Words.new(
-        title: "Dot Popper",
+        game_name: "Dot Popper",
         play: ByInput.new(touch: "Play", mouse: "Play", gamepad: "Play (A)"),
         continue: ByInput.new(touch: "Continue", mouse: "Continue", gamepad: "Continue (A)"),
         time_up: "Time's up!", new_score_record: "New record!", score_record: "Your record", score: "SCORE", time: "TIME",
@@ -46,7 +46,7 @@ module DotPopper
         copied: "Copied! Paste it anywhere.",
         copy: ByInput.new(touch: "Copy", mouse: "Copy", gamepad: "Copy (A)"),
         close: ByInput.new(touch: "Close", mouse: "Close", gamepad: "Close (B)"),
-        stats: "Your stats",
+        stats: "Stats",
         how_to_play: ByInput.new(touch: "How to play", mouse: "How to play", gamepad: "How to play (Y)"),
         go_back: ByInput.new(touch: "Back", mouse: "Back", gamepad: "Back (B)"),
         no_games: "Play a game, and your stats will appear here.",
@@ -58,7 +58,7 @@ module DotPopper
           gamepad: "Keep holding %s to clear your records, totals, chart, achievements, and streak."
         ),
         quit_again: "Press B again to quit",
-        full_screen: "Full screen", windowed: "Window", quit: "Quit",
+        quit: ByInput.new(touch: "Quit", mouse: "Quit", gamepad: "Quit (B)"),
         # The Themes screen: its button's word and heading, and each theme's name.
         themes: { title: "Themes", new: "A new theme", later: "Not now", use: "Use %s", classic: "Classic", ghost: "Ghost", jack_o_lantern: "Jack-o'-lantern", awake: "Awake", eclipse: "Eclipse" }.freeze,
         offer: {
@@ -106,7 +106,7 @@ module DotPopper
           longest_time_to_pop: "Longest Time to Pop",
           totals: "All your games", games: "Games played", pops: "Dots popped", mistakes: "Mistakes",
           seconds: "Time played", days: "Days played", none: "None yet",
-          goal: "Daily goal", streak: "Days in a row you've met it", longest_streak: "Most days in a row"
+          goal: "Daily goal", streak: "Days in a row", longest_streak: "Most days in a row"
         }.freeze,
         goals: {
           clean_run: "pop %d bright dots in a row without a mistake",
@@ -125,6 +125,33 @@ module DotPopper
           choice: "Dot size", smaller: "Smaller", bigger: "Bigger", smaller_note: "More room",
           bigger_note: "Less room", alike_note: "",
           alike: "About the same"
+        }.freeze,
+        # The redesigned screens' words, said for each input where a
+        # controller's button is named.
+        buttons: {
+          settings: ByInput.new(touch: "Settings", mouse: "Settings", gamepad: "Settings (Select)"),
+          get_pro: "Get Pro", home: ByInput.new(touch: "Home", mouse: "Home", gamepad: "Home (B)"),
+          tile_stats: "Stats", tile_achievements: "Achievements", tile_themes: "Themes", tile_groups: "Friend groups",
+          tile_note_to_earn: "#{Achievement::IDS.size} to earn", tile_note_take_title: "Join or create",
+          badge_stats: "X", badge_achievements: "LB", badge_themes: "RB", badge_groups: "LT",
+          goal_label: "Today's goal", in_a_row: "in a row",
+          sound: ByInput.new(touch: "Sound", mouse: "Sound", gamepad: "Sound (Select)"),
+          dot_size: ByInput.new(touch: "Dot size", mouse: "Dot size", gamepad: "Dot size (LB)"),
+          display: ByInput.new(touch: "Display", mouse: "Display", gamepad: "Display (RB)"),
+          on: "On", off: "Off", windowed: "Window", full_screen_borderless: "Borderless", full_screen: "Full screen",
+          credits_licenses: ByInput.new(touch: "Credits and licenses", mouse: "Credits and licenses", gamepad: "Credits and licenses (X)"),
+          privacy: ByInput.new(touch: "Privacy", mouse: "Privacy", gamepad: "Privacy (Y)"),
+          privacy_policy: ByInput.new(touch: "Read the privacy policy", mouse: "Read the privacy policy", gamepad: "Read the privacy policy (X)"),
+          privacy_delete: "Delete my friend group data",
+          privacy_hold: ByInput.new(touch: "Hold to leave every friend group and delete your scores online.", mouse: "Hold to leave every friend group and delete your scores online.", gamepad: "Hold Y to leave every friend group and delete your scores online."),
+          privacy_delete_note: "Your Stats stay.",
+          privacy_stats: "Your Stats stay on this device.",
+          privacy_groups: "In a friend group, Dot Popper keeps your scores online so the group can see them.",
+          not_earned: "Not earned yet", your_record: "Your record", settings_title: "Settings", privacy_title: "Privacy",
+          achievements_title: "Achievements", credits_title: "Credits and licenses",
+          achievement_close: ByInput.new(touch: "Close", mouse: "Close", gamepad: "Close (B)"),
+          achievement_pro: ByInput.new(touch: "Get Pro", mouse: "Get Pro", gamepad: "Get Pro (A)"),
+          how_to_earn: ByInput.new(touch: "How to earn", mouse: "How to earn", gamepad: "How to earn (X)")
         }.freeze
       )
 
@@ -196,13 +223,13 @@ module DotPopper
       # The rounded face, Fredoka (SIL Open Font License; assets/fonts).
       # Sizes are graphics units at a layout scale of 1. A size that
       # animates steps through whole sizes rather than scaling glyphs.
-      class Type < Data.define(:bold, :semibold, :title, :heading, :final_score, :hud_number, :hud_label,
+      class Type < Data.define(:bold, :semibold, :game_name, :heading, :final_score, :hud_number, :hud_label,
                                :prompt, :legend, :score_record, :floater, :new_score_record, :hint, :summary, :wordmark, :mono); end
 
       TYPE = Type.new(
         bold: "assets/fonts/Fredoka-Bold.ttf", semibold: "assets/fonts/Fredoka-SemiBold.ttf",
         wordmark: "assets/fonts/Iosevka-Bold-setdef.ttf", mono: "assets/fonts/Iosevka-Regular-latin.ttf",
-        title: 108, heading: 64, final_score: 136, hud_number: 35, hud_label: 12,
+        game_name: 108, heading: 64, final_score: 136, hud_number: 35, hud_label: 12,
         prompt: 26, legend: 29, score_record: 26, floater: 34, new_score_record: 34, hint: 21, summary: 20
       )
 

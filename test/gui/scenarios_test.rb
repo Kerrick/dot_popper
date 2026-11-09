@@ -27,7 +27,7 @@ class GuiScenariosTest < Minitest::Test
   end
 
   def test_full_screen_and_quit_on_the_title_by_the_mouse_alone
-    play("window_buttons", "Full screen is drawn", "a click on Full screen fills the screen",
+    play("window_buttons", "Full screen is drawn as Borderless", "a click on Full screen fills the screen",
          "the button now says Window", "a click on Window puts the window back",
          "a click on Quit asks Lota to quit at once")
   end
@@ -43,14 +43,14 @@ class GuiScenariosTest < Minitest::Test
   end
 
   def test_the_credits_screen
-    play("credits", "a click on Credits opens them", "the wheel scrolls down", "End goes to the end",
-         "a finger's drag moves the page along", "Escape goes back to the Stats screen",
-         "a gamepad's B goes back to the Stats screen", "Escape again goes back to the title")
+    play("credits", "a click on Credits and licenses opens them", "the wheel scrolls down", "End goes to the end",
+         "a finger's drag moves the page along", "Escape goes back to Settings",
+         "a gamepad's B goes back to Settings", "Escape again goes back Home")
   end
 
   def test_choosing_a_holiday_style_from_the_pro_version
-    play("themes", "the Stats screen offers Themes once the server has unlocked a theme",
-         "a click on the ordinary theme's card uses it at once", "Escape leaves Themes for the Stats screen",
+    play("themes", "Home offers Themes",
+         "a click on the ordinary theme's card uses it at once", "Escape leaves Themes for Home",
          DOT_POPPER_PRO: "1", DOT_POPPER_THEME_UNLOCKS: "ghost")
   end
 
@@ -125,7 +125,8 @@ class GuiScenariosTest < Minitest::Test
   end
 
   def test_how_to_play_on_the_title_by_mouse_and_by_h
-    play("how_to_play", "How to play is drawn", "How to play opens the tutorial at once", "Escape skips it",
+    play("how_to_play", "a first Home offers no How to play", "How to play is drawn",
+         "How to play opens the tutorial at once", "Escape skips it",
          "H opens it again from the title")
   end
 

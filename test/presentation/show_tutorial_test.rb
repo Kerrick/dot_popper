@@ -147,16 +147,6 @@ class ShowTutorialTest < Minitest::Test
     assert @show.playing?
   end
 
-  def test_the_skip_button_is_drawn_where_it_is_reached_in_a_corner_clear_of_the_hud
-    press_main
-    control = @show.controls.first
-
-    assert_equal [:skip], @show.controls.map(&:name)
-    assert_equal control.frame, control.reach
-    assert_operator control.frame.width, :>=, 44
-    assert_operator control.frame.x, :>, @show.layout.center_x + 150
-  end
-
   def test_a_gamepads_press_at_its_cursor_pops_the_dot_and_its_start_does_nothing
     press_main
     update_for(2.0)
@@ -209,15 +199,6 @@ class ShowTutorialTest < Minitest::Test
     assert_equal 1, @cabinet.game.score
     assert_operator @cabinet.game.countdown.remaining, :>, 9.8, "from what it left, the clock only now running"
     assert @show.lead_in
-  end
-
-  def test_how_to_play_is_offered_on_a_first_title_too_and_even_when_the_flag_never_opens_it
-    @show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3),
-                     stats_book: @stats_book, keeper: DotPopper::StatsKeeper.new(score_record: @score_record, stats_book: @stats_book))
-
-    assert_includes @show.controls.map(&:name), :how_to_play
-    @show.how_to_play
-    assert @show.tutorial?
   end
 
   def test_how_to_play_does_nothing_off_the_title

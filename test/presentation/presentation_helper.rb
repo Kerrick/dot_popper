@@ -30,11 +30,13 @@ module PresentationTest
   class FakeWindow
     attr_reader :quits
 
-    def initialize = (@fullscreen = false) || (@quits = 0)
+    attr_accessor :display
+
+    def initialize = (@display = :window) && (@quits = 0)
 
     def offered? = true
-    def fullscreen? = @fullscreen
-    def toggle_fullscreen = @fullscreen = !@fullscreen
+    def fullscreen? = display != :window
+    def toggle_fullscreen = self.display = fullscreen? ? :window : :borderless
     def quit = @quits += 1
   end
 

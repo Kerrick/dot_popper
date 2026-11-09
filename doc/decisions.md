@@ -1555,3 +1555,21 @@ On a good tap, "+1", "+1 and a stopwatch" and "+1 and a dot" fly in turn from th
 **To reverse:** in `Tutorial#tap`, put back a `mistake` on `dot.popped?`.
 
 **Dots sized to the screen do not make scores comparable (2026-11-09).** Earlier entries, the Stats note "Dots are sized to fit this screen, so scores compare across devices", and comments in the code said or implied that fitted dots make scores comparable or fair across devices. That was wrong. Fitting the dots to the screen narrows the difference that screen size makes to how crowded the field gets, but the same player still scores differently on different screens, and differently again with a mouse, a finger or a controller, which aim at different speeds and with different accuracy. The Stats note is deleted, because with the claim gone it tells the player nothing they can use (Strunk: omit needless words; Podmajersky: every line does a job). The README and the code comments now say only what fitting does. The rules do not change, and friend groups still count only games with fitted dots, now for a different reason: it narrows the difference and gives every member the same kind of game, not a level field.
+
+## Home and the screens it opens (the screen redesign)
+
+*Replaces the title's crowded corners: the mute, Full screen and dot-size controls, and Stats' doors to Credits, Themes and the offer. The approved proposal and its mocks are the target; the screens not yet redrawn (Game Over, Themes, the Pro offer, Friend groups) follow in their own commits.*
+
+**Experience goal (Fullerton).** A player is popping dots within two seconds of launch, and can start another game with one press after Game Over. Every other feature is on its own screen, opened on purpose.
+
+**Home** reads top down: the name, Play with the games left in its own label, today's goal with the days in a row, four large buttons (Stats, Achievements, Themes, Friend groups), each with one value (Saffer: bring the data forward), then How to play, Settings and, on a computer, Quit. One entry point, fewer choices (Hick's law). A first launch shows only the name, the wordless legend, Play, Settings and Quit; How to play and the large buttons appear after the first game, since Play already teaches it (Hodent: one thing at a time). Where a window is too small for the mocks' spacing, Home tightens it, and on the smallest windows leaves out the goal's card, which Stats shows too.
+
+**Settings** is a new screen for what most visits never touch: Sound, Dot size (where the two sizes look different), and on computers the Display choice of Window, Borderless or Full screen; then Credits and licenses and Privacy (the 80/20 rule). M still mutes on a keyboard. A window too short for all of it scrolls, as every list now does (`answers.md` 7). **Privacy** says what is kept in two lines, links to the policy, and holds Delete my friend group data (Metts & Welfle).
+
+**Achievements** is a grid of icons drawn from each name; a tap opens a dialog that says how to earn it, and for Pro the day earned or the progress where a record measures it (Johnson: recognition over recall).
+
+**Controller.** As before: a free cursor, and a labelled button for every action. On Home, A and Start both play, and only A is shown. View/Select opens Settings, as a console game's options button does, and in Settings the same button is Sound; it is one constant, `GamepadButtons::SETTINGS`. B on Home asks before it quits, as it did.
+
+**Headings** sit centred, shrunk to fit beside Back on a short window, or right of Back where centring cannot clear it.
+
+**To reverse:** the commit that lands this replaced the old screens outright; revert it.

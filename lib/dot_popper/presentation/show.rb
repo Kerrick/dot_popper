@@ -44,13 +44,15 @@ module DotPopper
                      keeper: StatsKeeper.new(score_record: cabinet.score_record, stats_book:, achievements:), notices: Notices.none,
                      sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never, window: NoWindowControl.new,
                      entitlement: Entitlement.free, theme_keeper: ThemeKeeper.plain(style::THEMES),
-                     groups: Groups::Session.off, storefront: NoStorefront.new, games: FreeGames.unlimited)
+                     groups: Groups::Session.off, storefront: NoStorefront.new, games: FreeGames.unlimited, links: NoLinks.new)
         @cabinet = cabinet
         @window = window
+        @links = links
+        @page = nil # which screen is open over Home, or nil for Home itself
+        @dialog = nil # the achievement open in its dialog, or nil
         @tutorial_flag = tutorial_flag
         @entitlement = entitlement
         @theme_keeper = theme_keeper
-        @themes = false
         @achievements = achievements
         @achievement_watch = AchievementWatch.new
         @groups = GroupPanel.new(groups:, entitlement:, sounds:, pro_offer: ->(feature) { open_offer_for(feature) })
@@ -113,11 +115,11 @@ module DotPopper
 
       # Whether the Themes screen is open over the Stats screen, and what
       # it shows: every theme the player can use, and the one in use.
-      def themes? = @themes
+      def themes? = @page == :themes
 
       # The new theme to tell the player of, once, at the title, when nothing
       # else is asked of them; nil the rest of the time.
-      def arrival = (@theme_keeper.arrival if home? && !stats? && !themes? && !group_open?)
+      def arrival = (@theme_keeper.arrival if on_home?)
       def arrival? = !arrival.nil?
       def arrival_plan = ArrivalPlan.new(layout:, word: (arrival_use_word if arrival?), measure: @measure)
 
@@ -135,22 +137,13 @@ module DotPopper
 
       # Whether the Stats screen offers Themes: always, the same to a Free
       # player and a Pro one.
-      def themes_offered? = stats? && !credits? && !themes? && @theme_keeper.offered?
+      def themes_offered? = true
 
       # Where the Themes screen's cards go (LooksLayout).
       def themes_layout = ThemesLayout.new(layout:, themes: themes, style: style::THEMES_LAYOUT)
 
-      def open_themes
-        return unless themes_offered?
-
-        @themes = true
-        sounds.play(:tick)
-      end
-
-      def close_themes
-        @themes = false
-        sounds.play(:tick, pitch: 0.8)
-      end
+      def open_themes = open_page(:themes)
+      def close_themes = close_page
 
       # Uses +theme+ from now on, and the whole screen takes its colors at
       # once, so the choice is seen before it is left.
@@ -185,7 +178,20 @@ module DotPopper
       # Whether the Stats screen is open over the title. It is the
       # presentation's alone: the game stays on its title meanwhile, and
       # no tap there reaches the game.
-      def stats? = !@stats.nil?
+      def stats? = @page == :stats
+
+      # Home itself, with no other screen open over it.
+      def on_home? = home? && @page.nil? && !group_open? && !offer?
+
+      # The screen open over Home, or nil.
+      attr_reader :page
+
+      # The Achievements screen, the achievement open in its dialog (or
+      # nil), Settings, and Privacy.
+      def achievements_open? = @page == :achievements
+      attr_reader :dialog
+      def settings? = @page == :settings
+      def privacy? = @page == :privacy
 
       # The friend groups' screens' state and their announcements (GroupPanel).
       def group_panel = @groups
@@ -201,22 +207,18 @@ module DotPopper
 
       # Whether the title offers the way in to groups: where there is a
       # server, once a game has finished, or for someone in a group.
-      def group_offered? = @groups.available? && (stats_offered? || @groups.member?)
-
-      # The title's way in to groups.
-      def group_button = GroupScreen.button(layout, labelled: layout.safe.width >= 480)
+      def group_offered? = @groups.available?
 
       # Where an announcement goes: under the HUD at Game Over, and at
       # the top of the title, clear of the Group button's row.
-      def banner_y = game_over? ? hud_bottom + layout.margin : layout.top + layout.button_size + layout.margin
+      def banner_y = layout.top
 
       # What the Stats screen shows, while it is open.
       def stats = @stats
 
       # The Stats screen laid out for the fonts this screen is measured with.
       def stats_layout
-        StatsLayout.measured(layout:, sheet: stats, style: style::RECORDS, measure: @measure, themes: themes_offered?,
-                             offer: offer_offered?)
+        StatsLayout.measured(layout:, sheet: stats, style: style::RECORDS, measure: @measure)
       end
 
       # Whether the title offers "Your stats" and the choice of dot size:
@@ -229,6 +231,14 @@ module DotPopper
       # Whether a game has finished since the records were last cleared:
       # the title shows today's goal only then.
       def played? = stats_book.stats.games.positive?
+
+      # What stands under Stats' heading where the two dot sizes differ:
+      # "Stats for smaller dots".
+      def stats_note
+        return unless sizing_offered?
+
+        "Stats for #{words.sizing(cabinet.sizing, sizing_preview).downcase} dots"
+      end
 
       # Whether the Stats screen offers "Clear my stats…": while it has
       # records to clear, and no Undo is offered.
@@ -244,7 +254,7 @@ module DotPopper
       # Whether the title offers the choice of dot size: once a game has
       # finished, and only where the two sizes look different. Where they
       # look alike, the saved choice stays as it was, and games follow it.
-      def sizing_offered? = stats_offered? && sizing_preview.offered?
+      def sizing_offered? = sizing_preview.offered?
       def playing? = cabinet.state.is_a?(Cabinet::Playing)
       def game_over? = cabinet.state.is_a?(Cabinet::GameOver)
 
@@ -265,23 +275,39 @@ module DotPopper
         return cabinet.press(x, y) if playing?
         return tutorial_tap(x, y) if tutorial?
 
-        case control_at(x, y)&.name
+        return press_list(x, y, by) if list_row_at?(x, y)
+
+        press(control_at(x, y)&.name, x, y, by)
+      end
+
+      # What a control does when pressed.
+      def press(name, x, y, by)
+        case name
         in :play then play
         in :continue then continue_on
         in :back then leave
         in :credits then open_credits
+        in :privacy then open_privacy
+        in :settings then open_settings
         in :themes then open_themes
+        in :groups then @groups.open
+        in :achievements then open_achievements
+        in [:achievement, id] then open_achievement(id)
+        in :achievement_close then close_dialog
+        in :achievement_prev then step_achievement(-1)
+        in :achievement_next then step_achievement(1)
+        in :achievement_pro then achievement_pro
         in Theme => theme then use(theme)
-        in :mute then sounds.toggle_mute
         in :how_to_play then how_to_play
-        in :fullscreen then window.toggle_fullscreen
+        in [:sound, on] then set_sound(on)
+        in [:display, mode] then window.display = mode
         in :quit then window.quit
         in :stats then open_stats
+        in :policy then open_policy
+        in :privacy_delete then @groups.hold_delete(by, now)
         in :arrival_use then answer_arrival(use: true)
         in :arrival_later then answer_arrival(use: false)
-        in :group_open then @groups.open
         in :offer then open_offer
-        in :achievements then open_offer_for(:achievements)
         in :buy then buy
         in :restore then @storefront.restore
         in DotSizing => sizing then choose_sizing(sizing)
@@ -290,11 +316,12 @@ module DotPopper
         in :close then close_share
         in :undo then undo
         in :clear then hold_clear(by)
-        in Symbol | Array => name if group_open? then @groups.press(name, by, now)
-        in nil if group_open? then @groups.tap_away
+        in Symbol | Array => pressed if group_open? then @groups.press(pressed, by, now)
         in nil if by == :gamepad then primary
         in nil if sharing? then (close_share unless share_plan.card.contains?(x, y))
-        in nil then credits? ? @credits_drag = [by, y] : toy_tap(x, y)
+        in nil if dialog then (close_dialog unless dialog_plan.card.contains?(x, y))
+        in nil if group_open? then start_scroll(by, y)
+        in nil then scrolling? ? start_scroll(by, y) : toy_tap(x, y)
         end
       end
 
@@ -305,12 +332,11 @@ module DotPopper
       def controls
         Control.apart(
           if arrival? then arrival_controls
-          elsif tutorial? then [Control.new(name: :skip, reach: layout.skip_button)]
+          elsif tutorial? then [button(:skip, layout.skip_button)]
           elsif offer? then offer_controls
-          elsif credits? then [button(:back, layout.back_button)]
+          elsif dialog then dialog_controls
+          elsif page then page_controls
           elsif group_open? then group_controls
-          elsif themes? then themes_controls
-          elsif stats? then stats_controls
           elsif home? then home_controls
           elsif sharing? then share_controls
           elsif game_over? then game_over_controls
@@ -334,9 +360,11 @@ module DotPopper
       # only a press at a place may touch the score.
       def primary
         if arrival? then answer_arrival(use: true)
-        elsif group_open? then leave
         elsif sharing? then copy_result
-        elsif offer? || stats? then leave
+        elsif offer? then buy
+        elsif dialog then close_dialog
+        elsif group_open? then @groups.primary
+        elsif page then leave
         elsif home? then play
         elsif game_over? then continue_on
         end
@@ -345,7 +373,7 @@ module DotPopper
       # The title's Play: a game starts, or on a first Play, the Tutorial
       # (TutorialFlag), which is seen from then on.
       def play
-        return unless home? && !stats? && !group_open?
+        return unless on_home?
         return open_tutorial if @tutorial_flag.due?(played: stats_offered?)
 
         start_game
@@ -355,7 +383,7 @@ module DotPopper
       # at once, whether it was seen or not, handing over into a game as
       # it does on a first Play.
       def how_to_play
-        open_tutorial if home? && !stats? && !group_open?
+        open_tutorial if on_home?
       end
 
       # The Tutorial's skip button, Escape, or a gamepad's B: the game
@@ -409,7 +437,7 @@ module DotPopper
       # first press asks, and :quit if a second comes within QUIT_ASK
       # seconds, so a stray press never closes the game.
       def ask_to_quit
-        return unless home? && !stats? && !group_open?
+        return unless on_home?
         return :quit if quit_asked?
 
         @quit_asked_at = now
@@ -434,24 +462,20 @@ module DotPopper
       def back
         if arrival? then answer_arrival(use: false)
         elsif tutorial? then skip_tutorial
-        elsif group_open? then leave
         elsif sharing? then close_share
-        elsif stats? then leave
+        elsif dialog then close_dialog
+        elsif offer? || group_open? || page then leave
         elsif game_over? then continue_on
         else return false
         end
         true
       end
 
-      # Switches how dots are sized (DotSizing) to the other choice, as a
-      # gamepad's shoulder button does, while the title offers it.
-      def toggle_sizing = choose_sizing(cabinet.sizing.toggled)
-
       # Sizes dots as +sizing+ (DotSizing) says, on the title while it
       # offers the choice, and remembers it. The title's dots and best
       # change with it, so the choice shows at once.
       def choose_sizing(sizing)
-        return unless home? && sizing_offered?
+        return unless settings? && sizing_offered?
         return sounds.play(:tick, pitch: 0.8) if sizing == cabinet.sizing
 
         cabinet.sizing = sizing
@@ -461,24 +485,38 @@ module DotPopper
         sounds.play(:tick, pitch: cabinet.sizing.sized_to_screen? ? 1.2 : 0.9)
       end
 
-      # Opens the Stats screen over the title, with the stats as they
-      # are now.
-      def open_stats
-        return unless home?
+      # Opens the screen +name+ over Home, with its list at the top.
+      def open_page(name)
+        return unless @page || home?
 
-        @stats = stats_sheet
+        @page = name
+        @scroll = nil
+        @list_press = nil
         sounds.play(:tick)
       end
 
+      # Leaves the open screen: Credits and Privacy go back to Settings,
+      # the others to Home.
+      def close_page
+        @page = %i[credits privacy].include?(@page) ? :settings : nil
+        @clearing = clearing.cancel
+        @scroll = nil
+        @dialog = nil
+        sounds.play(:tick, pitch: 0.8)
+      end
+
+      def open_stats
+        return unless on_home?
+
+        @stats = stats_sheet
+        open_page(:stats)
+      end
+
       def close_stats
-        @stats = nil
-        @themes = false
-        @credits = nil
+        close_page
         @offer = false
         @offer_focus = nil
         @offer_for_play = false
-        @clearing = clearing.cancel
-        sounds.play(:tick, pitch: 0.8)
       end
 
       # Back, from the Credits screen to the Stats screen, or from the
@@ -487,16 +525,11 @@ module DotPopper
         return close_offer if offer?
         return @groups.back if group_open?
 
-        if offer? then close_offer
-        elsif credits? then close_credits
-        elsif themes? then close_themes
-        else close_stats
-        end
+        close_page if page
       end
 
       def close_offer
-        return close_stats if @offer_for_play
-
+        @offer_for_play = false
         @offer = false
         @offer_focus = nil
         sounds.play(:tick, pitch: 0.8)
@@ -525,15 +558,17 @@ module DotPopper
       # does not (doc/decisions.md).
       def offer_offered? = @storefront.offered? && !@entitlement.pro?
 
+      # Whether the player has Pro.
+      def pro? = @entitlement.pro?
+
       # Whether the offer of Pro is open, over the Stats screen.
       def offer? = @offer
 
       # Opens the offer over the Stats screen, and asks the store for the
       # price, or asks again if an earlier request was never answered.
       def open_offer
-        return unless stats? && !credits? && offer_offered?
+        return unless offer_offered?
 
-        @themes = false
         @offer = true
         @offer_focus = nil
         @storefront.connect
@@ -569,8 +604,7 @@ module DotPopper
         @storefront.buy
       end
 
-      # Whether the Credits screen is open over the Stats screen.
-      def credits? = !@credits.nil?
+      def credits? = @page == :credits
 
       # How far down the Credits screen is scrolled (CreditsScroll), while
       # it is open.
@@ -590,53 +624,87 @@ module DotPopper
 
       # Opens the Credits screen over the Stats screen, at the top.
       def open_credits
-        return unless stats? && !credits? && !offer?
+        return unless settings?
 
+        open_page(:credits)
         @credits = CreditsScroll.at_top(content: 0.0, window: 0.0)
         lay_out_credits
-        sounds.play(:tick)
       end
 
-      def close_credits
-        @credits = nil
-        @credits_drag = nil
-        sounds.play(:tick, pitch: 0.8)
+      # What a screen's list scrolls by, for Credits and the lists
+      # (CreditsScroll), or nil where nothing scrolls.
+      def scroll = credits? ? @credits : @scroll
+
+      def scrolling? = credits? || achievements_open? || stats? || settings? || group_open?
+
+      # The line a list moves by, per wheel notch or stick second.
+      def scroll_line = credits? ? credits_layout.line : 40.0
+
+      # Keeps the open list's scroll, moved by +pixels+.
+      def scroll_by(pixels)
+        return @credits = @credits.by(pixels) if credits?
+
+        @scroll = @scroll&.by(pixels)
       end
 
-      # Scrolls the Credits screen down by +pixels+ (up for fewer).
-      def scroll_credits(pixels) = (@credits = @credits.by(pixels) if credits?)
+      # A list reports its content's height and the window it shows in.
+      def list_fit(content, window)
+        @scroll = @scroll ? @scroll.fitted(content:, window:) : CreditsScroll.at_top(content:, window:)
+      end
 
       # A mouse wheel's notches, +notches+ of them, positive for up.
-      def wheel_credits(notches) = scroll_credits(-notches * style::CREDITS.wheel * credits_layout.line)
+      def wheel_scroll(notches) = scroll_by(-notches * style::CREDITS.wheel * scroll_line)
 
-      # A gamepad's left stick or d-pad (Stick) held for +seconds+.
-      def stick_credits(stick, seconds)
+      # A gamepad's stick or d-pad (Stick) held for +seconds+.
+      def stick_scroll(stick, seconds)
+        return unless scrolling?
+
         push = stick.shaped(style::GAMEPAD.dead_zone, style::GAMEPAD.curve)
-        scroll_credits(push.y * style::CREDITS.stick * credits_layout.line * seconds)
+        scroll_by(push.y * style::CREDITS.stick * scroll_line * seconds)
       end
 
       # A key that scrolls the Credits screen; says whether it was one.
-      def credits_key(name)
-        return false unless credits?
+      def scroll_key(name)
+        return false unless scrolling? && scroll
 
-        @credits = @credits.key(name, line: credits_layout.line)
+        moved = scroll.key(name, line: scroll_line)
+        credits? ? @credits = moved : @scroll = moved
         %i[up down pageup pagedown home end].include?(name.to_s.to_sym)
       end
 
       # A finger or the mouse, +by+ (as #tap names it), dragged to +y+,
       # drags the page along with it.
-      def drag_credits(by, y)
-        held, from = @credits_drag
-        return unless credits? && held == by
+      def drag_scroll(by, y)
+        held, from = @drag
+        return unless held == by && scrolling?
 
-        scroll_credits(from - y)
-        @credits_drag = [by, y]
+        scroll_by(from - y)
+        @list_press = nil if @list_press&.first == by && (from - y).abs > 3
+        @drag = [by, y]
       end
+
+      def start_scroll(by, y) = @drag = [by, y]
+
+      # A press on a row of a scrolling list waits for its release, so a
+      # drag that starts on a row scrolls the list instead of opening it.
+      def press_list(x, y, by)
+        @list_press = [by, control_at(x, y).name, x, y]
+        @drag = [by, y]
+      end
+
+      def list_row_at?(x, y)
+        return false unless @page == :achievements || group_list?
+
+        name = control_at(x, y)&.name
+        name.is_a?(Array) && %i[achievement group_show].include?(name.first)
+      end
+
+      def group_list? = group_open? && @groups.page == :list && !offer?
 
       # A gamepad's Y on the Stats screen, held by +by+: Undo while it is
       # offered, or else the start of holding "Clear my stats…".
       def clear_or_undo(by)
-        return if credits? || offer?
+        return if !stats? || offer?
         return undo if undo_offer
 
         hold_clear(by) if clear_offered?
@@ -645,7 +713,12 @@ module DotPopper
       # +by+ (as #tap names it) let go. A hold of "Clear my stats…" it
       # made ends, with nothing cleared, if it was let go too soon.
       def let_go(by)
-        @credits_drag = nil if @credits_drag&.first == by
+        @drag = nil if @drag&.first == by
+        if @list_press&.first == by
+          _, name, x, y = @list_press
+          @list_press = nil
+          press(name, x, y, by)
+        end
         @clearing = clearing.release(by, now)
         @groups.let_go(by, now)
       end
@@ -735,20 +808,179 @@ module DotPopper
       # DotSizing and its Rect, while the title offers it.
       def sizing_reaches = SIZINGS.map { [it, reach_of(it)] }
 
-      # Where the title's words and buttons go (HomePlan). Play is sized
-      # from dots fitted to the screen, whichever size is chosen, so the
-      # Dot size choice beside it never moves or resizes it.
+      # Where Home's parts go (HomePlan).
       def home_plan
-        goal = stats_book.goal_done? ? words.goal_done_line(stats_book.goal) : words.goal(stats_book.goal) if played?
-        planned(HomeScreen.new(layout:, type: style::TYPE, words:, measure: @measure, score_record: marquee.score_record, goal:,
-                                done: stats_book.goal_done?, streak: stats_book.streak, stats: stats_offered?,
-                                sizing: sizing_offered?, radius: DotSize.fitted(layout.width, layout.height).radius,
-                                window: window.offered?, games: games_line))
+        planned(HomeScreen.new(layout:, type: style::TYPE, words:, measure: @measure, played: stats_offered?,
+                               tile_names:, window: window.offered?))
       end
 
-      # What the title says of the games left, or nil where none are counted.
+      # The four large buttons on Home, Friend groups only where a server is offered.
+      def tile_names = [:stats, :achievements, :themes, *(:groups if group_offered?)]
+
+      # What Home says of the games left, or nil where none are counted.
       def games_line = (words.games_left(games.left) if games.metered?)
 
+      # What Play says, and what it leaves to say beneath it.
+      def play_word = games.can_play? ? words.play : words.button(:get_pro)
+
+      def play_note
+        return unless games.metered?
+
+        games.can_play? ? words.games_left(games.left) : words.no_games_left(games.daily)
+      end
+
+      # A large button's name and its one value.
+      def tile_word(name) = words.tile(name)
+
+      def tile_note(name)
+        case name
+        when :stats then words.score_record_line(marquee.score_record)
+        when :achievements then pro? ? AchievementWords.count(@achievements.count) : words.tile_note(:to_earn)
+        when :themes then words.themes.fetch(in_use.key)
+        when :groups then @groups.member? ? words.titles_held(@groups.titles_held, @groups.groups.groups.size) : words.tile_note(:take_title)
+        end
+      end
+
+      # A screen's heading's type size and middle, fitted beside Back
+      # (Layout#heading_place).
+      def heading_place(text) = layout.heading_place(text, @measure)
+
+      def open_settings = open_page(:settings)
+      def open_privacy = open_page(:privacy)
+      def open_policy = @links.open(PRIVACY_URL)
+
+      def open_achievements = open_page(:achievements)
+      def achievements_layout = AchievementsScreen.new(layout:, ids: Achievement::IDS)
+      def achievement_count = @achievements.count
+
+      # The Achievements grid, each cell where it is on screen, with the
+      # list scrolled to fit its window.
+      def achievement_cells
+        grid = achievements_layout
+        list_fit(grid.height, grid.window.height)
+        grid.cells(@scroll.offset)
+      end
+
+      # A Free player sees only how each is earned; Pro also sees its day.
+      def achievement_earned?(id) = pro? && @achievements.earned?(id)
+
+      def open_achievement(id)
+        @dialog = id
+        sounds.play(:tick)
+      end
+
+      def close_dialog
+        @dialog = nil
+        sounds.play(:tick, pitch: 0.8)
+      end
+
+      def step_achievement(by)
+        ids = Achievement::IDS
+        @dialog = ids[((ids.index(@dialog) || 0) + by) % ids.size]
+        sounds.play(:tick)
+      end
+
+      # Get Pro, from a Free player's achievement dialog.
+      def achievement_pro
+        id = dialog
+        open_offer_for(:achievements)
+        @offer_achievement = id
+        @dialog = nil
+      end
+
+      # What the dialog says of how far along the player is: [record, goal]
+      # for the four the game measures (Steady hand, Unshaken, Big score,
+      # Long haul), or nil for the rest and for a Free player.
+      def achievement_progress(id)
+        return unless pro? && !@achievements.earned?(id)
+
+        case id
+        when :steady then [best_dots_in_a_row, Achievement::STEADY]
+        when :unshaken then [best_dots_in_a_row, Achievement::UNSHAKEN]
+        when :big_score then [SizeClass::ALL.map { cabinet.score_record.of(it) }.max || 0, Achievement::BIG_SCORE]
+        when :long_haul then [stats_book.stats.records.values.map(&:longest_game).max.to_f.round, Achievement::LONG_HAUL.to_i]
+        end
+      end
+
+      def dialog_plan
+        id = dialog or return
+        AchievementDialog.new(layout:, measure: @measure, how: AchievementWords.how(id), status: dialog_status(id), progress: achievement_progress(id),
+                              buttons: dialog_buttons).plan
+      end
+
+      # What the dialog says of its state: the earned day or "Not earned
+      # yet", or nothing for a Free player.
+      def dialog_status(id)
+        return unless pro?
+
+        day = @achievements.day(id)
+        day ? AchievementWords.earned_on(day) : words.button(:not_earned)
+      end
+
+      def dialog_buttons
+        steps = input == InputKind::GAMEPAD ? [[:achievement_prev, :prev], [:achievement_next, :next]] : []
+        return [[:achievement_close, :close], *steps] if pro?
+
+        [[:achievement_pro, :get_pro], [:achievement_close, :close], *steps]
+      end
+
+      def settings_plan
+        rows = [[:sound, words.button(:sound), :speaker, [[words.button(:on), !sounds.muted?, [:sound, true]], [words.button(:off), sounds.muted?, [:sound, false]]]]]
+        if sizing_offered?
+          rows << [:dot_size, words.button(:dot_size), :dot, SIZINGS.map { [words.sizing(it, sizing_preview), it == cabinet.sizing, it] }]
+        end
+        rows << [:display, words.button(:display), :corners, display_choices] if window.offered?
+        plan = SettingsScreen.new(layout:, rows:, offset: settings? && @scroll ? @scroll.offset : 0.0).plan
+        list_fit(plan.height, layout.page.height) if settings?
+        plan
+      end
+
+      def display_choices
+        { window: :windowed, borderless: :full_screen_borderless, exclusive: :full_screen }.map { |mode, word| [words.button(word), window.display == mode, [:display, mode]] }
+      end
+
+      def set_sound(on)
+        sounds.toggle_mute if sounds.muted? == on
+        sounds.play(:tick)
+      end
+
+      def privacy_plan
+        lines = [[:bars, words.button(:privacy_stats)], [:crown, words.button(:privacy_groups)]]
+        PrivacyScreen.new(layout:, measure: @measure, lines:, note: words.button(:privacy_delete_note), deletable: @groups.known?).plan
+      end
+
+      # A gamepad's button (+name+, a GamepadButtons intent) on this
+      # screen, as +by+, for a button that is held.
+      def pad(name)
+        return @groups.pad(name) if group_open? && !offer?
+        return pad_offer(name) if offer?
+        return pad_dialog(name) if dialog
+
+        case [@page, name]
+        in [nil, :x] then open_stats
+        in [nil, :y] then how_to_play
+        in [nil, :lb] then open_achievements
+        in [nil, :rb] then open_themes
+        in [nil, :lt] then @groups.open
+        in [nil, :select] then open_settings
+        in [:stats, :y] then clear_or_undo(:y)
+        in [:achievements, :x] then open_achievement(Achievement::IDS.first)
+        in [:themes, :lb] then step_theme(-1)
+        in [:themes, :rb] then step_theme(1)
+        in [:settings, :lb] then choose_sizing(cabinet.sizing.toggled) if sizing_offered?
+        in [:settings, :rb] then next_display
+        in [:settings, :x] then open_credits
+        in [:settings, :y] then open_privacy
+        in [:settings, :select] then set_sound(sounds.muted?)
+        in [:privacy, :x] then open_policy
+        in [:privacy, :y] then @groups.hold_delete(:y, now)
+        else nil
+        end
+      end
+
+      PRIVACY_URL = "https://dot-popper.setdef.com/privacy"
+
+      # What the title says of the games left, or nil where none are counted.
       # Where Game Over's words and "Share my score" go (FinalePlan), or
       # nil away from Game Over.
       def game_over_plan = game_over_screen&.then { planned(it) }
@@ -884,16 +1116,9 @@ module DotPopper
 
       def home_controls
         plan = home_plan
-        buttons = [Control.new(name: :mute, reach: layout.mute_button)]
-        buttons << button(:group_open, group_button) if group_offered?
-        buttons << button(:how_to_play, plan.how_to_play_button)
-        buttons << button(:stats, plan.stats_button) if stats_offered?
-        if (window_buttons = plan.window_buttons)
-          buttons << button(:fullscreen, window_buttons.fullscreen) << button(:quit, window_buttons.quit)
-        end
-        buttons.concat(SIZINGS.zip(plan.sizing_control.options).map { button(*it) }) if sizing_offered?
-        buttons << primary_button(:play, plan.play_button) if plan.play_button
-        buttons
+        buttons = plan.tiles.map { |name, rect| button(name, rect) }
+        plan.pills.each { |name, rect| buttons << button(name, rect) }
+        buttons << primary_button(:play, plan.play_button)
       end
 
       def share_controls
@@ -962,23 +1187,74 @@ module DotPopper
         sounds.play(:tick, pitch: 1.3) if offer?
       end
 
-      # Where the achievements are on the Stats screen, which a Free player
-      # taps to ask for Pro, or nil for a Pro player or where they are not listed.
-      def achievements_frame
-        return if @entitlement.pro? || !stats? || stats.empty || stats.achievements.nil?
-
-        stats_layout.achievements_frame
-      end
-
       def stats_controls
-        [(button(:credits, layout.credits_button)),
-         (button(:themes, layout.themes_button) if themes_offered?),
-         (button(:offer, layout.offer_button) if offer_offered?),
-         (button(:achievements, achievements_frame) if achievements_frame),
-         (button(:undo, layout.undo_button) if undo_offer),
+        [(button(:undo, layout.undo_button) if undo_offer),
          (button(:clear, layout.clear_stats_button) if clear_offered?),
          button(:back, layout.back_button)].compact
       end
+
+      def page_controls
+        case @page
+        when :stats then stats_controls
+        when :themes then themes_controls
+        when :achievements then achievement_controls
+        when :settings then settings_controls
+        when :privacy then privacy_controls
+        when :credits then [button(:back, layout.back_button)]
+        end
+      end
+
+      def achievement_controls
+        window = achievements_layout.window
+        cells = achievement_cells.select { it.rect.y < window.bottom && it.rect.bottom > window.y }.map do
+          control = button([:achievement, it.id], it.rect.cut(top: window.y, bottom: window.bottom))
+          control.with(reach: control.reach.cut(top: window.y, bottom: window.bottom))
+        end
+        cells << button(:back, layout.back_button)
+      end
+
+      def dialog_controls = dialog_plan.buttons.map { |name, rect| button(name, rect) }
+
+      def settings_controls
+        plan = settings_plan
+        rows = plan.rows.flat_map { |row| row.choices.zip(row.rects).map { |(_, _, name), rect| button(name, rect) } }
+        page = layout.page
+        seen = (rows + [button(:credits, plan.credits), button(:privacy, plan.privacy)]).select { it.frame.center_y.between?(page.y, page.bottom) }
+        seen.map { it.with(frame: it.frame.cut(top: page.y, bottom: page.bottom), reach: it.reach.cut(top: page.y, bottom: page.bottom)) } <<
+          button(:back, layout.back_button)
+      end
+
+      def privacy_controls
+        plan = privacy_plan
+        [button(:policy, plan.policy), (button(:privacy_delete, plan.delete) if plan.delete), button(:back, layout.back_button)].compact
+      end
+
+      def pad_offer(name)
+        case name
+        when :x then @storefront.restore
+        end
+      end
+
+      def pad_dialog(name)
+        case name
+        when :lb then step_achievement(-1)
+        when :rb then step_achievement(1)
+        end
+      end
+
+      def step_theme(by)
+        list = themes
+        use(list[(list.index(in_use).to_i + by) % list.size])
+      end
+
+      def next_display
+        return unless window.offered?
+
+        order = %i[window borderless exclusive]
+        window.display = order[(order.index(window.display).to_i + 1) % order.size]
+      end
+
+      def best_dots_in_a_row = stats_book.stats.records.values.map(&:most_dots_in_a_row).max.to_i
 
       # A button drawn at +frame+, which a press reaches within a dot's
       # width, short of the safe area's bottom.
@@ -1140,7 +1416,10 @@ module DotPopper
       def home_shown(event)
         @theme_keeper.refresh
         @stats = nil
-        @themes = false
+        @page = nil
+        @dialog = nil
+        @offer_for_play = false
+        @offer = false
         @groups.close if group_open?
         @credits = nil
         @clearing = clearing.cancel

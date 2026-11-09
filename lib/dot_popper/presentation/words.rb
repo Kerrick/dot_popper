@@ -15,10 +15,10 @@ module DotPopper
     # the end of "Today's goal: ...", with %d for its target. +screen_size+
     # says how big a screen is, in dots, with %d for its width and height,
     # and names the choices of dot size (DotSizing) by what they do here.
-    class Words < Data.define(:title, :play, :continue, :time_up, :new_score_record, :score_record, :score, :time,
+    class Words < Data.define(:game_name, :play, :continue, :time_up, :new_score_record, :score_record, :score, :time,
                               :share, :share_heading, :copied, :copy, :close, :stats, :how_to_play, :go_back,
                               :no_games, :clear, :keep_holding, :hold_to_clear, :cleared, :undo, :labels, :goals, :goal_done, :goal_met,
-                              :screen_size, :credits, :credits_title, :notice, :quit_again, :full_screen, :windowed, :quit, :themes, :offer,
+                              :screen_size, :credits, :credits_title, :notice, :quit_again, :quit, :themes, :offer, :buttons,
                               :input)
       MINUS = "−" # a true minus sign, as wide as the plus
       # How near a game must come to the best for Game Over to say by how
@@ -59,10 +59,29 @@ module DotPopper
       def how_to_play = super.for(input)
       def copy = super.for(input)
       def close = super.for(input)
+      def quit = super.for(input)
+      def settings = button(:settings)
 
-      # What the title's fullscreen button says it does: "Full screen" in
-      # a window, and back in fullscreen, "Window".
-      def fullscreen_button(fullscreen) = fullscreen ? windowed : full_screen
+      # A button's word, said as the player's input would press it.
+      def button(name)
+        word = buttons.fetch(name)
+        word.is_a?(ByInput) ? word.for(input) : word
+      end
+
+      # A large button's word on Home, its small value, and on a controller the button in its corner.
+      def tile(name) = buttons.fetch(:"tile_#{name}")
+      def tile_note(name) = buttons.fetch(:"tile_note_#{name}")
+      def tile_badge(name) = buttons.fetch(:"badge_#{name}")
+
+      # "Today's goal", the goal's sentence on its card, and what stands
+      # under the days in a row.
+      def goal_card_label = buttons.fetch(:goal_label)
+      def goal_sentence(goal) = "#{format(goals.fetch(goal.kind), goal.target).capitalize}."
+      def streak_days(days) = days == 1 ? "day" : "days"
+      def streak_in_a_row = buttons.fetch(:in_a_row)
+
+      # "1 of 3 titles".
+      def titles_held(held, groups) = "#{held} of #{groups} #{groups == 1 ? "title" : "titles"}"
 
       # What the Stats screen says while "Clear my stats…" is held:
       # on a gamepad, naming +button+, the one held ("A" or "Y").
@@ -71,6 +90,9 @@ module DotPopper
       # What the title says of the games left, where games are counted: "23
       # games left", or "No games left today".
       def games_left(left) = left.positive? ? "#{Words.count(left, "game")} left" : "No games left today"
+
+      # What stands under Get Pro when no game is left: "No games left today. 3 more tomorrow."
+      def no_games_left(daily) = "No games left today. #{daily} more tomorrow."
 
       # The offer's note, plain about how many games are left and how many
       # come each day: "No games left today. 3 games a day." It never says

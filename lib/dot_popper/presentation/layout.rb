@@ -46,18 +46,6 @@ module DotPopper
       end
     end
 
-    # The title's window buttons on a desktop, where each is drawn:
-    # "Full screen" (or "Window") and Quit, each with its word beside its
-    # icon where +labelled+, and otherwise only its icon; and where they
-    # stand (+place+): in the bottom row (:row), a row above its right
-    # end (:above), or in the top right corner (:corner).
-    class WindowButtons < Data.define(:fullscreen, :quit, :labelled, :place)
-      def rects = [fullscreen, quit]
-      def in_row? = place == :row
-      def above? = place == :above
-      def cornered? = place == :corner
-    end
-
     # The window's first size on a desktop: a reference play area measured
     # in radii, so the field is about as crowded as on a tablet, shrunk to
     # fit +most+ of the desktop if the desktop is smaller.
@@ -67,6 +55,19 @@ module DotPopper
         wanted_height = height * radius
         fit = [1.0, (desktop_width * most) / wanted_width, (desktop_height * most) / wanted_height].min
         [(wanted_width * fit).floor, (wanted_height * fit).floor]
+      end
+
+      # The window's size and its smallest, in the system's window
+      # coordinates, which are +per_unit+ to a graphics unit: 1 where they
+      # are points (a Mac), and the display's scale where they are pixels
+      # (Windows at 200%), so the window is the same size in units, and
+      # never smaller than +smallest+ units, on any display. +wanted+ is a
+      # size in units asked for (DOT_POPPER_WINDOW), or nil for one fitted
+      # to the desktop (+desktop_width+ by +desktop_height+, in window
+      # coordinates).
+      def mode_for(desktop_width, desktop_height, radius, per_unit:, smallest:, wanted: nil)
+        units = wanted || size_for(desktop_width / per_unit, desktop_height / per_unit, radius)
+        (units.map { [it, 0].max } + smallest).map { (it * per_unit).round }
       end
     end
 
@@ -81,11 +82,6 @@ module DotPopper
     # whole window; text and buttons stay inside +safe+, the part that no
     # notch, rounded corner, or home indicator covers.
     class Layout < Data.define(:width, :height, :safe, :style)
-      HOW_TO_PLAY = 3.8 # "How to play"'s width, in its heights, with room
-      HOW_TO_PLAY_LEAST = 3.1 # ...and the least it is drawn at in the bottom row
-      FULL_SCREEN = 3.8 # "Full screen"'s width, in its heights, as wide as "How to play"
-      QUIT = 2.4 # "Quit"'s width, in its heights
-      THEMES_LAYOUT = 3.0 # the Stats screen's "Themes" width, in its height
 
       # The scale for text and the HUD: 1 on a mid-sized window, smaller on
       # a phone, a little larger on a big screen.
@@ -103,6 +99,44 @@ module DotPopper
       end
 
       def margin = style.margin * ui
+
+      # A short window held sideways: Back moves to the top left, beside
+      # the heading, where a phone's thumb already is.
+      def short? = safe.height < 520 && safe.width > safe.height
+      def phone? = [safe.width, safe.height].min < 600
+
+      # The redesigned screens' margin and button height, as the mocks draw them.
+      def page_margin = phone? ? 16.0 : 24.0
+      def control_height = phone? ? 56.0 : 60.0
+      def heading_size = phone? ? 32 : 40
+      def heading_y = short? ? safe.y + page_margin + (control_height / 2.0) : safe.y + (phone? ? 34.0 : 55.0)
+
+      # A screen's heading for +text+: its type size and the middle of its
+      # line across. It is centred, shrunk until it fits; on a short window
+      # too narrow to centre it clear of Back, it sits in the room right of
+      # Back instead.
+      def heading_place(text, measure)
+        fit = lambda do |room, least|
+          size = heading_size
+          size -= 1 while size > least && measure.width(:bold, size, text) > room
+          size if measure.width(:bold, size, text) <= room
+        end
+        return [fit.(safe.width - (2 * page_margin), 18) || 18, center_x] unless short?
+
+        centred = fit.(2.0 * (center_x - back_button.right - page_margin), 24)
+        return [centred, center_x] if centred
+
+        left = back_button.right + page_margin
+        right = safe.right - page_margin
+        [fit.(right - left, 14) || 14, (left + right) / 2.0]
+      end
+
+      # Where a screen's content goes: under the heading, and clear of Back.
+      def page
+        top = short? ? back_button.bottom + page_margin : heading_y + (heading_size * 0.75)
+        bottom = short? ? safe.bottom - page_margin : back_button.y - page_margin
+        Rect.new(x: safe.x + page_margin, y: top, width: safe.width - (2 * page_margin), height: [bottom - top, 0.0].max)
+      end
       def center_x = safe.center_x
       def center_y = safe.center_y
       def top = safe.y + margin
@@ -110,121 +144,31 @@ module DotPopper
       # The whole window, notches and all.
       def whole = Rect.new(x: 0.0, y: 0.0, width: width.to_f, height: height.to_f)
 
-      # The mute toggle, in the safe area's bottom right corner. It is
-      # never smaller than a fingertip (44 units).
-      def mute_button
-        size = button_size
-        Rect.new(x: safe.right - margin - size, y: safe.bottom - margin - size, width: size, height: size)
-      end
-
       # The Tutorial's skip button, in the safe area's top right corner,
       # level with the HUD and clear of it, where the tutorial's dots never
       # go. It is never smaller than a fingertip (44 units).
       def skip_button
-        size = button_size
-        Rect.new(x: safe.right - margin - size, y: top, width: size, height: size)
+        width = control_height * 1.8
+        Rect.new(x: safe.right - page_margin - width, y: safe.bottom - page_margin - control_height, width:, height: control_height)
       end
 
-      # The title's "Your stats" button, in the safe area's bottom left
-      # corner, across from the mute button and as tall as it: HOW_TO_PLAY
-      # buttons' heights across, or, where the row is short of room for it
-      # and "How to play" both at that width, as on an upright phone, as
-      # little as HOW_TO_PLAY_LEAST.
-      def stats_button
-        height = button_size
-        shared = (safe.width - (4 * margin) - height) / 2.0
-        width = shared.clamp(height * HOW_TO_PLAY_LEAST, height * HOW_TO_PLAY)
-        Rect.new(x: safe.x + margin, y: safe.bottom - margin - height, width:, height:)
-      end
-
-      # The title's "How to play": a quiet pill with the help sign on it,
-      # the first of the bottom row's right-hand group, beside the window
-      # buttons where +window+ (WindowButtons) puts them in the row, and
-      # otherwise beside the mute button, as tall as it. It takes the room
-      # left of them, past "Your stats", up to HOW_TO_PLAY buttons'
-      # heights across; where that is less than HOW_TO_PLAY_LEAST, as on a
-      # small phone held upright, it takes a row of its own above the mute
-      # button instead, as the dot-size choice does.
-      def how_to_play_button(window: nil)
-        height = button_size
-        right = (window&.in_row? ? window.fullscreen.x : mute_button.x) - margin
-        room = right - (stats_button.right + margin)
-        if room >= height * HOW_TO_PLAY_LEAST
-          width = [height * HOW_TO_PLAY, room].min
-          return Rect.new(x: right - width, y: mute_button.y, width:, height:)
-        end
-
-        width = [height * HOW_TO_PLAY, safe.width - (2 * margin)].min
-        Rect.new(x: safe.right - margin - width, y: mute_button.y - row_apart(height) - height, width:, height:)
-      end
-
-      # The Stats screen's "Clear my stats…": small, in the safe
-      # area's bottom right corner, across from where "Your stats" was
-      # pressed, and on a row of its own under the prompt to go back.
-      def clear_stats_button
-        height = button_size
-        width = [height * 4.6, safe.width - (2 * margin)].min
-        Rect.new(x: safe.right - margin - width, y: safe.bottom - margin - height, width:, height:)
-      end
-
-      # The Stats screen's Back, in the bottom left corner, where "Your
-      # records" was pressed, across from "Clear my stats…" and never
-      # into it.
+      # Back: bottom left, or top left on a short window.
       def back_button
-        height = button_size
-        room = safe.width - (3 * margin) - clear_stats_button.width
-        Rect.new(x: safe.x + margin, y: safe.bottom - margin - height, width: [height * 2.4, room].min, height:)
+        y = short? ? safe.y + page_margin : safe.bottom - page_margin - control_height
+        Rect.new(x: safe.x + page_margin, y:, width: 120.0, height: control_height)
       end
 
-      # The Stats screen's Credits, a quiet pill beside Back, between it
-      # and "Clear my stats…", when there is room for it there; and
-      # otherwise, as on an upright phone, on a row of its own above Back.
-      def credits_button
-        height = button_size
-        wanted = height * 3.0
-        room = clear_stats_button.x - margin - back_button.right - margin
-        if room >= wanted
-          Rect.new(x: back_button.right + margin, y: back_button.y, width: wanted, height:)
-        else
-          Rect.new(x: back_button.x, y: back_button.y - margin - height, width: [wanted, safe.width - (2 * margin)].min, height:)
-        end
+      # The Stats screen's "Clear my stats…": bottom right, or top right on
+      # a short window.
+      def clear_stats_button
+        width = [control_height * 3.1, safe.width - (2 * page_margin)].min
+        y = short? ? safe.y + page_margin : safe.bottom - page_margin - control_height
+        Rect.new(x: safe.right - page_margin - width, y:, width:, height: control_height)
       end
 
-      # The Stats screen's Themes, a quiet pill of the same kind, offered
-      # once there is a theme to choose. It follows Credits along the bottom
-      # row when there is room for both, and otherwise takes the row above
-      # Back, beside Credits if that is there too and has room, or over it.
-      def themes_button
-        height = button_size
-        width = height * THEMES_LAYOUT
-        credits = credits_button
-        if credits.y == back_button.y
-          x = credits.right + margin
-          return Rect.new(x:, y: credits.y, width:, height:) if clear_stats_button.x - margin - x >= width
-
-          return Rect.new(x: back_button.x, y: back_button.y - margin - height, width: [width, safe.width - (2 * margin)].min, height:)
-        end
-
-        x = credits.right + margin
-        return Rect.new(x:, y: credits.y, width:, height:) if x + width <= safe.right - margin
-
-        Rect.new(x: credits.x, y: credits.y - margin - height, width: [width, safe.width - (2 * margin)].min, height:)
-      end
-
-      # The top of the Stats screen's buttons, whichever row they are on.
-      def stats_floor(themes: false, offer: false)
-        [back_button.y, credits_button.y, clear_stats_button.y, (themes_button.y if themes), (offer_button.y if offer)].compact.min
-      end
-
-      # The Stats screen's way to Pro, a quiet pill at the
-      # right, on a row of its own above every other button there, so it
-      # never takes the place of Credits or Themes.
-      def offer_button
-        height = button_size
-        width = [height * 3.4, safe.width - (2 * margin)].min
-        top = [credits_button.y, themes_button.y, clear_stats_button.y].min
-        Rect.new(x: safe.right - margin - width, y: top - margin - height, width:, height:)
-      end
+      # Where the screens not yet redrawn put a row's second button.
+      def credits_button = Rect.new(x: back_button.right + page_margin, y: back_button.y, width: control_height * 3.0, height: control_height)
+      def stats_floor(**) = [back_button.y, clear_stats_button.y].min
 
       # The size of a screen's main button, the title's Play and Game
       # Over's Continue, for dots of +radius+: at least a dot across, and
@@ -242,101 +186,13 @@ module DotPopper
 
       # Undo, once the records are cleared, at the same corner.
       def undo_button
-        height = button_size
-        width = height * 2.4
-        Rect.new(x: safe.right - margin - width, y: safe.bottom - margin - height, width:, height:)
-      end
-
-      # The title's window buttons on a desktop, "Full screen" (or
-      # "Window") and Quit, each with its icon, and its word where
-      # +labelled+: in the bottom row, between "How to play" and the mute
-      # button, so help, the window and sound stand together in the corner
-      # where a desktop puts its window buttons, as tall as the others.
-      # Labelled, they are as wide as FULL_SCREEN and QUIT heights;
-      # otherwise game, as the mute button is.
-      def window_buttons(labelled: true)
-        height = button_size
-        quit_width = labelled ? height * QUIT : height
-        fullscreen_width = labelled ? height * FULL_SCREEN : height
-        y = mute_button.y
-        quit = Rect.new(x: mute_button.x - margin - quit_width, y:, width: quit_width, height:)
-        fullscreen = Rect.new(x: quit.x - margin - fullscreen_width, y:, width: fullscreen_width, height:)
-        WindowButtons.new(fullscreen:, quit:, labelled:, place: :row)
-      end
-
-      # Whether the bottom row has room for +window+ (WindowButtons) with
-      # "How to play" still beside them, short of "Your stats".
-      def fits_in_row?(window) = how_to_play_button(window:).y == mute_button.y
-
-      # The same two as only their icons, game, a row above the bottom
-      # row's right end, Quit over the mute button: where the bottom row
-      # has no room for them, as on a narrow window.
-      def window_icons_above
-        size = button_size
-        y = [mute_button.y, how_to_play_button.y].min - row_apart(size) - size
-        quit = Rect.new(x: safe.right - margin - size, y:, width: size, height: size)
-        WindowButtons.new(fullscreen: quit.with(x: quit.x - margin - size), quit:, labelled: false, place: :above)
-      end
-
-      # The same two as only their icons, game, in the safe area's top
-      # right corner: where a window too short for a row above the
-      # bottom one has no room left for it (HomeScreen).
-      def window_icons
-        size = button_size
-        quit = Rect.new(x: safe.right - margin - size, y: top, width: size, height: size)
-        WindowButtons.new(fullscreen: quit.with(x: quit.x - margin - size), quit:, labelled: false, place: :corner)
-      end
-
-      # The title's choice of dot size: its label, then its two segments,
-      # each as tall as a button and wide enough for a dot icon and a few
-      # words. The title shows it only where it changes something. With
-      # room between "Your stats" and "How to play", it sits there,
-      # label on the left, its segments centred on the screen if they can
-      # be: the middle of the row, between the player's records on the
-      # left and help, the window and sound on the right. Otherwise, as on
-      # an upright phone, its segments are centred a row above the
-      # buttons, under the label, and above the window buttons too where
-      # +window+ (WindowButtons) has them in a row above.
-      def sizing_control(window: nil)
-        height = button_size
-        segment = height * 4.2
-        label = height * 2.1
-        left = stats_button.right + margin
-        how = how_to_play_button(window:)
-        right = (how.y == mute_button.y ? how.x : mute_button.x) - margin
-        above = window&.above? ? window.rects : []
-        return stacked_choice(height, segment, label, how, above) if right - left < label + (segment * 2)
-
-        x = (center_x - segment).clamp(left + label, right - (segment * 2))
-        y = mute_button.y
-        Segmented.new(label: Rect.new(x: x - label, y:, width: label, height:),
-                      options: segments(x, y, segment, height))
+        clear = clear_stats_button
+        clear.with(x: clear.right - (clear.height * 2.4), width: clear.height * 2.4)
       end
 
       # Never smaller than a fingertip (44 units).
       def button_size = [style.button * ui, 44.0].max
 
-      private
-
-      # How far apart two rows of buttons are, each +height+ tall, so each
-      # is reached a good way past its edge: up to a standard dot's width
-      # around it, as far as a short screen allows. (The Android playtest
-      # found a tap on Standard's lower half opening "Your stats".)
-      def row_apart(height) = [margin, [(2 * Rules::RADIUS) - height, safe.height * 0.05].min].max
-
-      # The choice a row above the buttons, and above "How to play" (+how+)
-      # where that has a row of its own, and above the rows in +above+.
-      def stacked_choice(height, segment, label, how, above)
-        segment = [segment, (safe.width / 2.0) - margin].min
-        y = [mute_button.y, how.y, *above.map(&:y)].min - row_apart(height) - height
-        tall = height * 0.7
-        Segmented.new(label: Rect.new(x: center_x - (label / 2.0), y: y - tall, width: label, height: tall),
-                      options: segments(center_x - segment, y, segment, height))
-      end
-
-      def segments(x, y, width, height)
-        [Rect.new(x:, y:, width:, height:), Rect.new(x: x + width, y:, width:, height:)]
-      end
     end
   end
 end

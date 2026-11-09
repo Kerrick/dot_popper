@@ -8,23 +8,23 @@ module DotPopper
     #
     # [:press] a press at the cursor, as a click there (A, and the right
     #   trigger through Trigger)
-    # [:start] start a game from the title, or continue after one, or
-    #   leave the Stats screen (Start)
-    # [:share] copy the result on Game Over, or on the Stats screen,
-    #   held, clear the records, and pressed again, undo that; on the
-    #   title, where there is nothing to share, How to play (Y)
-    # [:records] open the Stats screen from the title (X), and on the
-    #   Stats screen, the Credits screen
-    # [:leave] leave the Credits screen, or the Stats screen (B)
-    # [:mute] sound on or off (Back, Select, or Share), on every screen
-    # [:sizing] switch how dots are sized, on the title once it offers the
-    #   choice (either shoulder button)
+    # [:start] the screen's main button: Play on Home, as A on it does
+    #   (Start)
+    # [:leave] Back, Close or Home, and on Home, Quit, asked twice (B)
+    # [:select] Settings on Home, and Sound in Settings (View, Back,
+    #   Select, or Share: SETTINGS)
+    # [:x], [:y], [:lb], [:rb] each screen's own buttons, labelled on it
     #
     # The d-pad has no intent of its own: it moves the cursor, as the left
-    # stick does (GamepadCursor). B, X, and the shoulders do nothing during a game.
+    # stick does (GamepadCursor); the right stick scrolls a list. B, X, and
+    # the shoulders do nothing during a game.
     class GamepadButtons < Data.define(:intents)
-      STANDARD = { a: :press, start: :start, y: :share, x: :stats, b: :leave, back: :mute, leftshoulder: :sizing,
-                   rightshoulder: :sizing }.freeze
+      # The button that opens Settings from Home, as a console's View or
+      # Select button opens a game's options.
+      SETTINGS = :back
+
+      STANDARD = { a: :press, start: :start, y: :y, x: :x, b: :leave, SETTINGS => :select, leftshoulder: :lb,
+                   rightshoulder: :rb }.freeze
 
       def initialize(intents: STANDARD) = super
 

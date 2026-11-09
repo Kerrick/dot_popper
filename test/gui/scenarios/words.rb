@@ -47,7 +47,9 @@ module DotPopperGui
       wait(0.2)
       plan = show.home_plan
       check(show.quit_prompt.positive?, "B on the title asks to quit")
-      check(!plan.quit_line.overlaps?(plan.play_button), "the question is clear of Play")
+      x, y = plan.quit_line
+      line = DotPopper::Presentation::Rect.new(x: x - 150, y: y - 12, width: 300, height: 24)
+      check(!line.overlaps?(plan.play_button), "the question is clear of Play")
       keep_screenshot("quit-prompt")
       wait(DotPopper::Presentation::Show::QUIT_ASK + 0.2)
       check(show.home? && show.quit_prompt.zero?, "with no second B, the question goes and the game stays")

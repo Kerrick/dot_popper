@@ -10,10 +10,9 @@ module DotPopperGui
 
     def play
       quick_game
-      open_stats
+      open_settings
       click_credits
-      check(show.credits?, "a click on Credits opens them")
-      check(show.stats?, "over the Stats screen")
+      check(show.credits?, "a click on Credits and licenses opens them")
       page = show.credits_layout.window
       check(show.credits.farthest.positive?, "the page is longer than the window")
       lit = screenshot.lit_in(page)
@@ -40,32 +39,32 @@ module DotPopperGui
       keep_screenshot("credits")
 
       key(:escape)
-      check(show.stats? && !show.credits?, "Escape goes back to the Stats screen")
+      check(show.settings?, "Escape goes back to Settings")
       click_credits
       back = show.back_reach
       click(back.center_x, back.center_y)
-      check(show.stats? && !show.credits?, "a click on Back goes back to the Stats screen")
+      check(show.settings?, "a click on Back goes back to Settings")
       pad(:x)
       check(show.credits?, "a gamepad's X opens the credits")
       pad(:b)
-      check(show.stats? && !show.credits?, "a gamepad's B goes back to the Stats screen")
+      check(show.settings?, "a gamepad's B goes back to Settings")
       key(:c)
       check(show.credits?, "C opens the credits")
       key(:escape)
       key(:escape)
-      check(show.home? && !show.stats?, "Escape again goes back to the title, and starts no game")
+      check(show.on_home?, "Escape again goes back Home, and starts no game")
     end
 
     private
 
-    def open_stats
-      reach = show.stats_reach
+    def open_settings
+      reach = show.reach_of(:settings)
       click(reach.center_x, reach.center_y)
-      check(show.stats?, "a click on Your stats opens them")
+      check(show.settings?, "a click on Settings opens it")
     end
 
     def click_credits
-      reach = show.reach_of(:credits)
+      reach = reveal(:credits)
       click(reach.center_x, reach.center_y)
     end
 

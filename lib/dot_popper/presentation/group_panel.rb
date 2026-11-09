@@ -113,6 +113,10 @@ module DotPopper
       def open? = @open
       def available? = groups.available?
       def member? = groups.member?
+      def known? = groups.known?
+
+      # How many of the player's groups they hold the title of, for Home.
+      def titles_held = groups.groups.count(&:champion?)
       def pro? = @entitlement.pro?
       def group = @group_id && groups.group(@group_id)
 
@@ -200,8 +204,15 @@ module DotPopper
         end
       end
 
-      # A tap on nothing in particular. Nothing here has the keyboard.
-      def tap_away = nil
+      # Enter, Space or A aimed at nothing, on this screen: leaves, except
+      # the keypad, which joins with a whole code.
+      def primary = page == :join ? submit_join : back
+
+      # A gamepad's button on this screen (Show#pad).
+      def pad(name) = nil
+
+      # Holds Delete my friend group data, from the Privacy screen.
+      def hold_delete(by, now) = start_hold(:delete, by, now)
 
       def let_go(by, now) = @hold = hold.release(by, now)
       def cancel_hold = @hold = hold.cancel

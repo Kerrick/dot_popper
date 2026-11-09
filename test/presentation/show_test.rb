@@ -322,69 +322,6 @@ class ShowTest < Minitest::Test
     assert_nil @clipboard.text
   end
 
-  def test_the_mute_button_takes_its_own_tap_on_the_title
-    button = @show.layout.mute_button
-    @show.tap(button.center_x, button.center_y)
-
-    assert @sounds.muted?
-    assert @show.home?
-  end
-
-  def test_your_stats_is_offered_only_once_a_game_has_finished
-    refute @show.stats_offered?
-    assert_nil @show.stats_reach
-    @show.tap(*middle(@show.layout.stats_button))
-    assert @show.home?, "before then, its corner is empty space, which does nothing"
-
-    finish_game
-    assert @show.stats_offered?
-  end
-
-  # 800 by 600 fits a radius of about 35 when dots are sized to it.
-  def test_the_dot_size_choice_switches_on_the_title_and_is_remembered
-    finish_game
-    assert_operator @show.marquee.score_record, :>, 0
-
-    @show.tap(*middle(reach(DotPopper::DotSizing::SIZED_TO_SCREEN)))
-    assert @show.home?, "the tap never starts a game"
-    assert @cabinet.sizing.sized_to_screen?
-    assert_equal DotPopper::DotSizing::SIZED_TO_SCREEN.to_text, @sizing_store.read
-    assert_in_delta 35.4, @show.attract.dots.first.radius, 0.1
-    assert_equal 0, @show.marquee.score_record, "the title shows this choice's best"
-
-    press_main
-    assert_in_delta 35.4, @cabinet.game.field.radius, 0.1
-
-    @cabinet.update(20)
-    assert_equal "Played with dots sized to the screen.", @show.game_over.screen
-  end
-
-  # A tap on a segment chooses it, so tapping the chosen one again keeps
-  # it; a shoulder button switches to the other.
-  def test_each_segment_of_the_dot_size_choice_chooses_it
-    finish_game
-    same = DotPopper::DotSizing::STANDARD
-    @show.tap(*middle(reach(same)))
-    refute @cabinet.sizing.sized_to_screen?
-    assert_nil @sizing_store.read, "nothing changed, so nothing is saved"
-
-    @show.toggle_sizing
-    assert @cabinet.sizing.sized_to_screen?
-    @show.tap(*middle(reach(same)))
-    refute @cabinet.sizing.sized_to_screen?
-    assert @show.home?
-  end
-
-  # The maintainer didn't see why Play changed size with the Dot size
-  # choice: it was sized from the chosen dots. It never moves now.
-  def test_choosing_a_dot_size_leaves_play_where_it_is
-    finish_game
-    play = @show.send(:home_plan).play_button
-    @show.toggle_sizing
-
-    assert_equal play, @show.send(:home_plan).play_button
-  end
-
   # Laying the title out took a millisecond a frame on a phone, twice a
   # frame; it is laid out again only when something on it changes.
   def test_the_title_is_laid_out_again_only_when_it_changes
@@ -430,35 +367,6 @@ class ShowTest < Minitest::Test
     finish_game(back_to_title: false)
 
     assert_nil @show.ask_to_quit
-  end
-
-  def test_the_dot_size_choice_is_offered_only_once_a_game_has_finished
-    assert_nil reach(DotPopper::DotSizing::SIZED_TO_SCREEN)
-    @show.tap(*middle(@show.layout.sizing_control.options.first))
-
-    assert @show.home?
-    refute @cabinet.sizing.sized_to_screen?
-  end
-
-  # On the 24 × 16 R window, dots sized to it are the standard size, so
-  # the title leaves the choice out, and neither its segments nor a
-  # shoulder button change the saved one.
-  def test_where_the_sizes_style_alike_the_choice_is_not_offered
-    cabinet = DotPopper::Cabinet.new(field(1200, 800), random: Random.new(2), sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
-    show = Show.new(cabinet:, layout: layout(1200, 800), sounds: FakeSounds.new, radius: R, sizing_store: @sizing_store)
-    cabinet.press(10, 10)
-    cabinet.update(20)
-    cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
-    cabinet.press(10, 10)
-    assert show.stats_offered?
-    refute show.sizing_offered?
-
-    show.toggle_sizing
-    assert cabinet.sizing.sized_to_screen?, "the saved choice stays"
-    assert_nil show.sizing_reaches.to_h.fetch(DotPopper::DotSizing::STANDARD)
-    show.tap(*middle(show.layout.sizing_control.options.last))
-    assert cabinet.state.is_a?(DotPopper::Cabinet::Home), "where the control would be is empty space"
-    assert_nil @sizing_store.read
   end
 
   # Resizing the window brings the choice back, or takes it away.

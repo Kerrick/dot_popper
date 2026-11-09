@@ -43,21 +43,6 @@ class HoverTest < Minitest::Test
     assert_in_delta 0.0, hover.level(:stats)
   end
 
-  def test_the_title_hovers_the_buttons_it_offers_where_taps_reach_them
-    mute = @show.layout.mute_button
-    assert_equal :mute, @show.control_at(mute.center_x, mute.center_y).name
-    assert_nil @show.stats_reach, "a first title offers no records"
-    assert_nil @show.control_at(*middle(@show.layout.stats_button))
-
-    finish_game
-    assert_equal :stats, @show.control_at(*middle(@show.stats_reach)).name
-    assert_equal :stats, @show.control_at(@show.stats_reach.x + 1, @show.stats_reach.bottom - 1).name,
-                 "the whole reach, not only the drawn pill"
-    assert_equal STANDARD, @show.control_at(*middle(@show.sizing_reaches.to_h.fetch(STANDARD))).name
-    assert_equal :play, @show.control_at(*middle(@show.play_reach)).name
-    assert_nil @show.control_at(5, 5)
-  end
-
   def test_the_mouse_over_a_button_lights_it_and_moving_away_dims_it
     finish_game
     @show.pointer_at(*middle(@show.stats_reach))
@@ -69,33 +54,6 @@ class HoverTest < Minitest::Test
     assert_nil @show.hovered
     @show.update(LOOK.seconds)
     assert_in_delta 0.0, @show.hover.level(:stats)
-  end
-
-  def test_only_the_mouse_hovers
-    @show.pointer_at(*middle(@show.layout.mute_button))
-    assert_equal :mute, @show.hovered
-
-    @show.input = InputKind::TOUCH
-    assert_nil @show.hovered
-    @show.input = InputKind::GAMEPAD
-    assert_nil @show.hovered
-    @show.input = InputKind::MOUSE
-    assert_equal :mute, @show.hovered
-
-    @show.pointer_gone
-    assert_nil @show.hovered
-  end
-
-  def test_the_stats_screen_hovers_back_credits_and_clear_and_nothing_else
-    finish_game
-    @show.open_stats
-    assert_equal %i[credits achievements clear back], @show.controls.map(&:name)
-    @show.pointer_at(*middle(@show.back_reach))
-    assert_equal :back, @show.hovered
-    @show.pointer_at(*middle(@show.clear_reach))
-    assert_equal :clear, @show.hovered
-    @show.pointer_at(*middle(@show.home_plan.play_button))
-    assert_nil @show.hovered, "the title's buttons are covered"
   end
 
   def test_game_over_hovers_share_my_score_and_a_game_hovers_nothing

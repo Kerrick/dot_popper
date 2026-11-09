@@ -2,20 +2,48 @@
 
 module DotPopper
   module Shell
-    # The game's window on a desktop, which the title's "Full screen" and
-    # Quit switch and close, as F11, Alt+Enter (Cmd+Enter on a Mac) and
-    # Escape do. Fullscreen is borderless (:desktop), unless +exclusive+,
-    # as DOT_POPPER_FULLSCREEN=exclusive asks, to compare how each works
-    # with a system overlay and a TV's game mode.
-    class DesktopWindow < Data.define(:exclusive)
+    # The game's window on a desktop, as Settings' Display choice and F11,
+    # Alt+Enter (Cmd+Enter on a Mac), Quit and Escape move and close it:
+    # :window, :borderless (LÖVE's desktop fullscreen), or :exclusive (its
+    # real fullscreen). F11 switches between a window and the last
+    # fullscreen choice, which it remembers, so the window is a plain
+    # object rather than a frozen value. +lota+ is Lota's Window, or a
+    # stand-in for the tests.
+    class DesktopWindow
+      def initialize(exclusive: false, lota: ::Lota::Window)
+        @exclusive = exclusive
+        @lota = lota
+        @last = nil
+      end
+
       def offered? = true
 
       def fullscreen?
-        on, = ::Lota::Window.fullscreen
+        on, = @lota.fullscreen
         on
       end
 
-      def toggle_fullscreen = ::Lota::Window.set_fullscreen(!fullscreen?, exclusive ? :exclusive : :desktop)
+      # Which of the three the window is in now.
+      def display
+        on, type = @lota.fullscreen
+        return :window unless on
+
+        type.to_s == "exclusive" ? :exclusive : :borderless
+      end
+
+      def display=(mode)
+        @last = mode unless mode == :window
+        case mode
+        when :window then @lota.set_fullscreen(false, :desktop)
+        when :borderless then @lota.set_fullscreen(true, :desktop)
+        when :exclusive then @lota.set_fullscreen(true, :exclusive)
+        end
+      end
+
+      def toggle_fullscreen
+        self.display = fullscreen? ? :window : (@last || (@exclusive ? :exclusive : :borderless))
+      end
+
       def quit = ::Lota::Event.quit
     end
   end

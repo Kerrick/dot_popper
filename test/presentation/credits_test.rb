@@ -124,45 +124,45 @@ class CreditsTest < Minitest::Test
     assert_in_delta 750.0, scroll.fitted(content: 2000.0, window: 500.0).offset, 1e-9
   end
 
+  # Opened from Settings, the Credits screen scrolls by the wheel, the
+  # keys, a stick and a finger, and goes back a step at a time.
   def test_the_show_opens_scrolls_and_goes_back_a_step_at_a_time
     show = a_show
-    show.open_stats
+    show.open_settings
     reach = show.reach_of(:credits)
     show.tap(reach.center_x, reach.center_y)
 
     assert show.credits?
-    assert show.stats?
     assert_equal [:back], show.controls.map(&:name), "only Back, over the text"
     assert_operator show.credits.farthest, :>, 0.0
 
-    show.wheel_credits(-1)
+    show.wheel_scroll(-1)
     line = show.credits_layout.line
     assert_in_delta line * Style::CREDITS.wheel, show.credits.offset, 1e-6
-    assert show.credits_key(:pagedown)
-    refute show.credits_key(:escape)
-    show.stick_credits(Stick.new(x: 0, y: 1.0), 1.0)
+    assert show.scroll_key(:pagedown)
+    refute show.scroll_key(:escape)
+    show.stick_scroll(Stick.new(x: 0, y: 1.0), 1.0)
     assert_operator show.credits.offset, :>, line * 4
     before = show.credits.offset
-    show.stick_credits(Stick.new(x: 0, y: 0.1), 1.0)
+    show.stick_scroll(Stick.new(x: 0, y: 0.1), 1.0)
     assert_equal before, show.credits.offset, "a stick inside its dead zone is at rest"
 
     show.tap(5, 300, by: 7)
-    show.drag_credits(7, 250)
+    show.drag_scroll(7, 250)
     assert_in_delta before + 50, show.credits.offset, 1e-6, "a finger drags the page along"
     show.let_go(7)
-    show.drag_credits(7, 100)
+    show.drag_scroll(7, 100)
     assert_in_delta before + 50, show.credits.offset, 1e-6
 
     assert show.back
-    refute show.credits?
-    assert show.stats?
+    assert show.settings?
     assert show.back
-    refute show.stats?
+    assert show.on_home?
   end
 
   def test_y_clears_nothing_while_credits_are_open
     show = a_show
-    show.open_stats
+    show.open_settings
     show.open_credits
     show.clear_or_undo(:y)
 
@@ -171,9 +171,9 @@ class CreditsTest < Minitest::Test
 
   def test_a_resize_keeps_the_screen_open_and_laid_out_for_the_new_size
     show = a_show
-    show.open_stats
+    show.open_settings
     show.open_credits
-    show.credits_key(:end)
+    show.scroll_key(:end)
     show.resize(layout(400, 850), field(400, 850))
 
     assert show.credits?

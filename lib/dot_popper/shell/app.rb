@@ -83,7 +83,7 @@ module DotPopper
                                        tutorial_flag: Presentation::TutorialFlag.new(
                                          SaveFile.new(name: "tutorial.txt"), mode: Presentation::TutorialFlag.mode(@env)
                                        ),
-                                       entitlement:, theme_keeper:, storefront:, games:)
+                                       entitlement:, theme_keeper:, storefront:, games:, links: UrlOpener.new)
         storefront.connect
         @cabinet.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
                                         archive: ->(name) { SaveFile.new(name:) }))
@@ -175,12 +175,13 @@ module DotPopper
       def mouse_moved(x, y, istouch)
         point = @input.mouse_moved(x, y, istouch) or return
         @show.pointer_at(point.x, point.y)
+        @travel = nil if window_settling?
         @travel = (@travel || Presentation::MouseTravel.start).moved(x, y)
         if @travel.deliberate?
           @cursor = @cursor.hide(x, y)
           heard(point)
         end
-        @show.drag_credits(:mouse, point.y)
+        @show.drag_scroll(:mouse, point.y)
         @dragging.move(:mouse, point.x, point.y)
       end
 
@@ -203,7 +204,7 @@ module DotPopper
         point = heard(@input.touch_moved(id, x, y, devicetype, mouse))
         return unless point
 
-        @show.drag_credits(id, point.y)
+        @show.drag_scroll(id, point.y)
         @dragging.move(id, point.x, point.y)
       end
 
@@ -244,23 +245,17 @@ module DotPopper
         case @buttons.intent(button)
         in :press then gamepad_down(:a)
         in :start then @show.start
-        in :share then share_pressed
-        in :stats then @show.stats? ? @show.open_credits : (@show.open_stats if @show.stats_offered?)
+        in :y then y_pressed
         in :leave then @show.back || leave_title
-        in :mute then @speaker.toggle_mute
-        in :sizing then @show.toggle_sizing
+        in :x | :lb | :rb | :select => name then @show.pad(name)
         in nil then nil
         end
       end
 
-      # Y: on the Stats screen, "Clear my stats…" held, or Undo; on the
-      # title, where there is nothing to share, "How to play"; and
-      # elsewhere, "Share my score".
-      def share_pressed
-        if @show.stats? then @show.clear_or_undo(:y)
-        elsif @show.home? then @show.how_to_play
-        else @show.share
-        end
+      # Y: on the title and Settings a button of its own, and Game Over's
+      # Share my score.
+      def y_pressed
+        @show.game_over? || @show.sharing? ? @show.share : @show.pad(:y)
       end
 
       # A gamepad button came up. Letting go of A ends its press, which on
@@ -269,7 +264,7 @@ module DotPopper
       def gamepad_released(button)
         case @buttons.intent(button)
         in :press then gamepad_up(:a)
-        in :share then @show.let_go(:y)
+        in :y then @show.let_go(:y)
         else nil
         end
       end
@@ -277,6 +272,7 @@ module DotPopper
       # A gamepad's axis moved. The right trigger presses and lets go as A
       # does; the sticks are read each frame instead (Gamepads).
       def gamepad_axis(axis, value)
+        return left_trigger(value) if axis.to_s == "triggerleft"
         return unless axis.to_s == "triggerright"
         return skip_splash if @splash && value.to_f > 0.5
 
@@ -287,6 +283,15 @@ module DotPopper
 
         gamepad_used
         gamepad_down(:trigger)
+      end
+
+      # The left trigger, as a button, opens Friend groups on Home (LT).
+      def left_trigger(value)
+        @left_trigger = (@left_trigger || Presentation::Trigger.released).pull(value.to_f, Style::GAMEPAD)
+        return unless @left_trigger.pressed
+
+        gamepad_used
+        @show.pad(:lt)
       end
 
       # A controller was plugged in, or was there when the game started.
@@ -300,16 +305,15 @@ module DotPopper
       end
 
       # The mouse wheel turned +y+ notches, up when positive.
-      def wheel_moved(y) = @show.wheel_credits(y)
+      def wheel_moved(y) = @show.wheel_scroll(y)
 
       def key_pressed(key)
         return skip_splash if @splash
 
         return @speaker.toggle_mute if key == :m
         return @show.how_to_play if key == :h
-        return @show.open_themes if key == :l && @show.stats?
-        return @show.open_credits if key == :c && @show.stats?
-        return if @show.credits_key(key)
+        return @show.open_credits if key == :c && @show.settings?
+        return if @show.scroll_key(key)
         # Enter or Space presses the screen's main button, on any device;
         # Alt+Enter (Cmd+Enter on a Mac) is fullscreen's instead.
         return @show.primary if PRIMARY_KEYS.include?(key) && !(key != :space && fullscreen_chord?)
@@ -334,7 +338,16 @@ module DotPopper
       PRIMARY_KEYS = %i[return kpenter space].freeze
 
       # The window changed size, or moved to a screen of another density.
+      # For a moment after the window opens or changes size, the pointer
+      # seems to move under a still mouse, as the window moves under it
+      # (Windows sends several such motions as it grows a window to the
+      # display's scale), so no motion then takes the words to the mouse.
+      SETTLE = 0.5
+
+      def window_settling? = @uptime < (@settled_at || SETTLE)
+
       def resize
+        @settled_at = @uptime.to_f + SETTLE
         return unless @show
 
         happened("a resize")
@@ -361,16 +374,17 @@ module DotPopper
       # Credits screen scroll it instead and leave the cursor at rest.
       def read_with_stick(seconds)
         stick = @gamepads.stick
+        @show.stick_scroll(@gamepads.right_stick, seconds)
         return stick unless @show.credits?
 
-        @show.stick_credits(stick, seconds)
+        @show.stick_scroll(stick, seconds)
         Presentation::Stick.rest
       end
 
-      # Held arrow and Page keys go on scrolling the Credits screen, which
-      # is the only place the keyboard asks for repeats.
+      # Held arrow and Page keys go on scrolling the lists, and the only
+      # places the keyboard asks for repeats.
       def repeat_keys
-        reading = @show.credits?
+        reading = @show.scrolling?
         return if reading == @reading
 
         @reading = reading
@@ -426,7 +440,10 @@ module DotPopper
 
       # Tells the Show what made +tap+, if anything did, so its words name
       # that press. Returns +tap+.
+      # A finger starts the mouse's travel afresh, as the gamepad does, so
+      # only a new, deliberate move takes the words back to the mouse.
       def heard(tap)
+        @travel = nil if tap && tap.kind != Presentation::InputKind::MOUSE
         @show.input = tap.kind if tap
         tap
       end
@@ -521,10 +538,15 @@ module DotPopper
         @dragging.release(:gamepad, point.x, point.y)
       end
 
+      # The window, sized in graphics units: where the system's window
+      # coordinates are pixels (Windows at 200%), its size and smallest
+      # size are scaled to them, so a scaled display gets the same window.
       def open_window
-        size = window_size || Style::WINDOW.size_for(*::Lota::Window.desktop_dimensions, @dot_size.radius)
-        ::Lota::Window.set_mode(*size, resizable: true, centered: true, minwidth: SMALLEST_WINDOW[0],
-                                       minheight: SMALLEST_WINDOW[1])
+        width, = ::Lota::Window.mode
+        per_unit = [width.to_f / ::Lota::Graphics.width, 1.0].max
+        size = Style::WINDOW.mode_for(*::Lota::Window.desktop_dimensions, @dot_size.radius, per_unit:, smallest: SMALLEST_WINDOW,
+                                                                                           wanted: window_size)
+        ::Lota::Window.set_mode(size[0], size[1], resizable: true, centered: true, minwidth: size[2], minheight: size[3])
       end
 
       # A phone or tablet's window already covers the screen; fullscreen
@@ -667,11 +689,11 @@ module DotPopper
       end
 
       def screen_name
-        if @show.stats? then "Your stats"
+        if @show.stats? then "Stats"
         elsif @show.tutorial? then "the tutorial"
         elsif @show.playing? then "a game"
         elsif @show.game_over? then "Game Over"
-        else "the title"
+        else "Home"
         end
       end
 

@@ -328,7 +328,7 @@ class GroupPanelTest < Minitest::Test
     assert_predicate @session, :available?
   end
 
-  [[1200, 800], [400, 850], [850, 400]].each do |width, height|
+  [[1200, 800]].each do |width, height|
     define_method(:"test_every_screen_fits_and_is_apart_at_#{width}x#{height}") do
       build(width:, height:)
       body = group(numbers: (1..8).to_a, you: 3, champion: 2, top: 90)

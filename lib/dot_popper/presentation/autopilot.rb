@@ -69,7 +69,7 @@ module DotPopper
       def title(cabinet, show)
         return later_on_arrival(show) if show&.arrival?
         return browse(show) if show && (show.stats? || (@titles == 2 && !@browsed))
-        return choose_size(show) if show && !@resized && show.sizing_offered?
+        return choose_size(show) if show && (show.settings? || (!@resized && @browsed && show.sizing_offered?))
 
         press_once(@style.title_wait) { start(cabinet, show) }
       end
@@ -81,16 +81,6 @@ module DotPopper
 
         @waited = 0.0
         middle(show.reach_of(:arrival_later))
-      end
-
-      # Taps the choice of dot size not yet chosen, once, after half the
-      # title's wait; the title's own wait then starts again.
-      def choose_size(show)
-        return if @waited < @style.title_wait / 2
-
-        @resized = true
-        @waited = 0.0
-        middle(show.sizing_reaches.reject { |sizing, _| sizing == show.cabinet.sizing }.first.last)
       end
 
       # Opens "Your stats" once it is offered, and presses Back after
@@ -107,6 +97,26 @@ module DotPopper
         @browsed = true
         @waited = 0.0
         middle(show.stats_reach)
+      end
+
+      # Opens Settings once Home offers the choice of dot size, taps the
+      # size not yet chosen, and presses Back after +stats_wait+; Home's
+      # own wait then starts again.
+      def choose_size(show)
+        if show.settings?
+          return if @waited < @style.title_wait / 2
+          return middle(show.back_reach) if @resized && @waited >= @style.stats_wait
+
+          return if @resized
+
+          @resized = true
+          other = Show::SIZINGS.find { it != show.cabinet.sizing }
+          return middle(show.reach_of(other) || show.back_reach)
+        end
+        return if @waited < @style.title_wait / 2
+
+        @waited = 0.0
+        middle(show.reach_of(:settings))
       end
 
       # Play's middle; without the Show, the middle of the screen, which

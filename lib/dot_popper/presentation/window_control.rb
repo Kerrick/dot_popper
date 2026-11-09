@@ -13,7 +13,15 @@ module DotPopper
       def offered? = false
       def fullscreen? = false
       def toggle_fullscreen = nil
+      def display = :window
+      def display=(_mode); end
       def quit = nil
+    end
+
+    # Links nothing: a tap on an outside link does nothing. Anything that
+    # answers +open(url)+ can stand in, as Shell::UrlOpener does.
+    class NoLinks < Data.define
+      def open(_url) = nil
     end
   end
 end

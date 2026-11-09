@@ -13,12 +13,10 @@ module DotPopper
 
       def draw(show, layout)
         page = show.credits_layout
-        pen.text(show.words.credits_title, pen.fonts.bold(page.heading_size), layout.center_x, page.heading_y,
-                 pen.palette.cream)
+        Header.new(pen:).draw(show, layout, show.words.button(:credits_title))
         window = page.window
         text(show.credits_lines, show.credits.offset, window, page)
         bar(show.credits, window, layout)
-        PillButton.new(pen:).draw(layout.back_button, show.words.go_back, hover: show.hover.level(:back))
       end
 
       private

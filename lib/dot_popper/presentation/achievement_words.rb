@@ -24,7 +24,29 @@ module DotPopper
         long_haul: "#{Achievement::LONG_HAUL.to_i} s"
       }.freeze
 
+      # How each is earned, in a sentence a player can act on.
+      HOW = {
+        sharpshooter: "Pop a bright dot with less than #{(Achievement::SHARP * 100).round}% of it showing.",
+        sharp_trio: "Pop #{Achievement::SHARP_TRIO} bright dots in one game with less than #{(Achievement::SHARP_TRIO_BELOW * 100).round}% of each showing.",
+        patience: "When a bright dot appears with no clear spot to tap, tap nothing for at least #{Achievement::PATIENCE.to_i} seconds, then pop it.",
+        blink: "Pop a bright dot within #{Achievement::BLINK} seconds of the one before.",
+        steady: "Pop #{Achievement::STEADY} dots in a row without a mistake, in one game.",
+        unshaken: "Pop #{Achievement::UNSHAKEN} dots in a row without a mistake, in one game.",
+        shake_off: "After a mistake, pop #{Achievement::SHAKE_OFF} dots in a row without another.",
+        comeback: "Let the clock fall to #{Achievement::BRINK.to_i} seconds, then bring it back to #{Achievement::BACK.to_i}.",
+        fast_start: "Pop #{Achievement::FAST_START} bright dots in the first #{Achievement::FAST_START_SECONDS.to_i} seconds of a game.",
+        big_score: "Score #{Achievement::BIG_SCORE} points in one game.",
+        long_haul: "Keep one game going for #{Achievement::LONG_HAUL.to_i} seconds."
+      }.freeze
+      # The glyphs (Shell::Glyphs) each is drawn with, named after what it asks.
+      GLYPHS = { sharpshooter: :crosshair, sharp_trio: :trio, patience: :hourglass, blink: :eye, steady: :hand, unshaken: :mountain,
+                 shake_off: :shake, comeback: :stairs, fast_start: :bolt, big_score: :star, long_haul: :road }.freeze
+
+      def self.how(id) = HOW.fetch(id)
+      def self.glyph(id) = GLYPHS.fetch(id)
       def self.name(id) = NAMES.fetch(id)
+      def self.earned_on(day) = "Earned #{Date.iso8601(day).strftime("%B %-d, %Y")}"
+      def self.count(earned) = "#{earned} of #{Achievement::IDS.size}"
       def self.mark(id) = MARKS.fetch(id)
 
       # "Achievements: 3 of 11", over the list.

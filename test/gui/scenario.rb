@@ -241,6 +241,23 @@ module DotPopperGui
 
     def saved(name) = File.join(L::Filesystem.save_directory, name)
 
+    # A point on the screen that no button reaches, searched for across
+    # the safe area, as a window's size and its display's scale place
+    # the buttons differently.
+    def empty_point
+      safe = layout.safe
+      points = (1..9).flat_map { |row| (1..9).map { |column| [safe.x + (safe.width * column / 10.0), safe.y + (safe.height * row / 10.0)] } }
+      points.find { |x, y| show.control_at(x, y).nil? } || fail!("every point reaches a button")
+    end
+
+    # Scrolls a screen that is too short to show the button +name+ whole
+    # until it is there, and returns where a press reaches it.
+    def reveal(name)
+      show.scroll_key(:end) unless show.reach_of(name)
+      frames
+      show.reach_of(name) || fail!("the screen never shows #{name.inspect}")
+    end
+
     # Pixel checks, in graphics units
 
     # Checks the fresh dot's middle shows a fresh dot's warm, light body.

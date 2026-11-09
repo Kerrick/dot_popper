@@ -21,7 +21,7 @@ class StatsSheetTest < Minitest::Test
                                         field: DotPopper::Field.new(1200, 800, R))
 
   def test_the_sheet_shows_the_daily_goals_streaks
-    assert_equal [["Days in a row you've met it", "3 days"], ["Most days in a row", "7 days"]],
+    assert_equal [["Days in a row", "3 days"], ["Most days in a row", "7 days"]],
                  sheet.goal.rows.map { [it.label, it.value] }
   end
 
@@ -93,74 +93,10 @@ class StatsSheetTest < Minitest::Test
     assert_in_delta 100.0, bars[1].height
   end
 
-  def test_the_chart_dims_other_groups_games_and_says_so
-    mixed = stats.with(recent_classes: [nil, DotPopper::SizeClass::SMALL, MEDIUM, MEDIUM])
-    sheet = StatsSheet.build(mixed, score_record: 27, words: Style::WORDS, size_class: MEDIUM)
-    fitted = StatsSheet.build(mixed, score_record: 0, words: Style::WORDS, size_class: DotPopper::SizeClass::FITTED,
-                                       sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
-
-    assert_equal [false, false, true, true], sheet.mine, "an old game's group is unknown"
-    assert_equal "Brighter bars are games with standard dots on screens this size.", sheet.chart_note
-    assert_equal "Brighter bars are games with dots sized to the screen.", fitted.chart_note
-    assert_nil StatsSheet.build(stats, score_record: 27, words: Style::WORDS, size_class: MEDIUM).chart_note,
-               "with every bar bright there is nothing to explain"
-    plan = StatsLayout.new(layout: layout(400, 850), sheet:, style: Style::RECORDS)
-    assert_equal ["Your last 4 games", :chart, ChartNote.new(text: sheet.chart_note)],
-                 plan.placements.first(3).map(&:item)
-  end
-
   def test_twenty_slots_leave_room_for_the_games_to_come
     bars = ScoreBars.new(scores: [4]).bars(Rect.new(x: 0, y: 0, width: 200, height: 50), Pixels.new(scale: 1))
 
     assert_operator bars.first.width, :<, 10
   end
 
-  def test_a_wide_window_has_two_columns_and_a_narrow_one_stacks
-    wide = StatsLayout.new(layout: layout(1200, 800), sheet:, style: Style::RECORDS)
-    narrow = StatsLayout.new(layout: layout(400, 850), sheet:, style: Style::RECORDS)
-
-    assert wide.wide?
-    assert_equal 2, wide.placements.map(&:x).uniq.size
-    refute narrow.wide?
-    assert_equal 1, narrow.placements.map(&:x).uniq.size
-  end
-
-  def test_everything_fits_between_the_heading_and_the_prompt
-    [[1200, 800], [400, 850], [400, 320], [800, 600], [2560, 1440]].each do |width, height|
-      plan = StatsLayout.new(layout: layout(width, height), sheet:, style: Style::RECORDS)
-      assert_operator plan.note_y(0), :>, plan.heading_y, "#{width}x#{height}"
-      plan.placements.each do |placed|
-        assert_operator placed.y, :>, plan.note_y(0), "#{width}x#{height}"
-        assert_operator placed.x, :>=, 0, "#{width}x#{height}"
-        assert_operator placed.right, :<=, width, "#{width}x#{height}"
-        assert_operator placed.y, :>, plan.heading_y, "#{width}x#{height}"
-        bottom = placed.item == :chart ? placed.y + placed.height : placed.y
-        assert_operator bottom, :<, plan.prompt_y, "#{width}x#{height}"
-      end
-      assert_operator plan.text_size, :>=, StatsLayout::SMALLEST_TEXT
-    end
-  end
-
-  def test_the_chart_leads_when_there_are_scores
-    plan = StatsLayout.new(layout: layout(400, 850), sheet:, style: Style::RECORDS)
-
-    assert_equal ["Your last 4 games", :chart, "Your stats with standard dots on screens this size"],
-                 plan.placements.first(3).map(&:item)
-  end
-
-  # A column is only as wide as its longest row needs, so a label stays
-  # near its number, and the columns stay centred together.
-  def test_columns_are_as_wide_as_their_rows_need_and_centred
-    plan = StatsLayout.new(layout: layout(1200, 800), sheet:, style: Style::RECORDS, widest: 400)
-    lefts = plan.placements.map(&:x).uniq
-
-    assert plan.wide?
-    assert_equal [400], plan.placements.map(&:width).uniq
-    assert_in_delta 600, (lefts.min + lefts.max + 400) / 2.0, 0.01
-  end
-
-  def test_two_columns_only_when_both_fit_side_by_side
-    refute StatsLayout.new(layout: layout(1000, 800), sheet:, style: Style::RECORDS, widest: 520).wide?
-    assert StatsLayout.new(layout: layout(1000, 800), sheet:, style: Style::RECORDS, widest: 420).wide?
-  end
 end

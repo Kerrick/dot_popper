@@ -219,18 +219,18 @@ module DotPopper
     # license to show as written, if wider than the theme's column.
     class CreditsLayout < Data.define(:layout, :style, :wanted)
       def initialize(layout:, style:, wanted: 0.0) = super
-      def heading_size = layout.scaled(Style::RECORDS.heading)
-      def heading_y = layout.top + (heading_size * 0.6)
+      def heading_size = layout.heading_size
+      def heading_y = layout.heading_y
       def text_size = [layout.scaled(style.text), StatsLayout::SMALLEST_TEXT].max
       def line = text_size * style.line
       def room = [layout.safe.width - (layout.margin * 2), [layout.scaled(style.column), wanted.ceil].max].min
 
       def window
-        top = heading_y + (heading_size * 0.8) + (layout.margin * 0.5)
+        top = layout.short? ? layout.back_button.bottom + layout.page_margin : heading_y + (heading_size * 0.8) + (layout.margin * 0.5)
         Rect.new(x: layout.center_x - (room / 2.0), y: top, width: room, height: [bottom - top, 0.0].max)
       end
 
-      def bottom = layout.back_button.y - layout.margin
+      def bottom = layout.short? ? layout.safe.bottom - layout.page_margin : layout.back_button.y - layout.page_margin
     end
   end
 end

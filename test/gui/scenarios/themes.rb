@@ -11,9 +11,8 @@ module DotPopperGui
       keeper = show.instance_variable_get(:@theme_keeper)
       keeper.told(keeper.arrival) until keeper.arrival.nil?
       quick_game
-      open_stats
-      check(show.themes_offered?, "the Stats screen offers Themes once the server has unlocked a theme")
       reach = show.reach_of(:themes)
+      check(reach, "Home offers Themes")
       click(reach.center_x, reach.center_y)
       check(show.themes?, "a click on Themes opens it")
       cards = show.themes_layout.cards
@@ -27,19 +26,12 @@ module DotPopperGui
       click(ghost.center_x, ghost.center_y)
       check(show.in_use.key == :ghost, "a click on Ghost's card uses it")
       key(:escape)
-      check(show.stats? && !show.themes?, "Escape leaves Themes for the Stats screen")
-      key(:escape)
-      check(show.home?, "and then the Stats screen for the title")
+      check(show.on_home?, "Escape leaves Themes for Home")
       start_game
       check(show.palette.equal?(show.in_use.palette), "the game takes the colors of the theme in use")
     end
 
     private
 
-    def open_stats
-      reach = show.stats_reach
-      click(reach.center_x, reach.center_y)
-      check(show.stats?, "a click on Your stats opens them")
-    end
   end
 end

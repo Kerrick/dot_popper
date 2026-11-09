@@ -21,7 +21,7 @@ A game starts with 10 seconds on the clock. Each dot you pop gives you a point a
 ## What's in the game
 
 - **Free and Pro.** The game is Free to start. On a phone or tablet, a Free copy has a first stock of games that never refills, and 3 games a day that don't carry over; each game you start spends the day's first, so the stock lasts. The title says how many games are left, and watching the tutorial or How to play costs none, but the game it goes on into does. There is no way to earn more: Pro, bought once, makes games unlimited and adds Achievements, Themes and Friend groups. Those look the same to everyone; a Free player who taps one is taken to the Pro page, opening with what they tapped, and Back returns to where they were. When no games are left, Play opens the same page, which also has Restore Purchases for a purchase you already made. A computer's copy has no store to buy from yet, so it counts nothing.
-- **A goal for each day.** Dot Popper sets one goal each day for a single game, the same for every player that day, such as "score 10 points in a game without a single mistake" or "pop a bright dot that has been on screen for at least 3 seconds." Meet it on days in a row, and the game counts your streak on the title screen.
+- **A goal for each day.** Dot Popper sets one goal each day for a single game, the same for every player that day, such as "score 10 points in a game without a single mistake" or "pop a bright dot that has been on screen for at least 3 seconds." Meet it on days in a row, and the game counts your streak on Home.
 - **Stats and records.** On the Stats screen, the game keeps your record score, your longest game, your most dots in a row without a mistake, your shortest and longest time to pop, and a chart of your last 20 games, with totals for every game you have played.
 - **Themes.** Now and then a new theme arrives, such as ghosts or jack-o'-lanterns: its own dots, night and sounds. The game tells you once, with a preview and one tap to switch, and it stays yours from then on, offline too. Pro players can wear any theme from Themes. A theme never changes how the game plays, or where you can tap.
 - **A pile to play with.** When time runs out, the dots tumble into a heap at the bottom of the screen. Grab one and throw it while you read your score.
@@ -45,7 +45,7 @@ A game starts with 10 seconds on the clock. Each dot you pop gives you a point a
 
 At the start of each game, Dot Popper sizes the dots to your screen, so that every screen is about as crowded as a 1200 × 800 window. That narrows the difference between screens, but not all of it: scores still differ between screen sizes and between ways of playing, such as a mouse, a finger or a controller.
 
-On a screen where the size makes a visible difference, such as a large monitor in fullscreen, the game offers a Dot size choice on the title screen. Standard dots are the same size on every screen: a large screen gives you more room, and a small window crowds sooner. Dot Popper keeps your records with standard dots apart for small, medium, and large screens, so a game on one never competes with a game on another.
+On a screen where the size makes a visible difference, such as a large monitor in fullscreen, the game offers a Dot size choice in Settings. Standard dots are the same size on every screen: a large screen gives you more room, and a small window crowds sooner. Dot Popper keeps your records with standard dots apart for small, medium, and large screens, so a game on one never competes with a game on another.
 
 ## Install
 
@@ -72,23 +72,25 @@ Dot Popper does not update itself. Download the newest release and install it ov
 
 Press Play, and pop the bright dot, again and again, until the clock runs out.
 
-The first time you press Play, a short tutorial with no words shows you how, in about 20 seconds: a dot popping, the point and second it gives, what a click on a popped dot costs and does to your dots in a row, and a bright dot to wait for. The clock waits meanwhile, a click on a popped dot does nothing, and when the tutorial ends, your first game goes on from it, with its dots, its points and its time, and the clock starts. Skip it with the ⏭ button in the corner, Escape, or B on a controller. It never opens by itself again, even after you clear your records, but How to play, in the title's bottom right corner, plays it whenever you like, and H or Y on a controller does too. Your game then goes on from it, as it does the first time.
+The first time you press Play, a short tutorial with no words shows you how, in about 20 seconds: a dot popping, the point and second it gives, what a click on a popped dot costs and does to your dots in a row, and a bright dot to wait for. The clock waits meanwhile, a click on a popped dot does nothing, and when the tutorial ends, your first game goes on from it, with its dots, its points and its time, and the clock starts. Skip it with the ⏭ button in the corner, Escape, or B on a controller. It never opens by itself again, even after you clear your records, but How to play, at the bottom of Home once you have played a game, plays it whenever you like, and H or Y on a controller does too. Your game then goes on from it, as it does the first time.
 
 | To | With a mouse and keyboard | With a controller |
 | --- | --- | --- |
 | Pop a dot | Click it | Aim with the left stick or the d-pad, and press A or the right trigger |
-| Start a game, or continue after one | Click Play or Continue, or press Enter or Space | Start, or A on the button |
-| Open your stats, from the title | Click Your stats | X |
-| Watch how to play again, from the title | Click How to play, or press H | Y |
-| Leave the Stats screen | Click Back, or press Escape | B, or Start |
+| Start a game, or continue after one | Click Play or Continue, or press Enter or Space | A, or Start |
+| Open Stats, Achievements or Themes, from Home | Click its button | X, LB or RB |
+| Watch how to play again, from Home | Click How to play, or press H | Y |
+| Open Settings, from Home | Click Settings | View (also called Back or Select) |
+| Go back | Click Back, or press Escape | B |
+| Scroll a list | The mouse wheel, the arrow and Page keys, or drag it | The right stick |
 | Share your score, after a game | Click Share my score, then Copy. Escape closes it | Y, then Y or A to copy. B closes it |
 | Throw a dot, after a game | Drag it and let go | Hold A on a dot, move, and let go. The right stick rolls the whole pile |
-| Change the dot size, from the title | Click the Dot size choice | Either shoulder button |
-| Turn the sound off or on | Press M, or click the speaker in the corner of the title | Back (also called View or Select) |
-| Switch to fullscreen and back | Click Full screen (Window, in fullscreen) on the title, or press F11, or Alt+Enter (Cmd+Enter on a Mac) | Aim at Full screen on the title, and press A |
-| Quit | Click Quit on the title, or press Escape, on the title or during a game | B twice, on the title |
+| Change the dot size | Choose it in Settings | LB, in Settings |
+| Turn the sound off or on | Press M, or choose it in Settings | View, in Settings |
+| Switch to fullscreen and back | Choose Window, Borderless or Full screen in Settings, or press F11, or Alt+Enter (Cmd+Enter on a Mac) | RB, in Settings |
+| Quit | Click Quit on Home, or press Escape, on Home or during a game | B twice, on Home |
 
-On a Mac, Windows or Linux, Full screen and Quit sit between How to play and the speaker, in the title's bottom row, so the mouse alone can fill the screen and leave the game, even in fullscreen, where the window's own buttons are gone. From the Stats screen or Game Over, click Back or Continue to get to the title. On a small window, they show only their icons, and on the smallest, in the title's top right corner.
+On a Mac, Windows or Linux, Quit sits beside Settings at the bottom of Home, and Settings holds the Display choice, so the mouse alone can fill the screen and leave the game, even in fullscreen, where the window's own buttons are gone. From any other screen, click Back or Continue to get Home.
 
 ## Good to know
 

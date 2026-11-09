@@ -67,8 +67,8 @@ class AutopilotTest < Minitest::Test
     assert_equal 2, games
   end
 
-  # 800 by 600 fits smaller dots, so once a game has finished the title
-  # offers the choice, and the pilot switches it once.
+  # 800 by 600 fits smaller dots, so once a game has finished Settings
+  # offers the choice, and the pilot switches it once there.
   def test_it_switches_the_dot_size_once_the_title_offers_it
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
     show = Show.new(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R)

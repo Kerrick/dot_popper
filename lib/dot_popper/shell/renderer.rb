@@ -27,8 +27,11 @@ module DotPopper
         @dots = DotPainter.new(pen:)
         @effects = EffectsPainter.new(pen:, sparks:)
         @hud = HudPainter.new(pen:, dots: @dots)
-        @title = HomePainter.new(pen:, dots: @dots)
+        @home = HomePainter.new(pen:, dots: @dots)
         @stats = StatsPainter.new(pen:)
+        @settings = SettingsPainter.new(pen:, dots: @dots)
+        @achievements = AchievementsPainter.new(pen:)
+        @privacy = PrivacyPainter.new(pen:)
         @credits = CreditsPainter.new(pen:)
         @themes = ThemesPainter.new(pen:, dots: @dots)
         @offer = OfferPainter.new(pen:)
@@ -52,19 +55,19 @@ module DotPopper
           tutorial(width, height, layout)
         elsif @show.home?
           @dots.draw(@show.attract.dots, @at_rest, @show.now, radius)
-          if @show.stats?
+          if @show.offer?
             veil(width, height, @pen.style::RECORDS.veil)
-            if @show.offer? then @offer.draw(@show, layout)
-            else stats_screen.draw(@show, layout)
-            end
+            @offer.draw(@show, layout)
+          elsif @show.page
+            veil(width, height, @pen.style::RECORDS.veil)
+            page_screen.draw(@show, layout)
+            @achievements.dialog(@show, layout) if @show.dialog
           elsif @show.group_open?
             veil(width, height, @pen.style::GROUPS.veil)
-            if @show.offer? then @offer.draw(@show, layout)
-            else @group.draw(@show, layout)
-            end
+            @group.draw(@show, layout)
           else
             veil(width, height, @pen.style::HOME.dim)
-            @title.draw(@show, layout)
+            @home.draw(@show, layout)
             @arrival.draw(@show, layout) if @show.arrival?
           end
         else
@@ -86,7 +89,7 @@ module DotPopper
           @share.draw(@show, layout, width, height)
           banner(layout) unless @show.playing?
         end
-        banner(layout) if @show.home? && !@show.group_open? && !@show.stats?
+        banner(layout) if @show.on_home? || @show.game_over?
         splash ? @splash.draw(splash) : @cursor.draw(cursor)
       end
 
@@ -97,12 +100,15 @@ module DotPopper
 
       def radius = @show.cabinet.field.radius
 
-      # The screen open over the title's dimmed dots: Credits, Themes, or
-      # the Stats screen they were opened from.
-      def stats_screen
-        if @show.credits? then @credits
-        elsif @show.themes? then @themes
-        else @stats
+      # The screen open over Home's dimmed dots.
+      def page_screen
+        case @show.page
+        when :stats then @stats
+        when :themes then @themes
+        when :credits then @credits
+        when :achievements then @achievements
+        when :settings then @settings
+        when :privacy then @privacy
         end
       end
 
