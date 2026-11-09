@@ -20,9 +20,19 @@ module DotPopper
     class Session
       # A request to make, and +then+ one to make after it succeeds.
       # +group_id+ is the group it is about, and +loud+ that the player is
-      # waiting to hear how it went.
+      # waiting to hear how it went. Made only by Job.of, from what
+      # REQUESTS declares, so nothing goes out that isn't declared.
       class Job < Data.define(:kind, :verb, :path, :body, :then, :group_id, :loud)
         def initialize(kind:, verb:, path:, body: nil, then: nil, group_id: nil, loud: false) = super
+
+        def self.of(kind, body: nil, group_id: nil, **rest)
+          request = REQUESTS.fetch(kind)
+          raise ArgumentError, "#{kind} sends #{body.to_h.keys}, but declares #{request.body.keys}" unless body.to_h.keys == request.body.keys
+
+          new(kind:, verb: request.verb, path: request.path_for(group_id), body:, group_id:, **rest)
+        end
+
+        private_class_method :new, :[]
       end
 
       # What this device remembers of a group's title: the newest change it
@@ -97,19 +107,19 @@ module DotPopper
         return unless known?
 
         @error = nil if @groups.empty?
-        ask(Job.new(kind: :groups, verb: :get, path: "/groups", loud: @groups.empty?))
+        ask(Job.of(:groups, loud: @groups.empty?))
       end
 
-      def create = as_player(Job.new(kind: :create, verb: :post, path: "/groups", loud: true))
-      def join(code) = as_player(Job.new(kind: :join, verb: :post, path: "/memberships", body: { join_code: code }, loud: true))
+      def create = as_player(Job.of(:create, loud: true))
+      def join(code) = as_player(Job.of(:join, body: { join_code: code }, loud: true))
 
       def look_at(id)
-        ask(Job.new(kind: :group, verb: :get, path: "/groups/#{id}", group_id: id))
+        ask(Job.of(:group, group_id: id))
         fetch_changes(id)
       end
 
-      def leave(id) = ask(Job.new(kind: :left, verb: :delete, path: "/groups/#{id}/membership", group_id: id, loud: true))
-      def delete_everything = ask(Job.new(kind: :deleted, verb: :delete, path: "/player", loud: true))
+      def leave(id) = ask(Job.of(:left, group_id: id, loud: true))
+      def delete_everything = ask(Job.of(:deleted, loud: true))
 
       # A game just ended. The server cannot tell how a score was won, so
       # only a game that counts is sent: one played by a member, with dots
@@ -168,21 +178,21 @@ module DotPopper
         @error = nil
         return @error = :too_many_tries if waiting_out?
 
-        known? ? ask(job) : ask(Job.new(kind: :player, verb: :post, path: "/player", then: job, loud: true))
+        known? ? ask(job) : ask(Job.of(:player, then: job, loud: true))
       end
 
       def send_pending
         return unless @pending && member? && !@sending && !waiting_out?
 
         @sending = true
-        ask(Job.new(kind: :cabinet, verb: :post, path: "/games", body: { score: @pending }))
+        ask(Job.of(:cabinet, body: { score: @pending }))
       end
 
       def fetch_changes(id)
         return if @fetching.include?(id)
 
         @fetching << id
-        ask(Job.new(kind: :changes, verb: :get, path: "/groups/#{id}/title_changes", group_id: id))
+        ask(Job.of(:changes, group_id: id))
       end
 
       def waiting_out? = @wait_until && @clock.call.to_i < @wait_until

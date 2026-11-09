@@ -135,6 +135,21 @@ class GroupPanelTest < Minitest::Test
     assert_empty @worker.started
   end
 
+  # The gesture doc/privacy.json describes: the control on the list screen,
+  # held, asks the server to delete this player.
+  def test_holding_delete_my_data_deletes_the_player_from_the_server
+    join!
+    panel.open
+    tick
+
+    assert_equal Words.delete, @show.group_plan.actions.find { it.name == :group_delete }.text
+    tap_control(:group_delete)
+    tick(DotPopper::Presentation::GroupPanel::HOLD + 0.1)
+    tick
+
+    assert_equal :deleted, @worker.started.last.first.kind
+  end
+
   def test_leaving_and_deleting_never_need_it
     join!
     tap_control(:group_leave)

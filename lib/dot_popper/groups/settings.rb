@@ -6,7 +6,7 @@ module DotPopper
     # uses SERVER_URL; DOT_POPPER_SERVER names another server, to try one
     # out (empty, none, and the game then offers no groups and makes no
     # network connection). Nothing is sent until a Pro player creates or
-    # joins a group (doc/publishing.md says what then).
+    # joins a group (doc/privacy.json says what then).
     module Settings
       SERVER_URL = "https://server.dot-popper.setdef.com"
       OVERRIDE = "DOT_POPPER_SERVER"
