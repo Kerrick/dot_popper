@@ -11,53 +11,61 @@ module DotPopper
     # One theme on the Themes screen, where it is drawn.
     class ThemeCard < Data.define(:theme, :rect); end
 
-    # The Themes screen laid out in the safe area: the heading at the top,
-    # Back (Layout#back_button) at the bottom, and between them one card
-    # for each theme, in the most even grid the room allows, as large as it
-    # can be and no larger than +style.widest+. The grid sits a little above
-    # the middle of its room, and a short last row is centred.
+    # The Themes screen laid out under its heading (Layout#heading_y), over
+    # Back: one card for each theme, all in one row where each still has
+    # room for its name, and otherwise two to a row, the first across the
+    # whole width when the count is odd. The cards sit a little above the
+    # middle of their room. On a controller, LB and RB stand at the top
+    # right, where Back's row is on a short window.
     class ThemesLayout < Data.define(:layout, :themes, :style)
-      def heading_size = layout.scaled(style.heading)
-      def heading_y = layout.top + (heading_size * 0.6)
+      NARROWEST = 150.0 # a card's least width in a single row
+
+      def heading_size = layout.heading_size
+      def heading_y = layout.heading_y
+
       def cards
-        columns, width = best
-        height = width * style.ratio
-        gap = layout.margin * style.gap
-        rows = themes.each_slice(columns).to_a
-        block = (rows.size * height) + ((rows.size - 1) * gap)
-        top = room.y + [(room.height - block) / 3.0, 0.0].max
-        rows.each_with_index.flat_map do |row, r|
-          left = layout.center_x - (((row.size * width) + ((row.size - 1) * gap)) / 2.0)
-          row.each_with_index.map do |theme, i|
-            ThemeCard.new(theme:, rect: Rect.new(x: left + (i * (width + gap)), y: top + (r * (height + gap)), width:, height:))
-          end
-        end
+        gap = layout.page_margin * 0.6
+        across = (room.width - ((themes.size - 1) * gap)) / themes.size
+        width = [across, layout.scaled(style.widest)].min
+        return row(width, gap) if width >= NARROWEST && width * style.ratio <= room.height
+
+        grid(gap)
+      end
+
+      # LB and RB, the previous and the next theme, at the top right.
+      def steps
+        size = layout.control_height
+        width = size * 1.3
+        right = layout.safe.right - layout.page_margin
+        y = layout.short? ? layout.back_button.y : layout.safe.y + layout.page_margin
+        [[:theme_prev, Rect.new(x: right - (2 * width) - 8, y:, width:, height: size)], [:theme_next, Rect.new(x: right - width, y:, width:, height: size)]]
       end
 
       private
 
-      # What the cards may fill: under the heading, over Back.
-      def room
-        top = heading_y + (heading_size * 0.8)
-        bottom = layout.back_button.y - layout.margin
-        Rect.new(x: layout.safe.x + layout.margin, y: top, width: layout.safe.width - (2 * layout.margin),
-                 height: [bottom - top, 0.0].max)
+      def room = layout.page
+
+      def row(width, gap)
+        height = width * style.ratio
+        left = layout.center_x - (((themes.size * width) + ((themes.size - 1) * gap)) / 2.0)
+        top = room.y + [(room.height - height) / 3.0, 0.0].max
+        themes.each_with_index.map { |theme, i| ThemeCard.new(theme:, rect: Rect.new(x: left + (i * (width + gap)), y: top, width:, height:)) }
       end
 
-      # The number of columns and the card width that make the biggest
-      # cards; among those within a sixth of the biggest, the grid
-      # nearest square.
-      def best
-        gap = layout.margin * style.gap
-        sizes = (1..themes.size).map do |columns|
-          rows = (themes.size.to_f / columns).ceil
-          across = (room.width - ((columns - 1) * gap)) / columns
-          down = (room.height - ((rows - 1) * gap)) / rows / style.ratio
-          [columns, [across, down, layout.scaled(style.widest)].min, rows]
+      def grid(gap)
+        width = (room.width - gap) / 2.0
+        rows = (themes.size / 2.0).ceil
+        height = [width * style.ratio * 0.9, (room.height - ((rows - 1) * gap)) / rows].min
+        first, *rest = themes.size.odd? ? [themes.first(1), *themes.drop(1).each_slice(2)] : themes.each_slice(2).to_a
+        top = room.y
+        [first, *rest].each_with_index.flat_map do |slice, r|
+          y = top + (r * (height + gap))
+          if slice.size == 1
+            [ThemeCard.new(theme: slice.first, rect: Rect.new(x: room.x, y:, width: room.width, height:))]
+          else
+            slice.each_with_index.map { |theme, i| ThemeCard.new(theme:, rect: Rect.new(x: room.x + (i * (width + gap)), y:, width:, height:)) }
+          end
         end
-        biggest = sizes.map { it[1] }.max
-        columns, width, = sizes.select { it[1] >= biggest * 5 / 6.0 }.min_by { (it[0] - it[2]).abs }
-        [columns, width]
       end
     end
   end

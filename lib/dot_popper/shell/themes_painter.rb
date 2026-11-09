@@ -15,10 +15,19 @@ module DotPopper
 
       def draw(show, layout)
         plan = show.themes_layout
-        pen.text(show.words.themes.fetch(:title), pen.fonts.bold(plan.heading_size), layout.center_x, plan.heading_y,
-                 pen.palette.cream)
+        Header.new(pen:).draw(show, layout, show.words.themes.fetch(:title))
         plan.cards.each { card(it, show) }
-        PillButton.new(pen:).draw(layout.back_button, show.words.go_back, hover: show.hover.level(:back))
+        steps(show, plan) if show.input == Presentation::InputKind::GAMEPAD
+      end
+
+      # LB and RB, labelled with their arrows, at the top right.
+      def steps(show, plan)
+        glyphs = Glyphs.new(pen:)
+        plan.steps.each do |name, rect|
+          back = name == :theme_prev
+          PillButton.new(pen:).draw(rect, back ? "LB" : "RB", hover: show.hover.level(name),
+                                    icon: ->(x, y, size) { glyphs.draw(back ? :chevron_left : :chevron_right, x, y, size * 0.36) })
+        end
       end
 
       private
@@ -33,7 +42,7 @@ module DotPopper
         pen.color(palette.ink_top)
         G.rectangle(:fill, rect.x, rect.y, rect.width, rect.height, corner, corner, 32)
         pair(rect, theme)
-        name(show.words.themes.fetch(theme.key), rect, palette)
+        name(show.words.themes.fetch(theme.key), rect, theme)
         shade(rect, corner, palette) unless show.theme_open?(theme)
         outline(rect, corner, chosen, hover)
         tick(rect, palette) if chosen
@@ -59,10 +68,15 @@ module DotPopper
         end
       end
 
-      def name(text, rect, palette)
-        size = (rect.height * 0.15).round
-        size -= 1 while size > 10 && pen.fonts.semibold(size).width(text) > rect.width * 0.9
-        pen.text(text, pen.fonts.semibold(size), rect.center_x, rect.bottom - (rect.height * 0.14), palette.cream)
+      # The theme's name in its own lettering and its bright dot's color,
+      # as its title on Home is set.
+      def name(text, rect, theme)
+        art = theme.art
+        face = art&.wordmark || pen.style::TYPE.bold
+        text = text.upcase if art&.wordmark && art.title_dots
+        size = [(rect.height * 0.13).round, 24].min
+        size -= 1 while size > 10 && pen.fonts.face(face, size).width(text) > rect.width * 0.9
+        pen.text(text, pen.fonts.face(face, size), rect.center_x, rect.bottom - (rect.height * 0.2), theme.palette.fresh_body)
       end
 
       def outline(rect, corner, chosen, hover)

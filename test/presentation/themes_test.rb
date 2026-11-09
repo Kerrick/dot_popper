@@ -89,4 +89,18 @@ class ThemesTest < Minitest::Test
       end
     end
   end
+  # Every theme in one row where each card has room for its name, as on
+  # a computer's window; on a phone, two to a row, the first across the
+  # whole width when the count is odd.
+  def test_the_cards_stand_in_one_row_or_two_to_a_row
+    themes = Style::THEMES
+    wide = ThemesLayout.new(layout: layout(1200, 800), themes:, style: Style::THEMES_LAYOUT).cards
+    assert_equal [wide.first.rect.y], wide.map { it.rect.y }.uniq
+
+    narrow = ThemesLayout.new(layout: layout(400, 850), themes:, style: Style::THEMES_LAYOUT).cards
+    first, *rest = narrow.map(&:rect)
+    assert_operator first.width, :>, rest.first.width * 1.5, "the first spans the width" if themes.size.odd?
+    assert_equal 2, rest.map(&:y).tally.values.max, "the rest two to a row"
+  end
+
 end

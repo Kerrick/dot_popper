@@ -301,6 +301,8 @@ module DotPopper
         in :achievement_next then step_achievement(1)
         in :achievement_pro then achievement_pro
         in Theme => theme then use(theme)
+        in :theme_prev then step_theme(-1)
+        in :theme_next then step_theme(1)
         in :how_to_play then how_to_play
         in [:sound, on] then set_sound(on)
         in [:display, mode] then window.display = mode
@@ -1209,7 +1211,9 @@ module DotPopper
       end
 
       def themes_controls
-        themes_layout.cards.map { button(it.theme, it.rect) } << button(:back, layout.back_button)
+        plan = themes_layout
+        steps = input == InputKind::GAMEPAD ? plan.steps.map { |name, rect| button(name, rect) } : []
+        plan.cards.map { button(it.theme, it.rect) } + steps << button(:back, layout.back_button)
       end
 
       def offer_controls

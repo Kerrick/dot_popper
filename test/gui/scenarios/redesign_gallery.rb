@@ -46,6 +46,11 @@ module DotPopperGui
       show.back
       page(:open_stats, "stats")
       show.back
+      page(:open_themes, "themes")
+      show.input = P::InputKind::GAMEPAD
+      shoot("themes-gamepad", settle: 0.3)
+      show.input = phone ? P::InputKind::TOUCH : P::InputKind::MOUSE
+      show.back
       page(:open_achievements, "achievements")
       show.open_achievement(DotPopper::Achievement::IDS.first)
       shoot("ach-open")

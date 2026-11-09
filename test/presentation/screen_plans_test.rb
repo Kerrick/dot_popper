@@ -275,6 +275,9 @@ class ScreenPlansTest < Minitest::Test
     show.back
     show.open_themes
     yield "Themes", show
+    show.input = InputKind::GAMEPAD
+    yield "Themes with a controller", show
+    show.input = InputKind::MOUSE
     show.back
     show.open_settings
     yield "Settings", show
