@@ -41,7 +41,7 @@ class GroupStub
     when "POST /memberships" then join(body["join_code"])
     when "POST /games" then cabinet(body["score"].to_i)
     when %r{\AGET /groups/(\d+)\z} then one($1.to_i)
-    when %r{\AGET /groups/(\d+)/title_changes\z} then Reply.new(200, @changes.fetch($1.to_i, []).first(20))
+    when %r{\AGET /groups/(\d+)/history\z} then Reply.new(200, @changes.fetch($1.to_i, []).first(20))
     when %r{\ADELETE /groups/(\d+)/membership\z} then leave($1.to_i)
     else Reply.new(404, {})
     end
@@ -74,11 +74,11 @@ class GroupStub
     return group unless group[:won]
 
     previous = group[:champion]
-    change = { id: @next_change, champion_number: group[:you], previous_champion_number: previous, score:, won_at: Time.now.utc.iso8601 }
+    change = { id: @next_change, champion_number: group[:you], previous_champion_number: previous, score:, at: Time.now.utc.iso8601 }
     @next_change += 1
     @changes[group[:id]] = [change, *@changes[group[:id]]]
     group[:members][group[:you]] = score
-    group.merge!(top_score: score, champion: group[:you], reign_started_at: change[:won_at])
+    group.merge!(top_score: score, champion: group[:you], reign_started_at: change[:at])
   end
 
   def new_group(you:, joined:)
@@ -107,7 +107,7 @@ class GroupStub
     Array.new(11) do |i|
       champion = i.zero? ? 7 : ((i * 3) % 8) + 1
       previous = i == 10 ? nil : ((i + 1) * 3 % 8) + 1
-      { id: 100 - i, champion_number: champion, previous_champion_number: previous, score: SCORES.first - (i * 17), won_at: format("2026-10-%02dT10:00:00Z", 28 - i) }
+      { id: 100 - i, champion_number: champion, previous_champion_number: previous, score: SCORES.first - (i * 17), at: format("2026-10-%02dT10:00:00Z", 28 - i) }
     end
   end
 end

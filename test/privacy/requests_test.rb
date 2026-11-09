@@ -55,8 +55,8 @@ class PrivacyRequestsTest < Minitest::Test
     when "/groups", "/memberships"
       head.start_with?("GET") ? JSON.generate([GROUP]) : JSON.generate(GROUP)
     when %r{\A/groups/\d+\z} then JSON.generate(GROUP)
-    when %r{/title_changes\z}, "/themes" then "[]"
-    when "/games" then JSON.generate("groups" => [])
+    when %r{/history\z}, "/themes" then "[]"
+    when "/games", "/achievements" then JSON.generate("groups" => [])
     else "{}"
     end
   end
@@ -72,6 +72,8 @@ class PrivacyRequestsTest < Minitest::Test
     @session.create
     pump
     @session.look_at(1)
+    pump
+    @session.report_achievements(["steady"])
     pump
     @session.game_finished(score: 7, sized_to_screen: true)
     pump

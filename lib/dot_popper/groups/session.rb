@@ -78,6 +78,9 @@ module DotPopper
         @running = 0
         @groups = []
         @changes = {}
+        @history = {}
+        @unsent_achievements = []
+        @sending_achievements = []
         @fetching = []
         @announcements = []
         @error = nil
@@ -98,6 +101,9 @@ module DotPopper
       def group(id) = @groups.find { it.id == id }
       # A group's title changes, newest first, or nil before they are read.
       def title_changes(id) = @changes[id]
+      # A group's history, title changes and members' achievements together,
+      # newest first, or nil before it is read.
+      def history(id) = @history[id]
       # Whether a counting game has ended and its result is still awaited.
       def result_due? = @result_due
 
@@ -119,6 +125,19 @@ module DotPopper
       end
 
       def leave(id) = ask(Job.of(:left, group_id: id, loud: true))
+
+      # Keys of achievements a Pro player has earned, sent once each to
+      # the groups they are in (retries are harmless, and a key that
+      # could not be sent waits for the next contact).
+      def report_achievements(keys)
+        new_keys = keys.map(&:to_s) - @unsent_achievements
+        return if new_keys.empty?
+
+        @unsent_achievements |= new_keys
+        save
+        send_achievements
+      end
+
       def delete_everything = ask(Job.of(:deleted, loud: true))
 
       # A game just ended. The server cannot tell how a score was won, so
@@ -181,7 +200,28 @@ module DotPopper
         known? ? ask(job) : ask(Job.of(:player, then: job, loud: true))
       end
 
+      def send_achievements
+        return unless known? && member? && !waiting_out?
+
+        (@unsent_achievements - @sending_achievements).each do |key|
+          @sending_achievements << key
+          ask(Job.of(:achievement, body: { key: }))
+        end
+      end
+
+      def finish_achievement(key, body)
+        @unsent_achievements.delete(key)
+        (body.is_a?(Hash) && body["groups"].is_a?(Array) ? body["groups"] : []).filter_map { Group.parse(it) }.each { upsert(it) }
+        save
+      end
+
+      def drop_achievement(key)
+        @unsent_achievements.delete(key)
+        save
+      end
+
       def send_pending
+        send_achievements
         return unless @pending && member? && !@sending && !waiting_out?
 
         @sending = true
@@ -192,7 +232,7 @@ module DotPopper
         return if @fetching.include?(id)
 
         @fetching << id
-        ask(Job.of(:changes, group_id: id))
+        ask(Job.of(:history, group_id: id))
       end
 
       def waiting_out? = @wait_until && @clock.call.to_i < @wait_until
@@ -204,7 +244,8 @@ module DotPopper
       def settle(job, reply)
         @running -= 1
         @sending = false if job.kind == :cabinet
-        @fetching.delete(job.group_id) if job.kind == :changes
+        @fetching.delete(job.group_id) if job.kind == :history
+        @sending_achievements.delete(job.body[:key]) if job.kind == :achievement
         return @error = :offline if reply.offline? && job.loud
         return if reply.offline?
         return forget_identity if reply.status == 401
@@ -221,7 +262,8 @@ module DotPopper
       def refused(job, reply)
         wait_out(reply.retry_after) if reply.status == 429
         return give_up_pending if job.kind == :cabinet && NEVER_TAKEN.include?(reply.status)
-        return gone(job.group_id) if reply.status == 404 && %i[group changes left].include?(job.kind)
+        return gone(job.group_id) if reply.status == 404 && %i[group history left].include?(job.kind)
+        return drop_achievement(job.body[:key]) if job.kind == :achievement && NEVER_TAKEN.include?(reply.status)
         return forget_identity if reply.status == 404 && job.kind == :deleted
 
         @error = reason(job, reply) if job.loud
@@ -239,7 +281,8 @@ module DotPopper
         when :groups then read_groups(reply.body)
         when :create, :join then arrived(reply.body, job)
         when :group then read_group(reply.body)
-        when :changes then read_changes(job.group_id, reply.body)
+        when :history then read_history(job.group_id, reply.body)
+        when :achievement then finish_achievement(job.body[:key], reply.body)
         when :left then gone(job.group_id)
         when :deleted then forget_identity
         when :cabinet then finish_game(job.body[:score], reply.body)
@@ -286,6 +329,7 @@ module DotPopper
       def gone(id)
         @groups.reject! { it.id == id }
         @changes.delete(id)
+        @history.delete(id)
         @seen.delete(id)
         remember_membership
         save
@@ -296,11 +340,12 @@ module DotPopper
         fetch_changes(group.id) unless @seen[group.id]&.fingerprint == group.fingerprint
       end
 
-      def read_changes(id, body)
+      def read_history(id, body)
         return unless body.is_a?(Array) && (known_group = group(id))
 
         changes = body.filter_map { TitleChange.parse(it) }.sort_by { -it.id }
         @changes[id] = changes
+        @history[id] = (changes + body.filter_map { MemberAchievement.parse(it) }).sort_by { -it.id }
         announce(known_group, changes)
         @seen[id] = Seen.new(last: [@seen[id]&.last.to_i, changes.first&.id.to_i].max, fingerprint: known_group.fingerprint)
         save
@@ -368,6 +413,9 @@ module DotPopper
         @token = nil
         @groups = []
         @changes = {}
+        @history = {}
+        @unsent_achievements = []
+        @sending_achievements = []
         @seen = {}
         @announcements.clear
         @was_member = false
@@ -379,14 +427,15 @@ module DotPopper
       end
 
       # Saved one per line: token, unsent score, whether last known to be in
-      # a group, and for each group the newest change shown and how the
-      # group looked then.
+      # a group, for each group the newest change shown and how the
+      # group looked then, and achievements not yet sent.
       def load_saved
-        token, pending, member, seen = @store.read.to_s.split("\n", -1)
+        token, pending, member, seen, unsent = @store.read.to_s.split("\n", -1)
         @token = token unless token.to_s.empty?
         @pending = Integer(pending.to_s, 10, exception: false)
         @was_member = member == "1"
         @seen = parse_seen(seen.to_s)
+        @unsent_achievements = unsent.to_s.split(",")
       end
 
       def parse_seen(line)
@@ -399,7 +448,7 @@ module DotPopper
 
       def save
         seen = @seen.map { |id, entry| "#{id}|#{entry.last}|#{entry.fingerprint}" }.join(" ")
-        @store.write([@token.to_s, @pending.to_s, (@was_member ? "1" : ""), seen].join("\n"))
+        @store.write([@token.to_s, @pending.to_s, (@was_member ? "1" : ""), seen, @unsent_achievements.join(",")].join("\n"))
       end
     end
   end

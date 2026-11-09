@@ -165,6 +165,9 @@ module DotPopper
 
       def game_started = groups.game_started
 
+      # A Pro player's achievements, for their friend groups' history.
+      def report_achievements(ids) = groups.report_achievements(ids)
+
       # A game ended: reports it if it counts.
       def game_finished(score:, sized_to_screen:) = groups.game_finished(score:, sized_to_screen:)
 

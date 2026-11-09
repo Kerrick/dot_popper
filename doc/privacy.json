@@ -141,7 +141,7 @@
         "name": "group.txt",
         "label": "Your private code and any unsent score, if you use friend groups",
         "not_for_players": null,
-        "holds": "your anonymous group token, an unsent score, whether you were in a group, and the newest title change you were shown of each",
+        "holds": "your anonymous group token, an unsent score, whether you were in a group, the newest title change you were shown of each, and any achievements waiting to be sent",
         "made_by": "the game",
         "also_sent": [
           "your private code",
@@ -253,13 +253,25 @@
         "in_this_build": true
       },
       {
-        "kind": "changes",
+        "kind": "history",
         "method": "GET",
-        "path": "/groups/:id/title_changes",
+        "path": "/groups/:id/history",
         "query": {},
         "body": {},
         "sends_token": true,
-        "when": "When the player opens a group, and whenever a group's title looks different from when it was last read.",
+        "when": "When the player opens a group or its history, and whenever a group's title looks different from when it was last read.",
+        "in_this_build": true
+      },
+      {
+        "kind": "achievement",
+        "method": "POST",
+        "path": "/achievements",
+        "query": {},
+        "body": {
+          "key": "which achievement a Pro player earned, for their friend groups' history"
+        },
+        "sends_token": true,
+        "when": "When a Pro player in a friend group earns an achievement, once for each, and on buying Pro for those already earned.",
         "in_this_build": true
       },
       {
@@ -392,6 +404,7 @@
           ],
           "sent_by": [
             "join",
+            "achievement",
             "cabinet"
           ]
         },
@@ -408,7 +421,8 @@
             "create",
             "join",
             "group",
-            "changes",
+            "history",
+            "achievement",
             "left",
             "deleted",
             "cabinet"
@@ -442,6 +456,7 @@
           "shared": false,
           "sent_by": [
             "join",
+            "achievement",
             "cabinet"
           ]
         },
@@ -455,7 +470,8 @@
             "create",
             "join",
             "group",
-            "changes",
+            "history",
+            "achievement",
             "left",
             "deleted",
             "cabinet"

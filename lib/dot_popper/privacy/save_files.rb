@@ -50,7 +50,7 @@ module DotPopper
       KeptFile.new(name: "taught.txt", label: "What the game has shown you", holds: "what the game has already shown you"),
       KeptFile.new(name: "tutorial.txt", label: "What the game has shown you", holds: "whether you have played the tutorial"),
       KeptFile.new(name: "group.txt", label: "Your private code and any unsent score, if you use friend groups",
-                   holds: "your anonymous group token, an unsent score, whether you were in a group, and the newest title change you were shown of each",
+                   holds: "your anonymous group token, an unsent score, whether you were in a group, the newest title change you were shown of each, and any achievements waiting to be sent",
                    sent: { token: "your private code", score: "your scores from games that count" }),
       KeptFile.new(name: "cleared.txt", aside: Aside.new(kind: :diagnostics, reason: "Only the names of the backups to replace next time."), holds: "the names of the backups made by the last clearing of your records"),
       KeptFile.new(name: "vulkan_failed.txt", aside: Aside.new(kind: :diagnostics, reason: "A note that lets the game recover after its graphics fail to start."), holds: "that the game's graphics failed to start on this device, and when"),

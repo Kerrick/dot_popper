@@ -161,7 +161,7 @@ module DotPopper
         end
         score = change.score.to_s
         pen.text(score, font, rect.x + (radius * 6.4) + (font.width(score) / 2.0), y, pen.palette.cream)
-        date = change.date
+        date = change.at.to_s[0, 10]
         pen.text(date, font, rect.right - (font.width(date) / 2.0), y, pen.palette.soft) if date
       end
 

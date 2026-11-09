@@ -77,7 +77,7 @@ class GroupPanelTest < Minitest::Test
     tick
     until @worker.started.empty?
       path = @worker.started.first.first.path
-      reply(200, path.end_with?("title_changes") ? changes : body)
+      reply(200, path.end_with?("history") ? changes : body)
       tick
     end
   end
@@ -264,10 +264,10 @@ class GroupPanelTest < Minitest::Test
     join!
     tap_control(:group_history)
     tick
-    changes = [{ "id" => 2, "champion_number" => 2, "previous_champion_number" => 1, "score" => 18, "won_at" => "2026-11-05T01:00:00Z" }]
+    changes = [{ "id" => 2, "champion_number" => 2, "previous_champion_number" => 1, "score" => 18, "at" => "2026-11-05T01:00:00Z" }]
     until @worker.started.empty?
       path = @worker.started.first.first.path
-      reply(200, path.end_with?("title_changes") ? changes : group)
+      reply(200, path.end_with?("history") ? changes : group)
       tick
     end
 

@@ -956,7 +956,10 @@ module DotPopper
       def follow_store(seconds)
         free = !@entitlement.pro?
         @storefront.update(seconds)
-        sounds.play(:tick, pitch: 1.3) if free && offer? && @entitlement.pro?
+        return unless free && @entitlement.pro?
+
+        @groups.report_achievements(@achievements.earned) # what was earned while Free counts on buying
+        sounds.play(:tick, pitch: 1.3) if offer?
       end
 
       # Where the achievements are on the Stats screen, which a Free player
@@ -1125,6 +1128,7 @@ module DotPopper
         result = stats_book.record(game_stats, event.size_class)
         @groups.game_finished(score: event.score, sized_to_screen: event.size_class == SizeClass::FITTED && !@tutorial_game)
         achievements = @achievements.award(@achievement_watch.earned, day: stats_book.today.iso8601)
+        @groups.report_achievements(achievements) if @entitlement.pro?
         achievements = [] unless @entitlement.pro? # kept, and shown once Pro is bought
         lesson = @tutor.lesson(@mistake) if @mistake&.among(event.game.dots)
         @game_over = GameOver.new(style: style::GAME_OVER, score: event.score, score_record: event.score_record, new_score_record: event.new_score_record, at: now,

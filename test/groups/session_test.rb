@@ -34,7 +34,7 @@ class SessionTest < Minitest::Test
   end
 
   def change(id, champion: 1, previous: nil, score: 50)
-    { "id" => id, "champion_number" => champion, "previous_champion_number" => previous, "score" => score, "won_at" => "2026-11-05T10:00:00Z" }
+    { "id" => id, "champion_number" => champion, "previous_champion_number" => previous, "score" => score, "at" => "2026-11-05T10:00:00Z" }
   end
 
   def answer(status, body = {}, retry_after: nil)
@@ -488,7 +488,7 @@ class SessionTest < Minitest::Test
     answer(200, [group(champion: 2, top: 60)])
     pump
 
-    assert_includes paths, "/groups/1/title_changes"
+    assert_includes paths, "/groups/1/history"
     pending = paths
     answer(200, { "groups" => [{ "group" => group(champion: 2, top: 60), "won_title" => false }] }) if pending.first == "/games"
     pump
@@ -504,7 +504,7 @@ class SessionTest < Minitest::Test
     assert_empty paths
     refreshed([group(top: 80)])
 
-    assert_includes paths, "/groups/1/title_changes"
+    assert_includes paths, "/groups/1/history"
   end
 
   def test_a_new_change_is_announced_once_and_the_last_shown_is_remembered
@@ -568,5 +568,11 @@ class SessionTest < Minitest::Test
     refute_predicate off, :available?
     off.refresh
     off.update(quiet: true)
+  end
+end
+
+class SessionHistoryTest < Minitest::Test
+  def test_achievement_keys_fit_what_the_server_accepts
+    DotPopper::Achievement::IDS.each { assert_match(/\A[a-z0-9][a-z0-9_.-]{0,63}\z/, it.to_s) }
   end
 end

@@ -46,16 +46,25 @@ module DotPopper
     # One entry in a group's history of its title. +previous_champion_number+
     # is nil when the title was vacant: a group's first champion, or the
     # first after a vacancy.
-    class TitleChange < Data.define(:id, :champion_number, :previous_champion_number, :score, :won_at)
+    class TitleChange < Data.define(:id, :champion_number, :previous_champion_number, :score, :at)
       def self.parse(data)
         return unless data.is_a?(Hash) && data["id"].is_a?(Integer) && data["champion_number"].is_a?(Integer)
+        return unless data["kind"].nil? || data["kind"] == "title_change"
 
         new(id: data["id"], champion_number: data["champion_number"], previous_champion_number: data["previous_champion_number"],
-            score: data["score"].to_i, won_at: data["won_at"])
+            score: data["score"].to_i, at: data["at"])
       end
+    end
 
-      # The day it happened, as the server wrote it, or nil.
-      def date = won_at.to_s[/\A\d{4}-\d{2}-\d{2}/]
+    # A member earning an achievement, as it appears in a group's history.
+    # The +key+ is an Achievement's id; a key this game does not know is
+    # kept out of what is shown (Presentation::GroupScreen).
+    class MemberAchievement < Data.define(:id, :member_number, :key, :at)
+      def self.parse(data)
+        return unless data.is_a?(Hash) && data["kind"] == "achievement" && data["id"].is_a?(Integer) && data["member_number"].is_a?(Integer)
+
+        new(id: data["id"], member_number: data["member_number"], key: data["key"].to_s.to_sym, at: data["at"])
+      end
     end
 
     # Something to tell the player about a group's title, once, with no
