@@ -1464,3 +1464,13 @@ After the second pop, a fifth beat of about five seconds. The row of eight arriv
 **Release channel.** A `v1*` tag fails `.github/workflows/release-channel.yml` while `BUILD_CHANNEL` is nil (`script/check_build_channel.rb`), so a store release cannot ship the fake store. **To reverse:** delete the workflow.
 
 **Unverified.** Fastest pop became "Shortest Time to Pop" by analogy with the maintainer's "Longest Time to Pop".
+
+## Store builds use the group server too; the privacy manifest says what is sent
+
+**Decision (maintainer-approved, 2026-11-08).** `Groups::Settings.server_url(env)` answers `SERVER_URL`, `https://server.dot-popper.setdef.com`, for every build; `DOT_POPPER_SERVER` still overrides, and empty means none. The test-build/store split (`TEST_SERVER_URL`, `test_build:`) is gone. This replaces "Test builds reach the live group server; store builds stay unset".
+
+**Privacy manifest.** `PrivacyInfo.xcprivacy` declares, for App Functionality only and tracking false: Gameplay Content (scores, join code and seat) and User ID (the token), both **Linked**, since the server keeps the scores under the token and Apple counts data tied to an identifier as linked; and Other Usage Data (the themes check's first-play date, sent with no token), **not linked**. Join and membership data fall under Gameplay Content; Apple has no closer category. IP addresses are not declared: Apple's list has no IP category, the game stores none, and the server's logs and day-long rate-limit entries are the server's to state. This is a judgment; the maintainer can add Device ID. Apple's documentation pages returned only their titles when fetched, so the key spellings are from memory.
+
+**Wording.** `doc/publishing.md` now lists the facts and gives the Apple and Google answers to enter; README says the themes check once. The public privacy policy is the server side's.
+
+**To reverse:** set `SERVER_URL` to nil and make `server_url` return nil for it; remove the manifest's three entries.
