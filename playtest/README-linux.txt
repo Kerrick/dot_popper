@@ -32,7 +32,7 @@ What the script records: your answers; your Linux version, desktop and
 session (Wayland or X11), graphics card, OpenGL driver, displays and their
 refresh rates and scale, sound server, and any controllers; what Dot
 Popper printed while it ran; and the files Dot Popper saves in
-~/.local/share/dot_popper (your scores and a line for each round). It
+~/.local/share/dot_popper (your scores and a line for each game). It
 changes no setting, needs no root, and sends nothing anywhere. You send
 the file yourself.
 

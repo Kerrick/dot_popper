@@ -67,8 +67,8 @@ about 8 mm" to the log. The phone buzzes briefly on a pop. Sound comes
 through the media volume, and should not stop music another app plays.
 
 Back is the game's own: on "Your stats" it goes back to the title; on
-the title it leaves the app; during a round and at Game Over it does
-nothing, so a stray swipe never throws a round away.
+the title it leaves the app; during a game and at Game Over it does
+nothing, so a stray swipe never throws a game away.
 
 To watch the game's own lines while it runs (Way 1):
   adb logcat -s com.setdef.DotPopper:V SDL:V

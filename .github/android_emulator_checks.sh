@@ -12,18 +12,18 @@ here=$(cd "$(dirname "$0")" && pwd)
 package=com.setdef.DotPopper
 status=0
 
-# The bot plays for 90 seconds, for a bonus dot can stretch its first round. Back during its first round and at its
+# The bot plays for 90 seconds, for a bonus dot can stretch its first game. Back during its first game and at its
 # first Game Over must do nothing: the game carries on to the title and
 # quits only when DOT_POPPER_QUIT_AFTER says.
 ruby "$here/android_emulator.rb" "$apk" "$package" "$out/autoplay" \
   --env DOT_POPPER_AUTOPLAY=1 --env DOT_POPPER_SEED=7 --env DOT_POPPER_QUIT_AFTER=90 --env ALSOFT_DRIVERS=null \
   --env DOT_POPPER_SAVE_AS=ci_autoplay --env DOT_POPPER_SHOTS=3,12,25,38 --env DOT_POPPER_KIT_PROBE=1 \
   --ready "Dot Popper: " --shot 5 --shot 20 --timeout 300 --pull "Dot Popper: screenshot (\\S+)" \
-  --key-after "3:KEYCODE_BACK:kit probe: event RoundStarted" \
-  --key-after "1:KEYCODE_BACK:kit probe: event RoundEnded" \
+  --key-after "3:KEYCODE_BACK:kit probe: event GameStarted" \
+  --key-after "1:KEYCODE_BACK:kit probe: event GameEnded" \
   --expect "Dot Popper: a dot's radius is 50 dp, about 8 mm" --expect "Dot Popper: screenshot" \
   --expect-order "kit probe: keypressed :escape, :acback, false in Playing" \
-  --expect-order "kit probe: event RoundEnded" \
+  --expect-order "kit probe: event GameEnded" \
   --expect-order "kit probe: keypressed :escape, :acback, false in GameOver" \
   --expect-order "kit probe: event TitleShown" \
   --expect-order "exited with status 0" || status=1
@@ -35,7 +35,7 @@ ruby "$here/android_emulator.rb" "$apk" "$package" "$out/autoplay" \
 # runner that was more than the 4 s of the clock this once waited.
 ruby "$here/android_emulator.rb" "$apk" "$package" "$out/back-on-title" \
   --env ALSOFT_DRIVERS=null --env DOT_POPPER_SAVE_AS=ci_back --env DOT_POPPER_KIT_PROBE=1 \
-  --ready "kit probe: subscribed" --shot 2 --timeout 90 \
+  --ready "kit probe: subscribed to the cabinet" --shot 2 --timeout 90 \
   --key-after "1:KEYCODE_BACK:kit probe: splash over" \
   --expect "Dot Popper: a dot's radius is 50 dp, about 8 mm" \
   --expect-order "kit probe: splash over" \

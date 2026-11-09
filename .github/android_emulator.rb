@@ -110,6 +110,7 @@ started = Time.now
 seen = 0
 origin = nil
 pops = 0
+probe_failed = false
 last_tap = nil
 pending_shots = shots.sort
 pending_taps = taps.sort_by(&:first)
@@ -162,6 +163,12 @@ loop do
       say "tapped the dot at #{x.round}, #{y.round} of #{w.round}x#{h.round}: #{px}, #{py} on the screen"
     end
   end
+  probe_error = lines.find { it.include?("kit probe: error") }
+  if probe_error
+    say "the kit probe failed: #{probe_error}"
+    probe_failed = true
+    break
+  end
   break if lines.any? { it.include?("exited with status") }
 
   if Time.now - started > 20 && adb("shell", "pidof", package, allow_failure: true).strip.empty?
@@ -202,4 +209,4 @@ end
 say "missing, in order: #{out_of_order.source}" if out_of_order
 unsent = keys.reject { it[:sent] }
 unsent.each { say "never sent #{it[:code]}: no line matched #{it[:pattern].source}" }
-exit(missing.empty? && out_of_order.nil? && unsent.empty? ? 0 : 1)
+exit(!probe_failed && missing.empty?&& out_of_order.nil? && unsent.empty? ? 0 : 1)

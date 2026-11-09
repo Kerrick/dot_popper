@@ -49,6 +49,6 @@ Every five seconds it prints a line such as "60 frames a second, longest
 frame 18.2 ms". Quit the game, then select the Terminal's text, copy it,
 and paste it at the end of macos-results.txt.
 
-The game's saved files (scores, and rounds.csv, a line for each round) are
+The game's saved files (scores, and games.csv, a line for each game) are
 in ~/Library/Application Support/dot_popper. In Finder, choose Go > Go to
-Folder, paste that path, and attach rounds.csv to your message too.
+Folder, paste that path, and attach games.csv to your message too.

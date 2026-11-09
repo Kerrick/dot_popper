@@ -25,7 +25,7 @@ Thank you for playtesting Dot Popper! This takes about 15 minutes.
 What the script records: your answers; your Windows version, graphics card
 and driver, display size, scale and refresh rate, and any controllers;
 what Dot Popper printed while it ran; and the files Dot Popper saves in
-%APPDATA%\dot_popper (your scores and a line for each round). It changes no
+%APPDATA%\dot_popper (your scores and a line for each game). It changes no
 setting, needs no administrator, and sends nothing anywhere. You send the
 file yourself.
 

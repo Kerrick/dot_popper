@@ -112,6 +112,6 @@ not", "Dot Popper: drawing without" or "Dot Popper: playing without" mean
 something failed and the game carried on: paste those into the last
 question.
 
-The game's saved files (scores, and rounds.csv, a line for each round):
+The game's saved files (scores, and games.csv, a line for each game):
 Window > Devices and Simulators, select the device, select Dot Popper under
 Installed Apps, click the ... (gear) button, and Download Container.
