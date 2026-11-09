@@ -37,8 +37,11 @@ module DotPopper
         font = pen.fonts.bold(layout.scaled(pen.style::TYPE.floater))
         scene.flights.each { flight(it, now, scene.dots, spots, scene.radius, font) }
         GhostPainter.new(pen:).draw(scene.ghost_pose, show.input, scene.radius)
-        reach = show.skip_reach
-        SkipButton.new(pen:).draw(reach, hover: show.hover.level(:skip)) if reach
+        return unless show.skip_reach
+
+        # Skip, bottom right, its sign before its word, so it reads without English.
+        PillButton.new(pen:).draw(layout.skip_button, show.words.button(:skip), hover: show.hover.level(:skip),
+                                  icon: ->(x, y, size) { Glyphs.new(pen:).draw(:skip, x, y, size * 0.36) })
       end
 
       # The clock lit as the game's first second runs (Presentation::

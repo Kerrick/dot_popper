@@ -147,6 +147,20 @@ class ScreenPlansTest < Minitest::Test
 
   DESKTOPS = DESKTOP_WIDTHS.product(DESKTOP_HEIGHTS)
 
+  # The tutorial's Skip stands in the safe area's bottom right corner,
+  # where its dots and the HUD never go, a fingertip tall at least.
+  def test_skip_stands_in_the_bottom_right_corner
+    (SIZES + DESKTOPS).each do |width, height|
+      screen_layout = layout(width, height)
+      skip = screen_layout.skip_button
+      name = "#{width}x#{height}"
+      assert_inside skip, screen_layout.safe, name
+      assert_operator skip.right, :>, screen_layout.center_x + (screen_layout.safe.width * 0.25), name
+      assert_operator skip.bottom, :>, screen_layout.safe.bottom - screen_layout.page_margin - 1, name
+      assert_operator skip.height, :>=, 44.0, name
+    end
+  end
+
   # The offer of Pro, led by each thing a Free player can tap, at every
   # size: its parts are apart and inside the safe area, clear of Back, and
   # Buy and Restore Purchases always show.

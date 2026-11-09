@@ -130,6 +130,7 @@ module DotPopper
         # controller's button is named.
         buttons: {
           settings: ByInput.new(touch: "Settings", mouse: "Settings", gamepad: "Settings (Select)"),
+          skip: ByInput.new(touch: "Skip", mouse: "Skip", gamepad: "Skip (B)"),
           get_pro: "Get Pro", home: ByInput.new(touch: "Home", mouse: "Home", gamepad: "Home (B)"),
           tile_stats: "Stats", tile_achievements: "Achievements", tile_themes: "Themes", tile_groups: "Friend groups",
           tile_note_to_earn: "#{Achievement::IDS.size} to earn", tile_note_take_title: "Join or create",
