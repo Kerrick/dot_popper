@@ -6,7 +6,7 @@ module DotPopper
     # arriving, the score counting up, and the prompt to go on, which
     # shows only from +ready_at+, once a press would be heard. A new record
     # is celebrated once, when it has finished counting. +stats+ are the
-    # game's RoundStats, for the line of facts under the score. +record+
+    # game's GameStats, for the line of facts under the score. +record+
     # is the most impressive lifetime record the game set
     # (Stats::Record), or nil, and +goal_met+ whether it was the
     # first game to meet today's goal, which is celebrated once, also when

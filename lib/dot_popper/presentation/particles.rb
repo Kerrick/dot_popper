@@ -37,7 +37,7 @@ module DotPopper
       # A droplet shrinks to this much of its first size as it goes.
       SHRINK = 0.45
 
-      def stats_book = [[style.life.begin, longest].min, [style.life.end, longest].min]
+      def lifetime = [[style.life.begin, longest].min, [style.life.end, longest].min]
       def speed = [style.speed.begin * radius, style.speed.end * radius]
       def damping = [style.drag, style.drag]
       def acceleration = [0.0, style.gravity * radius, 0.0, style.gravity * radius]

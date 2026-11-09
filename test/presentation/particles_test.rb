@@ -11,7 +11,7 @@ class ParticlesTest < Minitest::Test
   end
 
   def test_no_droplet_outlives_its_longest
-    assert_operator emission(Style::POP_BURST.with(life: 0.3..2.0)).stats_book.max, :<=, Burst::LONGEST_LIFE
+    assert_operator emission(Style::POP_BURST.with(life: 0.3..2.0)).lifetime.max, :<=, Burst::LONGEST_LIFE
   end
 
   def test_speeds_and_gravity_are_in_graphics_units

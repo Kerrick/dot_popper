@@ -38,7 +38,32 @@ module DotPopperGui
       wait(1.0)
       keep_screenshot("offer-#{width}x#{height}")
       show.back
+      from_a_tap(:themes, width, height)
+      from_a_tap(:achievements, width, height)
       show.back
+    end
+
+    # A Free player taps what comes with Pro: the offer opens leading with it, and Back returns to where they were.
+    def from_a_tap(feature, width, height)
+      if feature == :themes
+        show.open_themes
+        wait(0.5)
+        keep_screenshot("themes-#{width}x#{height}")
+        card = show.themes_layout.cards.last.rect
+        click(card.center_x, card.center_y)
+      else
+        reach = show.reach_of(:achievements)
+        check(!reach.nil?, "the achievements can be tapped on the Stats screen at #{width}x#{height}")
+        click(reach.center_x, reach.center_y)
+      end
+      check(show.offer? && show.offer_focus == feature, "tapping #{feature} opens the offer leading with it")
+      wait_for("the price", within: 600) { show.offer_price }
+      wait(1.0)
+      keep_screenshot("offer-from-#{feature}-#{width}x#{height}")
+      show.back
+      check(!show.offer? && show.stats?, "Back from the offer returns to the Stats screen") if feature == :achievements
+      check(!show.offer? && show.themes?, "Back from the offer returns to the Themes screen") if feature == :themes
+      show.back if feature == :themes
     end
   end
 end

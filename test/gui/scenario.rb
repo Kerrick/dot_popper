@@ -184,7 +184,7 @@ module DotPopperGui
     # Common moves
 
     # The events of these kinds the game has told of, as their classes'
-    # last names, in order: [:RoundStarted, :Popped, ...].
+    # last names, in order: [:GameStarted, :Popped, ...].
     def story = events.map { it.class.name.split("::").last.to_sym }
 
     def fresh_dot = game.dots.find(&:fresh?)

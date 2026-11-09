@@ -3,7 +3,7 @@
 module DotPopper
   # One line per finished game, as CSV, for comparing playtests: when it
   # ended, the seed its dots were drawn from, its score, how long it ran,
-  # its RoundStats, and the day's goal (DailyGoal, for the date +today+
+  # its GameStats, and the day's goal (DailyGoal, for the date +today+
   # gives) with whether the game met it. It listens to a Cabinet (Cabinet#subscribe) and appends
   # through a store that answers +read+ and +write(text)+, as ScoreRecord
   # does, so it never touches a file system itself.

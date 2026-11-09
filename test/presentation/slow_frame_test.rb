@@ -11,10 +11,10 @@ class SlowFrameTest < Minitest::Test
   end
 
   def test_it_says_where_it_happened_what_came_before_and_what_collected
-    frame = SlowFrame.new(seconds: 0.5355, screen: "Game Over", recent: "RoundEnded", since: 0.02, major_gcs: 1,
+    frame = SlowFrame.new(seconds: 0.5355, screen: "Game Over", recent: "GameEnded", since: 0.02, major_gcs: 1,
                           minor_gcs: 0)
 
-    assert_equal "slow frame 535.5 ms on Game Over; 0.0 s after RoundEnded; garbage collections: 1 major, 0 minor",
+    assert_equal "slow frame 535.5 ms on Game Over; 0.0 s after GameEnded; garbage collections: 1 major, 0 minor",
                  frame.report
   end
 

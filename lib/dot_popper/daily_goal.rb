@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # One day's goal, met or not by a single game's RoundStats: +kind+
+  # One day's goal, met or not by a single game's GameStats: +kind+
   # names what it asks for, and +target+ how much. Each local date picks
   # one from LIST with a hash of the date that is the same on every
   # device and every run, so the day's goal never changes while the day

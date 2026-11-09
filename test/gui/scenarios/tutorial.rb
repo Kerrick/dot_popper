@@ -195,7 +195,7 @@ module DotPopperGui
       check(show.lead_in, "the clock is lit as it starts to run")
       wait(0.3)
       keep_screenshot(name("4-runs"))
-      check_equal(%i[RoundStarted], story.uniq - %i[TitleShown], "the tutorial told the rules nothing until then")
+      check_equal(%i[GameStarted], story.uniq - %i[TitleShown], "the tutorial told the rules nothing until then")
       wait(1.2)
       check(game.countdown.remaining < 7.0, "the clock runs")
     end

@@ -204,6 +204,12 @@ module DotPopper
       # What the Stats screen shows, while it is open.
       def stats = @stats
 
+      # The Stats screen laid out for the fonts this screen is measured with.
+      def stats_layout
+        StatsLayout.measured(layout:, sheet: stats, style: style::RECORDS, measure: @measure, themes: themes_offered?,
+                             offer: offer_offered?)
+      end
+
       # Whether the title offers "Your stats" and the choice of dot size:
       # only once a game has finished, so a first-time player's title says
       # only how to play. A player who cleared their records has played, so
@@ -915,12 +921,6 @@ module DotPopper
         return if @entitlement.pro? || !stats? || stats.empty || stats.achievements.nil?
 
         stats_layout.achievements_frame
-      end
-
-      # The Stats screen laid out for the fonts this screen is measured with.
-      def stats_layout
-        StatsLayout.measured(layout:, sheet: stats, style: style::RECORDS, measure: @measure, themes: themes_offered?,
-                             offer: offer_offered?)
       end
 
       def stats_controls

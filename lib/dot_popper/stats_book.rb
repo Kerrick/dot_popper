@@ -19,7 +19,7 @@ module DotPopper
       store.write(stats.to_text) if Stats.old?(text)
     end
 
-    # Adds a finished game's RoundStats, played on a screen of
+    # Adds a finished game's GameStats, played on a screen of
     # +size_class+, saves, and says what the game did: the records it set
     # among that class's records, most impressive first, and whether it was
     # the first to meet today's goal.

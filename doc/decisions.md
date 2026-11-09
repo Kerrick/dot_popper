@@ -1452,3 +1452,15 @@ After the second pop, a fifth beat of about five seconds. The row of eight arriv
 
 **To try without the server:** `ruby script/group_stub.rb` and `DOT_POPPER_SERVER=http://127.0.0.1:9293`.
 
+
+## One word for each thing
+
+*Renames the vocabulary of every section above; those sections stand as history with their old words.*
+
+**Decision.** Code and screen use the same word for a thing (the maintainer's rule). Old to new: round is game (`Round` is `Game`, `FreePlays` is `FreeGames`, "N games left", "3 games a day"); the app's old `Game` flow is `Cabinet`; slip is mistake; the pops in a row in a game are dots in a row (`run`, `longest_run` are `dots_in_a_row`, `most_dots_in_a_row`; the in-game streak toward a bonus dot is that too, so "streak" means only the daily one); a fresh dot's wait is its time to pop (`longest_time_to_pop`, `shortest_time_to_pop`; the screen says "Longest Time to Pop" and "Shortest Time to Pop"); Looks are Themes (`Wardrobe` is `ThemeKeeper`, `Presentation::Look` is `Style`); the Records screen is Stats (`Lifetime` is `StatsBook`, `LifetimeStats` is `Stats`, `RecordKeeper` is `StatsKeeper`); a record is a personal best at one thing (`BestScore` is `ScoreRecord`, `Bests` is `Records`, "New record!", "Your record", "Highest score"); `Finale` is `GameOver`; Paid is Pro (`paid?` is `pro?`, `DOT_POPPER_PAID` is `DOT_POPPER_PRO`, product `com.setdef.DotPopper.pro`). "Pop" is no longer a noun on screen. Save files and keys were renamed too, since saves are not kept before 1.0.0 and migration code would be dead weight.
+
+**Free and Pro look alike.** Join, Create, Achievements and Themes carry no "(Pro)" and no locked look. A Free player's tap opens the offer over the screen they are on, leading with the thing tapped (`Show#open_offer_for`, `offer_focus`); Back closes it to that screen as it was. Leaving a group, deleting data and clearing stats never need Pro. Achievements and Themes show earned and open marks the same to both (Nielsen: consistency; Norman: a locked look is clutter). The "X come with..." lines are gone. With no store the offer still opens and says the store isn't answering.
+
+**Release channel.** A `v1*` tag fails `.github/workflows/release-channel.yml` while `BUILD_CHANNEL` is nil (`script/check_build_channel.rb`), so a store release cannot ship the fake store. **To reverse:** delete the workflow.
+
+**Unverified.** Fastest pop became "Shortest Time to Pop" by analogy with the maintainer's "Longest Time to Pop".

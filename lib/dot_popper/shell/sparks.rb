@@ -65,7 +65,7 @@ module DotPopper
       end
 
       def configure(system, emission, color)
-        system.particle_stats_book = emission.stats_book
+        system.particle_lifetime = emission.lifetime
         system.speed = emission.speed
         system.spread = 2 * Math::PI
         system.linear_damping = emission.damping

@@ -29,7 +29,7 @@ module DotPopperGui
       game_over
       click_empty_space
       continue_to_title
-      check_equal(%i[RoundStarted RoundEnded TitleShown], story & %i[RoundStarted RoundEnded TitleShown],
+      check_equal(%i[GameStarted GameEnded TitleShown], story & %i[GameStarted GameEnded TitleShown],
                   "the screens come in order: title, game, Game Over, title")
     end
 
