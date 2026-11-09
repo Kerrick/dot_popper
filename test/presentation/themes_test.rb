@@ -60,7 +60,7 @@ class ThemesTest < Minitest::Test
   def test_a_free_player_can_be_told_and_is_led_to_pro
     show(paid: false, unlocked: ["ghost"])
     assert_equal :ghost, @show.arrival.key
-    assert_includes @show.arrival_use_word, "Pro"
+    assert_equal "Get Pro", @show.arrival_use_word
     assert_predicate @show.in_use, :ordinary?
   end
 
@@ -72,8 +72,7 @@ class ThemesTest < Minitest::Test
   def test_the_longest_switch_and_not_now_both_fit_on_a_phone_either_way_up
     show(paid: true)
     [[400, 850], [850, 400]].each do |width, height|
-      %i[use use_pro].each do |key|
-        word = format(@show.words.themes.fetch(key), "Jack-o'-lantern")
+      ["Get Pro", format(@show.words.themes.fetch(:use), "Jack-o'-lantern")].each do |word|
         plan = ArrivalPlan.new(layout: layout(width, height), word:)
         card = plan.card
         use = plan.use_button

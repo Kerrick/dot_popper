@@ -121,8 +121,8 @@ module DotPopper
       def arrival? = !arrival.nil?
       def arrival_plan = ArrivalPlan.new(layout:, word: (arrival_use_word if arrival?), measure: @measure)
 
-      # The switch's word: a Free player's says how, since it opens the offer.
-      def arrival_use_word = format(words.themes.fetch(themes_locked? ? :use_pro : :use), words.themes.fetch(arrival.key))
+      # The switch's word: a Free player's is "Get Pro", since it opens the offer.
+      def arrival_use_word = themes_locked? ? words.offer.fetch(:entry) : format(words.themes.fetch(:use), words.themes.fetch(arrival.key))
       def themes = @theme_keeper.shown
       def in_use = @theme_keeper.in_use
 

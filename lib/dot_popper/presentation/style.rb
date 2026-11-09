@@ -60,7 +60,7 @@ module DotPopper
         quit_again: "Press B again to quit",
         full_screen: "Full screen", windowed: "Window", quit: "Quit",
         # The Themes screen: its button's word and heading, and each theme's name.
-        themes: { title: "Themes", new: "A new theme", later: "Not now", use: "Use %s", use_pro: "Use %s with Pro", classic: "Classic", ghost: "Ghost", jack_o_lantern: "Jack-o'-lantern", awake: "Awake", eclipse: "Eclipse" }.freeze,
+        themes: { title: "Themes", new: "A new theme", later: "Not now", use: "Use %s", classic: "Classic", ghost: "Ghost", jack_o_lantern: "Jack-o'-lantern", awake: "Awake", eclipse: "Eclipse" }.freeze,
         offer: {
           entry: "Get Pro", heading: "Dot Popper Pro",
           includes: { games: "Unlimited games", achievements: "Achievements", themes: "Themes", groups: "Friend groups" }.freeze,
