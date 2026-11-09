@@ -1340,7 +1340,7 @@ The screens that were only tested are now seen (`test/gui/scenarios/screens_gall
 
 ## Friend groups are paid for every member
 
-The maintainer's decision: joining a group needs the paid version, as creating one does. "One person paying is far less lucrative than eight. Competition _is_ the draw, so we don't want freeloaders getting that benefit." It replaces the earlier default that joining was free. Leaving and deleting one's data stay available to everyone, so anyone can always get out.
+The maintainer's decision: joining a group needs the paid version, as creating one does. Competition is the draw, so everyone who takes part has the paid version. It replaces the earlier default that joining was free. Leaving and deleting one's data stay available to everyone, so anyone can always get out.
 
 **To reverse:** drop the `paid?` check in `GroupPanel#join`.
 
