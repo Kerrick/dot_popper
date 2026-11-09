@@ -14,7 +14,7 @@ module DotPopper
         @store = store
         @volume = volume
         @muted = store.read.to_s.strip == "muted"
-        @voices = build(patches)
+        @voices = @base = build(patches)
         @next = Hash.new(0)
       end
 
@@ -43,6 +43,16 @@ module DotPopper
         voice.play
       rescue StandardError => e
         warn "Dot Popper: could not play #{name}: #{e.message}"
+      end
+
+      # Plays +theme+'s own sounds in place of the ordinary ones, or the
+      # ordinary ones again. Made once per theme, the first time it is worn.
+      def dress(theme)
+        extra = theme.art&.sounds || {}
+        @theme_voices ||= {}
+        built = (@theme_voices[theme.key] ||= build(extra))
+        @voices = @base.merge(built)
+        @next = Hash.new(0)
       end
 
       private

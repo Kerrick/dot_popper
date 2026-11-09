@@ -55,7 +55,7 @@ class PrivacyRequestsTest < Minitest::Test
     when "/groups", "/memberships"
       head.start_with?("GET") ? JSON.generate([GROUP]) : JSON.generate(GROUP)
     when %r{\A/groups/\d+\z} then JSON.generate(GROUP)
-    when %r{/title_changes\z} then "[]"
+    when %r{/title_changes\z}, "/themes" then "[]"
     when "/games" then JSON.generate("groups" => [])
     else "{}"
     end
@@ -77,6 +77,9 @@ class PrivacyRequestsTest < Minitest::Test
     pump
     @session.leave(1)
     pump
+    DotPopper::Presentation::ThemeFeed.new(worker: Instant.new(Groups::Link.new("http://127.0.0.1:#{@server.addr[1]}")),
+                                           theme_keeper: DotPopper::Presentation::ThemeKeeper.plain([]), store: DotPopper::ScoreRecord::Memory.new,
+                                           today: -> { Date.new(2026, 11, 8) }).ask
     @session.delete_everything
     pump
 

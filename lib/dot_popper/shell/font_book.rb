@@ -17,6 +17,7 @@ module DotPopper
       def semibold(size) = font(@type.semibold, size)
       def mono(size) = font(@type.mono, size)
       def wordmark(size) = font(@type.wordmark, size)
+      def face(path, size) = font(path, size)
 
       def density=(density)
         return if density == @density

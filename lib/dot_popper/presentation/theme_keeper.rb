@@ -2,42 +2,34 @@
 
 module DotPopper
   module Presentation
-    # Which theme the game wears. A holiday theme (Theme) appears during its
-    # season, and one game played then earns it for good; an earned theme
-    # is kept whether or not the player has bought Pro, and
-    # is worn the day they do. Wearing a theme is Pro's, so
-    # the theme keeper asks the +entitlement+ and nothing else: for a free
-    # player the ordinary theme is always worn. A free player is still shown
-    # every theme, and which of them they have earned (#shown): the same
-    # rule as the achievements, to show what is there, plainly, in one
-    # calm place.
+    # Which themes the game can wear, and which it does. A theme other
+    # than the ordinary one exists to the player only once the server has
+    # said it is unlocked (#receive), while online; from then on it is
+    # kept for good, on this device, offline too. Before that no screen may
+    # show a trace of it, though its art ships with the game.
     #
-    # What is worn is settled when the theme keeper is made, when the title
-    # shows (#refresh), and when the player chooses, never in the middle of
-    # a game, so a game is never dressed twice. Until the player chooses,
-    # the theme in season is worn; once they do, their choice is, all year.
+    # Wearing one is Pro's, so a free player always wears the ordinary
+    # theme. A new theme is told once, at a calm moment (#arrival); telling
+    # it never depends on buying anything.
     #
-    # The store answers +read+ and +write(text)+ as ScoreRecord's does, and
-    # keeps two lines: "earned: halloween winter" and "chosen: halloween".
-    # +today+ answers the date.
+    # The store keeps three lines: "unlocked: ghost eclipse", "told:
+    # ghost", and "chosen: ghost".
     class ThemeKeeper
-      EARNED = "earned"
+      UNLOCKED = "unlocked"
+      TOLD = "told"
       CHOSEN = "chosen"
 
-      # A theme keeper that keeps nothing and has bought nothing, for a Show
+      # A theme_keeper that keeps nothing and has bought nothing, for a Show
       # made without one.
-      def self.plain(themes)
-        new(ScoreRecord::Memory.new, themes:, entitlement: Entitlement.free, today: -> { Date.today })
-      end
+      def self.plain(themes) = new(ScoreRecord::Memory.new, themes:, entitlement: Entitlement.free)
 
       attr_reader :worn
 
-      def initialize(store, themes:, entitlement:, today:)
+      def initialize(store, themes:, entitlement:)
         @store = store
         @themes = themes
         @entitlement = entitlement
-        @today = today
-        @earned, @chosen = read
+        @unlocked, @told, @chosen = read
         refresh
       end
 
@@ -45,69 +37,74 @@ module DotPopper
 
       def palette = worn.palette
 
-      # One game has been played: every theme in season is earned.
-      def game_played
-        fresh = in_season.map(&:key) - @earned
-        return if fresh.empty?
+      # The server's answer: every theme key unlocked so far. Unknown keys
+      # are ignored, for a game older than the server. A key once saved
+      # stays, even if a later answer leaves it out.
+      def receive(keys)
+        fresh = keys.map(&:to_sym).select { |key| known?(key) } - @unlocked
+        return false if fresh.empty?
 
-        @earned += fresh
+        @unlocked += fresh
+        save
+        true
+      end
+
+      def choices = @themes.select { it.ordinary? || @unlocked.include?(it.key) }
+
+      # What the Themes screen shows: every theme there is for this player.
+      def shown = choices
+
+      # Whether +theme+ may be chosen by this player.
+      def earned?(theme) = choices.include?(theme)
+
+      # Whether +theme+ is open to wear; a Free player sees it open too,
+      # and only wearing it asks for Pro.
+      def open?(theme) = choices.include?(theme)
+
+      # Whether themes are shown but not to wear, as for a free player.
+      def locked? = !@entitlement.pro?
+
+      # Whether there is anything to choose among: not before the server
+      # has unlocked a theme. Then the screen has something to offer.
+      def offered? = choices.size > 1
+
+      # The newest unlocked theme not yet told, or nil.
+      def arrival
+        key = (@unlocked - @told).first
+        key && @themes.find { it.key == key }
+      end
+
+      # The player has seen +theme+ announced, however they answered.
+      def told(theme)
+        @told |= [theme.key]
         save
       end
 
-      # Whether +theme+ is the player's for good.
-      def earned?(theme) = theme.ordinary? || @earned.include?(theme.key)
-
-      # What the player can wear: the ordinary theme, what they have
-      # earned, and what is in season now, in the catalog's order.
-      def choices
-        @themes.select { it.ordinary? || earned?(it) || it.in_season?(@today.call) }
-      end
-
-      # What the Themes screen shows, to every player alike: all the
-      # themes, the ones the player has earned marked as such (#earned?).
-      def shown = @themes
-
-      # Whether +theme+ is open to wear: earned, or in season. A Free
-      # player sees it open too; only wearing it asks for Pro.
-      def open?(theme) = choices.include?(theme)
-
-      # Whether wearing a theme is Pro's, as it is for a Free player.
-      def locked? = !@entitlement.pro?
-
-      # Whether the Stats screen offers the Themes screen: always, to a
-      # Free player and a Pro one alike.
-      def offered? = true
-
-      # Wears +theme+ from now on, if it is a choice and the player may.
       def wear(theme)
-        return unless !locked? && choices.size > 1 && choices.include?(theme)
+        return unless !locked? && choices.include?(theme)
 
         @chosen = theme.key
         save
         refresh
       end
 
-      # Works out again what is worn: the player's choice, else what is in
-      # season, else the ordinary theme; and always the ordinary theme
-      # before the purchase.
       def refresh
-        @worn = if !@entitlement.pro? then ordinary
-                else choices.find { it.key == @chosen } || in_season.first || ordinary
-                end
+        @worn = !@entitlement.pro? ? ordinary : (choices.find { it.key == @chosen } || ordinary)
       end
 
       private
 
-      def in_season = @themes.select { it.in_season?(@today.call) }
+      def known?(key) = @themes.any? { it.key == key && !it.ordinary? }
 
       def read
         lines = @store.read.to_s.lines.filter_map { it.split(":", 2).map(&:strip) if it.include?(":") }.to_h
         known = @themes.map(&:key)
-        earned = lines.fetch(EARNED, "").split.map(&:to_sym) & known
-        [earned, lines[CHOSEN]&.to_sym]
+        [lines.fetch(UNLOCKED, "").split.map(&:to_sym) & known, lines.fetch(TOLD, "").split.map(&:to_sym) & known, lines[CHOSEN]&.to_sym]
       end
 
-      def save = @store.write("#{EARNED}: #{@earned.join(" ")}\n#{CHOSEN}: #{@chosen}\n")
+      def save
+        @store.write("#{UNLOCKED}: #{@unlocked.join(" ")}\n#{TOLD}: #{@told.join(" ")}\n#{CHOSEN}: #{@chosen}\n")
+      end
     end
   end
 end

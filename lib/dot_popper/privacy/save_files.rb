@@ -40,6 +40,7 @@ module DotPopper
       KeptFile.new(name: "entitlement.txt", label: "Whether you bought Pro", holds: "whether Pro was bought"),
       KeptFile.new(name: "store_answer.txt", label: "Whether you bought Pro", made_by: "the iOS or Android host, read by the game", holds: "what the store last answered about Pro, and its price"),
       KeptFile.new(name: "themes.txt", label: "Your themes", holds: "your themes and which is chosen"),
+      KeptFile.new(name: "started_on.txt", label: "The date you first played", holds: "the date you first played, sent to learn which themes are available"),
       KeptFile.new(name: "games.txt", label: "How many free games you have left", holds: "how many free games are left and used today"),
       KeptFile.new(name: "games.csv", label: "A history of your games", holds: "a history of your games: when, score, and how each went"),
       KeptFile.new(name: "games-YYYYMMDD-HHMMSS.csv", label: "A history of your games", pattern: /\Agames-\d{8}-\d{6}\.csv\z/, holds: "an older game history, kept whole when its columns changed"),

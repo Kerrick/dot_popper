@@ -24,8 +24,10 @@ module DotPopper
         plan = show.title_plan
         ScrimPainter.new(pen:).draw(plan.backing, pen.style::TITLE_BACKING, layout, alpha: intro)
         title = pen.fonts.bold(plan.size(:title))
-        Lettering.new(pen:).candy(words.title, title, layout.center_x,
-                                  plan[:title].y + (title.height / 2.0) - ((1 - intro) * 24), intro)
+        y = plan[:title].y + (title.height / 2.0) - ((1 - intro) * 24)
+        if pen.art then ThemedTitle.new(pen:, dots:).draw(words.title, layout.center_x, y, plan.size(:title), intro, room: layout.safe.width * 0.92)
+        else Lettering.new(pen:).candy(words.title, title, layout.center_x, y, intro)
+        end
         legend(layout, plan, under_quit(show, plan, :legend, intro))
         line(plan, :score_record, words.score_record_line(marquee.score_record), pen.palette.soft, under_quit(show, plan, :score_record, intro))
         line(plan, :games, show.games_line.to_s, show.games.can_play? ? pen.palette.soft : pen.palette.cream, intro, size: :goal)

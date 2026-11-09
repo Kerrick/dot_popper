@@ -11,7 +11,8 @@ module DotPopper
     # and the painters draw that part with plain shapes instead.
     class Pen
       G = ::Lota::Graphics
-      SHADERS = %i[dot edge backdrop blur].freeze
+      SHADERS = %i[dot edge backdrop blur scene].freeze
+      THEMED = %i[extent shadow_offset shadow_reach shadow_alpha halo_width halo_alpha].freeze
 
       attr_reader :fonts, :style, :pixels, :hands
 
@@ -19,6 +20,7 @@ module DotPopper
         @style = style
         @palette = style::PALETTE
         @fonts = FontBook.new(style::TYPE)
+        @theme_shaders = {}
         @hands = HandSprites.new
         @square = G::Image.new(::Lota::Image::ImageData.new(2, 2, :rgba8, ("\xFF".b * 16)))
         @shaders = shaders ? SHADERS.to_h { [it, compile(it)] }.compact : {}
@@ -29,17 +31,43 @@ module DotPopper
 
       attr_reader :palette
 
-      # Puts on the theme whose colors are +palette+ (Presentation::ThemeKeeper):
-      # the shaders are given its colors and the hover's lit colors follow
-      # it. Says whether it was a change, so the caller can redraw what it
-      # keeps, such as the clear color. A palette already worn changes nothing.
-      def wear(palette)
-        return false if palette.equal?(@palette)
+      # Puts on +theme+ (Presentation::ThemeKeeper): the shaders are given
+      # its colors, its own dot shader is made ready, and the hover's lit
+      # colors follow it. Says whether it was a change, so the caller can
+      # redraw what it keeps, such as the clear color and the theme's
+      # night. A theme already worn changes nothing.
+      def wear(theme)
+        return false if theme.equal?(@theme)
 
-        @palette = palette
+        @theme = theme
+        @palette = theme.palette
         @lit = nil
+        @dot_shader = theme.art && theme_shader(theme.art.dot)
         paint_shaders
         true
+      end
+
+      attr_reader :theme
+
+      # The art of the theme worn, or nil for the ordinary one.
+      def art = @theme&.art
+
+      # The shader this theme's dots draw with, its own if it compiled.
+      def dot_shader = @dot_shader || (shader?(:dot) ? :dot : nil)
+
+      # Draws the block in +theme+, as a preview, and goes back.
+      def wearing(theme)
+        return yield unless theme && !theme.equal?(@theme) && !@shaders.empty?
+
+        was = [@theme, @palette, @dot_shader]
+        wear(theme)
+        begin
+          yield
+        ensure
+          @theme, @palette, @dot_shader = was
+          @lit = nil
+          paint_shaders
+        end
       end
 
       # What a button the mouse is over is lit with (Presentation::HoverStyle):
@@ -71,6 +99,12 @@ module DotPopper
       def square(x, y, half_width, half_height) = G.draw(@square, x, y, 0, half_width, half_height, 1, 1)
 
       def shader?(name) = @shaders.key?(name)
+
+      # A frame's clock and the pointer, for a theme's dot shader.
+      def tick_dot_shader(shader, seconds, gaze)
+        uniform(shader, "time", seconds)
+        uniform(shader, "gaze", gaze)
+      end
 
       # Draws the block with the shader +name+, which it is given. Only
       # call this when shader?(name).
@@ -114,8 +148,8 @@ module DotPopper
 
       private
 
-      def compile(name)
-        G::Shader.new("assets/shaders/#{name}.glsl")
+      def compile(name, folder = "assets/shaders")
+        G::Shader.new("#{folder}/#{name}.glsl")
       rescue StandardError => e
         warn "Dot Popper: drawing #{name} without its shader (#{e.message.lines.first&.strip})"
         nil
@@ -128,12 +162,30 @@ module DotPopper
         paint_shaders
       end
 
+      # A theme's dot shader, made once, given the geometry every dot
+      # shares. Nil (with a warning) if it will not compile on this GPU.
+      def theme_shader(name)
+        key = :"theme_#{name}"
+        return key if @shaders.key?(key)
+        return nil if @theme_shaders.key?(key) || @shaders.empty?
+
+        shader = compile(name, "assets/shaders/themes")
+        @theme_shaders[key] = shader
+        return nil unless shader
+
+        THEMED.each { |field| uniform(shader, field.to_s, style::DOT.public_send(field)) }
+        uniform(shader, "alarm", rgb(palette.alarm))
+        @shaders[key] = shader
+        key
+      end
+
       # Gives the shaders the worn palette's colors.
       def paint_shaders
         if (dot = @shaders[:dot])
           %i[fresh_light fresh_body fresh_deep fresh_bounce fresh_rim gloss halo popped_top popped_bottom popped_rim
              popped_crater popped_lip shadow alarm bonus_light bonus_body bonus_deep bonus_bounce bonus_rim bonus_mark].each { uniform(dot, it.to_s, rgb(palette.public_send(it))) }
         end
+        uniform(@shaders[@dot_shader], "alarm", rgb(palette.alarm)) if @dot_shader
         return unless (backdrop = @shaders[:backdrop])
 
         %i[ink_top ink_bottom ink_glow ink_edge].each { uniform(backdrop, it.to_s, rgb(palette.public_send(it))) }

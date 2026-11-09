@@ -1,20 +1,18 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # A holiday look, from Pro: a game played in its season
-  # earns it and wears it; the Stats screen then offers Themes, whose
-  # cards choose a theme at once, drawn in its colors, and Back and Escape
-  # leave one step at a time. Needs DOT_POPPER_PRO=1 and a date in
-  # Halloween's season (DOT_POPPER_TODAY=2026-10-31).
+  # A theme the server has unlocked: the Stats screen offers Themes, whose
+  # cards choose a theme at once. Needs DOT_POPPER_PRO=1 and
+  # DOT_POPPER_THEME_UNLOCKS=ghost.
   class ThemesScenario < Scenario
     scenario :themes
 
     def play
-      check(show.worn.key == :halloween, "a pro player wears the theme in season")
-      check(!show.themes_offered?, "no records yet, so no Themes")
+      keeper = show.instance_variable_get(:@theme_keeper)
+      keeper.told(keeper.arrival) until keeper.arrival.nil?
       quick_game
       open_stats
-      check(show.themes_offered?, "the Stats screen offers Themes once a theme is earned")
+      check(show.themes_offered?, "the Stats screen offers Themes once the server has unlocked a theme")
       reach = show.reach_of(:themes)
       click(reach.center_x, reach.center_y)
       check(show.themes?, "a click on Themes opens it")
@@ -25,9 +23,9 @@ module DotPopperGui
       frames(3)
       night = screenshot.color(layout.safe.x + 2, layout.safe.y + 2)
       check(night[2] > night[0], "the ordinary night is blue over red")
-      halloween = cards.find { it.theme.key == :halloween }.rect
-      click(halloween.center_x, halloween.center_y)
-      check(show.worn.key == :halloween, "a click on Halloween's card wears it")
+      ghost = cards.find { it.theme.key == :ghost }.rect
+      click(ghost.center_x, ghost.center_y)
+      check(show.worn.key == :ghost, "a click on Ghost's card wears it")
       key(:escape)
       check(show.stats? && !show.themes?, "Escape leaves Themes for the Stats screen")
       key(:escape)

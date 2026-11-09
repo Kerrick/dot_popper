@@ -37,6 +37,8 @@ module DotPopper
         @share = SharePreviewPainter.new(pen:, dots: @dots)
         @cursor = CursorPainter.new(pen:)
         @splash = SplashPainter.new(pen:)
+        @scene = Scene.new(pen)
+        @arrival = ArrivalPainter.new(pen:, dots: @dots)
         @tutorial = TutorialPainter.new(pen:)
         @at_rest = Presentation::DotAnimations.new(pen.style::MOTION)
       end
@@ -63,6 +65,7 @@ module DotPopper
           else
             veil(width, height, @pen.style::TITLE.dim)
             @title.draw(@show, layout)
+            @arrival.draw(@show, layout) if @show.arrival?
           end
         else
           @effects.flash(@show.effects, width, height)
@@ -174,12 +177,14 @@ module DotPopper
       # another color.
       def prepare
         G.background_color = @pen.palette.ink_edge.to_a
+        @scene.bake(@pen.art)
         @splash.refresh
         @hud.prepare(@show.layout)
       end
 
       def backdrop(width, height)
         return G.clear(0, 0, 1, 1) if @diagnostic
+        return @scene.draw if @scene.on?
         return flat_backdrop(width, height) unless @pen.shader?(:backdrop)
 
         @pen.shading(:backdrop) do |shader|

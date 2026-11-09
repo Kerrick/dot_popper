@@ -50,7 +50,7 @@ module DotPopper
     # Declared and in the privacy manifest, but not yet in the game's code.
     # test/privacy/requests_test.rb fails as soon as one is built, so it
     # cannot go out unplayed.
-    UNBUILT_REQUESTS = %i[themes].freeze
+    UNBUILT_REQUESTS = %i[].freeze
 
     # What the game reaches its server for, in this build.
     def self.features_built = REQUESTS.values.reject { UNBUILT_REQUESTS.include?(it.kind) }.map(&:feature).uniq

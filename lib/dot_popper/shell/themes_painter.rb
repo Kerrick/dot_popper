@@ -32,13 +32,11 @@ module DotPopper
         hover = show.hover.level(theme)
         pen.color(palette.ink_top)
         G.rectangle(:fill, rect.x, rect.y, rect.width, rect.height, corner, corner, 32)
-        pair(rect, palette)
+        pair(rect, theme)
         name(show.words.themes.fetch(theme.key), rect, palette)
-        earned = show.theme_earned?(theme)
         shade(rect, corner, palette) unless show.theme_open?(theme)
         outline(rect, corner, chosen, hover)
         tick(rect, palette) if chosen
-        badge(rect, palette, earned) unless chosen
       end
 
       # A theme neither earned nor in season is dimmed, so what is open is plain.
@@ -49,27 +47,16 @@ module DotPopper
 
       # A mark in a card's top right corner, as the Stats screen's
       # achievements wear theirs: a filled dot if earned, a ring if not.
-      def badge(rect, palette, earned)
-        size = pen.pixels.whole([rect.height * 0.2, 22.0].max)
-        x = pen.pixels.snap(rect.right - (size * 0.9))
-        y = pen.pixels.snap(rect.y + (size * 0.9))
-        pen.color(palette.fresh_light)
-        if earned
-          G.circle(:fill, x, y, size * 0.3, 24)
-        else
-          G.line_width = pen.pixels.line_width(2)
-          G.circle(:line, x, y, size * 0.3, 24)
-        end
-      end
-
       # A bright dot, and over its right side a popped one, in the upper
-      # part of the card.
-      def pair(rect, palette)
+      # part of the card, in the theme's own art.
+      def pair(rect, theme)
         radius = pen.pixels.whole([rect.height * 0.25, rect.width * 0.19].min)
         y = pen.pixels.snap(rect.y + (rect.height * 0.42))
         left = rect.center_x - (radius * 0.55)
-        dots.swatch(pen.pixels.snap(left - radius * 0.55), y, radius, palette, fresh: true)
-        dots.swatch(pen.pixels.snap(left + radius * 1.1), y, radius, palette, fresh: false)
+        pen.wearing(theme) do
+          dots.icon(pen.pixels.snap(left - radius * 0.55), y, radius, fresh: true)
+          dots.icon(pen.pixels.snap(left + radius * 1.1), y, radius, fresh: false)
+        end
       end
 
       def name(text, rect, palette)

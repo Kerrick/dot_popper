@@ -114,6 +114,15 @@ module DotPopper
       # Whether the Themes screen is open over the Stats screen, and what
       # it shows: every theme the player can wear, and the one worn.
       def themes? = @themes
+
+      # The new theme to tell the player of, once, at the title, when nothing
+      # else is asked of them; nil the rest of the time.
+      def arrival = (@theme_keeper.arrival if title? && !stats? && !themes? && !group_open?)
+      def arrival? = !arrival.nil?
+      def arrival_plan = ArrivalPlan.new(layout)
+
+      # The switch's word: a Free player's says how, since it opens the offer.
+      def arrival_wear_word = words.themes.fetch(themes_locked? ? :wear_pro : :wear)
       def themes = @theme_keeper.shown
       def worn = @theme_keeper.worn
 
@@ -268,6 +277,8 @@ module DotPopper
         in :fullscreen then window.toggle_fullscreen
         in :quit then window.quit
         in :stats then open_stats
+        in :arrival_wear then answer_arrival(wear: true)
+        in :arrival_later then answer_arrival(wear: false)
         in :group_open then @groups.open
         in :offer then open_offer
         in :achievements then open_offer_for(:achievements)
@@ -293,7 +304,8 @@ module DotPopper
       # these.
       def controls
         Control.apart(
-          if tutorial? then [Control.new(name: :skip, reach: layout.skip_button)]
+          if arrival? then arrival_controls
+          elsif tutorial? then [Control.new(name: :skip, reach: layout.skip_button)]
           elsif offer? then offer_controls
           elsif credits? then [button(:back, layout.back_button)]
           elsif group_open? then group_controls
@@ -321,7 +333,8 @@ module DotPopper
       # and Copy in the share preview. In a game it does nothing, since
       # only a press at a place may touch the score.
       def primary
-        if group_open? then leave
+        if arrival? then answer_arrival(wear: true)
+        elsif group_open? then leave
         elsif sharing? then copy_result
         elsif offer? || stats? then leave
         elsif title? then play
@@ -419,7 +432,8 @@ module DotPopper
       # the title, as Continue does. Says whether there was somewhere to go
       # back from, so that elsewhere the key can do its usual job.
       def back
-        if tutorial? then skip_tutorial
+        if arrival? then answer_arrival(wear: false)
+        elsif tutorial? then skip_tutorial
         elsif group_open? then leave
         elsif sharing? then close_share
         elsif stats? then leave
@@ -905,6 +919,27 @@ module DotPopper
         @credits = @credits.fitted(content: credits_lines.height, window: page.window.height)
       end
 
+      def arrival_controls
+        plan = arrival_plan
+        [button(:arrival_later, plan.later_button), button(:arrival_wear, plan.wear_button)]
+      end
+
+      # The player has answered the news of a new theme. A Pro player's
+      # switch wears it at once; a Free player's opens the offer, the same
+      # as tapping Themes.
+      def answer_arrival(wear:)
+        theme = arrival
+        return unless theme
+
+        @theme_keeper.told(theme)
+        if !wear then sounds.play(:tick, pitch: 0.8)
+        elsif themes_locked? then open_offer_for(:themes)
+        else
+          @theme_keeper.wear(theme)
+          sounds.play(:tick, pitch: 1.2)
+        end
+      end
+
       def themes_controls
         themes_layout.cards.map { button(it.theme, it.rect) } << button(:back, layout.back_button)
       end
@@ -1089,7 +1124,6 @@ module DotPopper
       def game_ended(event)
         result = stats_book.record(game_stats, event.size_class)
         @groups.game_finished(score: event.score, sized_to_screen: event.size_class == SizeClass::FITTED && !@tutorial_game)
-        @theme_keeper.game_played
         achievements = @achievements.award(@achievement_watch.earned, day: stats_book.today.iso8601)
         achievements = [] unless @entitlement.pro? # kept, and shown once Pro is bought
         lesson = @tutor.lesson(@mistake) if @mistake&.among(event.game.dots)

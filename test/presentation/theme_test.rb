@@ -10,7 +10,7 @@ class ThemeTest < Minitest::Test
 
   THEMES = Style::THEMES
 
-  def test_the_ordinary_style_comes_first_and_is_the_only_one_without_a_season
+  def test_the_ordinary_style_comes_first_and_is_the_only_one_without_art
     assert_predicate THEMES.first, :ordinary?
     assert_same Style::PALETTE, THEMES.first.palette
     assert_equal [THEMES.first], THEMES.select(&:ordinary?)
@@ -20,26 +20,6 @@ class ThemeTest < Minitest::Test
 
   def test_every_style_is_named_in_words
     THEMES.each { assert Style::WORDS.themes.key?(it.key), "#{it.key} has no name" }
-  end
-
-  def test_a_season_covers_its_first_and_last_days_and_runs_over_new_year
-    halloween = THEMES.find { it.key == :halloween }
-    winter = THEMES.find { it.key == :winter }
-
-    assert halloween.in_season?(Date.new(2026, 10, 17))
-    assert halloween.in_season?(Date.new(2026, 11, 2))
-    refute halloween.in_season?(Date.new(2026, 10, 16))
-    refute halloween.in_season?(Date.new(2026, 11, 3))
-    assert winter.in_season?(Date.new(2026, 12, 31))
-    assert winter.in_season?(Date.new(2027, 1, 2))
-    refute winter.in_season?(Date.new(2026, 12, 14))
-    refute winter.in_season?(Date.new(2027, 1, 3))
-    refute THEMES.first.in_season?(Date.new(2026, 10, 31))
-  end
-
-  def test_no_two_seasons_overlap
-    days = (Date.new(2026, 1, 1)..Date.new(2026, 12, 31)).to_a
-    days.each { |day| assert_operator THEMES.count { it.in_season?(day) }, :<=, 1, day.to_s }
   end
 
   def test_every_fresh_color_is_far_lighter_than_every_popped_color

@@ -2,29 +2,29 @@
 
 module DotPopper
   module Presentation
-    # The days of a year a holiday theme appears, from [month, day] to
-    # [month, day], both included. One that ends before it begins (Dec 15
-    # to Jan 2) runs over New Year.
-    class Season < Data.define(:from, :to)
-      def cover?(date)
-        today = [date.month, date.day]
-        after_start = (from <=> today) <= 0
-        before_end = (today <=> to) <= 0
-        (from <=> to) <= 0 ? after_start && before_end : after_start || before_end
-      end
+    # The sky of a theme's night, as the scene shader takes it.
+    class ThemeSky < Data.define(:top, :mid, :bottom, :glow, :glow_at, :glow_amount, :edge, :stars, :fog, :fog_amount)
+      def initialize(top:, mid:, bottom:, glow:, glow_at:, glow_amount:, edge:, stars:, fog: Color.hex("#000000"), fog_amount: 0.0) = super
     end
 
-    # A theme for the whole game, as plain data: its +key+ (what is saved
-    # of it), its +palette+ (Palette, usually the ordinary one with some
-    # colors changed), and the +season+ it appears in. The ordinary theme
-    # has no season, and is always there. Every dot, backdrop, button and
-    # word takes its colors from the palette, so a theme needs no code.
-    class Theme < Data.define(:key, :palette, :season)
-      def initialize(key:, palette:, season: nil) = super
+    # What a theme draws and plays beyond its colors, as one unit: +dot+
+    # names its shader in assets/shaders/themes/, +sky+ and +scenery+ its
+    # night (Presentation::Scenery), +wordmark+ the title's font, if it has
+    # its own, and whether the O's are dots (+title_dots+), and
+    # +sounds+ the patches it plays instead of the ordinary ones.
+    class ThemeArt < Data.define(:dot, :sky, :scenery, :wordmark, :title_dots, :sounds)
+      def initialize(dot:, sky:, scenery:, wordmark: nil, title_dots: false, sounds: {}) = super
+    end
 
-      def ordinary? = season.nil?
+    # A theme for the whole game: its +key+ (what is saved of it, and what
+    # the server names), its +palette+, and its +art+. The ordinary
+    # theme has no art and is always there. Every theme lives in its own
+    # file in presentation/themes/ with its shader in
+    # assets/shaders/themes/, so one can be swapped alone.
+    class Theme < Data.define(:key, :palette, :art)
+      def initialize(key:, palette:, art: nil) = super
 
-      def in_season?(date) = !season.nil? && season.cover?(date)
+      def ordinary? = art.nil?
     end
   end
 end

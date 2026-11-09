@@ -1521,3 +1521,15 @@ The fifth beat is gone. The tutorial is Good, Bad, Good again, as long as before
 `Show#with_a_game` is now the only door: Play, Skip, and the Tutorial's end (first Play and How to Play alike) go through it, and it spends a game or, with none left, opens the offer as Play does. The Tutorial's practice stays free; the game it goes on into costs one, like any other. This changes "Free plays", which said the tutorial and How to play never cost one: watching them doesn't, but the game after does. A first Play's tutorial, which also ends in a game, now spends one at its end (it used to be free, by the same hole).
 
 **To reverse:** call `go_on_from(scene)` directly in `Show#follow_tutorial`.
+
+## Themes are art, unlocked by the server
+
+*Replaces "Holiday themes are built: three looks, earned by one round, chosen on a Looks screen" and its date logic, and retires the recolour Halloween, Winter and Hearts.*
+
+**Four themes ship, each a single swappable unit:** Ghost, Jack-o'-lantern, Awake and Eclipse. A theme is one file in `presentation/themes/` (its palette, its sky, its sounds, its title) and one dot shader in `assets/shaders/themes/`, so replacing one (the maintainer may yet prefer round 3's circular ghost) touches nothing else. Its night is drawn once into a canvas at the screen's own resolution (`Shell::Scene`, `Presentation::Scenery`) and drawn 1:1 each frame, so scenery costs one quad on an old phone. Gameplay, scores, speeds and touch targets are untouched (Schell's elemental tetrad: aesthetics changes, mechanics do not). Every theme keeps the bright dot told from a popped one by shape and lightness, not hue (Hodent; Universal Principles of Color; `theme_test.rb` holds them all to the ordinary look's contrast).
+
+**The server unlocks them; the game never counts down.** A theme exists to the player only once `GET /themes?started_on=` has named it (`ThemeFeed`, on a worker thread, Offline changes nothing). Until then no screen shows a trace of it, no placeholder, no teaser, no count (Johnson: people do not miss what was never promised, and Rigby & Ryan on pressure: an offer you can see and not have is pressure). Once told, it is saved for good. `started_on` is a date kept once, for every player, with no account.
+
+**Telling the player.** A new theme is told once, at the title, when nothing else is asked of them: a calm moment (Saffer: bring the data forward, at the right time; Hodent: attention is scarce, so not mid-round). The card previews the theme's own bright and popped dot, and offers an immediate switch beside "Not now" (Rigby & Ryan: autonomy), so it is answered in one tap and never again. A free player is told too, because knowing is free, and their switch opens the Pro offer, as tapping Themes does (Ferrara: reward through meaning, not nagging; the offer is asked once). It is a card over the title and not a screen of its own: a judicious choice (the 80/20 rule, Tidwell's modal panel), and the game has no fixed count of screens; be judicious in adding one.
+
+**To reverse:** remove a theme's file and shader, or point `Look::THEMES` back at palettes alone.

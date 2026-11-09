@@ -55,10 +55,14 @@ module DotPopper
         achievements = Achievements.new(SaveFile.new(name: "achievements.txt"))
         keeper = StatsKeeper.new(score_record: @cabinet.score_record, stats_book:, achievements:, folder: ->(name) { SaveFile.new(name:) })
         entitlement = Entitlement.new(SaveFile.new(name: "entitlement.txt"), forced: Entitlement.forced?(@env, os:))
-        theme_keeper = Presentation::ThemeKeeper.new(SaveFile.new(name: "themes.txt"), themes: Style::THEMES, entitlement:, today:)
+        theme_keeper = Presentation::ThemeKeeper.new(SaveFile.new(name: "themes.txt"), themes: Style::THEMES, entitlement:)
+        wear_fixture(theme_keeper)
+        @theme_feed = theme_feed(theme_keeper)
+        @theme_feed&.ask
         @pen = Pen.new(Style, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
-        @pen.wear(theme_keeper.palette)
+        @pen.wear(theme_keeper.worn)
         @speaker = Speaker.new(Style::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Style::SOUND.volume)
+        @speaker.dress(theme_keeper.worn)
         @splash = @splash.with(sounding: !@speaker.muted?) if @splash
         storefront = Presentation::Storefront.for(
           os, entitlement:,
@@ -136,6 +140,7 @@ module DotPopper
         end
         @cabinet.update(seconds)
         @show.update(seconds)
+        @theme_feed&.update
         dress
         point_the_mouse
         repeat_keys
@@ -371,10 +376,29 @@ module DotPopper
         ::Lota::Keyboard.key_repeat = reading
       end
 
+      # A scenario's unlocks and theme, in place of the server's.
+      def wear_fixture(theme_keeper)
+        keys = @env["DOT_POPPER_THEME_UNLOCKS"]
+        theme_keeper.receive(keys.split(",")) if keys
+        key = @env["DOT_POPPER_THEME"]&.to_sym or return
+
+        Style::THEMES.find { it.key == key }&.then { theme_keeper.wear(it) }
+      end
+
+      # The feed that reads the server's unlocks, if the game has a server.
+      def theme_feed(theme_keeper)
+        url = Groups::Settings.server_url(@env) or return
+        Presentation::ThemeFeed.new(worker: Groups::Worker.new(Groups::Link.new(url)), theme_keeper:,
+                                    store: SaveFile.new(name: "started_on.txt"), today:)
+      end
+
       # Puts on the Show's look if it has changed (Presentation::ThemeKeeper),
       # which is only ever between games.
       def dress
-        @renderer.prepare if @pen.wear(@show.palette)
+        return unless @pen.wear(@show.worn)
+
+        @renderer.prepare
+        @speaker.dress(@show.worn)
       end
 
       # A press at +x+, +y+, by +by+ (a finger's id, :mouse, :gamepad, or

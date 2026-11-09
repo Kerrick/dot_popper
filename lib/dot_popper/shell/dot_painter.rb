@@ -17,24 +17,24 @@ module DotPopper
       SEGMENTS = 64
 
       def draw(stack, animations, now, radius)
-        paint { stack.bottom_up.each { |dot| one(dot.x, dot.y, radius, animations.pose(dot, now), 1.0, dot.bonus?) } }
+        paint { |shader| stack.bottom_up.each { |dot| one(dot.x, dot.y, radius, animations.pose(dot, now), 1.0, dot.bonus?, shader, dot.id) } }
       end
 
       # What of the dots glows, for Bloom: the fresh dots alone. The glow
       # is drawn under every dot, so the dots above a fresh one hide its
       # light as they hide it.
       def glow(stack, animations, now, radius)
-        paint do
+        paint do |shader|
           stack.bottom_up.each do |dot|
             pose = animations.pose(dot, now)
-            one(dot.x, dot.y, radius, pose, pose.freshness, dot.bonus?) if pose.freshness.positive?
+            one(dot.x, dot.y, radius, pose, pose.freshness, dot.bonus?, shader, dot.id) if pose.freshness.positive?
           end
         end
       end
 
       # One dot that is not in play, such as the title's examples.
       def icon(x, y, radius, fresh:, opacity: 1.0, bonus: false)
-        paint { one(x, y, radius, fresh ? Presentation::Pose::FRESH : Presentation::Pose::STILL, opacity, bonus) }
+        paint { |shader| one(x, y, radius, fresh ? Presentation::Pose::FRESH : Presentation::Pose::STILL, opacity, bonus, shader, 9) }
       end
 
       # One plain dot in the colors of +palette+, whichever theme is worn,
@@ -50,14 +50,21 @@ module DotPopper
 
       private
 
-      def paint(&)
-        return yield unless pen.shader?(:dot)
+      def paint
+        name = pen.dot_shader
+        return yield(nil) unless name
 
-        pen.shading(:dot) { yield }
+        pen.shading(name) do |shader|
+          pen.tick_dot_shader(shader, ::Lota::Timer.time, [0.0, 0.0]) if pen.art
+          yield shader
+        end
       end
 
-      def one(x, y, radius, pose, opacity, bonus)
-        pen.shader?(:dot) ? shaded(x, y, radius, pose, opacity, bonus) : flat(x, y, radius, pose, opacity, bonus)
+      def one(x, y, radius, pose, opacity, bonus, shader, seed)
+        return flat(x, y, radius, pose, opacity, bonus) unless shader
+
+        pen.uniform(shader, "seed", seed.to_f) if pen.art
+        shaded(x, y, radius, pose, opacity, bonus)
       end
 
       def shaded(x, y, radius, pose, opacity, bonus)

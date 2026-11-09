@@ -8,6 +8,7 @@
       "Your achievements",
       "Whether you bought Pro",
       "Your themes",
+      "The date you first played",
       "How many free games you have left",
       "A history of your games",
       "A copy of your records, if you clear them",
@@ -61,6 +62,14 @@
         "label": "Your themes",
         "not_for_players": null,
         "holds": "your themes and which is chosen",
+        "made_by": "the game",
+        "also_sent": []
+      },
+      {
+        "name": "started_on.txt",
+        "label": "The date you first played",
+        "not_for_players": null,
+        "holds": "the date you first played, sent to learn which themes are available",
         "made_by": "the game",
         "also_sent": []
       },
@@ -295,7 +304,7 @@
         "body": {},
         "sends_token": false,
         "when": "When the game is online, to learn which themes are available; for every player, Free too, with no token.",
-        "in_this_build": false
+        "in_this_build": true
       }
     ]
   },
@@ -333,7 +342,7 @@
   },
   "permissions": {
     "android_manifest": {
-      "android.permission.INTERNET": "to reach the game's server for friend groups",
+      "android.permission.INTERNET": "to reach the game's server for friend groups and themes",
       "android.permission.VIBRATE": "for haptic feedback"
     },
     "android_added_by_libraries": {

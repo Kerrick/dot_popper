@@ -49,9 +49,9 @@ class GuiScenariosTest < Minitest::Test
   end
 
   def test_choosing_a_holiday_style_from_the_pro_version
-    play("themes", "a pro player wears the theme in season", "the Stats screen offers Themes once a theme is earned",
+    play("themes", "the Stats screen offers Themes once the server has unlocked a theme",
          "a click on the ordinary theme's card wears it at once", "Escape leaves Themes for the Stats screen",
-         DOT_POPPER_PRO: "1", DOT_POPPER_TODAY: "2026-10-31")
+         DOT_POPPER_PRO: "1", DOT_POPPER_THEME_UNLOCKS: "ghost")
   end
 
   def test_clearing_the_stats_and_undoing_it
@@ -99,7 +99,7 @@ class GuiScenariosTest < Minitest::Test
   def test_a_free_player_buys_the_pro_version_on_a_test_builds_store
     play("purchase", "the games have run out", "Play leads to the offer", "the store gave its price", "Buy waits for the store",
          "the Stats screen no longer offers the purchase", "Themes opens", "scenario purchase passed",
-         DOT_POPPER_FREE_GAMES: "1", DOT_POPPER_TODAY: "2026-10-31")
+         DOT_POPPER_FREE_GAMES: "1", DOT_POPPER_THEME_UNLOCKS: "ghost")
   end
 
   def test_the_tutorial_played_through_with_a_mouse
@@ -160,7 +160,7 @@ class GuiScenariosTest < Minitest::Test
   def environment(name, window, env)
     { "DOT_POPPER_SCENARIO" => name, "DOT_POPPER_SAVE_AS" => "dot_popper_gui_#{name}_#{Process.pid}",
       "DOT_POPPER_WINDOW" => window, "DOT_POPPER_SEED" => "7", "DOT_POPPER_TODAY" => "2026-11-07",
-      "ALSOFT_DRIVERS" => "null", **env.transform_keys(&:to_s) }
+      "ALSOFT_DRIVERS" => "null", "DOT_POPPER_SERVER" => "", **env.transform_keys(&:to_s) }
   end
 
   # Removes the run's save folder, which it names as it starts.

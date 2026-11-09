@@ -10,121 +10,104 @@ class ThemeKeeperTest < Minitest::Test
 
   def setup
     @store = Memory.new
-    @pro = Memory.new
-    @day = Date.new(2026, 10, 31)
+    @paid = Memory.new
   end
 
-  def test_a_free_player_always_wears_the_ordinary_style_even_in_season
-    theme_keeper = theme_keeper(pro: false)
-
-    assert_predicate theme_keeper.worn, :ordinary?
-    assert_predicate theme_keeper, :offered?, "a free player is shown the themes"
-    assert_predicate theme_keeper, :locked?
-    assert_equal Style::THEMES, theme_keeper.shown
-    theme_keeper.wear(Style::THEMES.last)
-
-    assert_predicate theme_keeper.worn, :ordinary?
+  def theme_keeper(paid: true)
+    @paid.write("pro") if paid
+    ThemeKeeper.new(@store, themes: THEMES, entitlement: DotPopper::Entitlement.new(@paid))
   end
 
-  def test_a_pro_player_wears_the_theme_in_season_and_the_ordinary_style_out_of_it
-    assert_equal :halloween, theme_keeper.worn.key
-    @day = Date.new(2026, 11, 8)
-
-    assert_predicate theme_keeper.worn, :ordinary?
+  def test_until_the_server_says_so_there_is_no_trace_of_a_theme
+    w = theme_keeper
+    assert_equal [THEMES.first], w.choices
+    refute_predicate w, :offered?
+    assert_nil w.arrival
   end
 
-  def test_one_game_in_season_earns_a_theme_for_good
-    theme_keeper = theme_keeper(pro: true)
-    theme_keeper.game_played
-    @day = Date.new(2026, 11, 8)
-
-    assert_equal [:classic, :halloween], theme_keeper.choices.map(&:key)
-    assert theme_keeper.offered?
-    assert_equal [:classic, :halloween], theme_keeper(pro: true).choices.map(&:key), "kept by the store"
+  def test_unlocks_are_kept_for_good_even_if_the_server_forgets
+    w = theme_keeper
+    assert w.receive(%w[ghost awake]), "the server sent new themes"
+    assert_equal %i[classic ghost awake], w.choices.map(&:key)
+    w.receive([])
+    assert_equal %i[classic ghost awake], theme_keeper.choices.map(&:key), "still there, after a restart, offline"
   end
 
-  def test_a_game_out_of_season_earns_nothing_and_a_missed_theme_returns_next_year
-    @day = Date.new(2026, 11, 8)
-    theme_keeper = theme_keeper(pro: true)
-    theme_keeper.game_played
-
-    assert_equal [:classic], theme_keeper.choices.map(&:key)
-    assert theme_keeper.offered?, "Themes is always offered, with the others there to see"
-
-    @day = Date.new(2027, 10, 20)
-
-    assert_equal [:classic, :halloween], theme_keeper.choices.map(&:key)
+  def test_keys_the_game_does_not_know_are_ignored
+    theme_keeper.receive(%w[zombie classic])
+    assert_equal [THEMES.first], theme_keeper.choices
   end
 
-  def test_a_theme_earned_while_free_is_kept_and_worn_on_purchase
-    free = theme_keeper(pro: false)
-    free.game_played
-    @day = Date.new(2026, 11, 8)
-
-    assert_predicate free.worn, :ordinary?
-    assert_equal :halloween, theme_keeper(pro: false).choices.last.key
-
-    @pro.write("pro")
-    bought = theme_keeper(pro: false)
-
-    assert_predicate bought, :offered?
-    bought.wear(THEMES.find { it.key == :halloween })
-    assert_equal :halloween, bought.worn.key
+  def test_each_new_theme_is_told_once_and_a_pro_player_can_wear_it
+    w = theme_keeper
+    w.receive(["ghost"])
+    assert_equal :ghost, w.arrival.key
+    w.told(w.arrival)
+    assert_nil w.arrival, "told, however it was answered"
+    w.wear(w.choices.last)
+    assert_equal :ghost, theme_keeper.worn.key
   end
 
-  def test_a_chosen_style_is_kept_all_year_and_over_the_seasons_theme
-    theme_keeper = theme_keeper(pro: true)
-    theme_keeper.game_played
-    theme_keeper.wear(THEMES.first)
+  def test_a_free_player_may_know_of_a_theme_but_wears_the_ordinary_one
+    w = theme_keeper(paid: false)
+    w.receive(["ghost"])
+    assert_predicate w, :offered?
+    assert_predicate w, :locked?
+    assert_equal :ghost, w.arrival.key
+    w.wear(w.choices.last)
+    assert_predicate w.worn, :ordinary?
+  end
+end
 
-    assert_predicate theme_keeper.worn, :ordinary?
+class ThemeFeedTest < Minitest::Test
+  include PresentationTest
 
-    @day = Date.new(2026, 12, 20)
-    theme_keeper.game_played
+  Memory = DotPopper::ScoreRecord::Memory
+  Reply = DotPopper::Groups::Reply
 
-    assert_predicate theme_keeper(pro: true).worn, :ordinary?, "a choice stands over the season"
-    theme_keeper.wear(THEMES.find { it.key == :winter })
-    @day = Date.new(2027, 6, 1)
+  class FakeWorker
+    attr_accessor :finished_list
+    attr_reader :started
 
-    assert_equal :winter, theme_keeper(pro: true).worn.key, "worn all year once chosen"
+    def initialize = (@finished_list = [])
+    def start(job, _token) = @started = job
+    def finished = @finished_list.tap { @finished_list = [] }
   end
 
-  def test_nothing_unearned_or_out_of_season_can_be_worn
-    @day = Date.new(2026, 11, 8)
-    theme_keeper = theme_keeper(pro: true)
-    theme_keeper.wear(THEMES.find { it.key == :valentine })
-
-    assert_predicate theme_keeper.worn, :ordinary?
+  def setup
+    @store = Memory.new
+    @dated = Memory.new
+    @worker = FakeWorker.new
+    @paid = Memory.new
+    @theme_keeper = ThemeKeeper.new(@store, themes: Style::THEMES, entitlement: DotPopper::Entitlement.new(@paid))
+    @feed = ThemeFeed.new(worker: @worker, theme_keeper: @theme_keeper, store: @dated, today: -> { Date.new(2026, 11, 8) })
   end
 
-  def test_the_style_changes_only_when_refreshed_so_a_game_is_never_dressed_twice
-    theme_keeper = theme_keeper(pro: true)
-    @day = Date.new(2026, 11, 8)
-
-    assert_equal :halloween, theme_keeper.worn.key
-
-    theme_keeper.refresh
-
-    assert_predicate theme_keeper.worn, :ordinary?
+  def test_sends_the_first_play_date_and_keeps_it_for_good
+    @feed.ask
+    assert_equal "/themes?started_on=2026-11-08", @worker.started.path
+    feed = ThemeFeed.new(worker: @worker, theme_keeper: @theme_keeper, store: @dated, today: -> { Date.new(2027, 1, 1) })
+    feed.ask
+    assert_equal "/themes?started_on=2026-11-08", @worker.started.path
   end
 
-  def test_a_store_with_nonsense_in_it_is_a_new_theme_keeper
-    @store.write("earned: ghosts halloween\nchosen: nonsense\njunk")
-    theme_keeper = theme_keeper(pro: true)
-
-    assert_equal [:classic, :halloween], theme_keeper.choices.map(&:key)
-    assert_equal :halloween, theme_keeper.worn.key
+  def test_an_empty_answer_shows_no_trace_of_any_theme
+    @worker.finished_list = [[nil, Reply.new(status: 200, body: [])]]
+    refute @feed.update
+    refute_predicate @theme_keeper, :offered?
+    assert_nil @theme_keeper.arrival
   end
 
-  def test_the_palette_is_the_worn_themes
-    assert_same THEMES.find { it.key == :halloween }.palette, theme_keeper.palette
+  def test_an_unlock_arrives_and_unknown_keys_are_ignored
+    @worker.finished_list = [[nil, Reply.new(status: 200, body: [{ "key" => "ghost" }, { "key" => "zombie" }])]]
+    assert @feed.update
+    assert_equal [:ghost], @theme_keeper.choices.drop(1).map(&:key)
   end
 
-  private
-
-  def theme_keeper(pro: true)
-    @pro.write("pro") if pro
-    entitlement = DotPopper::Entitlement.new(@pro)
-    ThemeKeeper.new(@store, themes: THEMES, entitlement:, today: -> { @day })
+  def test_offline_keeps_what_was_saved
+    @theme_keeper.receive(["ghost"])
+    @worker.finished_list = [[nil, Reply.offline]]
+    refute @feed.update
+    assert_equal [:ghost], @theme_keeper.choices.drop(1).map(&:key)
   end
 end

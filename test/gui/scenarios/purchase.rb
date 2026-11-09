@@ -11,6 +11,8 @@ module DotPopperGui
     scenario :purchase
 
     def play
+      keeper = show.instance_variable_get(:@theme_keeper)
+      keeper.told(keeper.arrival) until keeper.arrival.nil?
       check(show.title?, "the game opens on the title")
       check_equal(words.games_left(2), show.games_line, "the title counts the games left")
       quick_game
