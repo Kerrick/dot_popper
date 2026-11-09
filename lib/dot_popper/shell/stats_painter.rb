@@ -74,11 +74,17 @@ module DotPopper
         left(title, pen.fonts.semibold(14), rect.x + pad, rect.y + 16, palette.soft)
         # One size for every row of the card: the largest at which each
         # row's label fits beside its value.
+        # a label that still does not fit breaks onto two lines.
         room = rect.width - (2 * pad) - 14
-        size -= 1 while size > 11 && rows.any? { pen.fonts.semibold(size).width(it.label) + pen.fonts.bold(size).width(it.value) > room }
+        least = (size * 0.8).round
+        size -= 1 while size > least && rows.any? { pen.fonts.semibold(size).width(it.label) + pen.fonts.bold(size).width(it.value) > room }
+        font = pen.fonts.semibold(size)
         rows.each_with_index do |row, i|
           y = rect.y + 30 + (i * height) + (height / 2.0)
-          left(row.label, pen.fonts.semibold(size), rect.x + pad, y, palette.cream)
+          lines = Presentation::Words.wrap(row.label, room - pen.fonts.bold(size).width(row.value)) { font.width(it) }
+          lines = [row.label] if lines.size > 2
+          step = [font.height * 0.95, height / 2.0].min
+          lines.each_with_index { |line, n| left(line, font, rect.x + pad, y + ((n - ((lines.size - 1) / 2.0)) * step), palette.cream) }
           right(row.value, pen.fonts.bold(size), rect.right - pad, y, palette.cream)
           next if i.zero?
 
