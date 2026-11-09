@@ -33,7 +33,7 @@ module DotPopper
       # the default, dots sized to the screen, first.
       SIZINGS = [DotSizing::SIZED_TO_SCREEN, DotSizing::STANDARD].freeze
 
-      attr_reader :cabinet, :effects, :animations, :hud, :attract, :layout, :marquee, :finale, :sounds, :now, :style,
+      attr_reader :cabinet, :effects, :animations, :hud, :attract, :layout, :marquee, :game_over, :sounds, :now, :style,
                   :stats_book, :input, :words, :clearing, :tutorial, :lead_in, :window, :games
 
       def initialize(cabinet:, layout:, sounds:, radius:, style: Style, random: Random.new, calm: false,
@@ -82,7 +82,7 @@ module DotPopper
         @attract = Attract.spawn(cabinet.field, style::TITLE)
         @now = 0.0
         @marquee = Marquee.new(style: style::TITLE, score_record: cabinet.score_record.of(cabinet.size_class), at: @now)
-        @finale = nil
+        @game_over = nil
         @tutor = tutor
         @clipboard = clipboard
         @sharing = sharing
@@ -197,7 +197,7 @@ module DotPopper
 
       # Where an announcement goes: under the HUD at Game Over, and at
       # the top of the title, clear of the Group button's row.
-      def banner_y = finished? ? hud_bottom + layout.margin : layout.top + layout.button_size + layout.margin
+      def banner_y = game_over? ? hud_bottom + layout.margin : layout.top + layout.button_size + layout.margin
 
       # What the Stats screen shows, while it is open.
       def stats = @stats
@@ -229,7 +229,7 @@ module DotPopper
       # look alike, the saved choice stays as it was, and games follow it.
       def sizing_offered? = stats_offered? && sizing_preview.offered?
       def playing? = cabinet.state.is_a?(Cabinet::Playing)
-      def finished? = cabinet.state.is_a?(Cabinet::GameOver)
+      def game_over? = cabinet.state.is_a?(Cabinet::GameOver)
 
       # A tap at +x+, +y+, by +by+ (a finger's id, :mouse, or :gamepad),
       # which #let_go names when it lets go. In a game, every tap goes to
@@ -292,7 +292,7 @@ module DotPopper
           elsif stats? then stats_controls
           elsif title? then title_controls
           elsif sharing? then share_controls
-          elsif finished? then finale_controls
+          elsif game_over? then game_over_controls
           else []
           end
         )
@@ -316,7 +316,7 @@ module DotPopper
         elsif sharing? then copy_result
         elsif offer? || stats? then leave
         elsif title? then play
-        elsif finished? then continue_on
+        elsif game_over? then continue_on
         end
       end
 
@@ -351,7 +351,7 @@ module DotPopper
       # Game Over's Continue: back to the title, once the game will hear a
       # press (Rules::GAME_OVER_GRACE).
       def continue_on
-        cabinet.press(layout.center_x, layout.center_y) if finished?
+        cabinet.press(layout.center_x, layout.center_y) if game_over?
       end
 
       # The mouse moved to +x+, +y+, without a button held or with one.
@@ -376,7 +376,7 @@ module DotPopper
       # Game Over, anywhere but its buttons, since it may become a drag of
       # the pile (PileGrabs). Everywhere else, the share preview over Game
       # Over too, a press counts the moment it goes down.
-      def waits_for_release?(x, y) = finished? && !sharing? && control_at(x, y).nil?
+      def waits_for_release?(x, y) = game_over? && !sharing? && control_at(x, y).nil?
 
       # A gamepad's Start: the screen's main button (#primary).
       def start = primary
@@ -414,7 +414,7 @@ module DotPopper
         elsif group_open? then leave
         elsif sharing? then close_share
         elsif stats? then leave
-        elsif finished? then continue_on
+        elsif game_over? then continue_on
         else return false
         end
         true
@@ -628,7 +628,7 @@ module DotPopper
       # copies, as Copy does. Anywhere else it does nothing.
       def share
         return copy_result if sharing?
-        return unless finished? && finale
+        return unless game_over? && game_over
 
         @preview = @sharing.offer(share_text, now)
         sounds.play(:tick)
@@ -707,7 +707,7 @@ module DotPopper
 
       # Where Game Over's words and "Share my score" go (FinalePlan), or
       # nil away from Game Over.
-      def finale_plan = finale_screen&.then { planned(it) }
+      def game_over_plan = game_over_screen&.then { planned(it) }
 
       # The plan of +screen+ (a TitleScreen or a FinaleScreen), laid out
       # again only when the screen differs from the last of its kind, since
@@ -721,10 +721,10 @@ module DotPopper
       end
 
       # Game Over's words to lay out (FinaleScreen), or nil away from it.
-      def finale_screen
-        return unless finale
+      def game_over_screen
+        return unless game_over
 
-        FinaleScreen.new(layout:, type: style::TYPE, words:, measure: @measure, scrim: style::FINALE_BACKING, finale:,
+        GameOverScreen.new(layout:, type: style::TYPE, words:, measure: @measure, scrim: style::GAME_OVER_BACKING, game_over:,
                          below: hud_bottom, radius: cabinet.game&.field&.radius || @radius, group_line: @groups.game_line)
       end
 
@@ -739,7 +739,7 @@ module DotPopper
 
       def update(seconds)
         @now += seconds
-        @groups.update(now, quiet: !playing?, showing: (title? && !stats?) || finished?)
+        @groups.update(now, quiet: !playing?, showing: (title? && !stats?) || game_over?)
         follow_store(seconds) unless playing?
         clear_stats if clearing.done?(now)
         @undo = nil unless @undo&.open?(now)
@@ -748,7 +748,7 @@ module DotPopper
         follow_tutorial(seconds) if tutorial?
         @attract = attract.update(seconds) if title?
         follow_game if cabinet.game
-        follow_finale if finished?
+        follow_game_over if game_over?
       end
 
       # Hears one of the rules' events (Cabinet#subscribe).
@@ -848,8 +848,8 @@ module DotPopper
         [button(:close, plan.close), button(:copy, plan.copy)]
       end
 
-      def finale_controls
-        plan = finale_plan or return []
+      def game_over_controls
+        plan = game_over_plan or return []
         [(button(:share, plan.share_button) if plan.share_button),
          (primary_button(:continue, plan.continue_button) if plan.continue_button)].compact
       end
@@ -966,7 +966,7 @@ module DotPopper
         end
         @tutorial_game = !scene.nil?
         @groups.game_started
-        @finale = nil
+        @game_over = nil
         @preview = nil
         @mistake = nil
         @undo = nil # the game's records would be lost to an undo
@@ -1036,8 +1036,8 @@ module DotPopper
 
       # The finished game's result, as Words#share_text says it.
       def share_text
-        words.share_text(finale.score, finale.stats, score_record: finale.score_record, new_score_record: finale.new_score_record?,
-                         record: finale.record, screen: finale.screen, first: finale.first)
+        words.share_text(game_over.score, game_over.stats, score_record: game_over.score_record, new_score_record: game_over.new_score_record?,
+                         record: game_over.record, screen: game_over.screen, first: game_over.first)
       end
 
       def game_ended(event)
@@ -1047,7 +1047,7 @@ module DotPopper
         achievements = @achievements.award(@achievement_watch.earned, day: stats_book.today.iso8601)
         achievements = [] unless @entitlement.paid? # kept, and shown once the paid version is bought
         lesson = @tutor.lesson(@mistake) if @mistake&.among(event.game.dots)
-        @finale = Finale.new(style: style::FINALE, score: event.score, score_record: event.score_record, new_score_record: event.new_score_record, at: now,
+        @game_over = GameOver.new(style: style::GAME_OVER, score: event.score, score_record: event.score_record, new_score_record: event.new_score_record, at: now,
                              stats: game_stats, record: result.records.first, goal_met: result.goal_met, lesson:, achievements:,
                              first: event.first, screen: words.played_on(event.game.field, sized: event.size_class == SizeClass::FITTED))
         sounds.play(event.new_score_record ? :new_score_record : :game_over)
@@ -1061,7 +1061,7 @@ module DotPopper
         @credits = nil
         @clearing = clearing.cancel
         effects.clear
-        @finale = nil
+        @game_over = nil
         @preview = nil
         @marquee = Marquee.new(style: style::TITLE, score_record: event.score_record, at: now)
       end
@@ -1107,14 +1107,14 @@ module DotPopper
         effects.light(style::TICK_FLASH)
       end
 
-      def follow_finale
-        @finale = finale.ready(now) if cabinet.state.ready?
-        replay_mistake if finale.lesson && finale.counted?(now) &&
-                       style::LESSON.replay_due?(finale.replayed, now - finale.at - style::FINALE.tally.duration)
-        goal_burst if finale.goal_due?(now)
-        return unless finale.celebration_due?(now)
+      def follow_game_over
+        @game_over = game_over.ready(now) if cabinet.state.ready?
+        replay_mistake if game_over.lesson && game_over.counted?(now) &&
+                       style::LESSON.replay_due?(game_over.replayed, now - game_over.at - style::GAME_OVER.tally.duration)
+        goal_burst if game_over.goal_due?(now)
+        return unless game_over.celebration_due?(now)
 
-        @finale = finale.celebrate
+        @game_over = game_over.celebrate
         celebrate
       end
 
@@ -1125,8 +1125,8 @@ module DotPopper
       # follow both dots wherever the pile has them, are only outlines, so
       # they hide no dot, and the screen never shakes.
       def replay_mistake
-        mistake = finale.lesson
-        @finale = finale.replay
+        mistake = game_over.lesson
+        @game_over = game_over.replay
         dots = cabinet.game.dots
         popped, bright = [mistake.popped, mistake.bright].map { |id| dots.find { it.id == id } }
         animations.wobble(popped.id, now)
@@ -1137,18 +1137,18 @@ module DotPopper
 
       # A small burst of twinkles where "You met today's goal!" appears.
       def goal_burst
-        @finale = finale.goal_celebrate
+        @game_over = game_over.goal_celebrate
         sounds.play(:tick, pitch: 1.5)
-        line = finale_plan[:goal] or return
-        effects.burst(line.center_x, line.center_y, style::FINALE.goal_sparkles, palette.confetti,
-                      longest: style::FINALE.sparkle_life)
+        line = game_over_plan[:goal] or return
+        effects.burst(line.center_x, line.center_y, style::GAME_OVER.goal_sparkles, palette.confetti,
+                      longest: style::GAME_OVER.sparkle_life)
       end
 
       def celebrate
-        sparkles = style::FINALE.sparkles
+        sparkles = style::GAME_OVER.sparkles
         [0.3, 0.5, 0.7].each do |across|
           effects.burst(layout.safe.x + (layout.safe.width * across), layout.top + (layout.safe.height * 0.2),
-                        sparkles, palette.confetti, longest: style::FINALE.sparkle_life)
+                        sparkles, palette.confetti, longest: style::GAME_OVER.sparkle_life)
         end
       end
     end

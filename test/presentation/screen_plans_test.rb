@@ -156,8 +156,8 @@ class ScreenPlansTest < Minitest::Test
       radius = DotPopper::DotSize.fitted(width, height).radius
       [true, false].repeated_permutation(3) do |goal_met, new_score_record, record|
         below = screen_layout.top + 60
-        plan = FinaleScreen.new(layout: screen_layout, type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
-                                scrim: Style::FINALE_BACKING, finale: finale(goal_met:, new_score_record:, record:),
+        plan = GameOverScreen.new(layout: screen_layout, type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
+                                scrim: Style::GAME_OVER_BACKING, game_over: game_over(goal_met:, new_score_record:, record:),
                                 below:, radius:).plan
         name = "#{width}x#{height} goal #{goal_met}, new record #{new_score_record}, record #{record}"
 
@@ -247,8 +247,8 @@ class ScreenPlansTest < Minitest::Test
   end
 
   def test_short_of_room_game_over_lets_the_record_go_first_and_keeps_the_score
-    plan = FinaleScreen.new(layout: layout(640, 330), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
-                            scrim: Style::FINALE_BACKING, finale: finale(goal_met: true, record: true), below: 70).plan
+    plan = GameOverScreen.new(layout: layout(640, 330), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
+                            scrim: Style::GAME_OVER_BACKING, game_over: game_over(goal_met: true, record: true), below: 70).plan
     order = %i[record summary goal best heading share]
     dropped = order.reject { plan[it] }
 
@@ -259,8 +259,8 @@ class ScreenPlansTest < Minitest::Test
   end
 
   def test_a_roomy_game_over_shows_every_line_at_full_size
-    plan = FinaleScreen.new(layout: layout(1200, 800), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
-                            scrim: Style::FINALE_BACKING, finale: finale(goal_met: true), below: 80).plan
+    plan = GameOverScreen.new(layout: layout(1200, 800), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
+                            scrim: Style::GAME_OVER_BACKING, game_over: game_over(goal_met: true), below: 80).plan
 
     assert_equal %i[heading goal score score_record summary share continue], plan.placed.rects.keys
     assert_operator plan.backing.bottom, :<=, plan.continue_button.y, "Continue stands on the pile, not the backing"
@@ -372,8 +372,8 @@ class ScreenPlansTest < Minitest::Test
 
   def middle(rect) = [rect.center_x, rect.center_y]
 
-  def finale(goal_met: false, new_score_record: false, record: false)
-    Finale.new(style: Style::FINALE, score: 128, score_record: new_score_record ? 128 : 140, new_score_record:, at: 0.0, goal_met:,
+  def game_over(goal_met: false, new_score_record: false, record: false)
+    GameOver.new(style: Style::GAME_OVER, score: 128, score_record: new_score_record ? 128 : 140, new_score_record:, at: 0.0, goal_met:,
                record: (DotPopper::Stats::Record.new(kind: :most_dots_in_a_row, value: 31) if record))
   end
 

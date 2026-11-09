@@ -94,10 +94,10 @@ class ShowTest < Minitest::Test
     assert @show.playing?, "in a game it does nothing"
     @cabinet.update(20)
     @show.tap(5, 5, by: :gamepad)
-    assert @show.finished?, "the grace still holds"
+    assert @show.game_over?, "the grace still holds"
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     @show.tap(5, 5, by: :mouse)
-    assert @show.finished?, "a click on empty space is the pile's"
+    assert @show.game_over?, "a click on empty space is the pile's"
     @show.tap(5, 5, by: :gamepad)
     assert @show.title?
   end
@@ -126,7 +126,7 @@ class ShowTest < Minitest::Test
     @show.update(0.1)
     @show.tap(*middle(@show.share_reach))
 
-    assert @show.finished?
+    assert @show.game_over?
     assert @show.sharing?
     assert_equal RESULT, @show.share_preview.text
     assert_nil @clipboard.text, "opening the preview copies nothing"
@@ -137,7 +137,7 @@ class ShowTest < Minitest::Test
     assert_equal RESULT, @clipboard.text
     assert @show.share_preview.copied?
     assert @show.sharing?, "the preview stays open to say it was copied"
-    assert @show.finished?
+    assert @show.game_over?
   end
 
   def test_the_share_preview_closes_by_close_by_back_and_by_a_tap_beside_it
@@ -149,7 +149,7 @@ class ShowTest < Minitest::Test
     @show.share
     assert @show.back, "Escape and B close it"
     refute @show.sharing?
-    assert @show.finished?, "and go no further than Game Over"
+    assert @show.game_over?, "and go no further than Game Over"
 
     @show.share
     card = @show.share_plan.card
@@ -187,7 +187,7 @@ class ShowTest < Minitest::Test
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     assert @cabinet.state.ready?, "the grace runs on under the preview"
     @show.primary
-    assert @show.finished?, "the main button copies there, and goes nowhere"
+    assert @show.game_over?, "the main button copies there, and goes nowhere"
     refute @show.waits_for_release?(*continue), "no press under the preview drags the pile"
 
     @show.close_share
@@ -226,7 +226,7 @@ class ShowTest < Minitest::Test
   def test_game_over_names_the_score_record_record_the_game_set
     start_and_pop
     @cabinet.update(20)
-    assert_nil @show.finale.record, "a first game has nothing to beat"
+    assert_nil @show.game_over.record, "a first game has nothing to beat"
 
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     @cabinet.press(10, 10)
@@ -234,8 +234,8 @@ class ShowTest < Minitest::Test
     2.times { start_and_pop(started: true) }
     @cabinet.update(30)
 
-    assert_equal :most_dots_in_a_row, @show.finale.record.kind
-    assert_equal 2, @show.finale.record.value
+    assert_equal :most_dots_in_a_row, @show.game_over.record.kind
+    assert_equal 2, @show.game_over.record.value
   end
 
   # 2026-11-01's goal is to pop 10 bright dots in the first 10 seconds.
@@ -250,10 +250,10 @@ class ShowTest < Minitest::Test
     end
     @cabinet.update(30)
 
-    assert show.finale.goal_met
-    refute show.finale.goal_due?(show.now), "not before the score has counted"
-    show.update(Style::FINALE.tally.duration)
-    assert show.finale.goal_celebrated
+    assert show.game_over.goal_met
+    refute show.game_over.goal_due?(show.now), "not before the score has counted"
+    show.update(Style::GAME_OVER.tally.duration)
+    assert show.game_over.goal_celebrated
     assert stats_book.goal_done?
   end
 
@@ -262,11 +262,11 @@ class ShowTest < Minitest::Test
     @cabinet.update(20)
     @show.update(0.1)
     press_main
-    assert @show.finished?, "the grace still holds"
+    assert @show.game_over?, "the grace still holds"
 
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     @show.tap(5, 5)
-    assert @show.finished?, "empty space is only for the pile"
+    assert @show.game_over?, "empty space is only for the pile"
     press_main
     assert @show.title?
     assert_nil @clipboard.text
@@ -297,15 +297,15 @@ class ShowTest < Minitest::Test
 
   def test_share_my_score_takes_taps_where_its_plan_draws_it
     finish_game(back_to_title: false)
-    button = @show.finale_plan.share_button
+    button = @show.game_over_plan.share_button
 
     reach = @show.share_reach
     assert reach.contains?(button.center_x, button.center_y)
     assert_operator reach.height, :>=, button.height
     refute reach.overlaps?(@show.continue_reach), "a press reaches one button"
-    assert_operator @show.finale_plan.backing.bottom, :<=, @show.finale_plan.continue_button.y,
+    assert_operator @show.game_over_plan.backing.bottom, :<=, @show.game_over_plan.continue_button.y,
                     "the backing ends above Continue"
-    assert_operator @show.finale_plan.backing.bottom, :>=, button.bottom, "and holds Share my score, with the score"
+    assert_operator @show.game_over_plan.backing.bottom, :>=, button.bottom, "and holds Share my score, with the score"
   end
 
   def test_the_share_buttons_place_on_the_title_shares_nothing
@@ -356,7 +356,7 @@ class ShowTest < Minitest::Test
     assert_in_delta 35.4, @cabinet.game.field.radius, 0.1
 
     @cabinet.update(20)
-    assert_equal "Played with dots sized to the screen.", @show.finale.screen
+    assert_equal "Played with dots sized to the screen.", @show.game_over.screen
   end
 
   # A tap on a segment chooses it, so tapping the chosen one again keeps
@@ -403,9 +403,9 @@ class ShowTest < Minitest::Test
 
   def test_game_over_is_laid_out_again_only_when_it_changes
     finish_game(back_to_title: false)
-    plan = @show.finale_plan
+    plan = @show.game_over_plan
 
-    assert_same plan, @show.finale_plan
+    assert_same plan, @show.game_over_plan
   end
 
   # The maintainer, on a controller alone, couldn't find how to quit. B
@@ -531,7 +531,7 @@ class ShowTest < Minitest::Test
     @show.start
     @cabinet.update(20)
     @show.start
-    assert @show.finished?, "the grace still holds"
+    assert @show.game_over?, "the grace still holds"
 
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     @show.start
@@ -551,7 +551,7 @@ class ShowTest < Minitest::Test
     @cabinet.update(20)
     @show.update(0.1)
     @show.share
-    assert @show.finished?
+    assert @show.game_over?
     assert @show.sharing?
     assert_nil @clipboard.text
     @show.share
@@ -646,7 +646,7 @@ class ShowTest < Minitest::Test
     clear_around!(@cabinet.game, popped)
     @show.tap(popped.x, popped.y)
     @cabinet.update(20)
-    assert_nil @show.finale.lesson, "a wrong tap with nothing under it teaches nothing"
+    assert_nil @show.game_over.lesson, "a wrong tap with nothing under it teaches nothing"
 
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
@@ -654,16 +654,16 @@ class ShowTest < Minitest::Test
     popped = @cabinet.game.dots.first
     fresh = @cabinet.game.dots.find(&:fresh?)
     @cabinet.update(20)
-    assert_equal Mistake.new(popped: popped.id, bright: fresh.id), @show.finale.lesson, "the wrong tap is the lesson"
+    assert_equal Mistake.new(popped: popped.id, bright: fresh.id), @show.game_over.lesson, "the wrong tap is the lesson"
     assert_equal "1", store.read
-    refute @show.finale_plan.placed.key?(:lesson), "with no word"
+    refute @show.game_over_plan.placed.key?(:lesson), "with no word"
 
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
     press_main
     hide_fresh_under_a_popped_dot_and_tap_it(started: true)
     @cabinet.update(20)
-    assert_nil @show.finale.lesson, "it has been taught as often as it is"
+    assert_nil @show.game_over.lesson, "it has been taught as often as it is"
   end
 
   # On the pile, the wrong tap's penalty replays as it played, after the
@@ -679,7 +679,7 @@ class ShowTest < Minitest::Test
     @show.effects.update(Style::REVEAL.duration)
     @sounds.played.clear
 
-    @show.update(Style::FINALE.tally.duration)
+    @show.update(Style::GAME_OVER.tally.duration)
     assert_equal [fresh.id], @show.effects.reveals.map(&:follow), "the bright dot is outlined"
     assert_includes @show.effects.rings.map { [it.style, it.follow] }, [Style::ALARM_RING, popped.id]
     assert_includes @show.effects.rings.map { [it.style, it.follow] }, [Style::SPAWN_RIPPLE, fresh.id], "and pulses"
@@ -688,7 +688,7 @@ class ShowTest < Minitest::Test
     assert_empty @sounds.played, "quietly"
 
     (Style::LESSON.replays * 2).times { @show.update(Style::LESSON.every) }
-    assert_equal Style::LESSON.replays, @show.finale.replayed, "a few times, and no more"
+    assert_equal Style::LESSON.replays, @show.game_over.replayed, "a few times, and no more"
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
     assert @show.title?, "Continue works as ever"
@@ -706,7 +706,7 @@ class ShowTest < Minitest::Test
     @show.tap(fresh.x, fresh.y)
     @cabinet.update(20)
 
-    assert_nil @show.finale.lesson
+    assert_nil @show.game_over.lesson
     assert_nil store.read
   end
 
@@ -724,17 +724,17 @@ class ShowTest < Minitest::Test
     @cabinet.update(20)
     @show.update(0.1)
 
-    assert @show.finished?
+    assert @show.game_over?
     assert_equal :game_over, @sounds.names.last, "a first game has no best to beat"
-    assert @show.finale.first
-    assert_equal 1, @show.finale.stats.pops
-    assert_in_delta 0.0, @show.finale.prompt(@show.now)
+    assert @show.game_over.first
+    assert_equal 1, @show.game_over.stats.pops
+    assert_in_delta 0.0, @show.game_over.prompt(@show.now)
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     @show.update(0.01)
     @show.update(1.0)
-    assert_equal 1, @show.finale.shown_score(@show.now)
-    assert_operator @show.finale.prompt(@show.now), :>, 0.9
-    refute @show.finale.celebrated, "only a beaten best is celebrated"
+    assert_equal 1, @show.game_over.shown_score(@show.now)
+    assert_operator @show.game_over.prompt(@show.now), :>, 0.9
+    refute @show.game_over.celebrated, "only a beaten best is celebrated"
   end
 
   def test_the_last_seconds_tick

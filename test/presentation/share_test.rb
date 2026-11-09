@@ -8,7 +8,7 @@ require_relative "presentation_helper"
 class ShareTest < Minitest::Test
   include PresentationTest
 
-  CUE = Style::FINALE.share
+  CUE = Style::GAME_OVER.share
 
   def test_a_line_of_the_result_breaks_into_words_and_shapes
     assert_equal [:fresh, " 27 pops · ", :popped, " 1 mistake · ", :clock, " 38 seconds"],
@@ -120,10 +120,10 @@ class ShareTest < Minitest::Test
     assert_operator score_record_ring.ring, :>, plain_ring.ring
   end
 
-  def test_the_finale_starts_the_cue_when_the_score_has_counted
-    finale = Finale.new(style: Style::FINALE, score: 9, score_record: 12, new_score_record: false, at: 1.0)
+  def test_the_game_over_starts_the_cue_when_the_score_has_counted
+    game_over = GameOver.new(style: Style::GAME_OVER, score: 9, score_record: 12, new_score_record: false, at: 1.0)
 
-    assert_in_delta 0.0, finale.share_cue(1.0 + Style::FINALE.tally.duration).alpha
-    assert_in_delta 1.0, finale.share_cue(1.0 + Style::FINALE.tally.duration + 2.0).alpha
+    assert_in_delta 0.0, game_over.share_cue(1.0 + Style::GAME_OVER.tally.duration).alpha
+    assert_in_delta 1.0, game_over.share_cue(1.0 + Style::GAME_OVER.tally.duration + 2.0).alpha
   end
 end

@@ -453,10 +453,10 @@ module DotPopper
       # been shown long enough. With DOT_POPPER_FAKE_GAMEPAD, the gamepad
       # makes it: the cursor goes where the drag is, and A holds the dot.
       def fake_drag
-        return unless @fake_drag && @show.finished?
+        return unless @fake_drag && @show.game_over?
 
         width, height = ::Lota::Graphics.dimensions
-        @fake_drag.step(@show.finale.at, @show.now, width, height) do |action, x, y|
+        @fake_drag.step(@show.game_over.at, @show.now, width, height) do |action, x, y|
           x, y = nearest_ball(x, y) if action == :press
           unless action == :move
             puts "Dot Popper: the fake drag #{action == :press ? "takes" : "throws"} a dot at #{x.round}, #{y.round}, " \
@@ -645,7 +645,7 @@ module DotPopper
         if @show.stats? then "Your records"
         elsif @show.tutorial? then "the tutorial"
         elsif @show.playing? then "a game"
-        elsif @show.finished? then "Game Over"
+        elsif @show.game_over? then "Game Over"
         else "the title"
         end
       end

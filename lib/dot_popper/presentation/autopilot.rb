@@ -25,7 +25,7 @@ module DotPopper
         @state = nil
         @waited = 0.0
         @cooldown = 0.0
-        @finales = 0
+        @game_overs = 0
         @titles = 0
         @browsed = false
         @resized = false
@@ -49,7 +49,7 @@ module DotPopper
       def notice(state)
         return if state.class == @state
 
-        @finales += 1 if state.is_a?(Cabinet::GameOver)
+        @game_overs += 1 if state.is_a?(Cabinet::GameOver)
         @titles += 1 if state.is_a?(Cabinet::Title)
         @shared = false
         @state = state.class
@@ -108,17 +108,17 @@ module DotPopper
       def finish(cabinet, show)
         return in_preview(show) if show&.sharing?
 
-        if show && @finales.even? && !@shared && @waited >= @style.finale_wait / 2 && show.share_reach
+        if show && @game_overs.even? && !@shared && @waited >= @style.game_over_wait / 2 && show.share_reach
           @shared = true
           @pressed_at = @waited
           return middle(show.share_reach)
         end
-        press_once(@style.finale_wait) { show ? middle(show.continue_reach) : center(cabinet.field) } if cabinet.state.ready?
+        press_once(@style.game_over_wait) { show ? middle(show.continue_reach) : center(cabinet.field) } if cabinet.state.ready?
       end
 
       # In the share preview, a moment after each press: Copy, then Close.
       def in_preview(show)
-        return if @waited - @pressed_at < @style.finale_wait / 4
+        return if @waited - @pressed_at < @style.game_over_wait / 4
 
         @pressed_at = @waited
         middle(show.share_preview.copied? ? show.close_reach : show.copy_reach)

@@ -59,7 +59,7 @@ class ParticlesTest < Minitest::Test
   end
 
   def test_fireworks_twinkle_and_spin
-    sparkles = Style::FINALE.sparkles
+    sparkles = Style::GAME_OVER.sparkles
 
     assert_equal :twinkle, sparkles.sprite
     refute_equal 0.0, sparkles.spin.end

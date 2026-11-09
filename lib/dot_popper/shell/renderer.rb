@@ -32,7 +32,7 @@ module DotPopper
         @credits = CreditsPainter.new(pen:)
         @themes = ThemesPainter.new(pen:, dots: @dots)
         @offer = OfferPainter.new(pen:)
-        @finale = FinalePainter.new(pen:)
+        @game_over = GameOverPainter.new(pen:)
         @group = GroupPainter.new(pen:)
         @share = SharePreviewPainter.new(pen:, dots: @dots)
         @cursor = CursorPainter.new(pen:)
@@ -67,9 +67,9 @@ module DotPopper
           glow
           field
           @effects.scene(@show.effects, dots)
-          veil(width, height, @show.finale&.dim(@show.now).to_f) unless @show.playing?
+          veil(width, height, @show.game_over&.dim(@show.now).to_f) unless @show.playing?
           @effects.words(@show.effects, layout)
-          @finale.draw(@show, layout) unless @show.playing?
+          @game_over.draw(@show, layout) unless @show.playing?
           lead_in = @show.lead_in
           if lead_in
             pill = @hud.bounds(@show.hud, layout)

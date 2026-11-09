@@ -21,7 +21,7 @@ module DotPopperGui
       check(true, "A held on a dot drags it up")
       check_warm_pixel
       wait(1.5)
-      check(show.finished?, "the drag stays on Game Over")
+      check(show.game_over?, "the drag stays on Game Over")
       pad(:a)
       check(show.title?, "a quick press of A goes on to the title")
     end

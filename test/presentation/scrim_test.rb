@@ -22,6 +22,6 @@ class ScrimTest < Minitest::Test
   end
 
   def test_game_overs_backing_never_hides_the_pile
-    assert_includes 0.55..0.65, Style::FINALE_BACKING.alpha
+    assert_includes 0.55..0.65, Style::GAME_OVER_BACKING.alpha
   end
 end

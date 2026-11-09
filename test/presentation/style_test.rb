@@ -68,6 +68,6 @@ class StyleTest < Minitest::Test
   end
 
   def test_the_settings_are_frozen_values
-    [Style::PALETTE, Style::TYPE, Style::MOTION, Style::HUD, Style::FINALE, Style::WORDS].each { assert_predicate it, :frozen? }
+    [Style::PALETTE, Style::TYPE, Style::MOTION, Style::HUD, Style::GAME_OVER, Style::WORDS].each { assert_predicate it, :frozen? }
   end
 end

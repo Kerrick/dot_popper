@@ -218,8 +218,8 @@ module DotPopperGui
 
     # Lets the game's clock run out, in long frames.
     def run_out_the_clock
-      wait_for("the game to end", within: 2000, step: QUICK) { show.finished? }
-      check(show.finished?, "the game ends when its clock runs out")
+      wait_for("the game to end", within: 2000, step: QUICK) { show.game_over? }
+      check(show.game_over?, "the game ends when its clock runs out")
     end
 
     # Waits out Game Over's grace and presses Continue.
@@ -264,7 +264,7 @@ module DotPopperGui
     def visible_point(stack, dot)
       ring = (0...16).map { Math::PI * it / 8 }
       offsets = [[0.0, 0.0]] + [0.3, 0.6].flat_map { |out| ring.map { [Math.cos(it) * out, Math.sin(it) * out] } }
-      covers = show.finale_plan&.placed&.rects&.values.to_a
+      covers = show.game_over_plan&.placed&.rects&.values.to_a
       offsets.map { |dx, dy| [dot.x + (dx * dot.radius), dot.y + (dy * dot.radius)] }
              .find { |x, y| stack.top_at(x, y)&.id == dot.id && covers.none? { it.contains?(x, y) } }
     end

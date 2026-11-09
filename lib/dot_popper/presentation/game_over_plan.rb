@@ -8,14 +8,14 @@ module DotPopper
     # A line the screen had no room for, or that is not shown, has no
     # Rect; Continue is the Rect named :continue, and "Share my score" the
     # one named :share.
-    class FinalePlan < Data.define(:placed, :sizes, :backing)
+    class GameOverPlan < Data.define(:placed, :sizes, :backing)
       def [](name) = placed[name]
       def size(name) = sizes.fetch(name)
       def share_button = placed[:share]
       def continue_button = placed[:continue]
     end
 
-    # Game Over's words for +finale+ (Finale), stacked as one group
+    # Game Over's words for +finale+ (Game Over), stacked as one group
     # between the HUD, whose bottom is at +below+, and the safe area's
     # bottom, or higher, so the pile's dots lying on the window's floor
     # show at least their lower half under Continue: "Time's up!", "You met
@@ -30,7 +30,7 @@ module DotPopper
     # score" reads as part of the score, and Continue, which needs none,
     # stands apart on the pile; it hides no more of the pile than it must.
     # Sizes are measured with +measure+ (RoughMeasure's methods).
-    class FinaleScreen < Data.define(:layout, :type, :words, :measure, :scrim, :finale, :below, :radius, :group_line)
+    class GameOverScreen < Data.define(:layout, :type, :words, :measure, :scrim, :game_over, :below, :radius, :group_line)
       # The gaps above each line, in graphics units at full size.
       GAPS = { heading: 26, goal: 12, score: 4, score_record: 4, group: 8, summary: 14, record: 8, achievement: 8, share: 16, continue: 22 }.freeze
       # "Share my score"'s share glyph and the room around its words, in
@@ -38,12 +38,12 @@ module DotPopper
       SHARE_GLYPH = 0.62
       SHARE_SIDES = 1.1
 
-      def initialize(layout:, type:, words:, measure:, scrim:, finale:, below:, radius: Rules::RADIUS, group_line: nil) = super
+      def initialize(layout:, type:, words:, measure:, scrim:, game_over:, below:, radius: Rules::RADIUS, group_line: nil) = super
 
       def plan
         placed = Column.new(room:).fit(layout.type_scales) { blocks(sizes(it), it) }
         sizes = sizes(placed.scale)
-        FinalePlan.new(placed:, sizes:, backing: backing(placed))
+        GameOverPlan.new(placed:, sizes:, backing: backing(placed))
       end
 
       # From a margin under the HUD to a margin above the safe area's
@@ -61,8 +61,8 @@ module DotPopper
 
       # The best line's face and size, and what it says.
       def score_record_line(size)
-        if finale.new_score_record? then [:bold, size, words.new_score_record]
-        else [:semibold, size, words.short_of_score_record(finale.score, finale.score_record, first: finale.first)]
+        if game_over.new_score_record? then [:bold, size, words.new_score_record]
+        else [:semibold, size, words.short_of_score_record(game_over.score, game_over.score_record, first: game_over.first)]
         end
       end
 
@@ -70,13 +70,13 @@ module DotPopper
 
       def blocks(sizes, scale)
         [line(:heading, :bold, sizes[:heading], words.time_up, scale, drop: 6),
-         (line(:goal, :bold, sizes[:goal], words.goal_met, scale, drop: 4, mark: true) if finale.goal_met),
-         line(:score, :bold, sizes[:score], finale.score.to_s, scale, depth: 1.06),
+         (line(:goal, :bold, sizes[:goal], words.goal_met, scale, drop: 4, mark: true) if game_over.goal_met),
+         line(:score, :bold, sizes[:score], game_over.score.to_s, scale, depth: 1.06),
          line(:score_record, *score_record_line(sizes[:score_record]), scale, drop: 5),
          (line(:group, :semibold, sizes[:summary], group_line, scale, drop: 3.5) if group_line),
-         line(:summary, :semibold, sizes[:summary], words.summary(finale.stats), scale, drop: 3),
-         (line(:record, :semibold, sizes[:summary], words.record(finale.record), scale, drop: 2) if finale.record),
-         (line(:achievement, :semibold, sizes[:summary], AchievementWords.earned(finale.achievements), scale, drop: 2.5) if finale.achievements.any?),
+         line(:summary, :semibold, sizes[:summary], words.summary(game_over.stats), scale, drop: 3),
+         (line(:record, :semibold, sizes[:summary], words.record(game_over.record), scale, drop: 2) if game_over.record),
+         (line(:achievement, :semibold, sizes[:summary], AchievementWords.earned(game_over.achievements), scale, drop: 2.5) if game_over.achievements.any?),
          share(scale),
          continue(scale)].compact
       end
@@ -103,7 +103,7 @@ module DotPopper
       end
 
       def share_width(height)
-        words_width = measure.width(:semibold, FinaleScreen.share_size(height), words.share)
+        words_width = measure.width(:semibold, GameOverScreen.share_size(height), words.share)
         [words_width + (height * (SHARE_GLYPH + SHARE_SIDES)), height * 4.2].max
       end
 
@@ -116,7 +116,7 @@ module DotPopper
       def sizes(scale)
         size = ->(nominal) { layout.type_size(nominal, scale) }
         { heading: size[type.heading], goal: size[type.score_record], score: size[type.final_score],
-          score_record: size[finale.new_score_record? ? type.new_score_record : type.score_record], summary: size[type.summary] }
+          score_record: size[game_over.new_score_record? ? type.new_score_record : type.score_record], summary: size[type.summary] }
       end
 
       # Around every line above Continue, and never past the safe area

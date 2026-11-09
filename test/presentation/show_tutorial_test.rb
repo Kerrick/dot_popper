@@ -59,13 +59,13 @@ class ShowTutorialTest < Minitest::Test
     assert_operator @cabinet.game.countdown.remaining, :<=, 1.0
     assert_equal [1, 1], [@show.hud.score, @show.hud.seconds]
     update_for(1.1)
-    assert @show.finished?
+    assert @show.game_over?
     assert_equal 1, @score_record.of(@cabinet.size_class)
   end
 
   def test_the_game_it_goes_on_into_counts_as_any_game_does
     play_through
-    update_for(0.1) until @show.finished?
+    update_for(0.1) until @show.game_over?
 
     assert_equal 1, @stats_book.stats.games
     assert_operator @show.game_stats.pops, :>=, 2, "its two pops are the game's"
@@ -263,7 +263,7 @@ class ShowTutorialTest < Minitest::Test
   end
 
   def finish_game
-    update_for(0.1) until @show.finished?
+    update_for(0.1) until @show.game_over?
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
   end

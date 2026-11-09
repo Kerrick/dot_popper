@@ -35,7 +35,7 @@ module DotPopperGui
       near = Math.hypot(held[0] - target[0], held[1] - target[1])
       check(near < dot.radius * 2, "the dragged dot follows the mouse (#{near.round} units from it)")
       release(*target)
-      check(show.finished?, "letting go of a drag stays on Game Over")
+      check(show.game_over?, "letting go of a drag stays on Game Over")
       before = pile.center(dot.id)
       frames(3)
       after = pile.center(dot.id)

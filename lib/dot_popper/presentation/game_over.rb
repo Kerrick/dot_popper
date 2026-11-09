@@ -21,7 +21,7 @@ module DotPopper
     # the game earned for the first time, which a player who has the
     # paid version hears of in a line after the score, never during the
     # game.
-    class Finale < Data.define(:style, :score, :score_record, :new_score_record, :at, :stats, :record, :goal_met, :ready_at,
+    class GameOver < Data.define(:style, :score, :score_record, :new_score_record, :at, :stats, :record, :goal_met, :ready_at,
                                :celebrated, :goal_celebrated, :screen, :lesson, :replayed, :first, :achievements)
       def initialize(style:, score:, score_record:, new_score_record:, at:, stats: GameStats.start, record: nil, goal_met: false,
                      ready_at: nil, celebrated: false, goal_celebrated: false, screen: nil, lesson: nil, replayed: 0, first: false,

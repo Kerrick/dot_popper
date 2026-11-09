@@ -14,7 +14,7 @@ module DotPopperGui
       start_game
       pop_fresh
       run_out_the_clock
-      wait(DotPopper::Presentation::Style::FINALE.tally.duration + 1.0)
+      wait(DotPopper::Presentation::Style::GAME_OVER.tally.duration + 1.0)
       check(screenshot.lit_in(show.share_reach) > 50, "Share my score is drawn")
       keep_screenshot("share-button")
       L::System.clipboard_text = UNTOUCHED
@@ -43,7 +43,7 @@ module DotPopperGui
     end
 
     def closed(how)
-      check(!show.sharing? && show.finished?, "#{how} closes the preview, back to Game Over")
+      check(!show.sharing? && show.game_over?, "#{how} closes the preview, back to Game Over")
     end
 
     def by_keys_and_pad
@@ -59,7 +59,7 @@ module DotPopperGui
       L::System.clipboard_text = UNTOUCHED
       key(:return)
       check_equal(show.share_preview.text, L::System.clipboard_text, "Enter copies")
-      check(show.finished?, "and stays on Game Over")
+      check(show.game_over?, "and stays on Game Over")
       close = show.close_reach
       click(close.center_x, close.center_y)
       closed("a click on Close")

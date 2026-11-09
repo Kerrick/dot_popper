@@ -39,15 +39,15 @@ class AchievementsOnStatsTest < Minitest::Test
     show(paid: true)
     play_a_sharp_game
 
-    assert_equal [:sharpshooter], @show.finale.achievements
-    assert_equal "New achievement: Sharpshooter", AchievementWords.earned(@show.finale.achievements)
+    assert_equal [:sharpshooter], @show.game_over.achievements
+    assert_equal "New achievement: Sharpshooter", AchievementWords.earned(@show.game_over.achievements)
   end
 
   def test_a_free_player_earns_it_too_but_hears_nothing_of_it
     show(paid: false)
     play_a_sharp_game
 
-    assert_empty @show.finale.achievements
+    assert_empty @show.game_over.achievements
     assert_equal [:sharpshooter], @achievements.earned
     assert_equal "sharpshooter=2026-11-08\n", @folder.call("achievements").read
   end
@@ -59,7 +59,7 @@ class AchievementsOnStatsTest < Minitest::Test
     press_main
     play_a_sharp_game
 
-    assert_empty @show.finale.achievements
+    assert_empty @show.game_over.achievements
   end
 
   def test_the_stats_list_every_achievement_open_before_any_is_earned

@@ -82,10 +82,10 @@ module DotPopperGui
       check_equal(score, ended.score, "Game Over's score")
       check_close(R::STARTING_SECONDS + POPS - (R::PENALTY_SECONDS * 1), ended.game.elapsed,
                   "the game lasted the time it was given")
-      lesson = show.finale.lesson
+      lesson = show.game_over.lesson
       fresh = ended.game.dots.find(&:fresh?)
       check(lesson && lesson.bright == fresh.id, "Game Over teaches the stacking rule from the wrong tap")
-      wait_for("the wrong tap replayed on the pile", within: 300) { show.finale.replayed.positive? }
+      wait_for("the wrong tap replayed on the pile", within: 300) { show.game_over.replayed.positive? }
       check_equal([fresh.id], show.effects.reveals.map(&:follow), "the bright dot it hid is outlined on the pile")
       wait(0.15)
       keep_screenshot("game-over-lesson")
@@ -104,7 +104,7 @@ module DotPopperGui
       check(show.control_at(x, y).nil?, "the place clicked is empty space")
       click(x, y)
       wait(0.3)
-      check(show.finished?, "a click on empty space at Game Over does nothing")
+      check(show.game_over?, "a click on empty space at Game Over does nothing")
     end
 
     def check_saves(score)

@@ -383,9 +383,9 @@ module DotPopper
       # Game over: how the game dims, how the score counts up, and the
       # celebration of a new record. Its sparkles may outlive a pop's
       # droplets, because no game is in play behind them.
-      class FinaleStyle < Data.define(:dim, :arrive, :tally, :prompt, :sparkles, :goal_sparkles, :sparkle_life,
+      class GameOverStyle < Data.define(:dim, :arrive, :tally, :prompt, :sparkles, :goal_sparkles, :sparkle_life,
                                      :share); end
-      FINALE = FinaleStyle.new(
+      GAME_OVER = GameOverStyle.new(
         dim: Tween.new(from: 0.0, to: 0.62, duration: 0.5, ease: :out_cubic),
         arrive: Tween.new(from: 0.0, to: 1.0, duration: 0.45, ease: :out_back),
         tally: Tween.new(from: 0.0, to: 1.0, duration: 0.8, ease: :out_cubic),
@@ -414,7 +414,7 @@ module DotPopper
       # Game Over's words, from "Time's up!" to the Continue button, sit on a
       # soft dark backing, 60% at its middle, so they read over the pile;
       # its edges feather out, so the pile still shows around them.
-      FINALE_BACKING = ScrimStyle.new(alpha: 0.6, feather: 40, layers: 10, pad: 18)
+      GAME_OVER_BACKING = ScrimStyle.new(alpha: 0.6, feather: 40, layers: 10, pad: 18)
 
       # After time's up, the game's dots tumble into a pile behind the
       # score, dimmed (Shell::Pile, with Box2D). A calm pile
@@ -537,8 +537,8 @@ module DotPopper
       # each screen, the Stats screen too, how long it thinks before each
       # tap (which grows with the score, so a game ends), and how often it
       # taps a popped dot.
-      class AutopilotStyle < Data.define(:title_wait, :finale_wait, :stats_wait, :think, :tiring, :mistakes); end
-      AUTOPILOT = AutopilotStyle.new(title_wait: 1.6, finale_wait: 3.2, stats_wait: 3.0, think: 0.22..0.45,
+      class AutopilotStyle < Data.define(:title_wait, :game_over_wait, :stats_wait, :think, :tiring, :mistakes); end
+      AUTOPILOT = AutopilotStyle.new(title_wait: 1.6, game_over_wait: 3.2, stats_wait: 3.0, think: 0.22..0.45,
                                     tiring: 0.07, mistakes: 0.2)
     end
   end
