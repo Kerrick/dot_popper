@@ -34,7 +34,7 @@ module DotPopper
         light = scene.spotlight
         halo(light.to.name, pill, light.strength(now), now - light.at) if light.to&.hud? && light.to.name != :dots_in_a_row
         label(scene.dots_in_a_row_label, layout, spots.fetch(:dots_in_a_row), pill) if scene.dots_in_a_row_label
-        font = pen.fonts.bold(layout.scaled(pen.look::TYPE.floater))
+        font = pen.fonts.bold(layout.scaled(pen.style::TYPE.floater))
         scene.flights.each { flight(it, now, scene.dots, spots, scene.radius, font) }
         GhostPainter.new(pen:).draw(scene.ghost_pose, show.input, scene.radius)
         reach = show.skip_reach
@@ -46,8 +46,8 @@ module DotPopper
       def lead_in_under(lead_in, now, pill, spots, radius)
         x, y = spots.fetch(:time)
         strength = lead_in.strength(now)
-        look = pen.look::TUTORIAL.spotlight
-        dim_around(x, y, pill.height * HUD_LIGHT, look.feather * radius, look.dim * strength) if strength.positive?
+        style = pen.style::TUTORIAL.spotlight
+        dim_around(x, y, pill.height * HUD_LIGHT, style.feather * radius, style.dim * strength) if strength.positive?
       end
 
       # ...and the halo on the clock, over it.
@@ -76,7 +76,7 @@ module DotPopper
 
       # The row's short label, under its row of dots.
       def label(text, layout, spot, pill)
-        font = pen.fonts.semibold(layout.scaled(pen.look::TYPE.hud_label))
+        font = pen.fonts.semibold(layout.scaled(pen.style::TYPE.hud_label))
         pen.outlined(text, font, spot[0], spot[1] + (pill.height * Presentation::Hud::PIP * 1.2) + font.height,
                      pen.palette.soft)
       end
@@ -93,7 +93,7 @@ module DotPopper
 
         share = light.progress(now)
         x, y, reach = from.zip(to).map { |start, finish| start + ((finish - start) * share) }
-        dim_around(x, y, reach, light.look.feather * radius, darkness)
+        dim_around(x, y, reach, light.style.feather * radius, darkness)
       end
 
       # The light around +anchor+, as [x, y, radius].
@@ -107,7 +107,7 @@ module DotPopper
       # How far the light reaches around +anchor+: the row's row is wider
       # than one number.
       def reach(anchor, pill, radius)
-        return radius * pen.look::TUTORIAL.spotlight.dot unless anchor.hud?
+        return radius * pen.style::TUTORIAL.spotlight.dot unless anchor.hud?
 
         pill.height * (anchor.name == :dots_in_a_row ? DOTS_IN_A_ROW_LIGHT : HUD_LIGHT)
       end

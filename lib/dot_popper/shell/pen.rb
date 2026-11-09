@@ -13,12 +13,12 @@ module DotPopper
       G = ::Lota::Graphics
       SHADERS = %i[dot edge backdrop blur].freeze
 
-      attr_reader :fonts, :look, :pixels, :hands
+      attr_reader :fonts, :style, :pixels, :hands
 
-      def initialize(look, shaders: true)
-        @look = look
-        @palette = look::PALETTE
-        @fonts = FontBook.new(look::TYPE)
+      def initialize(style, shaders: true)
+        @style = style
+        @palette = style::PALETTE
+        @fonts = FontBook.new(style::TYPE)
         @hands = HandSprites.new
         @square = G::Image.new(::Lota::Image::ImageData.new(2, 2, :rgba8, ("\xFF".b * 16)))
         @shaders = shaders ? SHADERS.to_h { [it, compile(it)] }.compact : {}
@@ -45,14 +45,14 @@ module DotPopper
       # What a button the mouse is over is lit with (Presentation::HoverLook):
       # the night's glow behind it and cream around it, in the worn palette.
       def lit
-        @lit ||= look::HOVER.with(fill: palette.ink_glow.with_alpha(look::HOVER.fill.a), edge: palette.cream)
+        @lit ||= style::HOVER.with(fill: palette.ink_glow.with_alpha(style::HOVER.fill.a), edge: palette.cream)
       end
 
       # +color+ as the worn palette has it: one of the ordinary palette's
       # colors, which Look gives to rings and flashes, becomes the worn
       # palette's color for the same job; any other color stays.
       def themed(color)
-        ordinary = look::PALETTE.to_h
+        ordinary = style::PALETTE.to_h
         job = ordinary.key(color)
         job ? palette.public_send(job) : color
       end
@@ -123,7 +123,7 @@ module DotPopper
 
       def configure
         if (dot = @shaders[:dot])
-          look::DOT.to_h.except(:legend).each { |name, value| uniform(dot, name.to_s, value) }
+          style::DOT.to_h.except(:legend).each { |name, value| uniform(dot, name.to_s, value) }
         end
         paint_shaders
       end

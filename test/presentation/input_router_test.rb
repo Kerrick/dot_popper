@@ -50,7 +50,7 @@ class InputRouterTest < Minitest::Test
   end
 
   def test_a_gamepad_press_is_a_click_at_the_cursor
-    cursor = GamepadCursor.centered(layout.whole, look: Look::GAMEPAD, radius: R).at(120, 80)
+    cursor = GamepadCursor.centered(layout.whole, style: Style::GAMEPAD, radius: R).at(120, 80)
 
     assert_equal Tap.new(x: 120.0, y: 80.0, kind: InputKind::GAMEPAD), @router.gamepad_pressed(cursor)
   end

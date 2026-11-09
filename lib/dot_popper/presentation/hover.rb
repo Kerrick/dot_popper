@@ -77,7 +77,7 @@ module DotPopper
     # How a button shows the mouse over it: it brightens over +seconds+,
     # and dims as quickly once the mouse leaves. +fill+ is the colour its
     # backing brightens to, and +edge+ the colour of its outline then.
-    class HoverLook < Data.define(:seconds, :fill, :edge); end
+    class HoverStyle < Data.define(:seconds, :fill, :edge); end
 
     # Which button the mouse is over, and how lit each one is, from 0 to
     # 1. Each level eases toward 1 while the mouse is +over+ that button
@@ -91,8 +91,8 @@ module DotPopper
 
       # +seconds+ later, every level a step nearer where it is going, by
       # +look+ (HoverLook). A level that reaches 0 is forgotten.
-      def update(seconds, look)
-        step = look.seconds.positive? ? seconds / look.seconds : 1.0
+      def update(seconds, style)
+        step = style.seconds.positive? ? seconds / style.seconds : 1.0
         names = levels.keys | [over].compact
         moved = names.to_h { [it, (levels.fetch(it, 0.0) + (it == over ? step : -step)).clamp(0.0, 1.0)] }
         with(levels: moved.reject { |_, level| level.zero? }.freeze)

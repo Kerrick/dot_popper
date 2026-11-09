@@ -46,7 +46,7 @@ module DotPopper
           next if width <= 0.0
 
           x, y = ring.center(dots)
-          pen.color(pen.themed(ring.look.color), ring.alpha(now))
+          pen.color(pen.themed(ring.style.color), ring.alpha(now))
           G.line_width = width
           G.circle(:line, x, y, ring.radius(now), 64)
         end
@@ -59,7 +59,7 @@ module DotPopper
           x, y = reveal.center(dots)
           radius = reveal.radius(now)
           alpha = reveal.alpha(now)
-          [[pen.palette.shadow, reveal.width * 2.2, alpha * 0.5], [pen.themed(reveal.look.color), reveal.width, alpha]]
+          [[pen.palette.shadow, reveal.width * 2.2, alpha * 0.5], [pen.themed(reveal.style.color), reveal.width, alpha]]
             .each do |color, width, strength|
             pen.color(color, strength)
             G.line_width = width
@@ -71,7 +71,7 @@ module DotPopper
       def floaters(floaters, now, layout)
         return if floaters.empty?
 
-        font = pen.fonts.bold(layout.scaled(pen.look::TYPE.floater))
+        font = pen.fonts.bold(layout.scaled(pen.style::TYPE.floater))
         floaters.each { pen.outlined(it.text, font, it.x, it.y_at(now), it.color, it.alpha(now)) }
       end
 

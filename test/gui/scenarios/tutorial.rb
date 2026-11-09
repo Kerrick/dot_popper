@@ -66,7 +66,7 @@ module DotPopperGui
     # Waits for the beat that freezes time, and for it to settle.
     def freeze_on(beat)
       wait_for("the tutorial's #{beat} beat", within: 900) { tutorial&.beat == beat }
-      wait(DotPopper::Presentation::Look::TUTORIAL.stop + 0.05)
+      wait(DotPopper::Presentation::Style::TUTORIAL.stop + 0.05)
       check(tutorial.rate.zero?, "time stands still in the #{beat} beat")
     end
 
@@ -115,7 +115,7 @@ module DotPopperGui
       check_equal([0, 9], shown, "the guide's tap costs the point there was and two seconds")
       wait(0.2)
       keep_screenshot(name("3-cost"))
-      wag = tutorial.ghost.look.wag
+      wag = tutorial.ghost.style.wag
       wait_for("the guide's finger-wag", within: 300) { tutorial.ghost_pose&.turn.to_f.abs > wag.angle * 0.8 }
       keep_screenshot(name("3-wag"))
       too_soon
@@ -152,7 +152,7 @@ module DotPopperGui
       T::PRACTICE.downto(T::PRACTICE - 1).each do |id|
         target = dot(id)
         how.call(target.x, target.y)
-        wait(look.flight + 0.05)
+        wait(style.flight + 0.05)
       end
       check_equal(before + 2, tutorial.hud.dots_in_a_row, "the row fills as the player pops")
       keep_screenshot(name("5-fills"))
@@ -174,7 +174,7 @@ module DotPopperGui
       check(tutorial.nil? || tutorial.dots.none? { it.id.negative? }, "its dots are put away")
     end
 
-    def look = DotPopper::Presentation::Look::TUTORIAL.dots_in_a_row
+    def style = DotPopper::Presentation::Style::TUTORIAL.dots_in_a_row
 
     # The last pop spawns a bright dot under the two popped ones, and the
     # game goes on from there: the same dots, the point and the 8 seconds

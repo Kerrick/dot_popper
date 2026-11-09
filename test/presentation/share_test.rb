@@ -8,7 +8,7 @@ require_relative "presentation_helper"
 class ShareTest < Minitest::Test
   include PresentationTest
 
-  CUE = Look::FINALE.share
+  CUE = Style::FINALE.share
 
   def test_a_line_of_the_result_breaks_into_words_and_shapes
     assert_equal [:fresh, " 27 pops · ", :popped, " 1 mistake · ", :clock, " 38 seconds"],
@@ -22,12 +22,12 @@ class ShareTest < Minitest::Test
 
     assert_equal ["Dot Popper: 3 points", "Played with dots sized to the screen."], preview.lines
     refute preview.copied?
-    assert_in_delta 0.0, preview.confirmation(5.0, Look::SHARE_PREVIEW)
+    assert_in_delta 0.0, preview.confirmation(5.0, Style::SHARE_PREVIEW)
     copied = preview.copy(3.0)
     assert copied.copied?
-    assert_in_delta 1.0, copied.confirmation(5.0, Look::SHARE_PREVIEW)
-    assert_in_delta 1.0, copied.arrival(5.0, Look::SHARE_PREVIEW)
-    assert_in_delta 0.0, copied.arrival(2.0, Look::SHARE_PREVIEW)
+    assert_in_delta 1.0, copied.confirmation(5.0, Style::SHARE_PREVIEW)
+    assert_in_delta 1.0, copied.arrival(5.0, Style::SHARE_PREVIEW)
+    assert_in_delta 0.0, copied.arrival(2.0, Style::SHARE_PREVIEW)
   end
 
   # The card says nothing about Copy before it is pressed, and keeps room
@@ -35,13 +35,13 @@ class ShareTest < Minitest::Test
   # it shows.
   def test_the_card_keeps_room_only_for_the_copied_line
     measure = RoughMeasure.new
-    plan = ShareScreen.new(layout: layout(1200, 800), type: Look::TYPE, words: Look::WORDS, measure:,
-                           look: Look::SHARE_PREVIEW, lines: ["Dot Popper: 3 points"]).plan
+    plan = ShareScreen.new(layout: layout(1200, 800), type: Style::TYPE, words: Style::WORDS, measure:,
+                           style: Style::SHARE_PREVIEW, lines: ["Dot Popper: 3 points"]).plan
     size = plan.size(:note)
-    copied = measure.width(:semibold, size, Look::WORDS.copied) + (measure.height(:semibold, size) * 0.75)
+    copied = measure.width(:semibold, size, Style::WORDS.copied) + (measure.height(:semibold, size) * 0.75)
 
     assert_in_delta copied, plan[:note].width, 1e-9
-    refute Look::WORDS.to_h.values.grep(String).any? { it.include?("Copy it") }, "no line on what Copy does"
+    refute Style::WORDS.to_h.values.grep(String).any? { it.include?("Copy it") }, "no line on what Copy does"
   end
 
   def test_in_the_game_sharing_opens_the_preview
@@ -121,9 +121,9 @@ class ShareTest < Minitest::Test
   end
 
   def test_the_finale_starts_the_cue_when_the_score_has_counted
-    finale = Finale.new(look: Look::FINALE, score: 9, score_record: 12, new_score_record: false, at: 1.0)
+    finale = Finale.new(style: Style::FINALE, score: 9, score_record: 12, new_score_record: false, at: 1.0)
 
-    assert_in_delta 0.0, finale.share_cue(1.0 + Look::FINALE.tally.duration).alpha
-    assert_in_delta 1.0, finale.share_cue(1.0 + Look::FINALE.tally.duration + 2.0).alpha
+    assert_in_delta 0.0, finale.share_cue(1.0 + Style::FINALE.tally.duration).alpha
+    assert_in_delta 1.0, finale.share_cue(1.0 + Style::FINALE.tally.duration + 2.0).alpha
   end
 end

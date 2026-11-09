@@ -22,7 +22,7 @@ module DotPopper
         intro = marquee.intro(now)
         words = show.words
         plan = show.title_plan
-        ScrimPainter.new(pen:).draw(plan.backing, pen.look::TITLE_BACKING, layout, alpha: intro)
+        ScrimPainter.new(pen:).draw(plan.backing, pen.style::TITLE_BACKING, layout, alpha: intro)
         title = pen.fonts.bold(plan.size(:title))
         Lettering.new(pen:).candy(words.title, title, layout.center_x,
                                   plan[:title].y + (title.height / 2.0) - ((1 - intro) * 24), intro)

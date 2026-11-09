@@ -45,10 +45,10 @@ module DotPopperGui
       continue_to_title
       show.open_stats
       check(!show.controls.map(&:name).include?(:offer), "the Records screen no longer offers the purchase")
-      check(!show.looks_locked?, "the looks are the player's to wear")
+      check(!show.themes_locked?, "the looks are the player's to wear")
       check(show.group_panel.paid?, "the player can create a friend group")
-      show.open_looks
-      check(show.looks?, "Looks opens")
+      show.open_themes
+      check(show.themes?, "Looks opens")
       wait(0.5)
       keep_screenshot("purchase-paid-looks")
     end

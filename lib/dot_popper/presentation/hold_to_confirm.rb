@@ -5,7 +5,7 @@ module DotPopper
     # Clearing the records: how long "Clear my records…" must be held,
     # how long Undo is offered once they are cleared, and how long the
     # hint to hold stays after a press let go too soon.
-    class ClearLook < Data.define(:hold, :undo, :hint); end
+    class ClearStyle < Data.define(:hold, :undo, :hint); end
 
     # A press that does something only once it has been held for
     # +seconds+, so it is never done by accident: let go sooner, and

@@ -20,7 +20,7 @@ module DotPopper
     # The store answers +read+ and +write(text)+ as ScoreRecord's does, and
     # keeps two lines: "earned: halloween winter" and "chosen: halloween".
     # +today+ answers the date.
-    class Wardrobe
+    class ThemeKeeper
       EARNED = "earned"
       CHOSEN = "chosen"
 

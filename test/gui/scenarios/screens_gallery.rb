@@ -22,8 +22,8 @@ module DotPopperGui
       @size = "first"
       shoot("over", settle: 2.5)
       continue_to_title
-      wardrobe = show.instance_variable_get(:@wardrobe)
-      wardrobe.instance_variable_set(:@earned, P::Look::THEMES.map(&:key).first(2)) if ENV["DOT_POPPER_PAID"] == "1"
+      theme_keeper = show.instance_variable_get(:@theme_keeper)
+      theme_keeper.instance_variable_set(:@earned, P::Style::THEMES.map(&:key).first(2)) if ENV["DOT_POPPER_PAID"] == "1"
       SIZES.each { |width, height, phone| screens(width, height, phone) }
       join
       SIZES.each { |width, height, phone| member(width, height, phone) }
@@ -48,9 +48,9 @@ module DotPopperGui
       group_door
       show.open_stats
       shoot("records")
-      show.open_looks
-      shoot("looks")
-      show.close_looks
+      show.open_themes
+      shoot("themes")
+      show.close_themes
       show.close_stats
       game_over
     end

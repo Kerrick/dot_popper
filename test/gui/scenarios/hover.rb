@@ -14,12 +14,12 @@ module DotPopperGui
       move(reach.center_x, reach.center_y)
       check_equal :stats, show.hovered, "the mouse over Your records hovers it"
       check(app.pointing_hand?, "the pointer is the pointing hand over Your records")
-      wait(DotPopper::Presentation::Look::HOVER.seconds * 2)
+      wait(DotPopper::Presentation::Style::HOVER.seconds * 2)
       check_close 1.0, show.hover.level(:stats), "Your records is lit"
       keep_screenshot("hover-records")
       move(layout.safe.x + 20, layout.top + 20)
       check(show.hovered.nil? && !app.pointing_hand?, "moving away clears the hover and the hand")
-      wait(DotPopper::Presentation::Look::HOVER.seconds * 2)
+      wait(DotPopper::Presentation::Style::HOVER.seconds * 2)
       check_close 0.0, show.hover.level(:stats), "Your records dims again"
       move(reach.center_x, reach.center_y)
       check(app.pointing_hand?, "the hand is back over Your records")

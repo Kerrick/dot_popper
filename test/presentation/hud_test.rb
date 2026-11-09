@@ -7,7 +7,7 @@ class HudTest < Minitest::Test
 
   def setup
     @game = game_with(dot(100, 100))
-    @hud = Hud.blank(Look::HUD, Look::WORDS).read(@game, 0.0)
+    @hud = Hud.blank(Style::HUD, Style::WORDS).read(@game, 0.0)
   end
 
   def test_it_shows_the_score_and_the_whole_seconds_left

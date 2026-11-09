@@ -16,11 +16,11 @@ module DotPopper
     class Tilting
       STICK = "the gamepad's right stick"
 
-      def initialize(pile:, gamepads:, accelerometer:, look:, turns:, random: Random.new)
+      def initialize(pile:, gamepads:, accelerometer:, style:, turns:, random: Random.new)
         @pile = pile
         @gamepads = gamepads
         @accelerometer = accelerometer
-        @look = look
+        @style = style
         @turns = turns
         @random = random
         @tilt = nil
@@ -38,7 +38,7 @@ module DotPopper
 
         reading = @accelerometer.reading if @accelerometer.present?
         stick = @gamepads.right_stick
-        return unless @tilted || reading || !stick.shaped(@look.dead_zone, 1.0).rest?
+        return unless @tilted || reading || !stick.shaped(@style.dead_zone, 1.0).rest?
 
         @tilted = true
         @tilt.orientation = orientation
@@ -48,7 +48,7 @@ module DotPopper
       private
 
       def begin_pile
-        @tilt = Presentation::Tilt.new(@look, orientation:)
+        @tilt = Presentation::Tilt.new(@style, orientation:)
         @tilted = false
         @accelerometer.start if @accelerometer.present?
         sources = [(@accelerometer.source if @accelerometer.present?), (STICK if @gamepads.any?)].compact
@@ -64,7 +64,7 @@ module DotPopper
         @pile.tilt(step.pull, wake: step.wake)
         return unless step.kick.positive?
 
-        @pile.throw_balls { |radius| @look.fling.velocity(step.pull, step.kick, radius, @random) }
+        @pile.throw_balls { |radius| @style.fling.velocity(step.pull, step.kick, radius, @random) }
       end
 
       # How the screen sits on the device, on a phone or tablet whose

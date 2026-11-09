@@ -38,11 +38,11 @@ class TutorTest < Minitest::Test
   end
   
   def test_its_wrong_tap_replays_a_few_times_after_the_score_has_counted
-    look = Look::LESSON
-    assert look.replay_due?(0, 0.0)
-    refute look.replay_due?(1, look.every - 0.01)
-    assert look.replay_due?(1, look.every)
-    refute look.replay_due?(look.replays, 100.0), "then the pile is left in peace"
+    style = Style::LESSON
+    assert style.replay_due?(0, 0.0)
+    refute style.replay_due?(1, style.every - 0.01)
+    assert style.replay_due?(1, style.every)
+    refute style.replay_due?(style.replays, 100.0), "then the pile is left in peace"
   end
   
   def test_a_damaged_count_starts_over

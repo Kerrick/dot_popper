@@ -17,10 +17,10 @@ module DotPopper
     class Bloom
       G = ::Lota::Graphics
 
-      def initialize(pen, look)
+      def initialize(pen, style)
         @pen = pen
-        @look = look
-        @kernel = look.kernel
+        @style = style
+        @kernel = style.kernel
         refresh
       end
 
@@ -29,12 +29,12 @@ module DotPopper
       # Makes the canvases again, for the screen's size and density now.
       def refresh
         @source = @across = @down = nil
-        return unless @look.strength.positive? && @pen.shader?(:blur)
+        return unless @style.strength.positive? && @pen.shader?(:blur)
 
         width, height = G.dimensions
         density = G.dpi_scale
         @source = G::Canvas.new(width, height, dpiscale: density)
-        blurred_width, = @look.blurred_size(*G.pixel_dimensions)
+        blurred_width, = @style.blurred_size(*G.pixel_dimensions)
         smaller = blurred_width.to_f / width
         @across = G::Canvas.new(width, height, dpiscale: smaller)
         @down = G::Canvas.new(width, height, dpiscale: smaller)
@@ -51,14 +51,14 @@ module DotPopper
         G.push(:all) do
           G.origin
           into(@source, &)
-          @look.passes.times do |pass|
+          @style.passes.times do |pass|
             blur(pass.zero? ? @source : @down, @across, [1.0 / @across.pixel_width, 0.0])
             blur(@across, @down, [0.0, 1.0 / @down.pixel_height])
           end
           G.canvas = nil
           G.shader = nil
           G.blend_mode = %i[add premultiplied]
-          G.color = [@look.strength * fade] * 4
+          G.color = [@style.strength * fade] * 4
           G.draw(@down, 0, 0)
         end
       end

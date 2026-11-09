@@ -33,24 +33,24 @@ module DotPopper
       # the default, dots sized to the screen, first.
       SIZINGS = [DotSizing::SIZED_TO_SCREEN, DotSizing::STANDARD].freeze
 
-      attr_reader :cabinet, :effects, :animations, :hud, :attract, :layout, :marquee, :finale, :sounds, :now, :look,
+      attr_reader :cabinet, :effects, :animations, :hud, :attract, :layout, :marquee, :finale, :sounds, :now, :style,
                   :stats_book, :input, :words, :clearing, :tutorial, :lead_in, :window, :games
 
-      def initialize(cabinet:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false,
-                     tutor: Tutor.new(ScoreRecord::Memory.new, times: look::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
+      def initialize(cabinet:, layout:, sounds:, radius:, style: Style, random: Random.new, calm: false,
+                     tutor: Tutor.new(ScoreRecord::Memory.new, times: style::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
                      stats_book: StatsBook.new(ScoreRecord::Memory.new), sizing_store: ScoreRecord::Memory.new,
                      input: InputKind::MOUSE, measure: RoughMeasure.new,
                      achievements: Achievements.new(ScoreRecord::Memory.new),
                      keeper: StatsKeeper.new(score_record: cabinet.score_record, stats_book:, achievements:), notices: Notices.none,
                      sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never, window: NoWindowControl.new,
-                     entitlement: Entitlement.free, wardrobe: Wardrobe.plain(look::THEMES),
+                     entitlement: Entitlement.free, theme_keeper: ThemeKeeper.plain(style::THEMES),
                      groups: Groups::Session.off, storefront: NoStorefront.new, games: FreeGames.unlimited)
         @cabinet = cabinet
         @window = window
         @tutorial_flag = tutorial_flag
         @entitlement = entitlement
-        @wardrobe = wardrobe
-        @looks = false
+        @theme_keeper = theme_keeper
+        @themes = false
         @achievements = achievements
         @achievement_watch = AchievementWatch.new
         @groups = GroupPanel.new(groups:, entitlement:, sounds:)
@@ -71,17 +71,17 @@ module DotPopper
         @radius = radius
         @scale = radius
         @sizing_store = sizing_store
-        @look = look
+        @style = style
         @input = input
-        @words = look::WORDS.for(input)
+        @words = style::WORDS.for(input)
         @random = random
         @calm = calm
         @effects = Effects.new(radius:, random:, calm:)
-        @animations = DotAnimations.new(look::MOTION)
-        @hud = Hud.blank(look::HUD, words)
-        @attract = Attract.spawn(cabinet.field, look::TITLE)
+        @animations = DotAnimations.new(style::MOTION)
+        @hud = Hud.blank(style::HUD, words)
+        @attract = Attract.spawn(cabinet.field, style::TITLE)
         @now = 0.0
-        @marquee = Marquee.new(look: look::TITLE, score_record: cabinet.score_record.of(cabinet.size_class), at: @now)
+        @marquee = Marquee.new(style: style::TITLE, score_record: cabinet.score_record.of(cabinet.size_class), at: @now)
         @finale = nil
         @tutor = tutor
         @clipboard = clipboard
@@ -95,7 +95,7 @@ module DotPopper
         @credits = nil
         @credits_drag = nil
         @keeper = keeper
-        @clearing = HoldToConfirm.idle(look::RECORDS_CLEAR.hold)
+        @clearing = HoldToConfirm.idle(style::RECORDS_CLEAR.hold)
         @undo = nil
         @pointer = nil
         @hover = Hover.none
@@ -108,47 +108,47 @@ module DotPopper
 
       # The colors of the look being worn (Wardrobe), which only changes
       # between games.
-      def palette = @wardrobe.palette
+      def palette = @theme_keeper.palette
 
       # Whether the Looks screen is open over the Stats screen, and what
       # it shows: every look the player can wear, and the one worn.
-      def looks? = @looks
-      def looks = @wardrobe.shown
-      def worn = @wardrobe.worn
+      def themes? = @themes
+      def themes = @theme_keeper.shown
+      def worn = @theme_keeper.worn
 
       # Whether the looks are only to see, as for a free player, and
       # whether +theme+ is one this player has earned.
-      def looks_locked? = @wardrobe.locked?
-      def look_earned?(theme) = @wardrobe.earned?(theme)
+      def themes_locked? = @theme_keeper.locked?
+      def theme_earned?(theme) = @theme_keeper.earned?(theme)
 
       # Whether the Stats screen offers Looks: always to a free player,
       # who is shown what looks there are and which they have earned, and
       # to a paid one once there is a look besides the ordinary one to
       # choose.
-      def looks_offered? = stats? && !credits? && !looks? && @wardrobe.offered?
+      def themes_offered? = stats? && !credits? && !themes? && @theme_keeper.offered?
 
       # Where the Looks screen's cards go (LooksLayout).
-      def looks_layout = LooksLayout.new(layout:, themes: looks, look: look::LOOKS, note: looks_locked?)
+      def themes_layout = ThemesLayout.new(layout:, themes: themes, style: style::THEMES_LAYOUT, note: themes_locked?)
 
-      def open_looks
-        return unless looks_offered?
+      def open_themes
+        return unless themes_offered?
 
-        @looks = true
+        @themes = true
         sounds.play(:tick)
       end
 
-      def close_looks
-        @looks = false
+      def close_themes
+        @themes = false
         sounds.play(:tick, pitch: 0.8)
       end
 
       # Wears +theme+ from now on, and the whole screen takes its colors at
       # once, so the choice is seen before it is left.
       def wear(theme)
-        return unless looks?
-        return sounds.play(:tick, pitch: 0.8) if looks_locked? || theme == worn
+        return unless themes?
+        return sounds.play(:tick, pitch: 0.8) if themes_locked? || theme == worn
 
-        @wardrobe.wear(theme)
+        @theme_keeper.wear(theme)
         sounds.play(:tick, pitch: 1.2)
       end
 
@@ -158,7 +158,7 @@ module DotPopper
         return if kind == input
 
         @input = kind
-        @words = look::WORDS.for(kind)
+        @words = style::WORDS.for(kind)
       end
 
       # Whether the title is showing: the game is on its title, and the
@@ -184,7 +184,7 @@ module DotPopper
 
       # Where the Friend group screen's parts go, while it is open.
       def group_plan
-        GroupScreen.new(layout:, look: look::GROUPS, measure: @measure, panel: @groups,
+        GroupScreen.new(layout:, style: style::GROUPS, measure: @measure, panel: @groups,
                         standard_dots: !cabinet.sizing.sized_to_screen?, back_text: words.go_back).plan
       end
 
@@ -222,7 +222,7 @@ module DotPopper
 
       # What the choice of dot size would do on this screen, worked out
       # afresh each time, so a resized window is always seen as it is now.
-      def sizing_preview = SizingPreview.of(cabinet.screen, look::SIZING)
+      def sizing_preview = SizingPreview.of(cabinet.screen, style::SIZING)
 
       # Whether the title offers the choice of dot size: once a game has
       # finished, and only where the two sizes look different. Where they
@@ -253,7 +253,7 @@ module DotPopper
         in :continue then continue_on
         in :back then leave
         in :credits then open_credits
-        in :looks then open_looks
+        in :themes then open_themes
         in Theme => theme then wear(theme)
         in :mute then sounds.toggle_mute
         in :how_to_play then how_to_play
@@ -287,7 +287,7 @@ module DotPopper
           if tutorial? then [Control.new(name: :skip, reach: layout.skip_button)]
           elsif credits? then [button(:back, layout.back_button)]
           elsif group_open? then group_controls
-          elsif looks? then looks_controls
+          elsif themes? then themes_controls
           elsif offer? then offer_controls
           elsif stats? then stats_controls
           elsif title? then title_controls
@@ -433,7 +433,7 @@ module DotPopper
 
         cabinet.sizing = sizing
         @sizing_store.write(cabinet.sizing.to_text)
-        @attract = Attract.spawn(cabinet.field, look::TITLE)
+        @attract = Attract.spawn(cabinet.field, style::TITLE)
         @marquee = marquee.with(score_record: cabinet.score_record.of(cabinet.size_class))
         sounds.play(:tick, pitch: cabinet.sizing.sized_to_screen? ? 1.2 : 0.9)
       end
@@ -449,7 +449,7 @@ module DotPopper
 
       def close_stats
         @stats = nil
-        @looks = false
+        @themes = false
         @credits = nil
         @offer = false
         @offer_for_play = false
@@ -464,7 +464,7 @@ module DotPopper
 
         if offer? then close_offer
         elsif credits? then close_credits
-        elsif looks? then close_looks
+        elsif themes? then close_themes
         else close_stats
         end
       end
@@ -490,7 +490,7 @@ module DotPopper
       def open_offer
         return unless stats? && !credits? && offer_offered?
 
-        @looks = false
+        @themes = false
         @offer = true
         @storefront.connect
         sounds.play(:tick)
@@ -501,7 +501,7 @@ module DotPopper
       def offer_plan
         return unless offer?
 
-        OfferScreen.new(layout:, type: look::TYPE, words:, measure: @measure, offering: !@entitlement.paid?,
+        OfferScreen.new(layout:, type: style::TYPE, words:, measure: @measure, offering: !@entitlement.paid?,
                         note: words.offer_note(games.left, games.daily)).plan
       end
 
@@ -538,7 +538,7 @@ module DotPopper
 
       # Where the Credits screen's heading and its window of text go.
       def credits_layout
-        page = CreditsLayout.new(layout:, look: look::CREDITS)
+        page = CreditsLayout.new(layout:, style: style::CREDITS)
         page.with(wanted: CreditsLines.widest_as_written(credits_book, size: page.text_size, measure: @measure))
       end
 
@@ -563,12 +563,12 @@ module DotPopper
       def scroll_credits(pixels) = (@credits = @credits.by(pixels) if credits?)
 
       # A mouse wheel's notches, +notches+ of them, positive for up.
-      def wheel_credits(notches) = scroll_credits(-notches * look::CREDITS.wheel * credits_layout.line)
+      def wheel_credits(notches) = scroll_credits(-notches * style::CREDITS.wheel * credits_layout.line)
 
       # A gamepad's left stick or d-pad (Stick) held for +seconds+.
       def stick_credits(stick, seconds)
-        push = stick.shaped(look::GAMEPAD.dead_zone, look::GAMEPAD.curve)
-        scroll_credits(push.y * look::CREDITS.stick * credits_layout.line * seconds)
+        push = stick.shaped(style::GAMEPAD.dead_zone, style::GAMEPAD.curve)
+        scroll_credits(push.y * style::CREDITS.stick * credits_layout.line * seconds)
       end
 
       # A key that scrolls the Credits screen; says whether it was one.
@@ -647,7 +647,7 @@ module DotPopper
       def share_plan
         return unless sharing?
 
-        ShareScreen.new(layout:, type: look::TYPE, words:, measure: @measure, look: look::SHARE_PREVIEW,
+        ShareScreen.new(layout:, type: style::TYPE, words:, measure: @measure, style: style::SHARE_PREVIEW,
                         lines: @preview.lines).plan
       end
 
@@ -696,7 +696,7 @@ module DotPopper
       # Dot size choice beside it never moves or resizes it.
       def title_plan
         goal = stats_book.goal_done? ? words.goal_done_line(stats_book.goal) : words.goal(stats_book.goal) if played?
-        planned(TitleScreen.new(layout:, type: look::TYPE, words:, measure: @measure, score_record: marquee.score_record, goal:,
+        planned(TitleScreen.new(layout:, type: style::TYPE, words:, measure: @measure, score_record: marquee.score_record, goal:,
                                 done: stats_book.goal_done?, streak: stats_book.streak, stats: stats_offered?,
                                 sizing: sizing_offered?, radius: DotSize.fitted(layout.width, layout.height).radius,
                                 window: window.offered?, games: games_line))
@@ -724,7 +724,7 @@ module DotPopper
       def finale_screen
         return unless finale
 
-        FinaleScreen.new(layout:, type: look::TYPE, words:, measure: @measure, scrim: look::FINALE_BACKING, finale:,
+        FinaleScreen.new(layout:, type: style::TYPE, words:, measure: @measure, scrim: style::FINALE_BACKING, finale:,
                          below: hud_bottom, radius: cabinet.game&.field&.radius || @radius, group_line: @groups.game_line)
       end
 
@@ -734,7 +734,7 @@ module DotPopper
         @layout = layout
         @tutorial&.refit(Field.new(field.width, field.height, @tutorial.field.radius))
         lay_out_credits if credits?
-        @attract = field.radius == attract.field.radius ? attract.refit(field) : Attract.spawn(field, look::TITLE)
+        @attract = field.radius == attract.field.radius ? attract.refit(field) : Attract.spawn(field, style::TITLE)
       end
 
       def update(seconds)
@@ -743,7 +743,7 @@ module DotPopper
         follow_store(seconds) unless playing?
         clear_stats if clearing.done?(now)
         @undo = nil unless @undo&.open?(now)
-        @hover = hover.at(hovered).update(seconds, look::HOVER)
+        @hover = hover.at(hovered).update(seconds, style::HOVER)
         effects.update(seconds)
         follow_tutorial(seconds) if tutorial?
         @attract = attract.update(seconds) if title?
@@ -758,7 +758,7 @@ module DotPopper
         when Events::GameStarted then game_started(event)
         when Events::Popped then popped(event)
         when Events::Penalized then penalized(event)
-        when Events::Missed then effects.ring(event.x, event.y, look::TOUCH_RIPPLE)
+        when Events::Missed then effects.ring(event.x, event.y, style::TOUCH_RIPPLE)
         when Events::GameEnded then game_ended(event)
         when Events::TitleShown then title_shown(event)
         end
@@ -792,7 +792,7 @@ module DotPopper
         effects.clear
         effects.scale_to(field.radius)
         @tutorial = Tutorial.new(field:, center: [layout.center_x, layout.center_y], effects:, sounds:,
-                                 haptics: @haptics, look:, now:, random: @random, calm: @calm, palette:)
+                                 haptics: @haptics, style:, now:, random: @random, calm: @calm, palette:)
       end
 
       # A tap in the Tutorial: its skip button, or the scene's.
@@ -812,7 +812,7 @@ module DotPopper
         @handing_over, @tutorial = @tutorial, nil
         scene = @handing_over
         cabinet.resume(field: scene.field, dots: scene.dots, score: scene.score, seconds: scene.seconds)
-        @lead_in = LeadIn.new(at: now, look: look::TUTORIAL.lead)
+        @lead_in = LeadIn.new(at: now, style: style::TUTORIAL.lead)
       end
 
       # The HUD reads the game. While the Tutorial's lead-in lights the
@@ -860,15 +860,15 @@ module DotPopper
         page = credits_layout
         key = [page.text_size, page.room]
         if @credits_lines&.first != key
-          @credits_lines = [key, CreditsLines.set(credits_book, size: page.text_size, room: page.room, line: look::CREDITS.line,
+          @credits_lines = [key, CreditsLines.set(credits_book, size: page.text_size, room: page.room, line: style::CREDITS.line,
                                                   measure: @measure)]
         end
         @credits = @credits.fitted(content: credits_lines.height, window: page.window.height)
       end
 
-      def looks_controls
-        buttons = looks_layout.cards.map { button(it.theme, it.rect) } << button(:back, layout.back_button)
-        buttons << button(:offer, layout.clear_stats_button) if looks_locked? && offer_offered?
+      def themes_controls
+        buttons = themes_layout.cards.map { button(it.theme, it.rect) } << button(:back, layout.back_button)
+        buttons << button(:offer, layout.clear_stats_button) if themes_locked? && offer_offered?
         buttons
       end
 
@@ -889,7 +889,7 @@ module DotPopper
 
       def stats_controls
         [(button(:credits, layout.credits_button)),
-         (button(:looks, layout.looks_button) if looks_offered?),
+         (button(:themes, layout.themes_button) if themes_offered?),
          (button(:offer, layout.offer_button) if offer_offered?),
          (button(:undo, layout.undo_button) if undo_offer),
          (button(:clear, layout.clear_stats_button) if clear_offered?),
@@ -912,10 +912,10 @@ module DotPopper
       # is offered.
       def clear_stats
         @clearing = clearing.cancel
-        @undo = UndoOffer.new(cleared: @keeper.clear, at: now, seconds: look::RECORDS_CLEAR.undo)
+        @undo = UndoOffer.new(cleared: @keeper.clear, at: now, seconds: style::RECORDS_CLEAR.undo)
         stats_changed
         sounds.play(:bonk, pitch: 0.7)
-        @haptics.buzz(look::HAPTICS.penalty)
+        @haptics.buzz(style::HAPTICS.penalty)
       end
 
       def undo
@@ -941,7 +941,7 @@ module DotPopper
 
       # Where the HUD's pill ends, at the safe area's top.
       def hud_bottom
-        type = look::TYPE
+        type = style::TYPE
         layout.top + Hud.height(@measure.height(:bold, layout.scaled(type.hud_number)),
                                 @measure.height(:semibold, layout.scaled(type.hud_label)))
       end
@@ -961,7 +961,7 @@ module DotPopper
         else
           effects.clear
           animations.clear
-          @hud = Hud.blank(look::HUD, words)
+          @hud = Hud.blank(style::HUD, words)
           event.game.dots.each { animations.spawn(it.id, now) }
         end
         @tutorial_game = !scene.nil?
@@ -979,13 +979,13 @@ module DotPopper
         dot = event.dot
         animations.pop(dot.id, now)
         animations.spawn(event.spawned.id, now)
-        effects.burst(event.x, event.y, look::POP_BURST, palette.confetti)
-        effects.ring(dot.x, dot.y, look::SHOCKWAVE, follow: dot.id)
-        effects.ring(event.spawned.x, event.spawned.y, look::SPAWN_RIPPLE, follow: event.spawned.id)
+        effects.burst(event.x, event.y, style::POP_BURST, palette.confetti)
+        effects.ring(dot.x, dot.y, style::SHOCKWAVE, follow: dot.id)
+        effects.ring(event.spawned.x, event.spawned.y, style::SPAWN_RIPPLE, follow: event.spawned.id)
         float_pair(event.x, event.y, Words.points(event.points), Words.seconds(event.seconds),
-                   palette.cream, palette.gain, look::GAIN_FLOAT)
+                   palette.cream, palette.gain, style::GAIN_FLOAT)
         sounds.play(:pop, pitch: pop_pitch, pan: pan(event.x))
-        @haptics.buzz(look::HAPTICS.pop)
+        @haptics.buzz(style::HAPTICS.pop)
         bonus_popped(event) if dot.bonus?
         bonus_earned(event.spawned) if event.spawned.bonus?
       end
@@ -993,45 +993,45 @@ module DotPopper
       # The row's payoff: a larger burst and a second, wider shockwave
       # over the pop's own, and a chord.
       def bonus_popped(event)
-        effects.burst(event.x, event.y, look::BONUS_BURST, look::BONUS_CONFETTI)
-        effects.ring(event.dot.x, event.dot.y, look::BONUS_SHOCKWAVE, follow: event.dot.id)
+        effects.burst(event.x, event.y, style::BONUS_BURST, style::BONUS_CONFETTI)
+        effects.ring(event.dot.x, event.dot.y, style::BONUS_SHOCKWAVE, follow: event.dot.id)
         sounds.play(:bonus_pop, pan: pan(event.x))
-        @haptics.buzz(look::HAPTICS.penalty)
+        @haptics.buzz(style::HAPTICS.penalty)
       end
 
       # The row's result: the bonus dot arrives in place of the ordinary
       # one, in a wide ripple and a chime, and keeps a ring pulsing about
       # it (#beckon).
       def bonus_earned(dot)
-        effects.ring(dot.x, dot.y, look::BONUS_RIPPLE, follow: dot.id)
+        effects.ring(dot.x, dot.y, style::BONUS_RIPPLE, follow: dot.id)
         sounds.play(:bonus, pan: pan(dot.x))
         @beckoned_at = now
       end
 
       # While a bonus dot waits, a mint ring pulses about it every so often.
       def beckon
-        return unless @beckoned_at && playing? && now - @beckoned_at >= look::BONUS_BEACON_EVERY
+        return unless @beckoned_at && playing? && now - @beckoned_at >= style::BONUS_BEACON_EVERY
 
         dot = cabinet.game.dots.find { it.fresh? && it.bonus? } or return @beckoned_at = nil
         @beckoned_at = now
-        effects.ring(dot.x, dot.y, look::BONUS_BEACON, follow: dot.id)
+        effects.ring(dot.x, dot.y, style::BONUS_BEACON, follow: dot.id)
       end
 
       def penalized(event)
         @penalized_at = now
         animations.wobble(event.dot.id, now)
-        effects.ring(event.dot.x, event.dot.y, look::ALARM_RING, follow: event.dot.id)
+        effects.ring(event.dot.x, event.dot.y, style::ALARM_RING, follow: event.dot.id)
         hidden = cabinet.game.dots.fresh_beneath(event.dot, event.x, event.y)
-        effects.reveal(hidden, look::REVEAL) if hidden
+        effects.reveal(hidden, style::REVEAL) if hidden
         @mistake = Mistake.new(popped: event.dot.id, bright: hidden.id) if hidden
-        effects.kick(look::PENALTY_SHAKE)
-        effects.light(look::PENALTY_FLASH)
+        effects.kick(style::PENALTY_SHAKE)
+        effects.light(style::PENALTY_FLASH)
         # The floor can keep the score from falling; say only what was lost.
         points = event.points.zero? ? nil : Words.points(event.points)
         float_pair(event.x, event.y, points, Words.seconds(event.seconds), palette.alarm, palette.alarm,
-                   look::LOSS_FLOAT)
+                   style::LOSS_FLOAT)
         sounds.play(:bonk, pan: pan(event.x))
-        @haptics.buzz(look::HAPTICS.penalty)
+        @haptics.buzz(style::HAPTICS.penalty)
       end
 
       # The finished game's result, as Words#share_text says it.
@@ -1043,27 +1043,27 @@ module DotPopper
       def game_ended(event)
         result = stats_book.record(game_stats, event.size_class)
         @groups.game_finished(score: event.score, sized_to_screen: event.size_class == SizeClass::FITTED && !@tutorial_game)
-        @wardrobe.game_played
+        @theme_keeper.game_played
         achievements = @achievements.award(@achievement_watch.earned, day: stats_book.today.iso8601)
         achievements = [] unless @entitlement.paid? # kept, and shown once the paid version is bought
         lesson = @tutor.lesson(@mistake) if @mistake&.among(event.game.dots)
-        @finale = Finale.new(look: look::FINALE, score: event.score, score_record: event.score_record, new_score_record: event.new_score_record, at: now,
+        @finale = Finale.new(style: style::FINALE, score: event.score, score_record: event.score_record, new_score_record: event.new_score_record, at: now,
                              stats: game_stats, record: result.records.first, goal_met: result.goal_met, lesson:, achievements:,
                              first: event.first, screen: words.played_on(event.game.field, sized: event.size_class == SizeClass::FITTED))
         sounds.play(event.new_score_record ? :new_score_record : :game_over)
       end
 
       def title_shown(event)
-        @wardrobe.refresh
+        @theme_keeper.refresh
         @stats = nil
-        @looks = false
+        @themes = false
         @groups.close if group_open?
         @credits = nil
         @clearing = clearing.cancel
         effects.clear
         @finale = nil
         @preview = nil
-        @marquee = Marquee.new(look: look::TITLE, score_record: event.score_record, at: now)
+        @marquee = Marquee.new(style: style::TITLE, score_record: event.score_record, at: now)
       end
 
       # A tap on the title away from its buttons: a fresh dot there pops
@@ -1078,39 +1078,39 @@ module DotPopper
       # One of the title's dots, popped by a tap: its droplets, its ring,
       # and its bloop, but no score.
       def toy_pop(dot, x, y)
-        effects.burst(x, y, look::POP_BURST, palette.confetti)
-        effects.ring(dot.x, dot.y, look::SHOCKWAVE)
+        effects.burst(x, y, style::POP_BURST, palette.confetti)
+        effects.ring(dot.x, dot.y, style::SHOCKWAVE)
         sounds.play(:pop, pan: pan(x))
       end
 
       # One floater to the left and one to the right of the tap; with only
       # one, it sits over the tap.
       def float_pair(x, y, left, right, left_color, right_color, float)
-        spread = look::FLOAT_SPREAD * @scale
+        spread = style::FLOAT_SPREAD * @scale
         spread = 0.0 unless left && right
         effects.float(left, x - spread, y, left_color, float) if left
         effects.float(right, x + spread, y, right_color, float) if right
       end
 
       # Where across the stereo field a sound at +x+ plays.
-      def pan(x) = look::SOUND.stereo.pan(x, layout.width)
+      def pan(x) = style::SOUND.stereo.pan(x, layout.width)
 
       def pop_pitch
-        sound = look::SOUND
+        sound = style::SOUND
         [1.0 + (cabinet.game.score * sound.pop_climb), sound.pop_highest].min
       end
 
       def tick(seconds)
         return if now - @penalized_at < 0.1
 
-        sounds.play(:tick, pitch: 1.0 + ((look::HUD.urgent_below - seconds) * look::SOUND.tick_climb))
-        effects.light(look::TICK_FLASH)
+        sounds.play(:tick, pitch: 1.0 + ((style::HUD.urgent_below - seconds) * style::SOUND.tick_climb))
+        effects.light(style::TICK_FLASH)
       end
 
       def follow_finale
         @finale = finale.ready(now) if cabinet.state.ready?
         replay_mistake if finale.lesson && finale.counted?(now) &&
-                       look::LESSON.replay_due?(finale.replayed, now - finale.at - look::FINALE.tally.duration)
+                       style::LESSON.replay_due?(finale.replayed, now - finale.at - style::FINALE.tally.duration)
         goal_burst if finale.goal_due?(now)
         return unless finale.celebration_due?(now)
 
@@ -1130,9 +1130,9 @@ module DotPopper
         dots = cabinet.game.dots
         popped, bright = [mistake.popped, mistake.bright].map { |id| dots.find { it.id == id } }
         animations.wobble(popped.id, now)
-        effects.ring(popped.x, popped.y, look::ALARM_RING, follow: popped.id)
-        effects.reveal(bright, look::REVEAL)
-        effects.ring(bright.x, bright.y, look::SPAWN_RIPPLE, follow: bright.id)
+        effects.ring(popped.x, popped.y, style::ALARM_RING, follow: popped.id)
+        effects.reveal(bright, style::REVEAL)
+        effects.ring(bright.x, bright.y, style::SPAWN_RIPPLE, follow: bright.id)
       end
 
       # A small burst of twinkles where "You met today's goal!" appears.
@@ -1140,15 +1140,15 @@ module DotPopper
         @finale = finale.goal_celebrate
         sounds.play(:tick, pitch: 1.5)
         line = finale_plan[:goal] or return
-        effects.burst(line.center_x, line.center_y, look::FINALE.goal_sparkles, palette.confetti,
-                      longest: look::FINALE.sparkle_life)
+        effects.burst(line.center_x, line.center_y, style::FINALE.goal_sparkles, palette.confetti,
+                      longest: style::FINALE.sparkle_life)
       end
 
       def celebrate
-        sparkles = look::FINALE.sparkles
+        sparkles = style::FINALE.sparkles
         [0.3, 0.5, 0.7].each do |across|
           effects.burst(layout.safe.x + (layout.safe.width * across), layout.top + (layout.safe.height * 0.2),
-                        sparkles, palette.confetti, longest: look::FINALE.sparkle_life)
+                        sparkles, palette.confetti, longest: style::FINALE.sparkle_life)
         end
       end
     end

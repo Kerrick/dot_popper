@@ -73,7 +73,7 @@ class WindowButtonsTest < Minitest::Test
   end
 
   def test_full_screens_word_says_what_it_does
-    words = Look::WORDS
+    words = Style::WORDS
 
     assert_equal "Full screen", words.fullscreen_button(false)
     assert_equal "Window", words.fullscreen_button(true)

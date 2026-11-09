@@ -7,7 +7,7 @@ module PresentationTest
   include DotPopperTest
   include DotPopper::Presentation
 
-  Look = DotPopper::Presentation::Look
+  Style = DotPopper::Presentation::Style
 
   # Sounds that only remember what they were asked to play.
   class FakeSounds
@@ -54,6 +54,6 @@ module PresentationTest
   end
 
   def layout(width = 800, height = 600)
-    Layout.new(width:, height:, safe: Rect.new(x: 0, y: 0, width:, height:), look: Look::LAYOUT)
+    Layout.new(width:, height:, safe: Rect.new(x: 0, y: 0, width:, height:), style: Style::LAYOUT)
   end
 end

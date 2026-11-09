@@ -17,7 +17,7 @@ class StatsSheetTest < Minitest::Test
 
   MEDIUM = DotPopper::SizeClass::MEDIUM
 
-  def sheet = StatsSheet.build(stats, score_record: 27, words: Look::WORDS, streak: 3, size_class: MEDIUM,
+  def sheet = StatsSheet.build(stats, score_record: 27, words: Style::WORDS, streak: 3, size_class: MEDIUM,
                                         field: DotPopper::Field.new(1200, 800, R))
 
   def test_the_sheet_shows_the_daily_goals_streaks
@@ -39,7 +39,7 @@ class StatsSheetTest < Minitest::Test
   end
 
   def test_the_records_are_this_screens_and_the_totals_every_screens
-    phone = StatsSheet.build(stats, score_record: 6, words: Look::WORDS, size_class: DotPopper::SizeClass::SMALL,
+    phone = StatsSheet.build(stats, score_record: 6, words: Style::WORDS, size_class: DotPopper::SizeClass::SMALL,
                                       field: DotPopper::Field.new(395, 850, R))
 
     assert_equal ["6", "12 seconds", "3", "None yet"], phone.records.rows.first(4).map(&:value)
@@ -50,7 +50,7 @@ class StatsSheetTest < Minitest::Test
   end
 
   def test_with_dots_sized_to_the_screen_the_sheet_says_so
-    fitted = StatsSheet.build(stats, score_record: 0, words: Look::WORDS, size_class: DotPopper::SizeClass::FITTED,
+    fitted = StatsSheet.build(stats, score_record: 0, words: Style::WORDS, size_class: DotPopper::SizeClass::FITTED,
                                        field: DotPopper::Field.new(395, 850, 30),
                                        sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
 
@@ -61,7 +61,7 @@ class StatsSheetTest < Minitest::Test
   end
 
   def test_with_no_games_the_sheet_is_empty_and_says_none_yet
-    empty = StatsSheet.build(DotPopper::Stats.new, score_record: 0, words: Look::WORDS)
+    empty = StatsSheet.build(DotPopper::Stats.new, score_record: 0, words: Style::WORDS)
 
     assert empty.empty
     assert_equal "None yet", empty.records.rows[3].value
@@ -96,16 +96,16 @@ class StatsSheetTest < Minitest::Test
 
   def test_the_chart_dims_other_groups_games_and_says_so
     mixed = stats.with(recent_classes: [nil, DotPopper::SizeClass::SMALL, MEDIUM, MEDIUM])
-    sheet = StatsSheet.build(mixed, score_record: 27, words: Look::WORDS, size_class: MEDIUM)
-    fitted = StatsSheet.build(mixed, score_record: 0, words: Look::WORDS, size_class: DotPopper::SizeClass::FITTED,
+    sheet = StatsSheet.build(mixed, score_record: 27, words: Style::WORDS, size_class: MEDIUM)
+    fitted = StatsSheet.build(mixed, score_record: 0, words: Style::WORDS, size_class: DotPopper::SizeClass::FITTED,
                                        sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
 
     assert_equal [false, false, true, true], sheet.mine, "an old game's group is unknown"
     assert_equal "Brighter bars are games with standard dots on screens this size.", sheet.chart_note
     assert_equal "Brighter bars are games with dots sized to the screen.", fitted.chart_note
-    assert_nil StatsSheet.build(stats, score_record: 27, words: Look::WORDS, size_class: MEDIUM).chart_note,
+    assert_nil StatsSheet.build(stats, score_record: 27, words: Style::WORDS, size_class: MEDIUM).chart_note,
                "with every bar bright there is nothing to explain"
-    plan = StatsLayout.new(layout: layout(400, 850), sheet:, look: Look::RECORDS)
+    plan = StatsLayout.new(layout: layout(400, 850), sheet:, style: Style::RECORDS)
     assert_equal ["Your last 4 games", :chart, ChartNote.new(text: sheet.chart_note)],
                  plan.placements.first(3).map(&:item)
   end
@@ -117,8 +117,8 @@ class StatsSheetTest < Minitest::Test
   end
 
   def test_a_wide_window_has_two_columns_and_a_narrow_one_stacks
-    wide = StatsLayout.new(layout: layout(1200, 800), sheet:, look: Look::RECORDS)
-    narrow = StatsLayout.new(layout: layout(400, 850), sheet:, look: Look::RECORDS)
+    wide = StatsLayout.new(layout: layout(1200, 800), sheet:, style: Style::RECORDS)
+    narrow = StatsLayout.new(layout: layout(400, 850), sheet:, style: Style::RECORDS)
 
     assert wide.wide?
     assert_equal 2, wide.placements.map(&:x).uniq.size
@@ -128,7 +128,7 @@ class StatsSheetTest < Minitest::Test
 
   def test_everything_fits_between_the_heading_and_the_prompt
     [[1200, 800], [400, 850], [400, 320], [800, 600], [2560, 1440]].each do |width, height|
-      plan = StatsLayout.new(layout: layout(width, height), sheet:, look: Look::RECORDS)
+      plan = StatsLayout.new(layout: layout(width, height), sheet:, style: Style::RECORDS)
       assert_operator plan.note_y(0), :>, plan.heading_y, "#{width}x#{height}"
       plan.placements.each do |placed|
         assert_operator placed.y, :>, plan.note_y(0), "#{width}x#{height}"
@@ -143,7 +143,7 @@ class StatsSheetTest < Minitest::Test
   end
 
   def test_the_chart_leads_when_there_are_scores
-    plan = StatsLayout.new(layout: layout(400, 850), sheet:, look: Look::RECORDS)
+    plan = StatsLayout.new(layout: layout(400, 850), sheet:, style: Style::RECORDS)
 
     assert_equal ["Your last 4 games", :chart, "Your records with standard dots on screens this size"],
                  plan.placements.first(3).map(&:item)
@@ -152,7 +152,7 @@ class StatsSheetTest < Minitest::Test
   # A column is only as wide as its longest row needs, so a label stays
   # near its number, and the columns stay centred together.
   def test_columns_are_as_wide_as_their_rows_need_and_centred
-    plan = StatsLayout.new(layout: layout(1200, 800), sheet:, look: Look::RECORDS, widest: 400)
+    plan = StatsLayout.new(layout: layout(1200, 800), sheet:, style: Style::RECORDS, widest: 400)
     lefts = plan.placements.map(&:x).uniq
 
     assert plan.wide?
@@ -161,7 +161,7 @@ class StatsSheetTest < Minitest::Test
   end
 
   def test_two_columns_only_when_both_fit_side_by_side
-    refute StatsLayout.new(layout: layout(1000, 800), sheet:, look: Look::RECORDS, widest: 520).wide?
-    assert StatsLayout.new(layout: layout(1000, 800), sheet:, look: Look::RECORDS, widest: 420).wide?
+    refute StatsLayout.new(layout: layout(1000, 800), sheet:, style: Style::RECORDS, widest: 520).wide?
+    assert StatsLayout.new(layout: layout(1000, 800), sheet:, style: Style::RECORDS, widest: 420).wide?
   end
 end

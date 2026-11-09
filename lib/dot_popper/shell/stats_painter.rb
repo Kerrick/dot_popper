@@ -20,9 +20,9 @@ module DotPopper
         sheet = show.stats or return
         words = show.words
         palette = pen.palette
-        plan = Presentation::StatsLayout.new(layout:, sheet:, look: pen.look::RECORDS,
-                                               widest: widest(sheet, layout.scaled(pen.look::RECORDS.text)),
-                                               looks: show.looks_offered?, offer: show.offer_offered?)
+        plan = Presentation::StatsLayout.new(layout:, sheet:, style: pen.style::RECORDS,
+                                               widest: widest(sheet, layout.scaled(pen.style::RECORDS.text)),
+                                               themes: show.themes_offered?, offer: show.offer_offered?)
         notes = note_lines(sheet, plan, layout)
         plan = plan.with(note_lines: notes.size)
         pen.text(words.stats, pen.fonts.bold(plan.heading_size), layout.center_x, plan.heading_y, palette.cream)
@@ -31,7 +31,7 @@ module DotPopper
         prompt(show, plan, layout)
         back(show, layout)
         credits(show, layout)
-        looks(show, layout) if show.looks_offered?
+        themes(show, layout) if show.themes_offered?
         offer(show, layout)
         corner(show, layout)
         return nothing_yet(words, layout, plan) if sheet.empty
@@ -66,7 +66,7 @@ module DotPopper
       def prompt(show, plan, layout)
         words = show.words
         clearing = show.clearing
-        hint = pen.look::RECORDS_CLEAR.hint
+        hint = pen.style::RECORDS_CLEAR.hint
         ago = clearing.let_go_ago(show.now)
         if clearing.held? then say(words.keep_holding(show.holding_button), plan, layout, 1.0)
         elsif ago && ago < hint then say(words.hold_to_clear, plan, layout, ((hint - ago) / 0.5).clamp(0.0, 1.0))
@@ -86,9 +86,9 @@ module DotPopper
 
       # Looks, quiet like Credits, with a bright dot and a popped one over
       # it for its icon.
-      def looks(show, layout)
-        hover = show.hover.level(:looks)
-        PillButton.new(pen:).draw(layout.looks_button, show.words.looks.fetch(:title), alpha: 0.8 + (0.2 * hover),
+      def themes(show, layout)
+        hover = show.hover.level(:themes)
+        PillButton.new(pen:).draw(layout.themes_button, show.words.themes.fetch(:title), alpha: 0.8 + (0.2 * hover),
                                                                                        color: pen.palette.soft, hover:,
                                                                                        icon: ->(x, y, size) { pair(x, y, size) })
       end

@@ -14,7 +14,7 @@ module DotPopperGui
       start_game
       pop_fresh
       run_out_the_clock
-      wait(DotPopper::Presentation::Look::FINALE.tally.duration + 1.0)
+      wait(DotPopper::Presentation::Style::FINALE.tally.duration + 1.0)
       check(screenshot.lit_in(show.share_reach) > 50, "Share my score is drawn")
       keep_screenshot("share-button")
       L::System.clipboard_text = UNTOUCHED

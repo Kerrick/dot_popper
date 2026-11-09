@@ -18,7 +18,7 @@ module DotPopper
     # +cooldown+ seconds, each ball as +fling+ (a Throw) says. A calm
     # pile (+shakes+ false) never throws a ball. A stick inside
     # +dead_zone+ is at rest.
-    class TiltLook < Data.define(:smoothing, :wake, :shake, :reversal, :settle, :cooldown, :least_kick, :kick, :most_kick,
+    class TiltStyle < Data.define(:smoothing, :wake, :shake, :reversal, :settle, :cooldown, :least_kick, :kick, :most_kick,
                                  :shakes, :fling, :dead_zone)
       # The speed, in radii a second, a jolt of +jolt+ g throws a ball:
       # none for a jolt no bigger than a shake, and at least +least_kick+
@@ -138,16 +138,16 @@ module DotPopper
     # After one, it waits out the +cooldown+ before it notices another, so
     # a single shake throws the dots once. +jolt+ is the size of the
     # shake it noticed in the last update, in g, or 0.
-    class ShakeSensor < Data.define(:average, :resting, :jolt, :first, :waiting, :look)
-      def self.start(look, reading) = new(average: LowPass.new(value: reading, time_constant: look.settle),
-                                          resting: 0.0, jolt: 0.0, first: nil, waiting: 0.0, look:)
+    class ShakeSensor < Data.define(:average, :resting, :jolt, :first, :waiting, :style)
+      def self.start(style, reading) = new(average: LowPass.new(value: reading, time_constant: style.settle),
+                                          resting: 0.0, jolt: 0.0, first: nil, waiting: 0.0, style:)
 
       def update(seconds, reading)
         change = reading - average.value
         settled = with(average: average.update(seconds, reading), resting: resting - seconds, jolt: 0.0,
                        waiting: waiting - seconds)
         settled = settled.with(first: nil) if settled.waiting <= 0.0
-        return settled unless change.length > look.shake && resting <= 0.0
+        return settled unless change.length > style.shake && resting <= 0.0
 
         settled.jolted(change)
       end
@@ -156,9 +156,9 @@ module DotPopper
       # or else the jolt to wait on.
       def jolted(change)
         if first&.dot(change)&.negative?
-          with(resting: look.cooldown, jolt: [change.length, first.length].max, first: nil, waiting: 0.0)
+          with(resting: style.cooldown, jolt: [change.length, first.length].max, first: nil, waiting: 0.0)
         else
-          with(first: change, waiting: look.reversal)
+          with(first: change, waiting: style.reversal)
         end
       end
 
@@ -175,10 +175,10 @@ module DotPopper
     # right stick, or both, as it comes in each frame. It begins pulling
     # straight down, as the pile does without it.
     class Tilt
-      def initialize(look, orientation: :portrait)
-        @look = look
+      def initialize(style, orientation: :portrait)
+        @style = style
         @orientation = orientation
-        @pull = LowPass.new(value: Pull.down, time_constant: look.smoothing)
+        @pull = LowPass.new(value: Pull.down, time_constant: style.smoothing)
         @woken = Pull.down
         @shakes = nil
       end
@@ -200,24 +200,24 @@ module DotPopper
       private
 
       def target(reading, stick)
-        pushed = Math.hypot(stick.x, stick.y) > @look.dead_zone
-        return Pull.from_stick(stick, @look.dead_zone) if pushed || reading.nil?
+        pushed = Math.hypot(stick.x, stick.y) > @style.dead_zone
+        return Pull.from_stick(stick, @style.dead_zone) if pushed || reading.nil?
 
         Pull.from_device(reading.x, reading.y, @orientation)
       end
 
       def woken?
-        return false if (pull - @woken).length <= @look.wake
+        return false if (pull - @woken).length <= @style.wake
 
         @woken = pull
         true
       end
 
       def kick(seconds, reading)
-        return 0.0 unless @look.shakes && reading
+        return 0.0 unless @style.shakes && reading
 
-        @shakes = @shakes ? @shakes.update(seconds, reading) : ShakeSensor.start(@look, reading)
-        @look.kick_for(@shakes.jolt)
+        @shakes = @shakes ? @shakes.update(seconds, reading) : ShakeSensor.start(@style, reading)
+        @style.kick_for(@shakes.jolt)
       end
     end
 

@@ -83,12 +83,12 @@ module DotPopper
       # The mouse over a segment: the other choice's segment takes the
       # night's glow, and either is outlined.
       def lit(inner, corner, chosen, amount)
-        look = pen.lit
+        style = pen.lit
         unless chosen
-          pen.color(look.fill, look.fill.a * amount)
+          pen.color(style.fill, style.fill.a * amount)
           G.rectangle(:fill, inner.x, inner.y, inner.width, inner.height, corner, corner, 48)
         end
-        pen.color(look.edge, 0.8 * amount)
+        pen.color(style.edge, 0.8 * amount)
         G.line_width = pen.pixels.line_width(1)
         inset = pen.pixels.line_at(inner.x) - inner.x
         G.rectangle(:line, inner.x + inset, inner.y + inset, inner.width - (2 * inset), inner.height - (2 * inset),

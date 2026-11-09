@@ -241,7 +241,7 @@ class ShowTutorialTest < Minitest::Test
   end
 
   def through_the_dots_in_a_row
-    Look::TUTORIAL.dots_in_a_row.practice.times do |pop|
+    Style::TUTORIAL.dots_in_a_row.practice.times do |pop|
       update_for(0.05) until @show.tutorial.beat == :practice && dots_in_a_row_dot(Tutorial::PRACTICE - pop)&.fresh?
       tap_dot(dots_in_a_row_dot(Tutorial::PRACTICE - pop))
     end

@@ -29,7 +29,7 @@ module DotPopper
 
       def pill(x, y, width, height, alpha, hover)
         palette = pen.palette
-        lit = pen.look::HOVER
+        lit = pen.style::HOVER
         pixels = pen.pixels
         corner = height / 2.0
         fill = palette.pill.mix(lit.fill, hover)

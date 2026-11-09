@@ -14,17 +14,17 @@ module DotPopper
 
       def draw(show, layout, width, height)
         preview = show.share_preview or return
-        look = pen.look::SHARE_PREVIEW
+        style = pen.style::SHARE_PREVIEW
         now = show.now
-        shown = preview.arrival(now, look).clamp(0.0, 1.0)
-        veil(width, height, look.veil * shown)
+        shown = preview.arrival(now, style).clamp(0.0, 1.0)
+        veil(width, height, style.veil * shown)
         plan = show.share_plan
         G.push do
-          G.translate(0, pen.pixels.snap((1 - shown) * look.lift * layout.ui))
+          G.translate(0, pen.pixels.snap((1 - shown) * style.lift * layout.ui))
           card(plan.card, layout, shown)
           heading(show, plan, shown)
           message(show, plan, shown)
-          note(show, plan, preview.confirmation(now, look), shown)
+          note(show, plan, preview.confirmation(now, style), shown)
           PillButton.new(pen:).draw(plan.close, show.words.close, alpha: shown, hover: show.hover.level(:close))
           PrimaryButton.new(pen:).draw(plan.copy, show.words.copy, alpha: shown, hover: show.hover.level(:copy),
                                          ratio: PillButton::LABEL)

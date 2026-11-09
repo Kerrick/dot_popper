@@ -27,37 +27,37 @@ module DotPopper
     # A burst asked for at (+x+, +y+), waiting for the shell to throw it:
     # its look, its colors, the longest a droplet of it may live, and the
     # +radius+ of the dots it is for, which its sizes are measured in.
-    class Spray < Data.define(:x, :y, :look, :colors, :longest, :radius)
-      def emission(sprite_size) = Emission.new(look:, longest:, radius:, sprite_size:)
+    class Spray < Data.define(:x, :y, :style, :colors, :longest, :radius)
+      def emission(sprite_size) = Emission.new(style:, longest:, radius:, sprite_size:)
     end
 
     # A Burst as a ParticleSystem's settings, in graphics units, for dots
     # of +radius+ and a sprite +sprite_size+ units across.
-    class Emission < Data.define(:look, :longest, :radius, :sprite_size)
+    class Emission < Data.define(:style, :longest, :radius, :sprite_size)
       # A droplet shrinks to this much of its first size as it goes.
       SHRINK = 0.45
 
-      def stats_book = [[look.life.begin, longest].min, [look.life.end, longest].min]
-      def speed = [look.speed.begin * radius, look.speed.end * radius]
-      def damping = [look.drag, look.drag]
-      def acceleration = [0.0, look.gravity * radius, 0.0, look.gravity * radius]
-      def spin = [look.spin.begin, look.spin.end]
+      def stats_book = [[style.life.begin, longest].min, [style.life.end, longest].min]
+      def speed = [style.speed.begin * radius, style.speed.end * radius]
+      def damping = [style.drag, style.drag]
+      def acceleration = [0.0, style.gravity * radius, 0.0, style.gravity * radius]
+      def spin = [style.spin.begin, style.spin.end]
 
       # The sprite's scale at the start and end of a droplet's life, for
       # the largest droplet; a Burst's size is a droplet's radius.
       def sizes
-        largest = 2 * look.size.end * radius / sprite_size
+        largest = 2 * style.size.end * radius / sprite_size
         [largest, largest * SHRINK]
       end
 
       # How far toward its end size a droplet may start, so the smallest
       # starts at the Burst's smallest size (LÖVE's size variation).
-      def size_variation = ((1 - (look.size.begin / look.size.end)) / (1 - SHRINK)).clamp(0.0, 1.0)
+      def size_variation = ((1 - (style.size.begin / style.size.end)) / (1 - SHRINK)).clamp(0.0, 1.0)
 
       # One color's fade, as LÖVE's colors through a particle's life: it
       # holds most of its opacity through the middle, then goes.
       def colors(color)
-        [1.0, 0.75, 0.0].map { [color.r, color.g, color.b, look.alpha * it] }
+        [1.0, 0.75, 0.0].map { [color.r, color.g, color.b, style.alpha * it] }
       end
     end
 

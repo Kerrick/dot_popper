@@ -30,7 +30,7 @@ module DotPopper
         @title = TitlePainter.new(pen:, dots: @dots)
         @stats = StatsPainter.new(pen:)
         @credits = CreditsPainter.new(pen:)
-        @looks = LooksPainter.new(pen:, dots: @dots)
+        @themes = ThemesPainter.new(pen:, dots: @dots)
         @offer = OfferPainter.new(pen:)
         @finale = FinalePainter.new(pen:)
         @group = GroupPainter.new(pen:)
@@ -38,7 +38,7 @@ module DotPopper
         @cursor = CursorPainter.new(pen:)
         @splash = SplashPainter.new(pen:)
         @tutorial = TutorialPainter.new(pen:)
-        @at_rest = Presentation::DotAnimations.new(pen.look::MOTION)
+        @at_rest = Presentation::DotAnimations.new(pen.style::MOTION)
       end
 
       # The frame, with the setdef +splash+ over it while there is one.
@@ -51,15 +51,15 @@ module DotPopper
         elsif @show.title?
           @dots.draw(@show.attract.dots, @at_rest, @show.now, radius)
           if @show.stats?
-            veil(width, height, @pen.look::RECORDS.veil)
+            veil(width, height, @pen.style::RECORDS.veil)
             if @show.offer? then @offer.draw(@show, layout)
             else stats_screen.draw(@show, layout)
             end
           elsif @show.group_open?
-            veil(width, height, @pen.look::GROUPS.veil)
+            veil(width, height, @pen.style::GROUPS.veil)
             @group.draw(@show, layout)
           else
-            veil(width, height, @pen.look::TITLE.dim)
+            veil(width, height, @pen.style::TITLE.dim)
             @title.draw(@show, layout)
           end
         else
@@ -96,7 +96,7 @@ module DotPopper
       # the Stats screen they were opened from.
       def stats_screen
         if @show.credits? then @credits
-        elsif @show.looks? then @looks
+        elsif @show.themes? then @themes
         else @stats
         end
       end

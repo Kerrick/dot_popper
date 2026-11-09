@@ -3,7 +3,7 @@
 module DotPopper
   module Presentation
     # How the share preview looks: SHARE_PREVIEW in Look says each.
-    class SharePreviewLook < Data.define(:arrive, :confirm, :lift, :width, :pad, :bubble, :veil); end
+    class SharePreviewStyle < Data.define(:arrive, :confirm, :lift, :width, :pad, :bubble, :veil); end
 
     # The result to share, open over Game Over since +at+: the very +text+
     # Copy puts on the clipboard, shown before anything is copied, so the
@@ -19,10 +19,10 @@ module DotPopper
       def copied? = !copied_at.nil?
 
       # How far the preview has come in, by +look+ (SharePreviewLook).
-      def arrival(now, look) = look.arrive.at(now - at)
+      def arrival(now, style) = style.arrive.at(now - at)
 
       # How far "Copied!" has come in since the last copy.
-      def confirmation(now, look) = copied? ? look.confirm.at(now - copied_at) : 0.0
+      def confirmation(now, style) = copied? ? style.confirm.at(now - copied_at) : 0.0
     end
 
     # How the game offers a result to share: in the game, by opening a

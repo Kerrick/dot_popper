@@ -10,7 +10,7 @@ module DotPopper
     # faster than +fastest+ radii a second, and when it is let go it
     # keeps the pointer's speed over its last +window+ seconds, up to
     # +fling+ radii a second.
-    class GrabLook < Data.define(:slop, :hold, :follow, :fastest, :fling, :window); end
+    class GrabStyle < Data.define(:slop, :hold, :follow, :fastest, :fling, :window); end
 
     # Where a pointer was, and when.
     class Sample < Data.define(:x, :y, :at); end
@@ -38,19 +38,19 @@ module DotPopper
       end
 
       # The grab with the pointer moved to +x+, +y+ at +at+.
-      def moved(x, y, at, look)
+      def moved(x, y, at, style)
         sample = Sample.new(x: x.to_f, y: y.to_f, at:)
-        far = Math.hypot(sample.x - start.x, sample.y - start.y) > look.slop * radius
-        kept = samples.drop_while.with_index { |old, i| i < samples.size - 1 && samples[i + 1].at <= at - look.window }
-        with(samples: kept + [sample], wandered: wandered || far).promoted(at, look)
+        far = Math.hypot(sample.x - start.x, sample.y - start.y) > style.slop * radius
+        kept = samples.drop_while.with_index { |old, i| i < samples.size - 1 && samples[i + 1].at <= at - style.window }
+        with(samples: kept + [sample], wandered: wandered || far).promoted(at, style)
       end
 
       # The grab at +at+, a drag once it has wandered or been held long
       # enough on a ball.
-      def promoted(at, look)
+      def promoted(at, style)
         return self if dragging || ball.nil?
 
-        with(dragging: wandered || at - start.at >= look.hold)
+        with(dragging: wandered || at - start.at >= style.hold)
       end
 
       # Whether letting go now is a click: never once it has dragged or
@@ -65,19 +65,19 @@ module DotPopper
 
       # The velocity that brings a ball's middle at +center+ to its target,
       # in graphics units a second.
-      def pull(center, look)
+      def pull(center, style)
         tx, ty = target
-        capped([(tx - center[0]) / look.follow, (ty - center[1]) / look.follow], look.fastest * radius)
+        capped([(tx - center[0]) / style.follow, (ty - center[1]) / style.follow], style.fastest * radius)
       end
 
       # The pointer's velocity as it lets go at +at+, over its last
       # samples, no faster than the look's fling.
-      def throw_velocity(at, look)
+      def throw_velocity(at, style)
         first = samples.first
         last = pointer
         seconds = [at - first.at, 1e-3].max
-        seconds = [seconds, look.window].max if samples.size == 1
-        capped([(last.x - first.x) / seconds, (last.y - first.y) / seconds], look.fling * radius)
+        seconds = [seconds, style.window].max if samples.size == 1
+        capped([(last.x - first.x) / seconds, (last.y - first.y) / seconds], style.fling * radius)
       end
 
       private
@@ -96,8 +96,8 @@ module DotPopper
     # on while another pointer is dragging, so a drag never leaves Game
     # Over. A ball held by one pointer cannot be taken by another.
     class PileGrabs
-      def initialize(look)
-        @look = look
+      def initialize(style)
+        @style = style
         @grabs = {}
       end
 
@@ -114,18 +114,18 @@ module DotPopper
 
       def move(key, x, y, now:)
         grab = @grabs[key] or return
-        @grabs[key] = grab.moved(x, y, now, @look)
+        @grabs[key] = grab.moved(x, y, now, @style)
       end
 
       # Turns holds long enough into drags.
-      def update(now) = @grabs.transform_values! { it.promoted(now, @look) }
+      def update(now) = @grabs.transform_values! { it.promoted(now, @style) }
 
       # The pointer let go at +x+, +y+: a Fling for a drag, a Click for a
       # click the game would hear, or nil.
       def release(key, x, y, now:)
         grab = @grabs.delete(key) or return
-        grab = grab.moved(x, y, now, @look)
-        return Fling.new(ball: grab.ball, velocity: grab.throw_velocity(now, @look)) if grab.dragging
+        grab = grab.moved(x, y, now, @style)
+        return Fling.new(ball: grab.ball, velocity: grab.throw_velocity(now, @style)) if grab.dragging
         return unless grab.click? && grab.heard && @grabs.none? { |_, other| other.dragging }
 
         Click.new(x: x.to_f, y: y.to_f)

@@ -6,11 +6,11 @@ class LayoutTest < Minitest::Test
   include PresentationTest
 
   def test_the_window_opens_at_the_reference_play_area
-    assert_equal [1200, 800], Look::WINDOW.size_for(3000, 2000, R)
+    assert_equal [1200, 800], Style::WINDOW.size_for(3000, 2000, R)
   end
 
   def test_the_window_fits_a_small_desktop_keeping_its_shape
-    width, height = Look::WINDOW.size_for(1280, 720, R)
+    width, height = Style::WINDOW.size_for(1280, 720, R)
 
     assert_operator height, :<=, 720 * 0.9
     assert_operator width, :<=, 1280 * 0.9
@@ -19,7 +19,7 @@ class LayoutTest < Minitest::Test
 
   def test_the_mute_button_sits_in_the_safe_area_and_fits_a_finger
     safe = Rect.new(x: 40, y: 20, width: 700, height: 500)
-    button = Layout.new(width: 800, height: 600, safe:, look: Look::LAYOUT).mute_button
+    button = Layout.new(width: 800, height: 600, safe:, style: Style::LAYOUT).mute_button
 
     assert_operator button.right, :<=, safe.right
     assert_operator button.bottom, :<=, safe.bottom
@@ -43,7 +43,7 @@ class LayoutTest < Minitest::Test
 
   def test_your_stats_sits_across_from_the_mute_button_in_the_safe_area
     safe = Rect.new(x: 40, y: 20, width: 320, height: 800)
-    narrow = Layout.new(width: 400, height: 850, safe:, look: Look::LAYOUT)
+    narrow = Layout.new(width: 400, height: 850, safe:, style: Style::LAYOUT)
     button = narrow.stats_button
 
     assert_operator button.x, :>=, safe.x

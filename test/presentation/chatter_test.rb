@@ -4,7 +4,7 @@ require_relative "presentation_helper"
 
 class ChatterTest < Minitest::Test
   Chatter = DotPopper::Presentation::Chatter
-  LOOK = DotPopper::Presentation::Look::CHATTER
+  LOOK = DotPopper::Presentation::Style::CHATTER
 
   def quiet = Chatter.quiet(LOOK)
 

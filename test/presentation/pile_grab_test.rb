@@ -5,7 +5,7 @@ require_relative "presentation_helper"
 class PileGrabTest < Minitest::Test
   include PresentationTest
 
-  LOOK = GrabLook.new(slop: 0.25, hold: 0.15, follow: 0.05, fastest: 60.0, fling: 40.0, window: 0.1)
+  LOOK = GrabStyle.new(slop: 0.25, hold: 0.15, follow: 0.05, fastest: 60.0, fling: 40.0, window: 0.1)
 
   def setup = @grabs = PileGrabs.new(LOOK)
 

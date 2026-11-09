@@ -24,7 +24,7 @@ module DotPopper
     # the note's room and the buttons always stay, since they are what the
     # preview is for. Sizes are measured with +measure+ (RoughMeasure's
     # methods).
-    class ShareScreen < Data.define(:layout, :type, :words, :measure, :look, :lines)
+    class ShareScreen < Data.define(:layout, :type, :words, :measure, :style, :lines)
       # The gaps above each block, in graphics units at full size.
       GAPS = { heading: 0, message: 14, note: 12, buttons: 18 }.freeze
       LINE = 1.2 # the message's lines apart, in a line's height
@@ -45,12 +45,12 @@ module DotPopper
       def room
         inside = layout.margin + pad
         safe = layout.safe
-        width = [safe.width - (2 * inside), look.width * layout.ui].min
+        width = [safe.width - (2 * inside), style.width * layout.ui].min
         Rect.new(x: layout.center_x - (width / 2.0), y: safe.y + inside, width:, height: safe.height - (2 * inside))
       end
 
       # The message bubble's padding around its lines.
-      def bubble = look.bubble * layout.ui
+      def bubble = style.bubble * layout.ui
 
       # The message bubble's padding at its left and right: roomier than
       # above and below, since a line's last letter has no more to its
@@ -59,7 +59,7 @@ module DotPopper
 
       private
 
-      def pad = look.pad * layout.ui
+      def pad = style.pad * layout.ui
 
       def blocks(sizes, scale)
         heading = sizes[:heading]

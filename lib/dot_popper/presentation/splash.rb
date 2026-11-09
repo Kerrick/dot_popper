@@ -51,7 +51,7 @@ module DotPopper
         reach = BlurKernel.spread(GLOW_STEP) * Math.sqrt(GLOW_PASSES)
         resolution = [reach / wanted, 1.0].min
         sigma = BlurKernel.sigma_for(wanted * resolution / Math.sqrt(GLOW_PASSES))
-        BloomLook.new(strength: GLOW_STRENGTH, sigma:, passes: GLOW_PASSES, resolution:)
+        BloomStyle.new(strength: GLOW_STRENGTH, sigma:, passes: GLOW_PASSES, resolution:)
       end
 
       def width = WIDTH * size

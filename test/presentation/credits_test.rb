@@ -7,7 +7,7 @@ require_relative "presentation_helper"
 class CreditsTest < Minitest::Test
   include PresentationTest
 
-  WORDS = Look::WORDS
+  WORDS = Style::WORDS
 
   def test_the_book_is_in_order_and_skips_what_the_build_lacks
     full = Notices.new(ofl: "OFL", iosevka: "IOS", emoji: "NOTO", lota: "LOTA", fledge: %w[ONE TWO])
@@ -95,7 +95,7 @@ class CreditsTest < Minitest::Test
   end
 
   def test_the_page_widens_for_a_license_as_far_as_the_screen_allows
-    page = CreditsLayout.new(layout: layout(1600, 900), look: Look::CREDITS)
+    page = CreditsLayout.new(layout: layout(1600, 900), style: Style::CREDITS)
     wide = page.with(wanted: page.room + 100)
     huge = page.with(wanted: 10_000.0)
 
@@ -137,7 +137,7 @@ class CreditsTest < Minitest::Test
 
     show.wheel_credits(-1)
     line = show.credits_layout.line
-    assert_in_delta line * Look::CREDITS.wheel, show.credits.offset, 1e-6
+    assert_in_delta line * Style::CREDITS.wheel, show.credits.offset, 1e-6
     assert show.credits_key(:pagedown)
     refute show.credits_key(:escape)
     show.stick_credits(Stick.new(x: 0, y: 1.0), 1.0)

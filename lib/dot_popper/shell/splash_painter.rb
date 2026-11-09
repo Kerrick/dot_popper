@@ -29,7 +29,7 @@ module DotPopper
 
       def draw(splash)
         width, height = G.dimensions
-        @pen.color(@pen.look::SPLASH_INK, splash.ground)
+        @pen.color(@pen.style::SPLASH_INK, splash.ground)
         G.rectangle(:fill, 0, 0, width + 1, height + 1)
         return unless splash.mark.positive?
 
@@ -50,7 +50,7 @@ module DotPopper
 
       def letters(logotype, font, left, baseline, alpha)
         pixels = @pen.pixels
-        @pen.color(@pen.look::SPLASH_YELLOW, alpha)
+        @pen.color(@pen.style::SPLASH_YELLOW, alpha)
         logotype.letters(left).each do |char, x|
           G.print(char, font, pixels.snap(x), pixels.snap(baseline - font.baseline))
         end
@@ -59,7 +59,7 @@ module DotPopper
       def block(logotype, left, baseline, alpha)
         pixels = @pen.pixels
         x, width = logotype.block(left)
-        @pen.color(@pen.look::SPLASH_YELLOW, alpha)
+        @pen.color(@pen.style::SPLASH_YELLOW, alpha)
         G.rectangle(:fill, pixels.snap(x), pixels.snap(logotype.block_top(baseline)), pixels.whole(width),
                     pixels.whole(logotype.block_height))
       end

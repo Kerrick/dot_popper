@@ -155,7 +155,7 @@ class GroupPanelTest < Minitest::Test
     assert_equal 1, panel.group_id
   end
 
-  def test_the_standings_are_score_record_first_with_the_champion_and_you_clear
+  def test_the_standings_are_best_first_with_the_champion_and_you_clear
     join!(group(numbers: [1, 2, 3], you: 3, champion: 2, top: 90))
     rows = @show.group_plan.rows
 

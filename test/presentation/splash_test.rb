@@ -135,11 +135,11 @@ class SplashTest < Minitest::Test
   def test_the_glow_blurs_the_same_share_of_the_mark_at_every_size
     [1.0, 2.0].each do |density|
       [40, 120, 262, 600, 1100].each do |size|
-        look = Logotype.new(size:).glow(density)
-        assert_in_delta 0.55, look.strength, 1e-9
-        reach = BlurKernel.spread(look.sigma) * Math.sqrt(look.passes) / look.resolution
+        style = Logotype.new(size:).glow(density)
+        assert_in_delta 0.55, style.strength, 1e-9
+        reach = BlurKernel.spread(style.sigma) * Math.sqrt(style.passes) / style.resolution
         assert_in_delta 0.06 * size * density, reach, 1e-6, "at size #{size}, density #{density}"
-        assert_operator look.resolution, :<=, 1.0
+        assert_operator style.resolution, :<=, 1.0
       end
     end
   end

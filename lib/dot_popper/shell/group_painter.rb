@@ -49,7 +49,7 @@ module DotPopper
         return unless banner
 
         alpha = banner.alpha(now)
-        font = pen.fonts.semibold(Presentation::Pixels.font_size(layout.scaled(pen.look::GROUPS.text)))
+        font = pen.fonts.semibold(Presentation::Pixels.font_size(layout.scaled(pen.style::GROUPS.text)))
         height = font.height * 1.9
         width = font.width(banner.text) + (height * 2.7)
         pixels = pen.pixels
@@ -174,7 +174,7 @@ module DotPopper
 
       # While a long press is held, what it will do.
       def hold(show, layout)
-        font = pen.fonts.semibold(layout.scaled(pen.look::GROUPS.text))
+        font = pen.fonts.semibold(layout.scaled(pen.style::GROUPS.text))
         y = layout.stats_floor - (font.height * 2)
         pen.text(show.group_panel.holding_words, font, layout.center_x, y, pen.palette.cream)
       end

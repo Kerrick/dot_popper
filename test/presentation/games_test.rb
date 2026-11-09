@@ -43,7 +43,7 @@ class GamesTest < Minitest::Test
 
     refute_predicate @show, :playing?
     assert_predicate @show, :offer?
-    assert_equal "Unlimited play", Look::WORDS.offer[:includes].first
+    assert_equal "Unlimited play", Style::WORDS.offer[:includes].first
     assert_includes @show.offer_plan.note_lines.join(" "), "tomorrow"
     assert_includes @show.controls.map(&:name), :restore
   end
@@ -118,8 +118,8 @@ class GamesTest < Minitest::Test
   end
 
   def test_no_word_of_the_games_calls_them_a_trial_or_a_demo
-    words = [Look::WORDS.games_left(0), Look::WORDS.games_left(5), Look::WORDS.offer_note(0, 3), Look::WORDS.offer_note(4, 3),
-             *Look::WORDS.offer[:includes]].join(" ")
+    words = [Style::WORDS.games_left(0), Style::WORDS.games_left(5), Style::WORDS.offer_note(0, 3), Style::WORDS.offer_note(4, 3),
+             *Style::WORDS.offer[:includes]].join(" ")
 
     refute_match(/trial|demo/i, words)
   end

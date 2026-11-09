@@ -5,7 +5,7 @@ require_relative "presentation_helper"
 class DotAnimationsTest < Minitest::Test
   include PresentationTest
 
-  def setup = @animations = DotAnimations.new(Look::MOTION)
+  def setup = @animations = DotAnimations.new(Style::MOTION)
 
   def test_a_dot_at_rest_is_drawn_at_its_size
     pose = @animations.pose(dot(0, 0, popped: true), 3.0)
@@ -55,7 +55,7 @@ class DotAnimationsTest < Minitest::Test
     end
   end
 
-  def test_a_popped_dot_looks_popped_almost_at_once
+  def test_a_popped_dot_themes_popped_almost_at_once
     @animations.pop(2, 1.0)
     popped = dot(0, 0, id: 2, popped: true)
 

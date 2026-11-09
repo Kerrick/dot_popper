@@ -249,7 +249,7 @@ module DotPopper
       # fits across.
       def legend_size(size)
         room = layout.safe.width - (layout.margin * 2)
-        size -= 1 while size > layout.look.least && legend_width(size) > room
+        size -= 1 while size > layout.style.least && legend_width(size) > room
         size
       end
 

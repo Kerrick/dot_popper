@@ -6,38 +6,38 @@ require_relative "presentation_helper"
 class ParticlesTest < Minitest::Test
   include PresentationTest
 
-  def emission(look = Look::POP_BURST, longest: Burst::LONGEST_LIFE, sprite_size: 16.0)
-    Emission.new(look:, longest:, radius: R, sprite_size:)
+  def emission(style = Style::POP_BURST, longest: Burst::LONGEST_LIFE, sprite_size: 16.0)
+    Emission.new(style:, longest:, radius: R, sprite_size:)
   end
 
   def test_no_droplet_outlives_its_longest
-    assert_operator emission(Look::POP_BURST.with(life: 0.3..2.0)).stats_book.max, :<=, Burst::LONGEST_LIFE
+    assert_operator emission(Style::POP_BURST.with(life: 0.3..2.0)).stats_book.max, :<=, Burst::LONGEST_LIFE
   end
 
   def test_speeds_and_gravity_are_in_graphics_units
-    assert_in_delta Look::POP_BURST.speed.end * R, emission.speed.last
-    assert_equal [0.0, Look::POP_BURST.gravity * R], emission.acceleration.last(2).then { [0.0, it.last] }
+    assert_in_delta Style::POP_BURST.speed.end * R, emission.speed.last
+    assert_equal [0.0, Style::POP_BURST.gravity * R], emission.acceleration.last(2).then { [0.0, it.last] }
   end
 
   def test_the_largest_droplet_is_its_sized_radius_and_shrinks
     start, finish = emission.sizes
 
-    assert_in_delta Look::POP_BURST.size.end * R * 2, start * 16.0
+    assert_in_delta Style::POP_BURST.size.end * R * 2, start * 16.0
     assert_operator finish, :<, start
   end
 
   def test_the_smallest_droplet_starts_at_its_least_size
-    look = Look::POP_BURST
+    style = Style::POP_BURST
     start, finish = emission.sizes
     smallest = start + (emission.size_variation * (finish - start))
 
-    assert_in_delta look.size.begin * R * 2, smallest * 16.0, 0.01
+    assert_in_delta style.size.begin * R * 2, smallest * 16.0, 0.01
   end
 
   def test_a_droplet_fades_out_from_its_burst_opacity
-    alphas = emission.colors(Look::PALETTE.cream).map(&:last)
+    alphas = emission.colors(Style::PALETTE.cream).map(&:last)
 
-    assert_in_delta Look::POP_BURST.alpha, alphas.first
+    assert_in_delta Style::POP_BURST.alpha, alphas.first
     assert_in_delta 0.0, alphas.last
     assert_equal alphas.sort.reverse, alphas
   end
@@ -59,7 +59,7 @@ class ParticlesTest < Minitest::Test
   end
 
   def test_fireworks_twinkle_and_spin
-    sparkles = Look::FINALE.sparkles
+    sparkles = Style::FINALE.sparkles
 
     assert_equal :twinkle, sparkles.sprite
     refute_equal 0.0, sparkles.spin.end

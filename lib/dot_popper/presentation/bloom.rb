@@ -8,7 +8,7 @@ module DotPopper
     # over the scene at +strength+. +sigma+ is the blur's spread in the
     # blurred layer's pixels, and +passes+ how many times it is blurred
     # each way, which widens it smoothly.
-    class BloomLook < Data.define(:strength, :sigma, :passes, :resolution)
+    class BloomStyle < Data.define(:strength, :sigma, :passes, :resolution)
       # The blurred layer's size in pixels, for a screen of +width+ by
       # +height+ pixels: never empty.
       def blurred_size(width, height) = [width, height].map { [(it * resolution).round, 1].max }

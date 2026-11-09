@@ -7,7 +7,7 @@ class AutopilotTest < Minitest::Test
 
   def test_it_games_a_game_and_comes_back_to_the_title
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
-    pilot = Autopilot.new(Look::AUTOPILOT, random: Random.new(5))
+    pilot = Autopilot.new(Style::AUTOPILOT, random: Random.new(5))
     seen = []
     events = []
     cabinet.subscribe { events << it.class }
@@ -28,7 +28,7 @@ class AutopilotTest < Minitest::Test
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
     clipboard = MemoryClipboard.new
     show = Show.new(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R, clipboard:)
-    pilot = Autopilot.new(Look::AUTOPILOT, random: Random.new(5))
+    pilot = Autopilot.new(Style::AUTOPILOT, random: Random.new(5))
     copies = []
     games = 0
     cabinet.subscribe { games += 1 if it.is_a?(DotPopper::Events::GameStarted) }
@@ -46,10 +46,10 @@ class AutopilotTest < Minitest::Test
     assert_match(/\ADot Popper: \d+ points?/, copies[1])
   end
 
-  def test_on_its_second_title_it_looks_at_the_stats_and_goes_back
+  def test_on_its_second_title_it_themes_at_the_stats_and_goes_back
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
     show = Show.new(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R)
-    pilot = Autopilot.new(Look::AUTOPILOT, random: Random.new(5))
+    pilot = Autopilot.new(Style::AUTOPILOT, random: Random.new(5))
     opened = false
     games = 0
     cabinet.subscribe { games += 1 if it.is_a?(DotPopper::Events::GameStarted) }
@@ -72,7 +72,7 @@ class AutopilotTest < Minitest::Test
   def test_it_switches_the_dot_size_once_the_title_offers_it
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
     show = Show.new(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R)
-    pilot = Autopilot.new(Look::AUTOPILOT, random: Random.new(5))
+    pilot = Autopilot.new(Style::AUTOPILOT, random: Random.new(5))
     games = 0
     cabinet.subscribe { games += 1 if it.is_a?(DotPopper::Events::GameStarted) }
     12_000.times do
@@ -90,7 +90,7 @@ class AutopilotTest < Minitest::Test
   def test_it_taps_only_a_fresh_dot_it_can_see
     covered = dot(400, 300)
     game = game_with(dot(400, 300, popped: true), covered)
-    pilot = Autopilot.new(Look::AUTOPILOT.with(mistakes: 0.0))
+    pilot = Autopilot.new(Style::AUTOPILOT.with(mistakes: 0.0))
 
     assert_nil pilot.send(:exposed_fresh, game)
   end
@@ -98,7 +98,7 @@ class AutopilotTest < Minitest::Test
   def test_its_mistake_is_impatience_with_the_covered_fresh_dot
     cover = dot(400, 300, popped: true)
     game = game_with(cover, dot(900, 900, popped: true), dot(430, 300))
-    pilot = Autopilot.new(Look::AUTOPILOT.with(mistakes: 1.0))
+    pilot = Autopilot.new(Style::AUTOPILOT.with(mistakes: 1.0))
 
     assert_equal cover, game.dots.top_at(*pilot.send(:mistake, game))
   end

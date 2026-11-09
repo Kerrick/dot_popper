@@ -13,7 +13,7 @@ module DotPopper
     # +damping+ slows each dot in the air; +fling+ scales the velocity a
     # dot had when the game ended; and no step is longer than
     # +longest_step+, so a slow frame cannot tunnel a dot through a wall.
-    class PileLook < Data.define(:meter, :gravity, :restitution, :friction, :density, :damping, :fling,
+    class PileStyle < Data.define(:meter, :gravity, :restitution, :friction, :density, :damping, :fling,
                                  :longest_step)
       # One of Box2D's meters, in graphics units, for a dot of +radius+.
       def meter_for(radius) = meter * radius

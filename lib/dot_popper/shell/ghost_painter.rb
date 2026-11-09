@@ -114,16 +114,16 @@ module DotPopper
       # which goes down as it presses.
       def gamepad(pose, radius)
         alpha = pose.alpha * ALPHA
-        look = pen.look::GAMEPAD
+        style = pen.style::GAMEPAD
         pixels = pen.pixels
         ring(pose.x, pose.y, pose, radius * 0.3, radius * 0.9)
         [[palette.shadow, 0.6, 4], [palette.cream, 1.0, 2]].each do |color, strength, width|
           pen.color(color, alpha * strength)
           G.line_width = pixels.line_width(width)
-          G.circle(:line, pose.x, pose.y, look.ring * radius, 48)
+          G.circle(:line, pose.x, pose.y, style.ring * radius, 48)
           [[1, 0], [-1, 0], [0, 1], [0, -1]].each do |dx, dy|
-            G.line(pose.x + (dx * look.ticks.begin * radius), pose.y + (dy * look.ticks.begin * radius),
-                   pose.x + (dx * look.ticks.end * radius), pose.y + (dy * look.ticks.end * radius))
+            G.line(pose.x + (dx * style.ticks.begin * radius), pose.y + (dy * style.ticks.begin * radius),
+                   pose.x + (dx * style.ticks.end * radius), pose.y + (dy * style.ticks.end * radius))
           end
         end
         a_button(pixels.snap(pose.x + (radius * 0.8)), pixels.snap(pose.y - (radius * 0.8)), pose, radius, alpha)

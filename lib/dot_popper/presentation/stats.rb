@@ -118,7 +118,7 @@ module DotPopper
     # the heading's and the rows' type, a row's height as a multiple of
     # its type, the chart's height in rows, the gap between two columns,
     # a column's widest, and how dark the title's dots are behind it.
-    class StatsLook < Data.define(:heading, :text, :line, :chart, :gap, :column, :veil); end
+    class StatsStyle < Data.define(:heading, :text, :line, :chart, :gap, :column, :veil); end
 
     # The Stats screen laid out in the safe area: the heading at the
     # top, the prompt to go back at the bottom, over the row of "Clear my
@@ -131,24 +131,24 @@ module DotPopper
     # below a readable size, to fit a short screen. Under the heading go
     # the sheet's notes, in +note_lines+ lines once the shell has wrapped
     # them to fit across.
-    class StatsLayout < Data.define(:layout, :sheet, :look, :note_lines, :widest, :looks, :offer)
+    class StatsLayout < Data.define(:layout, :sheet, :style, :note_lines, :widest, :themes, :offer)
       SMALLEST_TEXT = 11
 
-      def initialize(layout:, sheet:, look:, note_lines: sheet.notes.size, widest: nil, looks: false, offer: false) = super
+      def initialize(layout:, sheet:, style:, note_lines: sheet.notes.size, widest: nil, themes: false, offer: false) = super
 
-      def heading_size = layout.scaled(look.heading)
+      def heading_size = layout.scaled(style.heading)
       def heading_y = layout.top + (heading_size * 0.6)
 
       # The notes' type size, and where the middle of their line +i+ goes.
-      def note_size = [layout.scaled(look.text * 0.9), SMALLEST_TEXT].max
+      def note_size = [layout.scaled(style.text * 0.9), SMALLEST_TEXT].max
       def note_y(i) = heading_y + (heading_size * 0.75) + (note_size * 1.3 * (i + 0.5))
-      def prompt_size = layout.scaled(Look::TYPE.prompt)
+      def prompt_size = layout.scaled(Style::TYPE.prompt)
       # The prompt to go back sits over the row of "Clear my records…".
-      def prompt_y = layout.stats_floor(looks:, offer:) - layout.margin - (prompt_size * 0.6)
+      def prompt_y = layout.stats_floor(themes:, offer:) - layout.margin - (prompt_size * 0.6)
 
       # The rows' type size, and the height of a row.
-      def text_size = [(row / look.line).floor, SMALLEST_TEXT].max
-      def row = [layout.scaled(look.text) * look.line, room / columns.map { lines(it) }.max].min
+      def text_size = [(row / style.line).floor, SMALLEST_TEXT].max
+      def row = [layout.scaled(style.text) * style.line, room / columns.map { lines(it) }.max].min
 
       def wide? = layout.safe.width >= layout.safe.height * 1.2 && fits?(2)
 
@@ -178,7 +178,7 @@ module DotPopper
         two.each_with_index.map { |parts, i| i == shorter ? parts + [sheet.achievements] : parts }
       end
 
-      def gap = layout.scaled(look.gap)
+      def gap = layout.scaled(style.gap)
 
       def column_width
         room = layout.safe.width - (layout.margin * 2) - ((columns.size - 1) * gap)
@@ -187,7 +187,7 @@ module DotPopper
 
       # How wide a column would like to be: as its longest row needs, and
       # never past the look's widest.
-      def wanted = [widest || Float::INFINITY, layout.scaled(look.column)].min
+      def wanted = [widest || Float::INFINITY, layout.scaled(style.column)].min
 
       # The body starts under the heading, lowered by a third of the room
       # its tallest column leaves, so it sits a little above the middle.
@@ -211,17 +211,17 @@ module DotPopper
 
       # The chart's rows: its title, its bars, and the note under it, if
       # any, which may take two lines of its smaller type.
-      def chart_lines = look.chart + 1.6 + (sheet.chart_note ? 1.4 : 0.0)
+      def chart_lines = style.chart + 1.6 + (sheet.chart_note ? 1.4 : 0.0)
 
       def place(parts, x, width)
         y = body_top
         parts.flat_map do |part|
           if part == :chart
             placed = [Placed.new(item: Words.last_games(sheet.scores.size), x:, y: y + (row * 0.5), width:, height: row),
-                      Placed.new(item: :chart, x:, y: y + row, width:, height: row * look.chart)]
+                      Placed.new(item: :chart, x:, y: y + row, width:, height: row * style.chart)]
             if sheet.chart_note
               note = ChartNote.new(text: sheet.chart_note)
-              placed << Placed.new(item: note, x:, y: y + (row * (look.chart + 1.75)), width:, height: row * 1.2)
+              placed << Placed.new(item: note, x:, y: y + (row * (style.chart + 1.75)), width:, height: row * 1.2)
             end
             y += row * chart_lines
             next placed

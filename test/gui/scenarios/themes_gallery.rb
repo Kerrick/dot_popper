@@ -8,25 +8,25 @@ module DotPopperGui
   # can be worn; DOT_POPPER_GALLERY names the shots. Needs
   # DOT_POPPER_PAID=1. Not part of rake test:gui: it is for reviewing the
   # looks' design.
-  class LooksGalleryScenario < Scenario
-    scenario :looks_gallery
+  class ThemesGalleryScenario < Scenario
+    scenario :themes_gallery
 
     SIZES = [[1200, 800, false], [800, 500, false], [400, 320, false], [400, 850, true], [850, 400, true]].freeze
     ROUNDS = [[1200, 800, false], [400, 850, true]].freeze
 
     def play
-      wardrobe = show.instance_variable_get(:@wardrobe)
-      wardrobe.instance_variable_set(:@earned, DotPopper::Presentation::Look::THEMES.map(&:key))
+      theme_keeper = show.instance_variable_get(:@theme_keeper)
+      theme_keeper.instance_variable_set(:@earned, DotPopper::Presentation::Style::THEMES.map(&:key))
       quick_game
-      DotPopper::Presentation::Look::THEMES.each { gallery(wardrobe, it) }
+      DotPopper::Presentation::Style::THEMES.each { gallery(theme_keeper, it) }
     end
 
     private
 
-    def tag = ENV.fetch("DOT_POPPER_GALLERY", "looks")
+    def tag = ENV.fetch("DOT_POPPER_GALLERY", "themes")
 
-    def gallery(wardrobe, theme)
-      wardrobe.wear(theme)
+    def gallery(theme_keeper, theme)
+      theme_keeper.wear(theme)
       check(show.worn == theme, "#{theme.key} is worn")
       SIZES.each do |width, height, phone|
         at(width, height, phone) do
@@ -34,9 +34,9 @@ module DotPopperGui
           shoot(theme, "title")
           show.open_stats
           shoot(theme, "records")
-          show.open_looks
-          shoot(theme, "looks")
-          show.close_looks
+          show.open_themes
+          shoot(theme, "themes")
+          show.close_themes
           show.close_stats
         end
       end

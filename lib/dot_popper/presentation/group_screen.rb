@@ -5,7 +5,7 @@ module DotPopper
     # Sizes for the friend groups' screens, in graphics units at a scale
     # of 1: its heading's and its text's type, the widest its column gets,
     # and how dark the title's dots go behind it.
-    class GroupLook < Data.define(:heading, :text, :column, :veil); end
+    class GroupStyle < Data.define(:heading, :text, :column, :veil); end
 
     # A line of words where the screen puts it: +kind+ is :text, :note or
     # :alert, and says how it reads.
@@ -41,7 +41,7 @@ module DotPopper
     # never a scroll, so they work by a tap alone. Every button is a
     # thumb's height, and Leave and Delete sit where nobody presses them by
     # accident. Nothing on it is typed.
-    class GroupScreen < Data.define(:layout, :look, :measure, :panel, :standard_dots, :back_text)
+    class GroupScreen < Data.define(:layout, :style, :measure, :panel, :standard_dots, :back_text)
       ROW = 1.1 # a row's height, in button heights
       TALL = 520.0 # the safe height, in points, a keypad column needs
 
@@ -63,12 +63,12 @@ module DotPopper
 
       private
 
-      def size = layout.scaled(look.text)
-      def heading_size = layout.scaled(look.heading)
+      def size = layout.scaled(style.text)
+      def heading_size = layout.scaled(style.heading)
       def button = layout.button_size
       def margin = layout.margin
       def gap = margin * 0.5
-      def column_width = [look.column * layout.ui, layout.safe.width - (2 * margin)].min
+      def column_width = [style.column * layout.ui, layout.safe.width - (2 * margin)].min
       def left = layout.center_x - (column_width / 2.0)
       def line_height = size * 1.35
       def heading_y = layout.top + (heading_size * 0.5)
@@ -101,7 +101,7 @@ module DotPopper
       def paged(items, top, bottom, gallery: false)
         row_height = button * ROW
         per_column = [((bottom - top) / row_height).floor, 1].max
-        two = !gallery && items.size > per_column && layout.safe.width > 2 * look.column * layout.ui * 0.7
+        two = !gallery && items.size > per_column && layout.safe.width > 2 * style.column * layout.ui * 0.7
         columns = two ? 2 : 1
         per_page = per_column * columns
         width = two ? (layout.safe.width - (3 * margin)) / 2.0 : column_width

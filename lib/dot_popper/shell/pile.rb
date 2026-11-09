@@ -19,8 +19,8 @@ module DotPopper
     class Pile
       P = ::Lota::Physics
 
-      def initialize(look)
-        @look = look
+      def initialize(style)
+        @style = style
         @world = nil
       end
 
@@ -34,7 +34,7 @@ module DotPopper
       def falling? = !@world.nil?
 
       def update(seconds)
-        @world&.update(@look.step(seconds))
+        @world&.update(@style.step(seconds))
       end
 
       # Pulls the balls toward +pull+ (a Presentation::Pull, 1 being the
@@ -45,7 +45,7 @@ module DotPopper
         return unless @world
 
         close_lid
-        @world.gravity = pull.gravity(@look.gravity_for(@radius))
+        @world.gravity = pull.gravity(@style.gravity_for(@radius))
         @balls.each_value { wake(it) } if wake
       end
 
@@ -121,8 +121,8 @@ module DotPopper
         radius = @radius = game.field.radius
         @field = game.field
         @lid = false
-        P.meter = @look.meter_for(radius)
-        @world = P::World.new(0, @look.gravity_for(radius), true)
+        P.meter = @style.meter_for(radius)
+        @world = P::World.new(0, @style.gravity_for(radius), true)
         @walls = walls(game.field)
         @stack = game.dots
         @balls = @stack.to_h { [it.id, ball(it)] }
@@ -139,12 +139,12 @@ module DotPopper
       def ball(dot)
         body = P::Body.new(@world, dot.x, dot.y, :dynamic)
         shape = P::CircleShape.new(body, dot.radius)
-        shape.restitution = @look.restitution
-        shape.friction = @look.friction
-        shape.density = @look.density
+        shape.restitution = @style.restitution
+        shape.friction = @style.friction
+        shape.density = @style.density
         body.reset_mass_data
-        body.linear_damping = @look.damping
-        body.linear_velocity = @look.launch(dot)
+        body.linear_damping = @style.damping
+        body.linear_velocity = @style.launch(dot)
         body
       end
 
@@ -178,7 +178,7 @@ module DotPopper
       def walls(field)
         body = P::Body.new(@world, 0, 0, :static)
         Presentation::PileWalls.new(width: field.width, height: field.height, lid: @lid).segments.each do |segment|
-          P::EdgeShape.new(body, *segment).friction = @look.friction
+          P::EdgeShape.new(body, *segment).friction = @style.friction
         end
         body
       end

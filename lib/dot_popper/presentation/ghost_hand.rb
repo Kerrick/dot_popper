@@ -9,7 +9,7 @@ module DotPopper
     # tap again (+hover+, an [x, y] offset from that dot, which the
     # Tutorial keeps on screen), how it wags its finger there, "no"
     # (+wag+, a WagLook), and how long it then holds still (+settle+).
-    class GhostLook < Data.define(:loop, :glide, :fade, :rest, :hover, :wag, :settle)
+    class GhostStyle < Data.define(:loop, :glide, :fade, :rest, :hover, :wag, :settle)
       # How long it waits, from arriving, before it may move on.
       def waiting = wag.time + settle
     end
@@ -17,7 +17,7 @@ module DotPopper
     # A finger-wag, "no": +cycles+ times side to side in +time+ seconds,
     # turning about the wrist by up to +angle+ radians each way, easing
     # in and out of it.
-    class WagLook < Data.define(:cycles, :time, :angle)
+    class WagStyle < Data.define(:cycles, :time, :angle)
       # How far it is turned +elapsed+ seconds in, in radians.
       def turn(elapsed)
         return 0.0 unless elapsed.between?(0.0, time)
@@ -49,7 +49,7 @@ module DotPopper
     # back (:hover), or fades away (:gone). +to+ is the dot's Anchor, and
     # since +at+ it glides there from where the hand was before
     # (+before+, the GhostHand it was), or fades in if it was nowhere.
-    class GhostHand < Data.define(:mode, :to, :at, :before, :look)
+    class GhostHand < Data.define(:mode, :to, :at, :before, :style)
       # One tap's loop: it comes in from rest, goes down, holds, comes up,
       # and goes back to rest, as fractions of the loop.
       ARRIVES = 0.25
@@ -58,7 +58,7 @@ module DotPopper
       LIFTED = 0.53
       RESTS = 0.78
 
-      def self.none(look) = new(mode: :gone, to: nil, at: -Float::INFINITY, before: nil, look:)
+      def self.none(style) = new(mode: :gone, to: nil, at: -Float::INFINITY, before: nil, style:)
 
       def tapping(anchor, now) = moving(:tap, anchor, now)
       def hovering(anchor, now) = moving(:hover, anchor, now)
@@ -67,13 +67,13 @@ module DotPopper
       # Its pose at +now+ (GhostPose) among +dots+ of +radius+, or nil
       # where it shows nowhere.
       def pose(now, dots, radius)
-        share = (now - at) / (mode == :gone ? look.fade : look.glide)
+        share = (now - at) / (mode == :gone ? style.fade : style.glide)
         earlier = before&.pose(now, dots, radius) if share < 1
         return earlier&.with(alpha: earlier.alpha * (1 - share)) if mode == :gone
 
         own = own_pose(now, dots, radius) or return
         return own if before && share >= 1
-        return own.with(alpha: ((now - at) / look.fade).clamp(0.0, 1.0)) unless earlier
+        return own.with(alpha: ((now - at) / style.fade).clamp(0.0, 1.0)) unless earlier
 
         earlier.toward(own, Ease.in_out_sine(share))
       end
@@ -92,21 +92,21 @@ module DotPopper
       def own_pose(now, dots, radius)
         point = to&.point(dots, {}, radius) or return
         x, y = point
-        elapsed = now - at - (before ? look.glide : 0.0)
+        elapsed = now - at - (before ? style.glide : 0.0)
         mode == :tap ? tap_pose(x, y, elapsed, radius) : hover_pose(x, y, elapsed, radius)
       end
 
       # Comes in from rest, presses, lifts, and goes back, over and over.
       def tap_pose(x, y, elapsed, radius)
-        t = elapsed.negative? ? 0.0 : (elapsed % look.loop) / look.loop
+        t = elapsed.negative? ? 0.0 : (elapsed % style.loop) / style.loop
         away = if t < ARRIVES then 1 - Ease.in_out_sine(t / ARRIVES)
                elsif t < LIFTED then 0.0
                elsif t < RESTS then Ease.in_out_sine((t - LIFTED) / (RESTS - LIFTED))
                else 1.0
                end
-        rest_x, rest_y = look.rest
+        rest_x, rest_y = style.rest
         GhostPose.new(x: x + (rest_x * radius * away), y: y + (rest_y * radius * away), press: press_at(t),
-                      since_press: t >= ARRIVES && t < RESTS ? (t - ARRIVES) * look.loop : nil, alpha: 1.0)
+                      since_press: t >= ARRIVES && t < RESTS ? (t - ARRIVES) * style.loop : nil, alpha: 1.0)
       end
 
       def press_at(t)
@@ -120,7 +120,7 @@ module DotPopper
       # At the place it waits, never pressing: it wags its finger, "no",
       # then holds still.
       def hover_pose(x, y, elapsed, _radius)
-        GhostPose.new(x:, y:, press: 0.0, since_press: nil, alpha: 1.0, turn: look.wag.turn(elapsed))
+        GhostPose.new(x:, y:, press: 0.0, since_press: nil, alpha: 1.0, turn: style.wag.turn(elapsed))
       end
     end
   end

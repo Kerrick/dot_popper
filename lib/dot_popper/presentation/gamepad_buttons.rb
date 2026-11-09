@@ -39,8 +39,8 @@ module DotPopper
       def self.released = new(held: false, pressed: false)
 
       # The trigger after it reads +value+, from 0 (let go) to 1.
-      def pull(value, look)
-        now = held ? value > look.trigger_release : value >= look.trigger_press
+      def pull(value, style)
+        now = held ? value > style.trigger_release : value >= style.trigger_press
         with(held: now, pressed: now && !held)
       end
     end

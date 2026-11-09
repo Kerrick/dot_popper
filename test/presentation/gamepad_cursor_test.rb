@@ -5,9 +5,9 @@ require_relative "presentation_helper"
 class GamepadCursorTest < Minitest::Test
   include PresentationTest
 
-  LOOK = Look::GAMEPAD
+  LOOK = Style::GAMEPAD
 
-  def setup = @cursor = GamepadCursor.centered(layout.whole, look: LOOK, radius: R)
+  def setup = @cursor = GamepadCursor.centered(layout.whole, style: LOOK, radius: R)
 
   def test_it_starts_hidden_in_the_middle_of_the_window
     assert_equal [400.0, 300.0, false], [@cursor.x, @cursor.y, @cursor.visible]
@@ -28,7 +28,7 @@ class GamepadCursorTest < Minitest::Test
   def test_at_full_tilt_it_crosses_any_large_window_corner_to_corner_in_about_a_second
     [[800, 600], [1920, 1080], [3840, 2160]].each do |width, height|
       area = layout(width, height).whole
-      cursor = GamepadCursor.centered(area, look: LOOK, radius: R).at(0, 0)
+      cursor = GamepadCursor.centered(area, style: LOOK, radius: R).at(0, 0)
       across = Math.hypot(width, height)
       push = Stick.new(x: width / across, y: height / across)
       frames = 0
@@ -38,8 +38,8 @@ class GamepadCursorTest < Minitest::Test
     end
   end
 
-  def test_a_small_window_keeps_the_looks_speed_in_radii
-    small = GamepadCursor.centered(layout(400, 320).whole, look: LOOK, radius: R)
+  def test_a_small_window_keeps_the_themes_speed_in_radii
+    small = GamepadCursor.centered(layout(400, 320).whole, style: LOOK, radius: R)
 
     assert_in_delta LOOK.speed * R, small.top_speed
     assert_operator @cursor.top_speed, :>, LOOK.speed * R

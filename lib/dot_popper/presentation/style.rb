@@ -6,7 +6,7 @@ module DotPopper
     # colors, words, type, sizes, timings, easing, and how strong each
     # effect is. Sizes and distances are in radii (R) unless they say
     # otherwise, so the look scales with the dot; durations are seconds.
-    module Look
+    module Style
       hex = Color.method(:hex)
 
       PALETTE = Palette.new(
@@ -101,7 +101,7 @@ module DotPopper
         quit_again: "Press B again to quit",
         full_screen: "Full screen", windowed: "Window", quit: "Quit",
         # The Looks screen: its button's word and heading, and each look's name.
-        looks: { title: "Looks", locked: "Looks come with the full game", classic: "Classic", halloween: "Halloween", winter: "Winter", valentine: "Hearts" }.freeze,
+        themes: { title: "Looks", locked: "Looks come with the full game", classic: "Classic", halloween: "Halloween", winter: "Winter", valentine: "Hearts" }.freeze,
         offer: {
           entry: "Paid version", heading: "The paid version",
           includes: ["Unlimited play", "Achievements to earn", "Looks to choose from", "Create friend groups"].freeze,
@@ -173,38 +173,38 @@ module DotPopper
       # rows, the gap between columns and a column's widest, and how far
       # the title's dots dim behind it. A column is only as wide as its
       # longest row needs, so each label stays near its number.
-      RECORDS = StatsLook.new(heading: 48, text: 23, line: 1.6, chart: 4.2, gap: 56, column: 520, veil: 0.9)
+      RECORDS = StatsStyle.new(heading: 48, text: 23, line: 1.6, chart: 4.2, gap: 56, column: 520, veil: 0.9)
 
       # The Looks screen, over the Stats screen: its heading's size, the
       # gap between cards in margins, a card's height in its width, and the
       # widest a card grows (in units at a scale of 1).
-      LOOKS = LooksLook.new(heading: 48, gap: 1.0, ratio: 0.78, widest: 260, note: 20)
+      THEMES_LAYOUT = ThemesStyle.new(heading: 48, gap: 1.0, ratio: 0.78, widest: 260, note: 20)
 
       # The Friend group screen, opened from the title.
-      GROUPS = GroupLook.new(heading: 44, text: 20, column: 560, veil: 0.9)
+      GROUPS = GroupStyle.new(heading: 44, text: 20, column: 560, veil: 0.9)
 
       # The Credits screen, over the Stats screen: its type, the lines a
       # wheel's notch and a stick at full tilt move it.
-      CREDITS = CreditsLook.new(text: 20, line: 1.5, column: 680, wheel: 3, stick: 14)
+      CREDITS = CreditsStyle.new(text: 20, line: 1.5, column: 680, wheel: 3, stick: 14)
 
       # Clearing the records, from the Stats screen: "Clear my records…"
       # is held for two seconds, never only tapped, and Undo is offered
       # for ten after. A press let go too soon leaves its hint, to hold
       # it, for a moment.
-      RECORDS_CLEAR = ClearLook.new(hold: 2.0, undo: 10.0, hint: 2.5)
+      RECORDS_CLEAR = ClearStyle.new(hold: 2.0, undo: 10.0, hint: 2.5)
 
       # A button the mouse is over brightens, its backing to the night's
       # glow and its outline to cream, in an eighth of a second, quick
       # enough to answer the hand and soft enough not to flicker as the
       # pointer crosses an edge. Only the mouse hovers: a finger or a
       # gamepad never does.
-      HOVER = HoverLook.new(seconds: 0.12, fill: hex["#2b2766", 0.9], edge: hex["#fff4de"])
+      HOVER = HoverStyle.new(seconds: 0.12, fill: hex["#2b2766", 0.9], edge: hex["#fff4de"])
 
       # The stacking rule, taught on the first two Game Overs after a wrong
       # tap that had the bright dot hidden under the popped one: the tap's
       # penalty replays on the pile three times, 2.4 s apart, slowly
       # enough to watch, and then the pile is left in peace.
-      LESSON = LessonLook.new(times: 2, every: 2.4, replays: 3)
+      LESSON = LessonStyle.new(times: 2, every: 2.4, replays: 3)
 
       # The tutorial on a first Play (Presentation::Tutorial), which says
       # nothing in words. Its dots move at the game's slowest speed, and
@@ -219,19 +219,19 @@ module DotPopper
       # "−2"s float and the hand reaches its place, then flows at 0.6 while
       # it wags. In the game, the clock's spotlight fades in 0.6 s, so the
       # game's dots are never hidden; its halo lasts past the first tick.
-      TUTORIAL = TutorialLook.new(
+      TUTORIAL = TutorialStyle.new(
         drift: 1.0, stop: 0.15, resume: 0.5, slow: 0.6, start: [-0.27, -0.12].freeze, born: 0.1, peek: 0.8,
         clear: 2.3, warn: 1.35, flight: 0.6, quick: 0.45, gap: 0.15, hold: 0.45, linger: 0.35, handover: 0.35,
         longest: 5.0,
-        spotlight: SpotlightLook.new(dim: 0.62, move: 0.35, feather: 0.9, dot: 1.5),
-        ghost: GhostLook.new(loop: 1.6, glide: 0.5, fade: 0.25, rest: [0.75, 0.9].freeze, hover: [-0.2, -4.6].freeze,
-                             wag: WagLook.new(cycles: 2, time: 0.8, angle: 0.21), settle: 0.25),
-        lead: LeadLook.new(dim: 0.6, halo: 1.3, fade: 0.4),
-        dots_in_a_row: DotsInARowLook.new(practice: 3, arrive: 0.25, sweep: 0.07, flight: 0.3, ready: 0.3, reward: 1.1, leave: 0.25)
+        spotlight: SpotlightStyle.new(dim: 0.62, move: 0.35, feather: 0.9, dot: 1.5),
+        ghost: GhostStyle.new(loop: 1.6, glide: 0.5, fade: 0.25, rest: [0.75, 0.9].freeze, hover: [-0.2, -4.6].freeze,
+                             wag: WagStyle.new(cycles: 2, time: 0.8, angle: 0.21), settle: 0.25),
+        lead: LeadStyle.new(dim: 0.6, halo: 1.3, fade: 0.4),
+        dots_in_a_row: DotsInARowStyle.new(practice: 3, arrive: 0.25, sweep: 0.07, flight: 0.3, ready: 0.3, reward: 1.1, leave: 0.25)
       )
       # A calm tutorial's guide (DOT_POPPER_CALM) wags gentler: half as
       # far, and slower.
-      CALM_WAG = WagLook.new(cycles: 2, time: 1.0, angle: 0.1)
+      CALM_WAG = WagStyle.new(cycles: 2, time: 1.0, angle: 0.1)
 
       # The rounded face, Fredoka (SIL Open Font License; assets/fonts).
       # Sizes are graphics units at a layout scale of 1. A size that
@@ -256,15 +256,15 @@ module DotPopper
       # so how crowded the field gets, which is the game's tension, follows
       # the field's size in radii; 24 × 16 is about a tablet's. Phones and
       # tablets play fullscreen.
-      WINDOW = WindowLook.new(width: 24, height: 16, most: 0.9)
+      WINDOW = WindowStyle.new(width: 24, height: 16, most: 0.9)
 
-      LAYOUT = LayoutLook.new(margin: 16, button: 52, reference: 760.0, shrink: 0.7, step: 0.05, least: 12)
+      LAYOUT = LayoutStyle.new(margin: 16, button: 52, reference: 760.0, shrink: 0.7, step: 0.05, least: 12)
 
       # How a dot is drawn by the dot shader (assets/shaders/dot.glsl),
       # and the edge a player aims at: what is seen of a dot at rest ends
       # at its hit circle, radius 1, with a crisp rim, so a moving target
       # is easy to track. See DotLook.
-      DOT = DotLook.new(extent: 1.25, rim: 0.055, shadow_offset: 0.07, shadow_reach: 1.08, shadow_alpha: 0.4,
+      DOT = DotStyle.new(extent: 1.25, rim: 0.055, shadow_offset: 0.07, shadow_reach: 1.08, shadow_alpha: 0.4,
                         halo_width: 0.035, halo_alpha: 0.16, legend: 0.34)
 
       MOTION = DotMotion.new(
@@ -280,18 +280,18 @@ module DotPopper
       PARTICLE_SPRITE = 24
       POP_BURST = Burst.new(count: 14, speed: 2.2..5.2, life: 0.25..0.42, size: 0.05..0.11, drag: 3.5,
                             gravity: 3.0, alpha: 0.8)
-      SHOCKWAVE = RingLook.new(
+      SHOCKWAVE = RingStyle.new(
         radius: Tween.new(from: 1.0, to: 1.9, duration: 0.36, ease: :out_cubic),
         width: Tween.new(from: 0.14, to: 0.0, duration: 0.36, ease: :out_quad),
         alpha: Tween.new(from: 0.55, to: 0.0, duration: 0.36, ease: :out_quad), color: PALETTE.cream
       )
-      SPAWN_RIPPLE = RingLook.new(
+      SPAWN_RIPPLE = RingStyle.new(
         radius: Tween.new(from: 0.3, to: 1.45, duration: 0.55, ease: :out_cubic),
         width: Tween.new(from: 0.09, to: 0.0, duration: 0.55, ease: :linear),
         alpha: Tween.new(from: 0.5, to: 0.0, duration: 0.55, ease: :in_out_sine), color: PALETTE.halo
       )
       # A tap on empty space: only a whisper that the tap was heard.
-      TOUCH_RIPPLE = RingLook.new(
+      TOUCH_RIPPLE = RingStyle.new(
         radius: Tween.new(from: 0.12, to: 0.5, duration: 0.25, ease: :out_cubic),
         width: Tween.new(from: 0.05, to: 0.0, duration: 0.25, ease: :linear),
         alpha: Tween.new(from: 0.3, to: 0.0, duration: 0.25, ease: :out_quad), color: PALETTE.soft
@@ -304,19 +304,19 @@ module DotPopper
       # wider shockwave.
       BONUS_BEACON_EVERY = 0.9
       BONUS_CONFETTI = [PALETTE.bonus_body, PALETTE.bonus_light, PALETTE.cream, PALETTE.confetti.first].freeze
-      BONUS_RIPPLE = RingLook.new(
+      BONUS_RIPPLE = RingStyle.new(
         radius: Tween.new(from: 0.3, to: 2.2, duration: 0.7, ease: :out_cubic),
         width: Tween.new(from: 0.12, to: 0.0, duration: 0.7, ease: :linear),
         alpha: Tween.new(from: 0.8, to: 0.0, duration: 0.7, ease: :in_out_sine), color: PALETTE.bonus_body
       )
-      BONUS_BEACON = RingLook.new(
+      BONUS_BEACON = RingStyle.new(
         radius: Tween.new(from: 1.05, to: 1.7, duration: 0.6, ease: :out_cubic),
         width: Tween.new(from: 0.06, to: 0.0, duration: 0.6, ease: :linear),
         alpha: Tween.new(from: 0.55, to: 0.0, duration: 0.6, ease: :out_quad), color: PALETTE.bonus_body
       )
       BONUS_BURST = Burst.new(count: 26, speed: 2.6..6.4, life: 0.3..0.45, size: 0.06..0.13, drag: 3.5,
                               gravity: 3.0, alpha: 0.9)
-      BONUS_SHOCKWAVE = RingLook.new(
+      BONUS_SHOCKWAVE = RingStyle.new(
         radius: Tween.new(from: 1.0, to: 2.8, duration: 0.45, ease: :out_cubic),
         width: Tween.new(from: 0.2, to: 0.0, duration: 0.45, ease: :out_quad),
         alpha: Tween.new(from: 0.8, to: 0.0, duration: 0.45, ease: :out_quad), color: PALETTE.bonus_body
@@ -324,33 +324,33 @@ module DotPopper
 
       # A wrong tap: the dot shudders and its rim flashes, the screen
       # shakes a little, and the edges glow.
-      ALARM_RING = RingLook.new(
+      ALARM_RING = RingStyle.new(
         radius: Tween.new(from: 1.0, to: 1.3, duration: 0.3, ease: :out_cubic),
         width: Tween.new(from: 0.14, to: 0.0, duration: 0.3, ease: :out_quad),
         alpha: Tween.new(from: 0.85, to: 0.0, duration: 0.3, ease: :out_quad), color: PALETTE.alarm
       )
       # ...and if the fresh dot was underneath, its outline shows through,
       # so the player sees why: it was under there.
-      REVEAL = RevealLook.new(
+      REVEAL = RevealStyle.new(
         radius: Tween.new(from: 1.35, to: 1.04, duration: 0.22, ease: :out_cubic),
         alpha: Tween.new(from: 1.0, to: 0.0, duration: 0.6, ease: :in_quad),
         width: 0.075, dashes: 12, color: PALETTE.fresh_light
       )
-      PENALTY_SHAKE = ShakeLook.new(amplitude: 0.12, duration: 0.22, frequency: 24.0)
+      PENALTY_SHAKE = ShakeStyle.new(amplitude: 0.12, duration: 0.22, frequency: 24.0)
       # The glow is narrow and quick, so a dot near an edge is tinted only
       # for a moment.
-      PENALTY_FLASH = FlashLook.new(color: PALETTE.alarm, alpha: 0.42, duration: 0.32, band: 0.1)
+      PENALTY_FLASH = FlashStyle.new(color: PALETTE.alarm, alpha: 0.42, duration: 0.32, band: 0.1)
       # The clock's last seconds give each tick a faint glow too.
-      TICK_FLASH = FlashLook.new(color: PALETTE.urgent, alpha: 0.16, duration: 0.3, band: 0.12)
+      TICK_FLASH = FlashStyle.new(color: PALETTE.urgent, alpha: 0.16, duration: 0.3, band: 0.12)
 
       # Floating numbers; +spread+ sets the two of a tap apart, across.
-      GAIN_FLOAT = FloaterLook.new(rise: 1.0, life: 0.65)
-      LOSS_FLOAT = FloaterLook.new(rise: 0.7, life: 0.75)
+      GAIN_FLOAT = FloaterStyle.new(rise: 1.0, life: 0.65)
+      LOSS_FLOAT = FloaterStyle.new(rise: 0.7, life: 0.75)
       FLOAT_SPREAD = 0.62
 
       # The HUD's pill is mostly see-through, so a dot under it still
       # shows; its numbers are outlined, so they stay crisp over one.
-      HUD = HudLook.new(
+      HUD = HudStyle.new(
         backing: 0.4,
         bump: Tween.new(from: 1.3, to: 1.0, duration: 0.32, ease: :out_back),
         pulse: Tween.new(from: 1.4, to: 1.0, duration: 0.55, ease: :out_elastic),
@@ -359,8 +359,8 @@ module DotPopper
 
       # The title: its drifting dots and how far they dim, the prompt's
       # breath and its faintest point in it, which stays easy to read.
-      class TitleLook < Data.define(:dots, :drift, :dim, :breath, :faintest, :intro); end
-      TITLE = TitleLook.new(dots: 7, drift: 0.35, dim: 0.76, breath: 2.4, faintest: 0.8,
+      class TitleStyle < Data.define(:dots, :drift, :dim, :breath, :faintest, :intro); end
+      TITLE = TitleStyle.new(dots: 7, drift: 0.35, dim: 0.76, breath: 2.4, faintest: 0.8,
                             intro: Tween.new(from: 0.0, to: 1.0, duration: 0.5, ease: :out_cubic))
       # The title's "Dot size" choice is offered only where dots sized to
       # the screen would be more than a tenth smaller or bigger than the
@@ -368,24 +368,24 @@ module DotPopper
       # two look alike. Each segment shows a dot: the standard one about a
       # third of the segment's height across, the other in proportion to
       # it, from half as big to a little over twice.
-      SIZING = SizingLook.new(alike: 0.1, icon: 0.16, icons: 0.5..2.2)
+      SIZING = SizingStyle.new(alike: 0.1, icon: 0.16, icons: 0.5..2.2)
       # ...and the title's words, from its name to its prompt, sit on a
       # faint backing, so a dot drifting behind them dims further.
-      TITLE_BACKING = ScrimLook.new(alpha: 0.4, feather: 48, layers: 10, pad: 12)
+      TITLE_BACKING = ScrimStyle.new(alpha: 0.4, feather: 48, layers: 10, pad: 12)
 
       # The glow fresh dots and droplets cast on the night under the dots
       # (Shell::Bloom), blurred at half the screen's resolution. A
       # strength of 0 turns it off, as it is: a glow wide enough to see
       # blurs the fresh dot's edge, where the player aims (doc/decisions.md,
       # "A fresh dot's edge is its hit circle"). 0.7 brings it back.
-      BLOOM = BloomLook.new(strength: 0.0, sigma: 3.0, passes: 2, resolution: 0.5)
+      BLOOM = BloomStyle.new(strength: 0.0, sigma: 3.0, passes: 2, resolution: 0.5)
 
       # Game over: how the game dims, how the score counts up, and the
       # celebration of a new record. Its sparkles may outlive a pop's
       # droplets, because no game is in play behind them.
-      class FinaleLook < Data.define(:dim, :arrive, :tally, :prompt, :sparkles, :goal_sparkles, :sparkle_life,
+      class FinaleStyle < Data.define(:dim, :arrive, :tally, :prompt, :sparkles, :goal_sparkles, :sparkle_life,
                                      :share); end
-      FINALE = FinaleLook.new(
+      FINALE = FinaleStyle.new(
         dim: Tween.new(from: 0.0, to: 0.62, duration: 0.5, ease: :out_cubic),
         arrive: Tween.new(from: 0.0, to: 1.0, duration: 0.45, ease: :out_back),
         tally: Tween.new(from: 0.0, to: 1.0, duration: 0.8, ease: :out_cubic),
@@ -397,7 +397,7 @@ module DotPopper
         sparkle_life: 1.4,
         # "Share my score" rises into place as the score lands, rings
         # once, and rises further and rings brighter on a new record.
-        share: ShareCueLook.new(arrive: Tween.new(from: 0.0, to: 1.0, duration: 0.5, ease: :out_back), lift: 12,
+        share: ShareCueStyle.new(arrive: Tween.new(from: 0.0, to: 1.0, duration: 0.5, ease: :out_back), lift: 12,
                                 score_record_lift: 28, score_record_delay: 0.15,
                                 ring: Tween.new(from: 0.0, to: 1.0, duration: 0.8, ease: :out_cubic),
                                 ring_reach: 10, ring_alpha: 0.45, score_record_ring_reach: 18, score_record_ring_alpha: 0.9)
@@ -407,19 +407,19 @@ module DotPopper
       # into place; "Copied!" fades in. The card is at most +width+ units
       # across at a layout scale of 1, padded by +pad+, with its message
       # padded by +bubble+, and the screen behind it veiled by +veil+.
-      SHARE_PREVIEW = SharePreviewLook.new(arrive: Tween.new(from: 0.0, to: 1.0, duration: 0.22, ease: :out_cubic),
+      SHARE_PREVIEW = SharePreviewStyle.new(arrive: Tween.new(from: 0.0, to: 1.0, duration: 0.22, ease: :out_cubic),
                                            confirm: Tween.new(from: 0.0, to: 1.0, duration: 0.25, ease: :out_cubic),
                                            lift: 14, width: 680, pad: 24, bubble: 14, veil: 0.6)
 
       # Game Over's words, from "Time's up!" to the Continue button, sit on a
       # soft dark backing, 60% at its middle, so they read over the pile;
       # its edges feather out, so the pile still shows around them.
-      FINALE_BACKING = ScrimLook.new(alpha: 0.6, feather: 40, layers: 10, pad: 18)
+      FINALE_BACKING = ScrimStyle.new(alpha: 0.6, feather: 40, layers: 10, pad: 18)
 
       # After time's up, the game's dots tumble into a pile behind the
       # score, dimmed (Shell::Pile, with Box2D). A calm pile
       # (DOT_POPPER_CALM) falls slowly and settles without a bounce.
-      PILE = PileLook.new(meter: 2.0, gravity: 20.0, restitution: 0.35, friction: 0.4, density: 1.0, damping: 0.05,
+      PILE = PileStyle.new(meter: 2.0, gravity: 20.0, restitution: 0.35, friction: 0.4, density: 1.0, damping: 0.05,
                           fling: 1.0, longest_step: 1 / 30.0)
       CALM_PILE = PILE.with(gravity: 8.0, restitution: 0.0, friction: 0.8, damping: 2.5, fling: 0.25)
 
@@ -436,7 +436,7 @@ module DotPopper
       # the toss "not as much/violent as I'd expect". It makes no sound and
       # no flash: the dots flying is the whole answer. A calm pile turns
       # slowly and never throws.
-      TILT = TiltLook.new(smoothing: 0.2, wake: 0.05, shake: 1.0, reversal: 0.35, settle: 0.3, cooldown: 0.6,
+      TILT = TiltStyle.new(smoothing: 0.2, wake: 0.05, shake: 1.0, reversal: 0.35, settle: 0.3, cooldown: 0.6,
                           least_kick: 20.0,
                           kick: 40.0, most_kick: 108.0, shakes: true, fling: Throw.new(spread: 1.0, least: 0.6),
                           dead_zone: 0.2)
@@ -448,7 +448,7 @@ module DotPopper
       # held dot catches up with the pointer in a few frames, and is
       # thrown at the pointer's speed over its last tenth of a second,
       # which a calm pile caps low, so a flick only nudges it.
-      GRAB = GrabLook.new(slop: 0.25, hold: 0.15, follow: 0.05, fastest: 60.0, fling: 40.0, window: 0.1)
+      GRAB = GrabStyle.new(slop: 0.25, hold: 0.15, follow: 0.05, fastest: 60.0, fling: 40.0, window: 0.1)
       CALM_GRAB = GRAB.with(follow: 0.12, fastest: 20.0, fling: 6.0)
 
       # A worn mouse's double click (Presentation::Chatter): a press of a
@@ -459,18 +459,18 @@ module DotPopper
       # no press a player makes is lost. 8 units is MouseTravel's line
       # between a jitter and a nudge: the hand on a chattering mouse has
       # not moved it.
-      CHATTER = ChatterLook.new(seconds: 0.06, reach: 8.0)
+      CHATTER = ChatterStyle.new(seconds: 0.06, reach: 8.0)
 
       # Sound: the pop climbs a little with the score, up to a cap. A pop
       # or a wrong tap is heard where it is across the screen, leaning at
       # most 60% to a side.
-      class SoundLook < Data.define(:pop_climb, :pop_highest, :tick_climb, :volume, :stereo); end
-      SOUND = SoundLook.new(pop_climb: 0.02, pop_highest: 1.4, tick_climb: 0.12, volume: 0.8,
+      class SoundStyle < Data.define(:pop_climb, :pop_highest, :tick_climb, :volume, :stereo); end
+      SOUND = SoundStyle.new(pop_climb: 0.02, pop_highest: 1.4, tick_climb: 0.12, volume: 0.8,
                             stereo: Stereo.new(spread: 0.6))
 
       # A short buzz under the finger for a pop, a longer one for a wrong
       # tap, on phones and tablets that can (Shell::Haptics).
-      HAPTICS = HapticsLook.new(pop: 0.015, penalty: 0.04)
+      HAPTICS = HapticsStyle.new(pop: 0.015, penalty: 0.04)
 
       # The gamepad cursor (Lota 0.1.3 and newer). At full tilt it crosses
       # the window corner to corner in a second, whatever the window's
@@ -479,7 +479,7 @@ module DotPopper
       # that speed over 0.08 s, quick enough to feel direct; the squared
       # curve leaves half a tilt at a quarter of it, for aiming. The reticle is thin and open in the
       # middle, so it never hides the dot under it.
-      GAMEPAD = GamepadLook.new(dead_zone: 0.2, curve: 2.0, speed: 16.0, crossing: 1.0, ramp: 0.08, trigger_press: 0.5,
+      GAMEPAD = GamepadStyle.new(dead_zone: 0.2, curve: 2.0, speed: 16.0, crossing: 1.0, ramp: 0.08, trigger_press: 0.5,
                                 trigger_release: 0.3, ring: 0.3, ticks: 0.42..0.6, line: 0.04, pip: 4)
 
       PATCHES = {
@@ -537,8 +537,8 @@ module DotPopper
       # each screen, the Stats screen too, how long it thinks before each
       # tap (which grows with the score, so a game ends), and how often it
       # taps a popped dot.
-      class AutopilotLook < Data.define(:title_wait, :finale_wait, :stats_wait, :think, :tiring, :mistakes); end
-      AUTOPILOT = AutopilotLook.new(title_wait: 1.6, finale_wait: 3.2, stats_wait: 3.0, think: 0.22..0.45,
+      class AutopilotStyle < Data.define(:title_wait, :finale_wait, :stats_wait, :think, :tiring, :mistakes); end
+      AUTOPILOT = AutopilotStyle.new(title_wait: 1.6, finale_wait: 3.2, stats_wait: 3.0, think: 0.22..0.45,
                                     tiring: 0.07, mistakes: 0.2)
     end
   end

@@ -47,8 +47,8 @@ module DotPopper
       # Makes every size a bump or an urgent pulse passes through, an
       # elastic one's undershoot included, before the first number changes.
       def prepare(layout)
-        hud = pen.look::HUD
-        size = layout.scaled(pen.look::TYPE.hud_number)
+        hud = pen.style::HUD
+        size = layout.scaled(pen.style::TYPE.hud_number)
         largest = [hud.bump.from, hud.pulse.from].max
         largest.step(0.85, -0.01) { pen.fonts.bold(Presentation::Pixels.font_size(size * it, step: BUMP_STEP)) }
       end
@@ -76,7 +76,7 @@ module DotPopper
       def dots_in_a_row_top(pill) = pill.bottom + (pill.height * Presentation::Hud::PIP * 1.7)
 
       def fonts(layout)
-        type = pen.look::TYPE
+        type = pen.style::TYPE
         [pen.fonts.bold(layout.scaled(type.hud_number)), pen.fonts.semibold(layout.scaled(type.hud_label))]
       end
 
@@ -95,7 +95,7 @@ module DotPopper
       def pill(rect)
         pixels = pen.pixels
         corner = rect.height / 2.0
-        pen.color(pen.palette.pill, pen.look::HUD.backing)
+        pen.color(pen.palette.pill, pen.style::HUD.backing)
         G.rectangle(:fill, rect.x, rect.y, rect.width, rect.height, corner, corner, 48)
         pen.color(pen.palette.pill_edge)
         G.line_width = pixels.line_width(1)
@@ -117,7 +117,7 @@ module DotPopper
         palette = pen.palette
         pen.outlined(readout.label, label, x, top + (label.height / 2.0), palette.soft)
         center = number_middle(top, number, label)
-        size = Presentation::Pixels.font_size(layout.scaled(pen.look::TYPE.hud_number) * readout.scale, step: BUMP_STEP)
+        size = Presentation::Pixels.font_size(layout.scaled(pen.style::TYPE.hud_number) * readout.scale, step: BUMP_STEP)
         color = palette.cream.mix(palette.urgent, readout.urgency)
         pen.outlined(readout.text, pen.fonts.bold(size), x, center, color)
       end

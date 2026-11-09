@@ -6,32 +6,32 @@ class PileTest < Minitest::Test
   include PresentationTest
 
   def test_box2d_sees_a_dot_as_a_ball_about_a_meter_across
-    meters = R / Look::PILE.meter_for(R)
+    meters = R / Style::PILE.meter_for(R)
 
     assert_operator meters, :>=, 0.1
     assert_operator meters, :<=, 1.0
   end
 
   def test_gravity_scales_with_the_dot
-    assert_in_delta 2 * Look::PILE.gravity_for(R), Look::PILE.gravity_for(2 * R)
+    assert_in_delta 2 * Style::PILE.gravity_for(R), Style::PILE.gravity_for(2 * R)
   end
 
   def test_a_slow_frame_steps_the_world_only_so_far
-    assert_in_delta Look::PILE.longest_step, Look::PILE.step(0.5)
-    assert_in_delta 0.01, Look::PILE.step(0.01)
-    assert_in_delta 0.0, Look::PILE.step(-1)
+    assert_in_delta Style::PILE.longest_step, Style::PILE.step(0.5)
+    assert_in_delta 0.01, Style::PILE.step(0.01)
+    assert_in_delta 0.0, Style::PILE.step(-1)
   end
 
   def test_a_dot_keeps_its_last_velocity
-    assert_equal [120.0, -60.0], Look::PILE.launch(dot(0, 0, velocity_x: 120, velocity_y: -60))
+    assert_equal [120.0, -60.0], Style::PILE.launch(dot(0, 0, velocity_x: 120, velocity_y: -60))
   end
 
   def test_a_calm_pile_never_bounces_and_falls_gently
-    calm = Look::CALM_PILE
+    calm = Style::CALM_PILE
 
     assert_in_delta 0.0, calm.restitution
-    assert_operator calm.gravity, :<, Look::PILE.gravity
-    assert_operator calm.fling, :<, Look::PILE.fling
+    assert_operator calm.gravity, :<, Style::PILE.gravity
+    assert_operator calm.fling, :<, Style::PILE.fling
   end
 
   def test_the_walls_are_the_floor_and_sides_with_an_open_top

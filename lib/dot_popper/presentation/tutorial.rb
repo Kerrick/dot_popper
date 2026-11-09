@@ -19,7 +19,7 @@ module DotPopper
     # the dots to move never waits more than +longest+, should they
     # bounce. +spotlight+, +ghost+ and +lead+ are the spotlight's look,
     # the guide's, and the lead-in's. +row+ is how its row beat goes.
-    class TutorialLook < Data.define(:drift, :stop, :resume, :slow, :start, :born, :peek, :clear, :warn, :flight,
+    class TutorialStyle < Data.define(:drift, :stop, :resume, :slow, :start, :born, :peek, :clear, :warn, :flight,
                                      :quick, :gap, :hold, :linger, :handover, :longest, :spotlight, :ghost, :lead,
                                      :dots_in_a_row); end
 
@@ -30,21 +30,21 @@ module DotPopper
     # bonus dot arrives; its reward stands for +reward+, and then the
     # rehearsal's dots shrink away in +leave+. The row's length and the
     # reward are the game's (Rules::BONUS).
-    class DotsInARowLook < Data.define(:practice, :arrive, :sweep, :flight, :ready, :reward, :leave); end
+    class DotsInARowStyle < Data.define(:practice, :arrive, :sweep, :flight, :ready, :reward, :leave); end
 
     # How the Tutorial's last beat goes on into the real game: its
     # spotlight on the clock fades out in +dim+ seconds, and a halo stays
     # around the clock for +halo+, then fades in +fade+.
-    class LeadLook < Data.define(:dim, :halo, :fade); end
+    class LeadStyle < Data.define(:dim, :halo, :fade); end
 
     # The Tutorial's last beat, in the real game's first moments, since
     # +at+: the spotlight on the clock as it starts to run, fading, and a
     # halo around it a little longer. Only the clock is lit; the game's
     # own dots are never covered for more than a moment.
-    class LeadIn < Data.define(:at, :look)
-      def strength(now) = (1 - ((now - at) / look.dim)).clamp(0.0, 1.0)
-      def halo(now) = (1 - ((now - at - look.halo) / look.fade)).clamp(0.0, 1.0)
-      def over?(now) = now - at >= look.halo + look.fade
+    class LeadIn < Data.define(:at, :style)
+      def strength(now) = (1 - ((now - at) / style.dim)).clamp(0.0, 1.0)
+      def halo(now) = (1 - ((now - at - style.halo) / style.fade)).clamp(0.0, 1.0)
+      def over?(now) = now - at >= style.halo + style.fade
     end
 
     # The tutorial a player sees on their first Play: the first game's
@@ -116,16 +116,16 @@ module DotPopper
 
       attr_reader :field, :dots, :animations, :hud, :spotlight, :ghost, :beat, :now
 
-      def initialize(field:, center:, effects:, sounds:, haptics:, look:, palette: look::PALETTE, now: 0.0, random: Random.new, calm: false)
+      def initialize(field:, center:, effects:, sounds:, haptics:, style:, palette: style::PALETTE, now: 0.0, random: Random.new, calm: false)
         @field = field
         @effects = effects
         @sounds = sounds
         @haptics = haptics
-        @look = look
+        @style = style
         @palette = palette
         @random = random
-        @script = look::TUTORIAL
-        @guide = calm ? @script.ghost.with(wag: look::CALM_WAG) : @script.ghost
+        @script = style::TUTORIAL
+        @guide = calm ? @script.ghost.with(wag: style::CALM_WAG) : @script.ghost
         @waited_out = Float::INFINITY
         @now = now
         @since = now
@@ -135,8 +135,8 @@ module DotPopper
         @flights = []
         @spotlight = Spotlight.off(@script.spotlight)
         @ghost = GhostHand.none(@guide)
-        @hud = Hud.blank(look::HUD, look::WORDS).showing(Rules::LOWEST_SCORE, Rules::STARTING_SECONDS.to_i, now)
-        @animations = DotAnimations.new(look::MOTION)
+        @hud = Hud.blank(style::HUD, style::WORDS).showing(Rules::LOWEST_SCORE, Rules::STARTING_SECONDS.to_i, now)
+        @animations = DotAnimations.new(style::MOTION)
         @dots = Stack.new.slide_under(first_dot(*center))
         spawned(dots.first)
       end
@@ -184,7 +184,7 @@ module DotPopper
         return dots_in_a_row_tap(x, y) if DOTS_IN_A_ROW.include?(beat)
 
         dot = dots.top_at(x, y)
-        if dot.nil? then @effects.ring(x, y, @look::TOUCH_RIPPLE)
+        if dot.nil? then @effects.ring(x, y, @style::TOUCH_RIPPLE)
         elsif dot.popped? then mistake(dot, x, y)
         elsif dot.id == BRIGHT then pop_bright(dot, x, y) unless beat == :points
         elsif SLIDING.include?(beat) then pop_next(dot, x, y)
@@ -211,7 +211,7 @@ module DotPopper
 
       def spawned(dot)
         animations.spawn(dot.id, now)
-        @effects.ring(dot.x, dot.y, @look::SPAWN_RIPPLE, follow: dot.id)
+        @effects.ring(dot.x, dot.y, @style::SPAWN_RIPPLE, follow: dot.id)
       end
 
       def enter(beat)
@@ -380,14 +380,14 @@ module DotPopper
       def show_the_dots_in_a_row
         settle(NEXT)
         enter(:row)
-        @dots_in_a_row_look = @script.dots_in_a_row
+        @dots_in_a_row_style = @script.dots_in_a_row
         @dots_in_a_row_size = Rules::BONUS.dots_in_a_row
         @practiced = 0
         @hud = hud.counting(0, @dots_in_a_row_size, false, now)
         @spotlight = spotlight.toward(Anchor.hud(:dots_in_a_row), now)
-        sweep = @dots_in_a_row_size - @dots_in_a_row_look.practice
-        sweep.times { |index| cue(now + @dots_in_a_row_look.arrive + (index * @dots_in_a_row_look.sweep)) { light_pip } }
-        cue(now + @dots_in_a_row_look.arrive + (sweep * @dots_in_a_row_look.sweep) + @dots_in_a_row_look.ready) { offer_practice }
+        sweep = @dots_in_a_row_size - @dots_in_a_row_style.practice
+        sweep.times { |index| cue(now + @dots_in_a_row_style.arrive + (index * @dots_in_a_row_style.sweep)) { light_pip } }
+        cue(now + @dots_in_a_row_style.arrive + (sweep * @dots_in_a_row_style.sweep) + @dots_in_a_row_style.ready) { offer_practice }
       end
 
       def light_pip
@@ -421,7 +421,7 @@ module DotPopper
       # must cost nothing the game would carry on with.
       def dots_in_a_row_tap(x, y)
         dot = dots.top_at(x, y)
-        if dot.nil? then @effects.ring(x, y, @look::TOUCH_RIPPLE)
+        if dot.nil? then @effects.ring(x, y, @style::TOUCH_RIPPLE)
         elsif dot.popped? then shudder(dot, x)
         elsif beat == :practice && dot.id == @target then practice(dot, x, y)
         elsif beat == :bonus && dot.id == BONUS then bonus_pop(dot, x, y)
@@ -430,9 +430,9 @@ module DotPopper
 
       def shudder(dot, x)
         animations.wobble(dot.id, now)
-        @effects.ring(dot.x, dot.y, @look::ALARM_RING, follow: dot.id)
+        @effects.ring(dot.x, dot.y, @style::ALARM_RING, follow: dot.id)
         @sounds.play(:bonk, pan: pan(x))
-        @haptics.buzz(@look::HAPTICS.penalty)
+        @haptics.buzz(@style::HAPTICS.penalty)
       end
 
       # A practice pop: its "+1" flies into the row and lights the next
@@ -444,16 +444,16 @@ module DotPopper
         @ghost = ghost.gone(now)
         @practiced += 1
         @flights << Flight.new(text: Words.points(1), color: @palette.gain, from: Anchor.at(x, y),
-                               to: Anchor.hud(:dots_in_a_row), born: now, duration: @dots_in_a_row_look.flight)
-        landing = now + @dots_in_a_row_look.flight
-        if @practiced < @dots_in_a_row_look.practice
+                               to: Anchor.hud(:dots_in_a_row), born: now, duration: @dots_in_a_row_style.flight)
+        landing = now + @dots_in_a_row_style.flight
+        if @practiced < @dots_in_a_row_style.practice
           offer_practice
           cue(landing) { light_pip }
         else
           enter(:ready)
           @spotlight = spotlight.toward(Anchor.hud(:dots_in_a_row), now)
           cue(landing) { fill_the_row }
-          cue(landing + @dots_in_a_row_look.ready) { offer_bonus }
+          cue(landing + @dots_in_a_row_style.ready) { offer_bonus }
         end
       end
 
@@ -468,18 +468,18 @@ module DotPopper
         offer(Dot.new(id: BONUS, **clear_spot, velocity_x: 0.0, velocity_y: 0.0, radius:).with(bonus: true))
         dot = dots.find { it.id == BONUS }
         animations.spawn(BONUS, now)
-        @effects.ring(dot.x, dot.y, @look::BONUS_RIPPLE, follow: BONUS)
+        @effects.ring(dot.x, dot.y, @style::BONUS_RIPPLE, follow: BONUS)
         @sounds.play(:bonus, pan: pan(dot.x))
         @beckoned = now
       end
 
       # While it waits, a mint ring pulses about it, as in play.
       def beckon
-        return unless now - @beckoned >= @look::BONUS_BEACON_EVERY
+        return unless now - @beckoned >= @style::BONUS_BEACON_EVERY
 
         @beckoned = now
         dot = dots.find { it.id == BONUS }
-        @effects.ring(dot.x, dot.y, @look::BONUS_BEACON, follow: BONUS)
+        @effects.ring(dot.x, dot.y, @style::BONUS_BEACON, follow: BONUS)
       end
 
       # The reward, as a bonus pop in play shows it: a bigger burst and the
@@ -488,24 +488,24 @@ module DotPopper
       # empties, as a bonus pop's does.
       def bonus_pop(dot, x, y)
         burst(dot, x, y)
-        @effects.burst(x, y, @look::BONUS_BURST, @look::BONUS_CONFETTI)
-        @effects.ring(dot.x, dot.y, @look::BONUS_SHOCKWAVE, follow: BONUS)
+        @effects.burst(x, y, @style::BONUS_BURST, @style::BONUS_CONFETTI)
+        @effects.ring(dot.x, dot.y, @style::BONUS_SHOCKWAVE, follow: BONUS)
         @sounds.play(:bonus_pop, pan: pan(x))
-        @haptics.buzz(@look::HAPTICS.penalty)
+        @haptics.buzz(@style::HAPTICS.penalty)
         settle(BONUS)
         float_reward(x, y)
         @hud = hud.counting(0, @dots_in_a_row_size, false, now)
         @ghost = ghost.gone(now)
         @spotlight = spotlight.toward(nil, now)
         enter(:reward)
-        cue(now + @dots_in_a_row_look.reward) { put_the_rehearsal_away }
+        cue(now + @dots_in_a_row_style.reward) { put_the_rehearsal_away }
       end
 
       def float_reward(x, y)
         bonus = Rules::BONUS
-        spread = @look::FLOAT_SPREAD * radius
-        @effects.float(Words.points(Rules::POP_POINTS + bonus.points), x - spread, y, @palette.cream, @look::GAIN_FLOAT)
-        @effects.float(Words.seconds(Rules::POP_SECONDS + bonus.seconds), x + spread, y, @palette.gain, @look::GAIN_FLOAT)
+        spread = @style::FLOAT_SPREAD * radius
+        @effects.float(Words.points(Rules::POP_POINTS + bonus.points), x - spread, y, @palette.cream, @style::GAIN_FLOAT)
+        @effects.float(Words.seconds(Rules::POP_SECONDS + bonus.seconds), x + spread, y, @palette.gain, @style::GAIN_FLOAT)
       end
 
       # The rehearsal's dots leave, so the game goes on with only the
@@ -513,7 +513,7 @@ module DotPopper
       def put_the_rehearsal_away
         rehearsal = dots.select { it.id.negative? }
         rehearsal.each { animations.leave(it.id, now) }
-        cue(now + @dots_in_a_row_look.leave) do
+        cue(now + @dots_in_a_row_style.leave) do
           @dots = Stack.new(dots: dots.reject { it.id.negative? })
           hand_over
         end
@@ -535,10 +535,10 @@ module DotPopper
       # instant of the tap, over the dot still bright; time stops there, and
       # the dot takes its popped look as it flows again (#settle).
       def burst(dot, x, y)
-        @effects.burst(x, y, @look::POP_BURST, @palette.confetti)
-        @effects.ring(dot.x, dot.y, @look::SHOCKWAVE, follow: dot.id)
-        @sounds.play(:pop, pitch: 1.0 + (hud.score * @look::SOUND.pop_climb), pan: pan(x))
-        @haptics.buzz(@look::HAPTICS.pop)
+        @effects.burst(x, y, @style::POP_BURST, @palette.confetti)
+        @effects.ring(dot.x, dot.y, @style::SHOCKWAVE, follow: dot.id)
+        @sounds.play(:pop, pitch: 1.0 + (hud.score * @style::SOUND.pop_climb), pan: pan(x))
+        @haptics.buzz(@style::HAPTICS.pop)
       end
 
       # The dot +id+ popped, as the burst at the stopped instant said it
@@ -558,13 +558,13 @@ module DotPopper
       # says "you did that".
       def mistake(dot, x, y, guide: false)
         animations.wobble(dot.id, now)
-        @effects.ring(dot.x, dot.y, @look::ALARM_RING, follow: dot.id)
+        @effects.ring(dot.x, dot.y, @style::ALARM_RING, follow: dot.id)
         hidden = dots.fresh_beneath(dot, x, y)
-        @effects.reveal(hidden, @look::REVEAL) if hidden
-        @effects.light(@look::PENALTY_FLASH)
+        @effects.reveal(hidden, @style::REVEAL) if hidden
+        @effects.light(@style::PENALTY_FLASH)
         penalize
         @sounds.play(:bonk, pan: pan(x))
-        @haptics.buzz(@look::HAPTICS.penalty) unless guide
+        @haptics.buzz(@style::HAPTICS.penalty) unless guide
       end
 
       # A pop's point (+to+ :score) or second (:time), flying from where
@@ -596,7 +596,7 @@ module DotPopper
         score = from == :score
         @flights << Flight.new(text: Words.points(-lost), icon: (:stopwatch unless score), color: @palette.alarm,
                                from: Anchor.hud(from), to: Anchor.hud(from, below: 1.6), born: now,
-                               duration: @look::LOSS_FLOAT.life)
+                               duration: @style::LOSS_FLOAT.life)
       end
 
       # A pop's numbers landing in the HUD, which counts them up, with a
@@ -607,7 +607,7 @@ module DotPopper
         @sounds.play(:tick, pitch: 1.0) if seconds.positive?
       end
 
-      def pan(x) = @look::SOUND.stereo.pan(x, field.width)
+      def pan(x) = @style::SOUND.stereo.pan(x, field.width)
     end
   end
 end

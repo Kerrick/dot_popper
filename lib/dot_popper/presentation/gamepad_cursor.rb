@@ -17,7 +17,7 @@ module DotPopper
     # +ring+ and its +ticks+ (from, to) are in radii, +line+ is its
     # stroke, in radii too, and +pip+ is the dot at its centre, in device
     # pixels across.
-    class GamepadLook < Data.define(:dead_zone, :curve, :speed, :crossing, :ramp, :trigger_press, :trigger_release,
+    class GamepadStyle < Data.define(:dead_zone, :curve, :speed, :crossing, :ramp, :trigger_press, :trigger_release,
                                     :ring, :ticks, :line, :pip)
     end
 
@@ -56,10 +56,10 @@ module DotPopper
     # where the mouse last was, so a player who picks up the pad starts
     # from there. It stays inside +area+, the window. +pace+ is how fast
     # it is going, of its top speed, as it gathers speed.
-    class GamepadCursor < Data.define(:x, :y, :visible, :area, :look, :radius, :pace)
+    class GamepadCursor < Data.define(:x, :y, :visible, :area, :style, :radius, :pace)
       # A hidden cursor in the middle of +area+.
-      def self.centered(area, look:, radius:)
-        new(x: area.center_x, y: area.center_y, visible: false, area:, look:, radius:)
+      def self.centered(area, style:, radius:)
+        new(x: area.center_x, y: area.center_y, visible: false, area:, style:, radius:)
       end
 
       def initialize(pace: 0.0, **) = super
@@ -67,11 +67,11 @@ module DotPopper
       # The cursor +seconds+ later, pushed by +stick+. A push past the dead
       # zone moves it and shows it; a stick at rest stops it.
       def update(seconds, stick)
-        push = stick.shaped(look.dead_zone, look.curve)
+        push = stick.shaped(style.dead_zone, style.curve)
         return pace.zero? ? self : with(pace: 0.0) if push.rest?
 
         strength = Math.hypot(push.x, push.y)
-        paced = [pace + (seconds / look.ramp), strength].min
+        paced = [pace + (seconds / style.ramp), strength].min
         step = top_speed * seconds * paced / strength
         at(x + (push.x * step), y + (push.y * step)).with(pace: paced).show
       end
@@ -81,7 +81,7 @@ module DotPopper
       # of the ramp it spends gathering speed, and no less than +speed+
       # radii a second.
       def top_speed
-        [Math.hypot(area.width, area.height) / (look.crossing - (look.ramp / 2.0)), look.speed * radius].max
+        [Math.hypot(area.width, area.height) / (style.crossing - (style.ramp / 2.0)), style.speed * radius].max
       end
 
       def show = with(visible: true)

@@ -20,7 +20,7 @@ module DotPopper
         words = show.words
         arrival = finale.arrival(now)
         shown = arrival.clamp(0.0, 1.0)
-        ScrimPainter.new(pen:).draw(plan.backing, pen.look::FINALE_BACKING, layout, alpha: shown)
+        ScrimPainter.new(pen:).draw(plan.backing, pen.style::FINALE_BACKING, layout, alpha: shown)
         if (heading = plan[:heading])
           pen.text(words.time_up, pen.fonts.bold(plan.size(:heading)), layout.center_x,
                    heading.center_y - ((1 - arrival) * 30), palette.soft, shown)

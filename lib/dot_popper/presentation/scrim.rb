@@ -7,7 +7,7 @@ module DotPopper
     # over +feather+ graphics units at its edges (at a layout scale of
     # 1), in +layers+ steps, and +pad+ units wider than the text on every
     # side.
-    class ScrimLook < Data.define(:alpha, :feather, :layers, :pad)
+    class ScrimStyle < Data.define(:alpha, :feather, :layers, :pad)
       # Each layer's opacity: drawn one inside the other, so the middle is
       # covered by every layer, they add up to +alpha+ there.
       def layer_alpha = 1 - ((1 - alpha)**(1.0 / layers))

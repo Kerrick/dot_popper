@@ -17,7 +17,7 @@ class PlaytestKitTest < Minitest::Test
   LISTS = [WINDOWS, MAC, LINUX, IOS, ANDROID].freeze
 
   # Every String the presentation's settings hold, the words among them.
-  def self.game_strings(value = DotPopper::Presentation::Look.constants.map { DotPopper::Presentation::Look.const_get(it) })
+  def self.game_strings(value = DotPopper::Presentation::Style.constants.map { DotPopper::Presentation::Style.const_get(it) })
     case value
     when String then [value]
     when Array then value.flat_map { game_strings(it) }

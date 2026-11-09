@@ -24,7 +24,7 @@ class WordsTest < Minitest::Test
   end
 
   def test_the_score_record_is_named
-    assert_equal "Your record: 12", Look::WORDS.score_record_line(12)
+    assert_equal "Your record: 12", Style::WORDS.score_record_line(12)
   end
 
   # The result to share names a new record or a tie, and otherwise only
@@ -33,12 +33,12 @@ class WordsTest < Minitest::Test
     stats = DotPopper::GameStats.start.with(pops: 27, mistakes: 1, duration: 38.2)
 
     assert_equal "Dot Popper: 25 points, a new record!\n🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds",
-                 Look::WORDS.share_text(25, stats, score_record: 25, new_score_record: true)
+                 Style::WORDS.share_text(25, stats, score_record: 25, new_score_record: true)
     assert_equal "Dot Popper: 25 points, tying my best!\n🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds",
-                 Look::WORDS.share_text(25, stats, score_record: 25, new_score_record: false)
-    assert_match(/\ADot Popper: 1 point\n/, Look::WORDS.share_text(1, stats, score_record: 25, new_score_record: false))
-    assert_match(/\ADot Popper: 0 points\n/, Look::WORDS.share_text(0, stats, score_record: 0, new_score_record: false))
-    assert_match(/\ADot Popper: 25 points\n/, Look::WORDS.share_text(25, stats, score_record: 25, new_score_record: false, first: true))
+                 Style::WORDS.share_text(25, stats, score_record: 25, new_score_record: false)
+    assert_match(/\ADot Popper: 1 point\n/, Style::WORDS.share_text(1, stats, score_record: 25, new_score_record: false))
+    assert_match(/\ADot Popper: 0 points\n/, Style::WORDS.share_text(0, stats, score_record: 0, new_score_record: false))
+    assert_match(/\ADot Popper: 25 points\n/, Style::WORDS.share_text(25, stats, score_record: 25, new_score_record: false, first: true))
   end
 
   def test_the_shared_result_names_a_record_on_its_own_line
@@ -47,25 +47,25 @@ class WordsTest < Minitest::Test
 
     assert_equal "Dot Popper: 25 points, a new record!\nNew record: 18 dots in a row without a mistake\n" \
                  "🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds",
-                 Look::WORDS.share_text(25, stats, score_record: 25, new_score_record: true, record:)
+                 Style::WORDS.share_text(25, stats, score_record: 25, new_score_record: true, record:)
   end
 
   # A score depends on how crowded the screen gets, so the shared result
   # says how big the screen was, counted in dots side by side.
   def test_the_shared_result_can_say_the_screen_it_was_played_on
     stats = DotPopper::GameStats.start.with(pops: 27, mistakes: 1, duration: 38.2)
-    screen = Look::WORDS.played_on(DotPopper::Field.new(1200, 800, 50))
+    screen = Style::WORDS.played_on(DotPopper::Field.new(1200, 800, 50))
 
     assert_equal "Played on a screen about 12 dots wide and 8 dots tall.", screen
     assert_equal "Dot Popper: 25 points\n🟡 27 pops · ⚫ 1 mistake · ⏱ 38 seconds\n#{screen}",
-                 Look::WORDS.share_text(25, stats, score_record: 30, new_score_record: false, screen:)
+                 Style::WORDS.share_text(25, stats, score_record: 30, new_score_record: false, screen:)
     assert_equal "This screen is about 4 dots wide and 9 dots tall.",
-                 Look::WORDS.screen_here(DotPopper::Field.new(395, 850, 50))
+                 Style::WORDS.screen_here(DotPopper::Field.new(395, 850, 50))
     assert_equal [1, 1], Words.dots_across(DotPopper::Field.new(40, 20, 50)), "never no dots at all"
   end
 
   def test_each_record_reads_as_a_sentence
-    record = ->(kind, value) { Look::WORDS.record(DotPopper::Stats::Record.new(kind:, value:)) }
+    record = ->(kind, value) { Style::WORDS.record(DotPopper::Stats::Record.new(kind:, value:)) }
 
     assert_equal "New record: 18 dots in a row without a mistake", record[:most_dots_in_a_row, 18]
     assert_equal "New record: your longest game, 48 seconds", record[:longest_game, 47.6]
@@ -76,7 +76,7 @@ class WordsTest < Minitest::Test
   # The main buttons name the gamepad's button that presses them.
   def test_the_prompts_name_the_press_the_player_is_making
     said = [InputKind::TOUCH, InputKind::MOUSE, InputKind::GAMEPAD].map do |kind|
-      words = Look::WORDS.for(kind)
+      words = Style::WORDS.for(kind)
       [words.play, words.continue, words.go_back, words.how_to_play]
     end
 
@@ -88,8 +88,8 @@ class WordsTest < Minitest::Test
   # Holding "Clear my records…" says what will go, and on a gamepad
   # names the button being held.
   def test_clearing_the_stats_says_what_goes_and_names_the_button
-    mouse = Look::WORDS.for(InputKind::MOUSE)
-    pad = Look::WORDS.for(InputKind::GAMEPAD)
+    mouse = Style::WORDS.for(InputKind::MOUSE)
+    pad = Style::WORDS.for(InputKind::GAMEPAD)
 
     assert_equal "Keep holding to clear your records, totals, chart, and goal streak.", mouse.keep_holding("A")
     assert_equal "Keep holding Y to clear your records, totals, chart, and goal streak.", pad.keep_holding("Y")
@@ -105,10 +105,10 @@ class WordsTest < Minitest::Test
   def test_the_game_in_one_line
     stats = DotPopper::GameStats.start.with(pops: 14, mistakes: 2, times_to_pop: [1.0, 3.14])
 
-    assert_equal "14 pops, 2 mistakes, slowest pop 3.1 seconds", Look::WORDS.summary(stats)
+    assert_equal "14 pops, 2 mistakes, slowest pop 3.1 seconds", Style::WORDS.summary(stats)
     assert_equal "1 pop, 1 mistake, slowest pop 0.0 seconds",
-                 Look::WORDS.summary(DotPopper::GameStats.start.with(pops: 1, mistakes: 1, times_to_pop: [0.0]))
-    assert_equal "0 pops, 0 mistakes", Look::WORDS.summary(DotPopper::GameStats.start)
+                 Style::WORDS.summary(DotPopper::GameStats.start.with(pops: 1, mistakes: 1, times_to_pop: [0.0]))
+    assert_equal "0 pops, 0 mistakes", Style::WORDS.summary(DotPopper::GameStats.start)
   end
 
   def test_a_long_time_reads_in_the_units_that_suit_it
@@ -126,13 +126,13 @@ class WordsTest < Minitest::Test
 
   def test_every_goal_reads_as_a_whole_sentence
     DotPopper::DailyGoal::LIST.each do |goal|
-      line = Look::WORDS.goal(goal)
+      line = Style::WORDS.goal(goal)
       assert_match(/\AToday's goal: [a-z].*[a-z]\.\z/, line)
       assert_includes line, goal.target.to_s
     end
     assert_equal "Today's goal: pop 15 bright dots in a row without a mistake.",
-                 Look::WORDS.goal(DotPopper::DailyGoal.new(kind: :clean_run, target: 15))
-    assert_equal "Met 3 days in a row.", Look::WORDS.streak(3)
+                 Style::WORDS.goal(DotPopper::DailyGoal.new(kind: :clean_run, target: 15))
+    assert_equal "Met 3 days in a row.", Style::WORDS.streak(3)
   end
 
   def test_wrapping_breaks_between_words_to_fit
@@ -154,19 +154,19 @@ class WordsTest < Minitest::Test
   end
 
   def test_how_far_short_of_the_score_record
-    assert_equal "Just 3 points short of your record of 27", Look::WORDS.short_of_score_record(24, 27)
-    assert_equal "Just 1 point short of your record of 27", Look::WORDS.short_of_score_record(26, 27)
-    assert_equal "Your record is 28", Look::WORDS.short_of_score_record(5, 28), "a far-off best isn't a gap to dwell on"
-    assert_equal "You tied your record of 27", Look::WORDS.short_of_score_record(27, 27)
-    assert_equal "", Look::WORDS.short_of_score_record(0, 0), "no best to compare with yet"
-    assert_equal "Your record: 27", Look::WORDS.short_of_score_record(27, 27, first: true), "a first game tied nothing"
+    assert_equal "Just 3 points short of your record of 27", Style::WORDS.short_of_score_record(24, 27)
+    assert_equal "Just 1 point short of your record of 27", Style::WORDS.short_of_score_record(26, 27)
+    assert_equal "Your record is 28", Style::WORDS.short_of_score_record(5, 28), "a far-off best isn't a gap to dwell on"
+    assert_equal "You tied your record of 27", Style::WORDS.short_of_score_record(27, 27)
+    assert_equal "", Style::WORDS.short_of_score_record(0, 0), "no best to compare with yet"
+    assert_equal "Your record: 27", Style::WORDS.short_of_score_record(27, 27, first: true), "a first game tied nothing"
   end
 
   def test_a_met_goal_still_says_what_it_was
     goal = DotPopper::DailyGoal.for(Date.new(2026, 11, 1))
-    line = Look::WORDS.goal_done_line(goal)
+    line = Style::WORDS.goal_done_line(goal)
 
     assert line.start_with?("Done today: ")
-    assert_equal Look::WORDS.goal(goal).delete_prefix("Today's goal: "), line.delete_prefix("Done today: ")
+    assert_equal Style::WORDS.goal(goal).delete_prefix("Today's goal: "), line.delete_prefix("Done today: ")
   end
 end

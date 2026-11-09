@@ -100,12 +100,12 @@ class AchievementsOnStatsTest < Minitest::Test
   end
 
   def test_a_sheet_with_no_achievements_lists_no_achievements
-    assert_nil StatsSheet.build(stats, score_record: 1, words: Look::WORDS).achievements
+    assert_nil StatsSheet.build(stats, score_record: 1, words: Style::WORDS).achievements
   end
 
   def test_the_stats_screen_puts_the_achievements_in_a_column_of_their_own_where_there_is_room
     sheet = build_sheet(paid: true)
-    plan = StatsLayout.new(layout: layout(1400, 700), sheet:, look: Look::RECORDS, widest: 360)
+    plan = StatsLayout.new(layout: layout(1400, 700), sheet:, style: Style::RECORDS, widest: 360)
     achievements = plan.placements.select { it.item.is_a?(StatsRow) && it.item.mark }
     others = plan.placements.reject { it.item.is_a?(StatsRow) && it.item.mark }.select { it.item.is_a?(StatsRow) }
 
@@ -114,14 +114,14 @@ class AchievementsOnStatsTest < Minitest::Test
     assert_empty achievements.map(&:x) & others.map(&:x)
   end
 
-  def test_a_free_players_stats_fit_with_the_achievements_looks_and_the_offer_at_phone_and_desktop_sizes
+  def test_a_free_players_stats_fit_with_the_achievements_themes_and_the_offer_at_phone_and_desktop_sizes
     sheet = build_sheet(paid: false)
 
     [[1200, 800], [800, 500], [400, 320], [400, 850], [850, 400], [844, 390], [2560, 1440]].each do |width, height|
-      plan = StatsLayout.new(layout: layout(width, height), sheet:, look: Look::RECORDS, widest: 360, looks: true, offer: true)
+      plan = StatsLayout.new(layout: layout(width, height), sheet:, style: Style::RECORDS, widest: 360, themes: true, offer: true)
       page = layout(width, height)
 
-      assert_operator plan.prompt_y, :<=, page.stats_floor(looks: true, offer: true), "#{width}x#{height}"
+      assert_operator plan.prompt_y, :<=, page.stats_floor(themes: true, offer: true), "#{width}x#{height}"
       plan.placements.each do |placed|
         assert_operator placed.x, :>=, 0, "#{width}x#{height}"
         assert_operator placed.right, :<=, width, "#{width}x#{height}"
@@ -133,7 +133,7 @@ class AchievementsOnStatsTest < Minitest::Test
 
   def test_on_a_narrow_screen_the_achievements_stack_under_the_rest_and_all_fit
     sheet = build_sheet(paid: true)
-    plan = StatsLayout.new(layout: layout(395, 850), sheet:, look: Look::RECORDS, widest: 300)
+    plan = StatsLayout.new(layout: layout(395, 850), sheet:, style: Style::RECORDS, widest: 300)
     placed = plan.placements
 
     assert_equal DotPopper::Achievement::IDS.size, placed.count { it.item.is_a?(StatsRow) && it.item.mark }
@@ -167,7 +167,7 @@ class AchievementsOnStatsTest < Minitest::Test
   end
 
   def build_sheet(paid:)
-    StatsSheet.build(stats, score_record: 9, words: Look::WORDS, size_class: MEDIUM, field: DotPopper::Field.new(1200, 800, R),
+    StatsSheet.build(stats, score_record: 9, words: Style::WORDS, size_class: MEDIUM, field: DotPopper::Field.new(1200, 800, R),
                               achievements: @achievements, paid:)
   end
 end

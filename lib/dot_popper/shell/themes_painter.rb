@@ -10,12 +10,12 @@ module DotPopper
     # and a check, so what is chosen shows without a word. Presentation::
     # LooksLayout decides where each card goes; this only draws, on whole
     # device pixels.
-    class LooksPainter < Data.define(:pen, :dots)
+    class ThemesPainter < Data.define(:pen, :dots)
       G = ::Lota::Graphics
 
       def draw(show, layout)
-        plan = show.looks_layout
-        pen.text(show.words.looks.fetch(:title), pen.fonts.bold(plan.heading_size), layout.center_x, plan.heading_y,
+        plan = show.themes_layout
+        pen.text(show.words.themes.fetch(:title), pen.fonts.bold(plan.heading_size), layout.center_x, plan.heading_y,
                  pen.palette.cream)
         note(show, plan, layout) if plan.note
         plan.cards.each { card(it, show) }
@@ -28,7 +28,7 @@ module DotPopper
 
       # For a free player, the one line that says where looks come from.
       def note(show, plan, layout)
-        pen.text(show.words.looks.fetch(:locked), pen.fonts.semibold(plan.note_size), layout.center_x, plan.note_y, pen.palette.soft)
+        pen.text(show.words.themes.fetch(:locked), pen.fonts.semibold(plan.note_size), layout.center_x, plan.note_y, pen.palette.soft)
       end
 
       def card(card, show)
@@ -41,9 +41,9 @@ module DotPopper
         pen.color(palette.ink_top)
         G.rectangle(:fill, rect.x, rect.y, rect.width, rect.height, corner, corner, 32)
         pair(rect, palette)
-        name(show.words.looks.fetch(theme.key), rect, palette)
-        locked = show.looks_locked?
-        earned = show.look_earned?(theme)
+        name(show.words.themes.fetch(theme.key), rect, palette)
+        locked = show.themes_locked?
+        earned = show.theme_earned?(theme)
         shade(rect, corner, palette) if locked && !earned
         outline(rect, corner, chosen, hover)
         tick(rect, palette) if chosen

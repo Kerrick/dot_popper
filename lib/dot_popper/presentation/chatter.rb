@@ -5,7 +5,7 @@ module DotPopper
     # How soon, in seconds, and how near, in graphics units, a mouse
     # button's press may follow that button's last press and still be
     # its switch chattering (Chatter).
-    class ChatterLook < Data.define(:seconds, :reach); end
+    class ChatterStyle < Data.define(:seconds, :reach); end
 
     # A worn mouse's switch chatters: one click reaches the game as two,
     # a few hundredths of a second apart, and the second lands on the
@@ -21,8 +21,8 @@ module DotPopper
     # not, so a run of chatter is dropped whole. +presses+ holds each
     # button's last press as [at, x, y]; +dropping+, the buttons whose
     # next release is a dropped press's.
-    class Chatter < Data.define(:look, :presses, :dropping)
-      def self.quiet(look) = new(look:, presses: {}.freeze, dropping: [].freeze)
+    class Chatter < Data.define(:style, :presses, :dropping)
+      def self.quiet(style) = new(style:, presses: {}.freeze, dropping: [].freeze)
 
       # +button+ went down at +x+, +y+, +at+ seconds in. Returns the
       # Chatter after it, and whether the press is chatter, to be dropped.
@@ -50,7 +50,7 @@ module DotPopper
         return false unless last
 
         before, last_x, last_y = last
-        at - before < look.seconds && Math.hypot(x - last_x, y - last_y) <= look.reach
+        at - before < style.seconds && Math.hypot(x - last_x, y - last_y) <= style.reach
       end
     end
   end

@@ -42,8 +42,8 @@ module DotPopper
       def swatch(x, y, radius, palette, fresh:)
         G.push do
           G.translate(x, y)
-          pen.color(palette.shadow, pen.look::DOT.shadow_alpha)
-          G.circle(:fill, 0, radius * pen.look::DOT.shadow_offset, radius, SEGMENTS)
+          pen.color(palette.shadow, pen.style::DOT.shadow_alpha)
+          G.circle(:fill, 0, radius * pen.style::DOT.shadow_offset, radius, SEGMENTS)
           fresh ? flat_fresh(radius, 1.0, palette) : flat_popped(radius, 1.0, palette)
         end
       end
@@ -62,12 +62,12 @@ module DotPopper
 
       def shaded(x, y, radius, pose, opacity, bonus)
         G.color = [pose.freshness, pose.alarm, bonus ? pose.freshness : 0.0, opacity]
-        half = radius * pen.look::DOT.extent
+        half = radius * pen.style::DOT.extent
         pen.square(x, y, half * pose.scale_x, half * pose.scale_y)
       end
 
       def flat(x, y, radius, pose, opacity, bonus)
-        sizes = pen.look::DOT
+        sizes = pen.style::DOT
         G.push do
           G.translate(x, y)
           G.scale(pose.scale_x, pose.scale_y)
@@ -84,7 +84,7 @@ module DotPopper
       # so the dot's edge is its hit circle.
       def flat_fresh(radius, opacity, palette = pen.palette, bonus: false)
         rim, deep, body = (bonus ? palette.to_h.values_at(:bonus_rim, :bonus_deep, :bonus_body) : palette.to_h.values_at(:fresh_rim, :fresh_deep, :fresh_body))
-        inner = radius - [radius * pen.look::DOT.rim, pen.pixels.line_width(2)].max
+        inner = radius - [radius * pen.style::DOT.rim, pen.pixels.line_width(2)].max
         pen.color(rim, opacity)
         G.circle(:fill, 0, 0, radius, SEGMENTS)
         pen.color(deep, opacity)

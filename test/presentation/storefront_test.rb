@@ -196,7 +196,7 @@ class StorefrontTest < Minitest::Test
   end
 
   def test_no_word_of_the_offer_calls_it_a_trial_or_a_demo
-    words = Look::WORDS.offer.values.flatten.join(" ")
+    words = Style::WORDS.offer.values.flatten.join(" ")
 
     refute_match(/trial|demo/i, words)
   end
@@ -204,7 +204,7 @@ class StorefrontTest < Minitest::Test
   def test_the_offers_buttons_stay_on_every_screen_and_apart
     [[390, 844], [844, 390], [1920, 1080], [400, 320], [320, 568]].each do |width, height|
       layout = layout(width, height)
-      plan = OfferScreen.new(layout:, type: Look::TYPE, words: Look::WORDS, measure: RoughMeasure.new, offering: true).plan
+      plan = OfferScreen.new(layout:, type: Style::TYPE, words: Style::WORDS, measure: RoughMeasure.new, offering: true).plan
       safe = layout.safe
 
       assert plan.placed.fits?, "the offer fits #{width}x#{height}"
@@ -219,7 +219,7 @@ class StorefrontTest < Minitest::Test
   def test_the_way_to_the_offer_clears_the_stats_buttons
     [[390, 844], [844, 390], [1920, 1080], [400, 320], [320, 568]].each do |width, height|
       layout = layout(width, height)
-      others = [layout.back_button, layout.credits_button, layout.looks_button, layout.clear_stats_button]
+      others = [layout.back_button, layout.credits_button, layout.themes_button, layout.clear_stats_button]
 
       others.each { refute overlap?(layout.offer_button, it), "the pill clears #{it} at #{width}x#{height}" }
     end
@@ -269,7 +269,7 @@ class StorefrontTest < Minitest::Test
     show.open_offer
     answer("answer=1\nowned=1\nstate=ready\nprice=$1.99\n", show)
 
-    assert_equal Look::WORDS.offer[:thanks], show.offer_status
+    assert_equal Style::WORDS.offer[:thanks], show.offer_status
     assert_equal %i[back], show.controls.map(&:name)
     show.back
 

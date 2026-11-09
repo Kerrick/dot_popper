@@ -34,8 +34,8 @@ module DotPopper
       # Throws +look.count+ droplets out from (+x+, +y+), shared among
       # +colors+. No droplet outlives +longest+, which only a screen with
       # no game in play may raise.
-      def burst(x, y, look, colors, longest: Burst::LONGEST_LIFE)
-        spray = Spray.new(x:, y:, look:, colors:, longest: [longest, look.life.end].min, radius: @radius)
+      def burst(x, y, style, colors, longest: Burst::LONGEST_LIFE)
+        spray = Spray.new(x:, y:, style:, colors:, longest: [longest, style.life.end].min, radius: @radius)
         keep(@sprays, spray, MOST_SPRAYS)
       end
 
@@ -47,19 +47,19 @@ module DotPopper
       end
 
       # How many droplets of +spray+ each of its colors gets.
-      def shares(spray) = spray.look.shares(spray.colors, @random)
+      def shares(spray) = spray.style.shares(spray.colors, @random)
 
-      def ring(x, y, look, follow: nil)
-        keep(@rings, Ring.new(x:, y:, look:, scale: @radius, born: now, follow:), MOST_RINGS)
+      def ring(x, y, style, follow: nil)
+        keep(@rings, Ring.new(x:, y:, style:, scale: @radius, born: now, follow:), MOST_RINGS)
       end
 
       # Outlines +dot+, wherever it goes, over every other dot.
-      def reveal(dot, look)
-        keep(@reveals, Reveal.new(follow: dot.id, x: dot.x, y: dot.y, look:, scale: @radius, born: now), MOST_RINGS)
+      def reveal(dot, style)
+        keep(@reveals, Reveal.new(follow: dot.id, x: dot.x, y: dot.y, style:, scale: @radius, born: now), MOST_RINGS)
       end
 
-      def float(text, x, y, color, look)
-        keep(@floaters, Floater.new(text:, x:, y:, color:, look:, scale: @radius, born: now), MOST_FLOATERS)
+      def float(text, x, y, color, style)
+        keep(@floaters, Floater.new(text:, x:, y:, color:, style:, scale: @radius, born: now), MOST_FLOATERS)
       end
 
       # Measures every effect from now on in dots of +radius+, as a game
@@ -70,8 +70,8 @@ module DotPopper
         @shake = @shake.with(scale: radius)
       end
 
-      def kick(look) = @shake = @shake.kick(look, now)
-      def light(look) = @flash = EdgeFlash.new(look:, born: now)
+      def kick(style) = @shake = @shake.kick(style, now)
+      def light(style) = @flash = EdgeFlash.new(style:, born: now)
 
       def shake_x = @shake.offset_x(now)
       def shake_y = @shake.offset_y(now)

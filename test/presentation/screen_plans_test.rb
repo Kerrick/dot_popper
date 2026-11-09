@@ -12,7 +12,7 @@ class ScreenPlansTest < Minitest::Test
 
   SIZES = [[400, 850], [1200, 800], [800, 500], [640, 400], [400, 320], [844, 390], [1024, 768], [1920, 1080],
            [2560, 1440], [3840, 2160], [412, 832], [832, 412], [375, 812], [812, 375], [850, 400]].freeze
-  WORDS = Look::WORDS
+  WORDS = Style::WORDS
   GOAL = WORDS.goal(DotPopper::DailyGoal.for(Date.new(2026, 11, 1)))
 
   def test_the_titles_lines_never_overlap_each_other_or_the_bottom_row
@@ -20,7 +20,7 @@ class ScreenPlansTest < Minitest::Test
       screen_layout = layout(width, height)
       radii = [R, DotPopper::DotSize.fitted(width, height).radius]
       [0, 75].product([nil, :open, :done], [0, 5], [true, false], radii) do |score_record, goal, streak, sizing, radius|
-        screen = TitleScreen.new(layout: screen_layout, type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
+        screen = TitleScreen.new(layout: screen_layout, type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
                                  score_record:, goal: { open: GOAL, done: WORDS.goal_done_line(DotPopper::DailyGoal.for(Date.new(2026, 11, 1))) }[goal], done: goal == :done,
                                  streak:, stats: !goal.nil?, sizing: sizing && !goal.nil?, radius:)
         plan = screen.plan
@@ -62,7 +62,7 @@ class ScreenPlansTest < Minitest::Test
       screen_layout = layout(width, height)
       radius = DotPopper::DotSize.fitted(width, height).radius
       places = [[0, nil, false], [75, :open, false], [75, :done, true], [0, :open, true]].map do |score_record, goal, sizing|
-        screen = TitleScreen.new(layout: screen_layout, type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
+        screen = TitleScreen.new(layout: screen_layout, type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
                                  score_record:, goal: { open: GOAL, done: WORDS.goal_done_line(DotPopper::DailyGoal.for(Date.new(2026, 11, 1))) }[goal],
                                  done: goal == :done, streak: 5, stats: !goal.nil?, sizing:, radius:, window: true)
         plan = screen.plan
@@ -93,7 +93,7 @@ class ScreenPlansTest < Minitest::Test
   # the top right corner.
   def test_the_window_buttons_are_labelled_wherever_the_row_has_room
     place = lambda do |width, height|
-      buttons = TitleScreen.new(layout: layout(width, height), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
+      buttons = TitleScreen.new(layout: layout(width, height), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
                                 window: true, radius: DotPopper::DotSize.fitted(width, height).radius).plan.window_buttons
       [buttons.place, buttons.labelled]
     end
@@ -102,7 +102,7 @@ class ScreenPlansTest < Minitest::Test
     assert_equal [:row, false], place[640, 400]
     assert_equal [:above, false], place[400, 850]
     assert_equal [:corner, false], place[400, 320]
-    wide = TitleScreen.new(layout: layout(1200, 800), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
+    wide = TitleScreen.new(layout: layout(1200, 800), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
                            window: true).plan
     assert_equal wide.mute_button.y, wide.window_buttons.quit.y, "in the bottom row"
     assert_operator wide.how_to_play_button.right, :<, wide.window_buttons.fullscreen.x, "after How to play"
@@ -114,7 +114,7 @@ class ScreenPlansTest < Minitest::Test
   # the player's own best, goal and streak, closer to each other than to
   # Play.
   def test_play_follows_the_legend_and_the_players_own_lines_stand_apart_under_it
-    plan = TitleScreen.new(layout: layout(1200, 800), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
+    plan = TitleScreen.new(layout: layout(1200, 800), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
                            score_record: 75, goal: GOAL, streak: 5, stats: true, window: true).plan
 
     assert_equal %i[title legend play score_record goal streak], plan.placed.rects.keys
@@ -128,7 +128,7 @@ class ScreenPlansTest < Minitest::Test
   # out as before.
   def test_without_a_window_to_switch_the_title_has_no_window_buttons
     SIZES.each do |width, height|
-      screen = TitleScreen.new(layout: layout(width, height), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
+      screen = TitleScreen.new(layout: layout(width, height), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
                                stats: true, sizing: true)
       plan = screen.plan
 
@@ -156,8 +156,8 @@ class ScreenPlansTest < Minitest::Test
       radius = DotPopper::DotSize.fitted(width, height).radius
       [true, false].repeated_permutation(3) do |goal_met, new_score_record, record|
         below = screen_layout.top + 60
-        plan = FinaleScreen.new(layout: screen_layout, type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
-                                scrim: Look::FINALE_BACKING, finale: finale(goal_met:, new_score_record:, record:),
+        plan = FinaleScreen.new(layout: screen_layout, type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
+                                scrim: Style::FINALE_BACKING, finale: finale(goal_met:, new_score_record:, record:),
                                 below:, radius:).plan
         name = "#{width}x#{height} goal #{goal_met}, new record #{new_score_record}, record #{record}"
 
@@ -190,8 +190,8 @@ class ScreenPlansTest < Minitest::Test
       [InputKind::MOUSE, InputKind::GAMEPAD].product([nil, record], [nil, screen]) do |input, held, played|
         words = WORDS.for(input)
         text = words.share_text(128, stats, score_record: 128, new_score_record: true, record: held, screen: played)
-        plan = ShareScreen.new(layout: screen_layout, type: Look::TYPE, words:, measure: RoughMeasure.new,
-                               look: Look::SHARE_PREVIEW, lines: text.split("\n")).plan
+        plan = ShareScreen.new(layout: screen_layout, type: Style::TYPE, words:, measure: RoughMeasure.new,
+                               style: Style::SHARE_PREVIEW, lines: text.split("\n")).plan
         name = "#{width}x#{height} #{input.name}, record #{!held.nil?}, screen #{!played.nil?}"
 
         assert plan.placed.fits?, name
@@ -225,7 +225,7 @@ class ScreenPlansTest < Minitest::Test
   end
 
   def test_short_of_room_the_title_lets_the_streak_go_before_the_goal_and_the_score_record
-    plan = TitleScreen.new(layout: layout(400, 320), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
+    plan = TitleScreen.new(layout: layout(400, 320), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
                            score_record: 75, goal: GOAL, streak: 5, stats: true, sizing: true).plan
     dropped = %i[streak goal best].reject { plan[it] }
 
@@ -247,8 +247,8 @@ class ScreenPlansTest < Minitest::Test
   end
 
   def test_short_of_room_game_over_lets_the_record_go_first_and_keeps_the_score
-    plan = FinaleScreen.new(layout: layout(640, 330), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
-                            scrim: Look::FINALE_BACKING, finale: finale(goal_met: true, record: true), below: 70).plan
+    plan = FinaleScreen.new(layout: layout(640, 330), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
+                            scrim: Style::FINALE_BACKING, finale: finale(goal_met: true, record: true), below: 70).plan
     order = %i[record summary goal best heading share]
     dropped = order.reject { plan[it] }
 
@@ -259,8 +259,8 @@ class ScreenPlansTest < Minitest::Test
   end
 
   def test_a_roomy_game_over_shows_every_line_at_full_size
-    plan = FinaleScreen.new(layout: layout(1200, 800), type: Look::TYPE, words: WORDS, measure: RoughMeasure.new,
-                            scrim: Look::FINALE_BACKING, finale: finale(goal_met: true), below: 80).plan
+    plan = FinaleScreen.new(layout: layout(1200, 800), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
+                            scrim: Style::FINALE_BACKING, finale: finale(goal_met: true), below: 80).plan
 
     assert_equal %i[heading goal score score_record summary share continue], plan.placed.rects.keys
     assert_operator plan.backing.bottom, :<=, plan.continue_button.y, "Continue stands on the pile, not the backing"
@@ -364,7 +364,7 @@ class ScreenPlansTest < Minitest::Test
     show.open_stats
     yield "the Records screen", show
     show.tap(*middle(show.clear_reach))
-    show.update(Look::RECORDS_CLEAR.hold)
+    show.update(Style::RECORDS_CLEAR.hold)
     yield "the Records screen with Undo", show
     show.open_credits
     yield "the Credits screen", show
@@ -373,7 +373,7 @@ class ScreenPlansTest < Minitest::Test
   def middle(rect) = [rect.center_x, rect.center_y]
 
   def finale(goal_met: false, new_score_record: false, record: false)
-    Finale.new(look: Look::FINALE, score: 128, score_record: new_score_record ? 128 : 140, new_score_record:, at: 0.0, goal_met:,
+    Finale.new(style: Style::FINALE, score: 128, score_record: new_score_record ? 128 : 140, new_score_record:, at: 0.0, goal_met:,
                record: (DotPopper::Stats::Record.new(kind: :most_dots_in_a_row, value: 31) if record))
   end
 

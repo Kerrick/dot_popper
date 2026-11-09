@@ -7,7 +7,7 @@ require_relative "presentation_helper"
 class HoverTest < Minitest::Test
   include PresentationTest
 
-  LOOK = Look::HOVER
+  LOOK = Style::HOVER
   STANDARD = DotPopper::DotSizing::STANDARD
 
   def setup
@@ -86,10 +86,10 @@ class HoverTest < Minitest::Test
     assert_nil @show.hovered
   end
 
-  def test_the_stats_screen_hovers_back_credits_looks_and_clear_and_nothing_else
+  def test_the_stats_screen_hovers_back_credits_themes_and_clear_and_nothing_else
     finish_game
     @show.open_stats
-    assert_equal %i[credits looks clear back], @show.controls.map(&:name)
+    assert_equal %i[credits themes clear back], @show.controls.map(&:name)
     @show.pointer_at(*middle(@show.back_reach))
     assert_equal :back, @show.hovered
     @show.pointer_at(*middle(@show.clear_reach))

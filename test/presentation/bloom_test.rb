@@ -20,12 +20,12 @@ class BloomTest < Minitest::Test
   end
 
   def test_only_the_blur_is_smaller_than_the_screen
-    assert_equal [1200, 800], Look::BLOOM.blurred_size(2400, 1600)
-    assert_equal [1, 1], Look::BLOOM.with(resolution: 0.001).blurred_size(10, 10)
+    assert_equal [1200, 800], Style::BLOOM.blurred_size(2400, 1600)
+    assert_equal [1, 1], Style::BLOOM.with(resolution: 0.001).blurred_size(10, 10)
   end
 
   def test_the_glow_is_gentle
-    assert_operator Look::BLOOM.strength, :<=, 0.7
-    assert_operator Look::BLOOM.resolution, :>=, 0.5
+    assert_operator Style::BLOOM.strength, :<=, 0.7
+    assert_operator Style::BLOOM.resolution, :>=, 0.5
   end
 end

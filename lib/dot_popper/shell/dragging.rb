@@ -17,11 +17,11 @@ module DotPopper
     # It hears the rules' events (Cabinet#subscribe), after the Pile does,
     # and drops every pointer when the pile goes.
     class Dragging
-      def initialize(pile:, show:, look:)
+      def initialize(pile:, show:, style:)
         @pile = pile
         @show = show
-        @look = look
-        @grabs = Presentation::PileGrabs.new(look)
+        @style = style
+        @grabs = Presentation::PileGrabs.new(style)
       end
 
       def call(event)
@@ -55,7 +55,7 @@ module DotPopper
         @grabs.update(now)
         @grabs.drags.each do |grab|
           center = @pile.center(grab.ball) or next
-          @pile.steer(grab.ball, grab.pull(center, @look))
+          @pile.steer(grab.ball, grab.pull(center, @style))
         end
       end
 

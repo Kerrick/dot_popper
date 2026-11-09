@@ -5,7 +5,7 @@ require_relative "presentation_helper"
 class ColorTest < Minitest::Test
   include PresentationTest
 
-  def palette = Look::PALETTE
+  def palette = Style::PALETTE
 
   def test_hex_reads_each_channel
     color = Color.hex("#ff8000", 0.5)

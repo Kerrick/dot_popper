@@ -8,9 +8,9 @@ class SizingPreviewTest < Minitest::Test
   STANDARD = DotPopper::DotSizing::STANDARD
   FITTED = DotPopper::DotSizing::SIZED_TO_SCREEN
 
-  def preview(fitted, standard: 50) = SizingPreview.new(standard:, fitted:, look: Look::SIZING)
-  def named(sizing, fitted) = Look::WORDS.sizing(sizing, preview(fitted))
-  def note(sizing, fitted) = Look::WORDS.sizing_note(sizing, preview(fitted))
+  def preview(fitted, standard: 50) = SizingPreview.new(standard:, fitted:, style: Style::SIZING)
+  def named(sizing, fitted) = Style::WORDS.sizing(sizing, preview(fitted))
+  def note(sizing, fitted) = Style::WORDS.sizing_note(sizing, preview(fitted))
 
   # The maintainer: "Standard" is poorly named when it isn't the
   # standard. Each choice is named for what a player sees it do here,
@@ -42,9 +42,9 @@ class SizingPreviewTest < Minitest::Test
   end
 
   def test_it_reads_this_screens_sizes
-    assert_equal :smaller, SizingPreview.of(DotPopper::Field.new(400, 850, 50), Look::SIZING).effect
-    assert_equal :bigger, SizingPreview.of(DotPopper::Field.new(2400, 1500, 50), Look::SIZING).effect
-    assert_equal :alike, SizingPreview.of(DotPopper::Field.new(1200, 800, 50), Look::SIZING).effect
+    assert_equal :smaller, SizingPreview.of(DotPopper::Field.new(400, 850, 50), Style::SIZING).effect
+    assert_equal :bigger, SizingPreview.of(DotPopper::Field.new(2400, 1500, 50), Style::SIZING).effect
+    assert_equal :alike, SizingPreview.of(DotPopper::Field.new(1200, 800, 50), Style::SIZING).effect
   end
 
   # The icons stand in true proportion to the two sizes, as far as they
@@ -52,17 +52,17 @@ class SizingPreviewTest < Minitest::Test
   def test_the_icons_are_in_proportion
     standard = preview(30).icon(STANDARD, 50)
 
-    assert_in_delta 50 * Look::SIZING.icon, standard
+    assert_in_delta 50 * Style::SIZING.icon, standard
     assert_in_delta standard * 0.6, preview(30).icon(FITTED, 50)
     assert_in_delta standard * 1.5, preview(75).icon(FITTED, 50)
     assert_equal standard, preview(97).icon(STANDARD, 50), "the standard icon never changes"
   end
 
   def test_the_icons_stay_legible_and_inside_their_segment
-    smallest, largest = Look::SIZING.icons.minmax
+    smallest, largest = Style::SIZING.icons.minmax
 
-    assert_in_delta 50 * Look::SIZING.icon * smallest, preview(5).icon(FITTED, 50)
-    assert_in_delta 50 * Look::SIZING.icon * largest, preview(500).icon(FITTED, 50)
+    assert_in_delta 50 * Style::SIZING.icon * smallest, preview(5).icon(FITTED, 50)
+    assert_in_delta 50 * Style::SIZING.icon * largest, preview(500).icon(FITTED, 50)
     assert_operator 2 * preview(500).icon(FITTED, 50), :<, 50, "the biggest dot fits in the segment"
     assert_operator preview(5).icon(FITTED, 44), :>=, 3, "the smallest is still a dot"
   end

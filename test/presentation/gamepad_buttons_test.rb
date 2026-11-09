@@ -19,10 +19,10 @@ class GamepadButtonsTest < Minitest::Test
   end
 
   def test_the_trigger_presses_once_per_pull
-    look = Look::GAMEPAD
+    style = Style::GAMEPAD
     readings = [0.2, 0.6, 0.9, 0.4, 0.6, 0.1, 0.55]
     trigger = Trigger.released
-    presses = readings.map { (trigger = trigger.pull(it, look)).pressed }
+    presses = readings.map { (trigger = trigger.pull(it, style)).pressed }
 
     assert_equal [false, true, false, false, false, false, true], presses
   end

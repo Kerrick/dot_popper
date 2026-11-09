@@ -5,7 +5,7 @@ require_relative "presentation_helper"
 class StereoTest < Minitest::Test
   include PresentationTest
 
-  def stereo = Look::SOUND.stereo
+  def stereo = Style::SOUND.stereo
 
   def test_a_sound_leans_toward_its_side_of_the_screen
     assert_in_delta(-0.6, stereo.pan(0, 800))

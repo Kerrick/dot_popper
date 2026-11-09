@@ -17,7 +17,7 @@ module DotPopper
     # it, and the widest a column of text grows (all at a layout scale of
     # 1); the lines a mouse wheel's notch moves it; and how many lines a
     # second a gamepad's stick at full tilt does.
-    class CreditsLook < Data.define(:text, :line, :column, :wheel, :stick); end
+    class CreditsStyle < Data.define(:text, :line, :column, :wheel, :stick); end
 
     # One part of the Credits screen: a +heading+, a +subheading+ over one
     # open-source project's license, a +note+ in the game's own words, or a
@@ -215,13 +215,13 @@ module DotPopper
     # them the window the text scrolls in, as wide as +look+'s column.
     # +wanted+ is how wide the text would like to be: the widest line of a
     # license to show as written, if wider than the look's column.
-    class CreditsLayout < Data.define(:layout, :look, :wanted)
-      def initialize(layout:, look:, wanted: 0.0) = super
-      def heading_size = layout.scaled(Look::RECORDS.heading)
+    class CreditsLayout < Data.define(:layout, :style, :wanted)
+      def initialize(layout:, style:, wanted: 0.0) = super
+      def heading_size = layout.scaled(Style::RECORDS.heading)
       def heading_y = layout.top + (heading_size * 0.6)
-      def text_size = [layout.scaled(look.text), StatsLayout::SMALLEST_TEXT].max
-      def line = text_size * look.line
-      def room = [layout.safe.width - (layout.margin * 2), [layout.scaled(look.column), wanted.ceil].max].min
+      def text_size = [layout.scaled(style.text), StatsLayout::SMALLEST_TEXT].max
+      def line = text_size * style.line
+      def room = [layout.safe.width - (layout.margin * 2), [layout.scaled(style.column), wanted.ceil].max].min
 
       def window
         top = heading_y + (heading_size * 0.8) + (layout.margin * 0.5)

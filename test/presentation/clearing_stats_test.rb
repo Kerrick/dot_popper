@@ -7,8 +7,8 @@ require_relative "presentation_helper"
 class ClearingStatsTest < Minitest::Test
   include PresentationTest
 
-  HOLD = Look::RECORDS_CLEAR.hold
-  UNDO = Look::RECORDS_CLEAR.undo
+  HOLD = Style::RECORDS_CLEAR.hold
+  UNDO = Style::RECORDS_CLEAR.undo
 
   def setup
     @sounds = FakeSounds.new

@@ -14,8 +14,8 @@ module DotPopper
       G = ::Lota::Graphics
       BUFFER = 4 # bursts of one look each system has room for at once
 
-      def initialize(look)
-        @look = look
+      def initialize(style)
+        @style = style
         @systems = {}
         @cleared = 0
         refresh
@@ -58,9 +58,9 @@ module DotPopper
       end
 
       def system_for(spray, color)
-        texture = @sprites[spray.look.sprite] or return
-        @systems[[spray.look, spray.longest, spray.radius, color]] ||= configure(
-          G::ParticleSystem.new(texture, spray.look.count * BUFFER), spray.emission(texture.width), color
+        texture = @sprites[spray.style.sprite] or return
+        @systems[[spray.style, spray.longest, spray.radius, color]] ||= configure(
+          G::ParticleSystem.new(texture, spray.style.count * BUFFER), spray.emission(texture.width), color
         )
       end
 
@@ -84,7 +84,7 @@ module DotPopper
       # units across, in as many pixels as the screen has.
       def sprite(name)
         density = G.dpi_scale
-        pixels = (@look::PARTICLE_SPRITE * density).ceil
+        pixels = (@style::PARTICLE_SPRITE * density).ceil
         data = ::Lota::Image::ImageData.new(pixels, pixels, :rgba8)
         data.map_pixel { |x, y, *| [1, 1, 1, Presentation::SpriteArt.alpha(name, x, y, pixels)] }
         G::Image.new(data, dpiscale: density)

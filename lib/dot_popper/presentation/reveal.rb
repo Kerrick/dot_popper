@@ -6,7 +6,7 @@ module DotPopper
     # outline, the drawing convention for an edge out of sight, that
     # settles onto the dot's rim (+radius+, in radii) and fades (+alpha+).
     # +width+ is its line, in radii, and +dashes+ how many it has.
-    class RevealLook < Data.define(:radius, :alpha, :width, :dashes, :color)
+    class RevealStyle < Data.define(:radius, :alpha, :width, :dashes, :color)
       def duration = [radius.duration, alpha.duration].max
     end
 
@@ -14,24 +14,24 @@ module DotPopper
     # was too soon for, drawn over every dot since +born+. It follows its
     # dot's id, so it moves with the dot. +scale+ is the radius in
     # graphics units.
-    class Reveal < Data.define(:follow, :x, :y, :look, :scale, :born)
+    class Reveal < Data.define(:follow, :x, :y, :style, :scale, :born)
       def center(dots)
         dot = dots&.find { it.id == follow }
         dot ? [dot.x, dot.y] : [x, y]
       end
 
-      def alive?(now) = now - born < look.duration
+      def alive?(now) = now - born < style.duration
 
-      def radius(now) = look.radius.at(now - born) * scale
-      def width = look.width * scale
-      def alpha(now) = look.alpha.at(now - born).clamp(0.0, 1.0)
+      def radius(now) = style.radius.at(now - born) * scale
+      def width = style.width * scale
+      def alpha(now) = style.alpha.at(now - born).clamp(0.0, 1.0)
 
       # The dashes as [from, to] angles, in radians, turning slowly so the
       # outline reads as drawn, not stamped.
       def dashes(now)
-        step = 2 * Math::PI / look.dashes
+        step = 2 * Math::PI / style.dashes
         turn = (now - born) * 0.6
-        Array.new(look.dashes) { [(it * step) + turn, (it * step) + turn + (step * 0.58)] }
+        Array.new(style.dashes) { [(it * step) + turn, (it * step) + turn + (step * 0.58)] }
       end
     end
   end

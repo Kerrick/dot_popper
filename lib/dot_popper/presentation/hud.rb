@@ -6,7 +6,7 @@ module DotPopper
     # after it changes; from +urgent_below+ whole seconds left the clock
     # hurries, and +pulse+ is its scale on each second from then.
     # +backing+ is the pill's opacity.
-    class HudLook < Data.define(:backing, :bump, :pulse, :urgent_below); end
+    class HudStyle < Data.define(:backing, :bump, :pulse, :urgent_below); end
 
     # One number in the HUD as it should be drawn: its small label, its
     # text, its scale (drawn by choosing a bigger font, never by
@@ -28,15 +28,15 @@ module DotPopper
     # row (+row+ dots in a row of +size+ that earn a bonus dot, or
     # nil before the tutorial's row beat and where there is no bonus) works the same way,
     # and +ready+ says a bonus dot is on the field.
-    class Hud < Data.define(:look, :words, :score, :seconds, :dots_in_a_row, :size, :ready, :score_changed, :seconds_changed,
+    class Hud < Data.define(:style, :words, :score, :seconds, :dots_in_a_row, :size, :ready, :score_changed, :seconds_changed,
                             :dots_in_a_row_changed, :now)
       # A row dot's radius as a share of the pill's height, and the
       # distance between two, in their radii.
       PIP = 0.11
       PIP_STEP = 2.8
 
-      def self.blank(look, words)
-        new(look:, words:, score: nil, seconds: nil, dots_in_a_row: nil, size: nil, ready: false,
+      def self.blank(style, words)
+        new(style:, words:, score: nil, seconds: nil, dots_in_a_row: nil, size: nil, ready: false,
             score_changed: -Float::INFINITY, seconds_changed: -Float::INFINITY, dots_in_a_row_changed: -Float::INFINITY,
             now: 0.0)
       end
@@ -46,7 +46,7 @@ module DotPopper
       def read(game, now)
         score = game.score
         seconds = [game.countdown.whole_seconds, 0].max
-        if self.seconds && seconds < self.seconds && seconds.positive? && seconds <= look.urgent_below && block_given?
+        if self.seconds && seconds < self.seconds && seconds.positive? && seconds <= style.urgent_below && block_given?
           yield seconds
         end
         showing(score, seconds, now).streaking(game, now)
@@ -67,7 +67,7 @@ module DotPopper
       def dots_in_a_row_readout
         return unless dots_in_a_row
 
-        DotsInARow.new(lit: dots_in_a_row, size:, ready:, scale: look.bump.at(now - dots_in_a_row_changed))
+        DotsInARow.new(lit: dots_in_a_row, size:, ready:, scale: style.bump.at(now - dots_in_a_row_changed))
       end
 
       # The HUD showing +lit+ of a row of +size+, the row all mint when
@@ -91,14 +91,14 @@ module DotPopper
       # The pill's padding around a number line +number+ tall.
       def self.padding(number) = number * 0.28
 
-      def urgent? = !seconds.nil? && seconds <= look.urgent_below
+      def urgent? = !seconds.nil? && seconds <= style.urgent_below
 
       def score_readout
-        Readout.new(label: words.score, text: score.to_s, scale: look.bump.at(now - score_changed), urgency: 0.0)
+        Readout.new(label: words.score, text: score.to_s, scale: style.bump.at(now - score_changed), urgency: 0.0)
       end
 
       def time_readout
-        tween = urgent? ? look.pulse : look.bump
+        tween = urgent? ? style.pulse : style.bump
         Readout.new(label: words.time, text: seconds.to_s, scale: tween.at(now - seconds_changed),
                     urgency: urgent? ? 1.0 : 0.0)
       end

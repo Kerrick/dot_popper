@@ -8,7 +8,7 @@ module DotPopperGui
   class ClearingScenario < Scenario
     scenario :clearing
 
-    HOLD = DotPopper::Presentation::Look::RECORDS_CLEAR.hold
+    HOLD = DotPopper::Presentation::Style::RECORDS_CLEAR.hold
     FILES = %w[score_record.txt stats.txt games.csv].freeze
 
     def play

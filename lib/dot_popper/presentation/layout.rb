@@ -61,7 +61,7 @@ module DotPopper
     # The window's first size on a desktop: a reference play area measured
     # in radii, so the field is about as crowded as on a tablet, shrunk to
     # fit +most+ of the desktop if the desktop is smaller.
-    class WindowLook < Data.define(:width, :height, :most)
+    class WindowStyle < Data.define(:width, :height, :most)
       def size_for(desktop_width, desktop_height, radius)
         wanted_width = width * radius
         wanted_height = height * radius
@@ -75,34 +75,34 @@ module DotPopper
     # screen size at which text is drawn at its nominal size. A screen
     # short of room shrinks its type by +step+ at a time down to +shrink+
     # of its size, and never below +least+ units, unless it was smaller.
-    class LayoutLook < Data.define(:margin, :button, :reference, :shrink, :step, :least); end
+    class LayoutStyle < Data.define(:margin, :button, :reference, :shrink, :step, :least); end
 
     # Where things go on a screen of a given size. The playfield is the
     # whole window; text and buttons stay inside +safe+, the part that no
     # notch, rounded corner, or home indicator covers.
-    class Layout < Data.define(:width, :height, :safe, :look)
+    class Layout < Data.define(:width, :height, :safe, :style)
       HOW_TO_PLAY = 3.8 # "How to play"'s width, in its heights, with room
       HOW_TO_PLAY_LEAST = 3.1 # ...and the least it is drawn at in the bottom row
       FULL_SCREEN = 3.8 # "Full screen"'s width, in its heights, as wide as "How to play"
       QUIT = 2.4 # "Quit"'s width, in its heights
-      LOOKS = 3.0 # the Stats screen's "Looks" width, in its height
+      THEMES_LAYOUT = 3.0 # the Stats screen's "Looks" width, in its height
 
       # The scale for text and the HUD: 1 on a mid-sized window, smaller on
       # a phone, a little larger on a big screen.
-      def ui = ([safe.width, safe.height].min / look.reference).clamp(0.72, 1.35)
+      def ui = ([safe.width, safe.height].min / style.reference).clamp(0.72, 1.35)
 
       def scaled(size) = (size * ui).round
 
       # The type scales a crowded screen tries, from full size down.
-      def type_scales = (0..((1 - look.shrink) / look.step).round).map { 1.0 - (it * look.step) }
+      def type_scales = (0..((1 - style.shrink) / style.step).round).map { 1.0 - (it * style.step) }
 
       # +size+ scaled to the screen, then by +scale+, in whole units.
       def type_size(size, scale = 1.0)
         nominal = scaled(size)
-        [(nominal * scale).round, [nominal, look.least].min].max
+        [(nominal * scale).round, [nominal, style.least].min].max
       end
 
-      def margin = look.margin * ui
+      def margin = style.margin * ui
       def center_x = safe.center_x
       def center_y = safe.center_y
       def top = safe.y + margin
@@ -194,9 +194,9 @@ module DotPopper
       # once there is a look to choose. It follows Credits along the bottom
       # row when there is room for both, and otherwise takes the row above
       # Back, beside Credits if that is there too and has room, or over it.
-      def looks_button
+      def themes_button
         height = button_size
-        width = height * LOOKS
+        width = height * THEMES_LAYOUT
         credits = credits_button
         if credits.y == back_button.y
           x = credits.right + margin
@@ -212,8 +212,8 @@ module DotPopper
       end
 
       # The top of the Stats screen's buttons, whichever row they are on.
-      def stats_floor(looks: false, offer: false)
-        [back_button.y, credits_button.y, clear_stats_button.y, (looks_button.y if looks), (offer_button.y if offer)].compact.min
+      def stats_floor(themes: false, offer: false)
+        [back_button.y, credits_button.y, clear_stats_button.y, (themes_button.y if themes), (offer_button.y if offer)].compact.min
       end
 
       # The Stats screen's way to the paid version, a quiet pill at the
@@ -222,7 +222,7 @@ module DotPopper
       def offer_button
         height = button_size
         width = [height * 3.4, safe.width - (2 * margin)].min
-        top = [credits_button.y, looks_button.y, clear_stats_button.y].min
+        top = [credits_button.y, themes_button.y, clear_stats_button.y].min
         Rect.new(x: safe.right - margin - width, y: top - margin - height, width:, height:)
       end
 
@@ -314,7 +314,7 @@ module DotPopper
       end
 
       # Never smaller than a fingertip (44 units).
-      def button_size = [look.button * ui, 44.0].max
+      def button_size = [style.button * ui, 44.0].max
 
       private
 

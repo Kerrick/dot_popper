@@ -47,14 +47,14 @@ class ShowTest < Minitest::Test
     refute_includes @sounds.names, :bonus_pop
     bonus = @cabinet.game.dots.find(&:bonus?)
     assert bonus.fresh?
-    assert(show.effects.rings.any? { it.look == Look::BONUS_RIPPLE })
+    assert(show.effects.rings.any? { it.style == Style::BONUS_RIPPLE })
 
-    show.update(Look::BONUS_BEACON_EVERY + 0.1)
-    assert(show.effects.rings.any? { it.look == Look::BONUS_BEACON }, "a ring pulses about it while it waits")
+    show.update(Style::BONUS_BEACON_EVERY + 0.1)
+    assert(show.effects.rings.any? { it.style == Style::BONUS_BEACON }, "a ring pulses about it while it waits")
 
     pop_fresh(show)
     assert_equal 1, @sounds.names.count(:bonus_pop)
-    assert(show.effects.rings.any? { it.look == Look::BONUS_SHOCKWAVE })
+    assert(show.effects.rings.any? { it.style == Style::BONUS_SHOCKWAVE })
     refute(@cabinet.game.dots.any? { it.fresh? && it.bonus? })
   end
 
@@ -252,7 +252,7 @@ class ShowTest < Minitest::Test
 
     assert show.finale.goal_met
     refute show.finale.goal_due?(show.now), "not before the score has counted"
-    show.update(Look::FINALE.tally.duration)
+    show.update(Style::FINALE.tally.duration)
     assert show.finale.goal_celebrated
     assert stats_book.goal_done?
   end
@@ -443,7 +443,7 @@ class ShowTest < Minitest::Test
   # On the 24 × 16 R window, dots sized to it are the standard size, so
   # the title leaves the choice out, and neither its segments nor a
   # shoulder button change the saved one.
-  def test_where_the_sizes_look_alike_the_choice_is_not_offered
+  def test_where_the_sizes_style_alike_the_choice_is_not_offered
     cabinet = DotPopper::Cabinet.new(field(1200, 800), random: Random.new(2), sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
     show = Show.new(cabinet:, layout: layout(1200, 800), sounds: FakeSounds.new, radius: R, sizing_store: @sizing_store)
     cabinet.press(10, 10)
@@ -570,7 +570,7 @@ class ShowTest < Minitest::Test
 
     assert_equal ["+1", "+1s"], @show.effects.floaters.map(&:text)
     assert_equal :pop, @sounds.names.last
-    assert_equal [Look::POP_BURST], @show.effects.take_sprays.map(&:look)
+    assert_equal [Style::POP_BURST], @show.effects.take_sprays.map(&:style)
     assert_equal 2, @show.effects.rings.size
   end
 
@@ -582,15 +582,15 @@ class ShowTest < Minitest::Test
     clear_around!(@cabinet.game, popped)
     @show.tap(popped.x, popped.y)
 
-    assert_equal [Look::HAPTICS.pop, Look::HAPTICS.penalty], haptics.buzzes
-    assert_operator Look::HAPTICS.penalty, :>, Look::HAPTICS.pop
+    assert_equal [Style::HAPTICS.pop, Style::HAPTICS.penalty], haptics.buzzes
+    assert_operator Style::HAPTICS.penalty, :>, Style::HAPTICS.pop
   end
 
   def test_a_pop_is_heard_where_it_is
     start_and_pop
     x = @cabinet.game.dots.find(&:popped?).x
 
-    assert_in_delta Look::SOUND.stereo.pan(x, 800), @sounds.pans.last
+    assert_in_delta Style::SOUND.stereo.pan(x, 800), @sounds.pans.last
   end
 
   def test_the_pop_climbs_with_the_score_up_to_a_cap
@@ -598,7 +598,7 @@ class ShowTest < Minitest::Test
     score!(@cabinet.game, 1000)
     start_and_pop(started: true)
 
-    assert_in_delta Look::SOUND.pop_highest, @sounds.played.last.last
+    assert_in_delta Style::SOUND.pop_highest, @sounds.played.last.last
   end
 
   def test_a_wrong_tap_shows_only_what_was_lost
@@ -631,7 +631,7 @@ class ShowTest < Minitest::Test
     @show.tap(popped.x - 20, popped.y)
 
     assert_equal [fresh.id], @show.effects.reveals.map(&:follow)
-    @show.update(Look::REVEAL.duration)
+    @show.update(Style::REVEAL.duration)
     assert_empty @show.effects.reveals
   end
 
@@ -675,20 +675,20 @@ class ShowTest < Minitest::Test
     popped = @cabinet.game.dots.first
     fresh = @cabinet.game.dots.find(&:fresh?)
     @cabinet.update(20)
-    @show.update(Look::LESSON.every)
-    @show.effects.update(Look::REVEAL.duration)
+    @show.update(Style::LESSON.every)
+    @show.effects.update(Style::REVEAL.duration)
     @sounds.played.clear
 
-    @show.update(Look::FINALE.tally.duration)
+    @show.update(Style::FINALE.tally.duration)
     assert_equal [fresh.id], @show.effects.reveals.map(&:follow), "the bright dot is outlined"
-    assert_includes @show.effects.rings.map { [it.look, it.follow] }, [Look::ALARM_RING, popped.id]
-    assert_includes @show.effects.rings.map { [it.look, it.follow] }, [Look::SPAWN_RIPPLE, fresh.id], "and pulses"
+    assert_includes @show.effects.rings.map { [it.style, it.follow] }, [Style::ALARM_RING, popped.id]
+    assert_includes @show.effects.rings.map { [it.style, it.follow] }, [Style::SPAWN_RIPPLE, fresh.id], "and pulses"
     assert_operator @show.animations.pose(popped, @show.now + 0.05).alarm, :>, 0.0, "the popped dot shudders"
     assert_in_delta 0.0, @show.effects.shake_x
     assert_empty @sounds.played, "quietly"
 
-    (Look::LESSON.replays * 2).times { @show.update(Look::LESSON.every) }
-    assert_equal Look::LESSON.replays, @show.finale.replayed, "a few times, and no more"
+    (Style::LESSON.replays * 2).times { @show.update(Style::LESSON.every) }
+    assert_equal Style::LESSON.replays, @show.finale.replayed, "a few times, and no more"
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
     assert @show.title?, "Continue works as ever"

@@ -92,7 +92,7 @@ class TiltTest < Minitest::Test
   end
 
   def test_a_pull_of_one_is_the_piles_own_gravity
-    assert_equal [0.0, Look::PILE.gravity_for(R)], Pull.down.gravity(Look::PILE.gravity_for(R))
+    assert_equal [0.0, Style::PILE.gravity_for(R)], Pull.down.gravity(Style::PILE.gravity_for(R))
   end
 
   def test_a_reading_in_meters_a_second_squared_is_turned_to_g
@@ -135,7 +135,7 @@ class TiltTest < Minitest::Test
   end
 
   def test_the_filter_smooths_a_jittery_reading
-    filter = LowPass.new(value: Pull.down, time_constant: Look::TILT.smoothing)
+    filter = LowPass.new(value: Pull.down, time_constant: Style::TILT.smoothing)
     xs = 120.times.map do |i|
       filter = filter.update(1 / 60.0, Pull.new(x: i.even? ? 0.2 : -0.2, y: 1.0))
       filter.value.x
@@ -145,13 +145,13 @@ class TiltTest < Minitest::Test
   end
 
   def test_a_calm_tilt_turns_more_slowly
-    assert_operator Look::CALM_TILT.smoothing, :>, Look::TILT.smoothing
+    assert_operator Style::CALM_TILT.smoothing, :>, Style::TILT.smoothing
   end
 
   # Shakes.
 
   def test_a_jolt_and_one_back_is_a_shake_and_holding_still_is_not
-    sensor = ShakeSensor.start(Look::TILT, upright(:top))
+    sensor = ShakeSensor.start(Style::TILT, upright(:top))
     10.times { sensor = sensor.update(1 / 60.0, upright(:top)) }
 
     refute_predicate sensor, :shaken?
@@ -161,14 +161,14 @@ class TiltTest < Minitest::Test
     sensor = sensor.update(1 / 60.0, Reading.new(x: -2.0, y: 3.0, z: -0.5))
 
     assert_predicate sensor, :shaken?
-    assert_operator sensor.jolt, :>, Look::TILT.shake
+    assert_operator sensor.jolt, :>, Style::TILT.shake
   end
 
   # The Android playtest: walking with the phone at Game Over threw the
   # pile at every step. A footstep is a bump that settles back, never a
   # jolt the other way, so no number of them is a shake.
   def test_footsteps_are_never_a_shake
-    sensor = ShakeSensor.start(Look::TILT, upright(:top))
+    sensor = ShakeSensor.start(Style::TILT, upright(:top))
     shakes = (6 * 60).times.count do |frame|
       bump = (frame % 30).zero? ? Reading.new(x: 0.3, y: 1.6, z: 0.8) : Reading.still
       sensor = sensor.update(1 / 60.0, upright(:top) + bump)
@@ -179,15 +179,15 @@ class TiltTest < Minitest::Test
   end
 
   def test_a_jolt_back_too_late_is_not_a_shake
-    sensor = ShakeSensor.start(Look::TILT, upright(:top)).update(1 / 60.0, Reading.new(x: 3.0, y: 1.0))
-    ((Look::TILT.reversal * 60) + 2).ceil.times { sensor = sensor.update(1 / 60.0, upright(:top)) }
+    sensor = ShakeSensor.start(Style::TILT, upright(:top)).update(1 / 60.0, Reading.new(x: 3.0, y: 1.0))
+    ((Style::TILT.reversal * 60) + 2).ceil.times { sensor = sensor.update(1 / 60.0, upright(:top)) }
     sensor = sensor.update(1 / 60.0, Reading.new(x: -3.0, y: 1.0))
 
     refute_predicate sensor, :shaken?
   end
 
   def test_tilting_slowly_is_not_a_shake
-    sensor = ShakeSensor.start(Look::TILT, upright(:top))
+    sensor = ShakeSensor.start(Style::TILT, upright(:top))
     120.times do |i|
       sensor = sensor.update(1 / 60.0, upright(:top, lean: i / 120.0 * 1.5, toward: :right))
 
@@ -196,11 +196,11 @@ class TiltTest < Minitest::Test
   end
 
   def test_after_a_shake_the_sensor_waits_out_its_cooldown
-    sensor = shaken(ShakeSensor.start(Look::TILT, upright(:top)))
+    sensor = shaken(ShakeSensor.start(Style::TILT, upright(:top)))
 
     assert_predicate sensor, :shaken?
     shakes = 30.times.count do |i|
-      sensor = sensor.update(Look::TILT.cooldown / 40, Reading.new(x: i.even? ? -3.0 : 3.0, y: 1.0))
+      sensor = sensor.update(Style::TILT.cooldown / 40, Reading.new(x: i.even? ? -3.0 : 3.0, y: 1.0))
       sensor.shaken?
     end
 
@@ -211,28 +211,28 @@ class TiltTest < Minitest::Test
   end
 
   def test_a_shake_throws_harder_the_harder_it_is_up_to_a_cap
-    look = Look::TILT
+    style = Style::TILT
 
-    assert_in_delta 0.0, look.kick_for(0.0)
-    assert_in_delta 0.0, look.kick_for(look.shake)
-    assert_operator look.kick_for(look.shake + 1.0), :<, look.kick_for(look.shake + 1.5)
-    assert_in_delta look.most_kick, look.kick_for(100.0)
+    assert_in_delta 0.0, style.kick_for(0.0)
+    assert_in_delta 0.0, style.kick_for(style.shake)
+    assert_operator style.kick_for(style.shake + 1.0), :<, style.kick_for(style.shake + 1.5)
+    assert_in_delta style.most_kick, style.kick_for(100.0)
   end
 
   # The iPhone playtest found a shake "not as much/violent as I'd
   # expect": the gentlest toss now beats a dot's fastest speed well, and
   # a hard one throws about three times as hard as before.
   def test_even_a_gentle_shake_tosses_the_dots_well_past_their_fastest
-    look = Look::TILT
-    gentlest = look.kick_for(look.shake + 0.01) * look.fling.least
+    style = Style::TILT
+    gentlest = style.kick_for(style.shake + 0.01) * style.fling.least
 
-    assert_operator look.shake, :<=, 1.0
+    assert_operator style.shake, :<=, 1.0
     assert_operator gentlest, :>=, 2 * DotPopper::Rules::SPEEDS.max
-    assert_operator look.most_kick, :>=, 3 * 36.0
+    assert_operator style.most_kick, :>=, 3 * 36.0
   end
 
   def test_a_hand_shake_throws_hard
-    tilt = Tilt.new(Look::TILT)
+    tilt = Tilt.new(Style::TILT)
     30.times { tilt.update(1 / 60.0, reading: upright(:top)) }
     tilt.update(1 / 60.0, reading: upright(:top) + Reading.new(x: 1.5, y: 0.0))
     step = tilt.update(1 / 60.0, reading: upright(:top) + Reading.new(x: -1.5, y: 0.0))
@@ -241,7 +241,7 @@ class TiltTest < Minitest::Test
   end
 
   def test_a_thrown_ball_goes_against_the_pull_within_the_spread
-    fling = Look::TILT.fling
+    fling = Style::TILT.fling
     random = Random.new(3)
     50.times do
       vx, vy = fling.velocity(Pull.down, 10.0, R, random)
@@ -272,7 +272,7 @@ class TiltTest < Minitest::Test
   # Tilt, frame by frame.
 
   def test_with_nothing_to_tilt_it_the_pile_keeps_falling_down
-    tilt = Tilt.new(Look::TILT)
+    tilt = Tilt.new(Style::TILT)
     step = tilt.update(1 / 60.0)
 
     assert_equal Pull.down, step.pull
@@ -281,7 +281,7 @@ class TiltTest < Minitest::Test
   end
 
   def test_a_steady_tilt_turns_the_pull_and_wakes_the_pile_as_it_does
-    tilt = Tilt.new(Look::TILT, orientation: :portrait)
+    tilt = Tilt.new(Style::TILT, orientation: :portrait)
     steps = 60.times.map { tilt.update(1 / 60.0, reading: Reading.new(x: 0.6, y: 0.0)) }
 
     assert_in_delta(-0.6, steps.last.pull.x, 0.01)
@@ -291,34 +291,34 @@ class TiltTest < Minitest::Test
   end
 
   def test_the_screens_orientation_turns_the_reading
-    tilt = Tilt.new(Look::TILT, orientation: :landscape)
+    tilt = Tilt.new(Style::TILT, orientation: :landscape)
     60.times { tilt.update(1 / 60.0, reading: Reading.new(x: 0.0, y: -0.6)) }
 
     assert_in_delta(-0.6, tilt.pull.x, 0.01)
   end
 
   def test_a_pushed_stick_wins_over_the_accelerometer
-    tilt = Tilt.new(Look::TILT)
+    tilt = Tilt.new(Style::TILT)
     90.times { tilt.update(1 / 60.0, reading: upright(:top), stick: Stick.new(x: 0.0, y: -1.0)) }
 
     assert_in_delta(-1.0, tilt.pull.y, 0.01)
   end
 
   def test_a_shake_kicks_and_a_calm_one_never_does
-    [Look::TILT, Look::CALM_TILT].each do |look|
-      tilt = Tilt.new(look)
+    [Style::TILT, Style::CALM_TILT].each do |style|
+      tilt = Tilt.new(style)
       5.times { tilt.update(1 / 60.0, reading: upright(:top)) }
       tilt.update(1 / 60.0, reading: Reading.new(x: 3.0, y: -1.0, z: 1.0))
       step = tilt.update(1 / 60.0, reading: Reading.new(x: -3.0, y: 3.0, z: -1.0))
 
-      if look.shakes then assert_operator step.kick, :>, 0.0
+      if style.shakes then assert_operator step.kick, :>, 0.0
       else assert_in_delta 0.0, step.kick
       end
     end
   end
 
   def test_a_stick_never_shakes
-    tilt = Tilt.new(Look::TILT)
+    tilt = Tilt.new(Style::TILT)
     kicks = 30.times.map { tilt.update(1 / 60.0, stick: Stick.new(x: it.even? ? 1.0 : -1.0, y: 0.0)).kick }
 
     assert kicks.all?(&:zero?)

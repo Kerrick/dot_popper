@@ -19,8 +19,8 @@ module DotPopper
       # then points around it, in radii.
       PROBES = [[0, 0]] + (0...8).map { [0.6 * Math.cos(it * Math::PI / 4), 0.6 * Math.sin(it * Math::PI / 4)] }
 
-      def initialize(look, random: Random.new(7))
-        @look = look
+      def initialize(style, random: Random.new(7))
+        @style = style
         @random = random
         @state = nil
         @waited = 0.0
@@ -70,13 +70,13 @@ module DotPopper
         return browse(show) if show && (show.stats? || (@titles == 2 && !@browsed))
         return choose_size(show) if show && !@resized && show.sizing_offered?
 
-        press_once(@look.title_wait) { start(cabinet, show) }
+        press_once(@style.title_wait) { start(cabinet, show) }
       end
 
       # Taps the choice of dot size not yet chosen, once, after half the
       # title's wait; the title's own wait then starts again.
       def choose_size(show)
-        return if @waited < @look.title_wait / 2
+        return if @waited < @style.title_wait / 2
 
         @resized = true
         @waited = 0.0
@@ -87,12 +87,12 @@ module DotPopper
       # +records_wait+; the title's own wait then starts again.
       def browse(show)
         if show.stats?
-          return if @waited < @look.stats_wait
+          return if @waited < @style.stats_wait
 
           @waited = 0.0
           return middle(show.back_reach)
         end
-        return unless show.stats_offered? && @waited >= @look.title_wait / 2
+        return unless show.stats_offered? && @waited >= @style.title_wait / 2
 
         @browsed = true
         @waited = 0.0
@@ -108,17 +108,17 @@ module DotPopper
       def finish(cabinet, show)
         return in_preview(show) if show&.sharing?
 
-        if show && @finales.even? && !@shared && @waited >= @look.finale_wait / 2 && show.share_reach
+        if show && @finales.even? && !@shared && @waited >= @style.finale_wait / 2 && show.share_reach
           @shared = true
           @pressed_at = @waited
           return middle(show.share_reach)
         end
-        press_once(@look.finale_wait) { show ? middle(show.continue_reach) : center(cabinet.field) } if cabinet.state.ready?
+        press_once(@style.finale_wait) { show ? middle(show.continue_reach) : center(cabinet.field) } if cabinet.state.ready?
       end
 
       # In the share preview, a moment after each press: Copy, then Close.
       def in_preview(show)
-        return if @waited - @pressed_at < @look.finale_wait / 4
+        return if @waited - @pressed_at < @style.finale_wait / 4
 
         @pressed_at = @waited
         middle(show.share_preview.copied? ? show.close_reach : show.copy_reach)
@@ -130,8 +130,8 @@ module DotPopper
         @cooldown -= seconds
         return if @cooldown.positive?
 
-        target = (mistake(game) if @random.rand < @look.mistakes) || exposed_fresh(game)
-        @cooldown = target ? @random.rand(@look.think) + (@look.tiring * game.score) : 0.05
+        target = (mistake(game) if @random.rand < @style.mistakes) || exposed_fresh(game)
+        @cooldown = target ? @random.rand(@style.think) + (@style.tiring * game.score) : 0.05
         target
       end
 

@@ -7,7 +7,7 @@ class TutorialTest < Minitest::Test
   include PresentationTest
 
   STEP = 1 / 60.0
-  SCRIPT = Look::TUTORIAL
+  SCRIPT = Style::TUTORIAL
 
   def setup
     @sounds = FakeSounds.new
@@ -15,7 +15,7 @@ class TutorialTest < Minitest::Test
     @effects = Effects.new(radius: R)
     @field = DotPopper::Field.new(1200, 800, R)
     @tutorial = Tutorial.new(field: @field, center: [600.0, 400.0], effects: @effects, sounds: @sounds,
-                             haptics: @haptics, look: Look)
+                             haptics: @haptics, style: Style)
   end
 
   def test_the_bright_dot_drifts_at_the_slowest_speed_then_time_eases_to_a_stop
@@ -41,9 +41,9 @@ class TutorialTest < Minitest::Test
       radius = DotPopper::DotSize.fitted(width, height).radius
       field = DotPopper::Field.new(width, height, radius)
       inset = Rect.new(x: 0.0, y: 44.0, width: width.to_f, height: height - 78.0)
-      screen = Layout.new(width:, height:, safe: inset, look: Look::LAYOUT)
+      screen = Layout.new(width:, height:, safe: inset, style: Style::LAYOUT)
       tutorial = Tutorial.new(field:, center: [screen.center_x, screen.center_y], effects: Effects.new(radius:),
-                              sounds: @sounds, haptics: @haptics, look: Look)
+                              sounds: @sounds, haptics: @haptics, style: Style)
       (((SCRIPT.drift + SCRIPT.stop + 0.2) / STEP).ceil).times { tutorial.update(STEP) }
       dot = tutorial.dots.find { it.id == Tutorial::BRIGHT }
       name = "#{width}x#{height}"
@@ -78,7 +78,7 @@ class TutorialTest < Minitest::Test
 
     assert_equal :points, @tutorial.beat
     assert_equal %i[pop], @sounds.names
-    assert_equal [Look::HAPTICS.pop], @haptics.buzzes
+    assert_equal [Style::HAPTICS.pop], @haptics.buzzes
     assert_equal 1, @effects.take_sprays.size, "it bursts at once"
     assert bright.fresh?, "still bright as its numbers fly out of it"
     assert_nil next_dot, "and nothing is born under it yet"
@@ -128,9 +128,9 @@ class TutorialTest < Minitest::Test
     assert_equal [0, 9], shown, "which drop by it, the score no lower than 0, as in play"
     assert_equal :bonk, @sounds.names.last
     assert_equal 1, @effects.reveals.size, "the bright dot under it is outlined"
-    assert_equal 1, @effects.rings.count { it.look == Look::ALARM_RING }
+    assert_equal 1, @effects.rings.count { it.style == Style::ALARM_RING }
     assert_operator @tutorial.animations.pose(bright, @tutorial.now + 0.05).alarm, :>, 0.0, "it shudders"
-    assert_equal [Look::HAPTICS.pop], @haptics.buzzes, "only the player's own taps buzz"
+    assert_equal [Style::HAPTICS.pop], @haptics.buzzes, "only the player's own taps buzz"
     assert_in_delta 0.0, @effects.shake_x
 
     poses = 40.times.map do
@@ -182,9 +182,9 @@ class TutorialTest < Minitest::Test
 
   def test_a_calm_guide_wags_gentler
     calm = Tutorial.new(field: @field, center: [600.0, 400.0], effects: @effects, sounds: @sounds, haptics: @haptics,
-                        look: Look, calm: true)
-    assert_equal Look::CALM_WAG, calm.ghost.look.wag
-    assert_operator Look::CALM_WAG.angle, :<, SCRIPT.ghost.wag.angle
+                        style: Style, calm: true)
+    assert_equal Style::CALM_WAG, calm.ghost.style.wag
+    assert_operator Style::CALM_WAG.angle, :<, SCRIPT.ghost.wag.angle
   end
 
   # On an upright phone the first dot freezes near a side wall, where the
@@ -194,7 +194,7 @@ class TutorialTest < Minitest::Test
   def test_near_a_side_wall_the_dots_part_up_and_down
     field = DotPopper::Field.new(400, 850, R)
     @tutorial = Tutorial.new(field:, center: [200.0, 425.0], effects: Effects.new(radius: R), sounds: @sounds,
-                             haptics: @haptics, look: Look)
+                             haptics: @haptics, style: Style)
     to_the_peek
     play_until(within: 900) { @tutorial.beat == :aim_next }
 
@@ -211,7 +211,7 @@ class TutorialTest < Minitest::Test
     assert_equal %w[−1 −2], @tutorial.flights.map(&:text), "it says only what was lost"
     assert_equal [Anchor.hud(:score), Anchor.hud(:time)], @tutorial.flights.map(&:from)
     assert_equal :bonk, @sounds.names.last
-    assert_equal Look::HAPTICS.penalty, @haptics.buzzes.last, "the player's own tap buzzes"
+    assert_equal Style::HAPTICS.penalty, @haptics.buzzes.last, "the player's own tap buzzes"
     assert_equal 1, @effects.reveals.size, "the bright dot under it is outlined"
     assert_in_delta 0.0, @effects.shake_x
     assert_in_delta 0.0, @effects.shake_y
@@ -327,7 +327,7 @@ class TutorialTest < Minitest::Test
     @tutorial.tap(5, 795)
 
     assert_equal :aim, @tutorial.beat
-    assert_equal [Look::TOUCH_RIPPLE], @effects.rings.map(&:look).last(1)
+    assert_equal [Style::TOUCH_RIPPLE], @effects.rings.map(&:style).last(1)
     assert_empty @sounds.names
   end
 

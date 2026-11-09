@@ -6,7 +6,7 @@ class SynthTest < Minitest::Test
   include PresentationTest
 
   def test_every_sound_is_audible_and_never_clips
-    Look::PATCHES.each do |name, patch|
+    Style::PATCHES.each do |name, patch|
       samples = Synth.render(patch)
 
       assert_equal (patch.length * Synth::RATE).ceil, samples.size, name
@@ -15,11 +15,11 @@ class SynthTest < Minitest::Test
   end
 
   def test_every_sound_ends_in_silence
-    Look::PATCHES.each_value { assert_operator Synth.render(it).last.abs, :<, 0.05 }
+    Style::PATCHES.each_value { assert_operator Synth.render(it).last.abs, :<, 0.05 }
   end
 
   def test_the_sounds_are_short
-    Look::PATCHES.each { |name, patch| assert_operator patch.length, :<=, 1.0, name }
+    Style::PATCHES.each { |name, patch| assert_operator patch.length, :<=, 1.0, name }
   end
 
   def test_a_glide_rises

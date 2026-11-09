@@ -9,7 +9,7 @@ module DotPopper
     # draws it. Whatever the player presses with, a finger, the mouse, or
     # a gamepad, the Show hears of it, so its words name that press.
     class App
-      Look = Presentation::Look
+      Style = Presentation::Style
       PLAYTEST_LOG = "games.csv"
       SMALLEST_WINDOW = [400, 320].freeze
 
@@ -21,7 +21,7 @@ module DotPopper
         @env = env
         @elapsed = 0.0
         @uptime = 0.0
-        @chatter = Presentation::Chatter.quiet(Look::CHATTER)
+        @chatter = Presentation::Chatter.quiet(Style::CHATTER)
         @clock = Presentation::FrameClock.start
         @splash = Presentation::Splash.start(calm: flag?("DOT_POPPER_CALM")) unless Presentation::Splash.skipped?(env)
       end
@@ -55,10 +55,10 @@ module DotPopper
         achievements = Achievements.new(SaveFile.new(name: "achievements.txt"))
         keeper = StatsKeeper.new(score_record: @cabinet.score_record, stats_book:, achievements:, folder: ->(name) { SaveFile.new(name:) })
         entitlement = Entitlement.new(SaveFile.new(name: "entitlement.txt"), forced: Entitlement.forced?(@env, os:))
-        wardrobe = Presentation::Wardrobe.new(SaveFile.new(name: "looks.txt"), themes: Look::THEMES, entitlement:, today:)
-        @pen = Pen.new(Look, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
-        @pen.wear(wardrobe.palette)
-        @speaker = Speaker.new(Look::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Look::SOUND.volume)
+        theme_keeper = Presentation::ThemeKeeper.new(SaveFile.new(name: "themes.txt"), themes: Style::THEMES, entitlement:, today:)
+        @pen = Pen.new(Style, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
+        @pen.wear(theme_keeper.palette)
+        @speaker = Speaker.new(Style::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Style::SOUND.volume)
         @splash = @splash.with(sounding: !@speaker.muted?) if @splash
         storefront = Presentation::Storefront.for(
           os, entitlement:,
@@ -70,7 +70,7 @@ module DotPopper
         @show = Presentation::Show.new(groups:, cabinet: @cabinet, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"),
                                        tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt"),
-                                                                    times: Look::LESSON.times),
+                                                                    times: Style::LESSON.times),
                                        haptics: Haptics.for(os), clipboard: Clipboard.new, notices:,
                                        sharing: Presentation::SheetSharing.for(os, opener: UrlOpener.new),
                                        stats_book:, achievements:, keeper:, sizing_store:, input: starting_input, measure: FontMeasure.new(@pen.fonts),
@@ -78,21 +78,21 @@ module DotPopper
                                        tutorial_flag: Presentation::TutorialFlag.new(
                                          SaveFile.new(name: "tutorial.txt"), mode: Presentation::TutorialFlag.mode(@env)
                                        ),
-                                       entitlement:, wardrobe:, storefront:, games:)
+                                       entitlement:, theme_keeper:, storefront:, games:)
         storefront.connect
         @cabinet.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
                                         archive: ->(name) { SaveFile.new(name:) }))
         puts "Dot Popper: each game is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"
-        @pile = Pile.new(flag?("DOT_POPPER_CALM") ? Look::CALM_PILE : Look::PILE)
+        @pile = Pile.new(flag?("DOT_POPPER_CALM") ? Style::CALM_PILE : Style::PILE)
         @cabinet.subscribe(@pile)
         @gamepads = Gamepads.new(pretend: fake_gamepad?)
         @tilting = tilting
         @cabinet.subscribe(@tilting)
-        @dragging = Dragging.new(pile: @pile, show: @show, look: flag?("DOT_POPPER_CALM") ? Look::CALM_GRAB : Look::GRAB)
+        @dragging = Dragging.new(pile: @pile, show: @show, style: flag?("DOT_POPPER_CALM") ? Style::CALM_GRAB : Style::GRAB)
         @cabinet.subscribe(@dragging)
         @fake_drag = Presentation::FakeDrag.parse(@env["DOT_POPPER_FAKE_DRAG"])
-        @sparks = Sparks.new(Look)
-        @bloom = Bloom.new(@pen, Look::BLOOM)
+        @sparks = Sparks.new(Style)
+        @bloom = Bloom.new(@pen, Style::BLOOM)
         @renderer = Renderer.new(@show, @pen, pile: @pile, sparks: @sparks, bloom: @bloom,
                                              diagnostic: flag?("DOT_POPPER_DIAGNOSTIC_COLORS"))
         @renderer.prepare
@@ -100,11 +100,11 @@ module DotPopper
         @input = Presentation::InputRouter.new
         @buttons = Presentation::GamepadButtons.new
         @trigger = Presentation::Trigger.released
-        @cursor = Presentation::GamepadCursor.centered(@show.layout.whole, look: Look::GAMEPAD,
+        @cursor = Presentation::GamepadCursor.centered(@show.layout.whole, style: Style::GAMEPAD,
                                                        radius: @dot_size.radius)
         @cursor = @cursor.show if fake_gamepad?
         @pad_held = []
-        @autopilot = Presentation::Autopilot.new(Look::AUTOPILOT) if flag?("DOT_POPPER_AUTOPLAY")
+        @autopilot = Presentation::Autopilot.new(Style::AUTOPILOT) if flag?("DOT_POPPER_AUTOPLAY")
         @shots = Presentation::ShotSchedule.parse(@env["DOT_POPPER_SHOTS"])
         @quit_after = Float(@env.fetch("DOT_POPPER_QUIT_AFTER", ""), exception: false)
         @frames = Presentation::FrameMeter.start(5) if flag?("DOT_POPPER_PERF")
@@ -275,7 +275,7 @@ module DotPopper
         return skip_splash if @splash && value.to_f > 0.5
 
         was_held = @trigger.held
-        @trigger = @trigger.pull(value.to_f, Look::GAMEPAD)
+        @trigger = @trigger.pull(value.to_f, Style::GAMEPAD)
         return gamepad_up(:trigger) if was_held && !@trigger.held
         return unless @trigger.pressed
 
@@ -301,7 +301,7 @@ module DotPopper
 
         return @speaker.toggle_mute if key == :m
         return @show.how_to_play if key == :h
-        return @show.open_looks if key == :l && @show.stats?
+        return @show.open_themes if key == :l && @show.stats?
         return @show.open_credits if key == :c && @show.stats?
         return if @show.credits_key(key)
         # Enter or Space presses the screen's main button, on any device;
@@ -497,7 +497,7 @@ module DotPopper
       end
 
       def open_window
-        size = window_size || Look::WINDOW.size_for(*::Lota::Window.desktop_dimensions, @dot_size.radius)
+        size = window_size || Style::WINDOW.size_for(*::Lota::Window.desktop_dimensions, @dot_size.radius)
         ::Lota::Window.set_mode(*size, resizable: true, centered: true, minwidth: SMALLEST_WINDOW[0],
                                        minheight: SMALLEST_WINDOW[1])
       end
@@ -554,7 +554,7 @@ module DotPopper
         x, y, safe_width, safe_height = ::Lota::Window.safe_area
         safe = Presentation::Rect.new(x:, y:, width: safe_width, height: safe_height)
         safe = Presentation::Rect.new(x: 0, y: 0, width:, height:) unless safe.width.to_f.positive?
-        Presentation::Layout.new(width:, height:, safe:, look: Look::LAYOUT)
+        Presentation::Layout.new(width:, height:, safe:, style: Style::LAYOUT)
       end
 
       # DOT_POPPER_WINDOW=400x850: a window of that size, for checking a
@@ -599,7 +599,7 @@ module DotPopper
         fake = Presentation::Reading.parse(@env["DOT_POPPER_FAKE_TILT"])
         Tilting.new(pile: @pile, gamepads: @gamepads,
                     accelerometer: fake ? FakeAccelerometer.new(steady: fake) : Accelerometer.new,
-                    look: flag?("DOT_POPPER_CALM") ? Look::CALM_TILT : Look::TILT, turns: @touch)
+                    style: flag?("DOT_POPPER_CALM") ? Style::CALM_TILT : Style::TILT, turns: @touch)
       end
 
       # The middle of the pile's ball nearest +x+, +y+, or that point with
