@@ -7,7 +7,9 @@ module DotPopper
     # signed number, "+1" or "−2", and for the clock a small drawn
     # stopwatch after it (+stopwatch+). The stopwatch is ICON of the
     # line's height across, GAP of its own size after the number.
-    class Tally < Data.define(:text, :stopwatch)
+    class Tally < Data.define(:text, :stopwatch, :dot)
+      def initialize(text:, stopwatch: false, dot: false) = super
+
       ICON = 0.62
       GAP = 0.25
 
@@ -26,7 +28,7 @@ module DotPopper
       # measures it.
       def width(height)
         number = yield(text)
-        stopwatch ? number + (Tally.icon(height) * (1 + GAP)) : number
+        stopwatch || dot ? number + (Tally.icon(height) * (1 + GAP)) : number
       end
     end
   end

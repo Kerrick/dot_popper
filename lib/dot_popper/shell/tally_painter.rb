@@ -18,10 +18,23 @@ module DotPopper
       def left(tally, font, x, y, color, alpha)
         text = font.width(tally.text)
         pen.outlined(tally.text, font, x + (text / 2.0), y, color, alpha)
-        return unless tally.stopwatch
+        return unless tally.stopwatch || tally.dot
 
         icon = Presentation::Tally.icon(font.height)
-        stopwatch(x + text + (icon * Presentation::Tally::GAP) + (icon / 2.0), y, icon, color, alpha)
+        middle = x + text + (icon * Presentation::Tally::GAP) + (icon / 2.0)
+        tally.dot ? small_dot(middle, y, icon, color, alpha) : stopwatch(middle, y, icon, color, alpha)
+      end
+
+      # A small round dot, +size+ across, for a dot in the row, over a dark
+      # edge.
+      def small_dot(x, y, size, color, alpha)
+        pixels = pen.pixels
+        x = pixels.snap(x)
+        y = pixels.snap(y)
+        pen.color(pen.palette.shadow, alpha * 0.7)
+        G.circle(:fill, x, y, (size * 0.42) + pixels.line_width(2), 32)
+        pen.color(color, alpha)
+        G.circle(:fill, x, y, size * 0.42, 32)
       end
 
       # A small stopwatch, +size+ across, centred on +x+, +y+: its face, a

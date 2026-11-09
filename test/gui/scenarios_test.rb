@@ -103,9 +103,9 @@ class GuiScenariosTest < Minitest::Test
   end
 
   def test_the_tutorial_played_through_with_a_mouse
-    play("tutorial", "the first Play opens the tutorial", "a tap on the popped dot costs two seconds",
+    play("tutorial", "the first Play opens the tutorial", "a tap on the popped dot does nothing",
          "the rules hear nothing yet", "a tap on the clear bright dot pops it", "the game goes on with the tutorial's dots",
-         "and its 8 seconds",
+         "and its 10 seconds",
          "the tutorial told the rules nothing", "tutorial.txt remembers", DOT_POPPER_TUTORIAL: "1")
   end
 

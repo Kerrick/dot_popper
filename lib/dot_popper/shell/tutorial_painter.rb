@@ -152,7 +152,7 @@ module DotPopper
         share = flight.progress(now)
         x = from[0] + ((to[0] - from[0]) * share)
         y = from[1] + ((to[1] - from[1]) * share)
-        tally = Presentation::Tally.new(text: flight.text, stopwatch: flight.icon == :stopwatch)
+        tally = Presentation::Tally.new(text: flight.text, stopwatch: flight.icon == :stopwatch, dot: flight.icon == :dot)
         TallyPainter.new(pen:).centered(tally, font, x, y, flight.color, flight.alpha(now))
       end
     end

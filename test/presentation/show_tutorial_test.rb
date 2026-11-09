@@ -50,20 +50,6 @@ class ShowTutorialTest < Minitest::Test
     assert_equal [DotPopper::Events::GameStarted], @events.uniq - [DotPopper::Events::TitleShown]
   end
 
-  # A player's own wrong taps cost too, so the game may start with no
-  # time to spare: the clock it is handed runs out as any game's does.
-  def test_a_tutorial_left_with_a_second_hands_the_game_that_second
-    play_through(mistakes: 7)
-
-    assert @show.playing?
-    assert_equal 1, @cabinet.game.score
-    assert_operator @cabinet.game.countdown.remaining, :<=, 1.0
-    assert_equal [1, 1], [@show.hud.score, @show.hud.seconds]
-    update_for(1.1)
-    assert @show.game_over?
-    assert_equal 1, @score_record.of(@cabinet.size_class)
-  end
-
   def test_the_game_it_goes_on_into_counts_as_any_game_does
     play_through
     update_for(0.1) until @show.game_over?
@@ -133,6 +119,25 @@ class ShowTutorialTest < Minitest::Test
     assert_empty @sounds.names
     assert @show.back, "the skip still works"
     assert @show.playing?
+  end
+
+  # The maintainer's report, the path a real click takes: a press on the
+  # bad dot once the guide has shown its cost and the bright dot waits. It
+  # is the player's turn, and the tap must still cost nothing.
+  def test_a_click_on_the_bad_dot_on_the_players_turn_costs_nothing
+    press_main
+    update_for(0.1) until @show.tutorial.beat == :aim
+    tap_dot(@show.tutorial.dots.find { it.id == Tutorial::BRIGHT })
+    update_for(0.05) until @show.tutorial.beat == :aim_next
+    popped = @show.tutorial.dots.find { it.id == Tutorial::BRIGHT }
+    kept = @show.tutorial.hud.then { [it.score, it.seconds] }
+    @sounds.played.clear
+
+    %i[mouse tap gamepad].each { @show.tap(popped.x, popped.y, by: it) }
+
+    assert_equal kept, @show.tutorial.hud.then { [it.score, it.seconds] }
+    assert_equal :aim_next, @show.tutorial.beat
+    assert_empty @sounds.names
   end
 
   def test_escape_or_a_gamepads_b_skips_it
@@ -246,13 +251,11 @@ class ShowTutorialTest < Minitest::Test
     end
   end
 
-  # Plays the whole tutorial, tapping each bright dot as it is shown, and
-  # the popped one +mistakes+ times as the next peeks out from under it.
-  def play_through(hand_over: true, mistakes: 0, opened: false)
+  # Plays the whole tutorial, tapping each bright dot as it is shown.
+  def play_through(hand_over: true, opened: false)
     press_main unless opened
     [Tutorial::BRIGHT, Tutorial::NEXT].each do |id|
       update_for(0.1) until %i[aim aim_next].include?(@show.tutorial.beat) && !tapped?(id)
-      mistake(mistakes) if id == Tutorial::NEXT
       dot = @show.tutorial.dots.find { it.id == id }
       @show.tap(dot.x, dot.y)
     end
@@ -262,13 +265,6 @@ class ShowTutorialTest < Minitest::Test
   def tap_dot(dot) = @show.tap(dot.x, dot.y)
 
   def tapped?(id) = @show.tutorial.dots.find { it.id == id }.popped?
-
-  def mistake(times)
-    return if times.zero?
-
-    popped = @show.tutorial.dots.find { it.id == Tutorial::BRIGHT }
-    times.times { @show.tap(popped.x, popped.y) }
-  end
 
   def finish_game
     update_for(0.1) until @show.game_over?

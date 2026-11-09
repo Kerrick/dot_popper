@@ -1541,3 +1541,15 @@ The fifth beat is gone. The tutorial is Good, Bad, Good again, as long as before
 **Decision (maintainer's rule).** Nobody wears a theme, so no word of clothing is used for one, on screen or in code. The new-theme card's button is "Use <theme name>" (and "Get Pro" to a Free player, whose tap opens the offer, as "Get Pro" does elsewhere), after Podmajersky and Yifrah in INSIPIRATION.md: a button names the action it takes. In code, wear/worn/wardrobe/dress/outfit are use/in use/theme: `ThemeKeeper#use` and `#in_use`, `Show#use`, `Pen#use` and `#using`, `Speaker#use`, `ArrivalPlan#use_button`, `Show#arrival_use_word`. (`Wardrobe` and `Look` are the old names of `ThemeKeeper` and `Theme`.) "A worn mouse" stays: it is worn out, not worn on.
 
 **Fit.** `ArrivalPlan` stacks the two buttons when the switch's word will not fit beside "Not now" (measured, `RoughMeasure`), so "Use Jack-o'-lantern" fits at 400 x 850 and 850 x 400 (`themes_test.rb`).
+
+## In the tutorial, every number travels from the dot, and a player's tap never costs
+
+*The maintainer: the row's change had no object travelling to it, the wrong tap's cost did not travel from the dot at all, and "I am still able to click the bad red dot and lose time". Reproduced on trunk: `Tutorial#tap` already ignored the demo, but on the player's turn a tap on the popped dot still cost two seconds. This replaces "Every wrong tap in the tutorial costs what it does in play".*
+
+On a good tap, "+1", "+1 and a stopwatch" and "+1 and a dot" fly in turn from the dot to the score, the time and the row, each landing before the next leaves. The wrong tap does the same with "−1", "−2" and "−1 and a dot", from the popped dot, each number dropping as its object lands. A player's tap on a popped dot in the tutorial now does nothing, on their turn too.
+
+**Why, by the books.** Johnson's common fate and Swink's feedback from the thing acted on: the object carries the cause to the effect. Hodent: one thing at a time, so each lands before the next leaves, and the guide waits until the last one is on its way to go and wag. Juul: a loss must feel earned; a learner who taps the wrong dot in a lesson hasn't earned one, so the lesson shows the cost and never charges it.
+
+**Pacing.** Flights shortened from 0.6 s to 0.42 s, gaps to 0.12 s, the hold to 0.3 s, so the good tap's three objects take 1.92 s against 1.95 s before. The wrong tap's three add about 0.8 s, kept by leaving the light on the dot and hand, and the guide's wag overlapping the time flowing again.
+
+**To reverse:** in `Tutorial#tap`, put back a `mistake` on `dot.popped?`.

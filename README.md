@@ -72,7 +72,7 @@ Dot Popper does not update itself. Download the newest release and install it ov
 
 Press Play, and pop the bright dot, again and again, until the clock runs out.
 
-The first time you press Play, a short tutorial with no words shows you how, in about 20 seconds: a dot popping, the point and second it gives, what a click on a popped dot costs and does to your dots in a row, and a bright dot to wait for. The clock waits meanwhile, but a click on a popped dot costs what it does in a game, and when the tutorial ends, your first game goes on from it, with its dots, its points and its time, and the clock starts. Skip it with the ⏭ button in the corner, Escape, or B on a controller. It never opens by itself again, even after you clear your records, but How to play, in the title's bottom right corner, plays it whenever you like, and H or Y on a controller does too. Your game then goes on from it, as it does the first time.
+The first time you press Play, a short tutorial with no words shows you how, in about 20 seconds: a dot popping, the point and second it gives, what a click on a popped dot costs and does to your dots in a row, and a bright dot to wait for. The clock waits meanwhile, a click on a popped dot does nothing, and when the tutorial ends, your first game goes on from it, with its dots, its points and its time, and the clock starts. Skip it with the ⏭ button in the corner, Escape, or B on a controller. It never opens by itself again, even after you clear your records, but How to play, in the title's bottom right corner, plays it whenever you like, and H or Y on a controller does too. Your game then goes on from it, as it does the first time.
 
 | To | With a mouse and keyboard | With a controller |
 | --- | --- | --- |

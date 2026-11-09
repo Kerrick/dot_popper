@@ -93,11 +93,17 @@ class TutorialTest < Minitest::Test
     assert_equal %i[pop tick], @sounds.names
     play_for(SCRIPT.gap + SCRIPT.flight)
     assert_equal [1, 11], shown, "and the time its second"
-    assert_equal Anchor.hud(:dots_in_a_row), @tutorial.spotlight.to, "and the light moves on to the row"
     assert_in_delta 0.0, @tutorial.rate, 1e-9, "time holds still meanwhile"
 
+    flight = @tutorial.flights.first
+    assert_equal ["+1", :dot, Anchor.hud(:dots_in_a_row)], [flight.text, flight.icon, flight.to], "a dot flies to the row"
+    assert_equal Anchor.hud(:dots_in_a_row), @tutorial.spotlight.to
+    assert_equal 0, @tutorial.hud.dots_in_a_row, "which counts it only as it lands"
+    play_for(SCRIPT.flight)
+    assert_equal 1, @tutorial.hud.dots_in_a_row
+
     assert bright.fresh?, "the stopped clock holds it at its pop's instant"
-    play_for(SCRIPT.hold + STEP)
+    play_for(SCRIPT.hold)
     assert_equal :peek, @tutorial.beat
     assert bright.popped?, "as time flows, it shows it is popped"
     following = next_dot
@@ -123,9 +129,9 @@ class TutorialTest < Minitest::Test
       @tutorial.flights.any?
     end
     assert pressed && near?(pressed, bright), "the guide presses the popped dot"
-    assert_equal %w[−1 −2], @tutorial.flights.map(&:text), "and its cost leaps out of the score and the time"
-    assert_equal [nil, :stopwatch], @tutorial.flights.map(&:icon)
-    assert_equal [0, 9], shown, "which drop by it, the score no lower than 0, as in play"
+    assert_equal ["−1", Anchor.at(bright.x, bright.y), Anchor.hud(:score)],
+                 @tutorial.flights.first.then { [it.text, it.from, it.to] }, "its cost flies out of the dot, the score's first"
+    assert_equal [1, 11], shown, "and counts only as it lands"
     assert_equal :bonk, @sounds.names.last
     assert_equal 1, @effects.reveals.size, "the bright dot under it is outlined"
     assert_equal 1, @effects.rings.count { it.style == Style::ALARM_RING }
@@ -133,17 +139,29 @@ class TutorialTest < Minitest::Test
     assert_equal [Style::HAPTICS.pop], @haptics.buzzes, "only the player's own taps buzz"
     assert_in_delta 0.0, @effects.shake_x
 
-    poses = 40.times.map do
+    play_for(SCRIPT.flight + STEP)
+    assert_equal [0, 11], shown, "the score drops as it lands"
+    assert_empty @tutorial.flights, "and the next waits"
+    play_for(SCRIPT.gap + (SCRIPT.flight / 2))
+    assert_equal [["−2", :stopwatch, Anchor.hud(:time)]], @tutorial.flights.map { [it.text, it.icon, it.to] }
+    play_for(SCRIPT.flight)
+    assert_equal [0, 9], shown, "the time, in its turn"
+    assert_equal 1, @tutorial.hud.dots_in_a_row
+    assert_equal [["−1", :dot, Anchor.hud(:dots_in_a_row)]], @tutorial.flights.map { [it.text, it.icon, it.to] }
+    play_for(SCRIPT.flight)
+    assert_equal 0, @tutorial.hud.dots_in_a_row, "and the row, last"
+    assert_equal :slide, @tutorial.beat
+    play_for(SCRIPT.resume)
+    assert_in_delta SCRIPT.slow, @tutorial.rate, 1e-9, "time flows again, slowly"
+
+    poses = 15.times.map do
       play_for(STEP * 2)
       @tutorial.ghost_pose
     end
-    assert(poses.last(20).all? { it.press.zero? }, "then it lifts, and taps no more")
+    assert(poses.last(10).all? { it.press.zero? }, "then it lifts, and taps no more")
     assert(poses.last.then { !near?(it, bright) && !near?(it, next_dot) }, "and waits to one side")
     assert_equal 1, @effects.reveals.size, "once"
 
-    play_until { @tutorial.beat == :slide }
-    play_for(SCRIPT.resume)
-    assert_in_delta SCRIPT.slow, @tutorial.rate, 1e-9, "time flows again, slowly"
     play_until { @tutorial.beat == :aim_next }
     assert_operator Math.hypot(bright.x - next_dot.x, bright.y - next_dot.y), :>=, SCRIPT.clear * R
     play_for(1.0)
@@ -168,13 +186,13 @@ class TutorialTest < Minitest::Test
       @tutorial.beat == :aim_next
     end
     wag = SCRIPT.ghost.wag
-    arrives = (GhostHand::LIFTED * SCRIPT.ghost.loop) + SCRIPT.ghost.glide
+    arrives = (GhostHand::PRESSED * SCRIPT.ghost.loop) + SCRIPT.gap + (2 * (SCRIPT.flight + SCRIPT.gap)) + SCRIPT.ghost.glide
     wagging = turns.select { |at, _| at.between?(arrives, arrives + wag.time) }.map(&:last)
 
     assert_operator wagging.max, :>, wag.angle * 0.8, "it wags one way"
     assert_operator wagging.min, :<, -wag.angle * 0.8, "and the other"
     assert_operator wagging.each_cons(2).count { |a, b| a.negative? != b.negative? }, :>=, 3, "back and forth"
-    assert(turns.select { |at, _| at < arrives || at > arrives + wag.time }.all? { |_, turn| turn.abs < 1e-9 })
+    assert(turns.select { |at, _| at < arrives || at > arrives + wag.time + (2 * STEP) }.all? { |_, turn| turn.abs < 1e-9 })
     waited = @tutorial.now - started
     assert_operator waited, :>=, arrives + SCRIPT.ghost.waiting, "only once it has wagged and settled"
     assert_operator waited, :<, arrives + SCRIPT.ghost.waiting + 0.4, "and soon after"
@@ -199,21 +217,23 @@ class TutorialTest < Minitest::Test
     play_until(within: 900) { @tutorial.beat == :aim_next }
 
     assert_operator next_dot.y, :>, bright.y + (SCRIPT.clear * R * 0.9), "it slid out below"
-    assert_operator @tutorial.now, :<, 7.0, "with no long wait"
+    assert_operator @tutorial.now, :<, 7.6, "with no long wait"
   end
 
-  def test_a_tap_on_the_popped_dot_on_the_players_turn_costs_what_it_does_in_play
+  # The maintainer: "I am still able to click the bad red dot and lose
+  # time". On the player's own turn too, a tap there does nothing.
+  def test_a_tap_on_the_popped_dot_never_costs_the_player
     to_the_peek
     play_until { @tutorial.beat == :aim_next }
-    kept = @tutorial.flights.size
-    tap_on(bright)
+    sounds = @sounds.names.dup
+    rings = @effects.rings.size
+    2.times { tap_on(bright) }
 
-    assert_equal :aim_next, @tutorial.beat, "the turn goes on"
-    assert_equal [0, 7], shown, "two seconds, the score no lower than 0"
-    assert_equal %w[−2], @tutorial.flights.drop(kept).map(&:text), "it says only what was lost"
-    assert_equal :bonk, @sounds.names.last
-    assert_equal Style::HAPTICS.penalty, @haptics.buzzes.last, "the player's own tap buzzes"
-    assert_in_delta 0.0, @effects.shake_x
+    assert_equal :aim_next, @tutorial.beat
+    assert_equal [0, 9], shown
+    assert_equal sounds, @sounds.names
+    assert_equal rings, @effects.rings.size
+    assert_equal [Style::HAPTICS.pop], @haptics.buzzes
   end
 
   # The maintainer: a playtester "tapped the dark dot as soon as the
@@ -234,6 +254,7 @@ class TutorialTest < Minitest::Test
 
     play_until { @tutorial.flights.any? }
     assert_unheard(:warn, "while the guide's own cost plays") { [bright, next_dot] }
+    play_until { @tutorial.hud.dots_in_a_row.zero? }
 
     play_until { @tutorial.beat == :slide }
     assert_unheard(:slide) { [bright, next_dot] }
@@ -287,23 +308,6 @@ class TutorialTest < Minitest::Test
     assert_equal 3, @tutorial.dots.size, "no dot fades or is added"
   end
 
-  # However often the player taps the popped dot, the score and the
-  # clock stop at 0, as Countdown and the score's floor do in play, and
-  # say nothing more once they are there; the clock is still, so it never
-  # runs out, and the last pop's second is what the game starts with.
-  def test_wrong_taps_stop_at_nothing_and_the_game_gets_what_is_left
-    to_the_peek
-    play_until { @tutorial.beat == :aim_next }
-    kept = @tutorial.flights.size
-    7.times { tap_on(bright) }
-
-    assert_equal [0, 0], shown
-    assert_equal %w[−2 −2 −2 −2 −1], @tutorial.flights.drop(kept).map(&:text), "what was left, then nothing"
-    tap_on(next_dot)
-    play_until(within: 900) { @tutorial.over? }
-    assert_equal [1, 1], [@tutorial.score, @tutorial.seconds]
-  end
-
   # The maintainer: the first good "can also highlight the '1 in a row'",
   # and the first bad "can highlight that resetting to 0".
   def test_the_row_is_the_games_own_and_empty_from_the_start
@@ -315,37 +319,25 @@ class TutorialTest < Minitest::Test
     play_for(SCRIPT.drift + 0.5)
     @popped_at = @tutorial.now
     tap_on(bright)
-    play_for(SCRIPT.gap + SCRIPT.flight + SCRIPT.gap)
-    assert_equal 0, @tutorial.hud.dots_in_a_row, "the row waits its turn, after the point"
+    play_for(SCRIPT.gap + SCRIPT.flight + SCRIPT.gap + SCRIPT.flight)
+    assert_equal 0, @tutorial.hud.dots_in_a_row, "the row waits its turn, after the point and the second"
 
-    play_until { shown == [1, 11] }
-    assert_equal 1, @tutorial.hud.dots_in_a_row, "it reads 1 as the second lands"
+    play_until { @tutorial.hud.dots_in_a_row == 1 }
     assert_equal :gain, @tutorial.row_notice.tone
     assert_equal Anchor.hud(:dots_in_a_row), @tutorial.spotlight.to, "and the light goes there"
     assert_operator SCRIPT.notice, :<, 1.0, "briefly"
 
     play_until { @tutorial.beat == :peek }
-    assert_in_delta SCRIPT.gap + SCRIPT.flight + SCRIPT.gap + SCRIPT.flight + SCRIPT.hold,
-                    @tutorial.now - @popped_at, 2 * STEP, "and the beat is no longer for it"
+    assert_in_delta SCRIPT.gap + (3 * SCRIPT.flight) + (2 * SCRIPT.gap) + SCRIPT.hold,
+                    @tutorial.now - @popped_at, 2 * STEP, "and the beat takes three flights and its hold"
   end
 
   def test_the_guides_mistake_empties_the_row_and_rings_it_red
     to_the_peek
     assert_equal 1, @tutorial.hud.dots_in_a_row
 
-    play_until { @tutorial.flights.any? }
-    assert_equal 0, @tutorial.hud.dots_in_a_row, "it reads 0"
+    play_until { @tutorial.hud.dots_in_a_row.zero? }
     assert_equal :alarm, @tutorial.row_notice.tone
-    assert_equal Anchor.dot(Tutorial::BRIGHT), @tutorial.spotlight.to, "the light stays on the mistake"
-  end
-
-  def test_the_row_rings_only_when_a_mistake_empties_something
-    to_the_peek
-    play_until { @tutorial.beat == :aim_next }
-    rang = @tutorial.row_notice
-    tap_on(bright)
-
-    assert_same rang, @tutorial.row_notice
   end
 
   def test_the_last_pop_lights_the_row_again_and_the_game_is_left_it
