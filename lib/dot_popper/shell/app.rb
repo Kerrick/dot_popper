@@ -67,6 +67,7 @@ module DotPopper
                        Presentation::Storefront.for(os, opener: UrlOpener.new, answers: StoreAnswers.in_save_folder, entitlement:,
                                                     channel: Presentation::Storefront.channel(@env))
                      end
+        plays = free_plays(entitlement, metered: storefront.offered? && !flag?("DOT_POPPER_AUTOPLAY"))
         groups = Groups::Session.at(Groups::Settings.server_url(@env), store: SaveFile.new(name: "group.txt"))
         @show = Presentation::Show.new(groups:, game: @game, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"),
@@ -79,7 +80,7 @@ module DotPopper
                                        tutorial_flag: Presentation::TutorialFlag.new(
                                          SaveFile.new(name: "tutorial.txt"), mode: Presentation::TutorialFlag.mode(@env)
                                        ),
-                                       entitlement:, wardrobe:, storefront:)
+                                       entitlement:, wardrobe:, storefront:, plays:)
         storefront.connect
         @game.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
                                         archive: ->(name) { SaveFile.new(name:) }))
@@ -563,6 +564,16 @@ module DotPopper
       def window_size
         width, height = @env.fetch("DOT_POPPER_WINDOW", "").split("x", 2).map { Integer(it, exception: false) }
         [[width, SMALLEST_WINDOW[0]].max, [height, SMALLEST_WINDOW[1]].max] if width && height
+      end
+
+      # The plays a free player has left, counted only where the paid version
+      # can be bought and not under the autoplay bot. DOT_POPPER_FREE_PLAYS=n
+      # starts a new save with n plays in the bank and n for the day, to try
+      # the limit.
+      def free_plays(entitlement, metered:)
+        start = Integer(@env.fetch("DOT_POPPER_FREE_PLAYS", ""), exception: false)
+        FreePlays.new(SaveFile.new(name: "plays.txt"), today:, entitlement:, metered:,
+                      **(start ? { bank: start, daily: start } : {}))
       end
 
       # The player's local date, or DOT_POPPER_TODAY's, to try another

@@ -26,13 +26,15 @@ module DotPopper
     # (TutorialFlag) says whether Play opens the Tutorial first. +window+
     # (NoWindowControl's methods) is the desktop's window, which the
     # title's "Full screen" and Quit switch and close where it offers them.
+    # +plays+ (FreePlays) counts the rounds a free player may start: Play
+    # spends one, and with none left leads to the offer of the paid version.
     class Show
       # The dot-size choices in the order the title draws their segments:
       # the default, dots sized to the screen, first.
       SIZINGS = [DotSizing::SIZED_TO_SCREEN, DotSizing::STANDARD].freeze
 
       attr_reader :game, :effects, :animations, :hud, :attract, :layout, :marquee, :finale, :sounds, :now, :look,
-                  :lifetime, :input, :words, :clearing, :tutorial, :lead_in, :window
+                  :lifetime, :input, :words, :clearing, :tutorial, :lead_in, :window, :plays
 
       def initialize(game:, layout:, sounds:, radius:, look: Look, random: Random.new, calm: false,
                      tutor: Tutor.new(BestScore::Memory.new, times: look::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
@@ -42,7 +44,7 @@ module DotPopper
                      keeper: RecordKeeper.new(best: game.best, lifetime:, achievements:), notices: Notices.none,
                      sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never, window: NoWindowControl.new,
                      entitlement: Entitlement.free, wardrobe: Wardrobe.plain(look::THEMES),
-                     groups: Groups::Session.off, storefront: NoStorefront.new)
+                     groups: Groups::Session.off, storefront: NoStorefront.new, plays: FreePlays.unlimited)
         @game = game
         @window = window
         @tutorial_flag = tutorial_flag
@@ -53,7 +55,9 @@ module DotPopper
         @achievement_watch = AchievementWatch.new
         @groups = GroupPanel.new(groups:, entitlement:, sounds:)
         @storefront = storefront
+        @plays = plays
         @offer = false
+        @offer_for_play = false
         @tutorial = nil
         @handing_over = nil
         @lead_in = nil
@@ -448,6 +452,7 @@ module DotPopper
         @looks = false
         @credits = nil
         @offer = false
+        @offer_for_play = false
         @clearing = clearing.cancel
         sounds.play(:tick, pitch: 0.8)
       end
@@ -465,6 +470,8 @@ module DotPopper
       end
 
       def close_offer
+        return close_records if @offer_for_play
+
         @offer = false
         sounds.play(:tick, pitch: 0.8)
       end
@@ -494,7 +501,8 @@ module DotPopper
       def offer_plan
         return unless offer?
 
-        OfferScreen.new(layout:, type: look::TYPE, words:, measure: @measure, offering: !@entitlement.paid?).plan
+        OfferScreen.new(layout:, type: look::TYPE, words:, measure: @measure, offering: !@entitlement.paid?,
+                        note: words.offer_note(plays.left, plays.daily)).plan
       end
 
       # The price the store gave, or nil before it has.
@@ -691,8 +699,11 @@ module DotPopper
         planned(TitleScreen.new(layout:, type: look::TYPE, words:, measure: @measure, best: marquee.best, goal:,
                                 done: lifetime.goal_done?, streak: lifetime.streak, records: records_offered?,
                                 sizing: sizing_offered?, radius: DotSize.fitted(layout.width, layout.height).radius,
-                                window: window.offered?))
+                                window: window.offered?, plays: plays_line))
       end
+
+      # What the title says of the plays left, or nil where none are counted.
+      def plays_line = (words.plays_left(plays.left) if plays.metered?)
 
       # Where Game Over's words and "Share my score" go (FinalePlan), or
       # nil away from Game Over.
@@ -755,7 +766,23 @@ module DotPopper
 
       private
 
-      def start_round = game.press(layout.center_x, layout.center_y)
+      # A round starts, and costs a play (FreePlays); with none left, the
+      # offer of the paid version opens in its place.
+      def start_round
+        return offer_for_play unless plays.spend!
+
+        game.press(layout.center_x, layout.center_y)
+      end
+
+      # Opens the offer straight from the title, as Play does when no play
+      # is left; Back from it returns to the title.
+      def offer_for_play
+        return unless title? && offer_offered?
+
+        @records = records_sheet
+        @offer_for_play = true
+        open_offer
+      end
 
       # Plays the Tutorial on the field a round would start on, and sizes
       # the effects to its dots.

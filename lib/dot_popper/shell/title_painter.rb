@@ -28,6 +28,7 @@ module DotPopper
                                   plan[:title].y + (title.height / 2.0) - ((1 - intro) * 24), intro)
         legend(layout, plan, under_quit(show, plan, :legend, intro))
         line(plan, :best, words.best_line(marquee.best), pen.palette.soft, under_quit(show, plan, :best, intro))
+        line(plan, :plays, show.plays_line.to_s, show.plays.can_play? ? pen.palette.soft : pen.palette.cream, intro, size: :goal)
         daily_goal(show, layout, plan, under_quit(show, plan, :goal, intro)) if plan[:goal]
         quit_prompt(show, plan)
         line(plan, :streak, words.streak(show.lifetime.streak), pen.palette.soft, intro, size: :goal)

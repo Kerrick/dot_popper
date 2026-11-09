@@ -68,6 +68,19 @@ module DotPopper
       # on a gamepad, naming +button+, the one held ("A" or "Y").
       def keep_holding(button) = super().for(input).sub("%s", button.to_s)
 
+      # What the title says of the plays left, where plays are counted: "23
+      # plays left", or "No plays left today".
+      def plays_left(left) = left.positive? ? "#{Words.count(left, "play")} left" : "No plays left today"
+
+      # The offer's note, plain about what free play there is and when more
+      # comes: "No free plays left. 3 new free plays come tomorrow."
+      def offer_note(left, daily)
+        coming = "#{daily} new free plays"
+        return "No free plays left. #{coming} come tomorrow." unless left.positive?
+
+        "#{Words.count(left, "free play")} left. #{coming} come every day."
+      end
+
       # "Your best: 27".
       def best_line(best) = "#{self.best}: #{best}"
 
