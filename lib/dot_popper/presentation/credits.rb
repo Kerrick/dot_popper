@@ -7,10 +7,10 @@ module DotPopper
     # pointing hand (+emoji+), Lota's notices (+lota+), and each of
     # Fledge's (+fledge+). What a build lacks is nil, or empty, and the
     # Credits screen skips it.
-    class Notices < Data.define(:ofl, :iosevka, :emoji, :lota, :fledge)
+    class Notices < Data.define(:ofl, :iosevka, :emoji, :wordlists, :lota, :fledge)
       def self.none = new
 
-      def initialize(ofl: nil, iosevka: nil, emoji: nil, lota: nil, fledge: []) = super
+      def initialize(ofl: nil, iosevka: nil, emoji: nil, wordlists: nil, lota: nil, fledge: []) = super
     end
 
     # How the Credits screen reads: the type's size, a line's height in
@@ -42,6 +42,8 @@ module DotPopper
                   CreditsBlock.new(:legal, notices.iosevka),
                   CreditsBlock.new(:subheading, say.fetch(:emoji_name)), CreditsBlock.new(:note, say.fetch(:emoji)),
                   CreditsBlock.new(:legal, notices.emoji),
+                  CreditsBlock.new(:subheading, say.fetch(:wordlists_name)), CreditsBlock.new(:note, say.fetch(:wordlists)),
+                  CreditsBlock.new(:legal, notices.wordlists),
                   CreditsBlock.new(:subheading, say.fetch(:lota)), CreditsBlock.new(:legal, notices.lota),
                   CreditsBlock.new(:subheading, say.fetch(:fledge)),
                   *notices.fledge.map { CreditsBlock.new(:legal, it) }]

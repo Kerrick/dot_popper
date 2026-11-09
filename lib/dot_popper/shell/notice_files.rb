@@ -38,6 +38,7 @@ module DotPopper
         Presentation::Notices.new(ofl: read(@cabinet, "assets", "fonts", "OFL.txt"),
                                   iosevka: read(@cabinet, "assets", "fonts", "Iosevka-LICENSE.md"),
                                   emoji: read(@cabinet, "assets", "emoji", "LICENSE.txt"),
+                                  wordlists: read(@cabinet, "assets", "wordlists-LICENSE.txt"),
                                   lota: lota, fledge: fledge)
       end
 

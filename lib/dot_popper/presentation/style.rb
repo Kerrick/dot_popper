@@ -91,6 +91,8 @@ module DotPopper
           emoji_name: "Noto Emoji",
           emoji: "The tutorial's pointing hand is Noto Emoji's, copyright 2013 Google, Inc., under the Apache " \
                  "License, version 2.0.",
+          wordlists_name: "imsky/wordlists",
+          wordlists: "The names of friend groups and their members use Ivan Malopinsky's wordlists, under the MIT License.",
           lota: "Lota", fledge: "Fledge"
         }.freeze,
         cleared: "Stats cleared.", undo: ByInput.new(touch: "Undo", mouse: "Undo", gamepad: "Undo (Y)"),

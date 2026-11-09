@@ -10,14 +10,14 @@ class CreditsTest < Minitest::Test
   WORDS = Style::WORDS
 
   def test_the_book_is_in_order_and_skips_what_the_build_lacks
-    full = Notices.new(ofl: "OFL", iosevka: "IOS", emoji: "NOTO", lota: "LOTA", fledge: %w[ONE TWO])
+    full = Notices.new(ofl: "OFL", iosevka: "IOS", emoji: "NOTO", wordlists: "WORDS", lota: "LOTA", fledge: %w[ONE TWO])
     texts = CreditsBook.compose(WORDS, full).blocks.reject { it.kind == :note }.map(&:text)
 
     assert_equal ["Made by setdef", "Dot Popper © 2026 setdef", "Open-source licenses", "Fredoka", "OFL",
-                  "Iosevka", "IOS", "Noto Emoji", "NOTO", "Lota", "LOTA", "Fledge", "ONE", "TWO"], texts
+                  "Iosevka", "IOS", "Noto Emoji", "NOTO", "imsky/wordlists", "WORDS", "Lota", "LOTA", "Fledge", "ONE", "TWO"], texts
 
     bare = CreditsBook.compose(WORDS, Notices.none).blocks
-    assert_equal ["Dot Popper © 2026 setdef", "Fredoka", "Iosevka", "Noto Emoji"], bare.select { it.kind == :subheading }.map(&:text),
+    assert_equal ["Dot Popper © 2026 setdef", "Fredoka", "Iosevka", "Noto Emoji", "imsky/wordlists"], bare.select { it.kind == :subheading }.map(&:text),
                  "a heading with nothing under it goes"
     assert_includes bare.map(&:text).join(" "), "All rights reserved.", "the game keeps its rights"
   end
