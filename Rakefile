@@ -27,4 +27,13 @@ task :steep do
   sh "bundle exec steep check"
 end
 
+# Writes doc/privacy.json from what the game declares (lib/dot_popper/privacy).
+# test/privacy fails if the committed file is stale.
+desc "Generate doc/privacy.json"
+task :privacy do
+  $LOAD_PATH.unshift File.expand_path("lib", __dir__)
+  require "dot_popper/privacy/document"
+  File.write(DotPopper::Privacy::Document::PATH, DotPopper::Privacy::Document.current_json)
+end
+
 task default: %i[test steep]

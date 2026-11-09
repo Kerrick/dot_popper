@@ -1,0 +1,169 @@
+# frozen_string_literal: true
+
+require "test_helper"
+require "bundler"
+require "prism"
+require "dot_popper/presentation"
+require "dot_popper/shell/save_file"
+require "dot_popper/privacy/document"
+
+# Each declared list, compared exactly with the file it describes. When one
+# of these fails, the game has changed: declare the change in
+# lib/dot_popper/privacy, then run `bundle exec rake privacy`.
+class PrivacyDeclaredTest < Minitest::Test
+  Privacy = DotPopper::Privacy
+  ROOT = File.expand_path("../..", __dir__)
+
+  def read(path) = File.read(File.join(ROOT, path)).gsub(/<!--.*?-->/m, "")
+
+  def test_the_gems_shipped_are_declared
+    shipped = Bundler.definition.specs_for([:default]).map(&:name).uniq - ["bundler"]
+
+    assert_equal Privacy::SHIPPED_GEMS.keys.sort, shipped.sort
+  end
+
+  def test_the_android_dependencies_are_declared
+    block = File.read(File.join(ROOT, "android/host/build.gradle"))[/^dependencies \{\n(.*?)^\}/m, 1]
+    lines = block.lines.map(&:strip).reject(&:empty?)
+    found = lines.map { it[/\Aimplementation\s+(?:'([^']+)'|(files\('[^']+'\)))\z/] ? ($1 || $2) : flunk("can't read: #{it}") }
+
+    assert_equal Privacy::ANDROID_DEPENDENCIES.keys.sort, found.sort
+  end
+
+  def test_the_android_permissions_are_declared
+    found = read("android/host/src/main/AndroidManifest.xml").scan(/<uses-permission(?:-sdk-\d+)?\s+android:name="([^"]+)"/).flatten
+
+    assert_equal Privacy::ANDROID_PERMISSIONS.keys.sort, found.sort
+  end
+
+  def test_the_ios_usage_strings_are_declared
+    found = %w[ios/host/Host/Info.plist].flat_map { read(it).scan(/<key>(NS\w+UsageDescription)<\/key>/).flatten }
+
+    assert_equal Privacy::IOS_USAGE_STRINGS.keys.sort, found.sort
+  end
+
+  def test_the_ios_privacy_manifest_matches
+    manifest = read("ios/host/Host/PrivacyInfo.xcprivacy")
+    types = manifest.scan(%r{<key>NSPrivacyCollectedDataType</key>\s*<string>(\w+)</string>\s*<key>NSPrivacyCollectedDataTypeLinked</key>\s*<(true|false)/>\s*<key>NSPrivacyCollectedDataTypeTracking</key>\s*<(true|false)/>\s*<key>NSPrivacyCollectedDataTypePurposes</key>\s*<array>\s*<string>(\w+)</string>\s*</array>})
+    apis = manifest.scan(%r{<key>NSPrivacyAccessedAPIType</key>\s*<string>(\w+)</string>\s*<key>NSPrivacyAccessedAPITypeReasons</key>\s*<array>(.*?)</array>}m).to_h { |type, reasons| [type, reasons.scan(%r{<string>([^<]+)</string>}).flatten] }
+    sent = DotPopper::Groups::REQUESTS.values.flat_map(&:labels).uniq
+
+    assert_equal Privacy::STORE_LABELS.keys.sort, sent.sort, "every label is used by some request"
+    assert_equal Privacy::STORE_LABELS.values.map { [it[:apple], it[:apple_linked].to_s, "false", Privacy::APPLE_PURPOSE] }.sort, types.sort
+    assert_match(%r{<key>NSPrivacyTracking</key>\s*<false/>}, manifest)
+    assert_match(%r{<key>NSPrivacyTrackingDomains</key>\s*<array/>}, manifest)
+    assert_equal Privacy::APPLE_APIS, apis
+  end
+
+  def test_a_save_file_must_be_declared
+    assert_raises(ArgumentError) { DotPopper::Shell::SaveFile.new(name: "secrets.txt") }
+    assert_equal "stats.txt", DotPopper::Shell::SaveFile.new(name: "stats.txt").name
+  end
+
+  def test_every_save_file_in_the_code_is_declared_and_every_declared_one_is_in_the_code
+    literals = saved_names.select { it.is_a?(String) }
+    fixed = Privacy::SAVE_FILES.reject(&:pattern).map(&:name)
+    named_elsewhere = [DotPopper::StatsKeeper::NOTE, File.read(File.join(ROOT, "lib/dot_popper/shell/store_answers.rb"))[/NAME = "([^"]+)"/, 1]]
+
+    assert_equal fixed.sort, (literals + constants_named + named_elsewhere).uniq.sort
+    assert_equal 2, saved_names.count(:dynamic), "a new SaveFile.new with a computed name: name it, or add it here and declare its pattern"
+  end
+
+  def test_dated_names_match_their_patterns
+    backups = []
+    folder = ->(name) { backups << name; DotPopper::ScoreRecord::Memory.new }
+    keeper = DotPopper::StatsKeeper.new(score_record: memory("1"), stats_book: memory("2"), achievements: memory("3"), folder:)
+    keeper.clear
+    made = backups.grep(/\d{8}/)
+
+    refute_empty made
+    made.each { DotPopper::Shell::SaveFile.new(name: it) }
+    archived = []
+    log = DotPopper::PlaytestLog.new(DotPopper::ScoreRecord::Memory.new("old,columns\n1,2\n"), archive: ->(name) { archived << name; DotPopper::ScoreRecord::Memory.new })
+    log.send(:current)
+
+    refute_empty archived
+    archived.each { DotPopper::Shell::SaveFile.new(name: it) }
+    shot = File.read(File.join(ROOT, "lib/dot_popper/shell/app.rb"))[/name = "(shot-[^"]+)"/, 1].sub('#{number}', "3")
+    DotPopper::Shell::SaveFile.new(name: shot)
+  end
+
+  def test_only_save_file_writes_to_the_save_folder
+    allowed = { "lib/dot_popper/shell/store_answers.rb" => "File.delete", "lib/dot_popper/shell/app.rb" => "capture_screenshot" }
+    ban = /\bFile\.(?:write|binwrite|open|delete|rename)\b|\bIO\.(?:write|binwrite)\b|\bFileUtils\b|Filesystem\.(?:write|append|remove|mkdir|create_directory|new_file)\b|capture_screenshot/
+    hits = Dir[File.join(ROOT, "lib/**/*.rb")].reject { it.end_with?("shell/save_file.rb") }.filter_map do |path|
+      found = source_of(path).scan(ban)
+      rel = path.delete_prefix("#{ROOT}/")
+      left = found - [allowed[rel]]
+      "#{rel}: #{left.join(", ")}" unless left.empty?
+    end
+
+    assert_empty hits
+  end
+
+  def test_the_sensor_is_only_read_by_the_accelerometer
+    users = Dir[File.join(ROOT, "lib/**/*.rb")].select { source_of(it).include?("Lota::Sensor") }.map { File.basename(it) }
+
+    assert_equal ["accelerometer.rb"], users
+  end
+
+  def test_the_urls_the_game_opens_stay_on_the_device
+    openers = Dir[File.join(ROOT, "lib/**/*.rb")].select { source_of(it).include?("open_url") }.map { File.basename(it) }
+
+    assert_equal ["url_opener.rb"], openers
+    assert_equal %w[dotpopper-share dotpopper-store], [DotPopper::Presentation::SheetSharing::SCHEME, DotPopper::Presentation::Storefront::SCHEME].sort
+  end
+
+  def test_the_deletion_words_are_the_screens
+    words = DotPopper::Presentation::GroupWords
+    deletion = Privacy::Document.new.to_h.fetch(:deletion)
+
+    assert_equal [words.heading, words.delete, words.hold_to_delete], deletion.values_at(:screen, :control, :prompt)
+  end
+
+  def test_the_document_is_current
+    assert_equal Privacy::Document.current_json, File.read(Privacy::Document::PATH), Privacy::Document::STALE
+  end
+
+  private
+
+  def memory(text) = Struct.new(:saved) { def clear = nil }.new(text)
+
+  def source_of(path)
+    source = File.read(path)
+    Prism.parse_comments(source).reverse_each { |c| source[c.location.start_offset...c.location.end_offset] = "" }
+    source
+  end
+
+  def saved_names
+    @saved_names ||= shell_sources.flat_map { |path| names_in(Prism.parse_file(path).value) }
+  end
+
+  def shell_sources = Dir[File.join(ROOT, "lib/dot_popper/shell/*.rb")]
+
+  def names_in(node)
+    found = save_file_call?(node) ? [name_of(node)] : []
+    node.compact_child_nodes.each { found.concat(names_in(it)) }
+    found
+  end
+
+  def save_file_call?(node)
+    node.is_a?(Prism::CallNode) && node.name == :new && node.receiver.is_a?(Prism::ConstantReadNode) && node.receiver.name == :SaveFile
+  end
+
+  def name_of(call)
+    value = call.arguments.arguments.first.elements.find { it.key.unescaped == "name" }.value
+    case value
+    when Prism::StringNode then value.unescaped
+    when Prism::ConstantReadNode then value.name
+    else :dynamic
+    end
+  end
+
+  # The constants passed to SaveFile.new, read from where they are set.
+  def constants_named
+    saved_names.grep(Symbol).reject { it == :dynamic }.map do |name|
+      shell_sources.filter_map { File.read(it)[/\b#{name}\s*=\s*"([^"]+)"/, 1] }.first || flunk("can't find the save-file constant #{name}")
+    end
+  end
+end

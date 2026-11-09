@@ -1474,3 +1474,16 @@ After the second pop, a fifth beat of about five seconds. The row of eight arriv
 **Wording.** `doc/publishing.md` now lists the facts and gives the Apple and Google answers to enter; README says the themes check once. The public privacy policy is the server side's.
 
 **To reverse:** set `SERVER_URL` to nil and make `server_url` return nil for it; remove the manifest's three entries.
+
+## The privacy facts come from the code
+
+The public privacy policy and the store labels must be accurate, and nobody can be trusted to keep a hand-written list current, so the game now generates one document, `doc/privacy.json` (`bundle exec rake privacy`), from declarations that tests compare exactly with reality. Hunt and Thomas's DRY, applied to facts: one source, everything else generated from it.
+
+- **A declaration is the only way in.** `Shell::SaveFile` refuses a name not declared in `Privacy::SAVE_FILES`, dated names included. `Session::Job` is built only from `Groups::REQUESTS`, so a job's method, path, body and token are the declaration's.
+- **A test reads the wire.** `test/privacy/requests_test.rb` plays every request through a real `Session` and `Link` against a local server and compares what arrived. Source scans forbid network primitives outside `Link`, and file writes outside `SaveFile`.
+- **Exact lists fail `bundle exec rake`:** the gems shipped, Android's dependencies and permissions, iOS usage strings, and the privacy manifest's data types. Each sent field names its store label, and the labels must equal the manifest's types.
+- **Plain about the limits.** `declared_but_not_enforced` names what no test here can check: what Apple and Google do with a purchase, the native hosts, the engine, merged Android permissions and the server. The billing dependency pins its exact version so a bump makes someone re-read its manifest.
+- **`doc/publishing.md` no longer keeps a copy.** Its privacy facts and label answers moved to the generated document, IP addresses included (the server's proxy, request log and rate-limit notes). Apple's list has no IP category, so the document says that and leaves the choice of Device ID to the maintainer; retention is left to the server's own policy, since the old "up to a day" was the server's fact and its policy says a note can last longer.
+- **The themes check is declared before it is built:** `UNBUILT_REQUESTS` keeps it out of the wire test, `in_this_build` says so in the document, and a test fails once `started_on` appears in the game's code, so it can't ship unplayed.
+
+**To reverse:** delete `lib/dot_popper/privacy`, `test/privacy` and `doc/privacy.json`, have `Session` build its jobs inline again, and drop the check in `SaveFile`.

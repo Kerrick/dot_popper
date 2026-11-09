@@ -159,6 +159,7 @@ The iPhone, iPad, and Android builds are experimental, and are not released to p
 | [Why Ruby](why_ruby.md) | Dot Popper's Ruby beside the Lua a LÖVE game would use, from values and blocks to Ractors, and where Lua wins |
 | [Dot Popper on an iPad](ios.md) | What the iOS app needs, how the game behaves there, and how to check a run in the Simulator |
 | [Publishing Dot Popper](publishing.md) | What each store needs, from Google Play to Homebrew, and how the game's licenses stand |
+| [privacy.json](privacy.json) | Generated: what the game keeps, sends and asks for, and the stores' privacy labels (`bundle exec rake privacy`) |
 | [Playtests](playtests/) | What each playtest on a real device found, and what it led to |
 | [Inspiration](../INSIPIRATION.md) | Optional reading for the game's look and feel: summaries of books on interaction design, visual design, game design, and writing |
 | [Lota's README](https://github.com/setdef/Lota) | Lota's API, and how a LÖVE call becomes a Ruby one |

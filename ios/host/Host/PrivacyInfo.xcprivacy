@@ -7,13 +7,13 @@
   (doc/ios.md). It is in the host's Host folder, which project.yml takes
   as the target's sources, so Xcode bundles it at the app's top level.
   The game tracks no one. It sends data only once a Pro player creates or
-  joins a friend group, plus a themes check (doc/publishing.md has the
-  facts). Gameplay Content (scores, and the group's join code and seat) and
+  joins a friend group, plus a themes check (doc/privacy.json has the
+  facts, and test/privacy checks this file against them). Gameplay Content (scores, and the group's join code and seat) and
   User ID (the server's anonymous token) are Linked, because the server keeps
   the scores under the token; OtherUsageData (the first-play date the themes
   check sends, with no token) is not. All three are for App Functionality
   only. IP addresses are in the server's logs but are not a category here
-  (doc/publishing.md). The APIs with required
+  (doc/privacy.json). The APIs with required
   reasons below (FileTimestamp C617.1, SystemBootTime 35F9.1) are the two
   that Lota's audit of what the iOS app links (LÖVE, SDL, the prebuilt
   libraries, Lota's host, Fledge's runtime) found, and the two that

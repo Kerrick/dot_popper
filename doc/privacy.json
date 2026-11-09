@@ -1,0 +1,371 @@
+{
+  "game": "Dot Popper",
+  "game_version": "0.9.9",
+  "on_device": {
+    "files": [
+      {
+        "name": "score_record.txt",
+        "holds": "your best score for each dot size",
+        "made_by": "the game"
+      },
+      {
+        "name": "stats.txt",
+        "holds": "your statistics: totals, chart bars and goal streak",
+        "made_by": "the game"
+      },
+      {
+        "name": "achievements.txt",
+        "holds": "your achievements and the day each was earned",
+        "made_by": "the game"
+      },
+      {
+        "name": "entitlement.txt",
+        "holds": "whether Pro was bought",
+        "made_by": "the game"
+      },
+      {
+        "name": "themes.txt",
+        "holds": "your themes and which is chosen",
+        "made_by": "the game"
+      },
+      {
+        "name": "games.txt",
+        "holds": "how many free games are left and used today",
+        "made_by": "the game"
+      },
+      {
+        "name": "games.csv",
+        "holds": "a history of your games: when, score, and how each went",
+        "made_by": "the game"
+      },
+      {
+        "name": "dot_size.txt",
+        "holds": "your choice of dot size",
+        "made_by": "the game"
+      },
+      {
+        "name": "sound.txt",
+        "holds": "your sound setting",
+        "made_by": "the game"
+      },
+      {
+        "name": "taught.txt",
+        "holds": "what the game has already shown you",
+        "made_by": "the game"
+      },
+      {
+        "name": "tutorial.txt",
+        "holds": "whether you have played the tutorial",
+        "made_by": "the game"
+      },
+      {
+        "name": "group.txt",
+        "holds": "your anonymous group token, an unsent score, whether you were in a group, and the newest title change you were shown of each",
+        "made_by": "the game"
+      },
+      {
+        "name": "cleared.txt",
+        "holds": "the names of the backups made by the last clearing of your records",
+        "made_by": "the game"
+      },
+      {
+        "name": "vulkan_failed.txt",
+        "holds": "that the Vulkan renderer failed on this device, and when",
+        "made_by": "the game"
+      },
+      {
+        "name": "fake_store.txt",
+        "holds": "a pretend purchase, in test builds only",
+        "made_by": "the game"
+      },
+      {
+        "name": "store_answer.txt",
+        "holds": "what the store last answered about Pro",
+        "made_by": "the iOS or Android host, read by the game"
+      },
+      {
+        "name": "<record>-YYYYMMDD-HHMMSS.txt",
+        "holds": "a backup of your records from when you cleared them",
+        "made_by": "the game"
+      },
+      {
+        "name": "games-YYYYMMDD-HHMMSS.csv",
+        "holds": "an older game history, kept whole when its columns changed",
+        "made_by": "the game"
+      },
+      {
+        "name": "shot-<number>.png",
+        "holds": "a screenshot",
+        "made_by": "the game, only under the developer setting DOT_POPPER_SHOTS"
+      }
+    ],
+    "stays_on_the_device": "Everything in these files stays on the device, until the game is uninstalled or the player removes it."
+  },
+  "network": {
+    "server": "https://server.dot-popper.setdef.com",
+    "every_request": "Sent to this server over HTTPS, and shows the server the device's IP address.",
+    "ip_addresses": "The server's proxy and request log see the IP address of every request, and its rate-limit notes can hold it. The game neither reads nor sends it as data, and it is not used to work out a location. How long each is kept is stated by the server's own privacy policy.",
+    "outside_services": "The game has no analytics, crash-reporting, advertising or attribution services.",
+    "requests": [
+      {
+        "kind": "player",
+        "method": "POST",
+        "path": "/player",
+        "query": {},
+        "body": {},
+        "sends_token": false,
+        "when": "The first time this device creates or joins a group: the game asks the server for an anonymous token.",
+        "in_this_build": true
+      },
+      {
+        "kind": "groups",
+        "method": "GET",
+        "path": "/groups",
+        "query": {},
+        "body": {},
+        "sends_token": true,
+        "when": "At launch and when the groups' screen opens, once this device has a token.",
+        "in_this_build": true
+      },
+      {
+        "kind": "create",
+        "method": "POST",
+        "path": "/groups",
+        "query": {},
+        "body": {},
+        "sends_token": true,
+        "when": "When the player creates a group.",
+        "in_this_build": true
+      },
+      {
+        "kind": "join",
+        "method": "POST",
+        "path": "/memberships",
+        "query": {},
+        "body": {
+          "join_code": "the code of the group to join, which the player taps in"
+        },
+        "sends_token": true,
+        "when": "When the player joins a group with a code.",
+        "in_this_build": true
+      },
+      {
+        "kind": "group",
+        "method": "GET",
+        "path": "/groups/:id",
+        "query": {},
+        "body": {},
+        "sends_token": true,
+        "when": "When the player opens a group.",
+        "in_this_build": true
+      },
+      {
+        "kind": "changes",
+        "method": "GET",
+        "path": "/groups/:id/title_changes",
+        "query": {},
+        "body": {},
+        "sends_token": true,
+        "when": "When the player opens a group, and whenever a group's title looks different from when it was last read.",
+        "in_this_build": true
+      },
+      {
+        "kind": "left",
+        "method": "DELETE",
+        "path": "/groups/:id/membership",
+        "query": {},
+        "body": {},
+        "sends_token": true,
+        "when": "When the player holds Leave on a group.",
+        "in_this_build": true
+      },
+      {
+        "kind": "deleted",
+        "method": "DELETE",
+        "path": "/player",
+        "query": {},
+        "body": {},
+        "sends_token": true,
+        "when": "When the player holds the delete control (see deletion).",
+        "in_this_build": true
+      },
+      {
+        "kind": "cabinet",
+        "method": "POST",
+        "path": "/games",
+        "query": {},
+        "body": {
+          "score": "the score of a game that counts: played by a group member, with dots sized to the screen, not the tutorial's"
+        },
+        "sends_token": true,
+        "when": "After a game that counts, or at the next contact if it could not be sent then, while the player is in a group.",
+        "in_this_build": true
+      },
+      {
+        "kind": "themes",
+        "method": "GET",
+        "path": "/themes",
+        "query": {
+          "started_on": "the date this device first played"
+        },
+        "body": {},
+        "sends_token": false,
+        "when": "When the game is online, to learn which themes are available; for every player, Free too, with no token.",
+        "in_this_build": false
+      }
+    ]
+  },
+  "sdks": {
+    "ruby_gems": {
+      "lota": "the game engine: draws, plays sound, reads input"
+    },
+    "android_dependencies": {
+      "files('libs/FledgeRuby.aar')": "runs the game's Ruby",
+      "com.android.billingclient:billing:9.1.0": "Google Play Billing, to buy Pro"
+    },
+    "ios": "None beyond Apple's frameworks, StoreKit among them.",
+    "outside_services": "The game has no analytics, crash-reporting, advertising or attribution services."
+  },
+  "permissions": {
+    "android_manifest": {
+      "android.permission.INTERNET": "to reach the friend-group and themes server",
+      "android.permission.VIBRATE": "for haptic feedback"
+    },
+    "android_added_by_libraries": {
+      "com.android.vending.BILLING": "added by Play Billing, to buy Pro"
+    },
+    "ios_usage_strings": {},
+    "ios_privacy_manifest": {
+      "tracking": false,
+      "tracking_domains": [],
+      "apis": {
+        "NSPrivacyAccessedAPICategoryFileTimestamp": [
+          "C617.1"
+        ],
+        "NSPrivacyAccessedAPICategorySystemBootTime": [
+          "35F9.1"
+        ]
+      }
+    }
+  },
+  "sensors": {
+    "accelerometer": "The accelerometer is read only while the game-over pile is on screen, to tilt the dots. It is neither stored nor sent."
+  },
+  "sharing": {
+    "how": "Only when the player chooses \"Share my score\". On a phone the text goes to the system's own share sheet, and elsewhere to a preview with a copy button. The game does not send it anywhere itself.",
+    "example": "Dot Popper: 25 points, a new record!\n🟡 27 dots · ⚫ 1 mistake · ⏱ 38 seconds"
+  },
+  "deletion": {
+    "screen": "Friend groups",
+    "control": "Delete my data",
+    "gesture": "press and hold for 2 seconds",
+    "prompt": "Hold to delete your scores from the server.",
+    "sentence": "On the game's \"Friend groups\" screen, press and hold \"Delete my data\".",
+    "shown": "once this device has a token",
+    "request": "DELETE /player"
+  },
+  "store_labels": {
+    "apple": {
+      "tracking": false,
+      "data_types": [
+        {
+          "type": "NSPrivacyCollectedDataTypeGameplayContent",
+          "name": "Gameplay Content",
+          "linked": true,
+          "why": "the server keeps scores under the player's token",
+          "purposes": [
+            "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+          ],
+          "sent_by": [
+            "join",
+            "cabinet"
+          ]
+        },
+        {
+          "type": "NSPrivacyCollectedDataTypeUserID",
+          "name": "User ID",
+          "linked": true,
+          "why": "it is the identifier the scores are linked by",
+          "purposes": [
+            "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+          ],
+          "sent_by": [
+            "groups",
+            "create",
+            "join",
+            "group",
+            "changes",
+            "left",
+            "deleted",
+            "cabinet"
+          ]
+        },
+        {
+          "type": "NSPrivacyCollectedDataTypeOtherUsageData",
+          "name": "Other Usage Data",
+          "linked": false,
+          "why": "no token is sent with it",
+          "purposes": [
+            "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+          ],
+          "sent_by": [
+            "themes"
+          ]
+        }
+      ],
+      "ip_addresses": "The server's proxy and request log see the IP address of every request, and its rate-limit notes can hold it. The game neither reads nor sends it as data, and it is not used to work out a location. How long each is kept is stated by the server's own privacy policy. Apple's list has no IP-address category, so it is not among the data types; if the maintainer or Apple's review reads \"Device ID\" as covering it, add that, linked and for App Functionality."
+    },
+    "google": {
+      "collects_data": true,
+      "shares_with_other_parties": false,
+      "encrypted_in_transit": true,
+      "users_can_request_deletion": true,
+      "data_types": [
+        {
+          "category": "App activity > Other actions",
+          "optional": true,
+          "purpose": "App functionality",
+          "shared": false,
+          "sent_by": [
+            "join",
+            "cabinet"
+          ]
+        },
+        {
+          "category": "Personal info > User IDs",
+          "optional": true,
+          "purpose": "App functionality",
+          "shared": false,
+          "sent_by": [
+            "groups",
+            "create",
+            "join",
+            "group",
+            "changes",
+            "left",
+            "deleted",
+            "cabinet"
+          ]
+        },
+        {
+          "category": "App activity > App interactions",
+          "optional": false,
+          "purpose": "App functionality",
+          "shared": false,
+          "sent_by": [
+            "themes"
+          ]
+        }
+      ],
+      "ip_addresses": "The server's proxy and request log see the IP address of every request, and its rate-limit notes can hold it. The game neither reads nor sends it as data, and it is not used to work out a location. How long each is kept is stated by the server's own privacy policy. The maintainer decides whether to list it under Device or other IDs."
+    }
+  },
+  "declared_but_not_enforced": [
+    "What Apple and Google do with a purchase: it goes straight from the device to their store, in the iOS and Android hosts, and this game's server never sees it.",
+    "How the iOS and Android hosts, and the operating system's share sheet, behave beyond what their source shows: no test here runs them.",
+    "What Lota, LÖVE, SDL and Fledge's runtime do inside the app: audited by hand for their required-reason APIs, not by a test.",
+    "Permissions a library's own manifest adds when Android merges it in: ANDROID_MERGED records what billing 9.1.0's manifest says, and its transitive libraries are unchecked. Read the merged manifest of a release build.",
+    "What the server does with what it receives: its own privacy policy states that, and this repository cannot check it.",
+    "That a store's label definitions still fit these answers: Apple and Google change them, so re-read them when entering."
+  ]
+}
