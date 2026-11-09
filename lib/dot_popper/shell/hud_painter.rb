@@ -40,7 +40,8 @@ module DotPopper
         cell = cell([hud.score_readout, hud.time_readout], number, label)
         rect = bounds(hud, layout)
         y = number_middle(rect.y + (padding(number) * 0.55), number, label)
-        { score: [rect.x + (cell * 0.5), y], time: [rect.x + (cell * 1.5), y] }
+        { score: [rect.x + (cell * 0.5), y], time: [rect.x + (cell * 1.5), y],
+          streak: [rect.center_x, streak_top(rect)] }
       end
 
       # Makes every size a bump or an urgent pulse passes through, an
@@ -63,13 +64,16 @@ module DotPopper
         radius = pill.height * Presentation::Hud::PIP
         step = radius * Presentation::Hud::PIP_STEP
         left = pill.center_x - (step * (readout.size - 1) / 2.0)
-        top = pill.bottom + (radius * 1.7)
+        top = streak_top(pill)
         readout.size.times do |i|
           grown = readout.bumping?(i) ? radius * readout.scale : radius
           dots.icon(pixels.snap(left + (step * i)), pixels.snap(top), grown, fresh: readout.lit?(i),
                                                                        bonus: readout.ready, opacity: 0.95)
         end
       end
+
+      # The middle of the streak's row of dots, hung under the +pill+.
+      def streak_top(pill) = pill.bottom + (pill.height * Presentation::Hud::PIP * 1.7)
 
       def fonts(layout)
         type = pen.look::TYPE

@@ -26,7 +26,7 @@ module DotPopper
     # The score and the time left as the player last saw them, and when
     # each last changed, so a number can bump and the clock can tick. The
     # streak (+streak+ pops in a row of +size+ that earn a bonus dot, or
-    # nil in the tutorial and where there is no bonus) works the same way,
+    # nil before the tutorial's streak beat and where there is no bonus) works the same way,
     # and +ready+ says a bonus dot is on the field.
     class Hud < Data.define(:look, :words, :score, :seconds, :streak, :size, :ready, :score_changed, :seconds_changed,
                             :streak_changed, :now)
@@ -68,6 +68,12 @@ module DotPopper
         return unless streak
 
         Streak.new(lit: streak, size:, ready:, scale: look.bump.at(now - streak_changed))
+      end
+
+      # The HUD showing +lit+ of a streak of +size+, the row all mint when
+      # +ready+, as the Tutorial's rehearsal sets it; a dot newly lit bumps.
+      def counting(lit, size, ready, now)
+        with(streak: lit, size:, ready:, streak_changed: streak && lit > streak ? now : streak_changed)
       end
 
       # The HUD showing +score+ and +seconds+ at time +now+, as the Tutorial

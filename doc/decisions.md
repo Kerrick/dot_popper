@@ -1383,3 +1383,18 @@ The maintainer's decision: joining a group needs the paid version, as creating o
 **To try it:** `DOT_POPPER_FAKE_STORE=1 DOT_POPPER_PAID=0 DOT_POPPER_FREE_PLAYS=0` starts a fresh save with no plays; `DOT_POPPER_TODAY` moves the day. `test/gui/scenarios/plays_gallery.rb` keeps the screens.
 
 **To change it:** the numbers are `FreePlays::BANK` and `FreePlays::DAILY` (then update README.md and doc/publishing.md, which state them). To meter desktops too, count when `Storefront#offered?` is false as well, in `Shell::App#free_plays`, once a channel sells. To remove the limit, build `Show` with `FreePlays.unlimited` (its default) and hide `Look::WORDS.offer[:includes]`'s first line.
+## The tutorial teaches the streak and the star dot, by a short rehearsal
+
+*Changes "The bonus dot is built", which chose not to teach it: the maintainer found players never learn what the row across the top means.*
+
+After the second pop, a fifth beat of about five seconds. The row of eight arrives under the HUD with the label "8 in a row" and lights its first five by itself. The player pops three dots, each "+1" flying into the row and lighting the next. The full row turns mint and carries the star, the star dot arrives in its ripple and chime, the guide shows the tap, and popping it plays the real burst and floats "+4" and "+4s". The rehearsal's dots then shrink away and the old handover goes on. How to Play is the same `Tutorial`, so it shows this too; skipping works throughout, and a skip starts a clean round.
+
+**Why, by the books.** Koster and Ferrara: a pattern is learned by trying it, so the player's own taps light the row. Salen and Zimmerman's meaningful play: the result must be discernible and tied to the action, so each pop's "+1" flies into the pip it lights (Gestalt common fate, Johnson; feedback from the thing acted on, Swink). Hodent: teach gradually and spare attention, so it comes only after popping and the cost are learned, the spotlight holds one thing at a time, and a practice pop shows no score or time numbers. Johnson, an icon plus a short label: the row and the digit carry it, "8 in a row" helps, and the label goes once the star is out. Pinker's classic style and Podmajersky: show it, and say only what is happening.
+
+**Three pops, not eight.** Eight taps would make a beat as long as a lesson's half (Schreier on scope; Hodent on overload), and three show the pattern. The row stays eight long, because that is the rule, and its first five light by themselves. `StreakLook#practice` sets the split.
+
+**It touches nothing that counts.** The reward floats from the dot, as in play, and never enters the HUD. Numbers that flew in and were then taken away would read as a loss (Engelstein). The score and time carried into the round are the ones from the two earlier pops. A popped dot tapped here only shudders. The rehearsal's dots have negative ids and are gone before `Game#resume`, so the round starts with the same three dots and a streak of none, and no round is started or counted by it.
+
+**Small departures.** The second pop now takes its popped look when this beat opens, while time is still stopped, so nothing bright is left that can't be tapped. A wrong tap's emptying the row is not taught, to keep the beat to one idea.
+
+**To reverse:** in `Tutorial#pop_next`, cue `hand_over` instead of `show_the_streak`, and put `settle(NEXT)` back at the top of `hand_over`. Playtest whether five seconds feels short, and whether players read the first five lit dots as theirs.

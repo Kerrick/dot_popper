@@ -26,6 +26,9 @@ module DotPopperGui
       tap_the_bright_dot
       points_and_time
       wait_for_the_bright_dot
+      wait_for("the last pop's numbers", within: 120) { shown == [1, 8] }
+      check_equal([true, false], tutorial.dots.map(&:popped?), "it bursts still bright as its numbers land")
+      the_streak
       now_it_runs
       check_equal("seen", File.read(saved("tutorial.txt")).strip, "tutorial.txt remembers it was seen")
       run_out_the_clock
@@ -139,12 +142,44 @@ module DotPopperGui
       check(tutorial.beat == :warn || tutorial.beat == :slide, "the beat goes on")
     end
 
+    # The streak beat, on dots of its own: the row fills as the player
+    # pops, the star dot comes, its reward shows, and nothing of it reaches
+    # the numbers the round goes on with.
+    def the_streak
+      wait_for("the streak's row", within: 300) { tutorial.beat == :practice }
+      keep_screenshot(name("5-row"))
+      before = tutorial.hud.streak
+      T::PRACTICE.downto(T::PRACTICE - 1).each do |id|
+        target = dot(id)
+        how.call(target.x, target.y)
+        wait(look.flight + 0.05)
+      end
+      check_equal(before + 2, tutorial.hud.streak, "the row fills as the player pops")
+      keep_screenshot(name("5-fills"))
+      last = dot(T::PRACTICE - 2)
+      how.call(last.x, last.y)
+      wait_for("the star dot", within: 300) { tutorial.beat == :bonus }
+      check(tutorial.hud.ready, "the full row turns to the star")
+      check(dot(T::BONUS).bonus?, "the star dot arrives")
+      wait(0.3)
+      keep_screenshot(name("5-star"))
+      kept = shown
+      star = dot(T::BONUS)
+      how.call(star.x, star.y)
+      check_equal(:reward, tutorial.beat, "popping the star dot shows its reward")
+      wait(0.25)
+      keep_screenshot(name("5-reward"))
+      check_equal(kept, shown, "the reward stays out of the score and time")
+      wait_for("the rehearsal to leave", within: 300) { tutorial.nil? || tutorial.beat == :ending }
+      check(tutorial.nil? || tutorial.dots.none? { it.id.negative? }, "its dots are put away")
+    end
+
+    def look = DotPopper::Presentation::Look::TUTORIAL.streak
+
     # The last pop spawns a bright dot under the two popped ones, and the
     # round goes on from there: the same dots, the point and the 8 seconds
     # the two wrong taps left, and only the clock starts.
     def now_it_runs
-      wait_for("the last pop's numbers", within: 120) { shown == [1, 8] }
-      check_equal([true, false], tutorial.dots.map(&:popped?), "it bursts still bright as its numbers land")
       wait_for("the light on the clock", within: 300) { tutorial.nil? || tutorial.beat == :ending }
       check_equal([true, true, false], (tutorial || round).dots.map(&:popped?),
                   "as time flows, its pop spawns a bright dot under them")

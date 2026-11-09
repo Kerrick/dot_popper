@@ -100,6 +100,21 @@ class ShowTutorialTest < Minitest::Test
     assert_in_delta DotPopper::Rules::STARTING_SECONDS, @game.round.countdown.remaining
   end
 
+  def test_its_streak_beat_can_be_skipped_and_leaves_nothing_behind
+    press_main
+    [Tutorial::BRIGHT, Tutorial::NEXT].each do |id|
+      update_for(0.1) until %i[aim aim_next].include?(@show.tutorial.beat) && !tapped?(id)
+      tap_dot(streak_dot(id))
+    end
+    update_for(0.05) until @show.tutorial.beat == :practice
+    tap_dot(streak_dot(Tutorial::PRACTICE))
+    @show.back
+
+    assert @show.playing?
+    assert_equal [0, 1, 0], [@game.round.score, @game.round.dots.size, @game.round.streak]
+    assert_in_delta DotPopper::Rules::STARTING_SECONDS, @game.round.countdown.remaining
+  end
+
   def test_escape_or_a_gamepads_b_skips_it
     press_main
 
@@ -221,8 +236,21 @@ class ShowTutorialTest < Minitest::Test
       @show.tap(dot.x, dot.y)
       slip(slips) if id == Tutorial::BRIGHT
     end
+    through_the_streak
     update_for(STEP) while @show.tutorial? if hand_over
   end
+
+  def through_the_streak
+    Look::TUTORIAL.streak.practice.times do |pop|
+      update_for(0.05) until @show.tutorial.beat == :practice && streak_dot(Tutorial::PRACTICE - pop)&.fresh?
+      tap_dot(streak_dot(Tutorial::PRACTICE - pop))
+    end
+    update_for(0.05) until @show.tutorial.beat == :bonus
+    tap_dot(streak_dot(Tutorial::BONUS))
+  end
+
+  def streak_dot(id) = @show.tutorial.dots.find { it.id == id }
+  def tap_dot(dot) = @show.tap(dot.x, dot.y)
 
   def tapped?(id) = @show.tutorial.dots.find { it.id == id }.popped?
 

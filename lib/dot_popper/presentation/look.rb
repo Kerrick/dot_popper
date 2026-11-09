@@ -240,7 +240,8 @@ module DotPopper
         spotlight: SpotlightLook.new(dim: 0.62, move: 0.35, feather: 0.9, dot: 1.5),
         ghost: GhostLook.new(loop: 1.6, glide: 0.5, fade: 0.25, rest: [0.75, 0.9].freeze, hover: [-0.2, -4.6].freeze,
                              wag: WagLook.new(cycles: 2, time: 0.8, angle: 0.21), settle: 0.25),
-        lead: LeadLook.new(dim: 0.6, halo: 1.3, fade: 0.4)
+        lead: LeadLook.new(dim: 0.6, halo: 1.3, fade: 0.4),
+        streak: StreakLook.new(practice: 3, arrive: 0.25, sweep: 0.07, flight: 0.3, ready: 0.3, reward: 1.1, leave: 0.25)
       )
       # A calm tutorial's guide (DOT_POPPER_CALM) wags gentler: half as
       # far, and slower.

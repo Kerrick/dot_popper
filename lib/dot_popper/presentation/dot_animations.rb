@@ -42,9 +42,11 @@ module DotPopper
     class DotAnimations
       # When one dot was born, popped, and tapped by mistake; nil for what
       # has not happened to it.
-      class Moments < Data.define(:born, :popped, :wobbled)
-        NONE = new(born: nil, popped: nil, wobbled: nil)
+      class Moments < Data.define(:born, :popped, :wobbled, :left)
+        NONE = new(born: nil, popped: nil, wobbled: nil, left: nil)
       end
+
+      LEAVING = 0.25 # seconds a dot sent away takes to shrink to nothing
 
       def initialize(motion)
         @motion = motion
@@ -54,6 +56,7 @@ module DotPopper
       def spawn(id, now) = note(id, born: now)
       def pop(id, now) = note(id, popped: now)
       def wobble(id, now) = note(id, wobbled: now)
+      def leave(id, now) = note(id, left: now)
 
       def clear = @records.clear
       def size = @records.size
@@ -68,11 +71,15 @@ module DotPopper
         scale_x = scale * stretch_x * (1 + wobble)
         scale_y = scale * stretch_y * (1 - wobble)
         scale_x, scale_y = [scale_x, 1.0].max, [scale_y, 1.0].max if dot.popped?
+        scale_x, scale_y = [scale_x, scale_y].map { it * remaining(found, now) }
         Pose.new(scale_x:, scale_y:, freshness: freshness(dot, found, now),
                  alarm: found.wobbled ? @motion.wobble.glow(now - found.wobbled) : 0.0)
       end
 
       private
+
+      # A dot sent away (the Tutorial's rehearsal dots) shrinks to nothing.
+      def remaining(found, now) = found.left ? (1 - ((now - found.left) / LEAVING)).clamp(0.0, 1.0) : 1.0
 
       def note(id, **moment) = @records[id] = @records.fetch(id, Moments::NONE).with(**moment)
 
