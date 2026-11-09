@@ -4,7 +4,8 @@ module DotPopper
   # How big a game's dots are, which the player chooses on the title.
   # With SIZED_TO_SCREEN, dots sized to the screen and the DEFAULT, each
   # game's radius is DotSize.fitted to its screen, so every screen has
-  # about the same room in radii, and games compare across devices.
+  # about the same room in radii. That narrows the difference between
+  # screens, but scores still differ with screen size and input.
   # STANDARD, the standard dot size, is the spec's fixed radius: DotSize's
   # on every screen, so a small screen crowds sooner and plays harder.
   # Either way the radius is set when a game starts and kept until it

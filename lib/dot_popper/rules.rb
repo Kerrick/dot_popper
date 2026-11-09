@@ -2,7 +2,7 @@
 
 module DotPopper
   # The numbers that make the game what it is. Every distance and speed is
-  # measured in radii, so the game plays the same on any screen once the
+  # measured in radii, so a screen's room is counted in radii once the
   # radius itself is known (see DotSize).
   module Rules
     # A dot's radius, in Lota's graphics units. With +t.highdpi+ on, those
@@ -75,7 +75,7 @@ module DotPopper
     # "Sized to your screen" (DotSizing), which the player may choose in
     # place of the fixed RADIUS: each game's radius is the one that makes
     # its field FITTED_AREA square radii, the 24 × 16 R desktop window's
-    # area, so every screen is as crowded as that one. It is never below
+    # area, so every screen is about as crowded as that one. It is never below
     # SMALLEST_FITTED_RADIUS, 30 units, a dot 60 points across, well over
     # Apple's 44-point smallest touch target; and never above
     # LARGEST_FITTED_SHARE of the screen's shorter side, so a dot on a long,

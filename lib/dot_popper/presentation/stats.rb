@@ -62,7 +62,7 @@ module DotPopper
         ])
         mine = stats.recent_classes.map { it == size_class }
         new(records:, totals:, goal:, scores: stats.recent, empty: stats.games.zero?,
-            notes: field ? words.screen_notes(field, sizing) : [], mine:,
+            notes: field ? [words.screen_here(field)] : [], mine:,
             chart_note: (words.chart_note(sizing) unless mine.all?), achievements: achievements_section(achievements))
       end
     end

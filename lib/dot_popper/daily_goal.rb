@@ -5,8 +5,8 @@ module DotPopper
   # names what it asks for, and +target+ how much. Each local date picks
   # one from LIST with a hash of the date that is the same on every
   # device and every run, so the day's goal never changes while the day
-  # lasts. Each player is judged only by their own play, so the goal is
-  # fair whatever the screen. The words for each are Presentation's.
+  # lasts. Each player is judged only by their own play, so the goal
+  # needs no comparison between screens. The words for each are Presentation's.
   class DailyGoal < Data.define(:kind, :target)
     # The goals, each a thing a single game can do. The targets were set
     # with the simulator's model player on the 24 × 16 R window (see

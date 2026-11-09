@@ -13,7 +13,7 @@ module DotPopper
     MEDIUM = new(name: "medium")
     LARGE = new(name: "large")
     # Every game with dots sized to the screen (DotSizing): its field is
-    # always about as crowded, whatever the screen, so they are one class.
+    # about as crowded on any screen, so they are one class.
     FITTED = new(name: "fitted")
     ALL = [SMALL, MEDIUM, LARGE, FITTED].freeze
 

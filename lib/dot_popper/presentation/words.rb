@@ -150,16 +150,6 @@ module DotPopper
          screen].compact.join("\n")
       end
 
-      # What the Stats screen says about the screen, given its +field+
-      # and the player's DotSizing: how big it is, counted in dots side by
-      # side, and, with the dots fitted to it, what that does.
-      #
-      #   This screen is about 12 dots wide and 8 dots tall.
-      #   Dots are sized to fit this screen, so scores compare across devices.
-      def screen_notes(field, sizing)
-        [screen_here(field), (screen_size.fetch(:fitted_here) if sizing.sized_to_screen?)].compact
-      end
-
       # "This screen is about 12 dots wide and 8 dots tall."
       def screen_here(field) = format(screen_size.fetch(:here), *Words.dots_across(field))
 
