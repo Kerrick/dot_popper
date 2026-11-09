@@ -2,7 +2,7 @@
 
 module DotPopper
   module Groups
-    # What this device knows about its friend group, and everything it
+    # What this device knows about its friend groups, and everything it
     # asks the server for. Called only from the game's own thread, and
     # asks for nothing while a round is in play (#update's +quiet+).
     #
@@ -10,38 +10,37 @@ module DotPopper
     # with no saved token makes no connection at all. +store+ answers
     # read and write, as a SaveFile does, and +clock+ gives the time.
     #
-    # What went wrong is read from the status (REFUSALS) and, for a 409 or
-    # a 422, from the body. The server calls a member's place in a group a
-    # seat, 1 to 8; the game draws it as a Mark, 0 to 7 (Mark.of_seat), and
-    # a member is known by nothing else. The group's own +seat+ is this
-    # player's. A 429 says how long to wait (Retry-After), and until then
-    # nothing is sent that it would refuse.
+    # Every failure is quiet: a job the player asked for leaves a reason in
+    # #error for a screen to show, and any other is forgotten until the next
+    # chance to ask. A title change is learned from the group's history, and
+    # only that, so a reply lost on the way still gets its announcement: the
+    # history is fetched whenever a group's title looks different from when
+    # it was last read, and the newest entry already shown is kept here for
+    # each group, so only what is new is announced.
     class Session
       # A request to make, and +then+ one to make after it succeeds.
-      class Job < Data.define(:kind, :verb, :path, :body, :then)
-        def initialize(kind:, verb:, path:, body: nil, then: nil) = super
+      # +group_id+ is the group it is about, and +loud+ that the player is
+      # waiting to hear how it went.
+      class Job < Data.define(:kind, :verb, :path, :body, :then, :group_id, :loud)
+        def initialize(kind:, verb:, path:, body: nil, then: nil, group_id: nil, loud: false) = super
       end
 
-      # One member of the group, by the Mark they wear, and whether it is
-      # this player.
-      Member = Data.define(:mark, :you)
+      # What this device remembers of a group's title: the newest change it
+      # has shown, and how the group looked when it read the history.
+      Seen = Data.define(:last, :fingerprint)
 
       # The highest score the server takes.
       HIGHEST_SCORE = 100_000
-      SECONDS_A_DAY = 86_400
-      # How long a round played offline may wait to be reported, in days.
-      PENDING_DAYS = 2
-      # What a status means, by the kind of job it answers. :forget means
-      # the player is in no group; :drop means the server will never take
-      # the round waiting.
+      # What a status means, by the kind of job it answers.
       REFUSALS = {
         player: { 429 => :too_many_tries },
-        group: { 422 => :bad_mark, 429 => :too_many_tries },
-        joined: { 400 => :no_such_group, 404 => :no_such_group, 422 => :no_such_group, 429 => :too_many_tries },
-        round: { 400 => :drop, 404 => :forget, 422 => :drop }
+        create: { 429 => :too_many_tries },
+        join: { 400 => :no_such_group, 404 => :no_such_group, 422 => :no_such_group, 429 => :too_many_tries }
       }.freeze
       # What a 409's "error" means.
-      CONFLICTS = { "group_full" => :group_full, "already_in_group" => :already_in_group }.freeze
+      CONFLICTS = { "group_full" => :group_full, "already_member" => :already_member, "group_limit" => :group_limit }.freeze
+      # The answers to a game that mean the server will never take it.
+      NEVER_TAKEN = [400, 404, 422].freeze
       # The longest a Retry-After is believed, in seconds, and how long to
       # wait when a 429 names no time.
       LONGEST_WAIT = 3_600
@@ -58,7 +57,7 @@ module DotPopper
       # The Session for a game whose server is at +url+, or Session.off.
       def self.at(url, store:) = url ? new(store:, worker: Worker.new(Link.new(url))) : off
 
-      attr_reader :group, :error, :token, :mark
+      attr_reader :groups, :error, :token, :game_result
 
       def initialize(store:, worker:, clock: -> { Time.now }, available: true)
         @store = store
@@ -67,52 +66,76 @@ module DotPopper
         @available = available
         @waiting = []
         @running = 0
-        @messages = []
-        @group = nil
+        @groups = []
+        @changes = {}
+        @fetching = []
+        @announcements = []
         @error = nil
+        @sending = false
+        @arrival = nil
+        @game_result = nil
+        @result_due = false
         load_saved
       end
 
       def available? = @available
-      def member? = !@group.nil?
       def known? = !@token.nil?
       def busy? = @running.positive?
-      # The members, each a Member, in seat order.
-      def members = @group ? @group["member_seats"].sort.map { Member.new(mark: Mark.of_seat(it), you: it == @group["seat"]) } : []
-      def join_code = @group&.fetch("join_code")
-      def score_to_beat = @group&.fetch("score_to_beat")
-      # The Mark of the member holding the trophy, or nil if it is vacant.
-      def holder_mark = @group&.fetch("holder_seat")&.then { Mark.of_seat(it) }
+      # Whether this player belongs to any group, as far as is known: after
+      # a launch with no network the groups are unknown, but their games
+      # still count.
+      def member? = !@groups.empty? || @was_member
+      def group(id) = @groups.find { it.id == id }
+      # A group's title changes, newest first, or nil before they are read.
+      def title_changes(id) = @changes[id]
+      # Whether a counting game has ended and its result is still awaited.
+      def result_due? = @result_due
 
-      # Looks up the group, at launch and when its screen opens. Without
-      # a token there is nothing to look up and nothing is sent.
-      def refresh = known? ? ask(Job.new(kind: :group, verb: :get, path: "/group")) : nil
+      # Looks up the groups, at launch and when the groups' screen opens.
+      # Without a token there is nothing to look up and nothing is sent.
+      def refresh
+        return unless known?
 
-      # Makes a group, or joins the one with +code+ (digits), wearing +mark+
-      # (Groups::Mark) if no one there does, else the lowest that is free.
-      # Only the game decides whether a player may create or join
-      # (Entitlement); the server has no say in it.
-      def create(mark) = as_player(Job.new(kind: :group, verb: :post, path: "/group", body: { seat: Mark.seat(mark) }))
-      def join(mark, code) = as_player(Job.new(kind: :joined, verb: :post, path: "/membership", body: { join_code: code, seat: Mark.seat(mark) }))
-      def leave = ask(Job.new(kind: :left, verb: :delete, path: "/membership"))
-      def delete_everything = ask(Job.new(kind: :deleted, verb: :delete, path: "/player"))
+        @error = nil if @groups.empty?
+        ask(Job.new(kind: :groups, verb: :get, path: "/groups", loud: @groups.empty?))
+      end
 
-      # A round just ended. The server cannot tell how a score was won, so
-      # only a round that counts is sent: one played by a member, with dots
+      def create = as_player(Job.new(kind: :create, verb: :post, path: "/groups", loud: true))
+      def join(code) = as_player(Job.new(kind: :join, verb: :post, path: "/memberships", body: { join_code: code }, loud: true))
+
+      def look_at(id)
+        ask(Job.new(kind: :group, verb: :get, path: "/groups/#{id}", group_id: id))
+        fetch_changes(id)
+      end
+
+      def leave(id) = ask(Job.new(kind: :left, verb: :delete, path: "/groups/#{id}/membership", group_id: id, loud: true))
+      def delete_everything = ask(Job.new(kind: :deleted, verb: :delete, path: "/player", loud: true))
+
+      # A game just ended. The server cannot tell how a score was won, so
+      # only a game that counts is sent: one played by a member, with dots
       # sized to the screen, and not the tutorial's (+sized_to_screen+ is
-      # false for the others). If it cannot be sent now, the best such
-      # round waits and is sent with the next contact.
+      # false for the others). If it cannot be sent now, the best such game
+      # waits and is sent with the next contact.
       def round_finished(score:, sized_to_screen:)
-        return unless belongs? && sized_to_screen == true && score.positive?
+        @game_result = nil
+        @result_due = false
+        return unless member? && sized_to_screen == true && score.positive?
 
-        @pending = [score.clamp(0, HIGHEST_SCORE), @pending.to_i].max
-        @pending_day = today
+        @last_score = score.clamp(0, HIGHEST_SCORE)
+        @pending = [@last_score, @pending.to_i].max
+        @result_due = @pending == @last_score
         save
         send_pending
       end
 
-      # Moves on: hears what the server said, and unless a round is in
-      # play (+quiet+ false), hands over what is waiting.
+      # A round began, so the last game's result is old news.
+      def round_started
+        @game_result = nil
+        @result_due = false
+      end
+
+      # Moves on: hears what the server said, and unless a round is in play
+      # (+quiet+ false), hands over what is waiting.
       def update(quiet:)
         @worker.finished.each { |job, reply| settle(job, reply) }
         return unless quiet
@@ -120,18 +143,17 @@ module DotPopper
         @worker.start(@waiting.shift, @token) until @waiting.empty?
       end
 
-      # The next thing to tell the player, once, or nil.
-      def next_message
-        message = @messages.shift or return
-        tell_server(message.id) if message.id
-        message
+      # The next title change to tell the player, once, or nil.
+      def next_announcement = @announcements.shift
+
+      # The group just created or joined, once, for a screen to open.
+      def take_arrival
+        arrival = @arrival
+        @arrival = nil
+        arrival
       end
 
       private
-
-      # Whether this player is in a group, as far as is known: after a
-      # launch with no network the group is unknown, but its rounds count.
-      def belongs? = member? || @was_member
 
       def ask(job)
         @running += 1
@@ -146,24 +168,22 @@ module DotPopper
         @error = nil
         return @error = :too_many_tries if waiting_out?
 
-        known? ? ask(job) : ask(Job.new(kind: :player, verb: :post, path: "/player", body: nil, then: job))
+        known? ? ask(job) : ask(Job.new(kind: :player, verb: :post, path: "/player", then: job, loud: true))
       end
 
       def send_pending
-        return unless @pending && belongs?
+        return unless @pending && member? && !@sending && !waiting_out?
 
-        ask(Job.new(kind: :round, verb: :post, path: "/group/rounds", body: { score: @pending }))
+        @sending = true
+        ask(Job.new(kind: :game, verb: :post, path: "/games", body: { score: @pending }))
       end
 
-      # The theft is told: the server is asked to forget it, and until it
-      # has, this device does not tell it again.
-      def tell_server(id)
-        @told << id
-        save
-        delete_news(id)
-      end
+      def fetch_changes(id)
+        return if @fetching.include?(id)
 
-      def delete_news(id) = ask(Job.new(kind: :told, verb: :delete, path: "/group/thefts/#{id}"))
+        @fetching << id
+        ask(Job.new(kind: :changes, verb: :get, path: "/groups/#{id}/title_changes", group_id: id))
+      end
 
       def waiting_out? = @wait_until && @clock.call.to_i < @wait_until
 
@@ -173,173 +193,203 @@ module DotPopper
 
       def settle(job, reply)
         @running -= 1
-        return @error = :offline if reply.offline?
+        @sending = false if job.kind == :game
+        @fetching.delete(job.group_id) if job.kind == :changes
+        return @error = :offline if reply.offline? && job.loud
+        return if reply.offline?
         return forget_identity if reply.status == 401
-        return refused(job, reply) unless reply.ok?
 
-        @error = nil
+        reply.ok? ? settled(job, reply) : refused(job, reply)
+      end
+
+      def settled(job, reply)
+        @error = nil if job.loud
         apply(job, reply)
         ask(job.then) if job.then
       end
 
       def refused(job, reply)
-        status = reply.status
-        wait_out(reply.retry_after) if status == 429
-        case job.kind
-        when :told then nil
-        when :left, :thefts then look_at(nil) if status == 404
-        when :group
-          status == 404 ? look_at(nil) : conflict_or(job, reply)
-        else conflict_or(job, reply)
-        end
+        wait_out(reply.retry_after) if reply.status == 429
+        return give_up_pending if job.kind == :game && NEVER_TAKEN.include?(reply.status)
+        return gone(job.group_id) if reply.status == 404 && %i[group changes left].include?(job.kind)
+        return forget_identity if reply.status == 404 && job.kind == :deleted
+
+        @error = reason(job, reply) if job.loud
       end
 
-      # A 409 says which in its body; a 422 on a seat is a bad mark; and
-      # the rest are read from the status. A player who is in a group
-      # already is shown it.
-      def conflict_or(job, reply)
-        status = reply.status
-        body = reply.body.is_a?(Hash) ? reply.body : {}
-        reason = if status == 409 then CONFLICTS.fetch(body["error"], :failed)
-                 elsif status == 422 && job.kind == :joined && body.dig("errors", "seat") then :bad_mark
-                 else REFUSALS.dig(job.kind, status)
-                 end
-        case reason
-        when :forget then left_meanwhile
-        when :drop then give_up_pending
-        when nil then @error = :failed
-        else
-          @error = reason
-          refresh if reason == :already_in_group
-        end
+      def reason(job, reply)
+        return REFUSALS.dig(job.kind, reply.status) || :failed unless reply.status == 409
+
+        CONFLICTS.fetch(reply.body.is_a?(Hash) ? reply.body["error"] : nil, :failed)
       end
 
       def apply(job, reply)
         case job.kind
         when :player then adopt(reply.body)
-        when :group, :joined then look_at(reply.body)
-        when :thefts then tell_of(reply.body)
-        when :left then look_at(nil)
+        when :groups then read_groups(reply.body)
+        when :create, :join then arrived(reply.body, job)
+        when :group then read_group(reply.body)
+        when :changes then read_changes(job.group_id, reply.body)
+        when :left then gone(job.group_id)
         when :deleted then forget_identity
-        when :round then finish_round(reply.body)
+        when :game then finish_game(job.body[:score], reply.body)
         end
       end
 
       def adopt(body)
-        @token = body["token"]
+        token = body["token"] if body.is_a?(Hash)
+        return @error = :failed unless token.is_a?(String) && !token.empty?
+
+        @token = token
         save
       end
 
-      def look_at(group)
-        return @error = :failed unless group.nil? || group?(group)
+      def read_groups(body)
+        return unless body.is_a?(Array)
 
-        @group = group
-        remember_membership(!group.nil?)
-        return unless group
-
-        remember_mark(Mark.of_seat(group["seat"]))
-        ask(Job.new(kind: :thefts, verb: :get, path: "/group/thefts"))
-        drop_stale_pending
+        @groups = body.filter_map { Group.parse(it) }
+        @seen.select! { |id, _| group(id) }
+        remember_membership
+        @groups.each { follow(it) }
         send_pending
       end
 
-      # Whether +group+ is a group as the server describes one.
-      def group?(group)
-        group.is_a?(Hash) && Mark.seat?(group["seat"]) && group["member_seats"].is_a?(Array) &&
-          group["member_seats"].all? { Mark.seat?(it) } && group["join_code"].is_a?(String) &&
-          group["score_to_beat"].is_a?(Integer) && (group["holder_seat"].nil? || Mark.seat?(group["holder_seat"]))
+      def read_group(body) = Group.parse(body)&.then { upsert(it) }
+
+      def arrived(body, job)
+        group = Group.parse(body)
+        return @error = :failed if group.nil? && job.loud
+        return unless group
+
+        upsert(group)
+        @arrival = group.id
       end
 
-      # Queues a Message for each theft not yet told, and asks the server
-      # again to forget those already told that it still keeps. The
-      # server keeps a theft until told it was acknowledged.
-      def tell_of(news)
-        return unless news.is_a?(Array)
+      def upsert(group)
+        index = @groups.index { it.id == group.id }
+        index ? @groups[index] = group : @groups << group
+        remember_membership
+        follow(group)
+        send_pending
+      end
 
-        news = news.select { it.is_a?(Hash) && it["id"].is_a?(Integer) && Mark.seat?(it["thief_seat"]) }
-        news.each do |item|
-          if @told.include?(item["id"])
-            delete_news(item["id"])
-          elsif @messages.none? { it.id == item["id"] }
-            @messages << Message.stolen(Mark.of_seat(item["thief_seat"]), item["score"], item["id"])
-          end
-        end
-        kept = @told & news.map { it["id"] }
-        return if kept == @told
-
-        @told = kept
+      def gone(id)
+        @groups.reject! { it.id == id }
+        @changes.delete(id)
+        @seen.delete(id)
+        remember_membership
         save
       end
 
-      def remember_mark(mark)
-        return if @mark == mark
+      # Reads a group's history if its title has moved since it last was.
+      def follow(group)
+        fetch_changes(group.id) unless @seen[group.id]&.fingerprint == group.fingerprint
+      end
 
-        @mark = mark
+      def read_changes(id, body)
+        return unless body.is_a?(Array) && (known_group = group(id))
+
+        changes = body.filter_map { TitleChange.parse(it) }.sort_by { -it.id }
+        @changes[id] = changes
+        announce(known_group, changes)
+        @seen[id] = Seen.new(last: [@seen[id]&.last.to_i, changes.first&.id.to_i].max, fingerprint: known_group.fingerprint)
         save
       end
 
-      def remember_membership(member)
-        return if @was_member == member
+      # Tells the player of the newest change they have not been told of. A
+      # group met for the first time has nothing new: what happened before
+      # is its history.
+      def announce(group, changes)
+        seen = @seen[group.id] or return
+        newest = changes.first
+        return unless newest && newest.id > seen.last
 
-        @was_member = member
-        save
+        @announcements.reject! { it.group_id == group.id }
+        @announcements << Announcement.of(group, newest)
       end
 
-      # The server says this player is in no group, so a waiting round
-      # has nowhere to go.
-      def left_meanwhile
-        @was_member = false
-        give_up_pending
+      def finish_game(score, body)
+        @pending = nil if @pending == score
+        results = body.is_a?(Hash) && body["groups"].is_a?(Array) ? body["groups"] : []
+        outcomes = results.filter_map { outcome(it) }
+        save
+        @game_result = result_of(outcomes, score) if score == @last_score && @result_due
+        @result_due = false
+        send_pending
+      end
+
+      # A group's part in a game's reply, as [group, won_title, raised],
+      # with the group brought up to date. A champion beating their own
+      # score is no title change, so the server reports it as no win, and
+      # it shows only in the top score having risen.
+      def outcome(item)
+        return unless item.is_a?(Hash) && (group = Group.parse(item["group"]))
+
+        before = group(group.id)
+        raised = before&.champion? == true && group.top_score > before.top_score
+        upsert(group)
+        [group, item["won_title"] == true, raised]
+      end
+
+      def result_of(outcomes, score)
+        won = outcomes.count { |_, won, _| won }
+        raised = outcomes.count { |_, _, raised| raised }
+        chasing = outcomes.reject { |group, won, _| won || group.champion? }
+        GameResult.new(won:, raised:, short: chasing.map { |group, _, _| group.score_to_win - score }.select(&:positive?).min,
+                       reigning: !outcomes.empty? && won.zero? && raised.zero? && chasing.empty?)
       end
 
       def give_up_pending
         @pending = nil
+        @result_due = false
         save
       end
 
-      def finish_round(body)
-        give_up_pending
-        group = body["group"]
-        return unless group?(group)
+      def remember_membership
+        member = !@groups.empty?
+        return if @was_member == member && (member || @pending.nil?)
 
-        @messages << Message.taken(group["score_to_beat"]) if body["took_trophy"]
-        look_at(group)
-      end
-
-      def drop_stale_pending
-        return unless @pending && today - @pending_day.to_i > PENDING_DAYS
-
-        give_up_pending
+        @was_member = member
+        @pending = nil unless member
+        save
       end
 
       def forget_identity
         @token = nil
-        @mark = nil
-        @group = nil
+        @groups = []
+        @changes = {}
+        @seen = {}
+        @announcements.clear
         @was_member = false
         @wait_until = nil
         @pending = nil
-        @messages.clear
-        @told = []
+        @result_due = false
+        @game_result = nil
         save
       end
 
-      def today = @clock.call.to_i / SECONDS_A_DAY
-
-      # Saved one per line: token, mark, unsent score and its day, and
-      # the thefts already told, and whether they were last in a group.
+      # Saved one per line: token, unsent score, whether last known to be in
+      # a group, and for each group the newest change shown and how the
+      # group looked then.
       def load_saved
-        token, mark, pending, told, member = @store.read.to_s.split("\n", -1)
+        token, pending, member, seen = @store.read.to_s.split("\n", -1)
         @token = token unless token.to_s.empty?
-        @mark = Integer(mark, exception: false)
-        @mark = nil unless Mark.valid?(@mark)
-        @pending, @pending_day = pending.to_s.split.map(&:to_i)
-        @told = told.to_s.split.map(&:to_i)
+        @pending = Integer(pending.to_s, 10, exception: false)
         @was_member = member == "1"
+        @seen = parse_seen(seen.to_s)
+      end
+
+      def parse_seen(line)
+        line.split.to_h do |entry|
+          id, last, fingerprint = entry.split("|", 3)
+          id = Integer(id, 10, exception: false) || id
+          [id, Seen.new(last: last.to_i, fingerprint:)]
+        end
       end
 
       def save
-        @store.write([@token.to_s, @mark.to_s, (@pending ? "#{@pending} #{@pending_day}" : ""), @told.join(" "), (@was_member ? "1" : "")].join("\n"))
+        seen = @seen.map { |id, entry| "#{id}|#{entry.last}|#{entry.fingerprint}" }.join(" ")
+        @store.write([@token.to_s, @pending.to_s, (@was_member ? "1" : ""), seen].join("\n"))
       end
     end
   end

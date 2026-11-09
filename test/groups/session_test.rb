@@ -5,7 +5,6 @@ require "test_helper"
 class SessionTest < Minitest::Test
   Groups = DotPopper::Groups
   Reply = Groups::Reply
-  DAY = 86_400
 
   # A worker that holds each job until the test answers it.
   class HandWorker
@@ -20,42 +19,55 @@ class SessionTest < Minitest::Test
   def setup
     @store = DotPopper::BestScore::Memory.new
     @worker = HandWorker.new
-    @time = Time.at(DAY * 1000)
+    @time = Time.at(1_000_000)
     @session = new_session
   end
 
   def new_session = Groups::Session.new(store: @store, worker: @worker, clock: -> { @time })
   def pump = @session.update(quiet: true)
+  def job = @worker.started.first.first
+  def paths = @worker.started.map { it.first.path }
 
-  # A group as the server sends it: seats are 1 to 8, mine the first.
-  def group(score: 5, seats: [5], holder: nil)
-    { "join_code" => "2345678", "seat" => seats.first, "member_seats" => seats, "holder_seat" => holder,
-      "score_to_beat" => score }
+  def group(id: 1, you: 2, champion: 1, top: 50, numbers: [1, 2])
+    { "id" => id, "join_code" => "2345678", "you" => you, "champion_number" => champion, "top_score" => top,
+      "reign_started_at" => "2026-11-01T00:00:00Z", "members" => numbers.map { { "number" => it, "top_score" => it * 10 } } }
   end
 
-  def answer(status, body, retry_after: nil)
+  def change(id, champion: 1, previous: nil, score: 50)
+    { "id" => id, "champion_number" => champion, "previous_champion_number" => previous, "score" => score, "won_at" => "2026-11-05T10:00:00Z" }
+  end
+
+  def answer(status, body = {}, retry_after: nil)
     @worker.answer(Reply.new(status:, body:, retry_after:))
     pump
   end
 
-  # Joins, and hears the group and that there are no thefts.
-  def joined
-    @session.join(4, "2345678")
+  # Becomes a player, joins, and hears the group and its empty history.
+  def joined(body = group, changes: [])
+    @session.join("2345678")
     pump
-    answer(201, { "token" => "t" })
+    unless @session.known?
+      answer(201, { "token" => "t" })
+      pump
+    end
+    answer(201, body)
     pump
-    answer(201, group)
+    answer(200, changes)
     pump
-    answer(200, [])
   end
 
-  # Refreshes the group and answers the request for thefts.
-  def refreshed(group = group(), thefts: [])
+  def played(score: 60)
+    @session.round_finished(score:, sized_to_screen: true)
+    pump
+  end
+
+  def refreshed(body = [group], changes: nil)
     @session.refresh
     pump
-    answer(200, group)
+    answer(200, body)
     pump
-    answer(200, thefts)
+    answer(200, changes) if changes
+    pump
   end
 
   def test_a_new_player_asks_nothing
@@ -69,350 +81,477 @@ class SessionTest < Minitest::Test
     joined
 
     assert_predicate @session, :member?
-    assert_equal 4, @session.mark
-    assert_equal 4, new_session.mark
     assert_equal "t", new_session.token
+    assert_equal 1, @session.take_arrival
+    assert_nil @session.take_arrival
   end
 
-  def test_a_player_gives_the_server_only_a_token_and_a_seat
-    @session.join(4, "2345678")
+  def test_a_player_sends_only_a_join_code
+    @session.join("2345678")
     pump
 
-    job = @worker.started.first.first
-
-    assert_equal [:player, :post, "/player", nil], [job.kind, job.verb, job.path, job.body]
+    assert_equal ["/player", nil], [job.path, job.body]
     answer(201, { "token" => "t" })
     pump
 
-    assert_equal([:post, "/membership", { join_code: "2345678", seat: 5 }],
-                 [@worker.started.first.first.verb, @worker.started.first.first.path, @worker.started.first.first.body])
-    refute_respond_to @session, :name
-    refute_respond_to @session, :report
-    refute_respond_to @session, :block
+    assert_equal [:post, "/memberships", { join_code: "2345678" }], [job.verb, job.path, job.body]
+    assert_equal "t", @worker.started.first.last
   end
 
-  def test_the_server_may_give_another_seat_when_the_one_asked_for_is_taken
-    joined
-    refreshed(group(seats: [3, 5]))
-
-    assert_equal 2, @session.mark, "seat 3 is the game's mark 2"
-    assert_equal [[2, true], [4, false]], @session.members.map { [it.mark, it.you] }
-  end
-
-  def test_the_group_is_read_in_marks
-    joined
-    refreshed(group(seats: [2, 1, 8], holder: 8))
-
-    assert_equal [0, 1, 7], @session.members.map(&:mark)
-    assert_equal 7, @session.holder_mark
-    assert_equal "2345678", @session.join_code
-    refreshed(group(seats: [2]))
-
-    assert_nil @session.holder_mark
-  end
-
-  def test_a_group_that_is_not_one_is_a_quiet_failure
-    @session.join(4, "2345678")
+  def test_creating_posts_no_params
+    @session.create
     pump
     answer(201, { "token" => "t" })
     pump
-    answer(201, group.merge("seat" => 9))
 
-    assert_equal :failed, @session.error
-    refute_predicate @session, :member?
+    assert_equal [:post, "/groups", nil], [job.verb, job.path, job.body]
   end
 
-  def test_nothing_is_sent_while_a_round_is_in_play
-    joined
-    @session.refresh
-    @session.update(quiet: false)
-
-    assert_empty @worker.started
+  def test_player_rate_limit_is_reported_and_blocks_the_next_try
+    @session.join("2345678")
     pump
-    assert_equal 1, @worker.started.size
-  end
+    answer(429, {}, retry_after: 30)
 
-  def test_offline_is_quiet_and_keeps_what_it_knows
-    joined
-    @session.refresh
-    pump
-    @worker.answer(Reply.offline)
-    pump
-
-    assert_equal :offline, @session.error
-    assert_predicate @session, :member?
-  end
-
-  def test_a_round_not_sized_to_the_screen_is_not_reported
-    joined
-    @session.round_finished(score: 10, sized_to_screen: false)
-    pump
-
-    assert_empty @worker.started
-  end
-
-  def test_an_unsent_round_is_kept_for_later
-    joined
-    @session.round_finished(score: 10, sized_to_screen: true)
-    pump
-    @worker.answer(Reply.offline)
-    pump
-    @session.refresh
-    pump
-    answer(200, group)
-
-    assert_equal %i[thefts round], @worker.started.map { it.first.kind }
-  end
-
-  def test_an_unsent_round_too_old_is_dropped
-    joined
-    @session.round_finished(score: 10, sized_to_screen: true)
-    pump
-    @worker.answer(Reply.offline)
-    pump
-    @time += DAY * 3
-    @session.refresh
-    pump
-    answer(200, group)
-
-    assert_equal [:thefts], @worker.started.map { it.first.kind }
-  end
-
-  def test_a_round_after_a_launch_with_no_network_still_counts
-    joined
-    @session = new_session
-    @session.round_finished(score: 10, sized_to_screen: true)
-    pump
-
-    assert_equal [:round], @worker.started.map { it.first.kind }
-  end
-
-  def test_a_waiting_round_is_dropped_if_the_player_has_left_the_group
-    joined
-    @session = new_session
-    @session.round_finished(score: 10, sized_to_screen: true)
-    pump
-    answer(404, {})
-    @session.round_finished(score: 11, sized_to_screen: true)
-    pump
-
-    assert_empty @worker.started
-  end
-
-  def test_a_round_that_takes_the_trophy_is_told_once
-    joined
-    @session.round_finished(score: 10, sized_to_screen: true)
-    pump
-    answer(200, { "took_trophy" => true, "group" => group(score: 10, holder: 5) })
-
-    assert_equal [:taken, 10], @session.next_message.then { [it.kind, it.score] }
-    assert_nil @session.next_message
-  end
-
-  def test_a_theft_is_told_once_even_across_launches
-    joined
-    news = [{ "id" => 9, "thief_seat" => 7, "score" => 12, "taken_at" => "2026-03-04T12:00:00.000Z" }]
-    refreshed(thefts: news)
-
-    assert_equal [6, 12], @session.next_message.then { [it.who, it.score] }
-
-    @session = new_session
-    @worker.started.clear
-    refreshed(thefts: news)
-
-    assert_nil @session.next_message
-  end
-
-  def test_an_unknown_token_forgets_this_player
-    joined
-    @session.refresh
-    pump
-    answer(401, {})
-
-    refute_predicate @session, :known?
-  end
-
-  def test_deleting_forgets_everything_here
-    joined
-    @session.delete_everything
-    pump
-    answer(204, {})
-
-    refute_predicate @session, :known?
-    assert_nil new_session.token
-  end
-
-  def test_a_round_is_reported_as_a_score_in_range_and_nothing_else
-    joined
-    @session.round_finished(score: 250_000, sized_to_screen: true)
-    pump
-
-    job = @worker.started.first.first
-
-    assert_equal [:post, "/group/rounds", { score: 100_000 }], [job.verb, job.path, job.body]
-  end
-
-  def test_a_creator_asks_for_the_seat_they_want_and_says_nothing_of_payment
-    @session.create(3)
-    pump
-    answer(201, { "token" => "t" })
-    pump
-    job = @worker.started.first.first
-
-    assert_equal [:post, "/group", { seat: 4 }], [job.verb, job.path, job.body]
-    answer(201, group(seats: [6]))
-
-    assert_equal 5, @session.mark, "the server gave the lowest free seat"
-  end
-
-  def test_a_told_theft_is_deleted_by_id_and_forgotten_once_gone
-    joined
-    news = [{ "id" => 9, "thief_seat" => 7, "score" => 12 }]
-    refreshed(thefts: news)
-    @session.next_message
-    pump
-    job = @worker.started.first.first
-
-    assert_equal [:delete, "/group/thefts/9"], [job.verb, job.path]
-    @worker.answer(Reply.offline)
-    pump
-    refreshed(thefts: news)
-
-    assert_nil @session.next_message
-    assert_equal [[:delete, "/group/thefts/9"]], @worker.started.map { [it.first.verb, it.first.path] }
-    answer(204, nil)
-    refreshed
-
-    assert_nil @session.next_message
-  end
-
-  def test_each_refusal_status_says_what_went_wrong
-    {
-      [:create, 409, "group_full"] => :group_full, [:create, 409, "already_in_group"] => :already_in_group,
-      [:create, 409, nil] => :failed, [:create, 422, nil] => :bad_mark, [:create, 429, nil] => :too_many_tries,
-      [:create, 413, nil] => :failed, [:create, 500, nil] => :failed, [:create, 402, nil] => :failed,
-      [:join, 400, nil] => :no_such_group, [:join, 404, nil] => :no_such_group,
-      [:join, 409, "group_full"] => :group_full, [:join, 409, "already_in_group"] => :already_in_group,
-      [:join, 422, nil] => :no_such_group, [:join, 429, nil] => :too_many_tries
-    }.each do |(what, status, why), error|
-      setup
-      what == :create ? @session.create(1) : @session.join(1, "2345678")
-      pump
-      answer(201, { "token" => "t" })
-      pump
-      answer(status, why ? { "error" => why } : {})
-
-      assert_equal error, @session.error, "#{what} #{status}"
-      refute_predicate @session, :member?
-    end
-  end
-
-  def test_a_422_on_the_seat_of_a_join_is_a_bad_dot_and_on_the_code_is_no_group
-    @session.join(1, "2345678")
-    pump
-    answer(201, { "token" => "t" })
-    pump
-    answer(422, { "errors" => { "seat" => ["is invalid"] } })
-
-    assert_equal :bad_mark, @session.error
-  end
-
-  def test_already_in_a_group_shows_that_group
-    @session.create(1)
-    pump
-    answer(201, { "token" => "t" })
-    pump
-    answer(409, { "error" => "already_in_group" })
-
-    assert_equal :already_in_group, @session.error
-    assert_equal [:get, "/group"], @worker.started.map { [it.first.verb, it.first.path] }.first
-  end
-
-  def test_a_429_waits_out_its_retry_after_before_asking_again
-    @session.create(1)
-    pump
-    answer(201, { "token" => "t" })
-    pump
-    answer(429, { "error" => "rate_limited" }, retry_after: 90)
-    @session.create(1)
+    assert_equal :too_many_tries, @session.error
+    @session.create
     pump
 
     assert_equal :too_many_tries, @session.error
     assert_empty @worker.started
-    @time += 91
-    @session.create(1)
-    pump
-
-    assert_equal [:post, "/group"], @worker.started.map { [it.first.verb, it.first.path] }.first
-  end
-
-  def test_a_429_that_names_a_huge_time_still_ends
-    @session.create(1)
-    pump
-    answer(429, {}, retry_after: 10**9)
-    @time += 3_601
-    @session.create(1)
+    @time += 31
+    @session.create
     pump
 
     refute_empty @worker.started
   end
 
-  def test_no_group_is_not_an_error_when_asking_for_the_group_or_leaving
+  def test_a_garbled_token_is_quietly_a_failure
+    @session.join("2345678")
+    pump
+    answer(201, { "nope" => 1 })
+
+    assert_equal :failed, @session.error
+    assert_nil @session.token
+  end
+
+  { 404 => [{}, :no_such_group], 422 => [{}, :no_such_group], 400 => [{}, :no_such_group],
+    409 => [{ "error" => "group_full" }, :group_full], 429 => [{}, :too_many_tries], 500 => [{}, :failed] }.each do |status, (body, reason)|
+    define_method(:"test_joining_answered_#{status}_says_#{reason}") do
+      @session.join("2345678")
+      pump
+      answer(201, { "token" => "t" })
+      pump
+      answer(status, body)
+
+      assert_equal reason, @session.error
+      refute_predicate @session, :member?
+    end
+  end
+
+  %w[already_member group_limit].each do |error|
+    define_method(:"test_joining_conflict_#{error}") do
+      @session.join("2345678")
+      pump
+      answer(201, { "token" => "t" })
+      pump
+      answer(409, { "error" => error })
+
+      assert_equal error.to_sym, @session.error
+    end
+  end
+
+  def test_create_group_limit_and_an_unknown_conflict
+    joined
+    @session.create
+    pump
+    answer(409, { "error" => "group_limit" })
+
+    assert_equal :group_limit, @session.error
+    @session.create
+    pump
+    answer(409, { "error" => "whatever" })
+
+    assert_equal :failed, @session.error
+  end
+
+  def test_join_retry_after_is_kept_within_bounds
+    joined
+    @session.join("1111111")
+    pump
+    answer(429, {}, retry_after: 99_999)
+    @time += 3_601
+    @session.create
+    pump
+
+    refute_empty @worker.started
+  end
+
+  def test_offline_is_reported_only_for_what_the_player_asked
+    joined
+    refreshed
+    @session.refresh
+    pump
+    answer(0)
+
+    assert_nil @session.error
+    @session.create
+    pump
+    answer(0)
+
+    assert_equal :offline, @session.error
+  end
+
+  def test_a_launch_with_no_known_groups_says_it_is_offline
+    joined
+    session = new_session
+    @session = session
+    session.refresh
+    pump
+    answer(0)
+
+    assert_equal :offline, session.error
+    assert_predicate session, :member?, "its games still count"
+  end
+
+  def test_a_bad_group_in_the_list_is_dropped_and_the_rest_kept
+    joined
+    refreshed([group, { "id" => "bad id" }, 7])
+
+    assert_equal [1], @session.groups.map(&:id)
+  end
+
+  def test_a_body_of_the_wrong_kind_is_ignored
     joined
     @session.refresh
     pump
-    answer(404, {})
+    answer(200, { "nope" => true })
+
+    assert_equal [1], @session.groups.map(&:id)
+    @session.look_at(1)
+    pump
+    answer(200, "garbage")
+    answer(200, "garbage")
+
+    assert_equal [1], @session.groups.map(&:id)
+    assert_empty @session.title_changes(1)
+  end
+
+  def test_a_non_group_join_reply_is_a_failure
+    @session.join("2345678")
+    pump
+    answer(201, { "token" => "t" })
+    pump
+    answer(201, { "id" => 1 })
+
+    assert_equal :failed, @session.error
+  end
+
+  def test_group_404_drops_it
+    joined
+    @session.look_at(1)
+    pump
+    answer(404)
 
     refute_predicate @session, :member?
-    assert_nil @session.error
-    @session.refresh
+  end
+
+  def test_title_changes_404_drops_it
+    joined
+    @session.look_at(1)
     pump
     answer(200, group)
     pump
-    answer(200, [])
-    @session.leave
-    pump
-    answer(404, {})
+    answer(404)
 
-    refute_predicate @session, :member?
+    assert_nil @session.group(1)
+  end
+
+  def test_group_5xx_changes_nothing
+    joined
+    @session.look_at(1)
+    pump
+    answer(503)
+    answer(503)
+
+    assert @session.group(1)
     assert_nil @session.error
   end
 
-  def test_leaving_is_a_delete_of_the_membership
+  def test_leaving_204_and_404_both_remove_the_group
     joined
-    @session.leave
+    @session.leave(1)
     pump
-    job = @worker.started.first.first
 
-    assert_equal [:delete, "/membership"], [job.verb, job.path]
-    answer(204, {})
+    assert_equal [:delete, "/groups/1/membership"], [job.verb, job.path]
+    answer(204)
 
+    assert_nil @session.group(1)
+    refute_predicate @session, :member?
+    joined(group(id: 2))
+    @session.leave(2)
+    pump
+    answer(404)
+
+    assert_nil @session.group(2)
+  end
+
+  def test_leaving_keeps_other_groups_and_a_5xx_keeps_it
+    joined
+    refreshed([group, group(id: 2)], changes: [])
+    @session.leave(1)
+    pump
+    answer(500)
+
+    assert_equal :failed, @session.error
+    assert @session.group(1)
+    @session.leave(1)
+    pump
+    answer(204)
+
+    assert_equal [2], @session.groups.map(&:id)
+    assert_predicate @session, :member?
+  end
+
+  def test_delete_forgets_everything
+    joined
+    @session.delete_everything
+    pump
+
+    assert_equal [:delete, "/player"], [job.verb, job.path]
+    answer(204)
+    assert_nil @session.token
+    refute_predicate new_session, :member?
+    assert_empty @session.groups
+  end
+
+  def test_delete_404_also_forgets
+    joined
+    @session.delete_everything
+    pump
+    answer(404)
+
+    assert_nil @session.token
+  end
+
+  def test_a_401_forgets_the_player
+    joined
+    @session.refresh
+    pump
+    answer(401)
+
+    assert_nil @session.token
     refute_predicate @session, :member?
   end
 
-  def test_a_round_the_server_refuses_is_dropped_quietly
+  def test_nothing_is_sent_during_a_round
     joined
+    @session.refresh
+    @session.update(quiet: false)
+
+    assert_empty @worker.started
+  end
+
+  def test_only_a_game_that_counts_is_sent
+    joined
+    @session.round_finished(score: 10, sized_to_screen: false)
+    @session.round_finished(score: 0, sized_to_screen: true)
+    pump
+
+    assert_empty @worker.started
+  end
+
+  def test_a_non_member_reports_nothing
     @session.round_finished(score: 10, sized_to_screen: true)
     pump
-    answer(422, {})
 
-    assert_nil @session.error
-    assert_predicate @session, :member?
-    @session.refresh
-    pump
-    answer(200, group)
-
-    assert_equal [:thefts], @worker.started.map { it.first.kind }
+    assert_empty @worker.started
   end
 
-  def test_a_failing_theft_delete_is_quiet
+  def test_a_game_goes_to_the_server_and_a_win_is_told_in_the_result
     joined
-    refreshed(thefts: [{ "id" => 9, "thief_seat" => 7, "score" => 12 }])
-    @session.next_message
-    pump
-    answer(404, {})
+    played(score: 60)
 
-    assert_nil @session.error
+    assert_equal [:post, "/games", { score: 60 }], [job.verb, job.path, job.body]
+    answer(200, { "groups" => [{ "group" => group(top: 60, champion: 2), "won_title" => true }] })
+
+    assert_equal 1, @session.game_result.won
+    assert_equal 60, @session.group(1).top_score
+  end
+
+  def test_the_score_is_capped
+    joined
+    played(score: 999_999)
+
+    assert_equal 100_000, job.body[:score]
+  end
+
+  def test_a_champions_own_higher_score_raises_the_bar
+    joined(group(champion: 2))
+    played(score: 70)
+    answer(200, { "groups" => [{ "group" => group(champion: 2, top: 70), "won_title" => false }] })
+
+    assert_equal 0, @session.game_result.won
+    assert_equal 1, @session.game_result.raised
+  end
+
+  def test_the_nearest_miss_is_kept_when_nothing_is_won
+    joined
+    refreshed([group, group(id: 2, top: 90)], changes: [])
+    played(score: 40)
+    answer(200, { "groups" => [{ "group" => group(top: 50), "won_title" => false },
+                               { "group" => group(id: 2, top: 90), "won_title" => false }] })
+
+    assert_equal 11, @session.game_result.short, "the score that wins must be strictly higher"
+  end
+
+  def test_a_champion_of_every_group_keeps_it
+    joined(group(champion: 2, top: 90))
+    played(score: 10)
+    answer(200, { "groups" => [{ "group" => group(champion: 2, top: 90), "won_title" => false }] })
+
+    assert_predicate @session.game_result, :reigning
+  end
+
+  def test_a_game_with_no_group_in_its_reply_is_not_a_crash
+    joined
+    played
+    answer(200, "garbage")
+
+    refute @session.game_result.won.positive?
+  end
+
+  def test_a_game_held_while_offline_waits_and_keeps_only_the_best
+    joined
+    played(score: 30)
+    answer(0)
+    played(score: 20)
+    answer(0)
+
+    @session = new_session
+    refreshed
+
+    assert_equal({ score: 30 }, job.body)
+  end
+
+  [400, 404, 422].each do |status|
+    define_method(:"test_a_game_answered_#{status}_is_dropped") do
+      joined
+      played
+      answer(status)
+      @session = new_session
+      refreshed
+
+      assert_empty paths
+    end
+  end
+
+  [429, 500, 503].each do |status|
+    define_method(:"test_a_game_answered_#{status}_waits") do
+      joined
+      played
+      answer(status, {}, retry_after: 1)
+      @time += 5
+      refreshed
+
+      assert_equal "/games", job.path
+    end
+  end
+
+  def test_a_game_in_flight_is_not_sent_twice
+    joined
+    played(score: 30)
+    refreshed
+    played(score: 25)
+
+    assert_equal ["/games"], paths.uniq.select { it == "/games" }
+    assert_equal 1, paths.count("/games")
+  end
+
+  def test_leaving_the_last_group_drops_a_waiting_game
+    joined
+    played(score: 30)
+    answer(0)
+    @session.leave(1)
+    pump
+    answer(204)
+    joined(group(id: 2))
+
+    assert_empty paths
+  end
+
+  def test_a_lost_reply_is_learned_from_the_history
+    joined
+    played(score: 60)
+    answer(0)
+    @session.refresh
+    pump
+    answer(200, [group(champion: 2, top: 60)])
+    pump
+
+    assert_includes paths, "/groups/1/title_changes"
+    pending = paths
+    answer(200, { "groups" => [{ "group" => group(champion: 2, top: 60), "won_title" => false }] }) if pending.first == "/games"
+    pump
+    answer(200, [change(5, champion: 2, previous: 1, score: 60)])
+
+    assert_equal :you_won, @session.next_announcement.kind
+  end
+
+  def test_the_history_is_read_only_when_the_title_has_moved
+    joined
+    refreshed
+
+    assert_empty paths
+    refreshed([group(top: 80)])
+
+    assert_includes paths, "/groups/1/title_changes"
+  end
+
+  def test_a_new_change_is_announced_once_and_the_last_shown_is_remembered
+    joined(changes: [change(4)])
+    refreshed([group(top: 80, champion: 1)], changes: [change(9, previous: 2, score: 80), change(4)])
+
+    assert_equal :you_lost, @session.next_announcement.kind
+    assert_nil @session.next_announcement
+    @session = new_session
+    refreshed([group(top: 80, champion: 1)])
+
+    assert_empty paths, "nothing new to fetch after a restart"
+    refreshed([group(top: 95, champion: 1)], changes: [change(9, previous: 2, score: 80), change(4)])
+
+    assert_nil @session.next_announcement
+  end
+
+  def test_a_new_group_announces_nothing_from_its_past
+    joined(changes: [change(9), change(4)])
+
+    assert_nil @session.next_announcement
+  end
+
+  def test_only_the_newest_change_is_announced_per_group
+    joined
+    refreshed([group(top: 99)], changes: [change(9, champion: 1, previous: 2, score: 99), change(8, champion: 2, previous: 1, score: 70)])
+
+    assert_equal 99, @session.next_announcement.score
+    assert_nil @session.next_announcement
+  end
+
+  def test_a_title_change_among_others_is_changed
+    joined
+    refreshed([group(top: 60, you: 5, numbers: [5])], changes: [change(2, champion: 7, previous: 1, score: 60)])
+
+    assert_equal :changed, @session.next_announcement.kind
+  end
+
+  def test_history_keeps_newest_first_and_look_at_refetches
+    joined
+    @session.look_at(1)
+    pump
+    answer(200, group)
+    pump
+    answer(200, [change(2), change(9)])
+
+    assert_equal [9, 2], @session.title_changes(1).map(&:id)
   end
 
   def test_the_server_url_is_one_setting
@@ -424,5 +563,13 @@ class SessionTest < Minitest::Test
     assert_nil Groups::Settings::SERVER_URL
     assert_equal "http://x:1", Groups::Settings.server_url({ "DOT_POPPER_SERVER" => "http://x:1" })
     refute_predicate Groups::Session.at(nil, store: @store), :available?
+  end
+
+  def test_session_off_offers_nothing
+    off = Groups::Session.off
+
+    refute_predicate off, :available?
+    off.refresh
+    off.update(quiet: true)
   end
 end

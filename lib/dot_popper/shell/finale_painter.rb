@@ -30,6 +30,7 @@ module DotPopper
         Lettering.new(pen:).candy(finale.shown_score(now).to_s, score, layout.center_x,
                                   plan[:score].y + (score.height / 2.0), shown)
         best_line(show, plan, now, shown)
+        line(plan, :group, show.group_panel.game_line.to_s, palette.gain, shown) if plan[:group]
         line(plan, :summary, words.summary(finale.stats), palette.soft, shown * 0.8)
         line(plan, :record, words.record(finale.record), palette.gain, finale.afterword(now)) if finale.record && finale.counted?(now)
         line(plan, :achievement, Presentation::AchievementWords.earned(finale.achievements), palette.gain, finale.afterword(now)) if finale.achievements.any? && finale.counted?(now)

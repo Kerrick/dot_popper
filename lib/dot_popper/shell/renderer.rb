@@ -87,7 +87,7 @@ module DotPopper
 
       private
 
-      # A theft's message, for the few seconds it shows.
+      # A title change's announcement, for the few seconds it shows.
       def banner(layout) = @group.banner(@show.group_panel.banner, @show.now, layout, @show.banner_y)
 
       def radius = @show.game.field.radius

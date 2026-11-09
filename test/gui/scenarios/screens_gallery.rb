@@ -2,15 +2,16 @@
 
 module DotPopperGui
   # The screens a free or a paid player meets, kept as screenshots to look
-  # at: the Friend group door and screen (against a server named by
-  # DOT_POPPER_SERVER, with DOT_POPPER_GROUP_CODE the seven digits of a
-  # group on it), Records, Looks, and Game Over. DOT_POPPER_GALLERY names
-  # the shots. Run it once with DOT_POPPER_PAID=1 and once with 0. Not part
-  # of rake test:gui: it is for reviewing the screens.
+  # at: the friend groups' screens (against a server named by
+  # DOT_POPPER_SERVER, such as script/group_stub.rb, with
+  # DOT_POPPER_GROUP_CODE the seven digits of a group on it), Records,
+  # Looks, and Game Over. DOT_POPPER_GALLERY names the shots. Run it once
+  # with DOT_POPPER_PAID=1 and once with 0. Not part of rake test:gui: it
+  # is for reviewing the screens.
   class ScreensGalleryScenario < Scenario
     scenario :screens_gallery
 
-    SIZES = [[1200, 800, false], [400, 850, true], [850, 400, true], [400, 320, true]].freeze
+    SIZES = [[1200, 800, false], [400, 850, true], [850, 400, true]].freeze
     P = DotPopper::Presentation
 
     def play
@@ -58,33 +59,48 @@ module DotPopperGui
       return unless panel.available?
 
       panel.open
-      shoot("group-door")
-      code.each_char { panel.press([:group_digit, it], :touch, 0.0) }
+      shoot("group-list")
+      return show.back unless panel.paid?
+
+      panel.press(:group_join_open, :touch, 0.0)
+      code.each_char { panel.press([:code_digit, it], :touch, 0.0) }
       shoot("group-code")
-      code.size.times { panel.press(:group_erase, :touch, 0.0) }
+      show.back
       show.back
     end
 
     def join
       panel.open
-      code.each_char { panel.press([:group_digit, it], :touch, 0.0) }
-      panel.press(:group_join, :touch, 0.0)
-      wait_for("the group", within: 900) { panel.member? }
+      panel.press(:group_join_open, :touch, 0.0)
+      code.each_char { panel.press([:code_digit, it], :touch, 0.0) }
+      panel.press(:code_submit, :touch, 0.0)
+      wait_for("the group", within: 900) { panel.page == :group }
+      show.back
       show.back
     end
 
     def member(width, height, phone)
       fit(width, height, phone)
       panel.open
-      shoot("group-member", settle: 1.5)
+      wait_for("the groups", within: 900) { panel.groups.groups.size >= 3 }
+      shoot("group-list", settle: 1.5)
+      panel.press([:group_show, panel.groups.groups.find { it.join_code == code }.id], :touch, 0.0)
+      wait_for("the standings", within: 900) { panel.group }
+      shoot("group-standings", settle: 1.5)
+      panel.press(:group_history, :touch, 0.0)
+      wait_for("the history", within: 900) { panel.groups.title_changes(panel.group_id) }
+      shoot("group-history", settle: 1.5)
       show.back
+      show.back
+      show.back
+      game_over("over-member")
     end
 
-    def game_over
+    def game_over(state = "over")
       start_round
       6.times { pop_fresh }
       run_out_the_clock
-      shoot("over", settle: 2.5)
+      shoot(state, settle: 2.5)
       continue_to_title
     end
 

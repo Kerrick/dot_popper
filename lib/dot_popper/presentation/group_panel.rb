@@ -9,82 +9,102 @@ module DotPopper
 
       module_function
 
-      def button = "Group"
-      def heading = "Friend group"
-      def blurb = "Beat your friends and take the trophy. Its score falls a point a day."
-      def mark_label = "Your dot"
-      def code_label = "Code"
+      def button = "Groups"
+      def heading = "Friend groups"
+      def group_heading = "Your group"
+      def history_heading = "Title history"
+      def join_heading = "Join with a code"
+      def blurb = "Beat your friends and take the title."
       def join(paid) = paid ? "Join" : "Join (paid)"
       def create(paid) = paid ? "Create" : "Create (paid)"
       def needs_paid = "Friend groups come with the paid version."
-      def privacy = "Joining or creating sends your dot and scores to the group's server, which also sees your IP address."
+      def privacy = "Joining or creating sends your scores to the groups' server, which also sees your IP address."
       def need_code = "Tap your friend's code."
       def erase = "Erase"
+      def submit = "Join"
       def you = "You"
-      def leave = "Leave group"
+      def champion = "Champion"
+      def history = "History"
+      def older = "Older"
+      def newer = "Newer"
+      def leave = "Leave"
       def delete = "Delete my data"
-      def hold_to_leave = "Hold to leave the group."
+      def hold_to_leave = "Hold to leave this group."
       def hold_to_delete = "Hold to delete your scores from the server."
-      def code_line(code) = "Invite code: #{code}"
-      def standard_note = "Rounds with standard dots do not count. Choose dots sized to the screen."
+      def code_line(code) = "Code: #{code}"
+      def standard_note = "Games with standard dots do not count. Choose dots sized to the screen."
+      def members(count) = count == 1 ? "1 member" : "#{count} members"
+      def no_history = "No title changes yet."
 
-      # The score to beat today, or that nobody holds the trophy yet. Who
-      # holds it shows in the members' rows, by their dot.
-      def trophy_line(holder_mark, score_to_beat)
-        return "Nobody holds the trophy yet. Score any points to take it." unless holder_mark
+      # The group's standing, with the score that wins the title.
+      def title_line(group)
+        return "Score any points to take the title." if group.vacant?
+        return "You hold the title with #{group.top_score}." if group.champion?
 
-        "Beat #{score_to_beat} to take the trophy."
+        "Beat #{group.top_score} to take the title."
       end
 
-      # The one message a theft or a win makes.
-      def message(message)
-        case message.kind
-        in :stolen then "A friend took your trophy with #{message.score}."
-        in :taken then "You took the trophy with #{message.score}!"
+      # The one line a title change makes, by its kind (Groups::Announcement).
+      def announcement(item)
+        case item.kind
+        in :you_won then "You took the title with #{item.score}!"
+        in :you_lost then "A friend took your title with #{item.score}."
+        in :changed then "A friend took the title with #{item.score}."
+        end
+      end
+
+      # Game Over's line for a game (Groups::GameResult).
+      def game_line(result)
+        if result.won.positive? then result.won == 1 ? "You took the title!" : "You took #{result.won} titles!"
+        elsif result.raised.positive? then "You raised the bar!"
+        elsif result.reigning then "The title stays yours."
+        elsif result.short then "#{result.short} short of the title."
         end
       end
 
       def error(reason)
-        { offline: "Can't reach the group right now.", no_such_group: "No group has that code.",
-          group_full: "That group is full.", bad_mark: "Pick one of the dots.",
-          already_in_group: "You are already in a group.", too_many_tries: "Too many tries. Wait a while.",
-          no_group: "You are not in a group." }.fetch(reason, "Something went wrong.")
+        { offline: "Can't reach the groups right now.", no_such_group: "No group has that code.",
+          group_full: "That group is full.", already_member: "You are already in that group.",
+          group_limit: "You are in as many groups as you can be.", too_many_tries: "Too many tries. Wait a while." }
+          .fetch(reason, "Something went wrong.")
       end
     end
 
-    # How long a group's message stays on screen, and how it fades.
-    class GroupBanner < Data.define(:text, :at, :seconds, :mark)
+    # How long an announcement stays on screen, and how it fades. +number+
+    # and +group_id+ say whose icon and crest it shows.
+    class GroupBanner < Data.define(:text, :at, :seconds, :group_id, :number)
       FADE = 0.4
 
       def over?(now) = now - at >= seconds
       def alpha(now) = (((seconds - (now - at)) / FADE)).clamp(0.0, 1.0) * ((now - at) / FADE).clamp(0.0, 1.0)
     end
 
-    # The Friend group screen's state, over the title, and the one
-    # message a theft makes: the dot the player has picked (Groups::Mark),
-    # the code they have tapped, what a long press would do, and what to
-    # tell them next. Nothing here is typed: a dot is picked from the
-    # eight the game draws, and a code is tapped on its digits, so a
-    # controller can do both. It asks the Session (Groups) for everything,
-    # and never waits for it. Paid only changes whether Create creates
-    # (+entitlement+).
+    # The friend groups' screens' state, over the title, and the
+    # announcements a title change makes: which screen is showing, the code
+    # tapped so far, what a long press would do, and what to tell the
+    # player next. Nothing here is typed, so a controller can do all of it.
+    # It asks the Session (Groups) for everything, and never waits for it.
+    # Paid changes only whether Create and Join do anything (+entitlement+);
+    # leaving and deleting never need it.
     class GroupPanel
-      BANNER_SECONDS = 7.0
+      BANNER_SECONDS = 4.0
       HOLD = 2.0
+      PAGES = %i[list group history join].freeze
 
-      attr_reader :groups, :mark, :code, :banner, :hold, :note
+      attr_reader :groups, :code, :banner, :hold, :note, :page, :group_id, :offset
 
       def initialize(groups:, entitlement:, sounds:)
         @groups = groups
         @entitlement = entitlement
         @sounds = sounds
         @open = false
-        @mark = groups.mark || 0
+        @page = :list
+        @group_id = nil
+        @offset = 0
         @code = ""
         @hold = HoldToConfirm.idle(HOLD)
         @holding = nil
         @banner = nil
-        @news_due = true
         @note = nil
         groups.refresh
       end
@@ -93,10 +113,15 @@ module DotPopper
       def available? = groups.available?
       def member? = groups.member?
       def paid? = @entitlement.paid?
+      def group = @group_id && groups.group(@group_id)
 
+      # Opens on the list of groups, or at the code pad for someone with
+      # none, which is what they came for.
       def open
         @open = true
         @note = nil
+        @offset = 0
+        show(:list)
         groups.refresh
         @sounds.play(:tick)
       end
@@ -107,29 +132,48 @@ module DotPopper
         @sounds.play(:tick, pitch: 0.8)
       end
 
+      # Back up a level: history to its group, a group or the code pad to
+      # the list, the list out.
+      def back
+        @note = nil
+        @hold = hold.cancel
+        case page
+        when :history then show(:group)
+        when :group, :join then show(:list)
+        else close
+        end
+      end
+
       # The moving parts of each frame: the Session's replies, a long
-      # press finished, and the next message at a moment for one (at
-      # launch and at Game Over only, so it never nags). +quiet+ is false
-      # during a round, when the network waits; +showing+ says the screen
-      # can show a message now, on the title or at Game Over.
+      # press finished, and the next announcement at a moment for one.
+      # +quiet+ is false during a round, when the network waits; +showing+
+      # says the screen can show a message now, on the title or at Game
+      # Over.
       def update(now, quiet:, showing: quiet)
         groups.update(quiet:)
         finish_hold if hold.done?(now)
+        arrive
+        leave_page_if_gone
         @banner = nil if @banner&.over?(now)
-        return unless @news_due && !@banner && showing && !open?
+        return if @banner || !showing || open?
 
-        message = groups.next_message or return
-        @banner = GroupBanner.new(text: GroupWords.message(message), at: now, seconds: BANNER_SECONDS, mark: message.who)
-        @news_due = false
+        item = groups.next_announcement or return
+        @banner = GroupBanner.new(text: GroupWords.announcement(item), at: now, seconds: BANNER_SECONDS,
+                                  group_id: item.group_id, number: item.champion_number)
       end
 
-      # A round began, so the moment for a message has passed.
-      def round_started = @news_due = false
+      def round_started = groups.round_started
 
-      # A round ended: reports it if it counts, and a message may show.
-      def round_finished(score:, sized_to_screen:)
-        groups.round_finished(score:, sized_to_screen:)
-        @news_due = true
+      # A game ended: reports it if it counts.
+      def round_finished(score:, sized_to_screen:) = groups.round_finished(score:, sized_to_screen:)
+
+      # Game Over's line about the groups: its words, a blank that holds
+      # the line's place while the result is on its way, or nil.
+      def game_line
+        result = groups.game_result
+        return GroupWords.game_line(result) if result
+
+        groups.result_due? ? " " : nil
       end
 
       # A control this screen offers was pressed; +by+ is what pressed it
@@ -137,11 +181,15 @@ module DotPopper
       def press(name, by, now)
         @note = nil
         case name
-        in [:group_mark, Integer => mark] then pick(mark)
-        in [:group_digit, String => digit] then tap_digit(digit)
-        in :group_erase then erase
-        in :group_join then join
+        in [:code_digit, String => digit] then tap_digit(digit)
+        in :code_erase then erase
+        in :code_submit then submit_join
+        in [:group_show, id] then open_group(id)
+        in :group_join_open then open_join
         in :group_create then create
+        in :group_history then open_history
+        in :group_older then move(1)
+        in :group_newer then move(-1)
         in :group_leave then start_hold(:leave, by, now)
         in :group_delete then start_hold(:delete, by, now)
         else nil
@@ -157,13 +205,50 @@ module DotPopper
       # What the hold's prompt says while one is under way.
       def holding_words = @holding == :delete ? GroupWords.hold_to_delete : GroupWords.hold_to_leave
 
+      # Moves the page of a long list by one, for GroupScreen to bound.
+      def clamp_offset(most) = @offset = @offset.clamp(0, most)
+
       private
 
-      def pick(mark)
-        return unless Groups::Mark.valid?(mark)
+      def show(page, id = @group_id)
+        @page = page
+        @group_id = id
+        @offset = 0
+      end
 
-        @mark = mark
+      def open_group(id)
+        show(:group, id)
+        groups.look_at(id)
         @sounds.play(:tick)
+      end
+
+      def open_history
+        show(:history)
+        groups.look_at(@group_id)
+        @sounds.play(:tick)
+      end
+
+      def open_join
+        return @note = GroupWords.needs_paid unless paid?
+
+        @code = ""
+        show(:join)
+        @sounds.play(:tick)
+      end
+
+      def move(by)
+        @offset += by
+        @sounds.play(:tick)
+      end
+
+      def arrive
+        id = groups.take_arrival or return
+        open_group(id) if open?
+      end
+
+      # A group left, or lost, takes its pages with it.
+      def leave_page_if_gone
+        show(:list) if %i[group history].include?(page) && !group
       end
 
       def tap_digit(digit)
@@ -178,18 +263,17 @@ module DotPopper
         @sounds.play(:tick, pitch: 0.8)
       end
 
-      def join
+      def submit_join
         return @note = GroupWords.needs_paid unless paid?
-
         return @note = GroupWords.need_code if code.size < GroupWords::CODE_LENGTH
 
-        groups.join(mark, code)
+        groups.join(code)
       end
 
       def create
         return @note = GroupWords.needs_paid unless paid?
 
-        groups.create(mark)
+        groups.create
       end
 
       def start_hold(what, by, now)
@@ -200,7 +284,8 @@ module DotPopper
 
       def finish_hold
         @hold = hold.cancel
-        @holding == :delete ? groups.delete_everything : groups.leave
+        @holding == :delete ? groups.delete_everything : groups.leave(@group_id)
+        show(:list)
         @sounds.play(:bonk, pitch: 0.7)
       end
     end

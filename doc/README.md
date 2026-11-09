@@ -41,9 +41,9 @@ If you know LÖVE, [Why Ruby](why_ruby.md) sets Dot Popper's code beside the Lua
 
 ## The friend-group server
 
-The server is a separate Rails app, `~/Developer/dot_popper-server`; what it must do is in `doc/server.md`. The game speaks to it with `lib/dot_popper/groups/` (no `/v1` prefix; JSON; a bearer token). It holds no names or text: a member is one of eight looks (`lib/dot_popper/groups/mark.rb`), and a group's code is seven digits.
+The server is a separate Rails app, `~/Developer/dot_popper-server`; its API is `docs/api.md` there, and `doc/server.md` here says what it must do. The game speaks to it with `lib/dot_popper/groups/` (no `/v1` prefix; JSON; a bearer token). It holds no names or text: within a group a member is a number, which the game draws as an icon (`presentation/member_icon.rb`), and a group's code is seven digits.
 
-The game looks for the server at `Groups::Settings::SERVER_URL`, which is `nil` until one is deployed: with no address, no Group button appears and the game connects to nothing. Run the game with `DOT_POPPER_SERVER=http://localhost:3000` to try a local server.
+The game finds the server through `Groups::Settings`: test builds use `TEST_SERVER_URL`, and store builds use `SERVER_URL`, which is `nil` until the maintainer sets it (with no address, no Groups button appears and the game connects to nothing). Run the game with `DOT_POPPER_SERVER=http://127.0.0.1:9293` and `ruby script/group_stub.rb` to try the screens against an in-memory stand-in, seeded with a full group whose code is 1234567.
 
 ## Requirements
 

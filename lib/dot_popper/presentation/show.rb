@@ -176,7 +176,7 @@ module DotPopper
       # no tap there reaches the game.
       def records? = !@records.nil?
 
-      # The Friend group screen's state and the theft messages (GroupPanel).
+      # The friend groups' screens' state and their announcements (GroupPanel).
       def group_panel = @groups
 
       # Whether the Friend group screen is open over the title.
@@ -195,7 +195,7 @@ module DotPopper
       # The title's way in to groups.
       def group_button = GroupScreen.button(layout, labelled: layout.safe.width >= 480)
 
-      # Where a theft's message goes: under the HUD at Game Over, and at
+      # Where an announcement goes: under the HUD at Game Over, and at
       # the top of the title, clear of the Group button's row.
       def banner_y = finished? ? hud_bottom + layout.margin : layout.top + layout.button_size + layout.margin
 
@@ -460,7 +460,7 @@ module DotPopper
       # Back, from the Credits screen to the Records screen, or from the
       # Records screen to the title.
       def leave
-        return @groups.close if group_open?
+        return @groups.back if group_open?
 
         if offer? then close_offer
         elsif credits? then close_credits
@@ -725,7 +725,7 @@ module DotPopper
         return unless finale
 
         FinaleScreen.new(layout:, type: look::TYPE, words:, measure: @measure, scrim: look::FINALE_BACKING, finale:,
-                         below: hud_bottom, radius: game.round&.field&.radius || @radius)
+                         below: hud_bottom, radius: game.round&.field&.radius || @radius, group_line: @groups.game_line)
       end
 
       # The window changed size. The title's dots are respawned if their

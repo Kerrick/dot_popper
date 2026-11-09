@@ -180,20 +180,6 @@ module DotPopper
       # widest a card grows (in units at a scale of 1).
       LOOKS = LooksLook.new(heading: 48, gap: 1.0, ratio: 0.78, widest: 260, note: 20)
 
-      # The eight marks a member of a friend group wears, in the order of
-      # Groups::Mark: a dot's colour and the dark shape drawn on it. Add to
-      # the end only, since a server keeps the numbers.
-      MARKS = [
-        MarkLook.new(color: hex["#ffb454"], shape: :ring),
-        MarkLook.new(color: hex["#5aa9ff"], shape: :plus),
-        MarkLook.new(color: hex["#3ee0a8"], shape: :cross),
-        MarkLook.new(color: hex["#ff7aa8"], shape: :triangle),
-        MarkLook.new(color: hex["#f4e05a"], shape: :square),
-        MarkLook.new(color: hex["#b48cff"], shape: :diamond),
-        MarkLook.new(color: hex["#ff6b5e"], shape: :bar),
-        MarkLook.new(color: hex["#dfe6f5"], shape: :pair)
-      ].freeze
-
       # The Friend group screen, opened from the title.
       GROUPS = GroupLook.new(heading: 44, text: 20, column: 560, veil: 0.9)
 

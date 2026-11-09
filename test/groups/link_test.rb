@@ -35,17 +35,17 @@ class LinkTest < Minitest::Test
 
   def test_a_429_carries_its_retry_after_and_an_array_body_is_kept
     serve(http("429 Too Many Requests", '{"error":"rate_limited"}', "Retry-After" => "90"),
-          http("200 OK", '[{"id":7,"thief_seat":3,"score":41}]'),
+          http("200 OK", '[{"id":7,"champion_number":3,"score":41}]'),
           http("204 No Content", "")) do |url|
       link = Groups::Link.new(url)
       limited = link.call(:post, "/group", { seat: 1 }, "t")
 
       assert_equal [429, { "error" => "rate_limited" }, 90], [limited.status, limited.body, limited.retry_after]
-      thefts = link.call(:get, "/group/thefts", nil, "t")
+      changes = link.call(:get, "/groups/1/title_changes", nil, "t")
 
-      assert_equal [{ "id" => 7, "thief_seat" => 3, "score" => 41 }], thefts.body
-      assert_nil thefts.retry_after
-      assert_predicate link.call(:delete, "/group/thefts/7", nil, "t"), :ok?
+      assert_equal [{ "id" => 7, "champion_number" => 3, "score" => 41 }], changes.body
+      assert_nil changes.retry_after
+      assert_predicate link.call(:delete, "/groups/1/membership", nil, "t"), :ok?
     end
     assert_match(%r{\APOST /group }, @requests.first)
     assert_match(/authorization: Bearer t/i, @requests.first)

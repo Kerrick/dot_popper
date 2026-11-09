@@ -2,57 +2,63 @@
 
 module DotPopper
   module Presentation
-    # Sizes for the Friend group screen, in graphics units at a scale of
-    # 1: its heading's and its text's type, the widest its column gets,
+    # Sizes for the friend groups' screens, in graphics units at a scale
+    # of 1: its heading's and its text's type, the widest its column gets,
     # and how dark the title's dots go behind it.
     class GroupLook < Data.define(:heading, :text, :column, :veil); end
-
-    # How a Mark (Groups::Mark) is drawn: a dot of one colour with one
-    # dark shape on it. The colours are far apart in lightness as well as
-    # in hue, and each has a shape of its own, so no two look alike to a
-    # player who cannot tell colours apart, or in grayscale.
-    class MarkLook < Data.define(:color, :shape); end
 
     # A line of words where the screen puts it: +kind+ is :text, :note or
     # :alert, and says how it reads.
     class GroupLine < Data.define(:text, :y, :kind); end
 
-    # A button the screen offers: +name+ is what Show#tap hears. A dot to
-    # pick has no text, and a digit's is the digit.
+    # A button the screen offers: +name+ is what Show#tap hears. A row that
+    # opens a group has no text of its own.
     class GroupAction < Data.define(:name, :rect, :text); end
 
-    # A member's row: where it is, the mark they wear, whether it holds
-    # the trophy, and whether it is this player.
-    class GroupRow < Data.define(:rect, :mark, :holder, :me); end
+    # A row of the list of groups, which opens the group.
+    class GroupListRow < Data.define(:rect, :group); end
 
-    # Where the Friend group screen's parts go: +size+ its text's type,
-    # the heading's middle +heading_y+ and its +heading_size+, its lines
-    # (GroupLine), the box that shows the code tapped so far (a Rect, or
-    # nil), its buttons (GroupAction), and its member rows.
-    class GroupPlan < Data.define(:size, :heading_y, :heading_size, :lines, :code_box, :actions, :rows)
+    # A member's row in the standings: their +rank+ among the group's, and
+    # whether they hold the title and are this player.
+    class GroupStandingRow < Data.define(:rect, :group_id, :number, :score, :champion, :me); end
+
+    # An entry in a group's history: the new champion and, if any, who they
+    # took it from, drawn as icons so it can be read without words.
+    class GroupHistoryRow < Data.define(:rect, :group_id, :change); end
+
+    # Where a friend groups' screen's parts go: its text's +size+, the
+    # heading (+heading+ its words, +heading_y+ its middle, +heading_size+
+    # its type), its lines (GroupLine), the box showing the code tapped so
+    # far (a Rect, or nil), its buttons (GroupAction, CodeKey), and its
+    # rows.
+    class GroupPlan < Data.define(:size, :heading, :heading_x, :heading_y, :heading_size, :lines, :code_box, :actions, :rows)
       def controls = actions.map { [it.name, it.rect] }
     end
 
-    # The Friend group screen laid out in the safe area, from the
-    # GroupPanel's state: the door (a dot to wear, a code tapped on its
-    # digits, Join and Create) for someone in no group, or the group itself
-    # (the trophy and its members, in as many columns as they need to
-    # fit). Every button is a thumb's height, and Leave and Delete sit
-    # where nobody presses them by accident. Nothing on it is typed.
+    # The friend groups' screens laid out in the safe area: the list of
+    # the player's groups, a group's standings, its history of the title,
+    # and the keypad that joins one. Rows that outgrow a page go in pages,
+    # never a scroll, so they work by a tap alone. Every button is a
+    # thumb's height, and Leave and Delete sit where nobody presses them by
+    # accident. Nothing on it is typed.
     class GroupScreen < Data.define(:layout, :look, :measure, :panel, :standard_dots, :back_text)
-      ROW = 1.1 # a member's row's height, in button heights
-      DIGITS = %w[1 2 3 4 5 6 7 8 9 0].freeze
-      MARK_LEAST = 36.0 # the least a dot to pick is across before they go in two rows
+      ROW = 1.1 # a row's height, in button heights
+      TALL = 520.0 # the safe height, in points, a keypad column needs
 
       # The title's way in, in its top left corner, level with where the
       # window buttons go on a tiny window: a pill a button high.
       def self.button(layout, labelled:)
         height = layout.button_size
-        Rect.new(x: layout.safe.x + layout.margin, y: layout.top, width: labelled ? height * 2.6 : height, height:)
+        Rect.new(x: layout.safe.x + layout.margin, y: layout.top, width: labelled ? height * 2.8 : height, height:)
       end
 
       def plan
-        panel.member? ? group_plan : door_plan
+        case panel.page
+        when :group then group_plan
+        when :history then history_plan
+        when :join then join_plan
+        else list_plan
+        end
       end
 
       private
@@ -61,128 +67,138 @@ module DotPopper
       def heading_size = layout.scaled(look.heading)
       def button = layout.button_size
       def margin = layout.margin
+      def gap = margin * 0.5
       def column_width = [look.column * layout.ui, layout.safe.width - (2 * margin)].min
       def left = layout.center_x - (column_width / 2.0)
       def line_height = size * 1.35
+      def heading_y = layout.top + (heading_size * 0.5)
       def under_heading = layout.top + (heading_size * 1.3) + (size * 0.5)
       def floor = layout.records_floor - (margin * 0.5)
+      def short? = layout.safe.height < TALL && layout.safe.width > layout.safe.height
 
-      # The lines of +text+, wrapped to +room+, from +y+ down.
+      def back_action = GroupAction.new(name: :back, rect: layout.back_button, text: back_text)
+      def alert_text = panel.note || (panel.groups.error && GroupWords.error(panel.groups.error))
+
       def wrapped(text, y, kind, room = column_width)
         Words.balance(text, room) { measure.width(:semibold, size, it) }
              .each_with_index.map { |line, i| GroupLine.new(text: line, y: y + (line_height * i), kind:) }
       end
 
-      def heading_y = layout.top + (heading_size * 0.5)
-
-      def common_actions
-        back = GroupAction.new(name: :back, rect: layout.back_button, text: back_text)
-        panel.groups.known? ? [back, GroupAction.new(name: :group_delete, rect: layout.clear_records_button, text: GroupWords.delete)] : [back]
+      def plan_with(heading:, lines:, actions:, rows: [], code_box: nil, heading_x: layout.center_x)
+        GroupPlan.new(size:, heading:, heading_x:, heading_y:, heading_size:, lines:, code_box:, actions:, rows:)
       end
 
-      def alert_text = panel.note || (panel.groups.error && GroupWords.error(panel.groups.error))
-
-      # The door: what groups are, the dot to wear, the code, and Join and
-      # Create. In a window too short for one column the digits go in a
-      # second, beside the first.
-      def door_plan
-        one = door(wide: false)
-        return one if one.actions.all? { it.rect.bottom <= floor } && one.lines.all? { it.y <= floor }
-
-        door(wide: true)
+      # A row of equal pills across the column, at +y+.
+      def row_of(y, actions)
+        each = (column_width - (gap * (actions.size - 1))) / actions.size
+        actions.each_with_index.map { |(name, text), i| GroupAction.new(name:, text:, rect: Rect.new(x: left + ((each + gap) * i), y:, width: each, height: button)) }
       end
 
-      def door(wide:)
-        span = wide ? [layout.safe.width - (2 * margin), 2 * look.column * layout.ui].min : column_width
-        room = wide ? (span - margin) / 2.0 : span
-        x0 = layout.center_x - (span / 2.0)
-        x1 = wide ? x0 + room + margin : x0
-        blurb = wrapped(GroupWords.blurb, under_heading, :text, span)
-        blurb += wrapped(GroupWords.privacy, blurb.last.y + line_height, :note, span)
-        top = blurb.last.y + line_height
-        label = GroupLine.new(text: GroupWords.mark_label, y: top, kind: :note)
-        marks = mark_buttons(x0, top + (line_height * 0.8), room)
-        box, digits = code_pad(x1, wide ? marks.first.rect.y : marks.map { it.rect.bottom }.max + margin, room, wide)
-        join, create = join_buttons(x0, wide ? marks.map { it.rect.bottom }.max + margin : digits.map { it.rect.bottom }.max + margin, room)
-        below = [join.rect.bottom, *digits.map { it.rect.bottom }].max + (margin * 0.5)
-        alert = alert_text ? wrapped(alert_text, below + (size * 0.5), :alert, span) : []
-        GroupPlan.new(size:, heading_y:, heading_size:, lines: blurb + [label] + alert, code_box: box,
-                      actions: [*marks, *digits, join, create, *common_actions], rows: [])
-      end
-
-      # The eight dots to wear, in a row, or in two where a row would make
-      # them too small to press.
-      def mark_buttons(x, y, room)
-        count = Groups::Mark::COUNT
-        gap = margin * 0.5
-        per_row = count
-        side = [button, (room - (gap * (per_row - 1))) / per_row].min
-        if side < MARK_LEAST
-          per_row = count / 2
-          side = [button, (room - (gap * (per_row - 1))) / per_row].min
+      # Rows from +top+ to +bottom+: in as many as two columns where they
+      # are too many for one, in pages beyond that. Answers the rows each
+      # placed by the block, how many fit on a page, and the page's
+      # controls.
+      def paged(items, top, bottom, gallery: false)
+        row_height = button * ROW
+        per_column = [((bottom - top) / row_height).floor, 1].max
+        two = !gallery && items.size > per_column && layout.safe.width > 2 * look.column * layout.ui * 0.7
+        columns = two ? 2 : 1
+        per_page = per_column * columns
+        width = two ? (layout.safe.width - (3 * margin)) / 2.0 : column_width
+        x_of = ->(i) { two ? layout.safe.x + margin + ((width + margin) * i) : left }
+        panel.clamp_offset([(items.size - 1) / per_page, 0].max)
+        shown = items.drop(panel.offset * per_page).first(per_page)
+        placed = shown.each_with_index.map do |item, i|
+          yield item, Rect.new(x: x_of[i / per_column], y: top + ((i % per_column) * row_height), width:, height: button)
         end
-        used = (side * per_row) + (gap * (per_row - 1))
-        start = x + ((room - used) / 2.0)
-        Array.new(count) do |i|
-          rect = Rect.new(x: start + ((side + gap) * (i % per_row)), y: y + ((side + gap) * (i / per_row)), width: side, height: side)
-          GroupAction.new(name: [:group_mark, i], rect:, text: nil)
+        [placed, per_page]
+      end
+
+      def pager(items, per_page, y)
+        return [] if items.size <= per_page
+
+        row_of(y, [[:group_older, GroupWords.older], [:group_newer, GroupWords.newer]].reject do |name, _|
+          name == :group_newer ? panel.offset.zero? : panel.offset >= (items.size - 1) / per_page
+        end)
+      end
+
+      def list_plan
+        groups = panel.groups.groups
+        lines = groups.empty? ? wrapped(GroupWords.blurb, under_heading, :text) : []
+        lines += wrapped(GroupWords.privacy, lines.last.y + line_height, :note) if groups.empty?
+        action_y = floor - button
+        top = (lines.last&.y || under_heading - line_height) + line_height
+        alert = alert_text ? wrapped(alert_text, action_y - line_height, :alert) : []
+        bottom = (alert.first&.y || action_y) - margin
+        make = ->(group, rect) { GroupListRow.new(rect:, group:) }
+        rows, per_page = paged(groups, top, bottom, &make)
+        if groups.size > per_page
+          bottom -= button + gap
+          rows, per_page = paged(groups, top, bottom, &make)
         end
+        list_actions = rows.map { GroupAction.new(name: [:group_show, it.group.id], rect: it.rect, text: nil) }
+        controls = pager(groups, per_page, bottom - button)
+        plan_with(heading: GroupWords.heading, lines: lines + alert, rows:,
+                  actions: [*list_actions, *row_of(action_y, [[:group_join_open, GroupWords.join(panel.paid?)], [:group_create, GroupWords.create(panel.paid?)]]),
+                            *controls, back_action, *delete_action])
       end
 
-      # Join and Create side by side.
-      def join_buttons(x, y, room)
-        gap = margin
-        half = (room - gap) / 2.0
-        join = Rect.new(x:, y:, width: half, height: button)
-        [GroupAction.new(name: :group_join, rect: join, text: GroupWords.join(panel.paid?)),
-         GroupAction.new(name: :group_create, rect: join.with(x: join.right + gap), text: GroupWords.create(panel.paid?))]
+      def delete_action
+        return [] unless panel.groups.known?
+
+        [GroupAction.new(name: :group_delete, rect: layout.clear_records_button, text: GroupWords.delete)]
       end
 
-      # The code tapped so far and the digits to tap it with: the box and
-      # an erase key in a row, then the digits in as many rows as the room
-      # asks (two rows of five, or three of four).
-      def code_pad(x, y, room, wide)
-        gap = margin * 0.5
-        erase_width = button * 1.8
-        box = Rect.new(x:, y:, width: room - erase_width - gap, height: button)
-        erase = GroupAction.new(name: :group_erase, rect: Rect.new(x: box.right + gap, y:, width: erase_width, height: button),
-                                text: GroupWords.erase)
-        columns = wide ? 4 : 5
-        key = (room - (gap * (columns - 1))) / columns
-        keys = DIGITS.map.with_index do |digit, i|
-          rect = Rect.new(x: x + ((key + gap) * (i % columns)), y: box.bottom + gap + ((button + gap) * (i / columns)), width: key, height: button)
-          GroupAction.new(name: [:group_digit, digit], rect:, text: digit)
-        end
-        [box, [*keys, erase]]
-      end
-
-      # The group: the trophy, its members, Leave and Delete.
       def group_plan
-        groups = panel.groups
-        y = under_heading
-        lines = wrapped(GroupWords.trophy_line(groups.holder_mark, groups.score_to_beat), y, :text)
-        lines += wrapped(GroupWords.code_line(groups.join_code), lines.last.y + line_height, :text)
+        group = panel.group or return list_plan
+        lines = wrapped(GroupWords.title_line(group), under_heading, :text)
+        lines += wrapped(GroupWords.code_line(group.join_code), lines.last.y + line_height, :note)
         extra = alert_text || (GroupWords.standard_note if standard_dots)
         lines += wrapped(extra, lines.last.y + line_height, alert_text ? :alert : :note) if extra
-        rows = member_rows(groups.members, groups.holder_mark, lines.last.y + (line_height * 0.8))
-        leave = GroupAction.new(name: :group_leave, rect: layout.credits_button, text: GroupWords.leave)
-        GroupPlan.new(size:, heading_y:, heading_size:, lines:, code_box: nil,
-                      actions: [leave, *common_actions], rows:)
+        top = lines.last.y + (line_height * 0.8)
+        rows, = paged(group.standings, top, floor) do |member, rect|
+          GroupStandingRow.new(rect:, group_id: group.id, number: member.number, score: member.top_score,
+                               champion: member.number == group.champion_number, me: member.number == group.you)
+        end
+        plan_with(heading: GroupWords.group_heading, lines:, rows:,
+                  actions: [back_action, GroupAction.new(name: :group_leave, rect: layout.credits_button, text: GroupWords.leave),
+                            GroupAction.new(name: :group_history, rect: layout.clear_records_button, text: GroupWords.history)])
       end
 
-      # The members, in columns of as many rows as fit between +top+ and
-      # the floor.
-      def member_rows(members, holder_mark, top)
-        row_height = button * ROW
-        room = floor - (size * 0.4) - top
-        per_column = [(room / row_height).floor, 1].max
-        columns = (members.size.to_f / per_column).ceil.clamp(1, 2)
-        width = columns == 1 ? column_width : (layout.safe.width - (3 * margin)) / 2.0
-        x_of = ->(i) { columns == 1 ? left : layout.safe.x + margin + ((width + margin) * i) }
-        members.each_with_index.map do |member, i|
-          rect = Rect.new(x: x_of[i / per_column], y: top + ((i % per_column) * row_height), width:, height: button)
-          GroupRow.new(rect:, mark: member.mark, holder: member.mark == holder_mark, me: member.you)
-        end
+      def history_plan
+        group = panel.group or return list_plan
+        changes = panel.groups.title_changes(group.id).to_a
+        lines = changes.empty? ? wrapped(GroupWords.no_history, under_heading, :note) : []
+        bottom = floor - button - margin
+        top = lines.last ? lines.last.y + line_height : under_heading
+        rows, per_page = paged(changes, top, bottom, gallery: !short?) { |change, rect| GroupHistoryRow.new(rect:, group_id: group.id, change:) }
+        plan_with(heading: GroupWords.history_heading, lines:, rows:,
+                  actions: [*pager(changes, per_page, floor - button), back_action])
+      end
+
+      def pad(rect) = CodePad.new(rect:, gap:, key_height: button, erase: GroupWords.erase, submit: GroupWords.submit)
+      def pad_height(room) = [CodePad.height(button, gap), room].min
+
+      def join_plan = short? ? join_beside : join_stacked
+
+      def code_text = CodeText.of(panel.code, GroupWords::CODE_LENGTH)
+
+      def join_stacked
+        box = Rect.new(x: left, y: under_heading, width: column_width, height: button)
+        message = alert_text ? wrapped(alert_text, box.bottom + (size * 0.9), :alert) : []
+        top = box.bottom + (line_height * 1.5)
+        keys = pad(Rect.new(x: left, y: top, width: column_width, height: pad_height(layout.records_floor - margin - top))).keys
+        plan_with(heading: GroupWords.join_heading, lines: message, code_box: box, actions: [*keys, back_action])
+      end
+
+      def join_beside
+        each = [(layout.safe.width - (3 * margin)) / 2.0, column_width].min
+        x = layout.center_x - (((2 * each) + margin) / 2.0)
+        box = Rect.new(x:, y: under_heading, width: each, height: button)
+        message = alert_text ? wrapped(alert_text, box.bottom + (size * 0.9), :alert, each) : []
+        room = layout.records_floor - margin - layout.top
+        keys = pad(Rect.new(x: x + each + margin, y: layout.top, width: each, height: pad_height(room))).keys
+        plan_with(heading: GroupWords.join_heading, heading_x: box.center_x, lines: message, code_box: box, actions: [*keys, back_action])
       end
     end
   end

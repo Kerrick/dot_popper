@@ -8,4 +8,4 @@ module DotPopper
   end
 end
 
-%w[settings mark message link worker session].each { require_relative "groups/#{it}" }
+%w[settings group link worker session].each { require_relative "groups/#{it}" }
