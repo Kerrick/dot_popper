@@ -35,9 +35,10 @@ Dot Popper's Ubiquitous Language. Code, screens, docs and the server use the sam
 | **top score** | The highest score in a friend group since its members joined. | score to beat |
 | **title change** | The title passing to another member, seen by the whole group and never acknowledged. | news, theft |
 
+| **Home** | The main screen, with Play on it, and the button that returns there. | the title screen, main menu |
+
 ## Not yet decided
 
-- **Home**, for the main screen, is proposed because "title" now means the group's prize. Until it's decided, say "the main screen".
 - `Cabinet` names the app's screen flow in code. Players never see it.
 
 Don't write "bank" or "pool" for free games: say "your first 20 games" and "3 games a day". Don't call Free a trial or demo anywhere.
