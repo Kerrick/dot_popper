@@ -147,6 +147,25 @@ class ScreenPlansTest < Minitest::Test
 
   DESKTOPS = DESKTOP_WIDTHS.product(DESKTOP_HEIGHTS)
 
+  # The offer of Pro, led by each thing a Free player can tap, at every
+  # size: its parts are apart and inside the safe area, clear of Back, and
+  # Buy and Restore Purchases always show.
+  def test_the_offer_fits_every_screen_whatever_it_leads_with
+    (SIZES + DESKTOPS).each do |width, height|
+      screen_layout = layout(width, height)
+      [[:games, "No games left today."], [:themes, nil], [:achievements, nil], [:groups, nil]].each do |focus, note|
+        art = { themes: 100.0, achievements: 110.0 }.fetch(focus, 56.0)
+        plan = OfferScreen.new(layout: screen_layout, type: Style::TYPE, words: WORDS, measure: RoughMeasure.new, offering: true, note:, focus:,
+                               art:).plan
+        name = "#{width}x#{height} #{focus}"
+        %i[focus buy restore].each { assert plan[it], "#{name}: #{it} shows" }
+        rects = plan.placed.rects.values
+        assert_apart rects + [screen_layout.back_button], name
+        rects.each { assert_inside it, screen_layout.safe, name }
+      end
+    end
+  end
+
   # Every screen, at every size, on a phone and on a desktop: a press
   # reaches one button at most, the middle of each button reaches it,
   # no two buttons are drawn over each other, and each is drawn inside

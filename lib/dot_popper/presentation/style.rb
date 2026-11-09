@@ -62,7 +62,7 @@ module DotPopper
         # The Themes screen: its button's word and heading, and each theme's name.
         themes: { title: "Themes", new: "A new theme", later: "Not now", use: "Use %s", classic: "Classic", ghost: "Ghost", jack_o_lantern: "Jack-o'-lantern", awake: "Awake", eclipse: "Eclipse" }.freeze,
         offer: {
-          entry: "Get Pro", heading: "Dot Popper Pro",
+          entry: "Get Pro", heading: "Dot Popper Pro", no_games: "No games left today.",
           includes: { games: "Unlimited games", achievements: "Achievements", themes: "Themes", groups: "Friend groups" }.freeze,
           buy: "Buy for %s", retry: "Try again", restore: "Restore Purchases",
           loading: "Asking the store…", busy: "One moment…", pending: "Waiting for approval.",

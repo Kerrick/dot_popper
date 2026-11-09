@@ -34,7 +34,7 @@ module DotPopper
         @privacy = PrivacyPainter.new(pen:)
         @credits = CreditsPainter.new(pen:)
         @themes = ThemesPainter.new(pen:, dots: @dots)
-        @offer = OfferPainter.new(pen:)
+        @offer = OfferPainter.new(pen:, dots: @dots)
         @game_over = GameOverPainter.new(pen:)
         @group = GroupPainter.new(pen:)
         @share = SharePreviewPainter.new(pen:, dots: @dots)

@@ -56,7 +56,23 @@ module DotPopperGui
       shoot("ach-open")
       show.back
       show.back
+      offers unless show.pro?
       game_over
+    end
+
+    # A Free player's offer of Pro, led by a theme and by an achievement.
+    def offers
+      show.open_themes
+      show.use(show.themes.last)
+      shoot("offer-themes")
+      show.back
+      show.back
+      show.open_achievements
+      show.open_achievement(:steady)
+      show.press(:achievement_pro, 0, 0, :mouse)
+      shoot("offer-achievements")
+      show.back
+      show.back
     end
 
     # Game Over with its lines, a met goal and, for Pro, a new achievement.

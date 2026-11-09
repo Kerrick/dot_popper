@@ -44,7 +44,8 @@ class GamesTest < Minitest::Test
     refute_predicate @show, :playing?
     assert_predicate @show, :offer?
     assert_equal "Unlimited games", Style::WORDS.offer_items.first
-    assert_includes @show.offer_plan.note_lines.join(" "), "3 games a day"
+    assert_equal ["No games left today."], @show.offer_plan.note_lines, "the offer says why, and counts nothing"
+    assert_equal "Unlimited games", @show.offer_screen.focus_word
     assert_includes @show.controls.map(&:name), :restore
   end
 

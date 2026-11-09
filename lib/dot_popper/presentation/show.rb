@@ -621,9 +621,31 @@ module DotPopper
       def offer_plan
         return unless offer?
 
-        OfferScreen.new(layout:, type: style::TYPE, words:, measure: @measure, offering: !@entitlement.pro?,
-                        note: words.offer_note(games.left, games.daily), focus: @offer_focus).plan
+        offer_screen.plan
       end
+
+      # The offer's words and parts to lay out (OfferScreen).
+      def offer_screen
+        OfferScreen.new(layout:, type: style::TYPE, words:, measure: @measure, offering: !@entitlement.pro?,
+                        note: (words.offer[:no_games] if @offer_for_play), focus: @offer_focus, art: offer_art)
+      end
+
+      # How tall the offer's picture of what was tapped is: the themes'
+      # cards, the achievement's card, or a feature's sign.
+      def offer_art
+        case @offer_focus
+        when :themes then layout.short? ? 64.0 : 100.0
+        when :achievements then layout.short? ? 84.0 : 110.0
+        else layout.short? ? 40.0 : 56.0
+        end
+      end
+
+      # The themes the offer shows: every one but the ordinary, as Pro
+      # would give them now.
+      def offer_themes = themes.reject(&:ordinary?)
+
+      # The achievement a Free player tapped, which the offer leads with.
+      attr_reader :offer_achievement
 
       # The price the store gave, or nil before it has.
       def offer_price = @storefront.price
@@ -1105,6 +1127,7 @@ module DotPopper
         @stats = stats_sheet
         @offer_for_play = true
         open_offer
+        @offer_focus = :games
       end
 
       # Plays the Tutorial on the field a game would start on, and sizes
