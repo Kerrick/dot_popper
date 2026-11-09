@@ -123,7 +123,7 @@ class ClearingStatsTest < Minitest::Test
   def test_the_title_after_clearing_shows_no_score_record_or_goal_but_keeps_its_buttons
     clear_by(:mouse)
     @show.close_stats
-    plan = @show.title_plan
+    plan = @show.home_plan
 
     assert_nil plan[:score_record]
     assert_nil plan[:goal]

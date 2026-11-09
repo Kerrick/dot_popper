@@ -23,7 +23,7 @@ module DotPopperGui
       run_out_the_clock
       wait(2.5)
       keep_screenshot("#{tag}-#{theme}-over")
-      continue_to_title
+      continue_to_home
       theme_keeper.instance_variable_set(:@told, [])
       frames(4)
       keep_screenshot("#{tag}-#{theme}-arrival")

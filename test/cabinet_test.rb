@@ -15,7 +15,7 @@ class CabinetTest < Minitest::Test
   end
 
   def test_the_game_starts_on_the_title
-    assert_instance_of Cabinet::Title, @cabinet.state
+    assert_instance_of Cabinet::Home, @cabinet.state
     assert_nil @cabinet.game
   end
 
@@ -69,7 +69,7 @@ class CabinetTest < Minitest::Test
 
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     @cabinet.press(400, 300)
-    assert_instance_of Cabinet::Title, @cabinet.state
+    assert_instance_of Cabinet::Home, @cabinet.state
   end
 
   def test_presses_outside_play_do_not_change_the_finished_game

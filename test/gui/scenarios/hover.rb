@@ -24,7 +24,7 @@ module DotPopperGui
       move(reach.center_x, reach.center_y)
       check(app.pointing_hand?, "the hand is back over Your stats")
       touch_move(reach.center_x, reach.center_y)
-      check(show.title? && show.hovered.nil? && !app.pointing_hand?, "a finger over it leaves no hover and no hand")
+      check(show.home? && show.hovered.nil? && !app.pointing_hand?, "a finger over it leaves no hover and no hand")
       play = show.play_reach
       move(play.center_x - 30, play.center_y)
       move(play.center_x, play.center_y)

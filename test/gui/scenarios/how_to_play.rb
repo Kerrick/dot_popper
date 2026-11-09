@@ -15,7 +15,7 @@ module DotPopperGui
     T = DotPopper::Presentation::Tutorial
 
     def play
-      check(show.title?, "the game opens on the title")
+      check(show.home?, "the game opens on the title")
       touch(layout.safe.x + 4, layout.safe.y + 4) if hand == "touch" # a finger in hand, so the tutorial's guide is one
       wait(0.6)
       reach = show.reach_of(:how_to_play)
@@ -25,7 +25,7 @@ module DotPopperGui
       keep_screenshot(name("title"))
       press_it(reach)
       check(show.tutorial?, "How to play opens the tutorial at once")
-      check(cabinet.state.is_a?(DotPopper::Cabinet::Title) && cabinet.game.nil?, "the game stays on its title meanwhile")
+      check(cabinet.state.is_a?(DotPopper::Cabinet::Home) && cabinet.game.nil?, "the game stays on its title meanwhile")
       wait_for("the tutorial's first beat", within: 900) { show.tutorial&.beat == :aim }
       wait(0.6)
       keep_screenshot(name("tutorial"))
@@ -37,7 +37,7 @@ module DotPopperGui
       key(:escape)
       check(show.playing?, "Escape skips it, and the game starts")
       run_out_the_clock
-      continue_to_title(how)
+      continue_to_home(how)
       key(:h)
       check(show.tutorial?, "H opens it again from the title")
     end

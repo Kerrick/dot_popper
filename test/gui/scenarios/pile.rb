@@ -18,7 +18,7 @@ module DotPopperGui
       mean = pile.stack.sum(&:x) / pile.stack.size
       check(mean < layout.width * 0.4, "the tilt rolls the pile to the left (its middle at x #{mean.round})")
       check_warm_pixel
-      continue_to_title
+      continue_to_home
     end
 
     private

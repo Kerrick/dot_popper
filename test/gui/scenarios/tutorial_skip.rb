@@ -13,7 +13,7 @@ module DotPopperGui
       key(:escape)
       check(show.playing?, "Escape skips it, and the game starts at once")
       run_out_the_clock
-      continue_to_title
+      continue_to_home
       open_tutorial
       wait(0.5)
       button = show.skip_reach

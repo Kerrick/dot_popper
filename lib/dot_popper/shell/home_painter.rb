@@ -7,10 +7,10 @@ module DotPopper
     # been played, the score record and today's goal; and along the bottom,
     # "Your stats", where it changes something the choice of how dots
     # are sized, and "How to play", on a desktop "Full screen" and Quit,
-    # and the mute button, each where the Show's TitlePlan puts it. From
+    # and the mute button, each where the Show's HomePlan puts it. From
     # the name to the last line, the words sit on a faint backing, so the
     # dots drifting behind them dim further.
-    class TitlePainter < Data.define(:pen, :dots)
+    class HomePainter < Data.define(:pen, :dots)
       G = ::Lota::Graphics
       HELP = 0.3 # the help sign's ring's radius, in the button's height
       HELP_MARK = 0.42 # its question mark's size, in the button's height
@@ -21,8 +21,8 @@ module DotPopper
         marquee = show.marquee
         intro = marquee.intro(now)
         words = show.words
-        plan = show.title_plan
-        ScrimPainter.new(pen:).draw(plan.backing, pen.style::TITLE_BACKING, layout, alpha: intro)
+        plan = show.home_plan
+        ScrimPainter.new(pen:).draw(plan.backing, pen.style::HOME_BACKING, layout, alpha: intro)
         title = pen.fonts.bold(plan.size(:title))
         y = plan[:title].y + (title.height / 2.0) - ((1 - intro) * 24)
         if pen.art then ThemedTitle.new(pen:, dots:).draw(words.title, layout.center_x, y, plan.size(:title), intro, room: layout.safe.width * 0.92)

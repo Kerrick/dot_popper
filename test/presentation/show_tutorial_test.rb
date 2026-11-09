@@ -25,8 +25,8 @@ class ShowTutorialTest < Minitest::Test
     press_main
 
     assert @show.tutorial?
-    refute @show.title?
-    assert_instance_of DotPopper::Cabinet::Title, @cabinet.state
+    refute @show.home?
+    assert_instance_of DotPopper::Cabinet::Home, @cabinet.state
     assert_empty @events.grep(->(it) { it == DotPopper::Events::GameStarted })
     assert_equal "seen", @store.read, "it is seen from the moment it opens"
   end
@@ -47,7 +47,7 @@ class ShowTutorialTest < Minitest::Test
     assert_equal [1, 1], [game.dots_in_a_row, @show.hud.dots_in_a_row], "and the row goes on as the player left it"
     assert_same scene.animations, @show.animations, "and the dots are drawn as they were"
     assert_equal 0, @stats_book.stats.games
-    assert_equal [DotPopper::Events::GameStarted], @events.uniq - [DotPopper::Events::TitleShown]
+    assert_equal [DotPopper::Events::GameStarted], @events.uniq - [DotPopper::Events::HomeShown]
   end
 
   def test_the_game_it_goes_on_into_counts_as_any_game_does
@@ -196,12 +196,12 @@ class ShowTutorialTest < Minitest::Test
   def test_how_to_play_opens_it_again_and_it_hands_over_into_a_game
     play_through
     finish_game
-    assert @show.title?
+    assert @show.home?
     reach = @show.reach_of(:how_to_play)
     @show.tap(reach.center_x, reach.center_y)
 
     assert @show.tutorial?
-    assert_instance_of DotPopper::Cabinet::Title, @cabinet.state
+    assert_instance_of DotPopper::Cabinet::Home, @cabinet.state
     assert_equal "seen", @store.read
     play_through(opened: true)
     assert @show.playing?

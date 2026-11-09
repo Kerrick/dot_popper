@@ -257,7 +257,7 @@ module DotPopper
       # elsewhere, "Share my score".
       def share_pressed
         if @show.stats? then @show.clear_or_undo(:y)
-        elsif @show.title? then @show.how_to_play
+        elsif @show.home? then @show.how_to_play
         else @show.share
         end
       end
@@ -318,7 +318,7 @@ module DotPopper
         # On the title Android's Back leaves the app, as Back on an app's
         # first screen does; in a game it does nothing, so a stray edge
         # swipe never throws a game away.
-        return ::Lota::Event.quit if key == :escape && @android && @show.title?
+        return ::Lota::Event.quit if key == :escape && @android && @show.home?
         # A tablet's keyboard neither quits the app nor takes it out of
         # fullscreen: iOS apps are left by the system, never by the app.
         return if @touch

@@ -23,7 +23,7 @@ module DotPopperGui
       wait(1.5)
       check(show.game_over?, "the drag stays on Game Over")
       pad(:a)
-      check(show.title?, "a quick press of A goes on to the title")
+      check(show.home?, "a quick press of A goes on to the title")
     end
   end
 end

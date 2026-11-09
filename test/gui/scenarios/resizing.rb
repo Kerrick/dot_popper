@@ -28,7 +28,7 @@ module DotPopperGui
       check_game_fits
       run_out_the_clock
       pile_refits
-      continue_to_title
+      continue_to_home
     end
 
     private

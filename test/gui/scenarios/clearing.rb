@@ -33,7 +33,7 @@ module DotPopperGui
       check(!show.stats.empty, "a press of Y undoes")
       back = show.back_reach
       click(back.center_x, back.center_y)
-      check(!show.stats? && show.title?, "a click on Back goes back")
+      check(!show.stats? && show.home?, "a click on Back goes back")
     end
 
     private

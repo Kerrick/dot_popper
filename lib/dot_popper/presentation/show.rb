@@ -80,9 +80,9 @@ module DotPopper
         @effects = Effects.new(radius:, random:, calm:)
         @animations = DotAnimations.new(style::MOTION)
         @hud = Hud.blank(style::HUD, words)
-        @attract = Attract.spawn(cabinet.field, style::TITLE)
+        @attract = Attract.spawn(cabinet.field, style::HOME)
         @now = 0.0
-        @marquee = Marquee.new(style: style::TITLE, score_record: cabinet.score_record.of(cabinet.size_class), at: @now)
+        @marquee = Marquee.new(style: style::HOME, score_record: cabinet.score_record.of(cabinet.size_class), at: @now)
         @game_over = nil
         @tutor = tutor
         @clipboard = clipboard
@@ -117,7 +117,7 @@ module DotPopper
 
       # The new theme to tell the player of, once, at the title, when nothing
       # else is asked of them; nil the rest of the time.
-      def arrival = (@theme_keeper.arrival if title? && !stats? && !themes? && !group_open?)
+      def arrival = (@theme_keeper.arrival if home? && !stats? && !themes? && !group_open?)
       def arrival? = !arrival.nil?
       def arrival_plan = ArrivalPlan.new(layout:, word: (arrival_use_word if arrival?), measure: @measure)
 
@@ -174,7 +174,7 @@ module DotPopper
 
       # Whether the title is showing: the game is on its title, and the
       # Tutorial is not playing over it.
-      def title? = cabinet.state.is_a?(Cabinet::Title) && !tutorial?
+      def home? = cabinet.state.is_a?(Cabinet::Home) && !tutorial?
 
       # Whether the Tutorial is playing (#tutorial). The game stays on its
       # title meanwhile, so its clock is not running, and no tap there
@@ -311,7 +311,7 @@ module DotPopper
           elsif group_open? then group_controls
           elsif themes? then themes_controls
           elsif stats? then stats_controls
-          elsif title? then title_controls
+          elsif home? then home_controls
           elsif sharing? then share_controls
           elsif game_over? then game_over_controls
           else []
@@ -337,7 +337,7 @@ module DotPopper
         elsif group_open? then leave
         elsif sharing? then copy_result
         elsif offer? || stats? then leave
-        elsif title? then play
+        elsif home? then play
         elsif game_over? then continue_on
         end
       end
@@ -345,7 +345,7 @@ module DotPopper
       # The title's Play: a game starts, or on a first Play, the Tutorial
       # (TutorialFlag), which is seen from then on.
       def play
-        return unless title? && !stats? && !group_open?
+        return unless home? && !stats? && !group_open?
         return open_tutorial if @tutorial_flag.due?(played: stats_offered?)
 
         start_game
@@ -355,7 +355,7 @@ module DotPopper
       # at once, whether it was seen or not, handing over into a game as
       # it does on a first Play.
       def how_to_play
-        open_tutorial if title? && !stats? && !group_open?
+        open_tutorial if home? && !stats? && !group_open?
       end
 
       # The Tutorial's skip button, Escape, or a gamepad's B: the game
@@ -409,7 +409,7 @@ module DotPopper
       # first press asks, and :quit if a second comes within QUIT_ASK
       # seconds, so a stray press never closes the game.
       def ask_to_quit
-        return unless title? && !stats? && !group_open?
+        return unless home? && !stats? && !group_open?
         return :quit if quit_asked?
 
         @quit_asked_at = now
@@ -420,7 +420,7 @@ module DotPopper
       # How much of "Press B again to quit" shows: all of it while a second
       # press would quit, fading out in its last third of a second.
       def quit_prompt
-        return 0.0 unless quit_asked? && title?
+        return 0.0 unless quit_asked? && home?
 
         ((QUIT_ASK - (now - @quit_asked_at)) / 0.3).clamp(0.0, 1.0)
       end
@@ -451,12 +451,12 @@ module DotPopper
       # offers the choice, and remembers it. The title's dots and best
       # change with it, so the choice shows at once.
       def choose_sizing(sizing)
-        return unless title? && sizing_offered?
+        return unless home? && sizing_offered?
         return sounds.play(:tick, pitch: 0.8) if sizing == cabinet.sizing
 
         cabinet.sizing = sizing
         @sizing_store.write(cabinet.sizing.to_text)
-        @attract = Attract.spawn(cabinet.field, style::TITLE)
+        @attract = Attract.spawn(cabinet.field, style::HOME)
         @marquee = marquee.with(score_record: cabinet.score_record.of(cabinet.size_class))
         sounds.play(:tick, pitch: cabinet.sizing.sized_to_screen? ? 1.2 : 0.9)
       end
@@ -464,7 +464,7 @@ module DotPopper
       # Opens the Stats screen over the title, with the stats as they
       # are now.
       def open_stats
-        return unless title?
+        return unless home?
 
         @stats = stats_sheet
         sounds.play(:tick)
@@ -735,12 +735,12 @@ module DotPopper
       # DotSizing and its Rect, while the title offers it.
       def sizing_reaches = SIZINGS.map { [it, reach_of(it)] }
 
-      # Where the title's words and buttons go (TitlePlan). Play is sized
+      # Where the title's words and buttons go (HomePlan). Play is sized
       # from dots fitted to the screen, whichever size is chosen, so the
       # Dot size choice beside it never moves or resizes it.
-      def title_plan
+      def home_plan
         goal = stats_book.goal_done? ? words.goal_done_line(stats_book.goal) : words.goal(stats_book.goal) if played?
-        planned(TitleScreen.new(layout:, type: style::TYPE, words:, measure: @measure, score_record: marquee.score_record, goal:,
+        planned(HomeScreen.new(layout:, type: style::TYPE, words:, measure: @measure, score_record: marquee.score_record, goal:,
                                 done: stats_book.goal_done?, streak: stats_book.streak, stats: stats_offered?,
                                 sizing: sizing_offered?, radius: DotSize.fitted(layout.width, layout.height).radius,
                                 window: window.offered?, games: games_line))
@@ -753,7 +753,7 @@ module DotPopper
       # nil away from Game Over.
       def game_over_plan = game_over_screen&.then { planned(it) }
 
-      # The plan of +screen+ (a TitleScreen or a FinaleScreen), laid out
+      # The plan of +screen+ (a HomeScreen or a FinaleScreen), laid out
       # again only when the screen differs from the last of its kind, since
       # laying one out measures every line, a millisecond a frame on a
       # phone, and each frame asks for it more than once.
@@ -778,19 +778,19 @@ module DotPopper
         @layout = layout
         @tutorial&.refit(Field.new(field.width, field.height, @tutorial.field.radius))
         lay_out_credits if credits?
-        @attract = field.radius == attract.field.radius ? attract.refit(field) : Attract.spawn(field, style::TITLE)
+        @attract = field.radius == attract.field.radius ? attract.refit(field) : Attract.spawn(field, style::HOME)
       end
 
       def update(seconds)
         @now += seconds
-        @groups.update(now, quiet: !playing?, showing: (title? && !stats?) || game_over?)
+        @groups.update(now, quiet: !playing?, showing: (home? && !stats?) || game_over?)
         follow_store(seconds) unless playing?
         clear_stats if clearing.done?(now)
         @undo = nil unless @undo&.open?(now)
         @hover = hover.at(hovered).update(seconds, style::HOVER)
         effects.update(seconds)
         follow_tutorial(seconds) if tutorial?
-        @attract = attract.update(seconds) if title?
+        @attract = attract.update(seconds) if home?
         follow_game if cabinet.game
         follow_game_over if game_over?
       end
@@ -804,7 +804,7 @@ module DotPopper
         when Events::Penalized then penalized(event)
         when Events::Missed then effects.ring(event.x, event.y, style::TOUCH_RIPPLE)
         when Events::GameEnded then game_ended(event)
-        when Events::TitleShown then title_shown(event)
+        when Events::HomeShown then home_shown(event)
         end
       end
 
@@ -824,7 +824,7 @@ module DotPopper
       # Opens the offer straight from the title, as Play does when no play
       # is left; Back from it returns to the title.
       def offer_for_play
-        return unless title? && offer_offered?
+        return unless home? && offer_offered?
 
         @stats = stats_sheet
         @offer_for_play = true
@@ -882,8 +882,8 @@ module DotPopper
 
       def group_controls = group_plan.controls.map { |name, frame| button(name, frame) }
 
-      def title_controls
-        plan = title_plan
+      def home_controls
+        plan = home_plan
         buttons = [Control.new(name: :mute, reach: layout.mute_button)]
         buttons << button(:group_open, group_button) if group_offered?
         buttons << button(:how_to_play, plan.how_to_play_button)
@@ -1133,7 +1133,7 @@ module DotPopper
         sounds.play(event.new_score_record ? :new_score_record : :game_over)
       end
 
-      def title_shown(event)
+      def home_shown(event)
         @theme_keeper.refresh
         @stats = nil
         @themes = false
@@ -1143,13 +1143,13 @@ module DotPopper
         effects.clear
         @game_over = nil
         @preview = nil
-        @marquee = Marquee.new(style: style::TITLE, score_record: event.score_record, at: now)
+        @marquee = Marquee.new(style: style::HOME, score_record: event.score_record, at: now)
       end
 
       # A tap on the title away from its buttons: a fresh dot there pops
       # for fun, with no score; anywhere else, nothing happens.
       def toy_tap(x, y)
-        return unless title? && !stats? && !group_open?
+        return unless home? && !stats? && !group_open?
 
         dot = attract.dots.top_at(x, y)
         toy_pop(dot, x, y) if dot&.fresh?

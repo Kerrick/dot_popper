@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # The game as a whole: Title, then Playing, then Game Over, then Title
+  # The game as a whole: Home, then Playing, then Game Over, then Home
   # again. Each state is a value that answers +press+ and +update+ with
   # the state that follows it, so each transition reads in one place.
   # The Cabinet is the shell around them: it holds the current state, makes
@@ -23,7 +23,7 @@ module DotPopper
       @score_record = score_record
       @random = random
       @listeners = []
-      @state = show_title
+      @state = show_home
     end
 
     # Adds a listener: anything that answers +call(event)+.
@@ -53,7 +53,7 @@ module DotPopper
     # The player chose how dots are sized. Only the title may change it,
     # so a game in play keeps the radius it started with.
     def sizing=(sizing)
-      @sizing = sizing if state.is_a?(Title)
+      @sizing = sizing if state.is_a?(Home)
     end
 
     # Tells every listener of +event+; nil is nothing to tell.
@@ -64,9 +64,9 @@ module DotPopper
 
     # The transitions, each with the event that says it happened.
 
-    def show_title
-      announce(Events::TitleShown.new(score_record: score_record.of(size_class)))
-      Title.new
+    def show_home
+      announce(Events::HomeShown.new(score_record: score_record.of(size_class)))
+      Home.new
     end
 
     # A game drawn from +seed+, by default one of its own from the
@@ -84,7 +84,7 @@ module DotPopper
     # outside Playing; from here the game counts as any other does. Its
     # new dots are drawn from a seed of its own, as #start_game's are.
     def resume(field:, dots:, score:, seconds:, dots_in_a_row: 0)
-      return self unless state.is_a?(Title)
+      return self unless state.is_a?(Home)
 
       seed = @random.rand(LARGEST_SEED)
       advance(begin_game(Game.resume(field, dots:, score:, seconds:, dots_in_a_row:, random: Random.new(seed)), seed))
@@ -112,7 +112,7 @@ module DotPopper
     end
 
     # Waiting to start. Any press begins a game.
-    class Title < Data.define
+    class Home < Data.define
       def game = nil
       def press(cabinet, _x, _y) = cabinet.start_game
       def update(_game, _seconds) = self
@@ -145,7 +145,7 @@ module DotPopper
       def score = game.score
       def ready? = shown >= Rules::GAME_OVER_GRACE
 
-      def press(cabinet, _x, _y) = ready? ? cabinet.show_title : self
+      def press(cabinet, _x, _y) = ready? ? cabinet.show_home : self
       def update(_game, seconds) = with(shown: shown + seconds)
     end
   end

@@ -38,7 +38,7 @@ module DotPopper
         notice(cabinet.state)
         @waited += seconds
         case cabinet.state
-        when Cabinet::Title then title(cabinet, show)
+        when Cabinet::Home then title(cabinet, show)
         when Cabinet::GameOver then finish(cabinet, show)
         when Cabinet::Playing then play(seconds, cabinet.game)
         end
@@ -50,7 +50,7 @@ module DotPopper
         return if state.class == @state
 
         @game_overs += 1 if state.is_a?(Cabinet::GameOver)
-        @titles += 1 if state.is_a?(Cabinet::Title)
+        @titles += 1 if state.is_a?(Cabinet::Home)
         @shared = false
         @state = state.class
         @waited = 0.0

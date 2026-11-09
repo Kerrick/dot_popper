@@ -36,6 +36,6 @@ module DotPopper
 
     # The title screen came up; +best+ is the score record on screens like
     # this one.
-    class TitleShown < Data.define(:score_record); end
+    class HomeShown < Data.define(:score_record); end
   end
 end

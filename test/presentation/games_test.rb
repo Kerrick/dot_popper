@@ -53,7 +53,7 @@ class GamesTest < Minitest::Test
     press_main
     @show.back
 
-    assert_predicate @show, :title?
+    assert_predicate @show, :home?
     refute_predicate @show, :offer?
     refute_predicate @show, :stats?
   end
@@ -192,7 +192,7 @@ class GamesTest < Minitest::Test
     show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R)
 
     assert_nil show.games_line
-    assert_nil show.title_plan[:games]
+    assert_nil show.home_plan[:games]
   end
 
   def test_the_games_line_and_the_offer_fit_on_the_screens_a_player_has
@@ -200,7 +200,7 @@ class GamesTest < Minitest::Test
       layout = layout(width, height)
       show = Show.new(cabinet: DotPopper::Cabinet.new(field, random: Random.new(3)), layout:, sounds: FakeSounds.new, radius: R,
                       games: @games, storefront: Store.new)
-      plan = show.title_plan
+      plan = show.home_plan
 
       assert plan.placed.fits?, "the title fits #{width}x#{height}"
       assert plan[:games], "the games show at #{width}x#{height}"

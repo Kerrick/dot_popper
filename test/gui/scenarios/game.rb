@@ -15,7 +15,7 @@ module DotPopperGui
     POPS = 4
 
     def play
-      check(show.title?, "the game opens on the title")
+      check(show.home?, "the game opens on the title")
       start_game
       wait(0.5)
       shot = screenshot
@@ -28,8 +28,8 @@ module DotPopperGui
       run_out_the_clock
       game_over
       click_empty_space
-      continue_to_title
-      check_equal(%i[GameStarted GameEnded TitleShown], story & %i[GameStarted GameEnded TitleShown],
+      continue_to_home
+      check_equal(%i[GameStarted GameEnded HomeShown], story & %i[GameStarted GameEnded HomeShown],
                   "the screens come in order: title, game, Game Over, title")
     end
 

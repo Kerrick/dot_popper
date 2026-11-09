@@ -319,8 +319,8 @@ module DotPopper
 
       # The title: its drifting dots and how far they dim, the prompt's
       # breath and its faintest point in it, which stays easy to read.
-      class TitleStyle < Data.define(:dots, :drift, :dim, :breath, :faintest, :intro); end
-      TITLE = TitleStyle.new(dots: 7, drift: 0.35, dim: 0.76, breath: 2.4, faintest: 0.8,
+      class HomeStyle < Data.define(:dots, :drift, :dim, :breath, :faintest, :intro); end
+      HOME = HomeStyle.new(dots: 7, drift: 0.35, dim: 0.76, breath: 2.4, faintest: 0.8,
                             intro: Tween.new(from: 0.0, to: 1.0, duration: 0.5, ease: :out_cubic))
       # The title's "Dot size" choice is offered only where dots sized to
       # the screen would be more than a tenth smaller or bigger than the
@@ -331,7 +331,7 @@ module DotPopper
       SIZING = SizingStyle.new(alike: 0.1, icon: 0.16, icons: 0.5..2.2)
       # ...and the title's words, from its name to its prompt, sit on a
       # faint backing, so a dot drifting behind them dims further.
-      TITLE_BACKING = ScrimStyle.new(alpha: 0.4, feather: 48, layers: 10, pad: 12)
+      HOME_BACKING = ScrimStyle.new(alpha: 0.4, feather: 48, layers: 10, pad: 12)
 
       # The glow fresh dots and droplets cast on the night under the dots
       # (Shell::Bloom), blurred at half the screen's resolution. A

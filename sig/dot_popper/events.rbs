@@ -1,6 +1,6 @@
 module DotPopper
   type event = Events::Popped | Events::Penalized | Events::Missed
-             | Events::GameStarted | Events::GameEnded | Events::TitleShown
+             | Events::GameStarted | Events::GameEnded | Events::HomeShown
 
   type tap_event = Events::Popped | Events::Penalized | Events::Missed
 
@@ -73,7 +73,7 @@ module DotPopper
       def score: () -> Integer
     end
 
-    class TitleShown < ::Data
+    class HomeShown < ::Data
       attr_reader score_record: Integer
 
       def self.new: (score_record: Integer) -> instance

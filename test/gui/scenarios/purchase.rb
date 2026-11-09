@@ -13,7 +13,7 @@ module DotPopperGui
     def play
       keeper = show.instance_variable_get(:@theme_keeper)
       keeper.told(keeper.arrival) until keeper.arrival.nil?
-      check(show.title?, "the game opens on the title")
+      check(show.home?, "the game opens on the title")
       check_equal(words.games_left(2), show.games_line, "the title counts the games left")
       quick_game
       quick_game
@@ -39,12 +39,12 @@ module DotPopperGui
 
     def pro
       show.back
-      check(show.title?, "Back returns to the title")
+      check(show.home?, "Back returns to the title")
       check_nil_games
       start_game
       check(show.playing?, "Play starts a game with no games left")
       run_out_the_clock
-      continue_to_title
+      continue_to_home
       show.open_stats
       check(!show.controls.map(&:name).include?(:offer), "the Stats screen no longer offers the purchase")
       check(!show.themes_locked?, "the themes are the player's to use")
@@ -63,7 +63,7 @@ module DotPopperGui
     scenario :purchase_kept
 
     def play
-      check(show.title?, "the game opens on the title")
+      check(show.home?, "the game opens on the title")
       check(show.games_line.nil?, "still Pro after a relaunch: the title counts no games")
       wait(0.5)
       keep_screenshot("purchase-relaunched")

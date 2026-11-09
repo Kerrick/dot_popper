@@ -20,7 +20,7 @@ class ScreenPlansTest < Minitest::Test
       screen_layout = layout(width, height)
       radii = [R, DotPopper::DotSize.fitted(width, height).radius]
       [0, 75].product([nil, :open, :done], [0, 5], [true, false], radii) do |score_record, goal, streak, sizing, radius|
-        screen = TitleScreen.new(layout: screen_layout, type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
+        screen = HomeScreen.new(layout: screen_layout, type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
                                  score_record:, goal: { open: GOAL, done: WORDS.goal_done_line(DotPopper::DailyGoal.for(Date.new(2026, 11, 1))) }[goal], done: goal == :done,
                                  streak:, stats: !goal.nil?, sizing: sizing && !goal.nil?, radius:)
         plan = screen.plan
@@ -62,7 +62,7 @@ class ScreenPlansTest < Minitest::Test
       screen_layout = layout(width, height)
       radius = DotPopper::DotSize.fitted(width, height).radius
       places = [[0, nil, false], [75, :open, false], [75, :done, true], [0, :open, true]].map do |score_record, goal, sizing|
-        screen = TitleScreen.new(layout: screen_layout, type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
+        screen = HomeScreen.new(layout: screen_layout, type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
                                  score_record:, goal: { open: GOAL, done: WORDS.goal_done_line(DotPopper::DailyGoal.for(Date.new(2026, 11, 1))) }[goal],
                                  done: goal == :done, streak: 5, stats: !goal.nil?, sizing:, radius:, window: true)
         plan = screen.plan
@@ -93,7 +93,7 @@ class ScreenPlansTest < Minitest::Test
   # the top right corner.
   def test_the_window_buttons_are_labelled_wherever_the_row_has_room
     place = lambda do |width, height|
-      buttons = TitleScreen.new(layout: layout(width, height), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
+      buttons = HomeScreen.new(layout: layout(width, height), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
                                 window: true, radius: DotPopper::DotSize.fitted(width, height).radius).plan.window_buttons
       [buttons.place, buttons.labelled]
     end
@@ -102,7 +102,7 @@ class ScreenPlansTest < Minitest::Test
     assert_equal [:row, false], place[640, 400]
     assert_equal [:above, false], place[400, 850]
     assert_equal [:corner, false], place[400, 320]
-    wide = TitleScreen.new(layout: layout(1200, 800), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
+    wide = HomeScreen.new(layout: layout(1200, 800), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
                            window: true).plan
     assert_equal wide.mute_button.y, wide.window_buttons.quit.y, "in the bottom row"
     assert_operator wide.how_to_play_button.right, :<, wide.window_buttons.fullscreen.x, "after How to play"
@@ -114,7 +114,7 @@ class ScreenPlansTest < Minitest::Test
   # the player's own best, goal and streak, closer to each other than to
   # Play.
   def test_play_follows_the_legend_and_the_players_own_lines_stand_apart_under_it
-    plan = TitleScreen.new(layout: layout(1200, 800), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
+    plan = HomeScreen.new(layout: layout(1200, 800), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
                            score_record: 75, goal: GOAL, streak: 5, stats: true, window: true).plan
 
     assert_equal %i[title legend play score_record goal streak], plan.placed.rects.keys
@@ -128,7 +128,7 @@ class ScreenPlansTest < Minitest::Test
   # out as before.
   def test_without_a_window_to_switch_the_title_has_no_window_buttons
     SIZES.each do |width, height|
-      screen = TitleScreen.new(layout: layout(width, height), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
+      screen = HomeScreen.new(layout: layout(width, height), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
                                stats: true, sizing: true)
       plan = screen.plan
 
@@ -225,7 +225,7 @@ class ScreenPlansTest < Minitest::Test
   end
 
   def test_short_of_room_the_title_lets_the_streak_go_before_the_goal_and_the_score_record
-    plan = TitleScreen.new(layout: layout(400, 320), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
+    plan = HomeScreen.new(layout: layout(400, 320), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
                            score_record: 75, goal: GOAL, streak: 5, stats: true, sizing: true).plan
     dropped = %i[streak goal best].reject { plan[it] }
 

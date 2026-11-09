@@ -20,7 +20,7 @@ module DotPopperGui
       wait(0.5)
       check_fresh_pixel(fresh_dot)
       run_out_the_clock
-      continue_to_title
+      continue_to_home
       check(show.sizing_offered?, "the title offers the dot size on a narrow window")
       sizing, second = show.sizing_reaches.last
       check_equal(DotPopper::DotSizing::STANDARD, sizing, "the second segment is Standard")

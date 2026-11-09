@@ -15,7 +15,7 @@ module DotPopperGui
     scenario :window_buttons
 
     def play
-      check(show.title?, "the game opens on the title")
+      check(show.home?, "the game opens on the title")
       wait(0.6)
       check_drawn(:fullscreen, "Full screen")
       check_drawn(:quit, "Quit")
@@ -27,7 +27,7 @@ module DotPopperGui
       check_equal(words.full_screen, words.fullscreen_button(show.window.fullscreen?), "the button says Full screen")
       press_button(:fullscreen)
       settled_window("a click on Full screen fills the screen") { L::Window.fullscreen.first }
-      check(show.title?, "the title stays")
+      check(show.home?, "the title stays")
       wait(0.6)
       check_equal(words.windowed, words.fullscreen_button(show.window.fullscreen?), "the button now says Window")
       check_drawn(:fullscreen, "Window")

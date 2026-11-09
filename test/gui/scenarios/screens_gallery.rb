@@ -21,7 +21,7 @@ module DotPopperGui
       run_out_the_clock
       @size = "first"
       shoot("over", settle: 2.5)
-      continue_to_title
+      continue_to_home
       keeper = show.instance_variable_get(:@theme_keeper)
       keeper.receive(%w[ghost]) if ENV["DOT_POPPER_PRO"] == "1"
       keeper.told(keeper.arrival) until keeper.arrival.nil?
@@ -102,7 +102,7 @@ module DotPopperGui
       6.times { pop_fresh }
       run_out_the_clock
       shoot(state, settle: 2.5)
-      continue_to_title
+      continue_to_home
     end
 
     def shoot(state, settle: 1.0)

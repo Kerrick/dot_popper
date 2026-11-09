@@ -19,7 +19,7 @@ class ShowTest < Minitest::Test
     fresh = dots.find { it.fresh? && dots.top_at(it.x, it.y) == it && @show.control_at(it.x, it.y).nil? }
     @show.tap(fresh.x, fresh.y)
 
-    assert @show.title?
+    assert @show.home?
     assert_equal %i[pop], @sounds.names
     assert_equal 1, @show.effects.rings.size
   end
@@ -67,7 +67,7 @@ class ShowTest < Minitest::Test
 
   def test_only_play_starts_a_game
     @show.tap(5, 5)
-    assert @show.title?
+    assert @show.home?
 
     @show.tap(*middle(@show.play_reach))
     assert @show.playing?
@@ -77,7 +77,7 @@ class ShowTest < Minitest::Test
   # Play is at least a dot fitted to the screen across, whichever size is
   # chosen, and a press reaches it a margin past its edges.
   def test_play_is_big_and_easy_to_reach
-    button = @show.title_plan.play_button
+    button = @show.home_plan.play_button
     layout = @show.layout
 
     assert_operator button.height, :>=, 2 * DotPopper::DotSize.fitted(layout.width, layout.height).radius
@@ -99,7 +99,7 @@ class ShowTest < Minitest::Test
     @show.tap(5, 5, by: :mouse)
     assert @show.game_over?, "a click on empty space is the pile's"
     @show.tap(5, 5, by: :gamepad)
-    assert @show.title?
+    assert @show.home?
   end
 
   # The words name the press the player last made: a click to start,
@@ -192,7 +192,7 @@ class ShowTest < Minitest::Test
 
     @show.close_share
     @show.tap(*continue)
-    assert @show.title?
+    assert @show.home?
     refute @show.sharing?
   end
 
@@ -268,7 +268,7 @@ class ShowTest < Minitest::Test
     @show.tap(5, 5)
     assert @show.game_over?, "empty space is only for the pile"
     press_main
-    assert @show.title?
+    assert @show.home?
     assert_nil @clipboard.text
   end
 
@@ -279,7 +279,7 @@ class ShowTest < Minitest::Test
     @cabinet.update(20)
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     assert @show.back
-    assert @show.title?
+    assert @show.home?
   end
 
   # Game Over's presses wait for their release, since each may become a
@@ -313,7 +313,7 @@ class ShowTest < Minitest::Test
     place = middle(@show.share_reach)
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
-    assert @show.title?
+    assert @show.home?
     assert_nil @show.share_reach
 
     @show.tap(*place)
@@ -327,14 +327,14 @@ class ShowTest < Minitest::Test
     @show.tap(button.center_x, button.center_y)
 
     assert @sounds.muted?
-    assert @show.title?
+    assert @show.home?
   end
 
   def test_your_stats_is_offered_only_once_a_game_has_finished
     refute @show.stats_offered?
     assert_nil @show.stats_reach
     @show.tap(*middle(@show.layout.stats_button))
-    assert @show.title?, "before then, its corner is empty space, which does nothing"
+    assert @show.home?, "before then, its corner is empty space, which does nothing"
 
     finish_game
     assert @show.stats_offered?
@@ -346,7 +346,7 @@ class ShowTest < Minitest::Test
     assert_operator @show.marquee.score_record, :>, 0
 
     @show.tap(*middle(reach(DotPopper::DotSizing::SIZED_TO_SCREEN)))
-    assert @show.title?, "the tap never starts a game"
+    assert @show.home?, "the tap never starts a game"
     assert @cabinet.sizing.sized_to_screen?
     assert_equal DotPopper::DotSizing::SIZED_TO_SCREEN.to_text, @sizing_store.read
     assert_in_delta 35.4, @show.attract.dots.first.radius, 0.1
@@ -372,33 +372,33 @@ class ShowTest < Minitest::Test
     assert @cabinet.sizing.sized_to_screen?
     @show.tap(*middle(reach(same)))
     refute @cabinet.sizing.sized_to_screen?
-    assert @show.title?
+    assert @show.home?
   end
 
   # The maintainer didn't see why Play changed size with the Dot size
   # choice: it was sized from the chosen dots. It never moves now.
   def test_choosing_a_dot_size_leaves_play_where_it_is
     finish_game
-    play = @show.send(:title_plan).play_button
+    play = @show.send(:home_plan).play_button
     @show.toggle_sizing
 
-    assert_equal play, @show.send(:title_plan).play_button
+    assert_equal play, @show.send(:home_plan).play_button
   end
 
   # Laying the title out took a millisecond a frame on a phone, twice a
   # frame; it is laid out again only when something on it changes.
   def test_the_title_is_laid_out_again_only_when_it_changes
-    plan = @show.title_plan
+    plan = @show.home_plan
 
-    assert_same plan, @show.title_plan
+    assert_same plan, @show.home_plan
     finish_game
 
-    refute_same plan, @show.title_plan, "a played game brings the records and the goal"
-    assert_same @show.title_plan, @show.title_plan
-    wider = @show.title_plan
+    refute_same plan, @show.home_plan, "a played game brings the records and the goal"
+    assert_same @show.home_plan, @show.home_plan
+    wider = @show.home_plan
     @show.resize(layout(400, 850), field(400, 850))
 
-    refute_equal wider.play_button, @show.title_plan.play_button
+    refute_equal wider.play_button, @show.home_plan.play_button
   end
 
   def test_game_over_is_laid_out_again_only_when_it_changes
@@ -436,7 +436,7 @@ class ShowTest < Minitest::Test
     assert_nil reach(DotPopper::DotSizing::SIZED_TO_SCREEN)
     @show.tap(*middle(@show.layout.sizing_control.options.first))
 
-    assert @show.title?
+    assert @show.home?
     refute @cabinet.sizing.sized_to_screen?
   end
 
@@ -457,7 +457,7 @@ class ShowTest < Minitest::Test
     assert cabinet.sizing.sized_to_screen?, "the saved choice stays"
     assert_nil show.sizing_reaches.to_h.fetch(DotPopper::DotSizing::STANDARD)
     show.tap(*middle(show.layout.sizing_control.options.last))
-    assert cabinet.state.is_a?(DotPopper::Cabinet::Title), "where the control would be is empty space"
+    assert cabinet.state.is_a?(DotPopper::Cabinet::Home), "where the control would be is empty space"
     assert_nil @sizing_store.read
   end
 
@@ -480,14 +480,14 @@ class ShowTest < Minitest::Test
     finish_game
     @show.tap(*middle(@show.stats_reach))
     assert @show.stats?
-    assert @show.title?
+    assert @show.home?
     assert_equal 1, @show.stats.totals.rows.first.value.to_i
 
     @show.tap(10, 300)
     assert @show.stats?, "empty space does nothing"
     @show.tap(*middle(@show.back_reach))
     refute @show.stats?
-    assert @show.title?, "Back never starts a game"
+    assert @show.home?, "Back never starts a game"
   end
 
   def test_start_and_back_leave_the_stats_screen_and_only_it
@@ -495,12 +495,12 @@ class ShowTest < Minitest::Test
     @show.open_stats
     @show.start
     refute @show.stats?
-    assert @show.title?
+    assert @show.home?
 
     @show.open_stats
     assert @show.back
     refute @show.back, "with no Stats screen, back has nothing to do"
-    assert @show.title?
+    assert @show.home?
   end
 
   def test_the_stats_screen_opens_only_from_the_title
@@ -535,12 +535,12 @@ class ShowTest < Minitest::Test
 
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     @show.start
-    assert @show.title?
+    assert @show.home?
   end
 
   def test_a_gamepads_y_shares_the_result_on_game_over_and_nothing_else
     @show.share
-    assert @show.title?, "Y does nothing on the title"
+    assert @show.home?, "Y does nothing on the title"
     refute @show.sharing?
 
     @show.start
@@ -691,7 +691,7 @@ class ShowTest < Minitest::Test
     assert_equal Style::LESSON.replays, @show.game_over.replayed, "a few times, and no more"
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
-    assert @show.title?, "Continue works as ever"
+    assert @show.home?, "Continue works as ever"
   end
 
   # Once the bright dot it hid has been popped, the pile can't show which
@@ -754,7 +754,7 @@ class ShowTest < Minitest::Test
     @cabinet.update(1)
     press_main
 
-    assert @show.title?
+    assert @show.home?
     assert_empty @show.effects.floaters
   end
 

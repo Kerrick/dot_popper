@@ -39,7 +39,7 @@ module DotPopperGui
     end
 
     def closed(how)
-      check(!show.stats? && show.title?, "#{how} goes back to the title, and starts no game")
+      check(!show.stats? && show.home?, "#{how} goes back to the title, and starts no game")
     end
   end
 end

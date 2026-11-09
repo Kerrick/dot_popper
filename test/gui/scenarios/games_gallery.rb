@@ -12,7 +12,7 @@ module DotPopperGui
     SIZES = [[1200, 800], [400, 850], [850, 400]].freeze
 
     def play
-      check(show.title?, "the game opens on the title")
+      check(show.home?, "the game opens on the title")
       check(show.games_line == "No games left today", "the title says no games are left")
       SIZES.each { |width, height| shots(width, height) }
     end
@@ -30,7 +30,7 @@ module DotPopperGui
       wait(1.0)
       keep_screenshot("games-offer-#{width}x#{height}")
       show.back
-      check(show.title?, "Back returns to the title")
+      check(show.home?, "Back returns to the title")
     end
   end
 end

@@ -280,7 +280,7 @@ module DotPopper
 
       # The same two as only their icons, game, in the safe area's top
       # right corner: where a window too short for a row above the
-      # bottom one has no room left for it (TitleScreen).
+      # bottom one has no room left for it (HomeScreen).
       def window_icons
         size = button_size
         quit = Rect.new(x: safe.right - margin - size, y: top, width: size, height: size)

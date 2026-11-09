@@ -2,7 +2,7 @@
 
 module DotPopper
   module Presentation
-    # Where the title's words go, worked out by TitleScreen#plan: each
+    # Where the title's words go, worked out by HomeScreen#plan: each
     # line's Rect by name (Stacked), the Play button's as :play, the font
     # size each is set in, today's goal broken into lines, the faint
     # backing behind them, the bottom row's buttons, which the words keep
@@ -10,7 +10,7 @@ module DotPopper
     # where "Press B again to quit" goes while it shows (+quit_line+), with
     # the name of the line it stands in for there, if any (+quit_over+). A
     # line the screen had no room for, or that is not shown, has no Rect.
-    class TitlePlan < Data.define(:placed, :sizes, :goal_lines, :backing, :stats_button, :sizing_control,
+    class HomePlan < Data.define(:placed, :sizes, :goal_lines, :backing, :stats_button, :sizing_control,
                                   :mute_button, :how_to_play_button, :window_buttons, :quit_line, :quit_over)
       def [](name) = placed[name]
       def size(name) = sizes.fetch(name)
@@ -67,7 +67,7 @@ module DotPopper
     # then the goal, then the best, then the games left, and last the name shrinks on. The
     # legend and Play always stay, since they are how to play.
     # Sizes are measured with +measure+ (RoughMeasure's methods).
-    class TitleScreen < Data.define(:layout, :type, :words, :measure, :score_record, :goal, :done, :streak, :stats,
+    class HomeScreen < Data.define(:layout, :type, :words, :measure, :score_record, :goal, :done, :streak, :stats,
                                     :sizing, :radius, :window, :games)
       # The gaps above each line, in graphics units at full size.
       # The name, the legend and Play are near each other, one group; the
@@ -88,7 +88,7 @@ module DotPopper
       def plan
         buttons = window_buttons
         placed, sizes = stack(buttons)
-        TitlePlan.new(placed:, sizes:, goal_lines: goal_lines(sizes[:goal]), backing: backing(placed, sizes),
+        HomePlan.new(placed:, sizes:, goal_lines: goal_lines(sizes[:goal]), backing: backing(placed, sizes),
                       stats_button: layout.stats_button, sizing_control: layout.sizing_control(window: buttons),
                       mute_button: layout.mute_button, how_to_play_button: layout.how_to_play_button(window: buttons),
                       window_buttons: buttons, **quit_line(placed, sizes, buttons))

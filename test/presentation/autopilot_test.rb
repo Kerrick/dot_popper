@@ -16,11 +16,11 @@ class AutopilotTest < Minitest::Test
       cabinet.press(x, y) if x
       cabinet.update(1 / 60.0)
       seen << cabinet.state.class
-      break if seen.include?(DotPopper::Cabinet::GameOver) && cabinet.state.is_a?(DotPopper::Cabinet::Title)
+      break if seen.include?(DotPopper::Cabinet::GameOver) && cabinet.state.is_a?(DotPopper::Cabinet::Home)
     end
 
     assert_includes seen, DotPopper::Cabinet::GameOver
-    assert_instance_of DotPopper::Cabinet::Title, cabinet.state
+    assert_instance_of DotPopper::Cabinet::Home, cabinet.state
     assert_includes events, DotPopper::Events::Popped
   end
 
@@ -37,7 +37,7 @@ class AutopilotTest < Minitest::Test
       show.tap(x, y) if x
       cabinet.update(1 / 60.0)
       show.update(1 / 60.0)
-      copies << clipboard.text if cabinet.state.is_a?(DotPopper::Cabinet::Title) && copies.size < games
+      copies << clipboard.text if cabinet.state.is_a?(DotPopper::Cabinet::Home) && copies.size < games
       break if games >= 3
     end
 

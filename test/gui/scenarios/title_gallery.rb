@@ -18,7 +18,7 @@ module DotPopperGui
     P = DotPopper::Presentation
 
     def play
-      check(show.title?, "the game opens on the title")
+      check(show.home?, "the game opens on the title")
       @desktop = show.window
       each_size { shoot("first") }
       quick_game

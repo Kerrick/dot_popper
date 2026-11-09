@@ -94,7 +94,7 @@ class HoverTest < Minitest::Test
     assert_equal :back, @show.hovered
     @show.pointer_at(*middle(@show.clear_reach))
     assert_equal :clear, @show.hovered
-    @show.pointer_at(*middle(@show.title_plan.play_button))
+    @show.pointer_at(*middle(@show.home_plan.play_button))
     assert_nil @show.hovered, "the title's buttons are covered"
   end
 

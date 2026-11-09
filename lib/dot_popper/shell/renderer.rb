@@ -27,7 +27,7 @@ module DotPopper
         @dots = DotPainter.new(pen:)
         @effects = EffectsPainter.new(pen:, sparks:)
         @hud = HudPainter.new(pen:, dots: @dots)
-        @title = TitlePainter.new(pen:, dots: @dots)
+        @title = HomePainter.new(pen:, dots: @dots)
         @stats = StatsPainter.new(pen:)
         @credits = CreditsPainter.new(pen:)
         @themes = ThemesPainter.new(pen:, dots: @dots)
@@ -50,7 +50,7 @@ module DotPopper
         backdrop(width, height)
         if @show.tutorial?
           tutorial(width, height, layout)
-        elsif @show.title?
+        elsif @show.home?
           @dots.draw(@show.attract.dots, @at_rest, @show.now, radius)
           if @show.stats?
             veil(width, height, @pen.style::RECORDS.veil)
@@ -63,7 +63,7 @@ module DotPopper
             else @group.draw(@show, layout)
             end
           else
-            veil(width, height, @pen.style::TITLE.dim)
+            veil(width, height, @pen.style::HOME.dim)
             @title.draw(@show, layout)
             @arrival.draw(@show, layout) if @show.arrival?
           end
@@ -86,7 +86,7 @@ module DotPopper
           @share.draw(@show, layout, width, height)
           banner(layout) unless @show.playing?
         end
-        banner(layout) if @show.title? && !@show.group_open? && !@show.stats?
+        banner(layout) if @show.home? && !@show.group_open? && !@show.stats?
         splash ? @splash.draw(splash) : @cursor.draw(cursor)
       end
 

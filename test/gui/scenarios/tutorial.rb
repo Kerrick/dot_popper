@@ -31,7 +31,7 @@ module DotPopperGui
       now_it_runs
       check_equal("seen", File.read(saved("tutorial.txt")).strip, "tutorial.txt remembers it was seen")
       run_out_the_clock
-      continue_to_title
+      continue_to_home
     end
 
     private
@@ -44,12 +44,12 @@ module DotPopperGui
     def name(beat) = "tutorial-#{hand}-#{layout.width.round}x#{layout.height.round}-#{beat}"
 
     def open_tutorial(how)
-      check(show.title?, "the game opens on the title")
+      check(show.home?, "the game opens on the title")
       wait(0.5)
       play = show.play_reach
       how.call(play.center_x, play.center_y)
       check(show.tutorial?, "the first Play opens the tutorial")
-      check(cabinet.state.is_a?(DotPopper::Cabinet::Title) && cabinet.game.nil?, "the game stays on its title meanwhile")
+      check(cabinet.state.is_a?(DotPopper::Cabinet::Home) && cabinet.game.nil?, "the game stays on its title meanwhile")
     end
 
     def by_gamepad
@@ -186,7 +186,7 @@ module DotPopperGui
       check(show.lead_in, "the clock is lit as it starts to run")
       wait(0.3)
       keep_screenshot(name("4-runs"))
-      check_equal(%i[GameStarted], story.uniq - %i[TitleShown], "the tutorial told the rules nothing until then")
+      check_equal(%i[GameStarted], story.uniq - %i[HomeShown], "the tutorial told the rules nothing until then")
       wait(1.2)
       check(game.countdown.remaining < 9.0, "the clock runs")
     end

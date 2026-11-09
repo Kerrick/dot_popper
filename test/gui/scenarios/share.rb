@@ -31,7 +31,7 @@ module DotPopperGui
       closed("Escape")
       by_keys_and_pad
       by_touch
-      continue_to_title
+      continue_to_home
     end
 
     private

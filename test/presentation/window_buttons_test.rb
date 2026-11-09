@@ -21,7 +21,7 @@ class WindowButtonsTest < Minitest::Test
 
     click(:fullscreen)
     refute @window.fullscreen?
-    assert @show.title?, "the title stays"
+    assert @show.home?, "the title stays"
   end
 
   # A labelled button pressed on purpose is no stray press, so it asks
@@ -69,7 +69,7 @@ class WindowButtonsTest < Minitest::Test
 
     refute_includes names, :fullscreen
     refute_includes names, :quit
-    assert_nil show.title_plan.window_buttons
+    assert_nil show.home_plan.window_buttons
   end
 
   def test_full_screens_word_says_what_it_does

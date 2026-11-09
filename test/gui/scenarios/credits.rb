@@ -53,7 +53,7 @@ module DotPopperGui
       check(show.credits?, "C opens the credits")
       key(:escape)
       key(:escape)
-      check(show.title? && !show.stats?, "Escape again goes back to the title, and starts no game")
+      check(show.home? && !show.stats?, "Escape again goes back to the title, and starts no game")
     end
 
     private

@@ -29,7 +29,7 @@ module DotPopperGui
       key(:escape)
       check(show.stats? && !show.themes?, "Escape leaves Themes for the Stats screen")
       key(:escape)
-      check(show.title?, "and then the Stats screen for the title")
+      check(show.home?, "and then the Stats screen for the title")
       start_game
       check(show.palette.equal?(show.in_use.palette), "the game takes the colors of the theme in use")
     end

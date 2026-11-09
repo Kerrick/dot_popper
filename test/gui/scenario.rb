@@ -193,7 +193,7 @@ module DotPopperGui
     # Starts a game with a click in the middle of the title, away from
     # its buttons.
     def start_game(how = method(:click))
-      check(show.title?, "the title is showing")
+      check(show.home?, "the title is showing")
       play = show.play_reach
       how.call(play.center_x, play.center_y)
       check(show.playing?, "a press on Play starts a game")
@@ -223,12 +223,12 @@ module DotPopperGui
     end
 
     # Waits out Game Over's grace and presses Continue.
-    def continue_to_title(how = method(:click))
+    def continue_to_home(how = method(:click))
       wait_for("Game Over ready for a press") { cabinet.state.ready? }
       button = show.continue_reach
       how.call(button.center_x, button.center_y)
-      wait_for("the title again", within: 5) { show.title? }
-      check(show.title?, "Continue goes back to the title")
+      wait_for("the title again", within: 5) { show.home? }
+      check(show.home?, "Continue goes back to the title")
     end
 
     # A whole game, played quickly: one pop, then the clock runs out.
@@ -236,7 +236,7 @@ module DotPopperGui
       start_game
       pop_fresh
       run_out_the_clock
-      continue_to_title
+      continue_to_home
     end
 
     def saved(name) = File.join(L::Filesystem.save_directory, name)
