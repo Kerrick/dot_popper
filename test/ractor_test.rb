@@ -25,7 +25,17 @@ class RactorTest < Minitest::Test
     assert Ractor.shareable?(DotPopper::DotSize::TOUCH_SYSTEMS)
   end
 
+  # Ruby 4.0.9 on Windows (x64-mingw-ucrt) deadlocks when a Ractor other
+  # than the main one collects garbage while the main Ractor has another
+  # thread asleep, as Minitest's worker threads are: the game's garbage
+  # starts a collection in the Ractor, and the suite never ends. Three
+  # lines show it with no game at all (doc/decisions.md), so it is
+  # Ruby's, not the rules'. Linux and macOS play it as ever.
+  WINDOWS_RACTOR_GC = "Ruby 4.0.9 on Windows deadlocks a Ractor's GC beside a sleeping thread (doc/decisions.md)"
+
   def test_a_game_played_in_a_ractor_matches_one_played_here
+    skip WINDOWS_RACTOR_GC if Gem.win_platform?
+
     here = RactorTest.play_a_game(field)
 
     assert_equal here, played_in_a_ractor(field)

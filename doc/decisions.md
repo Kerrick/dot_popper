@@ -1599,3 +1599,15 @@ With no game left, Game Over's main button says Get Pro. It used to go Home and 
 ## The offer's achievement card has no progress line
 
 The `offer-achievements` mock puts "Your record: 19 of 20" under the achievement a Free player tapped. The proposal leaves it out: the offer shows "a real achievement with how to earn it", and choice 2, approved, makes progress one of the things Pro adds to Achievements, which a Free player's dialog already doesn't show. A line of Pro's progress on the offer would give it away before the purchase, and the dialog and the offer would disagree. So the card shows the achievement's sign, its name and how to earn it. It now draws the sign in the grid's dashed ring, as the mock does, so the player recognises the one they tapped (Johnson: recognition over recall).
+
+## On Windows, the suite skips the game played in a Ractor
+
+`rake test` never finished on the Windows PC, on trunk too: `RactorTest#test_a_game_played_in_a_ractor_matches_one_played_here` hung. The cause is Ruby's, not the rules'. On Ruby 4.0.9 (x64-mingw-ucrt), a garbage collection started inside a Ractor other than the main one deadlocks while the main Ractor has another thread asleep. Minitest's worker threads are asleep in every test run. Three lines show it, with nothing of the game's:
+
+```ruby
+Thread.new { sleep }
+sleep 0.1
+p Ractor.new { 20.times { GC.start }; 1 }.value # never returns on Windows; at once on Linux
+```
+
+The same lines with no other thread return at once on Windows, and so does the game in a Ractor outside Minitest, or inside it with `GC.disable`. So on Windows only, that one test is skipped with this reason (`RactorTest::WINDOWS_RACTOR_GC`). The other two Ractor tests, which only ask whether the rules' values are shareable, still run there, and Linux and macOS run all three. **To reverse:** delete the `skip` once a Ruby release plays the three lines on Windows.
