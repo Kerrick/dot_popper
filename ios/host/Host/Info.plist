@@ -3,13 +3,16 @@
   SPDX-FileCopyrightText: 2026 setdef <kerrick@setdef.com>
   SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
 
-  Dot Popper's copy of Lota 0.3.0's iOS Info.plist (ext/lota/phone/host/ios
+  Dot Popper's copy of Lota 0.3.1's iOS Info.plist (ext/lota/phone/host/ios
   in the gem), which kits.yml lays over Lota's host in the phone project.
   Its changes: the display name, Dot Popper, which has a space the
-  target's name cannot; and NSPrincipalClass, DotPopperApplication, the
-  UIApplication in Host/main.m that shows the system's share sheet when
-  the game opens a dotpopper-share: URL. SDL_RunApp passes UIApplicationMain
-  no class of its own, so UIKit takes this one. Lota's notes follow.
+  target's name cannot; and NSPrincipalClass, DotPopperApplication in
+  place of Lota's LotaApplication. DotPopperApplication, in Host/main.m,
+  is a LotaApplication that also shows the system's share sheet when the
+  game opens a dotpopper-share: URL, hands dotpopper-store: URLs to the
+  store, and keeps Dot Popper's own statusBarOrientation. SDL_RunApp
+  passes UIApplicationMain no class of its own, so UIKit takes this one.
+  Lota's notes follow.
 
   A Lota game's Info.plist, which fledge.yml's ios host lays over the one
   fledge build ios writes. It starts from Fledge's
@@ -22,6 +25,8 @@
   - UIApplicationSupportsIndirectInputEvents, which SDL asks for to read a
     mouse or trackpad ("You need UIApplicationSupportsIndirectInputEvents
     in your Info.plist for mouse support" without it).
+  - NSPrincipalClass, LotaApplication from Host/main.m, which reads the
+    window scene's orientation where iOS 27 no longer reports it to SDL.
   - UIStatusBarHidden, with UIViewControllerBasedStatusBarAppearance
     false, so the status bar stays hidden, as a game's usually is.
   - LotaAudioSessionCategory, which Host/main.m reads: the audio session's

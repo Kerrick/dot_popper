@@ -11,9 +11,10 @@
 // does on a thread of its own, so Ruby can call SDL directly. The main
 // thread's stack is the one the executable asks for, with -Wl,-stack_size
 // in OTHER_LDFLAGS. Info.plist names SDLUIKitSceneDelegate as the scene's
-// delegate.
+// delegate, and LotaApplication, below, as the app's UIApplication.
+// (Dot Popper's Info.plist names DotPopperApplication, a LotaApplication.)
 //
-// Dot Popper's copy (doc/ios.md) is Lota 0.3.0's (ext/lota/phone/host/ios
+// Dot Popper's copy (doc/ios.md) is Lota 0.3.1's (ext/lota/phone/host/ios
 // in the gem), which kits.yml lays it over in the phone project, with four
 // additions. The colour behind SDL's view, on its window and the window's
 // root view, as each window becomes key: the night's ink (#0c0b22), so
@@ -22,16 +23,20 @@
 // does not cover shows as green (doc/ios.md, "Diagnostic colours"). And
 // the system's share sheet, for Share my score: the game opens a
 // dotpopper-share: URL (SheetSharing), and DotPopperApplication, the
-// app's UIApplication (Info.plist's NSPrincipalClass), shows the sheet
-// in its place rather than send the URL anywhere. And the orientation
-// that SDL reads from UIApplication, which DotPopperApplication answers
-// from the scene (see its statusBarOrientation; Lota 0.3.1's host will
-// answer it for itself, and this can go then). And the store, for
-// buying Pro: the game opens a dotpopper-store: URL
-// (Storefront), and DotPopperApplication hands it to DotPopperStore, in
-// Store.swift beside this file, since StoreKit 2 is Swift's alone.
-// Lota's host already sets the audio session to Ambient (Info.plist's
-// LotaAudioSessionCategory) and SDL_ACCELEROMETER_AS_JOYSTICK=0.
+// app's UIApplication (Info.plist's NSPrincipalClass, in place of Lota's
+// LotaApplication, which it subclasses), shows the sheet in its place
+// rather than send the URL anywhere. And the orientation that SDL reads
+// from UIApplication, which DotPopperApplication answers from the scene
+// (see its statusBarOrientation). Lota 0.3.1's LotaApplication carries
+// its own fix for the same iOS 27 change, but nobody has run Lota's on a
+// real iPad yet, and Dot Popper's has, so Dot Popper's override stays in
+// front of Lota's until an iPad shows Lota's alone gives a landscape game
+// a landscape window. And the store, for buying Pro: the game opens a
+// dotpopper-store: URL (Storefront), and DotPopperApplication hands it to
+// DotPopperStore, in Store.swift beside this file, since StoreKit 2 is
+// Swift's alone. Lota's host already sets the audio session to Ambient
+// (Info.plist's LotaAudioSessionCategory) and
+// SDL_ACCELEROMETER_AS_JOYSTICK=0.
 @import FledgeRuby;
 @import AVFoundation;
 @import Foundation;
@@ -48,6 +53,59 @@ typedef int (*SDL_main_func)(int argc, char *argv[]);
 extern int SDL_RunApp(int argc, char *argv[], SDL_main_func main_function, void *reserved);
 
 static os_log_t app_log;
+
+// The app's UIApplication, which Info.plist names as NSPrincipalClass, so
+// that UIApplicationMain, called by SDL_RunApp with no class of its own
+// (SDL_uikitappdelegate.m at release-3.4.10, line 60), makes one. SDL
+// 3.4.10 reads the screen's orientation only from statusBarOrientation
+// (SDL_uikitvideo.m, line 240; SDL_uikitmodes.m, lines 333, 487, and
+// 521), and iOS 27 makes that a no-op that answers Unknown, which SDL
+// takes for portrait: a game launched in landscape gets a portrait window,
+// cut off at the bottom and black on the right
+// (doc/contributors/upstream/019.md). Where UIKit still answers, its
+// answer stands. Where it answers Unknown, the app's window scene says,
+// as Apple's deprecation of statusBarOrientation directs and as SDL 3.4.20
+// does (UIKit_GetInterfaceOrientation, SDL_uikitvideo.m). A scene may not
+// know its orientation yet while the app launches (SDL's issue 16436), and
+// SDL would swap the window's frame then too, so for Unknown the answer
+// follows the shape of the scene, or of the screen if there is none:
+// landscape when wider than tall (LandscapeRight, SDL's
+// SDL_ORIENTATION_LANDSCAPE, a guess at the side), else portrait. SDL then
+// leaves the frame as UIKit made it, as SDL 3.4.20 does.
+@interface LotaApplication : UIApplication
+@end
+
+@implementation LotaApplication
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic ignored "-Wdeprecated-implementations"
+- (UIInterfaceOrientation)statusBarOrientation {
+  UIInterfaceOrientation orientation = [super statusBarOrientation];
+  if (orientation != UIInterfaceOrientationUnknown)
+    return orientation;
+  UIWindowScene *window_scene = nil;
+  for (UIScene *scene in self.connectedScenes) {
+    if ([scene isKindOfClass:UIWindowScene.class] &&
+        [scene.session.role isEqualToString:UIWindowSceneSessionRoleApplication]) {
+      window_scene = (UIWindowScene *)scene;
+      break;
+    }
+  }
+  if (@available(iOS 16.0, *)) {
+    if (window_scene)
+      orientation = window_scene.effectiveGeometry.interfaceOrientation;
+  }
+  if (orientation != UIInterfaceOrientationUnknown)
+    return orientation;
+  CGSize size =
+      window_scene ? window_scene.coordinateSpace.bounds.size : UIScreen.mainScreen.bounds.size;
+  return size.width > size.height ? UIInterfaceOrientationLandscapeRight
+                                  : UIInterfaceOrientationPortrait;
+}
+#pragma clang diagnostic pop
+
+@end
 
 static NSString *AppName(void) {
   NSDictionary *info = NSBundle.mainBundle.infoDictionary;
@@ -165,7 +223,7 @@ static NSString *const StoreScheme = @"dotpopper-store";
 // needs registering, and the game keeps its focus. canOpenURL: answers
 // NO when there is nothing to share or nowhere to show the sheet, so the
 // game falls back on its own preview.
-@interface DotPopperApplication : UIApplication
+@interface DotPopperApplication : LotaApplication
 @end
 
 @implementation DotPopperApplication
@@ -175,7 +233,10 @@ static NSString *const StoreScheme = @"dotpopper-store";
 // view's width and height when the answer disagrees with the window's
 // shape. In this scene-based app on an iPad with iPadOS 27 the answer is
 // always Unknown, which SDL takes for portrait, so a landscape game drew
-// tall and cut off. The scene knows.
+// tall and cut off. The scene knows. LotaApplication's
+// statusBarOrientation, Lota 0.3.1's fix, answers only where this finds
+// no window scene; this one goes once Lota's has been seen to work on an
+// iPad by itself.
 - (UIInterfaceOrientation)statusBarOrientation {
   for (UIScene *scene in self.connectedScenes)
     if ([scene isKindOfClass:UIWindowScene.class])
