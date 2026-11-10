@@ -24,6 +24,10 @@ class SignaturesTest < Minitest::Test
                              H[VECTOR_PROOF["signature"]], C::SignedAnswers::PROOF + VECTOR_NONCE)
   end
 
+  def test_this_ruby_has_ed25519
+    assert_predicate C::Ed25519, :available?
+  end
+
   def test_the_servers_test_vector_proves_itself
     assert C::SignedAnswers.proof?(VECTOR_PROOF, VECTOR_NONCE, VECTOR_PINS)
   end

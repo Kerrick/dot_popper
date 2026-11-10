@@ -101,7 +101,8 @@ module DotPopper
         proof = SignedAnswers.fresh
         reply = @server.proof(proof)
         unless reply.ok? && SignedAnswers.proof?(reply.body, proof, @pins)
-          return Result.new(answer: @connectivity.online? ? :gone : :unknown, due:, nonce:, reply: nil)
+          gone = Ed25519.available? && @connectivity.online?
+          return Result.new(answer: gone ? :gone : :unknown, due:, nonce:, reply: nil)
         end
 
         Result.new(answer: :here, due:, nonce:, reply: due && @server.ask(due))
