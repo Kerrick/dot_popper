@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "time"
+
 module DotPopper
   module Presentation
     # Every sentence about friend groups, kept apart from Words so that
@@ -12,7 +14,7 @@ module DotPopper
       def button = "Groups"
       def heading = "Friend groups"
       def group_heading = "Your group"
-      def history_heading = "Title history"
+      def history_heading = "History"
       def join_heading = "Join with a code"
       def blurb = "Beat your friends and take the title."
       def join = "Join"
@@ -23,16 +25,40 @@ module DotPopper
       def you = "You"
       def champion = "Champion"
       def history = "History"
-      def older = "Older"
-      def newer = "Newer"
       def leave = "Leave"
       def delete = "Delete my data"
       def hold_to_leave = "Hold to leave this group."
       def hold_to_delete = "Hold to delete your scores from the server."
-      def code_line(code) = "Code: #{code}"
       def standard_note = "Games with standard dots do not count. Choose dots sized to the screen."
-      def members(count) = count == 1 ? "1 member" : "#{count} members"
-      def no_history = "No title changes yet."
+      def no_history = "Nothing has happened here yet."
+      def show = "Show"
+      def copy = "Copy"
+      def hidden_code = "●●●-●●●●"
+
+      # When something happened, in the player's own time: "November 8,
+      # 8:14 PM". +at+ is the server's ISO 8601 time; +offset+ stands in for
+      # the device's time zone in the tests.
+      def when(at, offset: nil)
+        time = Time.iso8601(at.to_s)
+        time = offset ? time.getlocal(offset) : time.getlocal
+        time.strftime("%B %-d, %-l:%M %p")
+      rescue ArgumentError
+        ""
+      end
+
+      # What a history entry says, as runs of [text, bold]: who took the
+      # title from whom and with what, or who earned which achievement.
+      def entry(group_id, change)
+        name = ->(number) { [Names.member(group_id, number), true] }
+        case change
+        in Groups::MemberAchievement
+          [name.(change.member_number), [" earned ", false], [AchievementWords.name(change.key), true], [".", false]]
+        else
+          took = [name.(change.champion_number)]
+          took += change.previous_champion_number ? [[" took the title from ", false], name.(change.previous_champion_number)] : [[" took the title", false]]
+          took + [[" with ", false], [change.score.to_s, true], [".", false]]
+        end
+      end
 
       # The group's standing, with the score that wins the title.
       def title_line(group)
@@ -96,7 +122,7 @@ module DotPopper
       HOLD = 2.0
       PAGES = %i[list group history join].freeze
 
-      attr_reader :groups, :code, :banner, :hold, :note, :page, :group_id, :offset
+      attr_reader :groups, :code, :banner, :hold, :note, :page, :group_id
 
       def initialize(groups:, entitlement:, sounds:, pro_offer: ->(_feature) {})
         @pro_offer = pro_offer
@@ -106,7 +132,6 @@ module DotPopper
         @open = false
         @page = :list
         @group_id = nil
-        @offset = 0
         @code = ""
         @hold = HoldToConfirm.idle(HOLD)
         @holding = nil
@@ -130,7 +155,6 @@ module DotPopper
       def open
         @open = true
         @note = nil
-        @offset = 0
         show(:list)
         groups.refresh
         @sounds.play(:tick)
@@ -214,8 +238,7 @@ module DotPopper
         in :group_join_open then open_join
         in :group_create then create
         in :group_history then open_history
-        in :group_older then move(1)
-        in :group_newer then move(-1)
+        in :group_code then reveal_code
         in :group_leave then start_hold(:leave, by, now)
         in :group_delete then start_hold(:delete, by, now)
         else nil
@@ -256,14 +279,37 @@ module DotPopper
       def holding_words = @holding == :delete ? GroupWords.hold_to_delete : GroupWords.hold_to_leave
 
       # Moves the page of a long list by one, for GroupScreen to bound.
-      def clamp_offset(most) = @offset = @offset.clamp(0, most)
+      # Whether the group's code shows: hidden until Show is pressed, and
+      # hidden again when the player leaves the group's screen.
+      def code_shown? = !@code_shown.nil? && @code_shown == @group_id && page == :group
+
+      # The group's history, newest first, without achievements this game
+      # does not know.
+      def history_entries
+        list = groups.history(@group_id) || groups.title_changes(@group_id) || []
+        list.reject { it.is_a?(Groups::MemberAchievement) && !Achievement::IDS.include?(it.key) }
+      end
+
+      # Show, then Copy: the code shows, then goes to the clipboard.
+      def reveal_code
+        if code_shown?
+          @copy&.call(CodeText.hyphenated(group.join_code))
+          @sounds.play(:tick, pitch: 1.3)
+        else
+          @code_shown = @group_id
+          @sounds.play(:tick)
+        end
+      end
+
+      # Where Copy puts the code (+copy+ answers call(text)).
+      attr_writer :copy
 
       private
 
       def show(page, id = @group_id)
+        @code_shown = nil unless id == @group_id && %i[group history].include?(page) && %i[group history].include?(@page)
         @page = page
         @group_id = id
-        @offset = 0
       end
 
       def open_group(id)
@@ -283,11 +329,6 @@ module DotPopper
 
         @code = ""
         show(:join)
-        @sounds.play(:tick)
-      end
-
-      def move(by)
-        @offset += by
         @sounds.play(:tick)
       end
 

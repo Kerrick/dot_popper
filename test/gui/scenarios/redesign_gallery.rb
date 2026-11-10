@@ -20,6 +20,38 @@ module DotPopperGui
       shoot("home-first", settle: 1.5)
       quick_game
       SIZES.each { |width, height, phone| screens(width, height, phone) }
+      groups if show.pro? && show.group_panel.available?
+    end
+
+    # The friend groups' screens, against a local stand-in for the server
+    # (script/group_stub.rb, named by DOT_POPPER_SERVER): the keypad, a
+    # group with its code shown, its history, and the list.
+    def groups
+      panel = show.group_panel
+      SIZES.each_with_index do |(width, height, phone), i|
+        fit(width, height, phone)
+        panel.open
+        wait_for("the list", within: 900) { panel.groups.groups.any? || i.zero? }
+        if i.zero?
+          panel.press(:group_join_open, :touch, show.now)
+          "123".each_char { panel.press([:code_digit, it], :touch, show.now) }
+          shoot("join")
+          "4567".each_char { panel.press([:code_digit, it], :touch, show.now) }
+          panel.press(:code_submit, :touch, show.now)
+          wait_for("the group", within: 900) { panel.page == :group }
+          show.back
+        end
+        shoot("groups", settle: 1.5)
+        panel.press([:group_show, panel.groups.groups.first.id], :touch, show.now)
+        panel.press(:group_code, :touch, show.now)
+        shoot("group", settle: 1.5)
+        panel.press(:group_history, :touch, show.now)
+        wait_for("the history", within: 900) { panel.history_entries.any? }
+        shoot("history", settle: 1.5)
+        show.back
+        show.back
+        show.back
+      end
     end
 
     private

@@ -2,27 +2,10 @@
 
 module DotPopper
   module Shell
-    # A trophy drawn in shapes, as the other icons are: a cup, its handles
-    # and its foot, in a square +size+ across around +x+, +y+.
-    class TrophyIcon < Data.define(:pen)
-      G = ::Lota::Graphics
-
-      def draw(x, y, size, alpha = 1.0, color: pen.palette.fresh_light)
-        s = size * 0.5
-        pen.color(color, alpha)
-        G.line_width = pen.pixels.line_width(2)
-        G.circle(:line, x - (s * 0.46), y - (s * 0.28), s * 0.2, 16)
-        G.circle(:line, x + (s * 0.46), y - (s * 0.28), s * 0.2, 16)
-        G.polygon(:fill, x - (s * 0.42), y - (s * 0.55), x + (s * 0.42), y - (s * 0.55), x + (s * 0.3), y + (s * 0.15),
-                  x - (s * 0.3), y + (s * 0.15))
-        G.rectangle(:fill, x - (s * 0.07), y + (s * 0.15), s * 0.14, s * 0.28)
-        G.rectangle(:fill, x - (s * 0.3), y + (s * 0.43), s * 0.6, s * 0.14)
-      end
-    end
-
-    # The friend groups' screens, over the title's dimmed dots, as
-    # Presentation::GroupScreen lays them out, and the short announcement a
-    # title change shows on the title or at Game Over.
+    # The friend groups' screens, over Home's dimmed dots, as
+    # Presentation::GroupScreen lays them out, each under its heading with
+    # Back, and the short announcement a title change shows on Home or at
+    # Game Over.
     class GroupPainter < Data.define(:pen, :icons)
       G = ::Lota::Graphics
 
@@ -31,15 +14,26 @@ module DotPopper
       def draw(show, layout)
         plan = show.group_plan
         palette = pen.palette
-        heading = pen.fonts.bold(plan.heading_size)
-        icon_x = plan.heading_x - (heading.width(plan.heading) / 2.0) - (heading.height * 0.6)
-        TrophyIcon.new(pen:).draw(icon_x, plan.heading_y, heading.height)
+        heading = pen.fonts.bold(show.heading_place(plan.heading).first)
         pen.text(plan.heading, heading, plan.heading_x, plan.heading_y, palette.cream)
+        PillButton.new(pen:).draw(layout.back_button, show.words.go_back, hover: show.hover.level(:back),
+                                  icon: ->(x, y, size) { Glyphs.new(pen:).draw(:chevron_left, x, y, size * 0.38) })
+        pen.text(plan.subheading, pen.fonts.semibold(15), layout.center_x, plan.heading_y + (heading.height * 0.62), palette.soft) if plan.subheading
+        icons.crest(layout.center_x, plan.crest_y, 22.0, show.group_panel.group_id) if plan.crest_y && show.group_panel.group_id
         lines(plan, layout)
-        code_box(show, plan)
+        show.group_panel.page == :group ? code_row(show, plan) : code_box(show, plan)
         buttons(show, plan)
-        plan.rows.each { row(show, plan, it) }
+        rows(show, plan)
         hold(show, layout) if show.group_panel.hold.held?
+      end
+
+      # The rows, clipped to the window they scroll in.
+      def rows(show, plan)
+        window = plan.window
+        pixels = pen.pixels
+        G.scissor = pixels.snap(window.x - 4), pixels.snap(window.y), pixels.snap(window.width + 8), pixels.snap(window.height) if window
+        plan.rows.each { row(show, plan, it) }
+        G.scissor = nil
       end
 
       # The announcement at +y+, on a dark pill so it reads over anything,
@@ -96,19 +90,37 @@ module DotPopper
         end
       end
 
-      # Every button but a row's: a row is drawn as a row, and the
-      # keypad's keys as keys.
+      # Every button but a row's: a row is drawn as a row, the keypad's
+      # keys as keys, and the code's Show or Copy in its row.
+      SIGNS = { group_join_open: :keypad, group_create: :plus, group_history: :history, group_leave: :leave, group_code: nil }.freeze
+
       def buttons(show, plan)
         plan.actions.each do |action|
-          next unless action.text
+          next if !action.text || action.name == :back
           next key(show, action) if key?(action.name)
 
-          PillButton.new(pen:).draw(action.rect, action.text, hover: show.hover.level(action.name),
-                                    color: quiet?(action.name) ? pen.palette.soft : pen.palette.cream)
+          sign = SIGNS[action.name]
+          leave = action.name == :group_leave
+          color = leave ? pen.palette.alarm : pen.palette.cream
+          icon = (->(x, y, size) { Glyphs.new(pen:).draw(sign, x, y, size * 0.4, color:) } if sign)
+          PillButton.new(pen:).draw(action.rect, action.text, hover: show.hover.level(action.name), color:, icon:, edge: (pen.palette.alarm if leave))
         end
       end
 
-      def key?(name) = name in [:code_digit, String] | :code_erase | :code_submit
+      # The group's code, hidden until Show is pressed: "Code", the code or
+      # its dots, and Show or Copy at the row's end.
+      def code_row(show, plan)
+        rect = plan.code_box or return
+        panel = show.group_panel
+        Card.new(pen:).draw(rect)
+        small = pen.fonts.semibold(15)
+        pen.text("Code", small, rect.x + 18 + (small.width("Code") / 2.0), rect.center_y, pen.palette.soft)
+        code = panel.code_shown? ? Presentation::CodeText.hyphenated(panel.group.join_code) : Presentation::GroupWords.hidden_code
+        font = pen.fonts.bold(24)
+        pen.text(code, font, rect.center_x, rect.center_y, pen.palette.cream)
+      end
+
+      def key?(name) = (name in [:code_digit, String] | :code_erase | :code_submit)
 
       # A key of the keypad: a digit, Delete with its sign, or Join, which
       # looks disabled until all seven digits are in.
@@ -138,69 +150,105 @@ module DotPopper
         end
       end
 
-      # A group's crest, its champion and score, and how many are in it.
+      # A group's crest and name, a crown where the player holds its
+      # title, its top score, and the arrow that opens it.
       def list_row(show, plan, row)
         rect = row.rect
         group = row.group
-        font = pen.fonts.semibold(plan.size)
-        radius = rect.height * 0.38
-        backing(rect, show.hover.level([:group_show, group.id]))
-        icons.crest(rect.x + (radius * 1.4), rect.center_y, radius, group.id)
-        members = Presentation::GroupWords.members(group.members.size)
-        pen.text(members, font, rect.x + (radius * 2.6) + (font.width(members) / 2.0), rect.center_y, pen.palette.soft)
-        right = rect.right - radius
+        Card.new(pen:).draw(rect, lit: show.hover.level([:group_show, group.id]))
+        radius = rect.height * 0.32
+        icons.crest(rect.x + 14 + radius, rect.center_y, radius, group.id)
+        font = pen.fonts.bold(plan.size)
+        name = Presentation::Names.group(group.id)
+        pen.text(name, font, rect.x + 28 + (radius * 2) + (font.width(name) / 2.0), rect.center_y, pen.palette.cream)
         score = group.top_score.to_s
-        pen.text(score, font, right - (font.width(score) / 2.0), rect.center_y, pen.palette.cream)
-        return if group.vacant?
+        big = pen.fonts.bold(plan.size + 8)
+        right = rect.right - 46
+        pen.text(score, big, right - (big.width(score) / 2.0), rect.center_y, pen.palette.fresh_body)
+        Glyphs.new(pen:).draw(:chevron_right, rect.right - 22, rect.center_y, 16, color: pen.palette.soft)
+        return unless group.champion?
 
-        x = right - font.width(score) - (radius * 1.2)
-        icons.draw(x, rect.center_y, radius * 0.85, group.id, group.champion_number)
-        TrophyIcon.new(pen:).draw(x - (radius * 1.7), rect.center_y, rect.height * 0.62) if group.champion?
+        Glyphs.new(pen:).draw(:crown, right - big.width(score) - 26, rect.center_y, 24, color: pen.palette.fresh_body)
       end
 
+      # A member's rank, icon and name, Champion or You under it, and their
+      # score; the player's own row outlined.
       def standing_row(plan, row)
-        font = pen.fonts.semibold(plan.size)
         rect = row.rect
-        radius = rect.height * 0.42
-        backing(rect, row.me ? 0.5 : 0.0) if row.champion || row.me
-        icons.draw(rect.x + (radius * 1.25), rect.center_y, radius, row.group_id, row.number)
-        x = rect.x + (radius * 2.7)
-        if row.me
-          pen.text(Presentation::GroupWords.you, font, x + (font.width(Presentation::GroupWords.you) / 2.0), rect.center_y, pen.palette.cream)
-          x += font.width(Presentation::GroupWords.you) + (radius * 0.5)
+        Card.new(pen:).draw(rect, edge: (pen.palette.fresh_body if row.me))
+        small = pen.fonts.semibold(13)
+        font = pen.fonts.bold(plan.size)
+        rank = row.rank.to_s
+        pen.text(rank, small, rect.x + 20, rect.center_y, pen.palette.soft)
+        radius = rect.height * 0.32
+        icons.draw(rect.x + 40 + radius, rect.center_y, radius, row.group_id, row.number)
+        x = rect.x + 52 + (radius * 2)
+        name = Presentation::Names.member(row.group_id, row.number)
+        tag = (Presentation::GroupWords.champion if row.champion) || (Presentation::GroupWords.you if row.me)
+        y = tag ? rect.center_y - (font.height * 0.38) : rect.center_y
+        pen.text(name, font, x + (font.width(name) / 2.0), y, pen.palette.cream)
+        if tag
+          tag_x = x
+          if row.champion
+            Glyphs.new(pen:).draw(:crown, x + 8, rect.center_y + (font.height * 0.45), 14, color: pen.palette.fresh_body)
+            tag_x += 20
+          end
+          pen.text(tag, small, tag_x + (small.width(tag) / 2.0), rect.center_y + (font.height * 0.45), pen.palette.fresh_body)
         end
-        champion(font, x, rect) if row.champion
         score = row.score.to_s
-        color = row.champion ? pen.palette.fresh_light : pen.palette.cream
-        pen.text(score, pen.fonts.bold(plan.size), rect.right - radius - (font.width(score) / 2.0), rect.center_y, color)
+        big = pen.fonts.bold(plan.size + 6)
+        pen.text(score, big, rect.right - 18 - (big.width(score) / 2.0), rect.center_y, pen.palette.cream)
       end
 
-      def champion(font, x, rect)
-        TrophyIcon.new(pen:).draw(x + (rect.height * 0.3), rect.center_y, rect.height * 0.72)
-        word = Presentation::GroupWords.champion
-        pen.text(word, font, x + (rect.height * 0.7) + (font.width(word) / 2.0), rect.center_y, pen.palette.fresh_light)
-      end
-
-      # The new champion, beside whom they took it from (or a trophy for
-      # the first ever), the score and the day.
+      # Who took the title from whom, or who earned which achievement, the
+      # names in bold, and when, in the player's own time.
       def history_row(plan, row)
-        font = pen.fonts.semibold(plan.size)
         rect = row.rect
+        Card.new(pen:).draw(rect)
         change = row.change
-        radius = rect.height * 0.38
-        y = rect.center_y
-        icons.draw(rect.x + (radius * 1.1), y, radius, row.group_id, change.champion_number)
-        pen.color(pen.palette.soft)
-        G.polygon(:fill, rect.x + (radius * 2.6), y, rect.x + (radius * 3.2), y - (radius * 0.4), rect.x + (radius * 3.2), y + (radius * 0.4))
-        if change.previous_champion_number
-          icons.draw(rect.x + (radius * 4.5), y, radius, row.group_id, change.previous_champion_number)
-        else
-          TrophyIcon.new(pen:).draw(rect.x + (radius * 4.5), y, rect.height * 0.7)
+        number = change.is_a?(Groups::MemberAchievement) ? change.member_number : change.champion_number
+        radius = rect.height * 0.3
+        icons.draw(rect.x + 14 + radius, rect.center_y, radius, row.group_id, number)
+        left = rect.x + 28 + (radius * 2)
+        room = rect.right - 14 - left
+        bold = pen.fonts.bold(plan.size - 1)
+        plain = pen.fonts.semibold(plan.size - 1)
+        lines = runs_in_lines(Presentation::GroupWords.entry(row.group_id, change), room, bold, plain).first(2)
+        small = pen.fonts.semibold(13)
+        top = rect.center_y - (((lines.size * bold.height) + small.height) / 2.0)
+        lines.each_with_index do |line, i|
+          x = left
+          line.each do |text, strong|
+            face = strong ? bold : plain
+            pen.text(text, face, x + (face.width(text) / 2.0), top + (bold.height * (i + 0.5)), strong ? pen.palette.cream : pen.palette.soft)
+            x += face.width(text)
+          end
         end
-        score = change.score.to_s
-        pen.text(score, font, rect.x + (radius * 6.4) + (font.width(score) / 2.0), y, pen.palette.cream)
-        date = change.at.to_s[0, 10]
-        pen.text(date, font, rect.right - (font.width(date) / 2.0), y, pen.palette.soft) if date
+        stamp = Presentation::GroupWords.when(change.at)
+        pen.text(stamp, small, left + (small.width(stamp) / 2.0), top + (lines.size * bold.height) + (small.height / 2.0), pen.palette.soft)
+      end
+
+      # Runs of [text, bold] broken into lines no wider than +room+, at
+      # word boundaries.
+      def runs_in_lines(runs, room, bold, plain)
+        lines = [[]]
+        width = 0.0
+        runs.each do |text, strong|
+          face = strong ? bold : plain
+          text.split(/(?<= )/).each do |word|
+            wide = face.width(word)
+            if width + wide > room && !lines.last.empty?
+              lines << []
+              width = 0.0
+              word = word.lstrip
+              wide = face.width(word)
+            end
+            last = lines.last.last
+            last && last[1] == strong ? last[0] += word : lines.last << [+word, strong]
+            width += wide
+          end
+        end
+        lines
       end
 
       def backing(rect, lit)
@@ -213,7 +261,7 @@ module DotPopper
       # While a long press is held, what it will do.
       def hold(show, layout)
         font = pen.fonts.semibold(layout.scaled(pen.style::GROUPS.text))
-        y = layout.stats_floor - (font.height * 2)
+        y = layout.page.bottom - layout.control_height - (font.height * 1.2)
         pen.text(show.group_panel.holding_words, font, layout.center_x, y, pen.palette.cream)
       end
     end

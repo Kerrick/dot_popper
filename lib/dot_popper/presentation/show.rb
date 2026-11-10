@@ -56,6 +56,7 @@ module DotPopper
         @achievements = achievements
         @achievement_watch = AchievementWatch.new
         @groups = GroupPanel.new(groups:, entitlement:, sounds:, pro_offer: ->(feature) { open_offer_for(feature) })
+        @groups.copy = ->(text) { clipboard.copy(text) }
         @offer_focus = nil
         @storefront = storefront
         @games = games
@@ -201,8 +202,13 @@ module DotPopper
 
       # Where the Friend group screen's parts go, while it is open.
       def group_plan
-        GroupScreen.new(layout:, style: style::GROUPS, measure: @measure, panel: @groups,
-                        standard_dots: !cabinet.sizing.sized_to_screen?, back_text: words.go_back).plan
+        where = [@groups.page, @groups.group_id]
+        @scroll = nil unless @group_scroll_at == where
+        @group_scroll_at = where
+        plan = GroupScreen.new(layout:, style: style::GROUPS, measure: @measure, panel: @groups, standard_dots: !cabinet.sizing.sized_to_screen?,
+                               back_text: words.go_back, offset: @scroll&.offset || 0.0).plan
+        list_fit(plan.content, plan.window.height) if plan.window
+        plan
       end
 
       # Whether the title offers the way in to groups: where there is a

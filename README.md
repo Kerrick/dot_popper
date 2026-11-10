@@ -77,7 +77,7 @@ The first time you press Play, a short tutorial with no words shows you how, in 
 | To | With a mouse and keyboard | With a controller |
 | --- | --- | --- |
 | Pop a dot | Click it | Aim with the left stick or the d-pad, and press A or the right trigger |
-| Start a game, or continue after one | Click Play or Continue, or press Enter or Space | A, or Start |
+| Start a game, or the next after Game Over | Click Play or Play again, or press Enter or Space | A, or Start |
 | Open Stats, Achievements or Themes, from Home | Click its button | X, LB or RB |
 | Watch how to play again, from Home | Click How to play, or press H | Y |
 | Open Settings, from Home | Click Settings | View (also called Back or Select) |
@@ -90,7 +90,7 @@ The first time you press Play, a short tutorial with no words shows you how, in 
 | Switch to fullscreen and back | Choose Window, Borderless or Full screen in Settings, or press F11, or Alt+Enter (Cmd+Enter on a Mac) | RB, in Settings |
 | Quit | Click Quit on Home, or press Escape, on Home or during a game | B twice, on Home |
 
-On a Mac, Windows or Linux, Quit sits beside Settings at the bottom of Home, and Settings holds the Display choice, so the mouse alone can fill the screen and leave the game, even in fullscreen, where the window's own buttons are gone. From any other screen, click Back or Continue to get Home.
+On a Mac, Windows or Linux, Quit sits beside Settings at the bottom of Home, and Settings holds the Display choice, so the mouse alone can fill the screen and leave the game, even in fullscreen, where the window's own buttons are gone. From any other screen, click Back, or Home on Game Over, to get Home.
 
 ## Good to know
 

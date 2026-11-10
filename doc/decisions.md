@@ -1572,4 +1572,8 @@ On a good tap, "+1", "+1 and a stopwatch" and "+1 and a dot" fly in turn from th
 
 **Headings** sit centred, shrunk to fit beside Back on a short window, or right of Back where centring cannot clear it.
 
+**Game Over** leads with Play again, so another game is one press (Juul; Swink), with Home and Share my score under it. Its lines stand in pills; a new achievement and a title taken each open what they name, with an arrow, and today's goal met opens nothing (Saffer: feedback no bigger than the moment). The HUD goes once Game Over has arrived, since the score is on it.
+
+**Themes, the Pro offer and Friend groups** follow the same heading and Back. The offer leads with what was tapped and counts nothing (`answers.md` 13). Friend groups' lists scroll instead of paging (`answers.md` 7), and a group and its members are named by the game (`Presentation::Names`). A group's code is hidden until Show, which becomes Copy. History names who took the title from whom, and who earned what, with the date and time in the player's own time zone. The keypad reads a code as it is shared, 482-1073, takes typed digits wherever there is a keyboard, and its Join looks disabled until all seven digits are in (Podmajersky: say nothing the player can see).
+
 **To reverse:** the commit that lands this replaced the old screens outright; revert it.

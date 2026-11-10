@@ -135,19 +135,22 @@ class GroupPanelTest < Minitest::Test
     assert_empty @worker.started
   end
 
-  # The gesture doc/privacy.json describes: the control on the list screen,
-  # held, asks the server to delete this player.
+  # The gesture doc/privacy.json describes: Delete my friend group data,
+  # on the Privacy screen, held, asks the server to delete this player.
   def test_holding_delete_my_data_deletes_the_player_from_the_server
     join!
-    panel.open
-    tick
-
-    assert_equal Words.delete, @show.group_plan.actions.find { it.name == :group_delete }.text
-    tap_control(:group_delete)
+    open_privacy
+    tap_control(:privacy_delete)
     tick(DotPopper::Presentation::GroupPanel::HOLD + 0.1)
     tick
 
     assert_equal :deleted, @worker.started.last.first.kind
+  end
+
+  def open_privacy
+    panel.close
+    @show.open_settings
+    @show.open_privacy
   end
 
   def test_leaving_and_deleting_never_need_it
@@ -157,10 +160,10 @@ class GroupPanelTest < Minitest::Test
     assert_predicate panel.hold, :held?
     @pro = DotPopper::Entitlement.free
     build(entitlement: @pro)
-    panel.open
     tick
+    open_privacy
 
-    assert_includes names, :group_delete
+    assert_includes names, :privacy_delete
   end
 
   def test_a_short_code_is_not_sent
@@ -221,7 +224,37 @@ class GroupPanelTest < Minitest::Test
     assert_equal [true, false, false], rows.map(&:champion)
     assert_equal [false, true, false], rows.map(&:me)
     assert_includes lines, Words.title_line(panel.group)
-    assert_includes lines, Words.code_line("2345678")
+  end
+
+  # The code is hidden until Show; Show then becomes Copy, which copies it
+  # as it is shared, and leaving the group's screen hides it again.
+  def test_the_code_shows_then_copies_and_hides_again_on_leaving
+    join!
+    action = -> { @show.group_plan.actions.find { it.name == :group_code } }
+    assert_equal Words.show, action.call.text
+    refute panel.code_shown?
+    tap_control(:group_code)
+    assert panel.code_shown?
+    assert_equal Words.copy, action.call.text
+    tap_control(:group_code)
+    assert_equal "234-5678", @show.instance_variable_get(:@clipboard).text
+    tap_control(:group_history)
+    tap_control(:back)
+    assert panel.code_shown?, "History is the group's own"
+    tap_control(:back)
+    tap_control([:group_show, 1])
+    refute panel.code_shown?
+  end
+
+  # History says when, in the player's own time.
+  def test_history_says_when_in_local_time_and_names_the_members
+    assert_equal "November 5, 1:00 AM", Words.when("2026-11-05T01:00:00Z", offset: "+00:00")
+    assert_equal "November 4, 7:00 PM", Words.when("2026-11-05T01:00:00Z", offset: "-06:00")
+    change = Groups::TitleChange.new(id: 1, champion_number: 2, previous_champion_number: 1, score: 31, at: "2026-11-05T01:00:00Z")
+    names = Words.entry(7, change).map(&:first).join
+    assert_equal "#{DotPopper::Presentation::Names.member(7, 2)} took the title from #{DotPopper::Presentation::Names.member(7, 1)} with 31.", names
+    earned = Groups::MemberAchievement.new(id: 2, member_number: 2, key: :blink, at: "2026-11-05T01:00:00Z")
+    assert_equal "#{DotPopper::Presentation::Names.member(7, 2)} earned Blink.", Words.entry(7, earned).map(&:first).join
   end
 
   def test_back_climbs_the_screens
@@ -265,7 +298,7 @@ class GroupPanelTest < Minitest::Test
     assert_nil @session.group(1)
   end
 
-  def test_a_list_too_long_for_a_page_goes_in_pages
+  def test_a_list_too_long_for_its_window_scrolls
     @session = Groups::Session.new(store: DotPopper::ScoreRecord::Memory.new, worker: @worker)
     build(width: 400, height: 500)
     join!
@@ -278,10 +311,10 @@ class GroupPanelTest < Minitest::Test
     first = @show.group_plan.rows.map { it.group.id }
 
     assert_operator first.size, :<, 20
-    assert_includes names, :group_older
-    tap_control(:group_older)
-    refute_equal first, @show.group_plan.rows.map { it.group.id }
-    assert_includes names, :group_newer
+    @show.scroll_key(:end)
+    last = @show.group_plan.rows.map { it.group.id }
+    refute_equal first, last
+    assert_includes last, groups.map { it["id"] }.max_by { DotPopper::Presentation::Names.group(it) }, "the end shows the last"
   end
 
   def test_the_history_is_read_for_the_group
@@ -354,6 +387,36 @@ class GroupPanelTest < Minitest::Test
     assert_predicate @session, :available?
   end
 
+  # On a phone either way up, a computer's window, and the smallest
+  # window, every friend groups' screen keeps its buttons apart and inside
+  # the safe area, and a press on each one's middle reaches it.
+  [[400, 850], [850, 400], [1200, 800], [400, 320], [640, 400]].each do |width, height|
+    define_method(:"test_every_screens_buttons_are_apart_and_inside_at_#{width}x#{height}") do
+      build(width:, height:)
+      join!(group(numbers: (1..8).to_a, you: 3, champion: 2, top: 90))
+      check = lambda do |where|
+        safe = @show.layout.safe
+        controls = @show.controls
+        controls.combination(2) { |one, other| refute one.frame.overlaps?(other.frame), "#{where}: #{one.name} and #{other.name}" }
+        controls.each do |control|
+          frame = control.frame
+          assert_operator frame.y, :>=, safe.y - 1e-6, "#{where}: #{control.name}"
+          assert_operator frame.bottom, :<=, safe.bottom + 1e-6, "#{where}: #{control.name}"
+          assert_equal control.name, @show.control_at(frame.center_x, frame.center_y)&.name, "#{where}: #{control.name}"
+        end
+      end
+      check.call("the group")
+      tap_control(:group_history)
+      tick
+      check.call("its history")
+      tap_control(:back)
+      tap_control(:back)
+      check.call("the list")
+      tap_control(:group_join_open)
+      check.call("the keypad")
+    end
+  end
+
   [[1200, 800]].each do |width, height|
     define_method(:"test_every_screen_fits_and_is_apart_at_#{width}x#{height}") do
       build(width:, height:)
@@ -361,9 +424,9 @@ class GroupPanelTest < Minitest::Test
       join!(body)
       safe = @show.layout.safe
       standings = @show.group_plan
-      standings.rows.each { assert_operator it.rect.bottom, :<=, safe.bottom + 1, "standings" }
-
-      assert_equal 8, standings.rows.size
+      standings.rows.each { assert_operator it.rect.y, :<, standings.window.bottom, "standings" }
+      @show.scroll_key(:end)
+      assert_includes @show.group_plan.rows.map(&:number), 1, "the last of the eight scrolls into view"
       [@show.controls.map(&:reach)].flatten.each { assert_operator it.bottom, :<=, safe.bottom + 1 }
       tap_control(:group_history)
       tick
