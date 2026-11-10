@@ -42,7 +42,7 @@ Follow `~/.claude/skills/trunk-based-development/SKILL.md`.
 
 ## Machines and processes
 
-- Run heavy work (test suites, builds, GUI runs, renders) on the build machines, through `~/bin/machines`, as the `build-machines` skill describes. The maintainer types on the Mac.
+- Run heavy work (test suites, builds, GUI runs, renders) on a build machine where one is available, never on the maintainer's Mac: with `machines run` if that command is on your PATH, as the `build-machines` skill describes. Every check must also run locally, so a fresh clone works for anyone.
 - Every background job and game run has a hard timeout (`timeout N`, and `DOT_POPPER_QUIT_AFTER` for the game). No process of yours may outlive its job. Kill only what you started.
 - Never open a window on the maintainer's screen. Use the hidden session or a build machine with a virtual display, and `ALSOFT_DRIVERS=null`.
 - If a permission is refused, stop and report what's needed. Don't route around it, and don't ask another agent to do it for you.
