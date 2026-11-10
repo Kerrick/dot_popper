@@ -68,7 +68,7 @@ class SignaturesTest < Minitest::Test
     assert_equal key, C::LicenseKey.parse(text)
     assert_equal key, C::LicenseKey.parse("  #{text.downcase.delete("-").scan(/.{1,40}/).join("\r\n")}\n")
     assert_equal key, C::LicenseKey.parse(text.delete_prefix("DP-").tr("0", "O"))
-    assert key.valid?
+    assert key.valid?(C::TEST_PINS)
   end
 
   def test_a_key_not_signed_by_a_pinned_license_key_or_changed_is_not_valid
@@ -76,8 +76,8 @@ class SignaturesTest < Minitest::Test
     key = C::LicenseKey.issue(C::TestKeys::LICENSE)
     changed = key.with(id: key.id.dup.tap { it.setbyte(0, key.id.getbyte(0) ^ 1) })
 
-    refute stranger.valid?
-    refute changed.valid?
+    refute stranger.valid?(C::TEST_PINS)
+    refute changed.valid?(C::TEST_PINS)
     refute key.valid?(VECTOR_PINS)
   end
 
@@ -92,11 +92,11 @@ class SignaturesTest < Minitest::Test
     nonce = C::SignedAnswers.fresh
     body = C::SignedAnswers.signed_verdict("moved", id, nonce)
 
-    assert_equal :moved, C::SignedAnswers.verdict(body, id, nonce)
-    assert_equal :current, C::SignedAnswers.verdict(C::SignedAnswers.signed_verdict("current", id, nonce), id, nonce)
-    assert_nil C::SignedAnswers.verdict(body, id, C::SignedAnswers.fresh)
-    assert_nil C::SignedAnswers.verdict(body, Random.bytes(16), nonce)
-    assert_nil C::SignedAnswers.verdict(body.merge("verdict" => "current"), id, nonce)
+    assert_equal :moved, C::SignedAnswers.verdict(body, id, nonce, C::TEST_PINS)
+    assert_equal :current, C::SignedAnswers.verdict(C::SignedAnswers.signed_verdict("current", id, nonce), id, nonce, C::TEST_PINS)
+    assert_nil C::SignedAnswers.verdict(body, id, C::SignedAnswers.fresh, C::TEST_PINS)
+    assert_nil C::SignedAnswers.verdict(body, Random.bytes(16), nonce, C::TEST_PINS)
+    assert_nil C::SignedAnswers.verdict(body.merge("verdict" => "current"), id, nonce, C::TEST_PINS)
     assert_nil C::SignedAnswers.verdict(body, id, nonce, VECTOR_PINS)
   end
 
