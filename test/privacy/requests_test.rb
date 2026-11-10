@@ -131,7 +131,11 @@ class PrivacyRequestsTest < Minitest::Test
     banned = %r{\bNet::|\bTCPSocket\b|\bUDPSocket\b|\bUNIXSocket\b|\bSocket\.|\bOpenSSL\b|\bURI\.open\b|\bopen-uri\b|require\s+["'](?:net/|socket|openssl|open-uri)|HTTParty|Faraday|RestClient|Excon|Typhoeus}
 
     # automation.rb only refuses connections (Automation.guard!); it opens none.
-    assert_empty ruby_files.reject { it.end_with?("groups/link.rb", "dot_popper/automation.rb") }.select { uncommented(it).match?(banned) }
+    # continuity/ed25519.rb takes OpenSSL's signatures, and nothing that connects.
+    signatures = File.join(ROOT, "lib/dot_popper/continuity/ed25519.rb")
+
+    assert_empty ruby_files.reject { it.end_with?("groups/link.rb", "dot_popper/automation.rb") || it == signatures }.select { uncommented(it).match?(banned) }
+    assert_empty uncommented(signatures).gsub(/OpenSSL::PKey\b|require "openssl"/, "").scan(banned)
     assert_empty native_files.select { File.read(it).match?(/URLSession|NSURLConnection|HttpURLConnection|OkHttp|Volley/) }
   end
 
