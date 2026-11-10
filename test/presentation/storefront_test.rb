@@ -84,6 +84,17 @@ class StorefrontTest < Minitest::Test
     end
   end
 
+  def test_a_computers_own_store_build_uses_the_native_port_on_that_computer_only
+    { Storefront::MAC_APP_STORE => "OS X", Storefront::MICROSOFT_STORE => "Windows" }.each do |channel, os|
+      store = Storefront.for(os, **stores, entitlement: @entitlement, channel:)
+
+      assert_same @native, store.instance_variable_get(:@port), channel
+      (["Linux", "OS X", "Windows"] - [os]).each do |other|
+        refute_predicate Storefront.for(other, **stores, entitlement: @entitlement, channel:), :offered?, "#{channel} on #{other}"
+      end
+    end
+  end
+
   def test_connecting_asks_the_store_and_a_pro_player_needs_no_asking
     @store.connect
 

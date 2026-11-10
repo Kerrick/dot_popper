@@ -82,14 +82,14 @@ module DotPopper
 
     SENSOR = "The game reads your device's tilt only on the Game Over screen, to roll the dots. It never stores or sends that."
     NO_OUTSIDE_SERVICES = "The game has no analytics, crash-reporting, advertising or attribution services."
-    PURCHASES = "When you buy Pro in a store's copy, your purchase goes straight from your device to Apple or Google. The game sends nothing about it. " \
+    PURCHASES = "When you buy Pro in a store's copy, your purchase goes straight from your device to Apple, Google or Microsoft. The game sends nothing about it. " \
                 "In a copy from setdef's website, you buy in your browser, and the license key you are sent is checked by the game itself. " \
                 "While setdef's server answers, the key and a random secret go to it, so the key works on one device at a time.".freeze
 
     # What the code here cannot make true, said plainly.
     NOT_ENFORCED = [
-      Item.new(note: "What Apple and Google do with a purchase: it goes straight from the device to their store, in the iOS and Android hosts.",
-               plain: "Apple and Google handle your purchase under their own privacy terms."),
+      Item.new(note: "What Apple, Google and Microsoft do with a purchase: it goes straight from the device to their store, in the iOS and Android hosts and the Mac App Store and Microsoft Store builds' store helpers.",
+               plain: "Apple, Google and Microsoft handle your purchase under their own privacy terms."),
       Item.new(note: "How the iOS and Android hosts, and the operating system's share sheet, behave beyond what their source shows: no test here runs them.",
                plain: "When you share a result, your device's own sharing screen takes over. We can't see what happens next."),
       Item.new(note: "What Lota, LÖVE, SDL and Fledge's runtime do inside the app: audited by hand for their required-reason APIs, not by a test.",

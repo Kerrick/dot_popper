@@ -68,8 +68,13 @@ module DotPopper
     # What a store build trusts: Apple's root, and the app's Play key once
     # pinned.
     STORES = Trust.new(apple_roots: [APPLE_ROOT_G3].freeze, play_keys: PLAY_KEYS.map { it.unpack1("m") }.freeze,
-                       app_id: APP_ID, product_id: PRODUCT_ID)
+                       app_id: APP_ID, product_id: PRODUCT_ID, windows_license: false)
+    # What the Microsoft Store build trusts: Windows' word for its license,
+    # and nothing that is signed, since no other store sells that build.
+    MICROSOFT_STORE = Trust.new(apple_roots: [].freeze, play_keys: [].freeze, app_id: APP_ID, product_id: PRODUCT_ID,
+                                windows_license: true)
     # What a test build trusts: only the fake store's test key.
-    TEST = Trust.new(apple_roots: [].freeze, play_keys: [TestKey::PUBLIC.unpack1("m")].freeze, app_id: APP_ID, product_id: PRODUCT_ID)
+    TEST = Trust.new(apple_roots: [].freeze, play_keys: [TestKey::PUBLIC.unpack1("m")].freeze, app_id: APP_ID, product_id: PRODUCT_ID,
+                     windows_license: false)
   end
 end

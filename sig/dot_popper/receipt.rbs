@@ -5,8 +5,9 @@ module DotPopper
       attr_reader play_keys: Array[String]
       attr_reader app_id: String
       attr_reader product_id: String
+      attr_reader windows_license: bool
 
-      def initialize: (apple_roots: Array[String], play_keys: Array[String], app_id: String, product_id: String) -> void
+      def initialize: (apple_roots: Array[String], play_keys: Array[String], app_id: String, product_id: String, windows_license: bool) -> void
     end
 
     APP_ID: String
@@ -14,6 +15,7 @@ module DotPopper
     APPLE_ROOT_G3: String
     PLAY_KEYS: Array[String]
     STORES: Trust
+    MICROSOFT_STORE: Trust
     TEST: Trust
 
     module TestKey
@@ -30,6 +32,11 @@ module DotPopper
     end
 
     module Play
+      def self.valid?: (String text, Trust trust) -> bool
+    end
+
+    module Microsoft
+      SKU: Regexp
       def self.valid?: (String text, Trust trust) -> bool
     end
   end

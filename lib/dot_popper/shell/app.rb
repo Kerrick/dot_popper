@@ -84,7 +84,7 @@ module DotPopper
         @splash = @splash.with(sounding: !@speaker.muted?) if @splash
         storefront = Presentation::Storefront.for(
           os, entitlement:, channel: @channel,
-              native: Presentation::NativeStore.new(opener: UrlOpener.new, answers: StoreAnswers.in_save_folder),
+              native: native_store(os),
               fake: Presentation::FakeStore.new(SaveFile.new(name: "fake_store.txt"), fails: Presentation::FakeStore.failure(@env)),
               website: ->(fake:) { website_store(license, clipboard, fake:) }
         )
@@ -447,9 +447,28 @@ module DotPopper
       # environment says.
       def trusted_pins = Build.store?(@channel) ? Continuity::PINNED : Continuity::TEST_PINS
 
-      # Whose receipts prove Pro: the stores' in a store build, and in a
-      # test build only the fake store's, by the channel alone.
-      def trusted_receipts = Build.store?(@channel) ? Receipt::STORES : Receipt::TEST
+      # Whose receipts prove Pro, by the channel alone: in a test build only
+      # the fake store's; in the Microsoft Store's build Windows' word,
+      # which comes only down the store helper's pipe; in any other store
+      # build the signed receipts of Apple and Google.
+      def trusted_receipts
+        return Receipt::TEST unless Build.store?(@channel)
+
+        @channel == Presentation::Storefront::MICROSOFT_STORE ? Receipt::MICROSOFT_STORE : Receipt::STORES
+      end
+
+      # The native port: on a phone the app's host, by URL and answer file;
+      # on a computer sold through its own store, the store helper shipped
+      # in the app, by its pipe (StoreHelper). Which one a build uses is
+      # Storefront.for's choice, by the channel.
+      def native_store(os)
+        if Presentation::Storefront::HELPER_CHANNELS.value?(os)
+          return StoreHelper.new(StoreHelper.find(os, starts: [__dir__, File.dirname(File.expand_path($PROGRAM_NAME))]),
+                                 automated: Automation.on?(@env))
+        end
+
+        Presentation::NativeStore.new(opener: UrlOpener.new, answers: StoreAnswers.in_save_folder)
+      end
 
       # What asks whether setdef is gone, and where a license key is: the
       # test build's fake, in this process, sending nothing anywhere; the

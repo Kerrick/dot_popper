@@ -61,6 +61,17 @@ module DotPopper
       # with no channel, as every CI kit is today.
       def self.test_build? = BUILD_CHANNEL.nil?
 
+      # The channels of the computers' own stores, each with the system it
+      # sells for, as Lota::System.os names it. Their copies also buy
+      # through the native port. Its host is a small program shipped beside
+      # the game (Shell::StoreHelper), since neither Lota nor LÖVE can call
+      # StoreKit or Windows.Services.Store: the Mac App Store's uses StoreKit
+      # 2 (macos/store), the Microsoft Store's Windows.Services.Store
+      # (windows/store). On any other system those channels offer nothing.
+      MAC_APP_STORE = "mac-app-store"
+      MICROSOFT_STORE = "microsoft-store"
+      HELPER_CHANNELS = { MAC_APP_STORE => "OS X", MICROSOFT_STORE => "Windows" }.freeze
+
       # The channel for copies no store controls: setdef's website, whose
       # store is a WebsiteStore (license keys). An iOS build never takes it
       # (Apple 3.1.1); an Android build for an APK or another store does.
@@ -70,7 +81,8 @@ module DotPopper
       # test build, on a phone the +fake+ store port, and on a computer the
       # +website+ store with its fake checkout, as computers' copies will
       # mostly be sold. With a channel, the +native+ port where the host
-      # has a store, the website store for WEBSITE, and else, on a
+      # has a store or the channel is that computer's own store's
+      # (HELPER_CHANNELS), the website store for WEBSITE, and else, on a
       # computer, the channel's own store, or none, which offers nothing, so
       # no one is offered a purchase that cannot complete. A channel nobody
       # has built is none. +website+ is called for the website store, with
@@ -82,7 +94,8 @@ module DotPopper
           return website.call(fake: true)
         end
         return website.call(fake: false) if channel == WEBSITE && os != "iOS" && website
-        return new(port: native, entitlement:) if SYSTEMS.include?(os)
+        return new(port: native, entitlement:) if SYSTEMS.include?(os) || HELPER_CHANNELS[channel] == os
+        return NoStorefront.new if HELPER_CHANNELS.key?(channel)
 
         sold = channels[channel]
         sold ? sold.call(entitlement:) : NoStorefront.new

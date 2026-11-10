@@ -456,7 +456,7 @@
       }
     ]
   },
-  "purchases": "When you buy Pro in a store's copy, your purchase goes straight from your device to Apple or Google. The game sends nothing about it. In a copy from setdef's website, you buy in your browser, and the license key you are sent is checked by the game itself. While setdef's server answers, the key and a random secret go to it, so the key works on one device at a time.",
+  "purchases": "When you buy Pro in a store's copy, your purchase goes straight from your device to Apple, Google or Microsoft. The game sends nothing about it. In a copy from setdef's website, you buy in your browser, and the license key you are sent is checked by the game itself. While setdef's server answers, the key and a random secret go to it, so the key works on one device at a time.",
   "sdks": {
     "for_players": [
       "On Android, Google Play handles buying Pro.",
@@ -630,8 +630,8 @@
   },
   "declared_but_not_enforced": [
     {
-      "note": "What Apple and Google do with a purchase: it goes straight from the device to their store, in the iOS and Android hosts.",
-      "plain": "Apple and Google handle your purchase under their own privacy terms.",
+      "note": "What Apple, Google and Microsoft do with a purchase: it goes straight from the device to their store, in the iOS and Android hosts and the Mac App Store and Microsoft Store builds' store helpers.",
+      "plain": "Apple, Google and Microsoft handle your purchase under their own privacy terms.",
       "record_only": null
     },
     {

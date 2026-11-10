@@ -46,6 +46,29 @@ class StoreBuildTest < Minitest::Test
     assert DotPopper::Entitlement.new(trust: app(nil).send(:trusted_receipts)).prove(receipt)
   end
 
+  # Windows' word for a license is taken in the Microsoft Store's build
+  # only, whose answers come down the helper's pipe and from no file.
+  def test_only_the_microsoft_store_build_takes_windows_word
+    word = "microsoft:#{DotPopper::Receipt::PRODUCT_ID}:9NBLGGH4R315/000N"
+    microsoft = DotPopper::Presentation::Storefront::MICROSOFT_STORE
+
+    assert_same DotPopper::Receipt::MICROSOFT_STORE, app(microsoft).send(:trusted_receipts)
+    assert DotPopper::Entitlement.new(trust: app(microsoft).send(:trusted_receipts)).prove(word)
+    [nil, "app-store", DotPopper::Presentation::Storefront::MAC_APP_STORE, "website"].each do |channel|
+      refute DotPopper::Entitlement.new(trust: app(channel).send(:trusted_receipts)).prove(word), channel.inspect
+    end
+  end
+
+  def test_a_computers_own_store_reads_its_helpers_pipe_and_an_automated_run_starts_none
+    %w[OS\ X Windows].each do |os|
+      port = app(DotPopper::Presentation::Storefront::MICROSOFT_STORE).send(:native_store, os)
+
+      assert_instance_of DotPopper::Shell::StoreHelper, port, os
+      assert_equal "-", port.path
+      refute port.open("dotpopper-store://open?n=1"), "SETTINGS is an automated run"
+    end
+  end
+
   def test_the_free_game_limit_counts_in_a_store_build_even_for_a_bot_or_a_scenario
     assert app("website").send(:player?)
     refute app(nil).send(:player?)

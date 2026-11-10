@@ -46,6 +46,27 @@ class ReceiptTest < Minitest::Test
     assert_equal "63343abfb89a6a03ebb57e9b3f5fa7be7c4f5c756f3017b3a8c488c3653e9179", OpenSSL::Digest::SHA256.hexdigest(root.to_der)
   end
 
+  # The Microsoft Store
+
+  def test_windows_word_proves_pro_only_in_the_microsoft_store_build
+    word = "microsoft:#{Receipt::PRODUCT_ID}:9NBLGGH4R315/000N"
+
+    assert Receipt.valid?(word, Receipt::MICROSOFT_STORE)
+    refute Receipt.valid?(word, Receipt::STORES)
+    refute Receipt.valid?(word, TEST)
+  end
+
+  def test_windows_word_for_another_add_on_or_no_sku_proves_nothing
+    refute Receipt.valid?("microsoft:com.setdef.DotPopper.other:9NBLGGH4R315/000N", Receipt::MICROSOFT_STORE)
+    refute Receipt.valid?("microsoft:#{Receipt::PRODUCT_ID}", Receipt::MICROSOFT_STORE)
+    refute Receipt.valid?("microsoft:#{Receipt::PRODUCT_ID}:owned", Receipt::MICROSOFT_STORE)
+  end
+
+  def test_the_microsoft_store_build_takes_no_signed_receipt_from_another_store
+    refute Receipt.valid?(Receipt.issue, Receipt::MICROSOFT_STORE)
+    refute Receipt.valid?(apple, Receipt::MICROSOFT_STORE)
+  end
+
   # The App Store
 
   def test_a_transaction_chained_to_a_pinned_root_proves_pro
@@ -80,7 +101,8 @@ class ReceiptTest < Minitest::Test
 
   private
 
-  def trust = Receipt::Trust.new(apple_roots: [chain[:root].to_der], play_keys: [], app_id: Receipt::APP_ID, product_id: Receipt::PRODUCT_ID)
+  def trust = Receipt::Trust.new(apple_roots: [chain[:root].to_der], play_keys: [], app_id: Receipt::APP_ID, product_id: Receipt::PRODUCT_ID,
+                                     windows_license: false)
 
   # A root, an intermediate and a leaf, as Apple's are laid out.
   def chain

@@ -6,7 +6,7 @@ module DotPopper
   # "Pro comes only from proof"). Nothing the game writes can stand in for
   # one: an edited file, a flag or a number never verifies.
   #
-  # The app's host passes a receipt to the game as text, in one of two
+  # The app's host passes a receipt to the game as text, in one of three
   # forms, after the store's own name:
   #
   #   apple:<JWS>                 StoreKit 2's signed transaction
@@ -16,6 +16,10 @@ module DotPopper
   #                               and its RSA signature (PKCS #1 v1.5,
   #                               SHA-1) by the app's own Play key, both in
   #                               standard Base64
+  #   microsoft:<token>:<SKU>     the Microsoft Store's license for the
+  #                               add-on, which is Windows' word and no
+  #                               signature (Microsoft), taken only by the
+  #                               Microsoft Store build
   #
   # The test build's fake store signs "play:" receipts with a test key
   # (TestKey), which only TEST trusts. Anything that goes wrong is a receipt
@@ -24,8 +28,10 @@ module DotPopper
     # What a build accepts a receipt from: the +apple_roots+ (DER
     # certificates) a StoreKit transaction must chain to, the +play_keys+
     # (DER public keys) a Play purchase must be signed by, the app's
-    # +app_id+ (its bundle ID and package name) and the +product_id+.
-    Trust = Data.define(:apple_roots, :play_keys, :app_id, :product_id)
+    # +app_id+ (its bundle ID and package name) and the +product_id+, and
+    # whether Windows' word for a Microsoft Store license is taken
+    # (+windows_license+), which only the Microsoft Store build's is.
+    Trust = Data.define(:apple_roots, :play_keys, :app_id, :product_id, :windows_license)
 
     APP_ID = "com.setdef.DotPopper"
     PRODUCT_ID = "com.setdef.DotPopper.pro"
@@ -36,6 +42,7 @@ module DotPopper
       case store
       when "apple" then Apple.valid?(rest.to_s, trust)
       when "play" then Play.valid?(rest.to_s, trust)
+      when "microsoft" then Microsoft.valid?(rest.to_s, trust)
       else false
       end
     end
@@ -51,4 +58,4 @@ end
 
 # Apple's and Play's checks and the test key need OpenSSL and JSON, and
 # are left out of the rules' type check (Steepfile).
-%w[apple play pins].each { require_relative "receipt/#{it}" }
+%w[apple play microsoft pins].each { require_relative "receipt/#{it}" }
