@@ -29,11 +29,12 @@ CI takes each store's values from the repository's settings on GitHub, never fro
 | --- | --- | --- | --- |
 | `MSIX_IDENTITY_NAME` | Variable | The package's identity name from Partner Center (Product identity). | No: every MSIX published to the Store carries it in its manifest. |
 | `MSIX_PUBLISHER` | Variable | The publisher, `CN=` and an ID, from the same page. | No, for the same reason. |
+| `APPLE_TEAM_ID` | Variable | The Apple Developer Team ID (ten letters and digits), from developer.apple.com, Membership. | No: it is in every app the team signs. |
 | `ANDROID_UPLOAD_KEYSTORE` | Secret | The upload keystore, in base64. | Yes: whoever has it can upload builds as you. |
 | `ANDROID_UPLOAD_KEY_ALIAS` | Secret | The key's alias in that keystore. | Kept with the keystore. |
 | `ANDROID_UPLOAD_KEY_PASSWORD` | Secret | The keystore's and key's password. | Yes. |
 
-Set a variable with `gh variable set NAME --repo setdef/dot_popper`, and a secret with `gh secret set NAME --repo setdef/dot_popper`. Apple's signing will add certificates and an App Store Connect API key here, all as secrets, once that work is done. The Microsoft Store signs an MSIX itself, so it needs no key.
+A `v1*` tag fails (the Release channel workflow) while `MSIX_IDENTITY_NAME`, `MSIX_PUBLISHER` or `APPLE_TEAM_ID` is unset or a stand-in (`script/check_store_identifiers.rb`), or while the Play key is unpinned (`script/check_build_channel.rb`). Set a variable with `gh variable set NAME --repo setdef/dot_popper`, and a secret with `gh secret set NAME --repo setdef/dot_popper`. Apple's signing will add certificates and an App Store Connect API key here, all as secrets, once that work is done. The Microsoft Store signs an MSIX itself, so it needs no key.
 
 ## Google Play
 
@@ -70,19 +71,41 @@ Set a variable with `gh variable set NAME --repo setdef/dot_popper`, and a secre
 ## Mac App Store
 
 - **Account:** the same Apple Developer Program.
-- **Build status:** `lota fuse` makes a working, unsigned `.app` for arm64.
-- **What's missing:**
-  - **The App Sandbox** (entitlement `com.apple.security.app-sandbox`). Dot Popper writes only to its own Application Support folder, which a sandboxed app gets inside its container, and reads the clipboard only to write to it. Tested on 2026-11-06: v0.8.6's app, signed locally with only that entitlement, started, played a game, quit cleanly, and saved to `~/Library/Containers/com.setdef.DotPopper/Data/Library/Application Support/`, so Lota and Fledge's runtime need nothing more for the sandbox. Copy my result and sound weren't checked under it; the clipboard needs no entitlement, and audio output doesn't either.
-  - Signing with "Apple Distribution" or "3rd Party Mac Developer" identities, and an installer package (`productbuild`) signed for the store.
-  - An App Store Connect record; the same identifier can serve both stores.
+- **The build:** the Package workflow's `mac-app-store` job makes it on every push. It is not the `.dmg` that playtesters get. The job:
+  1. Sets the channel with `ruby script/set_build_channel.rb mac-app-store` before `lota fuse`, so the app sells Pro through the Mac App Store and trusts only Apple's root.
+  2. Builds the store helper from `macos/store/main.swift` (StoreKit 2) with `swiftc`, linking `macos/store/Info.plist` into it. Then it places the helper at `Dot Popper.app/Contents/Helpers/dot-popper-store`.
+  3. Signs inside out, never with `--deep`. First the helper, with `macos/store/helper.entitlements` (`app-sandbox` and `inherit`, the only two a store helper may have). Then the app, with `macos/store/app.entitlements`: the App Sandbox, `network.client` (setdef's server and friend groups), and Fledge's two JIT entitlements, `cs.allow-unsigned-executable-memory` and `cs.disable-library-validation`.
+  4. Plays the sandboxed app with the bot. CI signs it ad hoc, so this only shows that it runs.
+  5. Uploads `mac-app-store-unsigned`, an unsigned `productbuild` package. It is never attached to a playtest release.
+- **How Pro is bought:** the game starts the helper once for each request, with the iOS host's `dotpopper-store://` URL, and reads the answer from the helper's standard output. The answer carries StoreKit's signed transaction. The game checks it offline against Apple Root CA - G3 at every launch, the same code as iOS (`Receipt::Apple`). An automated run starts no helper.
+- **What needs the maintainer's account:**
+  - The Apple Developer Program, and the Team ID in the repository variable `APPLE_TEAM_ID` (a `v1*` tag fails without it).
+  - A Mac App Store provisioning profile for `com.setdef.DotPopper`. It adds `com.apple.application-identifier` and `com.apple.developer.team-identifier` to the app's entitlements.
+  - Signing with the "Apple Distribution" (or "3rd Party Mac Developer Application") identity in the order above. The package is signed with "3rd Party Mac Developer Installer": `productbuild --component "Dot Popper.app" /Applications --sign "3rd Party Mac Developer Installer: …" Dot-Popper.pkg`. Upload with Transporter or `xcrun altool`.
+  - An App Store Connect record (the same bundle identifier serves the App Store and the Mac App Store) and the non-consumable `com.setdef.DotPopper.pro`.
   - The license decision above.
-  - Possibly a universal (x86_64 plus arm64) build, which isn't possible today, since Lota and Fledge ship no Intel Mac build. An arm64-only Mac app is allowed.
+- **Unverified until a sandbox purchase on a Mac:**
+  - That StoreKit accepts a helper outside `Contents/MacOS` as the app. The helper's linked Info.plist names `com.setdef.DotPopper` for that. If StoreKit refuses it, try moving the helper to `Contents/MacOS`, where `Bundle.main` is the app itself; `Shell::StoreHelper` looks in both places.
+  - That the purchase sheet appears for an accessory process.
+  - That `currentEntitlements` answers offline.
+  - That App Review accepts Fledge's two JIT entitlements.
+  - That no hardened-runtime trouble comes from YJIT (see below).
+- **Already right:** Dot Popper writes only to its own Application Support folder, which a sandboxed app gets inside its container, and it only writes to the clipboard, never reads it. Tested on 2026-11-06: v0.8.6's app, signed locally with only the sandbox entitlement, started, played a game, quit cleanly, and saved to `~/Library/Containers/com.setdef.DotPopper/Data/Library/Application Support/`. Lota's restart (`love.event.quit("restart")`) is killed under the sandbox on macOS 15, since it uses exec; starting a child process, as the store helper does, is unaffected (Lota's packaging design).
+- **Possibly a universal build** (x86_64 plus arm64), which isn't possible today, since Lota and Fledge ship no Intel Mac build. An arm64-only Mac app is allowed.
 
 ## Microsoft Store (Windows)
 
 - **Account:** a Microsoft Partner Center developer account, a one-time fee for individuals.
 - **Build status:** `lota fuse` makes a working NSIS installer (`-setup.exe`) and a `.zip`, unsigned.
 - **The route taken: MSIX.** The Package workflow's `msix` job wraps the fused Windows folder in an MSIX with an `AppxManifest.xml` (Windows.FullTrustApplication, `runFullTrust`). The Store signs MSIX itself, so no certificate is needed. CI checks it by signing a copy with a throwaway certificate, installing it, playing 90 seconds of autoplay, checking that its records were saved, and removing it. Under MSIX, Windows redirects the game's roaming AppData into the package, so its saves land in `%LOCALAPPDATA%\Packages\<package family name>\LocalCache\Roaming\dot_popper\` (confirmed by CI on 2026-11-06), and uninstalling the app removes them. The other route, the NSIS `-setup.exe` as a Win32 app, would need a purchased code-signing certificate.
+
+**The MSIX is the Microsoft Store's own build.** The `msix` job sets the channel with `ruby script/set_build_channel.rb microsoft-store` before `lota fuse`. It builds the store helper (`windows/store/dot_popper_store.c`, plain C against Windows.Services.Store) with MinGW, runs the helper's self-test, and puts `dot-popper-store.exe` beside `Dot Popper.exe`. The game starts the helper for each request with the same `dotpopper-store://` URL as the phones, and reads its answer from the helper's standard output. A process the packaged game starts has the package's identity, which `StoreContext` needs. The helper names the game's window as the owner of the Store's dialogs (`IInitializeWithWindow`).
+
+**How Pro is proven, and what that gives up.** `Windows.Services.Store` hands an app no receipt for an add-on. The older `Windows.ApplicationModel.Store` has signed receipts, but Microsoft doesn't support it in packaged desktop apps, and each of its receipts carries a device ID. So the game takes Windows' own license list (`GetAppLicenseAsync`, the add-on whose in-app offer token is `com.setdef.DotPopper.pro`), at every launch, and keeps nothing. The answer comes only through the helper's pipe, never from a file, and only the Microsoft Store build accepts it (`Receipt::Microsoft`). Editing a file or setting a variable can't grant Pro. Replacing the helper in the read-only install folder could, which counts as changing the app's code. That is weaker than Apple's and Google's receipts, which the game verifies itself: here it trusts Windows. *Unverified:* that the license list answers offline, that the purchase dialog appears over the game's window, and the helper against a real Store.
+
+**What needs the maintainer's account:**
+- An add-on in Partner Center: durable, never expiring, with the product ID `com.setdef.DotPopper.pro` (the helper finds it by that in-app offer token). *Unverified:* that Partner Center accepts dots in a product ID. If it doesn't, change `Receipt::PRODUCT_ID` and every store's product to match.
+- Purchases can only be tested on a copy installed from the Store, under a hidden or private listing (Microsoft's "Test your in-app purchase" steps).
 
 Steps for the maintainer:
 1. In Partner Center, reserve the name "Dot Popper" and open the product's **Product identity** page.
