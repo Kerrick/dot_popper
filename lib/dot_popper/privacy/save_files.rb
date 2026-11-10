@@ -49,6 +49,7 @@ module DotPopper
       KeptFile.new(name: "sound.txt", label: "Your settings", holds: "your sound setting"),
       KeptFile.new(name: "taught.txt", label: "What the game has shown you", holds: "what the game has already shown you"),
       KeptFile.new(name: "tutorial.txt", label: "What the game has shown you", holds: "whether you have played the tutorial"),
+      KeptFile.new(name: "group_notice.txt", label: "What the game has shown you", holds: "whether you have read what friend groups keep online"),
       KeptFile.new(name: "group.txt", label: "Your private code and any unsent score, if you use friend groups",
                    holds: "your anonymous group token, an unsent score, whether you were in a group, the newest title change you were shown of each, and any achievements waiting to be sent",
                    sent: { token: "your private code", score: "your scores from games that count" }),

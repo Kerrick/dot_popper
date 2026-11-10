@@ -83,6 +83,7 @@ module DotPopper
                                        tutorial_flag: Presentation::TutorialFlag.new(
                                          SaveFile.new(name: "tutorial.txt"), mode: Presentation::TutorialFlag.mode(@env)
                                        ),
+                                       group_notice: Presentation::GroupNotice.new(SaveFile.new(name: "group_notice.txt")),
                                        entitlement:, theme_keeper:, storefront:, games:, links: UrlOpener.new)
         storefront.connect
         @cabinet.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
@@ -265,6 +266,7 @@ module DotPopper
         case @buttons.intent(button)
         in :press then gamepad_up(:a)
         in :y then @show.let_go(:y)
+        in :start then @show.let_go(:start)
         else nil
         end
       end

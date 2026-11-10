@@ -33,9 +33,9 @@ class GroupPanelTest < Minitest::Test
     build
   end
 
-  def build(width: 800, height: 600, entitlement: @pro)
+  def build(width: 800, height: 600, entitlement: @pro, group_notice: DotPopper::Presentation::GroupNotice.read, links: DotPopper::Presentation::NoLinks.new)
     @show = Show.new(cabinet: @cabinet, layout: layout(width, height), sounds: @sounds, radius: R,
-                     entitlement:, groups: @session)
+                     entitlement:, groups: @session, group_notice:, links:)
   end
 
   def panel = @show.group_panel
@@ -133,6 +133,84 @@ class GroupPanelTest < Minitest::Test
     assert_predicate @show, :offer?
     assert_equal :groups, @show.offer_focus
     assert_empty @worker.started
+  end
+
+  class Links
+    attr_reader :opened
+
+    def initialize = @opened = []
+    def open(url) = @opened << url
+  end
+
+  def with_notice(saved = nil)
+    @notice_store = DotPopper::ScoreRecord::Memory.new(saved)
+    @links = Links.new
+    build(group_notice: DotPopper::Presentation::GroupNotice.new(@notice_store), links: @links)
+  end
+
+  # A first Join or Create says who keeps the scores, once, before any
+  # score is sent; Not now asks again next time.
+  def test_a_first_join_asks_first_and_not_now_asks_again
+    with_notice
+    panel.open
+    tap_control(:group_join_open)
+
+    assert_equal :join, panel.asking
+    assert_equal %i[policy notice_later notice_go], names
+    assert_equal :list, panel.page
+    tap_control(:notice_later)
+
+    assert_nil panel.asking
+    assert_equal :list, panel.page
+    tap_control(:group_join_open)
+
+    assert_equal :join, panel.asking
+  end
+
+  def test_going_on_does_what_was_pressed_and_never_asks_again
+    with_notice
+    panel.open
+    tap_control(:group_create)
+    assert_empty @worker.started, "nothing is sent before the notice is answered"
+    tap_control(:notice_go)
+    tick
+
+    refute_empty @worker.started
+    assert_equal "read", @notice_store.read
+    panel.close
+    panel.open
+    tap_control(:group_join_open)
+
+    assert_nil panel.asking
+    assert_equal :join, panel.page
+  end
+
+  def test_the_notice_links_to_the_privacy_policy_and_names_its_buttons
+    with_notice
+    panel.open
+    tap_control(:group_join_open)
+    tap_control(:policy)
+
+    assert_equal ["https://dot-popper.setdef.com/privacy"], @links.opened
+    assert_equal "Join", Words.notice_go(:join).for(DotPopper::Presentation::InputKind::TOUCH)
+    @show.input = DotPopper::Presentation::InputKind::GAMEPAD
+    @show.pad(:x)
+
+    assert_equal 2, @links.opened.size
+    @show.back
+
+    assert_nil panel.asking, "B is Not now"
+    assert_predicate panel, :open?
+  end
+
+  def test_a_free_player_sees_the_offer_not_the_notice
+    with_notice
+    build(entitlement: DotPopper::Entitlement.free, group_notice: DotPopper::Presentation::GroupNotice.new(@notice_store))
+    panel.open
+    tap_control(:group_join_open)
+
+    assert_predicate @show, :offer?
+    assert_nil panel.asking
   end
 
   # The gesture doc/privacy.json describes: Delete my friend group data,
@@ -315,6 +393,133 @@ class GroupPanelTest < Minitest::Test
     last = @show.group_plan.rows.map { it.group.id }
     refute_equal first, last
     assert_includes last, groups.map { it["id"] }.max_by { DotPopper::Presentation::Names.group(it) }, "the end shows the last"
+  end
+
+  def gamepad! = @show.input = DotPopper::Presentation::InputKind::GAMEPAD
+  def texts = @show.group_plan.actions.filter_map(&:text)
+
+  # On a controller every friend groups' screen names its buttons, and
+  # each button does what its label says, without the cursor.
+  def test_a_controller_labels_the_list_and_presses_each_button
+    join!
+    tap_control(:back)
+    gamepad!
+
+    assert_equal ["Join (X)", "Create (Y)", "Open group (RB)", "Back (B)"], texts
+    @show.pad(:rb)
+
+    assert_equal [:group, 1], [panel.page, panel.group_id]
+    @show.back
+    @show.pad(:x)
+
+    assert_equal :join, panel.page
+    @show.back
+    @show.pad(:y)
+    tick
+
+    assert_equal :create, @worker.started.last.first.kind
+  end
+
+  def test_a_controller_labels_a_group_and_steps_through_the_groups
+    @session = Groups::Session.new(store: DotPopper::ScoreRecord::Memory.new, worker: @worker)
+    build
+    join!
+    groups = [group(id: 1), group(id: 2)]
+    @session.refresh
+    tick
+    reply(200, groups)
+    answer_all(groups, changes: [])
+    gamepad!
+
+    assert_equal ["Show (X)", "History (Y)", "Hold Start to leave", "LB", "RB", "Back (B)"], texts
+    @show.pad(:x)
+
+    assert panel.code_shown?
+    assert_includes texts, "Copy (X)"
+    order = panel.listed.map(&:id)
+    @show.pad(:rb)
+
+    assert_equal order[(order.index(1) + 1) % 2], panel.group_id
+    @show.pad(:lb)
+
+    assert_equal 1, panel.group_id
+    @show.pad(:y)
+
+    assert_equal :history, panel.page
+    assert_equal ["Back (B)"], texts
+  end
+
+  def test_holding_start_leaves_a_group_and_letting_go_too_soon_does_not
+    join!
+    gamepad!
+    @show.start
+    @show.update(0.5)
+    @show.let_go(:start)
+    @show.update(3.0)
+
+    assert_equal :group, panel.page, "let go too soon"
+    @show.start
+    @show.update(3.0)
+
+    assert_equal :list, panel.page
+  end
+
+  def test_a_controller_labels_the_keypad_deletes_with_x_and_joins_with_start
+    open_join
+    gamepad!
+    keys = @show.group_plan.actions.to_h { [it.name, it.text] }
+
+    assert_equal "Delete (X)", keys[:code_erase]
+    assert_equal "Join (Start)", keys[:code_submit]
+    tap_code("23456789")
+    @show.pad(:x)
+
+    assert_equal "234567", panel.code
+    tap_code("8")
+    @show.start
+    tick
+
+    refute_empty @worker.started
+  end
+
+  SIZES = [[400, 850], [1200, 800], [850, 400], [320, 568], [568, 320], [1024, 768], [2560, 1440]].freeze
+
+  def assert_apart(where)
+    rects = @show.group_plan.actions.reject { it.name.is_a?(Array) && it.name.first == :group_show }.map { [it.name, it.rect] }
+    safe = @show.layout.safe
+    rects.combination(2).each { |(a, r), (b, q)| refute r.overlaps?(q), "#{where}: #{a} overlaps #{b}" }
+    rects.each { |name, r| assert r.x >= safe.x && r.right <= safe.right && r.y >= safe.y && r.bottom <= safe.bottom, "#{where}: #{name} leaves the safe area" }
+  end
+
+  # With a controller's labels, and with the notice open, nothing on a
+  # friend groups' screen overlaps or leaves the safe area, at any size.
+  def test_labelled_screens_and_the_notice_fit_every_size
+    SIZES.each do |width, height|
+      @session = Groups::Session.new(store: DotPopper::ScoreRecord::Memory.new, worker: @worker)
+      build(width:, height:)
+      join!
+      groups = [group(id: 1), group(id: 2)]
+      @session.refresh
+      tick
+      reply(200, groups)
+      answer_all(groups, changes: [])
+      gamepad!
+      assert_apart("#{width}x#{height} group")
+      @show.back
+      assert_apart("#{width}x#{height} list")
+      @show.pad(:x)
+      assert_apart("#{width}x#{height} keypad")
+      @show.back
+      build(width:, height:, group_notice: DotPopper::Presentation::GroupNotice.new(DotPopper::ScoreRecord::Memory.new))
+      gamepad!
+      panel.open
+      @show.pad(:y)
+      plan = @show.group_notice_plan
+      parts = plan.controls
+      parts.combination(2).each { |(a, r), (b, q)| refute r.overlaps?(q), "#{width}x#{height} notice: #{a} overlaps #{b}" }
+      parts.each { |name, r| assert plan.card.contains?(r.x, r.y) && plan.card.contains?(r.right, r.bottom), "#{width}x#{height} notice: #{name} leaves its card" }
+      assert @show.layout.safe.contains?(plan.card.x, plan.card.y) && @show.layout.safe.contains?(plan.card.right, plan.card.bottom), "#{width}x#{height}: the notice leaves the safe area"
+    end
   end
 
   def test_the_history_is_read_for_the_group

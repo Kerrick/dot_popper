@@ -19,8 +19,21 @@ module DotPopper
       def blurb = "Beat your friends and take the title."
       def join = "Join"
       def create = "Create"
-      def privacy = "Joining or creating sends your scores to the groups' server, which also sees your IP address."
+      # The notice a first Join or Create shows, once: who keeps the scores,
+      # in words that name the game, and a link to the privacy policy.
+      def notice = "Dot Popper keeps your scores online so your friend group can see them."
+      def notice_policy = ByInput.new(touch: "Read the privacy policy", mouse: "Read the privacy policy", gamepad: "Read the privacy policy (X)")
+      def notice_later = ByInput.new(touch: "Not now", mouse: "Not now", gamepad: "Not now (B)")
+
+      # The notice's main button names what it goes on to do: Join or Create.
+      def notice_go(asking) = asking == :create ? ByInput.new(touch: "Create", mouse: "Create", gamepad: "Create (A)") : ByInput.new(touch: "Join", mouse: "Join", gamepad: "Join (A)")
       def erase = "Delete"
+      def open_group = "Open group"
+      def hold_start_to_leave = "Hold Start to leave"
+
+      # A button's word, and on a controller the button that presses it:
+      # "Join (X)".
+      def pressed_by(word, button, input) = input == InputKind::GAMEPAD ? "#{word} (#{button})" : word
       def submit = "Join"
       def you = "You"
       def champion = "Champion"
@@ -117,6 +130,9 @@ module DotPopper
     # Pro changes only what Create and Join do (+entitlement+): for a Free
     # player they call +pro_offer+ with :groups, which opens the offer of
     # Pro over this panel, where it was. Leaving and deleting never need it.
+    # A Pro player's first Join or Create asks first (+notice+, a
+    # GroupNotice): it says who keeps the scores, once ever, before any
+    # score is sent (#asking).
     class GroupPanel
       BANNER_SECONDS = 4.0
       HOLD = 2.0
@@ -124,8 +140,10 @@ module DotPopper
 
       attr_reader :groups, :code, :banner, :hold, :note, :page, :group_id
 
-      def initialize(groups:, entitlement:, sounds:, pro_offer: ->(_feature) {})
+      def initialize(groups:, entitlement:, sounds:, pro_offer: ->(_feature) {}, notice: GroupNotice.read)
         @pro_offer = pro_offer
+        @notice = notice
+        @asking = nil
         @groups = groups
         @entitlement = entitlement
         @sounds = sounds
@@ -162,6 +180,7 @@ module DotPopper
 
       def close
         @open = false
+        @asking = nil
         @hold = hold.cancel
         @sounds.play(:tick, pitch: 0.8)
       end
@@ -171,6 +190,8 @@ module DotPopper
       def back
         @note = nil
         @hold = hold.cancel
+        return answer(go: false) if asking
+
         case page
         when :history then show(:group)
         when :group, :join then show(:list)
@@ -241,13 +262,38 @@ module DotPopper
         in :group_code then reveal_code
         in :group_leave then start_hold(:leave, by, now)
         in :group_delete then start_hold(:delete, by, now)
+        in :group_prev then step_group(-1)
+        in :group_next then step_group(1)
+        in :group_open_first then pad(:rb)
+        in :notice_go then answer(go: true)
+        in :notice_later then answer(go: false)
         else nil
         end
       end
 
       # Enter, Space or A aimed at nothing, on this screen: leaves, except
       # the keypad, which joins with a whole code.
-      def primary = page == :join ? submit_join : back
+      def primary
+        return answer(go: true) if asking
+
+        page == :join ? submit_join : back
+      end
+
+      # What the notice of a first Join or Create waits to do, :join or
+      # :create, while it is open over the screen; nil otherwise.
+      attr_reader :asking
+
+      # The notice answered: going on remembers it was read, and does what
+      # was pressed; Not now closes it, and the next Join or Create asks
+      # again.
+      def answer(go:)
+        what = asking or return
+        @asking = nil
+        return @sounds.play(:tick, pitch: 0.8) unless go
+
+        @notice.read!
+        what == :create ? create : open_join
+      end
 
       # Whether Join can be pressed: once all seven digits are in.
       def code_complete? = code.size == GroupWords::CODE_LENGTH
@@ -256,7 +302,7 @@ module DotPopper
       # itself, Backspace or Delete takes the last one away. Says whether
       # the key was one of those.
       def type(key)
-        return false unless open? && page == :join
+        return false unless open? && page == :join && !asking
 
         name = key.to_s
         if (digit = name[/\A(?:kp)?(\d)\z/, 1]) then tap_digit(digit)
@@ -266,8 +312,36 @@ module DotPopper
         true
       end
 
-      # A gamepad's button on this screen (Show#pad).
-      def pad(name) = nil
+      # The player's groups, in the order the list shows them.
+      def listed = groups.groups.sort_by { Names.group(it.id) }
+
+      # A gamepad's button on this screen (Show#pad), as each screen labels
+      # it: on the list, X Join, Y Create and RB the first group; on a
+      # group, X Show then Copy, Y History, and LB and RB the previous or
+      # next group; on the keypad, X Delete. Start's long press, which
+      # leaves a group, is #start's.
+      def pad(name)
+        @note = nil
+        case [page, name]
+        in [:list, :x] then open_join
+        in [:list, :y] then create
+        in [:list, :rb] then (first = listed.first) && open_group(first.id)
+        in [:group, :x] then reveal_code
+        in [:group, :y] then open_history
+        in [:group, :lb] then step_group(-1)
+        in [:group, :rb] then step_group(1)
+        in [:join, :x] then erase
+        else nil
+        end
+      end
+
+      # A gamepad's Start, held by +by+: on a group, the start of leaving
+      # it; elsewhere the screen's main button (#primary).
+      def start(by, now)
+        return primary if asking || page != :group
+
+        start_hold(:leave, by, now)
+      end
 
       # Holds Delete my friend group data, from the Privacy screen.
       def hold_delete(by, now) = start_hold(:delete, by, now)
@@ -326,10 +400,20 @@ module DotPopper
 
       def open_join
         return @pro_offer.call(:groups) unless pro?
+        return ask(:join) if @notice.due?
 
         @code = ""
         show(:join)
         @sounds.play(:tick)
+      end
+
+      # The previous or next group in the list's order, round its ends.
+      def step_group(by)
+        list = listed
+        return if list.size < 2
+
+        at = list.index { it.id == @group_id }.to_i
+        open_group(list[(at + by) % list.size].id)
       end
 
       def arrive
@@ -363,8 +447,14 @@ module DotPopper
 
       def create
         return @pro_offer.call(:groups) unless pro?
+        return ask(:create) if @notice.due?
 
         groups.create
+      end
+
+      def ask(what)
+        @asking = what
+        @sounds.play(:tick)
       end
 
       def start_hold(what, by, now)

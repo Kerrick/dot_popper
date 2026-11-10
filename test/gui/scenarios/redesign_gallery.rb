@@ -24,8 +24,9 @@ module DotPopperGui
     end
 
     # The friend groups' screens, against a local stand-in for the server
-    # (script/group_stub.rb, named by DOT_POPPER_SERVER): the keypad, a
-    # group with its code shown, its history, and the list.
+    # (script/group_stub.rb, named by DOT_POPPER_SERVER): the notice a
+    # first Join shows, the keypad, a group with its code shown, its
+    # history, and the list, each again with a controller's labels.
     def groups
       panel = show.group_panel
       SIZES.each_with_index do |(width, height, phone), i|
@@ -34,17 +35,22 @@ module DotPopperGui
         wait_for("the list", within: 900) { panel.groups.groups.any? || i.zero? }
         if i.zero?
           panel.press(:group_join_open, :touch, show.now)
+          shoot("groups-consent") if panel.asking
+          panel.press(:notice_go, :touch, show.now)
           "123".each_char { panel.press([:code_digit, it], :touch, show.now) }
           shoot("join")
+          labelled("join")
           "4567".each_char { panel.press([:code_digit, it], :touch, show.now) }
           panel.press(:code_submit, :touch, show.now)
           wait_for("the group", within: 900) { panel.page == :group }
           show.back
         end
         shoot("groups", settle: 1.5)
+        labelled("groups")
         panel.press([:group_show, panel.groups.groups.first.id], :touch, show.now)
         panel.press(:group_code, :touch, show.now)
         shoot("group", settle: 1.5)
+        labelled("group")
         panel.press(:group_history, :touch, show.now)
         wait_for("the history", within: 900) { panel.history_entries.any? }
         shoot("history", settle: 1.5)
@@ -55,6 +61,14 @@ module DotPopperGui
     end
 
     private
+
+    # The screen showing now, again with a controller's labels.
+    def labelled(name)
+      before = show.input
+      show.input = P::InputKind::GAMEPAD
+      shoot("#{name}-gamepad", settle: 0.3)
+      show.input = before
+    end
 
     def tag = ENV.fetch("DOT_POPPER_GALLERY", "redesign")
 

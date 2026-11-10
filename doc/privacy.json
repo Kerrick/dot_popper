@@ -138,6 +138,14 @@
         "also_sent": []
       },
       {
+        "name": "group_notice.txt",
+        "label": "What the game has shown you",
+        "not_for_players": null,
+        "holds": "whether you have read what friend groups keep online",
+        "made_by": "the game",
+        "also_sent": []
+      },
+      {
         "name": "group.txt",
         "label": "Your private code and any unsent score, if you use friend groups",
         "not_for_players": null,

@@ -64,6 +64,7 @@ module DotPopperGui
       return show.back unless panel.pro?
 
       panel.press(:group_join_open, :touch, 0.0)
+      panel.press(:notice_go, :touch, 0.0) if panel.asking
       code.each_char { panel.press([:code_digit, it], :touch, 0.0) }
       shoot("group-code")
       show.back
@@ -73,6 +74,7 @@ module DotPopperGui
     def join
       panel.open
       panel.press(:group_join_open, :touch, 0.0)
+      panel.press(:notice_go, :touch, 0.0) if panel.asking
       code.each_char { panel.press([:code_digit, it], :touch, 0.0) }
       panel.press(:code_submit, :touch, 0.0)
       wait_for("the group", within: 900) { panel.page == :group }

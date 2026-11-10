@@ -25,6 +25,30 @@ module DotPopper
         buttons(show, plan)
         rows(show, plan)
         hold(show, layout) if show.group_panel.hold.held?
+        notice(show, layout)
+      end
+
+      # The notice of a first Join or Create, over the screen it was asked
+      # from, dimmed: who keeps the scores, the link to the policy with the
+      # external-link sign, Not now, and the button that goes on.
+      def notice(show, layout)
+        plan = show.group_notice_plan or return
+        palette = pen.palette
+        safe = layout.safe
+        pen.color(palette.ink_edge, 0.72)
+        G.rectangle(:fill, safe.x - 400, safe.y - 400, safe.width + 800, safe.height + 800)
+        card = plan.card
+        pen.color(palette.ink_top)
+        G.rectangle(:fill, card.x, card.y, card.width, card.height, 22, 22, 32)
+        pen.color(palette.pill_edge)
+        G.line_width = pen.pixels.line_width(1.5)
+        G.rectangle(:line, card.x, card.y, card.width, card.height, 22, 22, 32)
+        font = pen.fonts.bold(plan.size)
+        plan.lines.each_with_index { |line, i| pen.text(line, font, plan.card.center_x, plan.text_y + (plan.line_height * i), palette.cream) }
+        link(show, plan)
+        words = Presentation::GroupWords
+        PillButton.new(pen:).draw(plan.later, show.group_word(words.notice_later), hover: show.hover.level(:notice_later))
+        PrimaryButton.new(pen:).draw(plan.go, show.group_word(words.notice_go(show.group_panel.asking)), hover: show.hover.level(:notice_go))
       end
 
       # The rows, clipped to the window they scroll in.
@@ -98,6 +122,7 @@ module DotPopper
         plan.actions.each do |action|
           next if !action.text || action.name == :back
           next key(show, action) if key?(action.name)
+          next step(show, action) if %i[group_prev group_next].include?(action.name)
 
           sign = SIGNS[action.name]
           leave = action.name == :group_leave
@@ -138,6 +163,28 @@ module DotPopper
         left = rect.center_x - ((mark + 8 + font.width(action.text)) / 2.0)
         Glyphs.new(pen:).draw(:backspace, left + (mark / 2.0), rect.center_y, mark)
         pen.text(action.text, font, left + mark + 8 + (font.width(action.text) / 2.0), rect.center_y, color)
+      end
+
+      # LB or RB, the previous or the next group, with its chevron.
+      def step(show, action)
+        back = action.name == :group_prev
+        PillButton.new(pen:).draw(action.rect, action.text, hover: show.hover.level(action.name),
+                                  icon: ->(x, y, size) { Glyphs.new(pen:).draw(back ? :chevron_left : :chevron_right, x, y, size * 0.36) })
+      end
+
+      # "Read the privacy policy", underlined in the fresh dot's gold, with
+      # the external-link sign after it, brighter under the mouse.
+      def link(show, plan)
+        rect = plan.policy
+        font = pen.fonts.semibold(plan.link_size)
+        text = plan.policy_text
+        color = pen.palette.fresh_body.mix(pen.palette.fresh_light, 0.6 * show.hover.level(:policy))
+        left = rect.center_x - ((font.width(text) + 26) / 2.0)
+        pen.text(text, font, left + (font.width(text) / 2.0), rect.center_y, color)
+        Glyphs.new(pen:).draw(:external, left + font.width(text) + 14, rect.center_y - 1, font.height * 0.8, color:)
+        under = pen.pixels.snap(rect.center_y + (font.height * 0.5))
+        G.line_width = pen.pixels.line_width(1.5)
+        G.line(left, under, left + font.width(text) + 26, under)
       end
 
       def quiet?(name) = %i[group_delete group_leave].include?(name)

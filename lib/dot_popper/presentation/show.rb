@@ -44,7 +44,8 @@ module DotPopper
                      keeper: StatsKeeper.new(score_record: cabinet.score_record, stats_book:, achievements:), notices: Notices.none,
                      sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never, window: NoWindowControl.new,
                      entitlement: Entitlement.free, theme_keeper: ThemeKeeper.plain(style::THEMES),
-                     groups: Groups::Session.off, storefront: NoStorefront.new, games: FreeGames.unlimited, links: NoLinks.new)
+                     groups: Groups::Session.off, storefront: NoStorefront.new, games: FreeGames.unlimited, links: NoLinks.new,
+                     group_notice: GroupNotice.read)
         @cabinet = cabinet
         @window = window
         @links = links
@@ -55,7 +56,7 @@ module DotPopper
         @theme_keeper = theme_keeper
         @achievements = achievements
         @achievement_watch = AchievementWatch.new
-        @groups = GroupPanel.new(groups:, entitlement:, sounds:, pro_offer: ->(feature) { open_offer_for(feature) })
+        @groups = GroupPanel.new(groups:, entitlement:, sounds:, pro_offer: ->(feature) { open_offer_for(feature) }, notice: group_notice)
         @groups.copy = ->(text) { clipboard.copy(text) }
         @offer_focus = nil
         @storefront = storefront
@@ -206,10 +207,23 @@ module DotPopper
         @scroll = nil unless @group_scroll_at == where
         @group_scroll_at = where
         plan = GroupScreen.new(layout:, style: style::GROUPS, measure: @measure, panel: @groups, standard_dots: !cabinet.sizing.sized_to_screen?,
-                               back_text: words.go_back, offset: @scroll&.offset || 0.0).plan
+                               back_text: words.go_back, offset: @scroll&.offset || 0.0, input:).plan
         list_fit(plan.content, plan.window.height) if plan.window
         plan
       end
+
+      # Where the notice of a first Join or Create puts its parts, while it
+      # is open over the friend groups' screen (GroupNoticePlan), or nil.
+      def group_notice_plan
+        return unless group_open? && @groups.asking && !offer?
+
+        GroupNoticeDialog.new(layout:, measure: @measure, policy_text: group_word(GroupWords.notice_policy),
+                              later_text: group_word(GroupWords.notice_later), go_text: group_word(GroupWords.notice_go(@groups.asking))).plan
+      end
+
+      # A friend groups' word (a ByInput), said as the player's input would
+      # press it.
+      def group_word(word) = word.for(input)
 
       # Whether the title offers the way in to groups: where there is a
       # server, once a game has finished, or for someone in a group.
@@ -480,8 +494,13 @@ module DotPopper
       # Over too, a press counts the moment it goes down.
       def waits_for_release?(x, y) = game_over? && !sharing? && control_at(x, y).nil?
 
-      # A gamepad's Start: the screen's main button (#primary).
-      def start = primary
+      # A gamepad's Start: the screen's main button (#primary), except on
+      # a friend group, where holding it leaves the group (GroupPanel#start).
+      def start
+        return @groups.start(:start, now) if group_open? && !offer?
+
+        primary
+      end
 
       QUIT_ASK = 2.0 # seconds a second B has to quit from the title
 
@@ -1028,7 +1047,7 @@ module DotPopper
       # screen, as +by+, for a button that is held.
       def pad(name)
         return pad_game_over(name) if game_over? && !sharing?
-        return @groups.pad(name) if group_open? && !offer?
+        return pad_groups(name) if group_open? && !offer?
         return pad_offer(name) if offer?
         return pad_dialog(name) if dialog
 
@@ -1190,7 +1209,7 @@ module DotPopper
         sounds.play(:tick)
       end
 
-      def group_controls = group_plan.controls.map { |name, frame| button(name, frame) }
+      def group_controls = (group_notice_plan || group_plan).controls.map { |name, frame| button(name, frame) }
 
       def home_controls
         plan = home_plan
@@ -1315,6 +1334,14 @@ module DotPopper
       def pad_game_over(name)
         chip = { lb: :over_achievement, rb: :over_group }[name] or return
         open_from_game_over(chip == :over_achievement ? :achievement : :group) if game_over_chips.any? { it.name == chip && it.opens }
+      end
+
+      # The friend groups' buttons; over the notice, X opens the privacy
+      # policy, as it does on Privacy.
+      def pad_groups(name)
+        return (open_policy if name == :x) if @groups.asking
+
+        @groups.pad(name)
       end
 
       def pad_offer(name)
