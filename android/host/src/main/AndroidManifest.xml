@@ -3,7 +3,7 @@
   SPDX-FileCopyrightText: 2026 setdef <kerrick@setdef.com>
   SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
 
-  Dot Popper's copy of Lota 0.3.0's Android host manifest
+  Dot Popper's copy of Lota 0.3.1's Android host manifest
   (ext/lota/phone/host/android in the gem), which android.yml lays over
   Lota's host in the phone project. Its two changes: Dot Popper decides
   what Back does itself, as Escape (Shell::App), so the meta-data below

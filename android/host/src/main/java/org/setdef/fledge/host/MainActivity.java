@@ -52,7 +52,7 @@ import org.setdef.fledge.FledgeRuby;
  * 3.4.10's, unchanged: SDLActivity refuses a libSDL3.so of another
  * release, and rake android:deps builds 3.4.10's (tasks/android_build.rb).
  *
- * Dot Popper's copy (PACKAGING.md, "The Android kit") is Lota 0.3.0's
+ * Dot Popper's copy (PACKAGING.md, "The Android kit") is Lota 0.3.1's
  * (ext/lota/phone/host/android in the gem) with five changes. In a
  * debuggable build only, each string extra of the launching intent named
  * lota.env.NAME sets the environment variable NAME before Ruby starts, so

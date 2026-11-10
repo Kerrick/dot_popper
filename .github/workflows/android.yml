@@ -1,8 +1,8 @@
 # Builds Dot Popper's EXPERIMENTAL Android kit (PACKAGING.md, "The Android
 # kit"), for a phone such as a OnePlus Nord N30 5G (Android 13,
-# arm64-v8a), by the route of Lota's doc/guide/phones.md at v0.3.0:
+# arm64-v8a), by the route of Lota's doc/guide/phones.md at v0.3.1:
 #
-# 1. rake android:deps, in a clone of Lota at v0.3.0, builds LÖVE's
+# 1. rake android:deps, in a clone of Lota at v0.3.1, builds LÖVE's
 #    libraries and SDL3 for arm64-v8a and x86_64 with NDK r30, OpenAL Soft
 #    as a shared libopenal.so and SDL3 as libSDL3.so;
 # 2. the files Lota's gem packages, built and unpacked from the clone,
@@ -31,7 +31,7 @@ on:
       lota_ref:
         description: "A Lota tag or commit (full SHA) to build from, to try an engine fix"
         required: false
-        default: "v0.3.0"
+        default: "v0.3.1"
 
 permissions:
   contents: read
@@ -46,7 +46,7 @@ defaults:
 
 env:
   LOTA_REPOSITORY: https://github.com/setdef/Lota.git
-  LOTA_REF: ${{ inputs.lota_ref || 'v0.3.0' }}
+  LOTA_REF: ${{ inputs.lota_ref || 'v0.3.1' }}
   NDK_REVISION: 30.0.16248370
   FLEDGE_TAG: v0.10.0
   IDENTIFIER: com.setdef.DotPopper

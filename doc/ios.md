@@ -2,11 +2,11 @@
 
 This page describes the game's side of an iOS or iPadOS build: what the app needs, what the game does differently there, and how to tell a good run from a bad one.
 
-The app itself isn't built in this repository. It is built by the iOS route of Lota's phone guide (`doc/guide/phones.md`, at Lota's `v0.3.0` tag), with Lota's experimental iOS engine and Lota's iOS host, and with Fledge's `fledge build ios` command, which generates an Xcode project. The desktop builds and CI don't use it.
+The app itself isn't built in this repository. It is built by the iOS route of Lota's phone guide (`doc/guide/phones.md`, at Lota's `v0.3.1` tag), with Lota's experimental iOS engine and Lota's iOS host, and with Fledge's `fledge build ios` command, which generates an Xcode project. The desktop builds and CI don't use it.
 
 ## Where things stand
 
-- **Dot Popper builds its own kit.** The [Kits workflow](../.github/workflows/kits.yml) builds `dot-popper-ipad-kit.zip` on every `v*` tag and by hand, from Lota's `v0.3.0` tag and Fledge v0.10.0, with Lota's iOS host and Dot Popper's two changes to it in `ios/host` (PACKAGING.md, "The iPad and iPhone kit"). The project targets iPhone and iPad. Earlier kits, built by a Lota agent from Lota's experiment branches, are retired.
+- **Dot Popper builds its own kit.** The [Kits workflow](../.github/workflows/kits.yml) builds `dot-popper-ipad-kit.zip` on every `v*` tag and by hand, from Lota's `v0.3.1` tag and Fledge v0.10.0, with Lota's iOS host and Dot Popper's two changes to it in `ios/host` (PACKAGING.md, "The iPad and iPhone kit"). The project targets iPhone and iPad. Earlier kits, built by a Lota agent from Lota's experiment branches, are retired.
 - **It runs in the Simulator.** A fresh runner builds the kit's project for the Simulator and, unsigned, for devices, and the autoplay bot plays it to the end in an iPad Pro 13-inch Simulator with exit status 0, with all four shaders, the fonts, the pile at Game Over, and the save folder working.
 - **It hasn't run on a real iPad or iPhone.** Nobody has yet signed it, installed it, or played it on hardware. See "What is still unverified" at the end.
 
@@ -22,7 +22,7 @@ The bundle identifier is `com.setdef.DotPopper`, set in `fledge.yml`.
 
 | Setting | Value | Why |
 | --- | --- | --- |
-| Lota | 0.3.0, built with its experimental iOS engine from a clone of its `v0.3.0` tag, with the iOS host its gem carries | Lota before 0.1.3 neither builds for iOS nor calls `Lota.touchpressed` for a touchscreen; 0.3.0 is the first release whose guide documents the phone route and ships the host |
+| Lota | 0.3.1, built with its experimental iOS engine from a clone of its `v0.3.1` tag, with the iOS host its gem carries | Lota before 0.1.3 neither builds for iOS nor calls `Lota.touchpressed` for a touchscreen; 0.3.0 is the first release whose guide documents the phone route and ships the host |
 | `t.highdpi` | `true`, already set in `conf.rb` | Without it, LÖVE, and so Lota, draws at 1× on a Retina iPad, and everything looks blurry |
 | Orientations | All four on iPad (`UISupportedInterfaceOrientations~ipad`); portrait and both landscapes on iPhone | The field is the whole window and rebuilds itself whenever the window changes size. Because `conf.rb` makes the window resizable, SDL allows every orientation that Info.plist allows |
 | Multitasking | Leave `UIRequiresFullScreen` unset | Split View and Stage Manager resize the window, which the game handles exactly as it handles a rotation |

@@ -1,6 +1,6 @@
 # Builds Dot Popper's playtest kits (PACKAGING.md, "Playtest kits"): one
 # kit in, one results file out, per device. Each desktop kit holds the app
-# `lota fuse` builds with Lota 0.3.0's release gem (.github/actions/fuse),
+# `lota fuse` builds with Lota 0.3.1's release gem (.github/actions/fuse),
 # on its own platform's runner, as the Package workflow builds the apps:
 #
 # - Windows x64: the game, playtest.ps1, which asks the hand checks one at
@@ -14,8 +14,8 @@
 #   which works as playtest.ps1 does, and a README, tested as the Windows
 #   kit is, under Xvfb with Mesa.
 # - iPad and iPhone (experimental): the Xcode project `fledge build ios`
-#   writes, with Lota 0.3.0's experimental iOS engine built from a clone
-#   of Lota at its v0.3.0 tag and Lota's iOS host, by the route of Lota's
+#   writes, with Lota 0.3.1's experimental iOS engine built from a clone
+#   of Lota at its v0.3.1 tag and Lota's iOS host, by the route of Lota's
 #   doc/guide/phones.md, and ios-results.txt to fill in. A second, fresh runner builds that
 #   project for the Simulator and, unsigned, for devices, and runs the
 #   autoplay check of doc/ios.md.
@@ -42,7 +42,7 @@ defaults:
     shell: bash
 
 env:
-  LOTA_VERSION: "0.3.0"
+  LOTA_VERSION: "0.3.1"
   # Only the iOS build names Fledge itself; lota fuse pins its own.
   FLEDGE_TAG: v0.10.0
   IDENTIFIER: com.setdef.DotPopper
