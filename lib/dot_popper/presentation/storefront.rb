@@ -52,7 +52,7 @@ module DotPopper
       # The channel this build is sold through, or nil for a test build.
       # A build for a store MUST set it, or it ships with the fake store
       # (doc/decisions.md, "The store is a port").
-      BUILD_CHANNEL = nil
+      BUILD_CHANNEL = Build::CHANNEL
 
       # Whether this is a build for playtesters rather than a store: one
       # with no channel, as every CI kit is today.

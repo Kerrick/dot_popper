@@ -117,4 +117,4 @@ def Lota.gamepadaxis(_joystick, axis, value) = @app&.gamepad_axis(axis, value)
 def Lota.joystickadded(joystick) = @app&.gamepad_added(joystick)
 def Lota.joystickremoved(joystick) = @app&.gamepad_removed(joystick)
 
-require_relative "test/gui/director" unless ENV.fetch("DOT_POPPER_SCENARIO", "").empty?
+require_relative "test/gui/director" unless DotPopper::Build.settings(ENV).fetch("DOT_POPPER_SCENARIO", "").empty?

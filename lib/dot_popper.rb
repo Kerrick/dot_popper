@@ -8,6 +8,7 @@ require "date"
 module DotPopper
 end
 
+require_relative "dot_popper/build"
 require_relative "dot_popper/automation"
 require_relative "dot_popper/rules"
 require_relative "dot_popper/entitlement"

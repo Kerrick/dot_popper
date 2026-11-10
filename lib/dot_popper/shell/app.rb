@@ -17,14 +17,18 @@ module DotPopper
       # plays: the rules, the Show, and the game-over pile.
       attr_reader :cabinet, :show, :pile
 
-      def initialize(env = ENV)
-        @env = env
-        Automation.guard!(exit_on_attempt: true) if Automation.on?(env)
+      # +channel+ is the build's (Build::CHANNEL). It, and not the
+      # environment, decides which keys and store this run trusts, and
+      # which developer settings (@env) it obeys.
+      def initialize(env = ENV, channel: Build::CHANNEL)
+        @channel = channel
+        @env = Build.settings(env, channel:)
+        Automation.guard!(exit_on_attempt: true) if Automation.on?(@env)
         @elapsed = 0.0
         @uptime = 0.0
         @chatter = Presentation::Chatter.quiet(Style::CHATTER)
         @clock = Presentation::FrameClock.start
-        @splash = Presentation::Splash.start(calm: flag?("DOT_POPPER_CALM")) unless Presentation::Splash.skipped?(env)
+        @splash = Presentation::Splash.start(calm: flag?("DOT_POPPER_CALM")) unless Presentation::Splash.skipped?(@env)
       end
 
       def load
@@ -59,9 +63,9 @@ module DotPopper
                                   starts: [File.dirname(File.expand_path($PROGRAM_NAME))]).notices
         achievements = Achievements.new(SaveFile.new(name: "achievements.txt"))
         keeper = StatsKeeper.new(score_record: @cabinet.score_record, stats_book:, achievements:, folder: ->(name) { SaveFile.new(name:) })
-        test_build = Presentation::Storefront.test_build? || Automation.on?(@env)
+        test_build = !Build.store?(@channel)
         @gone = Continuity::Gone.new(SaveFile.new(name: "setdef.txt"))
-        pins = test_build ? Continuity::TEST_PINS : Continuity::PINNED
+        pins = trusted_pins
         license = Continuity::License.new(SaveFile.new(name: "license.txt"), pins:)
         @watch = watch(license, pins, test_build)
         entitlement = Entitlement.new(SaveFile.new(name: "entitlement.txt"), forced: Entitlement.forced?(@env, os:), license:)
@@ -79,7 +83,7 @@ module DotPopper
         @speaker.use(theme_keeper.in_use)
         @splash = @splash.with(sounding: !@speaker.muted?) if @splash
         storefront = Presentation::Storefront.for(
-          os, entitlement:, **(Automation.on?(@env) ? { channel: nil } : {}),
+          os, entitlement:, channel: @channel,
               native: Presentation::NativeStore.new(opener: UrlOpener.new, answers: StoreAnswers.in_save_folder),
               fake: Presentation::FakeStore.new(SaveFile.new(name: "fake_store.txt"), fails: Presentation::FakeStore.failure(@env)),
               website: ->(fake:) { website_store(license, clipboard, fake:) }
@@ -438,6 +442,11 @@ module DotPopper
         Groups::Session.at(url, store: own ? SaveFile.new(name: "group.txt") : SaveFile.new(name: "group-#{URI(url).host.to_s.downcase}.txt"))
       end
 
+      # The keys this run trusts, decided by the build alone: the test
+      # keys in a test build, setdef's in a store build, whatever the
+      # environment says.
+      def trusted_pins = Build.store?(@channel) ? Continuity::PINNED : Continuity::TEST_PINS
+
       # What asks whether setdef is gone, and where a license key is: the
       # test build's fake, in this process, sending nothing anywhere; the
       # real server and connectivity checks once setdef's real keys are
@@ -688,6 +697,7 @@ module DotPopper
       # and not a GUI scenario, unless it sets DOT_POPPER_FREE_GAMES to try
       # the limit.
       def player?
+        return true if Build.store?(@channel)
         return false if flag?("DOT_POPPER_AUTOPLAY")
 
         @env.fetch("DOT_POPPER_SCENARIO", "").empty? || @env.key?("DOT_POPPER_FREE_GAMES")
@@ -697,9 +707,9 @@ module DotPopper
       # can be bought, as #player? allows. DOT_POPPER_FREE_GAMES=n starts a
       # new save with n games in the bank and n for the day, to try the
       # limit.
-      def free_games(entitlement, metered:)
+      def free_games(entitlement, metered:, store: SaveFile.new(name: "games.txt"))
         start = Integer(@env.fetch("DOT_POPPER_FREE_GAMES", ""), exception: false)
-        FreeGames.new(SaveFile.new(name: "games.txt"), today:, entitlement:, metered:,
+        FreeGames.new(store, today:, entitlement:, metered:,
                       **(start ? { bank: start, daily: start } : {}))
       end
 

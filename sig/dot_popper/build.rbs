@@ -1,0 +1,10 @@
+module DotPopper
+  module Build
+    CHANNEL: String?
+    PREFIX: String
+    HARMLESS: Array[String]
+
+    def self.store?: (?String? channel) -> bool
+    def self.settings: (?untyped env, ?channel: String?) -> untyped
+  end
+end
