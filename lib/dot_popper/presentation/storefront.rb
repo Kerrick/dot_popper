@@ -58,14 +58,27 @@ module DotPopper
       # with no channel, as every CI kit is today.
       def self.test_build? = BUILD_CHANNEL.nil?
 
+      # The channel for copies no store controls: setdef's website, whose
+      # store is a WebsiteStore (license keys). An iOS build never takes it
+      # (Apple 3.1.1); an Android build for an APK or another store does.
+      WEBSITE = "website"
+
       # The storefront for this build, chosen once: with no +channel+, a
-      # test build, the +fake+ port on every system. With one, the +native+
-      # port where the host has a store, and else, on a computer, the
-      # channel's own store, or none, which offers nothing, so no one is
-      # offered a purchase that cannot complete. A channel nobody has built
-      # is none.
-      def self.for(os, native:, fake:, entitlement:, channel: BUILD_CHANNEL, channels: CHANNELS)
-        return new(port: fake, entitlement:) if channel.nil?
+      # test build, on a phone the +fake+ store port, and on a computer the
+      # +website+ store with its fake checkout, as computers' copies will
+      # mostly be sold. With a channel, the +native+ port where the host
+      # has a store, the website store for WEBSITE, and else, on a
+      # computer, the channel's own store, or none, which offers nothing, so
+      # no one is offered a purchase that cannot complete. A channel nobody
+      # has built is none. +website+ is called for the website store, with
+      # whether the checkout is the test build's (+fake:+).
+      def self.for(os, native:, fake:, entitlement:, website: nil, channel: BUILD_CHANNEL, channels: CHANNELS)
+        if channel.nil?
+          return new(port: fake, entitlement:) if SYSTEMS.include?(os) || website.nil?
+
+          return website.call(fake: true)
+        end
+        return website.call(fake: false) if channel == WEBSITE && os != "iOS" && website
         return new(port: native, entitlement:) if SYSTEMS.include?(os)
 
         sold = channels[channel]
@@ -91,6 +104,11 @@ module DotPopper
       end
 
       def offered? = true
+      # A store's purchase is restored, never pasted as a key (Apple 3.1.1),
+      # and it sells for as long as the store lists it.
+      def keys? = false
+      def sold? = true
+      def paste = nil
 
       # Asks the store for the price and what this player owns: at launch,
       # so a purchase on another device or after a reinstall simply
@@ -152,6 +170,9 @@ module DotPopper
     # nobody has built: nothing is offered.
     class NoStorefront
       def offered? = false
+      def keys? = false
+      def sold? = false
+      def paste = nil
       def status = :unavailable
       def price = nil
       def connect = nil

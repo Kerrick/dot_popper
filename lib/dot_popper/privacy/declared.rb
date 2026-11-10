@@ -57,8 +57,15 @@ module DotPopper
                  why_linked: "it is the identifier the scores are linked by" },
       other_usage: { apple: "NSPrivacyCollectedDataTypeOtherUsageData", apple_name: "Other Usage Data", apple_linked: false,
                      google: "App activity > App interactions", google_optional: false,
-                     why_linked: "no token is sent with it" }
+                     why_linked: "no token is sent with it" },
+      # Sent only by copies no store controls, which have no store label:
+      # a copy from the App Store or Google Play has no license key.
+      license_key: { apple: nil, apple_name: nil, apple_linked: false, google: nil, google_optional: false,
+                     why_linked: "only a copy sold through setdef's website sends it, and no store's copy does" }
     }.freeze
+
+    # The labels a store's form asks about: those its copies can send.
+    def self.store_labels = STORE_LABELS.select { |_, data| data[:apple] }
 
     # PrivacyInfo.xcprivacy, apart from the data types STORE_LABELS gives.
     APPLE_TRACKING = false
@@ -75,7 +82,9 @@ module DotPopper
 
     SENSOR = "The game reads your device's tilt only on the Game Over screen, to roll the dots. It never stores or sends that."
     NO_OUTSIDE_SERVICES = "The game has no analytics, crash-reporting, advertising or attribution services."
-    PURCHASES = "When you buy Pro, your purchase goes straight from your device to Apple or Google. The game sends nothing about it."
+    PURCHASES = "When you buy Pro in a store's copy, your purchase goes straight from your device to Apple or Google. The game sends nothing about it. " \
+                "In a copy from setdef's website, you buy in your browser, and the license key you are sent is checked by the game itself. " \
+                "While setdef's server answers, the key and a random secret go to it, so the key works on one device at a time.".freeze
 
     # What the code here cannot make true, said plainly.
     NOT_ENFORCED = [

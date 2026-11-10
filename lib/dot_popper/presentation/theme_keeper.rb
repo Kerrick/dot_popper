@@ -15,6 +15,9 @@ module DotPopper
     # The store keeps three lines: "unlocked: ghost eclipse", "told:
     # ghost", and "chosen: ghost".
     class ThemeKeeper
+      # How long setdef must have been gone before a theme opens by its
+      # date alone (Theme#opens_on).
+      GONE_DAYS = 180
       UNLOCKED = "unlocked"
       TOLD = "told"
       CHOSEN = "chosen"
@@ -47,6 +50,15 @@ module DotPopper
         @unlocked += fresh
         save
         true
+      end
+
+      # Opens every theme whose date has passed by +today+, once setdef has
+      # been gone +gone_days+ of at least GONE_DAYS, as the server would
+      # have released it. Says whether any was new.
+      def open_by_date(today, gone_days)
+        return false if gone_days < GONE_DAYS
+
+        receive(@themes.select { it.opens_on && it.opens_on <= today }.map(&:key))
       end
 
       def choices = @themes.select { it.ordinary? || @unlocked.include?(it.key) }

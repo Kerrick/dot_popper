@@ -9,4 +9,4 @@ module DotPopper
   end
 end
 
-%w[ed25519 certificate pins test_keys license_key signed_answers].each { require_relative "continuity/#{it}" }
+%w[ed25519 certificate pins test_keys license_key signed_answers license setdef_server watch].each { require_relative "continuity/#{it}" }

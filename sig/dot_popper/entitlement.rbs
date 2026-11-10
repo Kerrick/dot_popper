@@ -8,10 +8,15 @@ module DotPopper
 
     @store: ScoreRecord::_Store
     @forced: bool
+    @license: _License?
+
+    interface _License
+      def pro?: () -> bool
+    end
 
     def self.free: () -> Entitlement
     def self.forced?: (untyped env, ?os: String?) -> bool
-    def initialize: (ScoreRecord::_Store store, ?forced: bool) -> void
+    def initialize: (ScoreRecord::_Store store, ?forced: bool, ?license: _License?) -> void
     def pro?: () -> bool
     def unlock!: () -> untyped
   end

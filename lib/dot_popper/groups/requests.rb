@@ -9,10 +9,12 @@ module DotPopper
     # What one kind of job asks the server for, and everything it sends:
     # its +verb+ and +path+ (":id" for the group's), its +body+ and +query+
     # fields, whether it sends the player's +token+, and when it +happens+.
+    # +to+ is the host it goes to when that is not the game's server: the
+    # connectivity checks' (Continuity::Connectivity).
     # Session's jobs are made from these, so a job cannot go out undeclared
     # and doc/privacy.json is generated from what the game really does.
-    class Request < Data.define(:kind, :verb, :path, :query, :body, :token, :happens, :feature)
-      def initialize(kind:, verb:, path:, happens:, query: {}, body: {}, token: true, feature: "friend groups") = super
+    class Request < Data.define(:kind, :verb, :path, :query, :body, :token, :happens, :feature, :to)
+      def initialize(kind:, verb:, path:, happens:, query: {}, body: {}, token: true, feature: "friend groups", to: nil) = super
 
       def path_for(group_id) = path.sub(":id", group_id.to_s)
 
@@ -47,7 +49,27 @@ module DotPopper
                   happens: "After a game that counts, or at the next contact if it could not be sent then, while the player is in a group."),
       Request.new(kind: :themes, verb: :get, path: "/themes", token: false, feature: "themes",
                   query: { started_on: Field.new(what: "the date this device first played", label: :other_usage) },
-                  happens: "When the game is online, to learn which themes are available; for every player, Free too, with no token.")
+                  happens: "When the game is online, to learn which themes are available; for every player, Free too, with no token."),
+      Request.new(kind: :proof, verb: :get, path: "/proof", token: false, feature: "checking that setdef's server is setdef's",
+                  query: { nonce: Field.new(what: "32 random bytes, new for each check, which the server signs", label: :other_usage) },
+                  happens: "Once each time the game starts, on copies that can check, to tell setdef's server from anyone else at its address. Always to setdef's own server, never a replacement."),
+      Request.new(kind: :license_entry, verb: :post, path: "/licenses", token: false, feature: "license keys",
+                  body: { key: Field.new(what: "the license key the player pasted", label: :license_key),
+                          secret: Field.new(what: "32 random bytes this device chose, which the server keeps only as a SHA-256", label: :license_key),
+                          nonce: Field.new(what: "32 random bytes, new for each request, which the server signs", label: :license_key) },
+                  happens: "When a player enters a license key, and at each start until setdef's server has answered, so the key moves to this device. Never on a copy sold by a store."),
+      Request.new(kind: :license_check, verb: :post, path: "/license_checks", token: false, feature: "license keys",
+                  body: { key_id: Field.new(what: "the license key's id, its first part", label: :license_key),
+                          secret: Field.new(what: "this device's current secret for the key", label: :license_key),
+                          next: Field.new(what: "32 random bytes this device chose as its next secret", label: :license_key),
+                          nonce: Field.new(what: "32 random bytes, new for each request, which the server signs", label: :license_key) },
+                  happens: "Once each time the game starts, on a device holding a license key, to learn whether the key has moved to another device."),
+      Request.new(kind: :connectivity_apple, verb: :get, path: "/hotspot-detect.html", token: false, to: "captive.apple.com", feature: "connectivity checks",
+                  happens: "Only when setdef's server gave no valid proof at a start: to tell setdef being gone from the internet being down. Apple's connectivity check, which answers the same page to everyone."),
+      Request.new(kind: :connectivity_google, verb: :get, path: "/generate_204", token: false, to: "connectivitycheck.gstatic.com", feature: "connectivity checks",
+                  happens: "As the one before, only if Apple's check did not answer as expected. Google's connectivity check, which answers an empty page to everyone."),
+      Request.new(kind: :connectivity_microsoft, verb: :get, path: "/connecttest.txt", token: false, to: "www.msftconnecttest.com", feature: "connectivity checks",
+                  happens: "As the one before, only if neither Apple's nor Google's check answered as expected. Microsoft's connectivity check, which answers the same line to everyone.")
     ].to_h { [it.kind, it] }.freeze
 
     # Declared and in the privacy manifest, but not yet in the game's code.

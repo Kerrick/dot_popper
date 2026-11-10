@@ -7,14 +7,16 @@
       "Your statistics",
       "Your achievements",
       "Whether you bought Pro",
+      "Your license key, if you bought Pro on the website",
+      "Whether setdef's server has stopped answering",
+      "Your settings",
+      "Your private code and any unsent score, if you use friend groups",
       "Your themes",
       "The date you first played",
       "How many free games you have left",
       "A history of your games",
       "A copy of your records, if you clear them",
-      "Your settings",
-      "What the game has shown you",
-      "Your private code and any unsent score, if you use friend groups"
+      "What the game has shown you"
     ],
     "files": [
       {
@@ -46,6 +48,41 @@
         "label": "Whether you bought Pro",
         "not_for_players": null,
         "holds": "whether Pro was bought",
+        "made_by": "the game",
+        "also_sent": []
+      },
+      {
+        "name": "license.txt",
+        "label": "Your license key, if you bought Pro on the website",
+        "not_for_players": null,
+        "holds": "the license key you entered, and the secret this device last chose for it",
+        "made_by": "the game",
+        "also_sent": [
+          "your license key",
+          "a secret this device chose"
+        ]
+      },
+      {
+        "name": "setdef.txt",
+        "label": "Whether setdef's server has stopped answering",
+        "not_for_players": null,
+        "holds": "the day the game first found setdef's server gone while the internet worked, if it has",
+        "made_by": "the game",
+        "also_sent": []
+      },
+      {
+        "name": "server.txt",
+        "label": "Your settings",
+        "not_for_players": null,
+        "holds": "the address of a server you chose for friend groups while setdef's server is gone",
+        "made_by": "the game",
+        "also_sent": []
+      },
+      {
+        "name": "group-<host>.txt",
+        "label": "Your private code and any unsent score, if you use friend groups",
+        "not_for_players": null,
+        "holds": "as group.txt, for a server you chose in place of setdef's, so neither server is sent the other's code",
         "made_by": "the game",
         "also_sent": []
       },
@@ -179,6 +216,17 @@
         "also_sent": []
       },
       {
+        "name": "fake_setdef.txt",
+        "label": null,
+        "not_for_players": {
+          "kind": "test_only",
+          "reason": "Used only in test builds, as a stand-in for setdef's server."
+        },
+        "holds": "a pretend server's record of license keys, in test builds only",
+        "made_by": "the game",
+        "also_sent": []
+      },
+      {
         "name": "fake_store.txt",
         "label": null,
         "not_for_players": {
@@ -201,15 +249,16 @@
         "also_sent": []
       }
     ],
-    "stays_on_the_device": "These stay on your device until you uninstall the game or remove them. If you use friend groups, your private code and your scores from games that count also go to the game's server."
+    "stays_on_the_device": "These stay on your device until you uninstall the game or remove them. If you enter a license key, your license key and a secret this device chose also go to the game's server. If you use friend groups, your private code and your scores from games that count also go to the game's server."
   },
   "network": {
     "server": "https://server.dot-popper.setdef.com",
-    "every_request": "Sent to this server over HTTPS.",
+    "every_request": "Sent over HTTPS to this server, except the connectivity checks, which go to the address each names, as plain HTTP that carries nothing about the player.",
     "outside_services": "The game has no analytics, crash-reporting, advertising or attribution services.",
     "requests": [
       {
         "kind": "player",
+        "to": "https://server.dot-popper.setdef.com",
         "method": "POST",
         "path": "/player",
         "query": {},
@@ -220,6 +269,7 @@
       },
       {
         "kind": "groups",
+        "to": "https://server.dot-popper.setdef.com",
         "method": "GET",
         "path": "/groups",
         "query": {},
@@ -230,6 +280,7 @@
       },
       {
         "kind": "create",
+        "to": "https://server.dot-popper.setdef.com",
         "method": "POST",
         "path": "/groups",
         "query": {},
@@ -240,6 +291,7 @@
       },
       {
         "kind": "join",
+        "to": "https://server.dot-popper.setdef.com",
         "method": "POST",
         "path": "/memberships",
         "query": {},
@@ -252,6 +304,7 @@
       },
       {
         "kind": "group",
+        "to": "https://server.dot-popper.setdef.com",
         "method": "GET",
         "path": "/groups/:id",
         "query": {},
@@ -262,6 +315,7 @@
       },
       {
         "kind": "history",
+        "to": "https://server.dot-popper.setdef.com",
         "method": "GET",
         "path": "/groups/:id/history",
         "query": {},
@@ -272,6 +326,7 @@
       },
       {
         "kind": "achievement",
+        "to": "https://server.dot-popper.setdef.com",
         "method": "POST",
         "path": "/achievements",
         "query": {},
@@ -284,6 +339,7 @@
       },
       {
         "kind": "left",
+        "to": "https://server.dot-popper.setdef.com",
         "method": "DELETE",
         "path": "/groups/:id/membership",
         "query": {},
@@ -294,6 +350,7 @@
       },
       {
         "kind": "deleted",
+        "to": "https://server.dot-popper.setdef.com",
         "method": "DELETE",
         "path": "/player",
         "query": {},
@@ -304,6 +361,7 @@
       },
       {
         "kind": "cabinet",
+        "to": "https://server.dot-popper.setdef.com",
         "method": "POST",
         "path": "/games",
         "query": {},
@@ -316,6 +374,7 @@
       },
       {
         "kind": "themes",
+        "to": "https://server.dot-popper.setdef.com",
         "method": "GET",
         "path": "/themes",
         "query": {
@@ -325,10 +384,87 @@
         "sends_token": false,
         "when": "When the game is online, to learn which themes are available; for every player, Free too, with no token.",
         "in_this_build": true
+      },
+      {
+        "kind": "proof",
+        "to": "https://server.dot-popper.setdef.com",
+        "method": "GET",
+        "path": "/proof",
+        "query": {
+          "nonce": "32 random bytes, new for each check, which the server signs"
+        },
+        "body": {},
+        "sends_token": false,
+        "when": "Once each time the game starts, on copies that can check, to tell setdef's server from anyone else at its address. Always to setdef's own server, never a replacement.",
+        "in_this_build": true
+      },
+      {
+        "kind": "license_entry",
+        "to": "https://server.dot-popper.setdef.com",
+        "method": "POST",
+        "path": "/licenses",
+        "query": {},
+        "body": {
+          "key": "the license key the player pasted",
+          "secret": "32 random bytes this device chose, which the server keeps only as a SHA-256",
+          "nonce": "32 random bytes, new for each request, which the server signs"
+        },
+        "sends_token": false,
+        "when": "When a player enters a license key, and at each start until setdef's server has answered, so the key moves to this device. Never on a copy sold by a store.",
+        "in_this_build": true
+      },
+      {
+        "kind": "license_check",
+        "to": "https://server.dot-popper.setdef.com",
+        "method": "POST",
+        "path": "/license_checks",
+        "query": {},
+        "body": {
+          "key_id": "the license key's id, its first part",
+          "secret": "this device's current secret for the key",
+          "next": "32 random bytes this device chose as its next secret",
+          "nonce": "32 random bytes, new for each request, which the server signs"
+        },
+        "sends_token": false,
+        "when": "Once each time the game starts, on a device holding a license key, to learn whether the key has moved to another device.",
+        "in_this_build": true
+      },
+      {
+        "kind": "connectivity_apple",
+        "to": "captive.apple.com",
+        "method": "GET",
+        "path": "/hotspot-detect.html",
+        "query": {},
+        "body": {},
+        "sends_token": false,
+        "when": "Only when setdef's server gave no valid proof at a start: to tell setdef being gone from the internet being down. Apple's connectivity check, which answers the same page to everyone.",
+        "in_this_build": true
+      },
+      {
+        "kind": "connectivity_google",
+        "to": "connectivitycheck.gstatic.com",
+        "method": "GET",
+        "path": "/generate_204",
+        "query": {},
+        "body": {},
+        "sends_token": false,
+        "when": "As the one before, only if Apple's check did not answer as expected. Google's connectivity check, which answers an empty page to everyone.",
+        "in_this_build": true
+      },
+      {
+        "kind": "connectivity_microsoft",
+        "to": "www.msftconnecttest.com",
+        "method": "GET",
+        "path": "/connecttest.txt",
+        "query": {},
+        "body": {},
+        "sends_token": false,
+        "when": "As the one before, only if neither Apple's nor Google's check answered as expected. Microsoft's connectivity check, which answers the same line to everyone.",
+        "in_this_build": true
       }
     ]
   },
-  "purchases": "When you buy Pro, your purchase goes straight from your device to Apple or Google. The game sends nothing about it.",
+  "purchases": "When you buy Pro in a store's copy, your purchase goes straight from your device to Apple or Google. The game sends nothing about it. In a copy from setdef's website, you buy in your browser, and the license key you are sent is checked by the game itself. While setdef's server answers, the key and a random secret go to it, so the key works on one device at a time.",
   "sdks": {
     "for_players": [
       "On Android, Google Play handles buying Pro.",
@@ -362,7 +498,7 @@
   },
   "permissions": {
     "android_manifest": {
-      "android.permission.INTERNET": "to reach the game's server for friend groups and themes",
+      "android.permission.INTERNET": "to reach the game's server for friend groups and themes and checking that setdef's server is setdef's and license keys and connectivity checks",
       "android.permission.VIBRATE": "for haptic feedback"
     },
     "android_added_by_libraries": {
@@ -445,7 +581,8 @@
             "NSPrivacyCollectedDataTypePurposeAppFunctionality"
           ],
           "sent_by": [
-            "themes"
+            "themes",
+            "proof"
           ]
         }
       ],
@@ -491,7 +628,8 @@
           "purpose": "App functionality",
           "shared": false,
           "sent_by": [
-            "themes"
+            "themes",
+            "proof"
           ]
         }
       ],

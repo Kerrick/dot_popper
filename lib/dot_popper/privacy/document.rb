@@ -44,17 +44,19 @@ module DotPopper
       end
 
       def stays_on_the_device
-        sent = SAVE_FILES.flat_map { it.sent.values }.join(" and ")
-        "These stay on your device until you uninstall the game or remove them. If you use friend groups, #{sent} also go to the game's server."
+        sent = SAVE_FILES.reject { it.sent.empty? }.group_by(&:sent_when).map do |sent_when, files|
+          " #{sent_when}, #{files.flat_map { it.sent.values }.join(" and ")} also go to the game's server."
+        end
+        "These stay on your device until you uninstall the game or remove them.#{sent.join}"
       end
 
       def network
-        { server: Groups::Settings::SERVER_URL, every_request: "Sent to this server over HTTPS.",
+        { server: Groups::Settings::SERVER_URL, every_request: "Sent over HTTPS to this server, except the connectivity checks, which go to the address each names, as plain HTTP that carries nothing about the player.",
           outside_services: NO_OUTSIDE_SERVICES, requests: Groups::REQUESTS.values.map { request(it) } }
       end
 
       def request(req)
-        { kind: req.kind, method: req.verb.to_s.upcase, path: req.path, query: fields(req.query), body: fields(req.body),
+        { kind: req.kind, to: req.to || Groups::Settings::SERVER_URL, method: req.verb.to_s.upcase, path: req.path, query: fields(req.query), body: fields(req.body),
           sends_token: req.token, when: req.happens, in_this_build: !Groups::UNBUILT_REQUESTS.include?(req.kind) }
       end
 
@@ -97,7 +99,7 @@ module DotPopper
                     ip_addresses: "#{IP_ADDRESSES} The maintainer decides whether to list it under Device or other IDs." } }
       end
 
-      def label_answers = STORE_LABELS.map { |label, data| yield(label, data) }
+      def label_answers = Privacy.store_labels.map { |label, data| yield(label, data) }
 
       def apple_answer(label, data)
         { type: data[:apple], name: data[:apple_name], linked: data[:apple_linked], why: data[:why_linked], purposes: [APPLE_PURPOSE], sent_by: kinds_with(label) }

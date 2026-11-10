@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # A free player's whole road to Pro in a test build, on the
-  # code a store build runs: the games run out, Play leads to the offer,
-  # Buy goes to the fake store and back, and the thanks and the pro
+  # A free player's whole road to Pro in a computer's test build, on the
+  # code a website build runs: the games run out, Play leads to the offer,
+  # Buy goes to the fake checkout, which puts a signed test license key on
+  # the clipboard, Paste license key enters it, and the thanks and the pro
   # features follow. It needs DOT_POPPER_FREE_GAMES=1, since a scenario
   # counts no games otherwise. PurchaseKeptScenario, run next on the same
   # save (DOT_POPPER_SAVE_AS), checks a relaunch.
@@ -28,7 +29,9 @@ module DotPopperGui
       keep_screenshot("purchase-offer")
       buy = show.reach_of(:buy)
       click(buy.center_x, buy.center_y)
-      check(show.offer_status == words.offer[:busy], "Buy waits for the store")
+      check(show.offer_status == words.offer[:copied], "Buy reaches the checkout, which sends a license key")
+      paste = show.reach_of(:paste)
+      click(paste.center_x, paste.center_y)
       wait_for("the thanks") { show.offer_status == words.offer[:thanks] }
       keep_screenshot("purchase-thanks")
       check_equal(%i[back], show.controls.map(&:name), "the offer leaves only Back")
@@ -58,7 +61,8 @@ module DotPopperGui
     def check_nil_games = check(show.games_line.nil?, "the title no longer counts plays")
   end
 
-  # The purchase kept: the same save, a new launch, and no store to ask.
+  # The purchase kept: the same save, a new launch, and the license key
+  # still there.
   class PurchaseKeptScenario < Scenario
     scenario :purchase_kept
 

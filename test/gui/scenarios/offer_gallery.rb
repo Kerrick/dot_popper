@@ -22,6 +22,10 @@ module DotPopperGui
       wait_for("the price", within: 600) { show.offer_price }
       buy = show.reach_of(:buy)
       click(buy.center_x, buy.center_y)
+      wait(0.5)
+      keep_screenshot("offer-key-copied-1200x800")
+      paste = show.reach_of(:paste)
+      click(paste.center_x, paste.center_y)
       wait_for("the purchase", within: 600) { show.offer_status == show.words.offer[:thanks] }
       keep_screenshot("offer-thanks-1200x800")
     end

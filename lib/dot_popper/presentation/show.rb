@@ -45,8 +45,9 @@ module DotPopper
                      sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never, window: NoWindowControl.new,
                      entitlement: Entitlement.free, theme_keeper: ThemeKeeper.plain(style::THEMES),
                      groups: Groups::Session.off, storefront: NoStorefront.new, games: FreeGames.unlimited, links: NoLinks.new,
-                     group_notice: GroupNotice.read)
+                     group_notice: GroupNotice.read, server_choice: nil)
         @cabinet = cabinet
+        @server_choice = server_choice
         @window = window
         @links = links
         @page = nil # which screen is open over Home, or nil for Home itself
@@ -340,6 +341,10 @@ module DotPopper
         in :offer then open_offer
         in :buy then buy
         in :restore then @storefront.restore
+        in :paste then paste_key
+        in :server then open_server
+        in :server_paste then paste_server
+        in :server_reset then reset_server
         in DotSizing => sizing then choose_sizing(sizing)
         in :share then share
         in :copy then copy_result
@@ -577,7 +582,7 @@ module DotPopper
       # Leaves the open screen: Credits and Privacy go back to Settings,
       # the others to Home.
       def close_page
-        @page = %i[credits privacy].include?(@page) ? :settings : nil
+        @page = %i[credits privacy server].include?(@page) ? :settings : nil
         @clearing = clearing.cancel
         @scroll = nil
         @dialog = nil
@@ -665,7 +670,8 @@ module DotPopper
       # The offer's words and parts to lay out (OfferScreen).
       def offer_screen
         OfferScreen.new(layout:, type: style::TYPE, words:, measure: @measure, offering: !@entitlement.pro?,
-                        note: (words.offer[:no_games] if @offer_for_play), focus: @offer_focus, art: offer_art)
+                        note: (words.offer[:no_games] if @offer_for_play), focus: @offer_focus, art: offer_art,
+                        sold: @storefront.sold?, second: @storefront.keys? ? :paste : :restore)
       end
 
       # How tall the offer's picture of what was tapped is: the themes'
@@ -695,6 +701,16 @@ module DotPopper
         return words.offer[:thanks] if @entitlement.pro?
 
         words.offer.fetch(@storefront.status, "")
+      end
+
+      # Paste license key: what is on the clipboard, entered as a key, on a
+      # copy that takes one (WebsiteStore). A key that is good is Pro at
+      # once, and #follow_store hears it as a purchase.
+      def paste_key
+        return unless offer? && @storefront.keys?
+
+        @storefront.paste
+        sounds.play(:tick)
       end
 
       # Buy where the store gave a price, and otherwise the same button's
@@ -949,6 +965,49 @@ module DotPopper
 
       def open_settings = open_page(:settings)
       def open_privacy = open_page(:privacy)
+
+      # Change Server, from Settings, only while setdef is gone
+      # (ServerChoice).
+      def open_server
+        open_page(:server) if settings? && server_offered?
+      end
+
+      def server? = @page == :server
+      def server_offered? = @server_choice&.offered? || false
+
+      # The words and buttons of Change Server (ServerScreen).
+      def server_plan
+        choice = @server_choice
+        now = format(words.button(:server_now), choice&.address || words.button(:server_setdef))
+        status = choice&.status && words.button(:"server_#{choice.status}")
+        ServerScreen.new(layout:, measure: @measure, lines: [[:crown, words.button(:server_warning)], [:copy, words.button(:server_how)]],
+                         now:, status:, resettable: !choice&.address.nil?).plan
+      end
+
+      def paste_server
+        return unless server?
+
+        @server_choice.paste
+        sounds.play(:tick)
+      end
+
+      def reset_server
+        return unless server?
+
+        @server_choice.reset
+        sounds.play(:tick, pitch: 0.8)
+      end
+
+      # The system's paste shortcut (Ctrl+V, or Cmd+V on a Mac) on a
+      # computer: Paste license key on the offer, or Paste server address on
+      # Change Server. Says whether it was taken.
+      def paste_shortcut
+        if offer? && @storefront.keys? then paste_key
+        elsif server? then paste_server
+        else return false
+        end
+        true
+      end
       def open_policy = @links.open(PRIVACY_URL)
 
       def open_achievements = open_page(:achievements)
@@ -1032,7 +1091,7 @@ module DotPopper
           rows << [:dot_size, words.button(:dot_size), :dot, SIZINGS.map { [words.sizing(it, sizing_preview), it == cabinet.sizing, it] }]
         end
         rows << [:display, words.button(:display), :corners, display_choices] if window.offered?
-        plan = SettingsScreen.new(layout:, rows:, offset: settings? && @scroll ? @scroll.offset : 0.0).plan
+        plan = SettingsScreen.new(layout:, rows:, offset: settings? && @scroll ? @scroll.offset : 0.0, server: server_offered?).plan
         list_fit(plan.height, layout.page.height) if settings?
         plan
       end
@@ -1281,6 +1340,7 @@ module DotPopper
         plan = offer_plan
         [(button(:buy, plan[:buy]) if plan.key?(:buy)),
          (button(:restore, plan[:restore]) if plan.key?(:restore)),
+         (button(:paste, plan[:paste]) if plan.key?(:paste)),
          button(:back, layout.back_button)].compact
       end
 
@@ -1308,6 +1368,7 @@ module DotPopper
         when :achievements then achievement_controls
         when :settings then settings_controls
         when :privacy then privacy_controls
+        when :server then server_controls
         when :credits then [button(:back, layout.back_button)]
         end
       end
@@ -1327,9 +1388,14 @@ module DotPopper
         plan = settings_plan
         rows = plan.rows.flat_map { |row| row.choices.zip(row.rects).map { |(_, _, name), rect| button(name, rect) } }
         page = layout.page
-        seen = (rows + [button(:credits, plan.credits), button(:privacy, plan.privacy)]).select { it.frame.center_y.between?(page.y, page.bottom) }
+        seen = (rows + [button(:credits, plan.credits), button(:privacy, plan.privacy), *(button(:server, plan.server) if plan.server)]).select { it.frame.center_y.between?(page.y, page.bottom) }
         seen.map { it.with(frame: it.frame.cut(top: page.y, bottom: page.bottom), reach: it.reach.cut(top: page.y, bottom: page.bottom)) } <<
           button(:back, layout.back_button)
+      end
+
+      def server_controls
+        plan = server_plan
+        [button(:server_paste, plan.paste), (button(:server_reset, plan.reset) if plan.reset), button(:back, layout.back_button)].compact
       end
 
       def privacy_controls
@@ -1354,7 +1420,7 @@ module DotPopper
 
       def pad_offer(name)
         case name
-        when :x then @storefront.restore
+        when :x then @storefront.keys? ? paste_key : @storefront.restore
         end
       end
 

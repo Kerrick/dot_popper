@@ -32,12 +32,16 @@ module DotPopper
       DESKTOP_PRO && !os.nil? && !STORE_SYSTEMS.include?(os)
     end
 
-    def initialize(store, forced: false)
+    # +license+ (Continuity::License, or anything that answers pro?) is a
+    # website copy's: a valid license key is Pro without a purchase here,
+    # for as long as it stays on this device.
+    def initialize(store, forced: false, license: nil)
       @store = store
       @forced = forced
+      @license = license
     end
 
-    def pro? = @forced || @store.read.to_s.strip == PRO
+    def pro? = @forced || @store.read.to_s.strip == PRO || @license&.pro? || false
 
     def unlock! = @store.write(PRO)
   end

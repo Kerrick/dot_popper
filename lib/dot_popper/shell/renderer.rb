@@ -32,6 +32,7 @@ module DotPopper
         @settings = SettingsPainter.new(pen:, dots: @dots)
         @achievements = AchievementsPainter.new(pen:)
         @privacy = PrivacyPainter.new(pen:)
+        @server = ServerPainter.new(pen:)
         @credits = CreditsPainter.new(pen:)
         @themes = ThemesPainter.new(pen:, dots: @dots)
         @offer = OfferPainter.new(pen:, dots: @dots)
@@ -117,6 +118,7 @@ module DotPopper
         when :achievements then @achievements
         when :settings then @settings
         when :privacy then @privacy
+        when :server then @server
         end
       end
 

@@ -21,14 +21,16 @@ module DotPopper
     # Buy and Restore Purchases. Short of room the type shrinks, then the
     # art goes. A short window held sideways puts the buttons on the right.
     # The buttons are the plan's only while +offering+: a player who owns
-    # it has nothing left to press here but Back.
-    class OfferScreen < Data.define(:layout, :type, :words, :measure, :offering, :note, :focus, :art)
+    # it has nothing left to press here but Back. Buy is there while Pro is
+    # +sold+; the second button, +second+, is Restore Purchases on a
+    # store's copy and Paste license key (:paste) on a website copy.
+    class OfferScreen < Data.define(:layout, :type, :words, :measure, :offering, :note, :focus, :art, :sold, :second)
       GAPS = { note: 0, art: 14, focus: 10, items: 12, status: 10, buy: 12, restore: 10 }.freeze
       LINE = 1.45 # the items apart, in a line's height
       WIDE = 560.0 # the widest the buttons are
 
-      def initialize(layout:, type:, words:, measure:, offering:, note: nil, focus: nil, art: 0.0)
-        super(layout:, type:, words:, measure:, offering:, note:, focus: focus || :games, art:)
+      def initialize(layout:, type:, words:, measure:, offering:, note: nil, focus: nil, art: 0.0, sold: true, second: :restore)
+        super(layout:, type:, words:, measure:, offering:, note:, focus: focus || :games, art:, sold:, second:)
       end
 
       def plan
@@ -97,8 +99,8 @@ module DotPopper
         return [] unless offering
 
         width = [WIDE, across].min
-        [Block.new(name: :buy, height: [80.0 * scale, layout.button_size].max, width:, gap: gap(:buy, scale)),
-         Block.new(name: :restore, height: layout.control_height, width:, gap: gap(:restore, scale))]
+        [(Block.new(name: :buy, height: [80.0 * scale, layout.button_size].max, width:, gap: gap(:buy, scale)) if sold),
+         Block.new(name: second, height: layout.control_height, width:, gap: gap(:restore, scale))].compact
       end
 
       def gap(name, scale) = GAPS.fetch(name) * layout.ui * scale

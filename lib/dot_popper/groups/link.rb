@@ -24,7 +24,12 @@ module DotPopper
       READ_SECONDS = 8
       VERBS = { get: "Get", post: "Post", put: "Put", delete: "Delete" }.freeze
 
-      def initialize(url) = @url = url
+      # +raw+ keeps a body as the text it is, for an answer that is not
+      # JSON, as a connectivity check's (Continuity::Connectivity).
+      def initialize(url, raw: false)
+        @url = url
+        @raw = raw
+      end
 
       def call(verb, path, body, token)
         require "net/http"
@@ -56,6 +61,8 @@ module DotPopper
         text = response.body.to_s
         status = response.code.to_i
         wait = Integer(response["Retry-After"].to_s, 10, exception: false)
+        return Reply.new(status:, body: text, retry_after: wait) if @raw
+
         Reply.new(status:, body: text.empty? ? {} : JSON.parse(text), retry_after: wait)
       rescue JSON::ParserError
         # A refusal with a page for a body is still a refusal.

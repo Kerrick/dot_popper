@@ -55,9 +55,18 @@ module DotPopper
                                   starts: [File.dirname(File.expand_path($PROGRAM_NAME))]).notices
         achievements = Achievements.new(SaveFile.new(name: "achievements.txt"))
         keeper = StatsKeeper.new(score_record: @cabinet.score_record, stats_book:, achievements:, folder: ->(name) { SaveFile.new(name:) })
-        entitlement = Entitlement.new(SaveFile.new(name: "entitlement.txt"), forced: Entitlement.forced?(@env, os:))
+        test_build = Presentation::Storefront.test_build? || Automation.on?(@env)
+        @gone = Continuity::Gone.new(SaveFile.new(name: "setdef.txt"))
+        pins = test_build ? Continuity::TEST_PINS : Continuity::PINNED
+        license = Continuity::License.new(SaveFile.new(name: "license.txt"), pins:)
+        @watch = watch(license, pins, test_build)
+        entitlement = Entitlement.new(SaveFile.new(name: "entitlement.txt"), forced: Entitlement.forced?(@env, os:), license:)
+        clipboard = Clipboard.new
+        @server_choice = Presentation::ServerChoice.new(SaveFile.new(name: "server.txt"), gone: @gone, clipboard:)
         theme_keeper = Presentation::ThemeKeeper.new(SaveFile.new(name: "themes.txt"), themes: Style::THEMES, entitlement:)
         use_fixture(theme_keeper)
+        @theme_keeper = theme_keeper
+        theme_keeper.open_by_date(today.call, @gone.days(today.call))
         @theme_feed = theme_feed(theme_keeper)
         @theme_feed&.ask
         @pen = Pen.new(Style, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
@@ -68,15 +77,16 @@ module DotPopper
         storefront = Presentation::Storefront.for(
           os, entitlement:, **(Automation.on?(@env) ? { channel: nil } : {}),
               native: Presentation::NativeStore.new(opener: UrlOpener.new, answers: StoreAnswers.in_save_folder),
-              fake: Presentation::FakeStore.new(SaveFile.new(name: "fake_store.txt"), fails: Presentation::FakeStore.failure(@env))
+              fake: Presentation::FakeStore.new(SaveFile.new(name: "fake_store.txt"), fails: Presentation::FakeStore.failure(@env)),
+              website: ->(fake:) { website_store(license, clipboard, fake:) }
         )
         games = free_games(entitlement, metered: storefront.offered? && player?)
-        groups = Groups::Session.at(Groups::Settings.server_url(@env), store: SaveFile.new(name: "group.txt"))
+        groups = groups_session
         @show = Presentation::Show.new(groups:, cabinet: @cabinet, layout:, sounds: @speaker, radius: @dot_size.radius,
                                        random:, calm: flag?("DOT_POPPER_CALM"),
                                        tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt"),
                                                                     times: Style::LESSON.times),
-                                       haptics: Haptics.for(os), clipboard: Clipboard.new, notices:,
+                                       haptics: Haptics.for(os), clipboard:, notices:,
                                        sharing: Presentation::SheetSharing.for(os, opener: UrlOpener.new),
                                        stats_book:, achievements:, keeper:, sizing_store:, input: starting_input, measure: FontMeasure.new(@pen.fonts),
                                        window: @window,
@@ -84,8 +94,10 @@ module DotPopper
                                          SaveFile.new(name: "tutorial.txt"), mode: Presentation::TutorialFlag.mode(@env)
                                        ),
                                        group_notice: Presentation::GroupNotice.new(SaveFile.new(name: "group_notice.txt")),
-                                       entitlement:, theme_keeper:, storefront:, games:, links: UrlOpener.new)
+                                       entitlement:, theme_keeper:, storefront:, games:, links: UrlOpener.new,
+                                       server_choice: @server_choice)
         storefront.connect
+        @watch.start
         @cabinet.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
                                         archive: ->(name) { SaveFile.new(name:) }))
         puts "Dot Popper: each game is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"
@@ -143,6 +155,7 @@ module DotPopper
         @cabinet.update(seconds)
         @show.update(seconds)
         @theme_feed&.update
+        follow_watch
         use_theme
         point_the_mouse
         repeat_keys
@@ -312,6 +325,7 @@ module DotPopper
       def key_pressed(key)
         return skip_splash if @splash
 
+        return if key == :v && paste_chord? && @show.paste_shortcut
         return if @show.type_key(key)
         return @speaker.toggle_mute if key == :m
         return @show.how_to_play if key == :h
@@ -403,9 +417,58 @@ module DotPopper
         Style::THEMES.find { it.key == key }&.then { theme_keeper.use(it) }
       end
 
+      # The server friend groups and themes use: setdef's, or while setdef
+      # is gone, a replacement the player chose (Presentation::ServerChoice),
+      # or none in an automated run.
+      def server_url
+        own = Groups::Settings.server_url(@env) or return
+        @server_choice.server_url(own)
+      end
+
+      # Friend groups on the server in use, each server's token kept apart,
+      # so setdef's is never sent to a replacement.
+      def groups_session
+        require "uri"
+        url = server_url
+        own = url.nil? || url == Groups::Settings.server_url(@env)
+        Groups::Session.at(url, store: own ? SaveFile.new(name: "group.txt") : SaveFile.new(name: "group-#{URI(url).host.to_s.downcase}.txt"))
+      end
+
+      # What asks whether setdef is gone, and where a license key is: the
+      # test build's fake, in this process, sending nothing anywhere; the
+      # real server and connectivity checks once setdef's real keys are
+      # pinned (Continuity.live?), never in an automated run; and else
+      # nothing.
+      def watch(license, pins, test_build)
+        if test_build
+          fake = Continuity::FakeSetdef.new(SaveFile.new(name: "fake_setdef.txt"), mode: Continuity::FakeSetdef.mode(@env))
+          Continuity::Watch.new(server: fake, connectivity: fake, gone: @gone, license:, today:, pins:)
+        elsif Continuity.live? && !Automation.on?(@env)
+          Continuity::Watch.new(server: Continuity::SetdefServer.new(Groups::Link.new(Groups::Settings::SERVER_URL)),
+                                connectivity: Continuity::Connectivity.new, gone: @gone, license:, today:, pins:)
+        else
+          Continuity::NoWatch.new(gone: @gone, license:)
+        end
+      end
+
+      # The website's store: its real checkout in the browser, or the test
+      # build's, which puts a signed test key on the clipboard.
+      def website_store(license, clipboard, fake:)
+        checkout = fake ? Presentation::FakeCheckout.new(clipboard:) : Presentation::BrowserCheckout.new(opener: UrlOpener.new)
+        Presentation::WebsiteStore.new(checkout:, license:, gone: @gone, clipboard:, entered: -> { @watch.start })
+      end
+
+      # Takes up a finished check of setdef: back again, a chosen server is
+      # forgotten; gone long enough, themes open by their dates.
+      def follow_watch
+        answer = @watch.update or return
+        @server_choice.forget if answer == :here
+        @theme_keeper.open_by_date(today.call, @gone.days(today.call))
+      end
+
       # The feed that reads the server's unlocks, if the game has a server.
       def theme_feed(theme_keeper)
-        url = Groups::Settings.server_url(@env) or return
+        url = server_url or return
         Presentation::ThemeFeed.new(worker: Groups::Worker.new(Groups::Link.new(url)), theme_keeper:,
                                     store: SaveFile.new(name: "started_on.txt"), today:)
       end
@@ -563,6 +626,9 @@ module DotPopper
       def leave_title
         ::Lota::Event.quit if !@ios && @show.ask_to_quit == :quit
       end
+
+      # Whether Ctrl or Cmd is held, which makes V paste.
+      def paste_chord? = ::Lota::Keyboard.down?(:lctrl, :rctrl, :lgui, :rgui)
 
       # Whether Alt or Cmd is held, which makes Enter switch fullscreen.
       def fullscreen_chord? = ::Lota::Keyboard.down?(:lalt, :ralt, :lgui, :rgui)

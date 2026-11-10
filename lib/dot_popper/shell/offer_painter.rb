@@ -23,8 +23,8 @@ module DotPopper
         art(show, plan[:art]) if plan.key?(:art)
         centered(plan, :focus, :bold, :focus, show.offer_screen.focus_word, palette.cream)
         items(plan, show.offer_screen.others)
-        centered(plan, :status, :semibold, :note, show.offer_status, palette.cream)
-        buttons(show, plan, words) if plan.key?(:buy)
+        status(plan, show.offer_status)
+        buttons(show, plan, words)
       end
 
       private
@@ -117,10 +117,21 @@ module DotPopper
         end
       end
 
+      # How the store or the key is getting on, smaller until it fits across.
+      def status(plan, text)
+        rect = plan[:status] or return
+        size = plan.size(:note)
+        size -= 1 while size > 10 && pen.fonts.semibold(size).width(text) > rect.width
+        pen.text(text, pen.fonts.semibold(size), rect.center_x, rect.center_y, pen.palette.cream)
+      end
+
+      # Buy, while Pro is sold, and Restore Purchases or Paste license key.
       def buttons(show, plan, words)
-        label = show.offer_price ? format(words[:buy], show.offer_price) : words[:retry]
-        PrimaryButton.new(pen:).draw(plan[:buy], label, hover: show.hover.level(:buy))
-        PillButton.new(pen:).draw(plan[:restore], words[:restore], hover: show.hover.level(:restore))
+        if plan.key?(:buy)
+          label = show.offer_price ? format(words[:buy], show.offer_price) : words[:retry]
+          PrimaryButton.new(pen:).draw(plan[:buy], label, hover: show.hover.level(:buy))
+        end
+        %i[restore paste].each { PillButton.new(pen:).draw(plan[it], words[it], hover: show.hover.level(it)) if plan.key?(it) }
       end
     end
   end

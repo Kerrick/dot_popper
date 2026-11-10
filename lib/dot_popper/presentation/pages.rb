@@ -8,13 +8,16 @@ module DotPopper
 
     # Settings laid out: its rows, Credits and licenses, Privacy, and how
     # tall all of it is, for a window too short to show it whole.
-    class SettingsPlan < Data.define(:rows, :credits, :privacy, :height); end
+    class SettingsPlan < Data.define(:rows, :credits, :privacy, :server, :height)
+      def initialize(rows:, credits:, privacy:, height:, server: nil) = super
+    end
 
     # Settings: each row's name beside its choices, or above them on a
-    # narrow screen, then Credits and licenses and Privacy. Where the page
-    # is too short for all of it, it scrolls, +offset+ down.
-    class SettingsScreen < Data.define(:layout, :rows, :offset)
-      def initialize(layout:, rows:, offset: 0.0) = super
+    # narrow screen, then Credits and licenses and Privacy, and under them,
+    # while setdef is gone, Change Server (+server+). Where the page is too
+    # short for all of it, it scrolls, +offset+ down.
+    class SettingsScreen < Data.define(:layout, :rows, :offset, :server)
+      def initialize(layout:, rows:, offset: 0.0, server: false) = super
 
       def plan
         area = layout.page
@@ -37,7 +40,8 @@ module DotPopper
         y += 4
         credits = pill(area.x, y, area.width)
         privacy = pill(area.x, y + button + 10, area.width)
-        SettingsPlan.new(rows: placed, credits:, privacy:, height: privacy.bottom - top + 8)
+        changing = (pill(area.x, privacy.bottom + 10, area.width) if server)
+        SettingsPlan.new(rows: placed, credits:, privacy:, server: changing, height: (changing || privacy).bottom - top + 8)
       end
 
       def beside(area)
@@ -45,7 +49,7 @@ module DotPopper
         width = [area.width, 928.0].min
         left = layout.center_x - (width / 2.0)
         tall = button + 14
-        total = (rows.size * (tall + 28)) + button + 8
+        total = (rows.size * (tall + 28)) + button + 8 + (server ? button + 12 : 0)
         y = area.y + [(area.height - total) / 2.0, 0.0].max - offset
         placed = rows.map do |key, label, glyph, choices|
           row = SettingsRow.new(key:, label:, glyph:, choices:, label_at: [left, y + (tall / 2.0)], frame: frame = Rect.new(x: left + label_width, y:, width: width - label_width, height: tall), rects: rects(frame, choices))
@@ -53,7 +57,8 @@ module DotPopper
           row
         end
         half = (width - 12) / 2.0
-        SettingsPlan.new(rows: placed, credits: pill(left, y, half), privacy: pill(left + half + 12, y, half), height: total)
+        changing = (pill(left, y + button + 12, half) if server)
+        SettingsPlan.new(rows: placed, credits: pill(left, y, half), privacy: pill(left + half + 12, y, half), server: changing, height: total)
       end
 
       def pill(x, y, width) = Rect.new(x:, y:, width:, height: button)
@@ -170,6 +175,42 @@ module DotPopper
         note_top = (delete || policy).bottom + 20
         note_lines = deletable ? Words.wrap(note, width) { measure.width(:semibold, 15, it) } : []
         PrivacyPlan.new(left:, lines: wrapped, line_size: size, policy:, delete:, note_lines:, note_y: note_top)
+      end
+    end
+
+    # Change Server: its lines of text (a sign and words each), which
+    # server is in use, Paste server address, Use setdef's server while a
+    # replacement is chosen, and the line saying how the last paste went.
+    class ServerPlan < Data.define(:left, :width, :lines, :line_size, :now, :now_y, :paste, :reset, :status, :status_y)
+      def initialize(left:, width:, lines:, line_size:, now:, now_y:, paste:, status_y:, reset: nil, status: nil) = super
+    end
+
+    # Laid out as the Privacy screen is (PrivacyScreen): one column, the
+    # warning first, as the thing to know before choosing (Podmajersky:
+    # write for the state the player is in), then what to do, then the
+    # buttons, each naming its action.
+    class ServerScreen < Data.define(:layout, :measure, :lines, :now, :status, :resettable)
+      def plan
+        area = layout.page
+        width = [area.width, 780.0].min
+        left = layout.center_x - (width / 2.0)
+        narrow = layout.safe.width < 600
+        size = layout.short? ? 17 : (narrow ? 18 : 22)
+        y = area.y + (narrow || layout.short? ? 8.0 : [(area.height - 330) / 2.0, 8.0].max)
+        wrapped = lines.map do |glyph, text|
+          rows = Words.wrap(text, width - 42) { measure.width(:semibold, size, it) }
+          entry = [glyph, rows, y]
+          y += (rows.size * (size * 1.5)) + 18
+          entry
+        end
+        now_y = y + 6
+        button = layout.control_height + (narrow ? 0.0 : 12.0)
+        paste = Rect.new(x: left, y: now_y + 24, width:, height: button)
+        reset = (Rect.new(x: left, y: paste.bottom + 12, width:, height: button) if resettable)
+        # A short window has no room below the buttons, so how the paste
+        # went takes the place of which server is in use, which it says too.
+        shown_now, shown_status = layout.short? && status ? [status, nil] : [now, status]
+        ServerPlan.new(left:, width:, lines: wrapped, line_size: size, now: shown_now, now_y:, paste:, reset:, status: shown_status, status_y: (reset || paste).bottom + 24)
       end
     end
   end

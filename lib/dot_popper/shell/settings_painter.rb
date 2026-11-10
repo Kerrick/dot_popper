@@ -14,6 +14,7 @@ module DotPopper
         plan.rows.each { row(show, it) }
         pill(show, :credits, plan.credits, :document, show.words.button(:credits_licenses))
         pill(show, :privacy, plan.privacy, :shield, show.words.button(:privacy))
+        pill(show, :server, plan.server, :crown, show.words.button(:server)) if plan.server
         ::Lota::Graphics.scissor = nil
       end
 

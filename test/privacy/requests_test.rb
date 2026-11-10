@@ -84,6 +84,7 @@ class PrivacyRequestsTest < Minitest::Test
                                            today: -> { Date.new(2026, 11, 8) }).ask
     @session.delete_everything
     pump
+    play_continuity
 
     sent = @heard.map { |head, body| [head, body] }
     built = Groups::REQUESTS.reject { |kind, _| Groups::UNBUILT_REQUESTS.include?(kind) }.values
@@ -140,6 +141,24 @@ class PrivacyRequestsTest < Minitest::Test
   end
 
   private
+
+  # The proof, a key's entry and check, and the three connectivity checks,
+  # each pointed at this machine with its own path; none answers as
+  # expected, so every connectivity check is asked.
+  def play_continuity
+    c = DotPopper::Continuity
+    local = "http://127.0.0.1:#{@server.addr[1]}"
+    server = c::SetdefServer.new(Groups::Link.new(local))
+    license = c::License.new(DotPopper::ScoreRecord::Memory.new, pins: c::TEST_PINS)
+    license.enter(c::LicenseKey.issue(c::TestKeys::LICENSE).text)
+    server.proof(c::SignedAnswers.fresh)
+    server.ask(license.due(c::SignedAnswers.fresh))
+    license.instance_variable_get(:@lines)["registered"] = "yes"
+    server.ask(license.due(c::SignedAnswers.fresh))
+    checks = c::Connectivity::CHECKS.map { it.with(url: "#{local}#{URI(it.url).path}") }
+
+    refute c::Connectivity.new(checks:).online?
+  end
 
   def path_of(head) = head[%r{\A\S+ (\S+)}, 1]
 

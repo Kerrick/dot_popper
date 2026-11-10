@@ -67,7 +67,10 @@ module DotPopper
           buy: "Buy for %s", retry: "Try again", restore: "Restore Purchases",
           loading: "Asking the store…", busy: "One moment…", pending: "Waiting for approval.",
           failed: "That didn't go through.", none: "Nothing to restore on this account.",
-          unavailable: "The store isn't answering.", thanks: "Thank you. It's yours."
+          unavailable: "The store isn't answering.", thanks: "Thank you. It's yours.",
+          paste: "Paste license key", browser: "Finish in your browser. Your key comes by email.",
+          copied: "Your license key is copied. Paste it here.", invalid: "That isn't a license key.",
+          empty: "Copy your license key first.", same: "That key is already here.", not_sold: "Pro is no longer sold."
         }.freeze,
         hold_to_clear: ByInput.new(
           touch: "Press and hold to clear your records, totals, chart, achievements, and streak.",
@@ -146,6 +149,13 @@ module DotPopper
           privacy_delete: "Delete my friend group data",
           privacy_hold: ByInput.new(touch: "Hold to leave every friend group and delete your scores online.", mouse: "Hold to leave every friend group and delete your scores online.", gamepad: "Hold Y to leave every friend group and delete your scores online."),
           privacy_delete_note: "Your Stats stay.",
+          server: "Change Server", server_title: "Change Server",
+          server_warning: "The server you choose receives your friend group scores. It can't give you Pro.",
+          server_how: "Copy the address of a server for Dot Popper, starting https://, and paste it here.",
+          server_now: "Now: %s", server_setdef: "setdef's server",
+          server_paste: "Paste server address", server_reset: "Use setdef's server",
+          server_chosen: "Friend groups use it from the next start.", server_not_https: "That isn't an https:// address.",
+          server_empty: "Copy the server's address first.",
           privacy_stats: "Your Stats stay on this device.",
           privacy_groups: "In a friend group, Dot Popper keeps your scores online so the group can see them.",
           not_earned: "Not earned yet", your_record: "Your record", settings_title: "Settings", privacy_title: "Privacy",

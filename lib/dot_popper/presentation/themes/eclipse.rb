@@ -7,7 +7,7 @@ module DotPopper
       module Eclipse
         def self.theme(base, hex)
           Theme.new(
-            key: :eclipse,
+            key: :eclipse, opens_on: Date.new(2027, 10, 1),
             palette: base.with(
               ink_top: hex["#090b1e"], ink_bottom: hex["#1a1028"], ink_glow: hex["#2b1436"], ink_edge: hex["#05050f"],
               fresh_light: hex["#fff9e6"], fresh_body: hex["#fff0c8"], fresh_deep: hex["#d9a35a"],

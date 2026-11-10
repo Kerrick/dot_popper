@@ -49,7 +49,7 @@ class PrivacyDeclaredTest < Minitest::Test
     sent = DotPopper::Groups::REQUESTS.values.flat_map(&:labels).uniq
 
     assert_equal Privacy::STORE_LABELS.keys.sort, sent.sort, "every label is used by some request"
-    assert_equal Privacy::STORE_LABELS.values.map { [it[:apple], it[:apple_linked].to_s, "false", Privacy::APPLE_PURPOSE] }.sort, types.sort
+    assert_equal Privacy.store_labels.values.map { [it[:apple], it[:apple_linked].to_s, "false", Privacy::APPLE_PURPOSE] }.sort, types.sort
     assert_match(%r{<key>NSPrivacyTracking</key>\s*<false/>}, manifest)
     assert_match(%r{<key>NSPrivacyTrackingDomains</key>\s*<array/>}, manifest)
     assert_equal Privacy::APPLE_APIS, apis
@@ -66,7 +66,7 @@ class PrivacyDeclaredTest < Minitest::Test
     named_elsewhere = [DotPopper::StatsKeeper::NOTE, File.read(File.join(ROOT, "lib/dot_popper/shell/store_answers.rb"))[/NAME = "([^"]+)"/, 1]]
 
     assert_equal fixed.sort, (literals + constants_named + named_elsewhere).uniq.sort
-    assert_equal 2, saved_names.count(:dynamic), "a new SaveFile.new with a computed name: name it, or add it here and declare its pattern"
+    assert_equal 3, saved_names.count(:dynamic), "a new SaveFile.new with a computed name: name it, or add it here and declare its pattern"
   end
 
   def test_dated_names_match_their_patterns
@@ -132,9 +132,9 @@ class PrivacyDeclaredTest < Minitest::Test
     sent = Privacy::SAVE_FILES.flat_map { it.sent.keys }
     requests = DotPopper::Groups::REQUESTS.values
 
-    assert_equal %i[score token], sent.sort
+    assert_equal %i[key score secret token], sent.sort
     assert(requests.any?(&:token))
-    assert(requests.any? { it.body.key?(:score) })
+    %i[score key secret].each { |field| assert(requests.any? { it.body.key?(field) }, field) }
   end
 
   def test_stays_on_the_device_excepts_what_leaves_it
@@ -157,8 +157,10 @@ class PrivacyDeclaredTest < Minitest::Test
     end
   end
 
-  def test_nothing_sent_concerns_a_purchase
-    words = DotPopper::Groups::REQUESTS.values.flat_map { [it.path, *it.body.keys, *it.query.keys] }.join(" ")
+  # Only a license key, from a website purchase, concerns one; a store's
+  # copy never sends it (STORE_LABELS' license_key).
+  def test_nothing_else_sent_concerns_a_purchase
+    words = DotPopper::Groups::REQUESTS.values.reject { it.labels.include?(:license_key) }.flat_map { [it.path, *it.body.keys, *it.query.keys] }.join(" ")
 
     refute_match(/purchase|receipt|entitlement|\bpro\b/i, words)
   end
