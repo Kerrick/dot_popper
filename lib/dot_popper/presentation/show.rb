@@ -435,12 +435,20 @@ module DotPopper
       end
 
       # Game Over's Play again: Home, and at once Play, so another game is
-      # one press; with no game left, Play's offer of Pro.
+      # one press. With no game left it says Get Pro, and opens the offer
+      # over Game Over, which Back closes to Game Over as it was.
       def play_again
         return unless game_over? && cabinet.state.ready?
+        return offer_over_game_over if !games.can_play? && offer_offered?
 
         continue_on
         play
+      end
+
+      def offer_over_game_over
+        @offer_for_play = true
+        open_offer
+        @offer_focus = :games
       end
 
       # One of Game Over's lines that opens something: a new achievement
@@ -492,7 +500,7 @@ module DotPopper
       # Game Over, anywhere but its buttons, since it may become a drag of
       # the pile (PileGrabs). Everywhere else, the share preview over Game
       # Over too, a press counts the moment it goes down.
-      def waits_for_release?(x, y) = game_over? && !sharing? && control_at(x, y).nil?
+      def waits_for_release?(x, y) = game_over? && !sharing? && !offer? && control_at(x, y).nil?
 
       # A gamepad's Start: the screen's main button (#primary), except on
       # a friend group, where holding it leaves the group (GroupPanel#start).
@@ -838,7 +846,7 @@ module DotPopper
       # copies, as Copy does. Anywhere else it does nothing.
       def share
         return copy_result if sharing?
-        return unless game_over? && game_over
+        return unless game_over? && game_over && !offer?
 
         @preview = @sharing.offer(share_text, now)
         sounds.play(:tick)
@@ -1046,9 +1054,9 @@ module DotPopper
       # A gamepad's button (+name+, a GamepadButtons intent) on this
       # screen, as +by+, for a button that is held.
       def pad(name)
-        return pad_game_over(name) if game_over? && !sharing?
-        return pad_groups(name) if group_open? && !offer?
         return pad_offer(name) if offer?
+        return pad_game_over(name) if game_over? && !sharing?
+        return pad_groups(name) if group_open?
         return pad_dialog(name) if dialog
 
         case [@page, name]

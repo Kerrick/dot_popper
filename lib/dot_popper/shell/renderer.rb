@@ -87,13 +87,21 @@ module DotPopper
           hud(layout) unless @show.game_over&.then { it.arrival(@show.now) >= 1.0 }
           @tutorial.lead_in_over(lead_in, @show.now, pill) if lead_in
           @share.draw(@show, layout, width, height)
-          banner(layout) unless @show.playing?
+          offer_over(width, height, layout) if @show.offer?
+          banner(layout) unless @show.playing? || @show.offer?
         end
-        banner(layout) if @show.on_home? || @show.game_over?
+        banner(layout) if @show.on_home? || (@show.game_over? && !@show.offer?)
         splash ? @splash.draw(splash) : @cursor.draw(cursor)
       end
 
       private
+
+      # The offer of Pro over Game Over, opened by its Get Pro, over the
+      # finished game veiled as Home's dots are under it.
+      def offer_over(width, height, layout)
+        veil(width, height, @pen.style::RECORDS.veil)
+        @offer.draw(@show, layout)
+      end
 
       # A title change's announcement, for the few seconds it shows.
       def banner(layout) = @group.banner(@show.group_panel.banner, @show.now, layout, @show.banner_y)

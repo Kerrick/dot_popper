@@ -1591,3 +1591,7 @@ As everywhere: a free cursor, and a labelled button for every action (`answers.m
 ## Game Over's facts are signs and numbers
 
 The line "14 dots, 2 mistakes, longest time to pop 3.1 seconds" is now three facts, each a sign and a number: a bright dot and the dots popped, a popped dot and the mistakes, and the game's stopwatch and how long the game lasted, "34s", as the game's own "+1s" (the `over` mocks, without their words). Nothing in them needs reading English (`AGENTS.md`: how to play never depends on it; Westland & Maggio: a sign, not colour alone). The longest time to pop stays on Stats. Where the row is too wide for the room across, the facts stand one under another (`GameOverScreen#facts`).
+
+## Get Pro at Game Over opens the offer over Game Over
+
+With no game left, Game Over's main button says Get Pro. It used to go Home and open the offer there, so Back left the player on Home. It now opens the offer over Game Over, as every Pro feature's offer opens over the screen it was tapped on, and Back returns to Game Over as it was (the proposal's screen map). While the offer is open, nothing under it takes a press, drags the pile, or opens Share my score.

@@ -59,6 +59,35 @@ class GamesTest < Minitest::Test
     refute_predicate @show, :stats?
   end
 
+  # Game Over's Get Pro opens the offer over Game Over, as every Pro
+  # feature's offer opens over the screen it was tapped on, and Back
+  # returns to Game Over as it was.
+  def test_get_pro_at_game_over_opens_the_offer_over_it_and_back_returns_there
+    2.times { @games.spend! }
+    press_main
+    @cabinet.update(20)
+    @show.update(0.016)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @show.update(0.016)
+
+    assert_predicate @show, :game_over?
+    assert_equal "Get Pro", @show.game_over_screen.play_word
+    @show.primary
+
+    assert_predicate @show, :offer?
+    assert_predicate @show, :game_over?, "over Game Over, not Home"
+    assert_equal ["No games left today."], @show.offer_plan.note_lines
+    assert_equal %i[buy restore back].sort, @show.controls.map(&:name).sort, "only the offer's buttons take a press"
+    refute @show.waits_for_release?(5.0, 5.0), "no press under the offer drags the pile"
+    @show.share
+
+    refute_predicate @show, :sharing?, "Y is not Share my score under the offer"
+    @show.back
+
+    refute_predicate @show, :offer?
+    assert_predicate @show, :game_over?
+  end
+
   def test_tomorrow_the_games_come_back
     3.times { @games.spend! }
     @day += 1
