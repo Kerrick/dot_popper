@@ -75,6 +75,30 @@ class WebsiteStoreTest < Minitest::Test
     assert s.pro?
   end
 
+  def test_a_keyboard_types_the_key_ignoring_case_spaces_and_hyphens
+    s = show
+    s.open_offer
+    text = C::LicenseKey.issue(C::TestKeys::LICENSE).text
+    refute s.type_key(:return), "Enter with nothing typed is the button's"
+    text.each_char do |c|
+      next if c == " "
+
+      assert s.type_key(c == "-" ? :minus : c.downcase.to_sym), c
+    end
+    assert_equal "#{s.words.offer[:typing]} …#{text.upcase[-24..]}", s.offer_status
+    refute s.pro?
+    s.type_key(:backspace)
+    s.type_key(text[-1].downcase.to_sym)
+    assert s.type_key(:return)
+    assert s.pro?
+  end
+
+  def test_typing_does_nothing_on_other_screens
+    s = show
+
+    refute s.type_key(:a)
+  end
+
   def test_paste_says_what_was_wrong_and_changes_nothing
     s = show
     s.open_offer

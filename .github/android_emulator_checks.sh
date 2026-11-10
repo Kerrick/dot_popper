@@ -17,11 +17,11 @@ status=0
 # quits only when DOT_POPPER_QUIT_AFTER says.
 ruby "$here/android_emulator.rb" "$apk" "$package" "$out/autoplay" \
   --env DOT_POPPER_AUTOPLAY=1 --env DOT_POPPER_SEED=7 --env DOT_POPPER_QUIT_AFTER=90 --env ALSOFT_DRIVERS=null \
-  --env DOT_POPPER_SAVE_AS=ci_autoplay --env DOT_POPPER_SHOTS=3,12,25,38 --env DOT_POPPER_KIT_PROBE=1 \
+  --env DOT_POPPER_SAVE_AS=ci_autoplay --env DOT_POPPER_SHOTS=3,12,25,38 --env DOT_POPPER_KIT_PROBE=1 --env DOT_POPPER_PERF=1 \
   --ready "Dot Popper: " --shot 5 --shot 20 --timeout 300 --pull "Dot Popper: screenshot (\\S+)" \
   --key-after "3:KEYCODE_BACK:kit probe: event GameStarted" \
   --key-after "1:KEYCODE_BACK:kit probe: event GameEnded" \
-  --expect "Dot Popper: a dot's radius is 50 dp, about 8 mm" --expect "Dot Popper: screenshot" \
+  --expect "Dot Popper: a dot's radius is 50 dp, about 8 mm" --expect "Dot Popper: screenshot" --expect "Dot Popper: Ed25519 verifies the server's test vector" \
   --expect-order "kit probe: keypressed :escape, :acback, false in Playing" \
   --expect-order "kit probe: event GameEnded" \
   --expect-order "kit probe: keypressed :escape, :acback, false in GameOver" \

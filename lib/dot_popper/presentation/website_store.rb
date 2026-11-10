@@ -22,7 +22,7 @@ module DotPopper
       # The price as the checkout page sets it. Change both together.
       PRICE = "$1.99"
 
-      attr_reader :status
+      attr_reader :status, :typed
 
       def initialize(checkout:, license:, gone:, clipboard:, entered: -> {})
         @checkout = checkout
@@ -31,6 +31,7 @@ module DotPopper
         @clipboard = clipboard
         @entered = entered
         @status = :ready
+        @typed = +""
       end
 
       def offered? = true
@@ -51,8 +52,34 @@ module DotPopper
       # Enters what is on the clipboard as a license key: :entered (Pro
       # from now on), :same, :invalid, or :empty with nothing to paste.
       def paste
-        text = @clipboard.paste.to_s
+        enter(@clipboard.paste.to_s)
+      end
+
+      # A key pressed on a computer's keyboard, as the license key being
+      # typed: a letter, digit or hyphen is added (a key ignores case, spaces
+      # and hyphens, so none of them matters), Backspace takes the last away,
+      # and Enter enters what was typed. Says whether it took the key.
+      def type(key)
+        name = key.to_s
+        if (char = name[/\A(?:kp)?([0-9a-z])\z/, 1]) then add(char)
+        elsif %w[minus kpminus].include?(name) then add("-")
+        elsif %w[backspace delete].include?(name) then erase
+        elsif %w[return kpenter].include?(name) && !@typed.empty? then enter(@typed)
+        else return false
+        end
+        true
+      end
+
+      def add(char)
+        @typed = (@typed + char.upcase)
+        @status = :ready
+      end
+
+      def erase = @typed = @typed.chop
+
+      def enter(text)
         result = text.strip.empty? ? :empty : @license.enter(text)
+        @typed = +"" if %i[entered same].include?(result)
         @entered.call if result == :entered
         @status = result
       end

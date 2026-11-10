@@ -34,6 +34,10 @@ module DotPopper
         @android = os == "Android"
         @ios = os == "iOS"
         puts "Dot Popper: a dot's radius is #{@dot_size.reason}"
+        # With DOT_POPPER_PERF=1: whether this build's Ruby verifies
+        # Ed25519, which the packaged-app playthroughs check. Where it
+        # does not, setdef is never found gone (Continuity::Watch).
+        puts "Dot Popper: Ed25519 #{Continuity::Ed25519.available? ? "verifies" : "does not verify"} the server's test vector" if flag?("DOT_POPPER_PERF")
         @touch ? fill_screen : open_window
         # A desktop's title offers "Full screen" and Quit; a phone's or
         # tablet's game already fills its screen, and leaves by the system.

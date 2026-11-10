@@ -134,6 +134,7 @@ jobs:
           $play = Play @{}
           if ($play.Status -ne 0) { exit 1 }
           if ($play.Out -notmatch 'frames a second') { Write-Host '::error::the game never reported drawing a frame'; exit 1 }
+          if ($play.Out -notmatch "Ed25519 verifies the server's test vector") { Write-Host '::error::the packaged Ruby does not verify Ed25519'; exit 1 }
 
           # A PC whose Vulkan can't start the game (doc/decisions.md, "When
           # Vulkan can't start the game, it starts again without it"):
@@ -351,7 +352,8 @@ jobs:
           if kill -0 "$pid" 2> /dev/null; then kill "$pid"; echo "::error::the app still ran after 120 s"; fi
           wait "$pid"; status=$?
           echo "exit status $status"; cat "$RUNNER_TEMP/play/out.txt"
-          [ "$status" = 0 ] && grep -q "frames a second" "$RUNNER_TEMP/play/out.txt"
+          [ "$status" = 0 ] && grep -q "frames a second" "$RUNNER_TEMP/play/out.txt" \
+            && grep -q "Ed25519 verifies the server's test vector" "$RUNNER_TEMP/play/out.txt"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -396,7 +398,8 @@ jobs:
           status=$?
           set -e
           echo "exit status $status"; cat "$RUNNER_TEMP/play/out.txt"
-          [ "$status" = 0 ] && grep -q "frames a second" "$RUNNER_TEMP/play/out.txt"
+          [ "$status" = 0 ] && grep -q "frames a second" "$RUNNER_TEMP/play/out.txt" \
+            && grep -q "Ed25519 verifies the server's test vector" "$RUNNER_TEMP/play/out.txt"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

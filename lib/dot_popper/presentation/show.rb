@@ -304,7 +304,19 @@ module DotPopper
       # A key typed on a keyboard that the open screen takes as text: the
       # digits and Backspace on the keypad that joins a friend group.
       # Says whether it took it.
-      def type_key(key) = group_open? && !offer? && @groups.type(key)
+      def type_key(key)
+        return typed_license_key(key) if offer? && @storefront.keys?
+
+        group_open? && @groups.type(key)
+      end
+
+      # A key typed into the offer of a copy that takes a license key, on a
+      # computer: Paste license key's other way in (WebsiteStore#type).
+      def typed_license_key(key)
+        return false unless @storefront.respond_to?(:type) && !@entitlement.pro?
+
+        @storefront.type(key)
+      end
 
       # What a control does when pressed.
       def press(name, x, y, by)
@@ -699,8 +711,15 @@ module DotPopper
       # say.
       def offer_status
         return words.offer[:thanks] if @entitlement.pro?
+        return "#{words.offer[:typing]} #{typed_tail}" if @storefront.respond_to?(:typed) && !@storefront.typed.empty? && @storefront.status == :ready
 
         words.offer.fetch(@storefront.status, "")
+      end
+
+      # The last of the key being typed, for the line to show.
+      def typed_tail
+        typed = @storefront.typed
+        typed.length > 24 ? "…#{typed[-24..]}" : typed
       end
 
       # Paste license key: what is on the clipboard, entered as a key, on a
