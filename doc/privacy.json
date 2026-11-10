@@ -382,11 +382,11 @@
     "example": "Dot Popper: 25 points, a new record!\n🟡 27 dots · ⚫ 1 mistake · ⏱ 38 seconds"
   },
   "deletion": {
-    "screen": "Friend groups",
-    "control": "Delete my data",
+    "screen": "Privacy",
+    "control": "Delete my friend group data",
     "gesture": "press and hold for 2 seconds",
-    "prompt": "Hold to delete your scores from the server.",
-    "sentence": "On the game's \"Friend groups\" screen, press and hold \"Delete my data\".",
+    "prompt": "Hold to leave every friend group and delete your scores online.",
+    "sentence": "In the game's Settings, open \"Privacy\", then press and hold \"Delete my friend group data\".",
     "shown": "once this device has a token",
     "request": "DELETE /player"
   },

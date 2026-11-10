@@ -82,9 +82,11 @@ module DotPopper
       def sharing_how = "A result is shared only when you choose \"#{Presentation::Style::WORDS.share}\". The game doesn't send it anywhere itself."
 
       def deletion
-        words = Presentation::GroupWords
-        { screen: words.heading, control: words.delete, gesture: "press and hold for #{Presentation::GroupPanel::HOLD.to_i} seconds", prompt: words.hold_to_delete,
-          sentence: "On the game's \"#{words.heading}\" screen, press and hold \"#{words.delete}\".", shown: "once this device has a token",
+        words = Presentation::Style::WORDS
+        screen = words.button(:privacy_title)
+        control = words.button(:privacy_delete)
+        { screen:, control:, gesture: "press and hold for #{Presentation::GroupPanel::HOLD.to_i} seconds", prompt: words.button(:privacy_hold),
+          sentence: "In the game's #{words.button(:settings_title)}, open \"#{screen}\", then press and hold \"#{control}\".", shown: "once this device has a token",
           request: Groups::REQUESTS.fetch(:deleted).then { "#{it.verb.to_s.upcase} #{it.path}" } }
       end
 
