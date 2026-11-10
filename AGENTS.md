@@ -49,7 +49,7 @@ Follow `~/.claude/skills/trunk-based-development/SKILL.md`.
 
 ## Hands off
 
-- Never edit the maintainer's own checkout at `~/Developer/dot_popper`, which he plays from. Use a worktree or clone.
+- Never edit the maintainer's own checkout, which he plays from. Use a worktree or clone.
 - Never edit Lota's or the server's repositories from here. Ask their sessions.
 - Never touch the maintainer's devices, or his wife's, without being asked. On her devices, install only `com.setdef.DotPopper`, and never erase, update or change settings.
 - Create no accounts, repositories or store listings, and never read or copy secrets.
