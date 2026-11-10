@@ -1014,6 +1014,8 @@ When the tutorial ends, the first round begins from exactly where it left things
 
 **To reverse:** In `Show#follow_tutorial`, call `start_round` instead of `game.resume`, and in `Show#round_started` treat every round as fresh.
 
+**Confirmed (2026-11-09).** The maintainer: "The tutorial _is_ the game; the game should be in whatever state the tutorial forces the player through." That is what this section built, so nothing changed: the first game keeps the tutorial's dots, score and time. A Skip still starts a clean game, since a player who skips was forced through nothing.
+
 ### The tutorial's guide shows a wrong tap's cost, with no ✕
 
 The soft pink ✕ that marked the popped dot in the tutorial is gone. Instead, as the bright dot peeks out, the guide taps the popped dot once, and the game's own penalty plays: the dot's shudder and alarm ring, the dashed outline of the bright dot under it, the edge's glow, the bonk, and "−2" and "−2" with the stopwatch leaping out of SCORE and TIME. Then the guide lifts and waits well above the popped dot, clear of both dots, while the bright one slides clear, and only then moves to it and taps. The guide's tap lands before the player's turn, under the spotlight, with the guide plainly pressing, and it doesn't buzz a phone, so it can't be mistaken for the player's own. *Later: the guide's wrong tap and the player's own now cost what they do in play (see "Every wrong tap in the tutorial costs what it does in play").*
