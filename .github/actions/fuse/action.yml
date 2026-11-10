@@ -48,7 +48,7 @@ runs:
       shell: bash
       run: |
         exclude=()
-        for path in test doc sig script playtest android ios .github Rakefile Steepfile mise.toml \
+        for path in test doc sig script playtest android ios macos windows .github Rakefile Steepfile mise.toml \
           AGENTS.md GLOSSARY.md INSIPIRATION.md PACKAGING.md README.md .gitignore; do
           exclude+=(--exclude "$path")
         done

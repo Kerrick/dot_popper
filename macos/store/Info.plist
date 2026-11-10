@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  SPDX-FileCopyrightText: 2026 setdef <kerrick@setdef.com>
+  SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
+
+  Linked into the store helper (-sectcreate __TEXT __info_plist) so that
+     StoreKit, asking Bundle.main, finds the game's own bundle identifier
+     even though the helper sits outside Contents/MacOS. Not yet tried
+     against a real store. -->
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>com.setdef.DotPopper</string>
+	<key>CFBundleName</key>
+	<string>Dot Popper</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>13.0</string>
+</dict>
+</plist>
