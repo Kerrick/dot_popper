@@ -35,7 +35,7 @@ module DotPopper
         starts.each do |start|
           folder = File.expand_path(start)
           DEPTH.times do
-            [File.join(folder, name), File.join(folder, "Helpers", name)].each { return it if File.file?(it) && File.executable?(it) }
+            [File.join(folder, name), File.join(folder, "Helpers", name)].each { return it if File.file?(it) }
             folder = File.dirname(folder)
           end
         end
