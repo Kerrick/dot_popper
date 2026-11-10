@@ -23,3 +23,20 @@ jobs:
         with:
           ruby-version: .ruby-version
       - run: ruby script/check_build_channel.rb
+
+  identifiers:
+    name: Every store's identifiers are set
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: .ruby-version
+      - run: ruby script/check_store_identifiers.rb
+        env:
+          MSIX_IDENTITY_NAME: ${{ vars.MSIX_IDENTITY_NAME }}
+          MSIX_PUBLISHER: ${{ vars.MSIX_PUBLISHER }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
