@@ -162,11 +162,14 @@ jobs:
   # The Store signs the package itself, so the artifact is unsigned. To check
   # it, a copy is signed with a throwaway certificate whose subject is the
   # Publisher, trusted on this runner, installed, played and removed.
+  # The Microsoft Store's own build: its channel set before fusing
+  # (script/set_build_channel.rb), so it sells Pro through the Store, by
+  # the store helper (windows/store) beside the program.
   msix:
-    name: Windows MSIX
-    needs: [windows]
+    name: Windows MSIX (Microsoft Store build)
+    needs: [test]
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     env:
       # Placeholders until the maintainer copies them from Partner Center.
       MSIX_IDENTITY_NAME: ${{ vars.MSIX_IDENTITY_NAME || 'setdef.DotPopper' }}
@@ -175,19 +178,39 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
         with:
-          name: dot-popper-windows-x64
-          path: ${{ runner.temp }}/fused
+          ruby-version: .ruby-version
+          windows-toolchain: none
+      - run: ruby script/set_build_channel.rb microsoft-store
+      - uses: ./.github/actions/fuse
+        with:
+          platform: x64-mingw-ucrt
+
+      - name: Build the store helper with MinGW, and check it
+        shell: pwsh
+        run: |
+          C:\msys64\usr\bin\pacman.exe -S --noconfirm --needed mingw-w64-ucrt-x86_64-gcc | Out-Host
+          $env:PATH = "C:\msys64\ucrt64\bin;$env:PATH"
+          $helper = Join-Path $env:RUNNER_TEMP 'helper'
+          New-Item -ItemType Directory -Force -Path $helper | Out-Null
+          gcc -std=c11 -O2 -Wall -Wextra -Werror -Wno-cast-function-type -municode -static `
+            -o "$helper\dot-popper-store.exe" windows/store/dot_popper_store.c -lruntimeobject -lole32
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          & "$helper\dot-popper-store.exe" --self-test
+          if ($LASTEXITCODE -ne 0) { exit 1 }
 
       - name: Lay out the package and write its manifest
         shell: pwsh
         run: |
-          $zip = Get-ChildItem -LiteralPath "$env:RUNNER_TEMP/fused" -Filter 'Dot Popper-*.zip' | Select-Object -First 1
+          $zip = Get-ChildItem -LiteralPath "$env:RUNNER_TEMP/fuse" -Filter 'Dot Popper-*.zip' | Select-Object -First 1
           $unzipped = Join-Path $env:RUNNER_TEMP 'unzipped'
           Expand-Archive -LiteralPath $zip.FullName -DestinationPath $unzipped
           $program = Get-ChildItem -LiteralPath $unzipped -Recurse -File -Filter 'Dot Popper.exe' | Select-Object -First 1
           $root = $program.DirectoryName
+          # The store helper beside the program, where Shell::StoreHelper
+          # looks; started by the game, it has the package's identity.
+          Copy-Item (Join-Path $env:RUNNER_TEMP 'helper\dot-popper-store.exe') $root
 
           # The runner has no GPU: Mesa's software OpenGL goes beside the
           # program for the check below. (The Store build is this folder
@@ -361,6 +384,76 @@ jobs:
           path: |
             ${{ runner.temp }}/fuse/*.dmg
             ${{ runner.temp }}/fuse/*.tar.gz
+          if-no-files-found: error
+          compression-level: 0
+
+  # The Mac App Store's own build (doc/publishing.md): its channel set
+  # before fusing, the store helper (macos/store) in Contents/Helpers, and
+  # the App Sandbox. Signed here ad hoc only, to check that it starts and
+  # plays inside the sandbox; the maintainer's Apple Distribution identity
+  # and provisioning profile sign the real one. Its artifact is not
+  # attached to a playtest release.
+  mac-app-store:
+    name: Mac App Store build
+    needs: [test]
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: .ruby-version
+      - run: ruby script/set_build_channel.rb mac-app-store
+      - uses: ./.github/actions/fuse
+        with:
+          platform: arm64-darwin
+
+      - name: Build the store helper, put it in the app, and sign both for the sandbox
+        run: |
+          mkdir -p "$RUNNER_TEMP/mas"
+          tar -xzf "$RUNNER_TEMP"/fuse/*.tar.gz -C "$RUNNER_TEMP/mas"
+          app=$(find "$RUNNER_TEMP/mas" -maxdepth 3 -name 'Dot Popper.app' -type d | head -1)
+          echo "MAS_APP=$app" >> "$GITHUB_ENV"
+          mkdir -p "$app/Contents/Helpers"
+          helper="$app/Contents/Helpers/dot-popper-store"
+          xcrun swiftc -O -target arm64-apple-macos13 \
+            -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker macos/store/Info.plist \
+            -o "$helper" macos/store/main.swift
+          "$helper" --check
+          # Inside out, and never --deep: the helper, then the app.
+          codesign --force --sign - --identifier com.setdef.DotPopper.store-helper \
+            --entitlements macos/store/helper.entitlements "$helper"
+          codesign --force --sign - --entitlements macos/store/app.entitlements "$app"
+          codesign --verify --strict --verbose=2 "$app"
+          codesign --display --entitlements - "$app"
+          codesign --display --entitlements - "$helper"
+
+      - name: Play the sandboxed app
+        run: |
+          out="$RUNNER_TEMP/mas-play.txt"
+          # shellcheck disable=SC2086
+          env -i HOME="$HOME" PATH=/usr/bin:/bin $PLAY_ENV "$MAS_APP/Contents/MacOS/Dot Popper" > "$out" 2>&1 &
+          pid=$!
+          for _ in $(seq 120); do kill -0 "$pid" 2> /dev/null || break; sleep 1; done
+          if kill -0 "$pid" 2> /dev/null; then kill "$pid"; echo "::error::the app still ran after 120 s"; fi
+          wait "$pid"; status=$?
+          echo "exit status $status"; cat "$out"
+          # A sandboxed app saves inside its container.
+          ls -la "$HOME/Library/Containers/com.setdef.DotPopper/Data/Library/Application Support/" || true
+          [ "$status" = 0 ] && grep -q "frames a second" "$out"
+
+      - name: Package it for the store, unsigned
+        run: |
+          mkdir -p "$RUNNER_TEMP/mas-pkg"
+          productbuild --component "$MAS_APP" /Applications "$RUNNER_TEMP/mas-pkg/Dot-Popper-$APP_VERSION-mac-app-store-unsigned.pkg"
+          ls -la "$RUNNER_TEMP/mas-pkg"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mac-app-store-unsigned
+          path: ${{ runner.temp }}/mas-pkg/*.pkg
           if-no-files-found: error
           compression-level: 0
 
