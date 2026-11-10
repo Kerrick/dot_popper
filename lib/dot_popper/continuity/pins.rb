@@ -23,15 +23,21 @@ module DotPopper
                        8aac532eb028225861e7e98055f98b5e06d7586fd07fbf5c4bca51cc7d4c8d90]
     )
 
-    # setdef's own four public keys, as hex, once they exist:
-    #   Pins.of(roots: %w[MAIN_ROOT BACKUP_ROOT], license_keys: %w[MAIN BACKUP])
-    SETDEF_PINS = nil
+    # setdef's own four public keys: the proof roots (main, and a sealed
+    # backup; root ids 8336ad85d326749b and ad88ca8070d052b7) and the
+    # license-signing keys (main and backup).
+    SETDEF_PINS = Pins.of(
+      roots: %w[79d5734924f1f17b86eec3d20cb05bcd88996cdac0ade9e76652e23890b0936b
+                acc38f5061fb9de2b57dff17f2f6c51ca585b96261805a5323b1022607c82253],
+      license_keys: %w[779da5ce8b28fb9486667d610482a6abd416f94cc19721f3d1313475ea7b17c2
+                       e40183ecb2bfcd2ff8f124d33a0ab32d8e96749a517a07d2237a88bacea908d0]
+    )
 
-    # What this build trusts. To ship setdef's real keys, fill in
-    # SETDEF_PINS and change this one line to SETDEF_PINS. While it is
-    # TEST_PINS, no build asks setdef's real server anything (.live?), so
-    # none can decide setdef is gone from a proof it could never verify.
-    PINNED = TEST_PINS
+    # What this build trusts: setdef's real keys. A test build (no store
+    # channel) trusts TEST_PINS instead, in the app, and nothing signed by
+    # the test keys verifies against these. While this was TEST_PINS, no
+    # build asked setdef's real server anything (.live?).
+    PINNED = SETDEF_PINS
 
     # Whether this build trusts real keys, and so may ask the real server.
     def self.live?(pins = PINNED) = !pins.equal?(TEST_PINS)

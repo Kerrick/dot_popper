@@ -100,8 +100,31 @@ class SignaturesTest < Minitest::Test
     assert_nil C::SignedAnswers.verdict(body, id, nonce, VECTOR_PINS)
   end
 
-  def test_no_build_asks_the_real_server_while_test_keys_are_pinned
-    refute C.live?
-    assert C.live?(C::Pins.new(roots: [], license_keys: []))
+  def test_a_store_build_pins_setdefs_real_keys_and_so_asks_the_real_server
+    assert_same C::SETDEF_PINS, C::PINNED
+    assert C.live?
+    refute C.live?(C::TEST_PINS)
+    assert_equal %w[8336ad85d326749b ad88ca8070d052b7], C::PINNED.roots.map { C.hex(C::Certificate.id_of(it)) }
+    assert_equal [2, 2], [C::PINNED.roots.size, C::PINNED.license_keys.size]
+    assert(([*C::PINNED.roots, *C::PINNED.license_keys] & [*C::TEST_PINS.roots, *C::TEST_PINS.license_keys]).empty?)
+    assert(([*C::PINNED.roots, *C::PINNED.license_keys]).all? { it.bytesize == 32 })
+  end
+
+  def test_nothing_the_test_build_signs_passes_against_the_real_pins
+    assert C::LicenseKey.issue(C::TestKeys::LICENSE).valid?(C::TEST_PINS)
+    refute C::LicenseKey.issue(C::TestKeys::LICENSE).valid?(C::PINNED)
+    nonce = C::SignedAnswers.fresh
+    assert C::SignedAnswers.proof?(C::SignedAnswers.signed_proof(nonce), nonce, C::TEST_PINS)
+    refute C::SignedAnswers.proof?(C::SignedAnswers.signed_proof(nonce), nonce, C::PINNED)
+  end
+
+  # The server's license-key test vector signs with RFC 8032's first test
+  # key, which is public and pinned by no build.
+  def test_the_server_license_key_test_vector_is_not_valid_against_the_real_pins
+    vector = C::LicenseKey.parse("DP-04002-0G30G-2GC1R-81450-P30D1-R7SFX-0HGSD-6SGPK-K2W19-V4W1S-HG83P-HYKNB-CE1KN-Q1F61-356YC-HEY9G-RB61G-ZG7MQ-0YPZS-A2015-PT5GT-M3X50-KSA5M-FC841-KPZC6-WXQ0W")
+
+    assert_equal H["000102030405060708090a0b0c0d0e0f"], vector.id
+    assert vector.valid?(C::Pins.new(roots: [], license_keys: [H["d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"]]))
+    refute vector.valid?(C::PINNED)
   end
 end
