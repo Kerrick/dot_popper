@@ -79,13 +79,15 @@ module DotPopper
         end
       end
 
-      # The achievement tapped, on a card: its sign, its name, how to earn it.
+      # The achievement tapped, on a card: its sign in the grid's dashed
+      # ring, its name, and how to earn it. No progress: that is what Pro
+      # adds (doc/decisions.md).
       def achievement(show, rect)
         id = show.offer_achievement or return
         Card.new(pen:).draw(rect)
         radius = rect.height * 0.32
         x = rect.x + 16 + radius
-        Glyphs.new(pen:).draw(Presentation::AchievementWords.glyph(id), x, rect.center_y, radius * 1.1, color: pen.palette.soft)
+        AchievementsPainter.new(pen:).emblem(id, x, rect.center_y, radius, show.achievement_earned?(id))
         left = x + radius + 16
         room = rect.right - left - 16
         bold = pen.fonts.bold(18)

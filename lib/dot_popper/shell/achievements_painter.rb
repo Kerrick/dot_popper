@@ -35,17 +35,9 @@ module DotPopper
         buttons(show, plan)
       end
 
-      private
-
-      def cell(show, cell)
-        earned = show.achievement_earned?(cell.id)
-        emblem(cell.id, cell.x, cell.y, cell.radius, earned, lit: show.hover.level([:achievement, cell.id]))
-        name = Presentation::AchievementWords.name(cell.id)
-        lines = Presentation::Words.wrap(name, cell.radius * 2.8) { pen.fonts.semibold(15).width(it) }
-        font = pen.fonts.semibold(15)
-        lines.each_with_index { |line, i| pen.text(line, font, cell.x, cell.name_y + (font.height * i), earned ? pen.palette.cream : pen.palette.soft) }
-      end
-
+      # An achievement's sign at +x+, +y+, +radius+ across: on gold where
+      # +earned+, and in a dashed ring where not yet, as the grid shows it
+      # and the offer of Pro shows the one tapped.
       def emblem(id, x, y, radius, earned, lit: 0.0)
         palette = pen.palette
         if earned
@@ -65,6 +57,17 @@ module DotPopper
         G.circle(:fill, x, y, radius, 64) if lit.positive?
         glyph = Presentation::AchievementWords.glyph(id)
         Glyphs.new(pen:).draw(glyph, x, y, radius * 1.15, color: earned ? palette.ink_bottom : palette.soft, weight: 2.0)
+      end
+
+      private
+
+      def cell(show, cell)
+        earned = show.achievement_earned?(cell.id)
+        emblem(cell.id, cell.x, cell.y, cell.radius, earned, lit: show.hover.level([:achievement, cell.id]))
+        name = Presentation::AchievementWords.name(cell.id)
+        lines = Presentation::Words.wrap(name, cell.radius * 2.8) { pen.fonts.semibold(15).width(it) }
+        font = pen.fonts.semibold(15)
+        lines.each_with_index { |line, i| pen.text(line, font, cell.x, cell.name_y + (font.height * i), earned ? pen.palette.cream : pen.palette.soft) }
       end
 
       def dashes(x, y, radius)

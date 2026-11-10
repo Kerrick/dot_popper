@@ -1595,3 +1595,7 @@ The line "14 dots, 2 mistakes, longest time to pop 3.1 seconds" is now three fac
 ## Get Pro at Game Over opens the offer over Game Over
 
 With no game left, Game Over's main button says Get Pro. It used to go Home and open the offer there, so Back left the player on Home. It now opens the offer over Game Over, as every Pro feature's offer opens over the screen it was tapped on, and Back returns to Game Over as it was (the proposal's screen map). While the offer is open, nothing under it takes a press, drags the pile, or opens Share my score.
+
+## The offer's achievement card has no progress line
+
+The `offer-achievements` mock puts "Your record: 19 of 20" under the achievement a Free player tapped. The proposal leaves it out: the offer shows "a real achievement with how to earn it", and choice 2, approved, makes progress one of the things Pro adds to Achievements, which a Free player's dialog already doesn't show. A line of Pro's progress on the offer would give it away before the purchase, and the dialog and the offer would disagree. So the card shows the achievement's sign, its name and how to earn it. It now draws the sign in the grid's dashed ring, as the mock does, so the player recognises the one they tapped (Johnson: recognition over recall).
