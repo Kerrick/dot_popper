@@ -72,7 +72,7 @@ module DotPopperGui
       keep_screenshot("clearing-cleared")
       check_equal("", File.read(saved("stats.txt")), "stats.txt is emptied")
       check(before["games.csv"] == File.read(saved("games.csv")), "the playtest log is untouched")
-      backup = Dir[saved("stats-*.txt")]
+      backup = Dir[saved("stats-*.txt").tr("\\", "/")] # Dir[] reads only forward slashes, and Windows' save folder has back ones
       check_equal(1, backup.size, "one backup of stats.txt")
       check(before["stats.txt"] == File.read(backup.first), "the backup is an exact copy")
       check_equal(0, show.marquee.score_record, "the title's best is cleared too")

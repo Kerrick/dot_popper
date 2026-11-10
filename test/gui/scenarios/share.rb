@@ -24,7 +24,7 @@ module DotPopperGui
       keep_screenshot("share-preview")
       copy = show.copy_reach
       click(copy.center_x, copy.center_y)
-      check_equal(show.share_preview.text, L::System.clipboard_text, "a click on Copy copies exactly the text shown")
+      check_equal(show.share_preview.text, clipboard, "a click on Copy copies exactly the text shown")
       wait(0.5)
       keep_screenshot("share-copied")
       key(:escape)
@@ -52,13 +52,13 @@ module DotPopperGui
       check(show.sharing? && L::System.clipboard_text == UNTOUCHED, "a gamepad's Y opens the preview, copying nothing")
       check_equal("Copy (A)", words.copy, "the preview names a gamepad's buttons")
       pad(:y)
-      check_equal(show.share_preview.text, L::System.clipboard_text, "Y again copies")
+      check_equal(show.share_preview.text, clipboard, "Y again copies")
       pad(:b)
       closed("a gamepad's B")
       open_by(:click)
       L::System.clipboard_text = UNTOUCHED
       key(:return)
-      check_equal(show.share_preview.text, L::System.clipboard_text, "Enter copies")
+      check_equal(show.share_preview.text, clipboard, "Enter copies")
       check(show.game_over?, "and stays on Game Over")
       close = show.close_reach
       click(close.center_x, close.center_y)
@@ -70,12 +70,17 @@ module DotPopperGui
       L::System.clipboard_text = UNTOUCHED
       copy = show.copy_reach
       touch(copy.center_x, copy.center_y)
-      check_equal(show.share_preview.text, L::System.clipboard_text, "a tap on Copy copies")
+      check_equal(show.share_preview.text, clipboard, "a tap on Copy copies")
       card = show.share_plan.card
       touch(card.center_x, card.y + 4)
       check(show.sharing?, "a tap on the card does nothing")
       touch(layout.safe.x + 6, layout.safe.bottom - 6)
       closed("a tap beside the card")
     end
+
+    # The clipboard's text, its lines ended as the game wrote them: on
+    # Windows the system hands back each line ended with CR LF, as every
+    # Windows program writes text there, and a paste reads the same lines.
+    def clipboard = L::System.clipboard_text.to_s.gsub("\r\n", "\n")
   end
 end

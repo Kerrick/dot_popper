@@ -1611,3 +1611,11 @@ p Ractor.new { 20.times { GC.start }; 1 }.value # never returns on Windows; at o
 ```
 
 The same lines with no other thread return at once on Windows, and so does the game in a Ractor outside Minitest, or inside it with `GC.disable`. So on Windows only, that one test is skipped with this reason (`RactorTest::WINDOWS_RACTOR_GC`). The other two Ractor tests, which only ask whether the rules' values are shareable, still run there, and Linux and macOS run all three. **To reverse:** delete the `skip` once a Ruby release plays the three lines on Windows.
+
+## The GUI scenarios on Windows
+
+Four scenarios failed on the Windows PC from before the redesign. Three were the scenarios' own mistakes, and one comes from the PC's screen.
+
+- **Share (two runs of it): fixed.** On Windows the clipboard gives text back with each line ended by CR LF, which is how Windows stores text there, so a paste reads the same lines. The scenario now compares lines, not line endings.
+- **Clearing: fixed.** `Dir[]` reads only forward slashes, and on Windows Lota's save folder is written with back slashes (`C:\Users\...\Lota\...`), so the glob for the backup found nothing even though the backup was there. The scenario turns the slashes before it globs.
+- **Resizing: from the PC's screen.** The agent's console display is 1920 x 1080 pixels at 200% scale, which is 960 x 540 units. The scenario opens at 1200 x 800 units (2400 x 1600 pixels, larger than the screen) and asks for 800 x 500 and 1100 x 700, the second also larger than the screen. Windows doesn't give a window the size it asks for when it won't fit the display at that scale: the first request ends with the window at the game's minimum, 400 x 320, and the scenario waits for 800 x 500 in vain. The same scenario passes on Linux under Xvfb at 1280 x 1024. It needs a display at least 1200 x 800 units, such as 2560 x 1600 at 200% or 1920 x 1080 at 100%, and changing the PC's display is the maintainer's call, not a test's.
