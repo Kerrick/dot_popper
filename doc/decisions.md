@@ -1587,3 +1587,7 @@ On a good tap, "+1", "+1 and a stopwatch" and "+1 and a dot" fly in turn from th
 ## Friend groups' controller labels
 
 As everywhere: a free cursor, and a labelled button for every action (`answers.md` 8, the `groups-gamepad`, `group-gamepad` and `join-gamepad` mocks). The list: X Join, Y Create, and RB opens the first group, from an "Open group (RB)" pill at the right of Back's row, since a row has no label of its own. A group: X Show then Copy, Y History, LB and RB the previous or next group in the list's order (pills at the right of Back's row, where there is another group), and Leave becomes "Hold Start to leave", which Start held does; let go too soon, nothing happens. The keypad: X Delete, Start Join; the digits are pressed with the cursor or typed, as the mock draws. History has only Back (B). B is Back on every one.
+
+## Game Over's facts are signs and numbers
+
+The line "14 dots, 2 mistakes, longest time to pop 3.1 seconds" is now three facts, each a sign and a number: a bright dot and the dots popped, a popped dot and the mistakes, and the game's stopwatch and how long the game lasted, "34s", as the game's own "+1s" (the `over` mocks, without their words). Nothing in them needs reading English (`AGENTS.md`: how to play never depends on it; Westland & Maggio: a sign, not colour alone). The longest time to pop stays on Stats. Where the row is too wide for the room across, the facts stand one under another (`GameOverScreen#facts`).

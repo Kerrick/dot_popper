@@ -102,13 +102,12 @@ class WordsTest < Minitest::Test
     assert_equal InputKind::TOUCH, InputKind.starting(touch: true)
   end
 
-  def test_the_game_in_one_line
-    stats = DotPopper::GameStats.start.with(pops: 14, mistakes: 2, times_to_pop: [1.0, 3.14])
+  # Game Over's facts are signs and numbers, with no word to translate.
+  def test_the_game_in_signs_and_numbers
+    stats = DotPopper::GameStats.start.with(pops: 14, mistakes: 2, times_to_pop: [1.0, 3.14], duration: 33.6)
 
-    assert_equal "14 dots, 2 mistakes, longest time to pop 3.1 seconds", Style::WORDS.summary(stats)
-    assert_equal "1 dot, 1 mistake, longest time to pop 0.0 seconds",
-                 Style::WORDS.summary(DotPopper::GameStats.start.with(pops: 1, mistakes: 1, times_to_pop: [0.0]))
-    assert_equal "0 dots, 0 mistakes", Style::WORDS.summary(DotPopper::GameStats.start)
+    assert_equal [[:bright, "14"], [:popped, "2"], [:stopwatch, "34s"]], Words.facts(stats)
+    assert_equal [[:bright, "0"], [:popped, "0"], [:stopwatch, "0s"]], Words.facts(DotPopper::GameStats.start)
   end
 
   def test_a_long_time_reads_in_the_units_that_suit_it

@@ -136,6 +136,22 @@ class ScreenPlansTest < Minitest::Test
     assert plan[:play_again]
   end
 
+  # The facts stand in one row where it fits, and one under another
+  # where it does not, every one inside the room.
+  def test_game_overs_facts_stack_where_a_row_does_not_fit
+    huge = game_over.with(stats: DotPopper::GameStats.start.with(pops: 123_456_789, mistakes: 123_456_789, duration: 123_456_789.0))
+    wide = GameOverScreen.new(layout: layout(1200, 800), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
+                              scrim: Style::GAME_OVER_BACKING, game_over:, below: 0).plan
+    narrow = GameOverScreen.new(layout: layout(320, 800), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
+                                scrim: Style::GAME_OVER_BACKING, game_over: huge, below: 0).plan
+
+    assert wide[:summary]
+    refute narrow[:summary]
+    rows = (0..2).map { narrow[[:fact, it]] }
+    assert rows.all?, "each fact on a line of its own"
+    assert_operator rows[0].bottom, :<=, rows[1].y
+  end
+
   def test_a_roomy_game_over_shows_every_line_at_full_size
     plan = GameOverScreen.new(layout: layout(1200, 800), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
                               scrim: Style::GAME_OVER_BACKING, game_over: game_over, below: 0, chips: CHIPS).plan

@@ -35,7 +35,7 @@ module DotPopper
         @credits = CreditsPainter.new(pen:)
         @themes = ThemesPainter.new(pen:, dots: @dots)
         @offer = OfferPainter.new(pen:, dots: @dots)
-        @game_over = GameOverPainter.new(pen:)
+        @game_over = GameOverPainter.new(pen:, dots: @dots)
         @group = GroupPainter.new(pen:)
         @share = SharePreviewPainter.new(pen:, dots: @dots)
         @cursor = CursorPainter.new(pen:)

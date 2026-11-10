@@ -11,7 +11,7 @@ module DotPopper
     # be heard, and Home beside Share my score, all over the dimmed pile,
     # as the mocks draw it, with no backing of their own. The stacking
     # rule is taught on the pile itself, with no word (Show#replay_mistake).
-    class GameOverPainter < Data.define(:pen)
+    class GameOverPainter < Data.define(:pen, :dots)
       G = ::Lota::Graphics
 
       def draw(show, layout)
@@ -30,7 +30,7 @@ module DotPopper
         Lettering.new(pen:).candy(game_over.shown_score(now).to_s, score, plan[:score].center_x,
                                   plan[:score].y + (score.height / 2.0), shown)
         score_record_line(show, plan, now, shown)
-        line(plan, :summary, words.summary(game_over.stats), palette.soft, shown * 0.8)
+        facts(show, plan, shown)
         line(plan, :record, words.record(game_over.record), palette.gain, game_over.afterword(now)) if game_over.record && game_over.counted?(now)
         chips(show, plan, game_over.afterword(now)) if game_over.counted?(now)
         buttons(show, plan, game_over, now, shown, layout)
@@ -85,6 +85,35 @@ module DotPopper
         cut = text
         cut = cut[0...-1] while cut.size > 1 && font.width("#{cut}…") > room
         "#{cut.rstrip}…"
+      end
+
+      # The game's facts, each its sign and its number: a bright dot, a
+      # popped one, and the game's stopwatch (TallyPainter), in a row or one
+      # under another, as the plan put them.
+      def facts(show, plan, alpha)
+        list = Presentation::Words.facts(show.game_over.stats)
+        font = pen.fonts.bold(plan.size(:facts))
+        screen = Presentation::GameOverScreen
+        if (row = plan[:summary])
+          x = row.x
+          list.each { |sign, text| x = fact(sign, text, font, x, row.center_y, alpha) + (font.height * screen::FACTS_APART) }
+        else
+          list.each_with_index { |(sign, text), i| (rect = plan[[:fact, i]]) && fact(sign, text, font, rect.x, rect.center_y, alpha) }
+        end
+      end
+
+      # One fact from +x+, its middle at +y+; where it ends.
+      def fact(sign, text, font, x, y, alpha)
+        screen = Presentation::GameOverScreen
+        size = font.height * screen::FACT_SIGN
+        middle = x + (size / 2.0)
+        case sign
+        when :stopwatch then TallyPainter.new(pen:).stopwatch(middle, y, size, pen.palette.cream, alpha)
+        else dots.icon(middle, y, size * 0.5, fresh: sign == :bright, opacity: alpha)
+        end
+        left = x + (font.height * (screen::FACT_SIGN + screen::FACT_GAP))
+        pen.text(text, font, left + (font.width(text) / 2.0), y, pen.palette.cream, alpha)
+        left + font.width(text)
       end
 
       # A semibold line of +text+ in its place in +plan+, if it has one.

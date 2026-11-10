@@ -131,14 +131,10 @@ module DotPopper
         score_record.positive? ? "You tied your record of #{score_record}" : ""
       end
 
-      # The game in one quiet line, so a player can see what it was made
-      # of: "14 dots, 2 mistakes, longest time to pop 3.1 seconds". The
-      # longest time to pop is the longest any fresh dot took to be popped.
-      def summary(stats)
-        parts = [Words.count(stats.pops, "dot"), Words.count(stats.mistakes, "mistake")]
-        parts << "longest time to pop #{format("%.1f", stats.longest_time_to_pop)} seconds" if stats.pops.positive?
-        parts.join(", ")
-      end
+      # What the game was made of, each fact a sign and a number, so it
+      # reads in any language: the bright dots popped, the mistakes, and
+      # how long the game lasted, in seconds, as the game's own "+1s".
+      def self.facts(stats) = [[:bright, stats.pops.to_s], [:popped, stats.mistakes.to_s], [:stopwatch, "#{stats.duration.round}s"]]
 
       # The one lifetime record a game set that Game Over names (the most
       # impressive, Stats::Record::ORDER), as a sentence:

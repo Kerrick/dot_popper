@@ -22,7 +22,8 @@ module DotPopper
     end
 
     # Game Over, read top down: "Time's up!", the score, a new record or
-    # how far short of it the game fell, the game's facts, a record it
+    # how far short of it the game fell, the game's facts (Words.facts),
+    # in a row or, short of room across, one under another, a record it
     # set, then its +chips+ (GameOverChip), each a line of its own, then
     # Play again, as big as Layout's primary_size for dots of +radius+, with
     # +play_note+ under its word, and Home beside Share my score. Short of
@@ -36,7 +37,13 @@ module DotPopper
     class GameOverScreen < Data.define(:layout, :type, :words, :measure, :scrim, :game_over, :below, :radius, :chips,
                                        :play_word, :play_note)
       # The gaps above each line, in graphics units at full size.
-      GAPS = { heading: 26, score: 4, score_record: 4, summary: 14, record: 8, chip: 10, play_again: 34, buttons: 14 }.freeze
+      GAPS = { heading: 26, score: 4, score_record: 4, summary: 14, fact: 4, record: 8, chip: 10, play_again: 34, buttons: 14 }.freeze
+      # A fact's sign and the room after it, and the room between facts, in
+      # the height of their type (Words.facts).
+      FACT_SIGN = 1.0
+      FACT_GAP = 0.3
+      FACTS_APART = 1.1
+      FACTS_LARGER = 3 # the facts' type over the summary's, as the mocks set their numbers
       # A chip's height and its words' size, in units at full size.
       CHIP = 38.0
       CHIP_TEXT = 15
@@ -69,6 +76,15 @@ module DotPopper
         if game_over.new_score_record? then [:bold, size, words.new_score_record]
         else [:semibold, size, words.short_of_score_record(game_over.score, game_over.score_record, first: game_over.first)]
         end
+      end
+
+      # How wide one fact is, its sign and its number, in type +size+.
+      def fact_width(text, size) = (measure.height(:bold, size) * (FACT_SIGN + FACT_GAP)) + measure.width(:bold, size, text)
+
+      # How wide the facts are in one row, in type +size+.
+      def facts_width(size)
+        facts = Words.facts(game_over.stats)
+        facts.sum { fact_width(it.last, size) } + (measure.height(:bold, size) * FACTS_APART * (facts.size - 1))
       end
 
       # The size a chip's words are set in, at type +scale+.
@@ -132,11 +148,23 @@ module DotPopper
       # score.
       def rest(scale, across = room.width)
         sizes = sizes(scale)
-        [line(:summary, :semibold, sizes[:summary], words.summary(game_over.stats), scale, drop: 3),
+        [*facts(sizes[:facts], scale, across),
          (line(:record, :semibold, sizes[:summary], words.record(game_over.record), scale, drop: 2) if game_over.record),
          *chips.each_with_index.map { |chip, i| chip_block(chip, i, scale, across) },
          play_again(scale, across),
          buttons_block(scale, across)].compact.reject { it.width > across + 1e-6 } # a line too wide for the room is left out
+      end
+
+      # The facts in one row, :summary; or where the row is too wide for
+      # the room, one under another, [:fact, 0] and on.
+      def facts(size, scale, across)
+        height = measure.height(:bold, size)
+        row = facts_width(size)
+        return [Block.new(name: :summary, height:, width: row, gap: gap(:summary, scale), drop: 3)] if row <= across
+
+        Words.facts(game_over.stats).each_with_index.map do |(_, text), i|
+          Block.new(name: [:fact, i], height:, width: fact_width(text, size), gap: gap(i.zero? ? :summary : :fact, scale), drop: 3)
+        end
       end
 
       def chip_block(chip, index, scale, across)
@@ -188,7 +216,8 @@ module DotPopper
       def sizes(scale)
         size = ->(nominal) { layout.type_size(nominal, scale) }
         { heading: size[type.heading], score: size[type.final_score],
-          score_record: size[game_over.new_score_record? ? type.new_score_record : type.score_record], summary: size[type.summary] }
+          score_record: size[game_over.new_score_record? ? type.new_score_record : type.score_record], summary: size[type.summary],
+          facts: size[type.summary + FACTS_LARGER] }
       end
 
       # Around the result and its lines, short of Play again, and never
