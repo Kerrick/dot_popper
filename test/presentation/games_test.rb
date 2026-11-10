@@ -24,7 +24,7 @@ class GamesTest < Minitest::Test
 
   def setup
     @day = Date.new(2026, 11, 8)
-    @entitlement = DotPopper::Entitlement.free
+    @entitlement = DotPopper::Entitlement.test
     @games = DotPopper::FreeGames.new(Memory.new, today: -> { @day }, entitlement: @entitlement, bank: 0)
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(3))
     @show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, games: @games, entitlement: @entitlement,
@@ -190,7 +190,7 @@ class GamesTest < Minitest::Test
 
   def test_buying_makes_play_unlimited_and_hides_the_count
     3.times { @games.spend! }
-    @entitlement.unlock!
+    @entitlement.prove(DotPopper::Receipt.issue)
 
     assert_nil @show.games_line
     press_main

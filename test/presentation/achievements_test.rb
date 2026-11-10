@@ -19,7 +19,7 @@ class AchievementsOnStatsTest < Minitest::Test
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), score_record: DotPopper::ScoreRecord.new(@folder.call("best")))
     stats_book = DotPopper::StatsBook.new(@folder.call("stats"), today: -> { Date.new(2026, 11, 8) })
     keeper = DotPopper::StatsKeeper.new(score_record: @cabinet.score_record, stats_book:, achievements: @achievements, folder: @folder)
-    entitlement = DotPopper::Entitlement.new(Memory.new(pro ? "pro" : nil))
+    entitlement = DotPopper::Entitlement.new(forced: pro)
     @show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, stats_book:, keeper:,
                      achievements: @achievements, entitlement:)
   end

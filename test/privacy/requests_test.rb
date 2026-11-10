@@ -134,9 +134,13 @@ class PrivacyRequestsTest < Minitest::Test
     # automation.rb only refuses connections (Automation.guard!); it opens none.
     # continuity/ed25519.rb takes OpenSSL's signatures, and nothing that connects.
     signatures = File.join(ROOT, "lib/dot_popper/continuity/ed25519.rb")
+    # receipt.rb and receipt/ check stores' signatures and certificates,
+    # and nothing that connects.
+    receipts = ruby_files.select { it.end_with?("dot_popper/receipt.rb") || it.include?("dot_popper/receipt/") }
 
-    assert_empty ruby_files.reject { it.end_with?("groups/link.rb", "dot_popper/automation.rb") || it == signatures }.select { uncommented(it).match?(banned) }
+    assert_empty ruby_files.reject { it.end_with?("groups/link.rb", "dot_popper/automation.rb") || it == signatures || receipts.include?(it) }.select { uncommented(it).match?(banned) }
     assert_empty uncommented(signatures).gsub(/OpenSSL::PKey\b|require "openssl"/, "").scan(banned)
+    receipts.each { assert_empty uncommented(it).gsub(/OpenSSL::(?:PKey|X509|ASN1|BN)\b|require "openssl"/, "").scan(banned), it }
     assert_empty native_files.select { File.read(it).match?(/URLSession|NSURLConnection|HttpURLConnection|OkHttp|Volley/) }
   end
 

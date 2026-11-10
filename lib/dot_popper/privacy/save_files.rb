@@ -38,7 +38,6 @@ module DotPopper
       KeptFile.new(name: "score_record.txt", label: "Your best score", holds: "your best score for each dot size"),
       KeptFile.new(name: "stats.txt", label: "Your statistics", holds: "your statistics: totals, chart bars and goal streak"),
       KeptFile.new(name: "achievements.txt", label: "Your achievements", holds: "your achievements and the day each was earned"),
-      KeptFile.new(name: "entitlement.txt", label: "Whether you bought Pro", holds: "whether Pro was bought"),
       KeptFile.new(name: "license.txt", label: "Your license key, if you bought Pro on the website",
                    holds: "the license key you entered, and the secret this device last chose for it",
                    sent: { key: "your license key", secret: "a secret this device chose" }, sent_when: "If you enter a license key"),
@@ -47,7 +46,7 @@ module DotPopper
       KeptFile.new(name: "server.txt", label: "Your settings", holds: "the address of a server you chose for friend groups while setdef's server is gone"),
       KeptFile.new(name: "group-<host>.txt", label: "Your private code and any unsent score, if you use friend groups", pattern: /\Agroup-[a-z0-9.-]+\.txt\z/,
                    holds: "as group.txt, for a server you chose in place of setdef's, so neither server is sent the other's code"),
-      KeptFile.new(name: "store_answer.txt", label: "Whether you bought Pro", made_by: "the iOS or Android host, read by the game", holds: "what the store last answered about Pro, and its price"),
+      KeptFile.new(name: "store_answer.txt", label: "Whether you bought Pro", made_by: "the iOS or Android host, read by the game", holds: "what the store last answered about Pro: its price and, if you bought Pro, the store's signed receipt for it"),
       KeptFile.new(name: "themes.txt", label: "Your themes", holds: "your themes and which is chosen"),
       KeptFile.new(name: "started_on.txt", label: "The date you first played", holds: "the date you first played, sent to learn which themes are available"),
       KeptFile.new(name: "games.txt", label: "How many free games you have left", holds: "how many free games are left and used today"),
@@ -65,7 +64,7 @@ module DotPopper
       KeptFile.new(name: "cleared.txt", aside: Aside.new(kind: :diagnostics, reason: "Only the names of the backups to replace next time."), holds: "the names of the backups made by the last clearing of your records"),
       KeptFile.new(name: "vulkan_failed.txt", aside: Aside.new(kind: :diagnostics, reason: "A note that lets the game recover after its graphics fail to start."), holds: "that the game's graphics failed to start on this device, and when"),
       KeptFile.new(name: "fake_setdef.txt", aside: Aside.new(kind: :test_only, reason: "Used only in test builds, as a stand-in for setdef's server."), holds: "a pretend server's record of license keys, in test builds only"),
-      KeptFile.new(name: "fake_store.txt", aside: Aside.new(kind: :test_only, reason: "Used only in test builds, never with a real purchase."), holds: "a pretend purchase, in test builds only"),
+      KeptFile.new(name: "fake_store.txt", aside: Aside.new(kind: :test_only, reason: "Used only in test builds, never with a real purchase."), holds: "a pretend purchase's receipt, signed by a test key, in test builds only"),
       KeptFile.new(name: "shot-<number>.png", aside: Aside.new(kind: :developer_only, reason: "Made only under a developer setting that players never use."), pattern: /\Ashot-\d+\.png\z/,
                    made_by: "the game, only under the developer setting DOT_POPPER_SHOTS", holds: "a screenshot")
     ].freeze

@@ -7,9 +7,9 @@ module DotPopper
     # its own SCHEME, and the store's answer comes back in a small file,
     # named in the URL, rewritten whole, which #update reads a few times a
     # second, outside a game. Each answer is the whole state, so one that
-    # is missed costs nothing: whether the player owns the product, its
-    # price as the store writes it, how the last request went, and that
-    # request's number.
+    # is missed costs nothing: whether the player owns the product, the
+    # store's signed receipt for it if so, its price as the store writes
+    # it, how the last request went, and that request's number.
     #
     # That URL and that file are the port: +port+ answers open(url) with
     # whether it was taken, and read, remove and path for the answer.
@@ -19,9 +19,12 @@ module DotPopper
     # is chosen once, by Storefront.for, at the composition root
     # (Shell::App), from the build; nothing above the port differs between
     # them (test/presentation/store_contract.rb, doc/decisions.md).
-    # +entitlement+ (Entitlement) is unlocked the moment the store says the
-    # product is owned. A store that later says otherwise, as after a
-    # refund, locks nothing (doc/decisions.md).
+    # +entitlement+ (Entitlement) is Pro the moment the store hands over a
+    # receipt that verifies (Receipt); an answer's "owned" alone proves
+    # nothing. Nothing is kept: each launch asks the store again, which
+    # answers from its own cache, offline too. A store that later says
+    # otherwise in the same run, as after a refund, locks nothing
+    # (doc/decisions.md, "Pro comes only from proof").
     class Storefront
       SCHEME = "dotpopper-store"
       # The one product, as App Store Connect and the Play Console must
@@ -149,7 +152,7 @@ module DotPopper
         return unless text
 
         answer = text.lines.to_h { it.chomp.split("=", 2) }
-        @entitlement.unlock! if answer["owned"] == "1" && !@entitlement.pro?
+        @entitlement.prove(answer["receipt"]) if answer["receipt"] && !@entitlement.pro?
         return unless answer["answer"].to_i >= @number
 
         @price = answer["price"] unless answer["price"].to_s.empty?

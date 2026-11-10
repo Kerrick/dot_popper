@@ -14,9 +14,16 @@
 //   state=ready           loading, working, ready, pending, cancelled,
 //                         restored, none, failed or unavailable
 //   price=$1.99           the store's own, in the player's currency
+//   receipt=apple:<JWS>   while owned, the transaction as StoreKit signed
+//                         it (jwsRepresentation), which the game
+//                         verifies itself (Receipt::Apple)
 //
 // Only a transaction StoreKit has verified, and that was not refunded,
-// counts as owned. There is no server, so nothing else checks it.
+// counts as owned, and "owned" alone grants nothing: the game takes Pro
+// only from the receipt. Owned purchases come from
+// Transaction.currentEntitlements, which StoreKit answers from the
+// device's cache, so #open asks it first and a launch with no internet
+// still finds Pro. There is no server, so nothing else checks it.
 import Foundation
 import StoreKit
 
@@ -57,6 +64,7 @@ final class StoreKeeper {
   private var path = ""
   private var number = 0
   private var owned = false
+  private var receipt = ""
   private var state = "loading"
   private var price = ""
   private var product: Product?
@@ -95,10 +103,11 @@ final class StoreKeeper {
   private func open() async {
     state = "loading"
     write()
+    await refreshOwned()
+    write()
     do {
       product = try await Product.products(for: [productID]).first
       if let product { price = product.displayPrice }
-      await refreshOwned()
       state = product == nil ? "unavailable" : "ready"
     } catch {
       state = "unavailable"
@@ -116,13 +125,17 @@ final class StoreKeeper {
     write()
     do {
       switch try await product.purchase() {
-      case .success(.verified(let transaction)):
-        await transaction.finish()
-        owned = true
-        state = "ready"
-      case .success(.unverified(_, let error)):
-        NSLog("Dot Popper: StoreKit could not verify the purchase: %@", String(describing: error))
-        state = "failed"
+      case .success(let result):
+        switch result {
+        case .verified(let transaction):
+          await transaction.finish()
+          receipt = result.jwsRepresentation
+          owned = true
+          state = "ready"
+        case .unverified(_, let error):
+          NSLog("Dot Popper: StoreKit could not verify the purchase: %@", String(describing: error))
+          state = "failed"
+        }
       case .pending:
         state = "pending"
       case .userCancelled:
@@ -158,20 +171,22 @@ final class StoreKeeper {
   }
 
   private func refreshOwned() async {
-    var found = false
+    var found = ""
     for await result in Transaction.currentEntitlements {
       if case .verified(let transaction) = result, transaction.productID == productID,
         transaction.revocationDate == nil
       {
-        found = true
+        found = result.jwsRepresentation
       }
     }
-    owned = found
+    receipt = found
+    owned = !found.isEmpty
   }
 
   private func write() {
     let clean = price.replacingOccurrences(of: "\n", with: " ")
-    let text = "answer=\(number)\nowned=\(owned ? 1 : 0)\nstate=\(state)\nprice=\(clean)\n"
+    var text = "answer=\(number)\nowned=\(owned ? 1 : 0)\nstate=\(state)\nprice=\(clean)\n"
+    if owned { text += "receipt=apple:\(receipt)\n" }
     do {
       let url = URL(fileURLWithPath: path)
       try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)

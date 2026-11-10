@@ -11,6 +11,7 @@ end
 require_relative "dot_popper/build"
 require_relative "dot_popper/automation"
 require_relative "dot_popper/rules"
+require_relative "dot_popper/receipt"
 require_relative "dot_popper/entitlement"
 require_relative "dot_popper/visibility"
 require_relative "dot_popper/events"

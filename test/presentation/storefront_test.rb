@@ -28,10 +28,12 @@ class StorefrontTest < Minitest::Test
     def path = "/save dir/answer.txt"
   end
 
+  RECEIPT = DotPopper::Receipt.issue
+
   def setup
     @opener = FakeOpener.new
     @answers = FakeAnswers.new
-    @entitlement = DotPopper::Entitlement.free
+    @entitlement = DotPopper::Entitlement.test
     @store = Storefront.new(port: port, entitlement: @entitlement)
   end
 
@@ -89,7 +91,7 @@ class StorefrontTest < Minitest::Test
     assert_match %r{\Adotpopper-store://open\?n=1&}, @opener.urls.last
     assert_equal :loading, @store.status
 
-    @entitlement.unlock!
+    @entitlement.prove(RECEIPT)
     @store.connect
 
     assert_equal 1, @opener.urls.size
@@ -104,12 +106,31 @@ class StorefrontTest < Minitest::Test
     refute_predicate @entitlement, :pro?
   end
 
-  def test_owning_it_unlocks_whatever_request_the_answer_is_to
+  def test_a_receipt_proves_pro_whatever_request_the_answer_is_to
     @store.connect
+    @store.connect
+    hear("answer=1\nowned=1\nstate=ready\nprice=$1.99\nreceipt=#{RECEIPT}\n")
+  
+    assert_predicate @entitlement, :pro?
+  end
+  
+  # The maintainer's rule: editing a text file must never grant Pro.
+  def test_an_answer_that_only_says_owned_proves_nothing
     @store.connect
     hear("answer=1\nowned=1\nstate=ready\nprice=$1.99\n")
-
-    assert_predicate @entitlement, :pro?
+    hear("answer=1\nowned=1\nstate=ready\nprice=$1.99\nreceipt=pro\n")
+    hear("answer=1\nowned=1\nstate=ready\nprice=$1.99\nreceipt=#{RECEIPT.sub("play:", "play:A")}\n")
+  
+    refute_predicate @entitlement, :pro?
+  end
+  
+  def test_a_receipt_the_test_key_signed_proves_nothing_in_a_store_build
+    store = Storefront.new(port:, entitlement: entitlement = DotPopper::Entitlement.free)
+    store.connect
+    @answers.text = "answer=1\nowned=1\nstate=ready\nprice=$1.99\nreceipt=#{RECEIPT}\n"
+    store.update(Storefront::EVERY)
+  
+    refute_predicate entitlement, :pro?
   end
 
   def test_an_older_answer_does_not_overturn_a_newer_request
@@ -157,14 +178,14 @@ class StorefrontTest < Minitest::Test
   end
 
   def test_a_store_that_later_says_not_owned_takes_nothing_back
-    @entitlement.unlock!
+    @entitlement.prove(RECEIPT)
     hear("answer=9\nowned=0\nstate=ready\n")
 
     assert_predicate @entitlement, :pro?
   end
 
   def test_the_answer_is_read_only_every_so_often
-    @answers.text = "answer=0\nowned=1\nstate=ready\n"
+    @answers.text = "answer=0\nowned=1\nstate=ready\nreceipt=#{RECEIPT}\n"
     @store.update(Storefront::EVERY / 2)
 
     refute_predicate @entitlement, :pro?
@@ -203,7 +224,7 @@ class StorefrontTest < Minitest::Test
 
   def test_a_store_is_not_read_during_a_game
     show, = offer_show
-    @answers.text = "answer=0\nowned=1\nstate=ready\n"
+    @answers.text = "answer=0\nowned=1\nstate=ready\nreceipt=#{RECEIPT}\n"
     show.primary
     show.update(Storefront::EVERY * 2)
 

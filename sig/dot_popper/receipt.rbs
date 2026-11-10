@@ -1,0 +1,36 @@
+module DotPopper
+  module Receipt
+    class Trust
+      attr_reader apple_roots: Array[String]
+      attr_reader play_keys: Array[String]
+      attr_reader app_id: String
+      attr_reader product_id: String
+
+      def initialize: (apple_roots: Array[String], play_keys: Array[String], app_id: String, product_id: String) -> void
+    end
+
+    APP_ID: String
+    PRODUCT_ID: String
+    APPLE_ROOT_G3: String
+    PLAY_KEYS: Array[String]
+    STORES: Trust
+    TEST: Trust
+
+    module TestKey
+      PRIVATE: String
+      PUBLIC: String
+    end
+
+    def self.valid?: (untyped text, Trust trust) -> bool
+    def self.load_openssl: () -> void
+    def self.issue: (?key: String, ?app_id: String, ?product_id: String, ?state: Integer, ?at: Time) -> String
+
+    module Apple
+      def self.valid?: (String jws, Trust trust) -> bool
+    end
+
+    module Play
+      def self.valid?: (String text, Trust trust) -> bool
+    end
+  end
+end

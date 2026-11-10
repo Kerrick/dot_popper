@@ -25,6 +25,7 @@ Dot Popper's Ubiquitous Language. Code, screens, docs and the server use the sam
 | **Free** | The game without a purchase. | trial, demo |
 | **Pro** | The one purchase: unlimited games, achievements, themes, friend groups. Nothing in Pro changes how the game plays or scores. | paid, the full game, premium |
 | **license key** | The signed text a website purchase of Pro sends by email, which "Paste license key" enters. One key holds Pro on one device at a time. Store copies have none: their store keeps the purchase. | serial, code, activation, product key |
+| **receipt** | A store's signed record of a purchase of Pro (StoreKit's signed transaction, Play's signed purchase), which the game verifies itself, offline, each launch. Code and docs only; no screen shows the word. | token, flag |
 | **Theme** | A set of art and sound for the game. | Looks, skin, wardrobe |
 | **current theme** | The theme in use now. | worn |
 | **use** | What a player does with a theme, as in "Use Ghost". | wear, dress, equip |

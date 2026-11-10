@@ -10,12 +10,12 @@ class ThemeKeeperTest < Minitest::Test
 
   def setup
     @store = Memory.new
-    @paid = Memory.new
+    @paid = false
   end
 
   def theme_keeper(paid: true)
-    @paid.write("pro") if paid
-    ThemeKeeper.new(@store, themes: THEMES, entitlement: DotPopper::Entitlement.new(@paid))
+    @paid = true if paid
+    ThemeKeeper.new(@store, themes: THEMES, entitlement: DotPopper::Entitlement.new(forced: @paid))
   end
 
   def test_until_the_server_says_so_there_is_no_trace_of_a_theme
@@ -78,8 +78,8 @@ class ThemeFeedTest < Minitest::Test
     @store = Memory.new
     @dated = Memory.new
     @worker = FakeWorker.new
-    @paid = Memory.new
-    @theme_keeper = ThemeKeeper.new(@store, themes: Style::THEMES, entitlement: DotPopper::Entitlement.new(@paid))
+    @paid = false
+    @theme_keeper = ThemeKeeper.new(@store, themes: Style::THEMES, entitlement: DotPopper::Entitlement.new(forced: @paid))
     @feed = ThemeFeed.new(worker: @worker, theme_keeper: @theme_keeper, store: @dated, today: -> { Date.new(2026, 11, 8) })
   end
 

@@ -9,7 +9,7 @@ class FreeGamesTest < Minitest::Test
   def setup
     @store = Memory.new
     @day = Date.new(2026, 11, 8)
-    @entitlement = DotPopper::Entitlement.new(Memory.new)
+    @entitlement = DotPopper::Entitlement.test
   end
 
   def games(metered: true, **) = FreeGames.new(@store, today: -> { @day }, entitlement: @entitlement, metered:, **)
@@ -95,7 +95,7 @@ class FreeGamesTest < Minitest::Test
   end
 
   def test_the_pro_version_counts_nothing_and_never_refuses
-    @entitlement.unlock!
+    @entitlement.prove(DotPopper::Receipt.issue)
     games = games(bank: 0, daily: 0)
 
     assert_predicate games, :can_play?
@@ -107,7 +107,7 @@ class FreeGamesTest < Minitest::Test
   def test_buying_part_way_stops_the_counting_and_keeps_what_was_left
     games = games()
     (FreeGames::DAILY + 1).times { games.spend! }
-    @entitlement.unlock!
+    @entitlement.prove(DotPopper::Receipt.issue)
 
     10.times { assert games.spend! }
     assert_equal FreeGames::BANK - 1, games.bank_left
@@ -116,13 +116,13 @@ class FreeGamesTest < Minitest::Test
   def test_buying_when_out_of_games_lets_play_go_on
     games = games(bank: 0)
     FreeGames::DAILY.times { games.spend! }
-    @entitlement.unlock!
+    @entitlement.prove(DotPopper::Receipt.issue)
 
     assert_predicate games, :can_play?
   end
 
   def test_forcing_the_pro_version_counts_nothing
-    forced = DotPopper::Entitlement.new(Memory.new, forced: true)
+    forced = DotPopper::Entitlement.new(forced: true)
     games = FreeGames.new(@store, today: -> { @day }, entitlement: forced)
 
     5.times { assert games.spend! }

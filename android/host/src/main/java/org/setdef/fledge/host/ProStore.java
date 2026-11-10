@@ -5,6 +5,7 @@ package org.setdef.fledge.host;
 
 import android.app.Activity;
 import android.net.Uri;
+import android.util.Base64;
 import android.util.Log;
 import com.android.billingclient.api.AcknowledgePurchaseParams;
 import com.android.billingclient.api.BillingClient;
@@ -38,11 +39,19 @@ import java.util.List;
  *   state=ready       loading, working, ready, pending, cancelled,
  *                     restored, none, failed or unavailable
  *   price=$1.99       the store's own, in the player's currency
+ *   receipt=play:J:S  while owned, the purchase's original JSON (J) and
+ *                     Play's signature of it (S), each in Base64, which
+ *                     the game verifies itself (Receipt::Play)
  * </pre>
  *
  * Only a purchase Play reports as PURCHASED counts as owned, never a
  * pending one, and each is acknowledged, or Play refunds it after three
- * days. There is no server, so nothing else checks it. Everything here
+ * days. "owned" alone grants nothing: the game takes Pro only from the
+ * receipt. Owned purchases are asked for first when the game opens the
+ * store, before the price, since Play answers them from the Play Store
+ * app's cache and the price needs the network; so a launch with no
+ * internet still finds Pro (inference: Play Billing's reference does not
+ * say so). There is no server, so nothing else checks it. Everything here
  * runs on the main thread: requests are posted to it, and Play Billing
  * calls its listeners on it.
  */
@@ -55,6 +64,7 @@ final class ProStore implements PurchasesUpdatedListener {
     private File file;
     private int number;
     private boolean owned;
+    private String receipt = "";
     private String state = "loading";
     private String price = "";
     private ProductDetails details;
@@ -124,7 +134,23 @@ final class ProStore implements PurchasesUpdatedListener {
         });
     }
 
+    /** What this player owns first, from Play's cache, then the price. */
     private void open() {
+        QueryPurchasesParams params = QueryPurchasesParams.newBuilder()
+            .setProductType(BillingClient.ProductType.INAPP)
+            .build();
+        client.queryPurchasesAsync(params, (result, purchases) -> activity.runOnUiThread(() -> {
+            if (result.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                take(purchases);
+                write();
+            } else {
+                Log.w(TAG, "purchases: " + result.getDebugMessage());
+            }
+            price();
+        }));
+    }
+
+    private void price() {
         QueryProductDetailsParams params = QueryProductDetailsParams.newBuilder()
             .setProductList(List.of(QueryProductDetailsParams.Product.newBuilder()
                 .setProductId(productId)
@@ -143,7 +169,7 @@ final class ProStore implements PurchasesUpdatedListener {
             if (offer != null) {
                 price = offer.getFormattedPrice();
             }
-            queryOwned(false);
+            finish("ready");
         }));
     }
 
@@ -209,6 +235,8 @@ final class ProStore implements PurchasesUpdatedListener {
                 continue;
             }
             owned = true;
+            receipt = "play:" + Base64.encodeToString(purchase.getOriginalJson().getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP)
+                + ":" + purchase.getSignature().replace("\n", "");
             if (!purchase.isAcknowledged()) {
                 AcknowledgePurchaseParams params = AcknowledgePurchaseParams.newBuilder()
                     .setPurchaseToken(purchase.getPurchaseToken())
@@ -225,7 +253,8 @@ final class ProStore implements PurchasesUpdatedListener {
 
     private void write() {
         String clean = price.replace('\n', ' ');
-        String text = "answer=" + number + "\nowned=" + (owned ? 1 : 0) + "\nstate=" + state + "\nprice=" + clean + "\n";
+        String text = "answer=" + number + "\nowned=" + (owned ? 1 : 0) + "\nstate=" + state + "\nprice=" + clean + "\n"
+            + (owned ? "receipt=" + receipt + "\n" : "");
         try {
             File directory = file.getAbsoluteFile().getParentFile();
             directory.mkdirs();

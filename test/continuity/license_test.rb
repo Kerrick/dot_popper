@@ -40,6 +40,19 @@ class LicenseTest < Minitest::Test
     assert_equal :same, license.enter(@key.text.downcase)
   end
 
+  # The maintainer's rule: editing a text file must never grant Pro. The
+  # saved key is verified again at each launch, offline.
+  def test_license_txt_is_pro_only_while_it_holds_a_key_that_verifies
+    saved = Memory.new
+    C::License.new(saved, pins: C::TEST_PINS).enter(@key.text)
+
+    assert_predicate C::License.new(Memory.new(saved.read), pins: C::TEST_PINS), :pro?, "a relaunch, offline"
+    refute_predicate C::License.new(Memory.new(saved.read), pins: C::PINNED), :pro?, "a store build"
+    ["key: pro\n", "pro: yes\nregistered: yes\n", "key: #{@key.text.sub(/.\z/) { it == "0" ? "1" : "0" }}\n", "4"].each do |text|
+      refute_predicate C::License.new(Memory.new(text), pins: C::TEST_PINS), :pro?, text
+    end
+  end
+
   def test_entering_a_key_registers_it_and_checks_keep_it_current
     watch = device
     watch.license.enter(@key.text)

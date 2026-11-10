@@ -68,7 +68,7 @@ module DotPopper
         pins = trusted_pins
         license = Continuity::License.new(SaveFile.new(name: "license.txt"), pins:)
         @watch = watch(license, pins, test_build)
-        entitlement = Entitlement.new(SaveFile.new(name: "entitlement.txt"), forced: Entitlement.forced?(@env, os:), license:)
+        entitlement = Entitlement.new(forced: Entitlement.forced?(@env, os:), license:, trust: trusted_receipts)
         clipboard = Clipboard.new
         @server_choice = Presentation::ServerChoice.new(SaveFile.new(name: "server.txt"), gone: @gone, clipboard:)
         theme_keeper = Presentation::ThemeKeeper.new(SaveFile.new(name: "themes.txt"), themes: Style::THEMES, entitlement:)
@@ -446,6 +446,10 @@ module DotPopper
       # keys in a test build, setdef's in a store build, whatever the
       # environment says.
       def trusted_pins = Build.store?(@channel) ? Continuity::PINNED : Continuity::TEST_PINS
+
+      # Whose receipts prove Pro: the stores' in a store build, and in a
+      # test build only the fake store's, by the channel alone.
+      def trusted_receipts = Build.store?(@channel) ? Receipt::STORES : Receipt::TEST
 
       # What asks whether setdef is gone, and where a license key is: the
       # test build's fake, in this process, sending nothing anywhere; the

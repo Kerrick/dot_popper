@@ -16,3 +16,13 @@ if channel.nil?
 end
 
 puts "BUILD_CHANNEL is #{channel.inspect}"
+
+# A Google Play purchase proves Pro only by the app's own Play key
+# (DotPopper::Receipt::PLAY_KEYS), which only the Play Console shows, so a
+# store release cannot ship until it is pinned (doc/decisions.md, "Pro
+# comes only from proof").
+if DotPopper::Receipt::PLAY_KEYS.empty?
+  warn "Receipt::PLAY_KEYS is empty: no Google Play purchase would prove Pro. Pin the app's licensing key " \
+       "from the Play Console in lib/dot_popper/receipt/pins.rb before tagging."
+  exit 1
+end

@@ -28,7 +28,7 @@ class RedesignTest < Minitest::Test
     @book.record(DotPopper::GameStats.start.with(most_dots_in_a_row: 19), DotPopper::SizeClass::MEDIUM) if played
     @earned = DotPopper::Achievements.new(DotPopper::ScoreRecord::Memory.new)
     Show.new(cabinet: @cabinet, layout: layout(1200, 800), sounds: @sounds, radius: R, stats_book: @book, achievements: @earned,
-             entitlement: pro ? DotPopper::Entitlement.new(DotPopper::ScoreRecord::Memory.new, forced: true) : DotPopper::Entitlement.free)
+             entitlement: pro ? DotPopper::Entitlement.new(forced: true) : DotPopper::Entitlement.free)
   end
 
   def middle(rect) = [rect.center_x, rect.center_y]
@@ -135,7 +135,7 @@ class RedesignTest < Minitest::Test
   # Buy goes.
   def test_a_free_tap_on_a_theme_opens_the_offer_over_themes_and_back_returns
     store = Store.new
-    entitlement = DotPopper::Entitlement.new(DotPopper::ScoreRecord::Memory.new)
+    entitlement = DotPopper::Entitlement.test
     cabinet = DotPopper::Cabinet.new(field(1200, 800), random: Random.new(2))
     s = Show.new(cabinet:, layout: layout(1200, 800), sounds: FakeSounds.new, radius: R, entitlement:, storefront: store,
                  theme_keeper: ThemeKeeper.new(DotPopper::ScoreRecord::Memory.new, themes: Style::THEMES, entitlement:))
@@ -145,7 +145,7 @@ class RedesignTest < Minitest::Test
     assert_equal :themes, s.offer_focus
     assert_includes s.controls.map(&:name), :buy
 
-    entitlement.unlock!
+    entitlement.prove(DotPopper::Receipt.issue)
     s.update(0.1)
     assert_equal Style::WORDS.offer[:thanks], s.offer_status
     refute_includes s.controls.map(&:name), :buy

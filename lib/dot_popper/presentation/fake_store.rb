@@ -13,8 +13,13 @@ module DotPopper
     #
     # The +ledger+ (read and write(text), as ScoreRecord's store) is the
     # store's own record of what this install bought, apart from the
-    # game's Entitlement, as Apple's and Google's are; so Restore finds a
-    # purchase, and a launch sees one, the way a real store would.
+    # game's Entitlement, as Apple's and Google's caches are; so Restore
+    # finds a purchase, and a launch sees one, the way a real store would.
+    # What it keeps is the receipt itself, in Play's form, signed by the
+    # test key (Receipt.issue), and every answer that owns Pro hands it
+    # over, so the game proves a fake purchase by the code that proves a
+    # real one. Only a test build trusts that key (Receipt::TEST); a ledger
+    # edited to say anything else is a receipt that does not verify.
     #
     # +fails+ takes the part of the store going wrong, for a developer
     # (FAILS_BY) and never on any screen: "refused", the system would not
@@ -28,7 +33,6 @@ module DotPopper
       # How many reads of the answer, a quarter second apart, a request
       # takes to come back.
       READS = 2
-      OWNED = "owned"
 
       # The failure +env+ asks for, or nil.
       def self.failure(env) = env.fetch(FAILS_BY, "").then { it if FAILURES.include?(it) }
@@ -95,7 +99,7 @@ module DotPopper
         return "failed" if @price.empty?
         return @fails if %w[failed cancelled pending].include?(@fails)
 
-        @ledger.write(OWNED)
+        @ledger.write(Receipt.issue)
         "ready"
       end
 
@@ -105,10 +109,13 @@ module DotPopper
         owned? ? "restored" : "none"
       end
 
-      def owned? = @ledger.read.to_s.strip == OWNED
+      def receipt = @ledger.read.to_s.strip
+
+      def owned? = !receipt.empty?
 
       def write(state)
         @text = "answer=#{@asked.last}\nowned=#{owned? ? 1 : 0}\nstate=#{state}\nprice=#{@price}\n"
+        @text += "receipt=#{receipt}\n" if owned?
       end
     end
   end

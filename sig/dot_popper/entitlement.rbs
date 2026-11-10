@@ -1,23 +1,24 @@
 module DotPopper
   class Entitlement
-    PRO: String
     FORCED_BY: String
     DESKTOP_PRO: bool
     STORE_SYSTEMS: Array[String]
 
-
-    @store: ScoreRecord::_Store
     @forced: bool
     @license: _License?
+    @trust: Receipt::Trust
+    @proven: bool
+    @refused: String?
 
     interface _License
       def pro?: () -> bool
     end
 
     def self.free: () -> Entitlement
+    def self.test: () -> Entitlement
     def self.forced?: (untyped env, ?os: String?) -> bool
-    def initialize: (ScoreRecord::_Store store, ?forced: bool, ?license: _License?) -> void
+    def initialize: (?forced: bool, ?license: _License?, ?trust: Receipt::Trust) -> void
     def pro?: () -> bool
-    def unlock!: () -> untyped
+    def prove: (String? receipt) -> bool
   end
 end

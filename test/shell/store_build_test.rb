@@ -38,6 +38,14 @@ class StoreBuildTest < Minitest::Test
     assert key.valid?(app(nil).send(:trusted_pins))
   end
 
+  def test_only_a_test_build_takes_the_fake_stores_receipts
+    receipt = DotPopper::Receipt.issue
+
+    assert_same DotPopper::Receipt::STORES, app("app-store").send(:trusted_receipts)
+    refute DotPopper::Entitlement.new(trust: app("app-store").send(:trusted_receipts)).prove(receipt)
+    assert DotPopper::Entitlement.new(trust: app(nil).send(:trusted_receipts)).prove(receipt)
+  end
+
   def test_the_free_game_limit_counts_in_a_store_build_even_for_a_bot_or_a_scenario
     assert app("website").send(:player?)
     refute app(nil).send(:player?)

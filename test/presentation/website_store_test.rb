@@ -17,7 +17,7 @@ class WebsiteStoreTest < Minitest::Test
     @gone_store = Memory.new
     @gone = C::Gone.new(@gone_store)
     @license = C::License.new(Memory.new, pins: C::TEST_PINS)
-    @entitlement = DotPopper::Entitlement.new(Memory.new, license: @license)
+    @entitlement = DotPopper::Entitlement.new(license: @license)
     @entered = 0
     @store = WebsiteStore.new(checkout: FakeCheckout.new(clipboard: @clipboard), license: @license, gone: @gone, clipboard: @clipboard,
                               entered: -> { @entered += 1 })

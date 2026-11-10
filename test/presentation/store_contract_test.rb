@@ -17,6 +17,19 @@ class FakeStoreContractTest < Minitest::Test
 
   def relaunched(store) = new_store(ledger: @ledgers.fetch(store))
 
+  # The maintainer's rule: editing a text file must never grant Pro.
+  def test_a_ledger_edited_to_say_owned_proves_nothing
+    ledger = DotPopper::ScoreRecord::Memory.new
+    ledger.write("owned")
+    entitlement = DotPopper::Entitlement.test
+    front = Storefront.new(port: new_store(ledger:), entitlement:)
+    front.connect
+    settle(front) { front.price }
+    3.times { front.update(Storefront::EVERY) }
+
+    refute_predicate entitlement, :pro?
+  end
+
   def test_a_failure_is_for_a_developers_setting_only
     assert_nil FakeStore.failure({})
     assert_nil FakeStore.failure({ "DOT_POPPER_FAKE_STORE_FAILS" => "nonsense" })
@@ -41,6 +54,7 @@ class NativeStoreContractTest < Minitest::Test
       @path = path
       @price = ""
       @owned = false
+      @receipt = DotPopper::Receipt.issue
     end
 
     def open(url)
@@ -89,7 +103,7 @@ class NativeStoreContractTest < Minitest::Test
     end
 
     def write(state)
-      File.write(@path, "answer=#{@number}\nowned=#{@owned ? 1 : 0}\nstate=#{state}\nprice=#{@price}\n")
+      File.write(@path, "answer=#{@number}\nowned=#{@owned ? 1 : 0}\nstate=#{state}\nprice=#{@price}\n#{"receipt=#{@receipt}\n" if @owned}")
     end
   end
 

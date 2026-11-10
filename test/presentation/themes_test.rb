@@ -8,13 +8,13 @@ class ThemesTest < Minitest::Test
 
   def setup
     @sounds = FakeSounds.new
-    @paid = DotPopper::ScoreRecord::Memory.new
+    @paid = false
     @day = Date.new(2026, 11, 8)
   end
 
   def show(paid:, unlocked: [])
-    @paid.write("pro") if paid
-    entitlement = DotPopper::Entitlement.new(@paid)
+    @paid = true if paid
+    entitlement = DotPopper::Entitlement.new(forced: @paid)
     @theme_keeper = ThemeKeeper.new(DotPopper::ScoreRecord::Memory.new, themes: Style::THEMES, entitlement:)
     @theme_keeper.receive(unlocked)
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), score_record: DotPopper::ScoreRecord.new(DotPopper::ScoreRecord::Memory.new))

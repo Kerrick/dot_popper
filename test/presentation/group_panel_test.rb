@@ -28,7 +28,7 @@ class GroupPanelTest < Minitest::Test
     @sounds = FakeSounds.new
     @worker = HandWorker.new
     @session = Groups::Session.new(store: DotPopper::ScoreRecord::Memory.new, worker: @worker)
-    @pro = DotPopper::Entitlement.new(DotPopper::ScoreRecord::Memory.new, forced: true)
+    @pro = DotPopper::Entitlement.new(forced: true)
     @cabinet = DotPopper::Cabinet.new(field)
     build
   end
