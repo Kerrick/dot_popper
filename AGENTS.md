@@ -30,7 +30,7 @@ Follow `~/.claude/skills/trunk-based-development/SKILL.md`.
 - Work straight on `trunk` in small green commits, rebasing first. Branches are rare, last minutes, and are never built on.
 - Never push to find out whether CI passes. Before each push, run what CI runs that your change could affect: `bundle exec rake`, the GUI scenarios, and for startup, the shell or the bot, the packaged-app playthrough and the Android emulator check.
 - A red trunk comes first. Fix it within minutes, or revert the commit that broke it.
-- Don't tag, and don't change `fledge.yml`'s version, unless the maintainer says so.
+- Before 1.0.0, a green trunk may be tagged as a playtest release (`v0.X.Y`) without asking: bump `fledge.yml`'s version in the tagged commit. From 1.0.0 on, tag only when the maintainer says so.
 - Commits are Conventional Commits with a prose body, ending with your `Co-Authored-By` line.
 
 ## Tests
