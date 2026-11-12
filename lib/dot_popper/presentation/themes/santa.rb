@@ -25,11 +25,11 @@ module DotPopper
                                 glow_amount: 0.35, edge: hex["#050818"], stars: 0.9),
               wordmark: "assets/fonts/Fredoka-Bold.ttf", title_dots: true,
               sounds: {
-                pop: Patch.new(notes: [Note.new(wave: :sine, from: 2349, length: 0.12, attack: 0.001, volume: 0.45),
-                                       Note.new(wave: :sine, from: 3136, start: 0.03, length: 0.1, attack: 0.001, volume: 0.35),
-                                       Note.new(wave: :sine, from: 2793, start: 0.06, length: 0.14, attack: 0.001, volume: 0.35),
+                pop: Patch.new(notes: [Note.new(wave: :sine, from: 523, length: 0.12, attack: 0.001, volume: 0.45),
+                                       Note.new(wave: :sine, from: 698, start: 0.03, length: 0.1, attack: 0.001, volume: 0.35),
+                                       Note.new(wave: :sine, from: 622, start: 0.06, length: 0.14, attack: 0.001, volume: 0.35),
                                        Note.new(wave: :noise, from: 1, length: 0.1, attack: 0.002, volume: 0.12),
-                                       Note.new(wave: :sine, from: 4699, start: 0.06, length: 0.05, attack: 0.001, volume: 0.1)]),
+                                       Note.new(wave: :sine, from: 1047, start: 0.06, length: 0.05, attack: 0.001, volume: 0.1)]),
                 bonk: Patch.new(notes: [Note.new(wave: :triangle, from: 130, to: 98, length: 0.32, attack: 0.03, volume: 0.9),
                                         Note.new(wave: :sine, from: 196, to: 147, length: 0.3, attack: 0.03, volume: 0.4)])
               }

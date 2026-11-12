@@ -26,12 +26,12 @@ module DotPopper
                                 glow_amount: 0.55, edge: hex["#06100d"], stars: 0.0),
               wordmark: "assets/fonts/Fredoka-Bold.ttf", title_dots: true,
               sounds: {
-                pop: Patch.new(notes: [Note.new(wave: :sine, from: 2637, length: 0.26, attack: 0.001, volume: 0.55),
-                                       Note.new(wave: :sine, from: 3951, length: 0.14, attack: 0.001, volume: 0.25),
+                pop: Patch.new(notes: [Note.new(wave: :sine, from: 523, length: 0.26, attack: 0.001, volume: 0.55),
+                                       Note.new(wave: :sine, from: 784, length: 0.14, attack: 0.001, volume: 0.25),
                                        Note.new(wave: :noise, from: 1, length: 0.05, attack: 0.001, volume: 0.35),
-                                       Note.new(wave: :sine, from: 4186, start: 0.05, length: 0.06, attack: 0.001, volume: 0.18),
-                                       Note.new(wave: :sine, from: 5274, start: 0.09, length: 0.05, attack: 0.001, volume: 0.14),
-                                       Note.new(wave: :sine, from: 3520, start: 0.13, length: 0.07, attack: 0.001, volume: 0.12)]),
+                                       Note.new(wave: :sine, from: 831, start: 0.05, length: 0.06, attack: 0.001, volume: 0.18),
+                                       Note.new(wave: :sine, from: 1047, start: 0.09, length: 0.05, attack: 0.001, volume: 0.14),
+                                       Note.new(wave: :sine, from: 698, start: 0.13, length: 0.07, attack: 0.001, volume: 0.12)]),
                 bonk: Patch.new(notes: [Note.new(wave: :noise, from: 1, length: 0.09, attack: 0.002, volume: 0.45),
                                         Note.new(wave: :triangle, from: 170, to: 90, length: 0.22, volume: 0.9)])
               }

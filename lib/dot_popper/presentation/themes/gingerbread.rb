@@ -29,9 +29,9 @@ module DotPopper
                 # A gumdrop's soft "boop": a light tap, one short note that
                 # lifts a little, and a single small bounce above it.
                 pop: Patch.new(notes: [Note.new(wave: :noise, from: 1, length: 0.008, attack: 0.0005, volume: 0.25),
-                                       Note.new(wave: :sine, from: 660, to: 790, length: 0.06, attack: 0.003, volume: 0.6),
-                                       Note.new(wave: :triangle, from: 330, to: 395, length: 0.06, attack: 0.003, volume: 0.2),
-                                       Note.new(wave: :sine, from: 990, start: 0.05, length: 0.045, attack: 0.002, volume: 0.25)]),
+                                       Note.new(wave: :sine, from: 555, to: 664, length: 0.06, attack: 0.003, volume: 0.6),
+                                       Note.new(wave: :triangle, from: 277, to: 332, length: 0.06, attack: 0.003, volume: 0.2),
+                                       Note.new(wave: :sine, from: 832, start: 0.05, length: 0.045, attack: 0.002, volume: 0.25)]),
                 bonk: Patch.new(notes: [Note.new(wave: :triangle, from: 140, to: 90, length: 0.24, attack: 0.01, volume: 0.9),
                                         Note.new(wave: :noise, from: 1, length: 0.04, attack: 0.002, volume: 0.2)])
               }

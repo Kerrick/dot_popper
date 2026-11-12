@@ -28,8 +28,8 @@ module DotPopper
               sounds: {
                 pop: Patch.new(notes: [Note.new(wave: :sine, from: 260, to: 520, length: 0.09, volume: 0.8),
                                        Note.new(wave: :noise, from: 1, length: 0.025, attack: 0.002, volume: 0.25),
-                                       Note.new(wave: :sine, from: 1568, start: 0.05, length: 0.14, attack: 0.001, volume: 0.3),
-                                       Note.new(wave: :sine, from: 3136, start: 0.05, length: 0.06, attack: 0.001, volume: 0.1)]),
+                                       Note.new(wave: :sine, from: 784, start: 0.05, length: 0.14, attack: 0.001, volume: 0.3),
+                                       Note.new(wave: :sine, from: 1568, start: 0.05, length: 0.06, attack: 0.001, volume: 0.1)]),
                 bonk: Patch.new(notes: [Note.new(wave: :triangle, from: 150, to: 80, length: 0.24, volume: 1.0),
                                         Note.new(wave: :noise, from: 1, length: 0.06, attack: 0.002, volume: 0.45)])
               }
