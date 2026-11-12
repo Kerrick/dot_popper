@@ -1,5 +1,5 @@
 # Checks ios/host/Host/Store.swift against a StoreKit configuration file in
-# the iOS Simulator (doc/decisions.md): xcodegen, then xcodebuild test. It
+# the iOS Simulator (doc/design/store-and-pro.md): xcodegen, then xcodebuild test. It
 # builds no game: a bare app holds the real Store.swift and an Objective-C
 # file that calls it as main.m does, and the test target buys, restores and
 # fails through StoreKit's test session. Settings match the host project

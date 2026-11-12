@@ -18,7 +18,7 @@ module DotPopper
   # full bank. A player's clock is trusted, as the other saves trust it.
   class FreeGames
     # The one-time bank, and the games each day. Both are provisional
-    # (doc/decisions.md, "Free games").
+    # (ADR-0012).
     BANK = 20
     DAILY = 3
 

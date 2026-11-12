@@ -7,7 +7,7 @@
 // DotPopperApplication, in main.m, hands it here on the main thread, as
 // it does share URLs. The answer goes into the file the URL names, the
 // whole state each time, written atomically, which the game reads a few
-// times a second (doc/decisions.md):
+// times a second (ADR-0008; doc/design/store-and-pro.md):
 //
 //   answer=7              the number of the request this answers
 //   owned=1               whether this player has the product

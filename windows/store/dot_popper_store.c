@@ -22,7 +22,7 @@
 //                         Store ID, from the license Windows holds
 //
 // The Microsoft Store gives an app no signed receipt for an add-on
-// (doc/decisions.md), so "receipt" here is Windows' word, which the game
+// (ADR-0010), so "receipt" here is Windows' word, which the game
 // can only take, and only down this pipe (Receipt::Microsoft). Licenses
 // come from StoreContext.GetAppLicenseAsync, which Windows answers from
 // its own license store, so a launch with no internet should still find

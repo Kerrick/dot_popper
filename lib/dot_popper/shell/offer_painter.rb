@@ -81,7 +81,7 @@ module DotPopper
 
       # The achievement tapped, on a card: its sign in the grid's dashed
       # ring, its name, and how to earn it. No progress: that is what Pro
-      # adds (doc/decisions.md).
+      # adds (doc/design/store-and-pro.md).
       def achievement(show, rect)
         id = show.offer_achievement or return
         Card.new(pen:).draw(rect)

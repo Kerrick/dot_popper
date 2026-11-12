@@ -3,7 +3,7 @@
 # Makes this working copy a store build: sets DotPopper::Build::CHANNEL in
 # lib/dot_popper/build.rb to CHANNEL, before `lota fuse` builds the app, so
 # the channel is fixed in the app and nothing a player sets can change it
-# (doc/decisions.md, "A store build ignores developer settings"). CI runs
+# (ADR-0010). CI runs
 # it in a store build's job only; the repository's own file stays nil, a
 # test build. Refuses a channel no store build is made for.
 #

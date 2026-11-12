@@ -124,7 +124,7 @@ No type error detected. 🫖
 
 - `bundle exec rake test` runs the unit tests alone, and `bundle exec rake steep` runs Steep alone.
 - `bundle exec rake test:gui` plays the scenarios in `test/gui/scenarios`, except the galleries, which render screens to compare by eye, in real windows. It needs a display, so `rake` leaves it out. CI runs it on every push and pull request, on Linux, under a virtual display with software OpenGL.
-- `bundle exec ruby script/simulate.rb 20` plays 20 games on each of six screens with a model player, with each dot size, and prints a table of scores, game lengths, and penalties. A run of 20 games finished in 36 seconds on an M1 Max. [Decisions made overnight](decisions.md) has the rules its numbers set.
+- `bundle exec ruby script/simulate.rb 20` plays 20 games on each of six screens with a model player, with each dot size, and prints a table of scores, game lengths, and penalties. A run of 20 games finished in 36 seconds on an M1 Max. [The rules](design/rules.md) has what its numbers set, and [Development](design/development.md) how it runs.
 
 ## Building the app
 
@@ -155,7 +155,9 @@ The iPhone, iPad, and Android builds are experimental, and are not released to p
 | Resource | What it holds |
 | --- | --- |
 | [Packaging Dot Popper](../PACKAGING.md) | Getting a build, how `lota fuse` and Fledge put the app together, building on your own computer, what CI checks, and the playtest kits |
-| [Decisions made overnight](decisions.md) | Each call made about the rules, crowding, presentation, and LÖVE's engine, with why, and what it would take to reverse it |
+| [Architecture](architecture.md) | How the code is divided into the core, the presentation and the shell, what each may depend on, and how a press, a frame and a save move through it |
+| [Decision log](adr/README.md) | The architecturally significant decisions, one ADR each, with the options weighed, why, and what each costs |
+| [Design documents](architecture.md#design-documents) | How each area works now: the rules, Stats, screens, the tutorial, look and sound, input, platforms, the store and Pro, friend groups, privacy, and development |
 | [Why Ruby](why_ruby.md) | Dot Popper's Ruby beside the Lua a LÖVE game would use, from values and blocks to Ractors, and where Lua wins |
 | [Dot Popper on an iPad](ios.md) | What the iOS app needs, how the game behaves there, and how to check a run in the Simulator |
 | [Publishing Dot Popper](publishing.md) | What each store needs, from Google Play to Homebrew, and how the game's licenses stand |

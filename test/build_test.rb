@@ -5,7 +5,7 @@ require_relative "test_helper"
 # A store build is decided by the build alone. Nothing a player can set, in
 # the environment, a file or an argument, selects the test keys, grants Pro,
 # changes the server, or skips the free-game limit in one
-# (doc/decisions.md, "A store build ignores developer settings").
+# (ADR-0010).
 class BuildTest < Minitest::Test
   STORE = "website"
   SETTINGS = {

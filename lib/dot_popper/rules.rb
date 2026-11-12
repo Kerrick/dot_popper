@@ -31,7 +31,7 @@ module DotPopper
     # wrong tap starts the count over; a bonus dot already earned stays,
     # and popping it starts the count over too. Nothing about it is
     # random: the same pops always earn it. The numbers were chosen with
-    # script/simulate.rb (see doc/decisions.md).
+    # script/simulate.rb (see doc/design/rules.md).
     class Bonus < Data.define(:dots_in_a_row, :points, :seconds); end
 
     BONUS = Bonus.new(dots_in_a_row: 8, points: 3, seconds: 3.0)
@@ -44,7 +44,8 @@ module DotPopper
     # under a mouse. A draw that offers none tries another velocity, up to
     # SPAWN_TRIES times, then another place and velocity, up to SPAWN_TRIES
     # more, and keeps its last draw if every try fails, so a dot always
-    # spawns. See Spawner, and doc/decisions.md for how rarely it applies.
+    # spawns. See Spawner, ADR-0002, and doc/design/rules.md for how rarely it
+    # applies.
     TOUCH_TARGET = 44
     SPAWN_LOOKAHEAD = 1.0
     SPAWN_TRIES = 4
@@ -61,7 +62,7 @@ module DotPopper
 
     # Records are kept by the field's size in square radii (SizeClass),
     # because a smaller field crowds sooner, and crowding is the game's
-    # difficulty. With R fixed, the simulation (doc/decisions.md) has an
+    # difficulty. With R fixed, the simulation (doc/design/rules.md) has an
     # upright iPhone at 134 R², an 11-inch iPad and the 24 × 16 R desktop
     # window at about 384, a 13-inch iPad Pro at 566, and big monitors
     # fullscreen at 1,475 to 2,035. A field under SMALL_FIELD_BELOW is

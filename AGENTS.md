@@ -15,7 +15,7 @@ These rules bind every agent working on Dot Popper. The maintainer set each of t
 
 ## Design
 
-- Read `INSIPIRATION.md` in full (it's spelled that way) before designing anything a player sees. Let those books decide, and name them in `doc/decisions.md`.
+- Read `INSIPIRATION.md` in full (it's spelled that way) before designing anything a player sees. Let those books decide, and name them in the ADR (`doc/adr/`) or design document (`doc/design/`) that records the choice.
 - Be judicious about adding screens, but add one where it's the right answer rather than crowding an existing one.
 - Pro never changes how the game plays or scores, and a theme never makes the game easier or harder. Hit areas and bounces stay circles.
 - A button names the action it takes.

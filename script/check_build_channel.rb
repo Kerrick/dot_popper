@@ -11,7 +11,7 @@ require_relative "../lib/dot_popper/presentation"
 channel = DotPopper::Presentation::Storefront::BUILD_CHANNEL
 if channel.nil?
   warn "BUILD_CHANNEL is nil: this build sells through the fake store. Set it in " \
-       "lib/dot_popper/presentation/storefront.rb (doc/decisions.md, \"The store is a port\") before tagging."
+       "lib/dot_popper/presentation/storefront.rb (ADR-0009) before tagging."
   exit 1
 end
 
@@ -19,8 +19,7 @@ puts "BUILD_CHANNEL is #{channel.inspect}"
 
 # A Google Play purchase proves Pro only by the app's own Play key
 # (DotPopper::Receipt::PLAY_KEYS), which only the Play Console shows, so a
-# store release cannot ship until it is pinned (doc/decisions.md, "Pro
-# comes only from proof").
+# store release cannot ship until it is pinned (ADR-0010).
 if DotPopper::Receipt::PLAY_KEYS.empty?
   warn "Receipt::PLAY_KEYS is empty: no Google Play purchase would prove Pro. Pin the app's licensing key " \
        "from the Play Console in lib/dot_popper/receipt/pins.rb before tagging."

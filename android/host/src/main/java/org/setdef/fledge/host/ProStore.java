@@ -31,7 +31,7 @@ import java.util.List;
  * (Presentation::Storefront) and MainActivity#startActivity hands it here.
  * The answer goes into the file the URL names, the whole state each time,
  * written by renaming a finished file over it, which the game reads a few
- * times a second (doc/decisions.md):
+ * times a second (ADR-0008; doc/design/store-and-pro.md):
  *
  * <pre>
  *   answer=7          the number of the request this answers

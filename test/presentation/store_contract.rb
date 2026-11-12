@@ -11,7 +11,7 @@
 # It reads answers only as Storefront does, through +read+, so the fake
 # cannot drift from the port without failing here. Passing says the
 # adapter speaks the port; it says nothing of Apple's or Google's real
-# stores (doc/decisions.md, "The store is a port").
+# stores (ADR-0009).
 module StoreContract
   Storefront = DotPopper::Presentation::Storefront
   STATES = %w[loading working ready pending cancelled restored none failed unavailable].freeze

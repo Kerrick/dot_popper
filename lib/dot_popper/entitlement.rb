@@ -3,7 +3,7 @@
 module DotPopper
   # Whether this player has Pro. Pro comes only from proof the game checks
   # by itself, offline, every launch, and never from anything it stored
-  # (doc/decisions.md, "Pro comes only from proof"): a store copy's
+  # (ADR-0010): a store copy's
   # receipt, which the store hands over at each launch and #prove verifies
   # (Receipt), or a website copy's license key (+license+,
   # Continuity::License), whose signature is checked against the pinned
@@ -15,8 +15,7 @@ module DotPopper
     FORCED_BY = "DOT_POPPER_PRO"
     # Whether a computer's copy has everything for nothing. It does not: a
     # desktop copy is free until a store, a channel's or a test build's fake,
-    # sells it (Presentation::Storefront; doc/decisions.md, "Desktop is
-    # free until a channel sells it" and "The store is a port"). Set it true to ship a desktop copy
+    # sells it (Presentation::Storefront; ADR-0009). Set it true to ship a desktop copy
     # whole. The systems that have a store of their own are STORE_SYSTEMS,
     # as Lota::System.os names them.
     DESKTOP_PRO = false

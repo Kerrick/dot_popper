@@ -8,7 +8,7 @@ module DotPopper
   # setting. A store build (a channel) trusts only setdef's keys, sells
   # through its channel's store, and ignores each developer setting that
   # could grant Pro, change the server, or skip the free-game limit
-  # (doc/decisions.md, "A store build ignores developer settings").
+  # (ADR-0010).
   module Build
     # The channel this build is sold through, or nil for a test build. A
     # build for a store MUST set it (script/check_build_channel.rb).

@@ -374,8 +374,8 @@ module DotPopper
       # The glow fresh dots and droplets cast on the night under the dots
       # (Shell::Bloom), blurred at half the screen's resolution. A
       # strength of 0 turns it off, as it is: a glow wide enough to see
-      # blurs the fresh dot's edge, where the player aims (doc/decisions.md,
-      # "A fresh dot's edge is its hit circle"). 0.7 brings it back.
+      # blurs the fresh dot's edge, where the player aims
+      # (doc/design/look-and-sound.md). 0.7 brings it back.
       BLOOM = BloomStyle.new(strength: 0.0, sigma: 3.0, passes: 2, resolution: 0.5)
 
       # Game over: how the game dims, how the score counts up, and the

@@ -10,7 +10,7 @@ module DotPopper
   class DailyGoal < Data.define(:kind, :target)
     # The goals, each a thing a single game can do. The targets were set
     # with the simulator's model player on the 24 × 16 R window (see
-    # doc/decisions.md): reachable on a good game, not on every game.
+    # doc/design/progress.md): reachable on a good game, not on every game.
     # The bonus dot (Rules::BONUS) lengthens games and raises scores, and
     # the three targets that count those were raised to match.
     LIST = [

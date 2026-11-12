@@ -2,8 +2,8 @@
 
 module DotPopper
   # A store's signed record of a purchase of Pro, which the game checks by
-  # itself, offline, each time the store hands it one (doc/decisions.md,
-  # "Pro comes only from proof"). Nothing the game writes can stand in for
+  # itself, offline, each time the store hands it one (ADR-0010).
+  # Nothing the game writes can stand in for
   # one: an edited file, a flag or a number never verifies.
   #
   # The app's host passes a receipt to the game as text, in one of three

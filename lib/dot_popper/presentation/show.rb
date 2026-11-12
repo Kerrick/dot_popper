@@ -651,7 +651,7 @@ module DotPopper
       # Whether the Stats screen offers the way to Pro: where
       # there is a store, to a player who has not bought it. It is offered
       # here and nowhere else, and asks for nothing; a player finds it or
-      # does not (doc/decisions.md).
+      # does not (doc/design/store-and-pro.md).
       def offer_offered? = @storefront.offered? && !@entitlement.pro?
 
       # Whether the player has Pro.

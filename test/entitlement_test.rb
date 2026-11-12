@@ -3,7 +3,7 @@
 require_relative "test_helper"
 
 # Pro comes only from proof checked offline, never from a stored flag
-# (doc/decisions.md, "Pro comes only from proof").
+# (ADR-0010).
 class EntitlementTest < Minitest::Test
   Entitlement = DotPopper::Entitlement
   Receipt = DotPopper::Receipt

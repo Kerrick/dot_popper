@@ -28,7 +28,7 @@ The bundle identifier is `com.setdef.DotPopper`, set in `fledge.yml`.
 | Multitasking | Leave `UIRequiresFullScreen` unset | Split View and Stage Manager resize the window, which the game handles exactly as it handles a rotation |
 | Status bar | Hidden: set `UIStatusBarHidden` to `true` in Info.plist for the launch screen; the game hides it itself after launch | See "Fullscreen and the safe area" |
 | Audio session | `AVAudioSessionCategoryAmbient`, which Lota's host program sets before `SDL_RunApp` from its `Info.plist`'s `LotaAudioSessionCategory`, `ambient` | See "Sound" |
-| Entitlements | None | The game uses no iCloud, Game Center, camera, or microphone, and saves only in the app's own container. In-App Purchase needs no entitlement file; StoreKit is the app's only network use (doc/decisions.md, "Buying Pro") |
+| Entitlements | None | The game uses no iCloud, Game Center, camera, or microphone, and saves only in the app's own container. In-App Purchase needs no entitlement file; StoreKit is the app's only network use ([store and Pro](design/store-and-pro.md)) |
 | `UIApplicationSupportsIndirectInputEvents` | `true` | SDL needs it to see a mouse or trackpad on an iPad. The game treats clicks as taps |
 
 ## How the game behaves on iOS
@@ -45,7 +45,7 @@ Dots use the whole screen, corners included. Everything else stays inside the sa
 
 Rotating the iPad, entering Split View, or resizing a Stage Manager window all reach the game as a `Lota.resize` call. The game then rebuilds the field and the layout, and moves every dot in proportion to the new field (`Dot#refit`), even in the middle of a game: a dot 70% of the way across stays 70% of the way across, so turning a phone and back puts every dot back where it was, and no dot is ever left off screen. The heap of dots at Game Over is moved back inside the window.
 
-The rules never change with the window: the radius, the speeds, and the clock stay the same. A portrait field is just taller and narrower, and plays as the field-size table in [decisions.md](decisions.md) predicts. Fonts are rebuilt for the new size and pixel density.
+The rules never change with the window: the radius, the speeds, and the clock stay the same. A portrait field is just taller and narrower, and plays as the crowding table in [the rules](design/rules.md) predicts. Fonts are rebuilt for the new size and pixel density.
 
 ### Dot size
 

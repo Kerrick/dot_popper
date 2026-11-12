@@ -136,8 +136,8 @@ jobs:
           if ($play.Out -notmatch 'frames a second') { Write-Host '::error::the game never reported drawing a frame'; exit 1 }
           if ($play.Out -notmatch "Ed25519 verifies the server's test vector") { Write-Host '::error::the packaged Ruby does not verify Ed25519'; exit 1 }
 
-          # A PC whose Vulkan can't start the game (doc/decisions.md, "When
-          # Vulkan can't start the game, it starts again without it"):
+          # A PC whose Vulkan can't start the game (ADR-0007;
+          # doc/design/platforms.md):
           # allowed only Vulkan, which this runner has no GPU for, the game
           # must run its own exe again without it, in a fresh save folder,
           # and play.

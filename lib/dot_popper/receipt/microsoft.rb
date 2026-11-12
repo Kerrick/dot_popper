@@ -7,8 +7,7 @@ module DotPopper
     # add-on, only the licenses the user holds (StoreAppLicense's
     # AddOnLicenses), which Windows keeps and answers from. So the game
     # cannot check this one itself: it can only take Windows' answer, and
-    # only by a road no text file is on (doc/decisions.md, "The Mac App
-    # Store and the Microsoft Store sell Pro"). The text is
+    # only by a road no text file is on (ADR-0010). The text is
     # "<in-app offer token>:<SKU Store ID>", as the Microsoft Store build's
     # helper (windows/store) writes it down its pipe.
     #

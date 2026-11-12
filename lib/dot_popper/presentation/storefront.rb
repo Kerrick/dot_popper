@@ -18,13 +18,13 @@ module DotPopper
     # is the adapter for a build with no channel, a test build. Which one
     # is chosen once, by Storefront.for, at the composition root
     # (Shell::App), from the build; nothing above the port differs between
-    # them (test/presentation/store_contract.rb, doc/decisions.md).
+    # them (test/presentation/store_contract.rb, ADR-0009).
     # +entitlement+ (Entitlement) is Pro the moment the store hands over a
     # receipt that verifies (Receipt); an answer's "owned" alone proves
     # nothing. Nothing is kept: each launch asks the store again, which
     # answers from its own cache, offline too. A store that later says
     # otherwise in the same run, as after a refund, locks nothing
-    # (doc/decisions.md, "Pro comes only from proof").
+    # (ADR-0010).
     class Storefront
       SCHEME = "dotpopper-store"
       # The one product, as App Store Connect and the Play Console must
@@ -54,7 +54,7 @@ module DotPopper
       CHANNELS = {}.freeze
       # The channel this build is sold through, or nil for a test build.
       # A build for a store MUST set it, or it ships with the fake store
-      # (doc/decisions.md, "The store is a port").
+      # (ADR-0009).
       BUILD_CHANNEL = Build::CHANNEL
 
       # Whether this is a build for playtesters rather than a store: one

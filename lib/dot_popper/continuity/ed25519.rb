@@ -5,7 +5,7 @@ module DotPopper
     # Ed25519 (RFC 8032, pure) by Ruby's OpenSSL, which every build carries:
     # Fledge's desktop runtimes (rv-ruby's, and RubyInstaller's on Windows)
     # and its iOS and Android runtimes link OpenSSL 3, which has Ed25519
-    # (doc/decisions.md, "Pro outlives setdef"). openssl is required on
+    # (ADR-0011). openssl is required on
     # first use, so a game that never checks a key never loads it. Anything
     # that goes wrong is a signature that does not verify, never an error.
     module Ed25519

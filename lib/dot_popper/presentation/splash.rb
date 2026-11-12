@@ -5,7 +5,7 @@ module DotPopper
     # setdef's logotype, the maker's mark, shown before the title: the
     # word "setdef" in Iosevka Bold, then a solid block like a text
     # cursor. All its measures are ems of +size+, the font's size. The
-    # block's are the maintainer's decision (doc/decisions.md): one
+    # block's are the maintainer's decision (doc/design/screens.md): one
     # Iosevka cell wide, 0.95em tall, from 0.14em below the baseline to
     # 0.81em above it, and 0.5em / 7 past the end of the "f"'s cell.
     class Logotype < Data.define(:size)

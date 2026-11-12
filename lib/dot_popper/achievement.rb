@@ -7,7 +7,7 @@ module DotPopper
   # order the Stats screen lists them in, and what Achievements saves.
   #
   # Sharpshooter's number was chosen by playing the real rules with model
-  # players (doc/decisions.md): a player who taps only once a fingertip
+  # players (doc/design/progress.md): a player who taps only once a fingertip
   # fits on the dot pops it with a third or more showing, so a dot popped
   # with under a tenth showing was a deliberate, precise tap.
   module Achievement

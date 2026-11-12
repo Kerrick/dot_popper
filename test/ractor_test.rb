@@ -29,9 +29,9 @@ class RactorTest < Minitest::Test
   # than the main one collects garbage while the main Ractor has another
   # thread asleep, as Minitest's worker threads are: the game's garbage
   # starts a collection in the Ractor, and the suite never ends. Three
-  # lines show it with no game at all (doc/decisions.md), so it is
+  # lines show it with no game at all (doc/design/development.md), so it is
   # Ruby's, not the rules'. Linux and macOS play it as ever.
-  WINDOWS_RACTOR_GC = "Ruby 4.0.9 on Windows deadlocks a Ractor's GC beside a sleeping thread (doc/decisions.md)"
+  WINDOWS_RACTOR_GC = "Ruby 4.0.9 on Windows deadlocks a Ractor's GC beside a sleeping thread (doc/design/development.md)"
 
   def test_a_game_played_in_a_ractor_matches_one_played_here
     skip WINDOWS_RACTOR_GC if Gem.win_platform?

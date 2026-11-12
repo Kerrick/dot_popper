@@ -5,8 +5,7 @@ require "openssl"
 require "json"
 
 # A store's receipt is checked by the game itself, offline: Play's signed
-# purchase and StoreKit 2's signed transaction (doc/decisions.md, "Pro
-# comes only from proof"). Apple's real chain cannot be made here, so its
+# purchase and StoreKit 2's signed transaction (ADR-0010). Apple's real chain cannot be made here, so its
 # check runs against a chain this test makes with Apple's markings, and
 # against Apple's real root only to show that chain is refused there.
 class ReceiptTest < Minitest::Test
