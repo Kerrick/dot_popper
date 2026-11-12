@@ -5,7 +5,7 @@ module DotPopper
     # What stands in a theme's night, as plain shapes in graphics units:
     # silhouettes of trees, hills, a crooked house, a fence, graves, bats,
     # the wood's trunks, fir boughs and presents, snowy rooftops and a
-    # sleigh, and a farm. It knows no drawing library;
+    # sleigh, a snowy yard, and a farm. It knows no drawing library;
     # Shell::Scene bakes these once, for the screen's size, into a canvas
     # at the screen's own resolution.
     #
@@ -28,6 +28,7 @@ module DotPopper
         when :boughs then boughs(width, height)
         when :farm then farm(width, height)
         when :rooftops then rooftops(width, height)
+        when :snowfield then snowfield(width, height)
         else []
         end
       end
@@ -421,6 +422,46 @@ module DotPopper
           lead = [hx, hy]
         end
         out << segment(place.call(-2, 0), place.call(lead[0] + 6, lead[1] - 1), 0.9, 0.9, color)
+      end
+
+      # A snowy yard on a winter night: drifts in two depths, a cottage
+      # with lit windows behind a picket fence, snowy firs, and a lamp
+      # post. The snow is lighter than the sky, as snow is at night.
+      def snowfield(width, height)
+        out = []
+        land = width > height
+        far = Color.hex("#1c2a50")
+        near = Color.hex("#2a3a66")
+        ink = Color.hex("#070c1e")
+        snow = Color.hex("#3a4c80")
+        lamp = Color.hex("#8a6a34", 0.6)
+        back = ->(f) { height * ((land ? 0.8 : 0.84) + (0.025 * Math.sin((f * 3.2) + 0.8))) }
+        hill_strip(out, far, width, height, &back)
+        r = Random.new(91)
+        (land ? 9 : 6).times do |i|
+          f = (i + r.rand(0.1..0.9)) / (land ? 9 : 6)
+          snowy_fir(out, ink, Color.hex("#24345e"), width * f, back.call(f) + 4, height * r.rand(0.1..0.17), (land ? 46 : 34) * r.rand(0.8..1.2))
+        end
+        cx = width * (land ? 0.7 : 0.66)
+        house(out, ink, snow, lamp, cx, back.call(0.68) + 10, land ? 120 : 84, land ? 70 : 50, true, Random.new(4))
+        front = ->(f) { height * ((land ? 0.9 : 0.92) + (0.02 * Math.sin((f * 2.4) + 2.0))) }
+        f = 0.0
+        while f < 1.0
+          gx = width * f
+          gy = front.call(f) - 2
+          out << Fan.new(color: ink, points: [[gx - 3, gy + 8], [gx - 3, gy - 16], [gx, gy - 20], [gx + 3, gy - 16], [gx + 3, gy + 8]])
+          out << segment([gx - 3, gy - 17], [gx + 3, gy - 17], 2.5, 2.5, snow)
+          f += land ? 0.022 : 0.045
+        end
+        out << segment([0, front.call(0) - 10], [width, front.call(1) - 10], 2.5, 2.5, ink)
+        hill_strip(out, near, width, height, &front)
+        snowy_fir(out, ink, snow, width * (land ? 0.06 : 0.08), front.call(0.06) + 8, height * (land ? 0.5 : 0.38), land ? 110 : 76)
+        lx = width * (land ? 0.36 : 0.84)
+        ly = front.call(lx / width) + 4
+        out << segment([lx, ly], [lx, ly - (height * 0.2)], 4, 3, ink)
+        out << Fan.new(color: ink, points: [[lx - 8, ly - (height * 0.2)], [lx + 8, ly - (height * 0.2)], [lx + 5, ly - (height * 0.2) - 16], [lx - 5, ly - (height * 0.2) - 16]])
+        out << Fan.new(color: lamp, points: [[lx - 5, ly - (height * 0.2) - 2], [lx + 5, ly - (height * 0.2) - 2], [lx + 3.5, ly - (height * 0.2) - 13], [lx - 3.5, ly - (height * 0.2) - 13]])
+        out
       end
 
       # A farm at dusk: a field, a barn and silo, shocks of corn, a fence,
