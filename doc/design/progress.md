@@ -38,7 +38,7 @@ The log is rewritten whole each time, which is fine for the few hundred lines a 
 
 `GameStats` (`lib/dot_popper/game_stats.rb`) is built from the rules' events by `GameStats::Recorder`, and decides nothing. It counts pops, mistakes, softened mistakes, each pop's time to pop (from the bright dot appearing to its pop), the game's duration (`Game#elapsed`, clock time only), the score, `dots_in_a_row` and `most_dots_in_a_row`, and `bonuses`. From these it gives `longest_time_to_pop`, `shortest_time_to_pop`, `mean_time_to_pop` and `pops_within(seconds)`.
 
-A game that goes on from the tutorial (`GameStats.opening`) starts with a pop for each popped dot it was handed, the tutorial's score, and the dots in a row the game carries (1, as the tutorial shows); those pops have no time to pop.
+A game the tutorial played over (`GameStats.opening`) begins play with a pop for each of its popped dots, its score, and its dots in a row (1 at the tutorial's end); those pops have no time to pop, and the guide's mistake is not counted. `AchievementWatch` starts the game's row at the same count. It is the same whether the tutorial ended or was skipped.
 
 ## Stats
 
