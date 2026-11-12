@@ -28,6 +28,11 @@ module DotPopper
       def initialize(key:, palette:, art: nil, opens_on: nil) = super
 
       def ordinary? = art.nil?
+
+      # The patches it plays in place of the ordinary ones (Style::PATCHES,
+      # Shell::Speaker#use): none for the ordinary theme, and for one with
+      # art, its own over Style::THEMED_PATCHES.
+      def sounds = ordinary? ? {} : Style::THEMED_PATCHES.merge(art.sounds)
     end
   end
 end

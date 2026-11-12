@@ -489,6 +489,18 @@ module DotPopper
       GAMEPAD = GamepadStyle.new(dead_zone: 0.2, curve: 2.0, speed: 16.0, crossing: 1.0, ramp: 0.08, trigger_press: 0.5,
                                 trigger_release: 0.3, ring: 0.3, ticks: 0.42..0.6, line: 0.04, pip: 4)
 
+      # The chord over a bonus dot's pop.
+      BONUS_CHORD = [
+        Note.new(wave: :triangle, from: 659.25, start: 0.05, length: 0.3, volume: 0.6),
+        Note.new(wave: :triangle, from: 987.77, start: 0.05, length: 0.3, volume: 0.5),
+        Note.new(wave: :sine, from: 1318.51, start: 0.05, length: 0.4, volume: 0.5)
+      ].freeze
+
+      # What a theme with art plays in place of the ordinary sounds when it
+      # has none of its own: a bonus dot's pop is the chord alone, since
+      # the theme's own pop has just been played under it.
+      THEMED_PATCHES = { bonus_pop: Patch.new(notes: BONUS_CHORD) }.freeze
+
       PATCHES = {
         # A bubbly "bloop": a sine that swoops up, with a soft click.
         pop: Patch.new(notes: [
@@ -505,9 +517,7 @@ module DotPopper
         bonus_pop: Patch.new(notes: [
           Note.new(wave: :sine, from: 360, to: 980, length: 0.12, volume: 1.0),
           Note.new(wave: :noise, from: 1, length: 0.012, attack: 0.001, volume: 0.25),
-          Note.new(wave: :triangle, from: 659.25, start: 0.05, length: 0.3, volume: 0.6),
-          Note.new(wave: :triangle, from: 987.77, start: 0.05, length: 0.3, volume: 0.5),
-          Note.new(wave: :sine, from: 1318.51, start: 0.05, length: 0.4, volume: 0.5)
+          *BONUS_CHORD
         ]),
         # A low, dull "bonk", falling.
         bonk: Patch.new(notes: [
