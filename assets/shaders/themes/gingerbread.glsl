@@ -128,13 +128,14 @@ vec3 cookie(vec2 p, float d, float aa, float fresh, float bonus) {
   float wall = cover_of(hole + 0.04, aa) * (1.0 - cover_of(man(p - vec2(-0.03, -0.045)), aa));
   vec3 tray = vec3(0.02, 0.012, 0.012);
   s = mix(s, tray, cover_of(hole, aa));
-  s = mix(s, vec3(0.42, 0.26, 0.16), wall * cover_of(hole, aa) * 0.95);
-  s = mix(s, mix(vec3(0.26, 0.24, 0.26), vec3(0.4, 0.37, 0.4), sq_lit), cover_of(sq, aa));
+  s = mix(s, vec3(0.27, 0.15, 0.09), wall * cover_of(hole, aa) * 0.95);
+  // The icing in the dark, a step above the dough and no more.
+  s = mix(s, mix(vec3(0.16, 0.14, 0.15), vec3(0.24, 0.21, 0.22), sq_lit), cover_of(sq, aa));
 
   vec3 col = mix(s, whole, fresh);
   float w = mix(max(0.038, 1.5 * aa), max(0.022, 1.5 * aa), fresh);
   float ring = clamp((d - (1.0 - w)) / aa + 0.5, 0.0, 1.0);
-  vec3 rim_color = mix(mix(vec3(0.3, 0.2, 0.15), vec3(0.5, 0.36, 0.27), clamp(0.5 + 0.6 * dot(p, vec2(-0.53, -0.848)), 0.0, 1.0)),
+  vec3 rim_color = mix(mix(vec3(0.19, 0.13, 0.1), vec3(0.32, 0.23, 0.17), clamp(0.5 + 0.6 * dot(p, vec2(-0.53, -0.848)), 0.0, 1.0)),
                        vec3(1.0, 0.92, 0.8), fresh);
   return mix(col, rim_color, ring);
 }

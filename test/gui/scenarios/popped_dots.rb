@@ -22,7 +22,7 @@ module DotPopperGui
 
     # Themes whose popped dots are known to be too light, until each is
     # redrawn. Each must still fail, so the list cannot go stale.
-    TOO_LIGHT = %i[classic awake peppermint jingle_bell gingerbread].freeze
+    TOO_LIGHT = %i[classic awake jingle_bell].freeze
 
     def play
       keeper = show.instance_variable_get(:@theme_keeper)

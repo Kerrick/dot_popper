@@ -119,20 +119,21 @@ vec3 mint(vec2 p, float d, float aa, float fresh, float bonus) {
   vec3 slate = mix(vec3(0.07, 0.055, 0.075), vec3(0.17, 0.14, 0.18), clamp(lam2 * 1.1, 0.0, 1.0));
   vec3 deep = mix(vec3(0.15, 0.02, 0.045), vec3(0.3, 0.05, 0.08), clamp(lam2 * 1.1, 0.0, 1.0));
   vec3 s = mix(slate, deep, cover_of(sd2, aa));
-  // A dull sheen, still candy.
-  s = mix(s, vec3(0.32, 0.28, 0.34), spec * 0.3);
-  s = mix(s, vec3(0.36, 0.32, 0.4), glare * 0.3);
-  // The cracks: dark gaps, each with a pale broken edge on its lit side.
+  // A dull sheen, still candy, and no lighter than a shipped popped dot.
+  s = mix(s, vec3(0.2, 0.17, 0.21), spec * 0.3);
+  s = mix(s, vec3(0.22, 0.19, 0.24), glare * 0.3);
+  // The cracks: dark gaps, each with a broken edge a step lighter on its
+  // lit side, so they read by shape in dark tones.
   float cr = cracks(p);
   float lip = cover_of(abs(cr - 0.016) - 0.012, aa) * step(0.0, cr);
-  s = mix(s, vec3(0.62, 0.54, 0.6), lip * 0.9);
+  s = mix(s, vec3(0.24, 0.2, 0.24), lip * 0.9);
   s = mix(s, vec3(0.025, 0.012, 0.02), cover_of(cr, aa));
   s *= 1.0 - 0.18 * smoothstep(0.82, 1.0, d) * clamp(dot(normalize(p + 1e-4), vec2(0.6, 0.8)) + 0.3, 0.0, 1.0);
 
   vec3 col = mix(s, whole, fresh);
   float w = mix(max(0.038, 1.5 * aa), max(0.022, 1.5 * aa), fresh);
   float ring = clamp((d - (1.0 - w)) / aa + 0.5, 0.0, 1.0);
-  vec3 rim_color = mix(mix(vec3(0.3, 0.24, 0.3), vec3(0.5, 0.42, 0.48), clamp(0.5 + 0.6 * dot(p, vec2(-0.53, -0.848)), 0.0, 1.0)),
+  vec3 rim_color = mix(mix(vec3(0.19, 0.15, 0.19), vec3(0.32, 0.26, 0.31), clamp(0.5 + 0.6 * dot(p, vec2(-0.53, -0.848)), 0.0, 1.0)),
                        vec3(1.0, 0.98, 0.97), fresh);
   return mix(col, rim_color, ring);
 }
