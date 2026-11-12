@@ -34,7 +34,8 @@ module DotPopper
         Themes::JackOLantern.theme(PALETTE, hex),
         Themes::Awake.theme(PALETTE, hex),
         Themes::Eclipse.theme(PALETTE, hex),
-        Themes::Ornament.theme(PALETTE, hex)
+        Themes::Ornament.theme(PALETTE, hex),
+        Themes::PumpkinPie.theme(PALETTE, hex)
       ].freeze
 
       WORDS = Words.new(
@@ -62,7 +63,7 @@ module DotPopper
         quit: ByInput.new(touch: "Quit", mouse: "Quit", gamepad: "Quit (B)"),
         # The Themes screen: its button's word and heading, and each theme's name.
         themes: { title: "Themes", new: "A new theme", later: "Not now", use: "Use %s", classic: "Classic", ghost: "Ghost", jack_o_lantern: "Jack-o'-lantern", awake: "Awake", eclipse: "Eclipse",
-                  ornament: "Ornament" }.freeze,
+                  ornament: "Ornament", pumpkin_pie: "Pumpkin pie" }.freeze,
         offer: {
           entry: "Get Pro", heading: "Dot Popper Pro", no_games: "No games left today.",
           includes: { games: "Unlimited games", achievements: "Achievements", themes: "Themes", groups: "Friend groups" }.freeze,

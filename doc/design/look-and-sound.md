@@ -137,7 +137,7 @@ On a pop the phone buzzes 15 ms, and on a mistake 40 ms (`Style::HAPTICS`; 0 tur
 
 ## Themes
 
-A theme is a set of art and sound for the whole game. Six ship in `Style::THEMES`: the ordinary one, Classic, first, and five with art. A theme changes how the game looks and sounds, never how it plays: gameplay, scores, speeds and touch targets are untouched, hit areas and bounces stay circles, and no theme makes the game easier or harder (Schell's elemental tetrad: aesthetics changes, mechanics do not).
+A theme is a set of art and sound for the whole game. Seven ship in `Style::THEMES`: the ordinary one, Classic, first, and six with art. A theme changes how the game looks and sounds, never how it plays: gameplay, scores, speeds and touch targets are untouched, hit areas and bounces stay circles, and no theme makes the game easier or harder (Schell's elemental tetrad: aesthetics changes, mechanics do not).
 
 | Theme | Key | File | Dot | Night | Title |
 | --- | --- | --- | --- | --- | --- |
@@ -147,6 +147,7 @@ A theme is a set of art and sound for the whole game. Six ship in `Style::THEMES
 | Awake | `:awake` | `themes/awake.rb` | `awake.glsl`: an open cat's eye, a shut lid when popped | A dark wood (`:wood`) | Anton, O's as dots |
 | Eclipse | `:eclipse` | `themes/eclipse.rb` | `eclipse.glsl`: a harvest moon, in eclipse when popped, so a bright dot sliding out from under a popped one is a crescent | A churchyard (`:churchyard`) | IM Fell Double Pica, beside a small crescent |
 | Ornament | `:ornament` | `themes/ornament.rb` | `ornament.glsl`: a glass ornament lit gold from within, its cap inside the circle; the same ornament in dark red, green or blue glass, its light out, when popped | Fir boughs over a low warm glow (`:boughs`) | Fredoka, O's as dots |
+| Pumpkin pie | `:pumpkin_pie` | `themes/pumpkin_pie.rb` | `pumpkin_pie.glsl`: a pumpkin pie seen from above, its fluted crust the circle's edge, a dollop of cream in the middle; the empty dish, with crumbs, when popped | A farm at dusk, with a barn, shocks of corn and geese (`:farm`) | Fredoka, O's as dots |
 
 The theme files are in `lib/dot_popper/presentation/themes/`, their dot shaders in `assets/shaders/themes/`, and the title fonts' licenses in [assets/fonts/README.md](../../assets/fonts/README.md). Theme names are in `Style::WORDS.themes`.
 
@@ -158,7 +159,7 @@ When a theme is used, everything takes it: every dot, the night, buttons, words,
 
 ### Scenery is drawn once
 
-A theme's night is baked once for the screen's size into a canvas at the screen's own resolution and drawn 1:1 each frame, so scenery costs one quad on an old phone (`Shell::Scene`): its sky by `scene.glsl`, its silhouettes (trees, hills, a crooked house, a fence, graves, bats, the wood's trunks, fir boughs) as plain filled polygons from `Presentation::Scenery`, then fog by the shader over them where the sky has any. It is baked again whenever the theme or the window changes (`Renderer#prepare`). Without the `scene` shader, or if a canvas can't be made, the ordinary night is drawn.
+A theme's night is baked once for the screen's size into a canvas at the screen's own resolution and drawn 1:1 each frame, so scenery costs one quad on an old phone (`Shell::Scene`): its sky by `scene.glsl`, its silhouettes (trees, hills, a crooked house, a fence, graves, bats, the wood's trunks, fir boughs, a barn and shocks of corn) as plain filled polygons from `Presentation::Scenery`, then fog by the shader over them where the sky has any. It is baked again whenever the theme or the window changes (`Renderer#prepare`). Without the `scene` shader, or if a canvas can't be made, the ordinary night is drawn.
 
 ### Contrast
 
