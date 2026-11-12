@@ -93,6 +93,24 @@ class WebsiteStoreTest < Minitest::Test
     assert_equal s.words.offer[:copied], s.offer_status
   end
 
+  def test_the_buy_label_names_the_keyboards_key_until_a_pointer_or_controller_is_used
+    s = show
+    s.open_offer
+    s.keyboard_used("Ctrl+B")
+
+    assert_equal "Buy for $1.99 (Ctrl+B)", s.buy_label
+    s.keyboard_used("\u2318B")
+
+    assert_equal "Buy for $1.99 (\u2318B)", s.buy_label
+    s.input = InputKind::MOUSE
+
+    assert_equal "Buy for $1.99", s.buy_label
+    s.keyboard_used("Ctrl+B")
+    s.input = InputKind::GAMEPAD
+
+    assert_equal "Buy for $1.99 (Y)", s.buy_label
+  end
+
   def test_the_buy_label_has_no_controller_button_for_a_finger_or_mouse
     s = show
     s.open_offer

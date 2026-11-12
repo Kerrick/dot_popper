@@ -36,6 +36,7 @@ module DotPopper
         @dot_size = DotSize.for(os)
         @touch = DotSize.touch?(os)
         @android = os == "Android"
+        @mac = os == "OS X"
         @ios = os == "iOS"
         puts "Dot Popper: a dot's radius is #{@dot_size.reason}"
         # With DOT_POPPER_PERF=1: whether this build's Ruby verifies
@@ -333,6 +334,7 @@ module DotPopper
       def key_pressed(key)
         return skip_splash if @splash
 
+        @show.keyboard_used(@mac ? "\u2318B" : "Ctrl+B") unless @touch
         return if key == :v && paste_chord? && @show.paste_shortcut
         # Ctrl+B or Cmd+B buys on the offer: a chord, so no press that means
         # continue or back, and no letter of a typed license key, buys.

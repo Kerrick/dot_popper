@@ -162,6 +162,7 @@ module DotPopper
       # The player pressed with +kind+ (InputKind): from now on the words
       # say what to do with it.
       def input=(kind)
+        @key_hint = nil # a pointer or a controller took over from the keyboard
         return if kind == input
 
         @input = kind
@@ -747,7 +748,16 @@ module DotPopper
       # continue or back elsewhere.
       def buy_label
         label = offer_price ? format(words.offer[:buy], offer_price) : words.offer[:retry]
-        input == InputKind::GAMEPAD ? "#{label} (Y)" : label
+        return "#{label} (Y)" if input == InputKind::GAMEPAD
+
+        @key_hint ? "#{label} (#{@key_hint})" : label
+      end
+
+      # A key was pressed on a computer's keyboard: until a pointer or a
+      # controller is used, Buy names its key, +buy_key+ ("Ctrl+B", or
+      # "⌘B" on a Mac).
+      def keyboard_used(buy_key)
+        @key_hint = buy_key
       end
 
       # Ctrl+B or Cmd+B, or a controller's Y, on the offer: Buy, where Pro
