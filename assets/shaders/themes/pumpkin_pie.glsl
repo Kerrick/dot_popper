@@ -4,10 +4,10 @@
 // round the edge, each crimp a pillow of pastry browned on its crest, the
 // glossy spiced custard set a little below it, and a piped swirl of
 // whipped cream in the middle casting its shadow. A popped dot is the same
-// dish after dinner, in the dark: the middle eaten, a smear of filling and
-// crumbs on the glazed floor, the crust's edge left behind as a broken
-// ring, and a fork across it. Every eaten pie is alike. The vertex color
-// says what kind of dot it is, as in dot.glsl.
+// dish after dinner, in the dark, the pie gone: the bare glazed dish, its
+// fluted rim catching the light, its floor wiped clean but for a few
+// crumbs. Every empty dish is alike. The vertex color says what kind of
+// dot it is, as in dot.glsl.
 
 uniform float extent;
 uniform float shadow_offset;
@@ -86,34 +86,24 @@ float cream_h(vec2 p) {
   return dome * (0.62 + 0.2 * ridge + 0.22 * coil) + 0.04 * ridge + 0.25 * peak;
 }
 
-// The fork lying across the eaten dish, as a signed distance, and where
-// across it a point is (-1 to 1) for its round shading.
-const vec2 FORK_A = vec2(0.76, 0.2);
-const vec2 FORK_B = vec2(-0.4, 0.52);
-float fork(vec2 p, out float across) {
-  vec2 axis = normalize(FORK_B - FORK_A);
-  vec2 side = vec2(-axis.y, axis.x);
-  float len = length(FORK_B - FORK_A);
-  float s = dot(p - FORK_A, axis) / len;
-  float x = dot(p - FORK_A, side);
-  float w;
-  if (s < 0.58) w = mix(0.09, 0.058, s / 0.58);
-  else if (s < 0.68) w = mix(0.058, 0.036, (s - 0.58) / 0.1);
-  else if (s < 0.78) w = mix(0.036, 0.115, smoothstep(0.68, 0.78, s));
-  else w = 0.115;
-  across = clamp(x / w, -1.0, 1.0);
-  float body = max(abs(x) - w, max(-s * len, (s - 0.83) * len));
-  // The end of the handle is round.
-  body = max(body, -s * len - 0.0);
-  body = min(max(body, 0.09 - s * len), length(p - FORK_A - axis * 0.09) - 0.09);
-  // Four tines, from the head to their tips.
-  float tine_x = mod(x + 0.115, 0.0767) - 0.0383;
-  float tines = max(max(abs(tine_x) - 0.018, abs(x) - 0.115), max((0.79 - s) * len, (s - 1.0) * len));
-  return min(body, tines);
+// The empty dish: a flat floor, a wall sloping up to a rounded rim
+// fluted as many times as the crust was crimped, 0 to 1.
+const float FLOOR = 0.58;
+const float RIM_IN = 0.8;
+float dish_rim(vec2 p) {
+  float u = fract(atan(p.y, p.x) / TAU * CRIMPS + 0.5) - 0.5;
+  return 0.95 + 0.03 * (0.5 + 0.5 * cos(TAU * u));
+}
+float dish_h(vec2 p) {
+  float r = length(p);
+  float u = fract(atan(p.y, p.x) / TAU * CRIMPS + 0.5) - 0.5;
+  float wall = smoothstep(FLOOR, RIM_IN, r);
+  float t = clamp((r - RIM_IN) / (dish_rim(p) - RIM_IN), 0.0, 1.0);
+  float lip = sin(3.14159 * t) * (0.75 + 0.25 * cos(TAU * u));
+  return 0.55 * wall + 0.3 * lip * step(RIM_IN, r);
 }
 
 vec3 dot_body(vec2 p, float d, float aa, float fresh, float bonus) {
-  float a = atan(p.y, p.x);
   float outer = crust_outer(p);
   float e = 0.004;
   float h = crust_h(p);
@@ -181,62 +171,35 @@ vec3 dot_body(vec2 p, float d, float aa, float fresh, float bonus) {
   lit *= 1.0 - 0.35 * exp(-pow((d - INNER) / 0.018, 2.0));
 
   // --- The dish after dinner, in the dark ---
-  // The crust's edge is left, broken off where it was eaten.
-  float jag = 0.16 * (noise(vec2(d * 30.0, 1.0)) - 0.5) + 0.05 * (noise(vec2(d * 90.0, 4.0)) - 0.5);
-  float gap1 = abs(mod(a - 0.55 + jag + 3.14159, TAU) - 3.14159) - 0.42;
-  float gap2 = abs(mod(a + 2.45 + jag + 3.14159, TAU) - 3.14159) - 0.22;
-  float kept = fill(-min(gap1, gap2) * 0.6, aa);
-  vec3 old_crust = mix(vec3(0.16, 0.1, 0.07), vec3(0.42, 0.31, 0.21), clamp(0.15 + lam * 0.95, 0.0, 1.0));
-  old_crust *= 0.9 + 0.12 * blister;
-  old_crust += vec3(0.5, 0.42, 0.34) * spec * 0.2;
-  old_crust *= 0.5 + 0.5 * smoothstep(0.0, 0.25, h);
-  // Where a piece broke off, its broken face shows, paler and crumbly.
-  float face = exp(-pow(min(abs(gap1), abs(gap2)) / 0.035, 2.0)) * step(0.0, -min(gap1, gap2) + 0.02);
-  old_crust = mix(old_crust, vec3(0.44, 0.35, 0.26) * (0.8 + 0.3 * fbm(p * 40.0)), face * 0.5);
-
-  // The glazed floor: a deep rust, its wall lit on the near side, a sheen.
-  float wall = smoothstep(INNER - 0.14, INNER + 0.02, d);
-  float wall_lit = clamp(0.5 - 0.7 * dot(p / max(d, 1e-4), L.xy), 0.0, 1.0);
-  vec3 floor_col = mix(vec3(0.12, 0.05, 0.045), vec3(0.2, 0.09, 0.07), clamp(0.6 - 0.4 * d, 0.0, 1.0));
-  floor_col = mix(floor_col, mix(vec3(0.07, 0.03, 0.03), vec3(0.3, 0.14, 0.1), wall_lit), wall);
-  float glaze = exp(-pow(length((p - vec2(-0.2, -0.3)) / vec2(0.3, 0.12)), 2.0));
-  floor_col += vec3(0.16, 0.1, 0.09) * glaze;
-  // What's left of the filling: a rim of it along the crust, a smear
-  // where a fork dragged through it, and crumbs.
-  float rim_fill = exp(-pow((d - INNER + 0.012) / 0.022, 2.0)) * (0.6 + 0.4 * noise(vec2(a * 12.0, 0.0)));
-  // The smear: a broad stroke across the floor, combed by the tines.
-  vec2 sq = p - vec2(0.05, 0.62);
-  float sr = length(sq), sa = atan(sq.y, sq.x);
-  float along = clamp((sa + 2.55) / 1.15, 0.0, 1.0);
-  float smear = exp(-pow((sr - 0.8) / (0.09 * (1.0 - along * 0.6)), 4.0)) * smoothstep(-2.6, -2.45, sa) * smoothstep(-1.3, -1.5, sa);
-  smear *= 0.7 + 0.3 * smoothstep(-0.2, 0.6, sin((sr - 0.8) * 110.0));
-  vec3 filling_dark = vec3(0.46, 0.2, 0.07);
-  vec3 eaten = mix(floor_col, filling_dark, clamp(rim_fill + smear, 0.0, 1.0) * 0.8);
-  // Crumbs, the same in every dish.
-  vec2 crumbs[6];
-  crumbs[0] = vec2(0.36, -0.06); crumbs[1] = vec2(-0.5, 0.06); crumbs[2] = vec2(0.12, 0.02);
-  crumbs[3] = vec2(-0.1, -0.52); crumbs[4] = vec2(0.5, -0.36); crumbs[5] = vec2(-0.2, 0.18);
-  for (int i = 0; i < 6; i++) {
-    float cr = 0.026 + 0.012 * float(i - 2 * (i / 2));
-    vec2 q = p - crumbs[i];
-    float cd = length(q * vec2(1.0, 1.25)) - cr + 0.004 * sin(atan(q.y, q.x) * 3.0 + float(i));
-    eaten *= 1.0 - 0.5 * fill(length(q - vec2(-0.012, -0.016)) - cr * 1.1, aa * 3.0) * step(0.0, cd);
-    vec3 crumb = mix(vec3(0.3, 0.21, 0.14), vec3(0.52, 0.4, 0.29), clamp(0.5 - dot(q / cr, vec2(0.6, 0.8)) * 0.5, 0.0, 1.0));
-    eaten = mix(eaten, crumb, fill(cd, aa));
+  // The pie is gone. The glaze is a deep rust; the rim and the wall
+  // facing the light catch it, and the flutes each take a glint.
+  vec2 dg = vec2(dish_h(p + vec2(e, 0.0)) - dish_h(p - vec2(e, 0.0)), dish_h(p + vec2(0.0, e)) - dish_h(p - vec2(0.0, e))) / (2.0 * e);
+  vec3 dn = normal_of(dg, 0.1);
+  float relief = dot(dn, L) - L.z;
+  vec3 glaze = mix(vec3(0.15, 0.065, 0.05), vec3(0.3, 0.15, 0.11), smoothstep(RIM_IN - 0.04, RIM_IN + 0.06, d));
+  vec3 dark = glaze * clamp(1.0 + 2.6 * relief, 0.35, 2.2);
+  dark += vec3(0.62, 0.5, 0.44) * pow(max(dot(dn, HALF_V), 0.0), 60.0) * 0.55 * step(FLOOR + 0.05, d);
+  // The floor, wiped clean: a broad soft reflection of the room.
+  dark += vec3(0.1, 0.06, 0.055) * exp(-pow(length((p - vec2(-0.16, -0.2)) / vec2(0.36, 0.24)), 2.0)) * (1.0 - smoothstep(FLOOR - 0.1, FLOOR, d));
+  // Past the flutes, the dish's outer edge falls away into shadow.
+  dark = mix(dark, vec3(0.08, 0.035, 0.03), fill(dish_rim(p) - d, aa));
+  // A trail of crust flakes where the last slice was lifted, the same
+  // in every dish, each with its shadow.
+  vec3 flakes[5];
+  flakes[0] = vec3(0.1, 0.3, 0.05); flakes[1] = vec3(0.22, 0.21, 0.066); flakes[2] = vec3(0.315, 0.165, 0.026);
+  flakes[3] = vec3(0.4, 0.06, 0.044); flakes[4] = vec3(0.47, -0.04, 0.024);
+  for (int i = 0; i < 5; i++) {
+    float cr = flakes[i].z;
+    float turn = float(i) * 1.9;
+    vec2 q = mat2(cos(turn), sin(turn), -sin(turn), cos(turn)) * (p - flakes[i].xy);
+    float qa = atan(q.y, q.x);
+    float edge = cr * (0.78 + 0.28 * noise(vec2(qa * 1.3 + float(i) * 7.0, 0.5)) + 0.08 * cos(3.0 * qa + float(i)));
+    float cd = length(q * vec2(0.8, 1.3)) - edge;
+    vec2 sq = p - flakes[i].xy - vec2(0.014, 0.02);
+    dark *= 1.0 - 0.5 * fill(length(sq) - cr * 1.05, aa * 2.0) * step(0.0, cd);
+    vec3 crumb = mix(vec3(0.28, 0.18, 0.1), vec3(0.6, 0.45, 0.28), clamp(0.5 + dot(p - flakes[i].xy, L.xy) / cr * 0.55, 0.0, 1.0));
+    dark = mix(dark, crumb, fill(cd, aa));
   }
-  vec3 dark_lip = mix(vec3(0.12, 0.05, 0.04), vec3(0.3, 0.15, 0.11), lip_lit);
-  vec3 dark = mix(dark_lip, old_crust, in_crust * kept);
-  dark = mix(dark, eaten, fill(d - INNER, aa));
-  dark *= 1.0 - 0.3 * exp(-pow((d - INNER) / 0.02, 2.0)) * kept;
-  // The fork, steel in the dark, its shadow on the dish below it.
-  float across;
-  float fsd = fork(p - vec2(0.035, 0.05), across);
-  dark *= 1.0 - 0.45 * fill(fsd, aa * 5.0);
-  fsd = fork(p, across);
-  float fl = clamp(0.55 - 0.5 * across, 0.0, 1.0);
-  vec3 steel = mix(vec3(0.24, 0.25, 0.3), vec3(0.62, 0.64, 0.7), fl);
-  steel = mix(steel, vec3(0.78, 0.8, 0.86), exp(-pow((across + 0.35) / 0.18, 2.0)) * 0.6);
-  dark = mix(dark, steel, fill(fsd, aa));
 
   vec3 c = mix(dark, lit, fresh);
   float w = mix(max(0.034, 1.5 * aa), max(0.022, 1.5 * aa), fresh);
