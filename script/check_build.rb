@@ -38,7 +38,9 @@ check = lambda do |what, &passes|
   failures << what unless ok
 end
 
-ours = $LOADED_FEATURES.grep(%r{/dot_popper(/|\.rb\z)})
+# The game's code is lib/dot_popper.rb and what is under lib/dot_popper/;
+# another folder named dot_popper (one holding Ruby itself, say) is not.
+ours = $LOADED_FEATURES.grep(%r{/lib/dot_popper(/|\.rb\z)})
 check.call("every file of the game's code loaded is the app's own") { ours.any? && ours.all? { it.start_with?(game) } }
 
 build = DotPopper::Build
