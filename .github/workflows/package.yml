@@ -578,23 +578,33 @@ jobs:
       # Every file the release would offer, each unpacked on its own.
       - name: Check each file's app as it was built
         run: |
-          fuse="$RUNNER_TEMP/fuse"
+          temp=$RUNNER_TEMP
+          # One spelling of the folder that both Git's bash and Ruby read.
+          if [ "$RUNNER_OS" = Windows ]; then temp=$(cygpath -m "$RUNNER_TEMP"); fi
+          fuse="$temp/fuse"
           check() { ruby script/check_build.rb website "$VERSION" "$1"; }
           case "$RUNNER_OS" in
             Windows)
-              7z x -y -bd -o"$RUNNER_TEMP/zip" "$fuse"/*.zip > /dev/null && check "$RUNNER_TEMP/zip"
-              7z x -y -bd -o"$RUNNER_TEMP/installer" "$fuse"/*-setup.exe > /dev/null && check "$RUNNER_TEMP/installer" ;;
+              7z x -y -bd -o"$temp/zip" "$fuse"/*.zip > /dev/null
+              check "$temp/zip"
+              7z x -y -bd -o"$temp/installer" "$fuse"/*-setup.exe > /dev/null
+              check "$temp/installer" ;;
             macOS)
-              mkdir -p "$RUNNER_TEMP/tar" && tar -xzf "$fuse"/*.tar.gz -C "$RUNNER_TEMP/tar" && check "$RUNNER_TEMP/tar"
-              hdiutil attach -nobrowse -readonly -mountpoint "$RUNNER_TEMP/dmg" "$fuse"/*.dmg
-              status=0; check "$RUNNER_TEMP/dmg" || status=$?
-              hdiutil detach "$RUNNER_TEMP/dmg"
+              mkdir -p "$temp/tar"
+              tar -xzf "$fuse"/*.tar.gz -C "$temp/tar"
+              check "$temp/tar"
+              hdiutil attach -nobrowse -readonly -mountpoint "$temp/dmg" "$fuse"/*.dmg
+              status=0; check "$temp/dmg" || status=$?
+              hdiutil detach "$temp/dmg"
               exit "$status" ;;
             Linux)
-              mkdir -p "$RUNNER_TEMP/tar" && tar -xzf "$fuse"/*.tar.gz -C "$RUNNER_TEMP/tar" && check "$RUNNER_TEMP/tar"
-              mkdir -p "$RUNNER_TEMP/appimage" && cp "$fuse"/*.AppImage "$RUNNER_TEMP/appimage/app.AppImage"
-              chmod +x "$RUNNER_TEMP/appimage/app.AppImage"
-              (cd "$RUNNER_TEMP/appimage" && ./app.AppImage --appimage-extract > /dev/null) && check "$RUNNER_TEMP/appimage/squashfs-root" ;;
+              mkdir -p "$temp/tar" "$temp/appimage"
+              tar -xzf "$fuse"/*.tar.gz -C "$temp/tar"
+              check "$temp/tar"
+              cp "$fuse"/*.AppImage "$temp/appimage/app.AppImage"
+              chmod +x "$temp/appimage/app.AppImage"
+              (cd "$temp/appimage" && ./app.AppImage --appimage-extract > /dev/null)
+              check "$temp/appimage/squashfs-root" ;;
           esac
 
       - name: Play the unpacked app with no Ruby on its PATH
