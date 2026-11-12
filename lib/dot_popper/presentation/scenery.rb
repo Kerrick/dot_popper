@@ -5,10 +5,10 @@ module DotPopper
     # What stands in a theme's night, as plain shapes in graphics units:
     # silhouettes of trees, hills, a crooked house, a fence, graves, bats,
     # the wood's trunks, fir boughs and presents, snowy rooftops and a
-    # sleigh, a snowy yard, a mantel by the fire, a sleigh ride, and a
-    # farm at Thanksgiving. It knows no drawing library; Shell::Scene
-    # bakes these once, for the screen's size, into a canvas at the
-    # screen's own resolution.
+    # sleigh, a snowy yard, a mantel by the fire, a sleigh ride, a farm at
+    # Thanksgiving, and the edge of a wood where turkeys roost. It knows
+    # no drawing library; Shell::Scene bakes these once, for the screen's
+    # size, into a canvas at the screen's own resolution.
     #
     # Every shape is convex or a fan about its first point, so a plain
     # filled polygon draws it.
@@ -28,6 +28,7 @@ module DotPopper
         when :churchyard then churchyard(width, height)
         when :boughs then boughs(width, height)
         when :farm then farm(width, height)
+        when :roost then roost(width, height)
         when :rooftops then rooftops(width, height)
         when :snowfield then snowfield(width, height)
         when :mantel then mantel(width, height)
@@ -732,6 +733,54 @@ module DotPopper
         out << Dot.new(x: at.call(17, -12)[0], y: at.call(17, -12)[1], radius: 2 * s, color: Color.hex("#ffc870", 0.45))
       end
 
+      # The edge of a wood at nightfall, where turkeys roost: a far line of
+      # trees, a field with round hay bales and a rail fence, and two great
+      # oaks with turkeys gone up into their limbs for the night.
+      def roost(width, height)
+        out = []
+        land = width > height
+        far_c = Color.hex("#221a30")
+        mid_c = Color.hex("#140f1e")
+        ink = Color.hex("#07060d")
+        far = ->(f) { height * ((land ? 0.76 : 0.8) + (0.02 * Math.sin((f * 4) + 0.5)) + (0.008 * Math.sin(f * 15))) }
+        hill_strip(out, far_c, width, height, &far)
+        r = Random.new(88)
+        x = 0.0
+        while x < width
+          out << Dot.new(x:, y: far.call(x / width) - 3, radius: r.rand(8.0..16.0) * (land ? 1.2 : 1.0), color: far_c)
+          x += r.rand(9.0..16.0)
+        end
+        field = ->(f) { height * ((land ? 0.86 : 0.885) + (0.01 * Math.sin((f * 2.2) + 1.3))) }
+        hill_strip(out, mid_c, width, height, &field)
+        [[0.42, 1.0], [0.52, 0.8], [0.66, 0.9], [0.78, 0.7]].each do |f, size|
+          next if !land && f > 0.7
+
+          rad = size * (land ? 15 : 12)
+          out << Dot.new(x: width * f, y: field.call(f) - (rad * 0.85), radius: rad, color: mid_c)
+        end
+        near = ->(f) { height * ((land ? 0.92 : 0.935) + (0.012 * Math.sin((f * 3.1) + 0.2))) }
+        hill_strip(out, ink, width, height, &near)
+        fence(out, ink, width * 0.3, width, near, width)
+        [[land ? 0.12 : 0.16, land ? 0.24 : 0.2, land ? 46 : 34, -0.08, 5], [land ? 0.9 : 0.92, land ? 0.17 : 0.13, land ? 34 : 24, -0.3, 61]].each do |f, reach, w, lean, rs|
+          forks = []
+          oak(out, ink, width * f, near.call(f) + 8, (-Math::PI / 2) + lean, height * reach, w, 5, Random.new(rs), forks)
+          forks.select { |_, _, depth| depth.between?(3, 4) }.each_with_index do |(bx, by, _), i|
+            roosting_turkey(out, ink, bx, by, land ? 2.1 : 1.6, i.even? ? 1 : -1) if i.even?
+          end
+        end
+        out
+      end
+
+      # A turkey asleep on a limb: a round body, its tail hanging, its head
+      # sunk in its shoulders.
+      def roosting_turkey(out, color, x, y, s, facing)
+        out << Fan.new(color:, points: [[x - (facing * 4 * s), y - (4 * s)], [x - (facing * 9 * s), y - (2 * s)], [x - (facing * 13 * s), y + (9 * s)],
+                                        [x - (facing * 7 * s), y + (11 * s)], [x - (facing * 2 * s), y + (2 * s)]])
+        out << Dot.new(x:, y: y - (6 * s), radius: 7 * s, color:)
+        out << Dot.new(x: x + (facing * 6 * s), y: y - (11 * s), radius: 3 * s, color:)
+        out << segment([x + (facing * 2 * s), y], [x + (facing * 2 * s), y + (3 * s)], 1.2 * s, 1.2 * s, color)
+      end
+
       # A farm at dusk on Thanksgiving, at three depths: far hills and a
       # line of trees; the farmhouse, its windows lit for dinner, with
       # smoke from its chimney, and a barn and silo; and near, a tall oak
@@ -856,7 +905,7 @@ module DotPopper
 
       # An oak late in the fall: a broad crown of crooked limbs, a few
       # leaves still on their tips.
-      def oak(out, color, x, y, angle, length, width, depth, random)
+      def oak(out, color, x, y, angle, length, width, depth, random, forks = nil)
         steps = 3
         points = [[x, y]]
         bent = angle
@@ -878,9 +927,10 @@ module DotPopper
           return
         end
         out << Dot.new(x: tip[0], y: tip[1], radius: width * 0.3, color:)
+        forks << [tip[0], tip[1], depth] if forks
         spread = depth > 3 ? 1.1 : 0.8
         random.rand(3..4).times do
-          oak(out, color, tip[0], tip[1], bent + random.rand(-spread..spread), length * random.rand(0.58..0.74), width * 0.55, depth - 1, random)
+          oak(out, color, tip[0], tip[1], bent + random.rand(-spread..spread), length * random.rand(0.58..0.74), width * 0.55, depth - 1, random, forks)
         end
       end
     end

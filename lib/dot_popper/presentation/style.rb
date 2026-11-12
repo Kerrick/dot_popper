@@ -39,7 +39,8 @@ module DotPopper
         Themes::Snowman.theme(PALETTE, hex),
         Themes::Peppermint.theme(PALETTE, hex),
         Themes::JingleBell.theme(PALETTE, hex),
-        Themes::PumpkinPie.theme(PALETTE, hex)
+        Themes::PumpkinPie.theme(PALETTE, hex),
+        Themes::Turkey.theme(PALETTE, hex)
       ].freeze
 
       WORDS = Words.new(
@@ -67,7 +68,7 @@ module DotPopper
         quit: ByInput.new(touch: "Quit", mouse: "Quit", gamepad: "Quit (B)"),
         # The Themes screen: its button's word and heading, and each theme's name.
         themes: { title: "Themes", new: "A new theme", later: "Not now", use: "Use %s", classic: "Classic", ghost: "Ghost", jack_o_lantern: "Jack-o'-lantern", awake: "Awake", eclipse: "Eclipse",
-                  ornament: "Ornament", santa: "Santa", snowman: "Snowman", peppermint: "Peppermint", jingle_bell: "Jingle bell", pumpkin_pie: "Pumpkin pie" }.freeze,
+                  ornament: "Ornament", santa: "Santa", snowman: "Snowman", peppermint: "Peppermint", jingle_bell: "Jingle bell", pumpkin_pie: "Pumpkin pie", turkey: "Turkey" }.freeze,
         offer: {
           entry: "Get Pro", heading: "Dot Popper Pro", no_games: "No games left today.",
           includes: { games: "Unlimited games", achievements: "Achievements", themes: "Themes", groups: "Friend groups" }.freeze,
