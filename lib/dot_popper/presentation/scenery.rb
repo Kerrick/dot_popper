@@ -199,28 +199,61 @@ module DotPopper
         end
       end
 
-      # Fir boughs hanging in from the top corners.
+      # Inside a Christmas tree: fir boughs, far ones paler, reaching in
+      # from both sides at every height, with near ones heavy at the top
+      # corners.
       def boughs(width, height)
         out = []
         land = width > height
-        reach = land ? 0.42 : 0.62
-        [[Color.hex("#0b1a16"), 0], [Color.hex("#040b09"), 1]].each do |ink, layer|
+        layers = [[Color.hex("#0b1d18"), land ? 4 : 5, 0.34..0.55, 0.75],
+                  [Color.hex("#061210"), land ? 3 : 4, 0.4..0.62, 0.9],
+                  [Color.hex("#030a08"), 2, 0.5..0.75, 1.15]]
+        presents(out, Color.hex("#050a08"), width, height)
+        layers.each_with_index do |(ink, count, reach, scale), layer|
           [[0, 1], [width, -1]].each_with_index do |(x0, side), k|
             r = Random.new(70 + (layer * 10) + k)
-            3.times do |b|
-              y0 = (b * 0.09 * height) - (layer * 30) + r.rand(-20.0..20.0)
-              length = width * reach * r.rand(0.6..1.0) * (layer.zero? ? 1.1 : 0.9)
-              angle = side.positive? ? r.rand(0.15..0.5) : Math::PI - r.rand(0.15..0.5)
-              bough(out, ink, x0, y0, angle, length, r)
+            count.times do |b|
+              span = layer == 2 ? 0.22 : 0.98
+              y0 = (((b + 0.5 + (side.positive? ? 0 : 0.5)) / count * span) - (layer == 2 ? 0.04 : 0.02)) * height + r.rand(-12.0..12.0)
+              length = [width, height].min * r.rand(reach) * (land ? 1.25 : 1.0)
+              angle = side.positive? ? r.rand(0.05..0.4) : Math::PI - r.rand(0.05..0.4)
+              bough(out, ink, x0 - (side * 10), y0, angle, length, r, scale)
             end
           end
         end
         out
       end
 
+      # The floor under the tree, and presents on it, each with a bow.
+      def presents(out, color, width, height)
+        land = width > height
+        floor = height * (land ? 0.9 : 0.93)
+        out << Fan.new(color:, points: [[0, floor], [width, floor], [width, height], [0, height]])
+        r = Random.new(5)
+        x = width * (land ? 0.04 : -0.02)
+        while x < width
+          w = r.rand(0.7..1.3) * (land ? 96 : 66)
+          h = w * r.rand(0.55..1.15)
+          gap = r.rand(0.0..1.0) < 0.35 && x > width * 0.2 ? w * 1.4 : 0
+          x += gap
+          unless gap.positive? && x > width * 0.4 && x < width * 0.6
+            out << Fan.new(color:, points: [[x, floor + 2], [x + w, floor + 2], [x + w, floor - h], [x, floor - h]])
+            bow(out, color, x + (w / 2), floor - h, w * 0.22)
+          end
+          x += w + r.rand(2.0..10.0)
+        end
+      end
+
+      # A bow seen from the front: two loops and two tails.
+      def bow(out, color, x, y, size)
+        out << Fan.new(color:, points: [[x, y + 1], [x - size, y - (size * 0.75)], [x - (size * 1.15), y - (size * 0.35)], [x - (size * 0.9), y + (size * 0.05)]])
+        out << Fan.new(color:, points: [[x, y + 1], [x + (size * 0.9), y + (size * 0.05)], [x + (size * 1.15), y - (size * 0.35)], [x + size, y - (size * 0.75)]])
+        out << Dot.new(x:, y: y - (size * 0.1), radius: size * 0.22, color:)
+      end
+
       # A fir bough: a drooping stem with twigs either side, all of them
       # thick with short needles.
-      def bough(out, color, x, y, angle, length, random)
+      def bough(out, color, x, y, angle, length, random, scale = 1.0)
         steps = 10
         droop = Math.cos(angle).positive? ? 0.06 : -0.06
         points = [[x, y]]
@@ -231,8 +264,8 @@ module DotPopper
         end
         points.each_cons(2).with_index do |(a, b), i|
           f = i.to_f / steps
-          out << segment(a, b, (6 * (1 - f)) + 2, (6 * (1 - f - (1.0 / steps))) + 2, color)
-          needles(out, color, a, b, 13 * (1 - (f * 0.4)), random)
+          out << segment(a, b, ((6 * (1 - f)) + 2) * scale, ((6 * (1 - f - (1.0 / steps))) + 2) * scale, color)
+          needles(out, color, a, b, 13 * scale * (1 - (f * 0.4)), random)
           next if i.zero?
 
           dir = Math.atan2(b[1] - a[1], b[0] - a[0])
@@ -240,8 +273,8 @@ module DotPopper
             twig = dir + (side * 0.75) + random.rand(-0.15..0.15)
             reach = length * 0.22 * (1 - (f * 0.6)) * random.rand(0.7..1.0)
             tip = [a[0] + (Math.cos(twig) * reach), a[1] + (Math.sin(twig) * reach) + (reach * 0.15)]
-            out << segment(a, tip, 2.4, 1.2, color)
-            needles(out, color, a, tip, 9 * (1 - (f * 0.4)), random)
+            out << segment(a, tip, 2.4 * scale, 1.2 * scale, color)
+            needles(out, color, a, tip, 10 * scale * (1 - (f * 0.4)), random)
           end
         end
       end
@@ -249,8 +282,8 @@ module DotPopper
       # Short needles either side of the twig from +a+ to +b+, swept forward.
       def needles(out, color, a, b, size, random)
         dir = Math.atan2(b[1] - a[1], b[0] - a[0])
-        6.times do |n|
-          t = (n + 0.5) / 6.0
+        8.times do |n|
+          t = (n + 0.5) / 8.0
           at = [a[0] + ((b[0] - a[0]) * t), a[1] + ((b[1] - a[1]) * t)]
           [-1, 1].each do |side|
             angle = dir + (side * 0.9) + random.rand(-0.12..0.12)
