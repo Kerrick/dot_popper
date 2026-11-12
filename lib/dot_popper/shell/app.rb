@@ -67,7 +67,7 @@ module DotPopper
         test_build = !Build.store?(@channel)
         @gone = Continuity::Gone.new(SaveFile.new(name: "setdef.txt"))
         pins = trusted_pins
-        license = Continuity::License.new(SaveFile.new(name: "license.txt"), pins:)
+        license = Continuity::License.new(license_store, pins:)
         @watch = watch(license, pins, test_build)
         entitlement = Entitlement.new(forced: Entitlement.forced?(@env, os:), license:, trust: trusted_receipts)
         clipboard = Clipboard.new
@@ -450,6 +450,11 @@ module DotPopper
       # The keys this run trusts, decided by the build alone: the test
       # keys in a test build, setdef's in a store build, whatever the
       # environment says.
+      # Where the license key is kept: license.txt, except in an app
+      # store's build, which never reads that file (so a key left on disk
+      # grants nothing and is never sent) and keeps nothing in its place.
+      def license_store = Build.license_keys?(@channel) ? SaveFile.new(name: "license.txt") : ScoreRecord::Memory.new
+
       def trusted_pins = Build.store?(@channel) ? Continuity::PINNED : Continuity::TEST_PINS
 
       # Whose receipts prove Pro, by the channel alone: in a test build only

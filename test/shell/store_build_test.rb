@@ -90,4 +90,24 @@ class StoreBuildTest < Minitest::Test
     assert_equal DotPopper::Groups::Settings::SERVER_URL, DotPopper::Groups::Settings.server_url(plain)
     assert_equal Date.new(2031, 1, 1), app(nil).send(:today).call
   end
+
+  # A license file on disk is never read in an app store's build, so it
+  # grants nothing and the watch owes the server no request about it.
+  def test_an_app_stores_build_never_reads_a_license_key_and_asks_the_server_nothing
+    key = C::LicenseKey.issue(C::TestKeys::LICENSE)
+    DotPopper::Build::STORES.each do |channel|
+      store = app(channel).send(:license_store)
+
+      assert_instance_of DotPopper::ScoreRecord::Memory, store, channel
+      assert_nil store.read, channel
+      license = C::License.new(store, pins: C::TEST_PINS)
+
+      refute_predicate license, :pro?, channel
+      assert_nil license.due("n" * 16), channel
+      assert_equal :entered, license.enter(key.text), "only a Paste Key could, and a store never shows it"
+    end
+    %w[website].push(nil).each do |channel|
+      assert_instance_of DotPopper::Shell::SaveFile, app(channel).send(:license_store), channel.inspect
+    end
+  end
 end
