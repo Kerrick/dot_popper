@@ -34,7 +34,21 @@ CI takes each store's values from the repository's settings on GitHub, never fro
 | `ANDROID_UPLOAD_KEY_ALIAS` | Secret | The key's alias in that keystore. | Kept with the keystore. |
 | `ANDROID_UPLOAD_KEY_PASSWORD` | Secret | The keystore's and key's password. | Yes. |
 
-A `v1*` tag fails (the Release channel workflow) while `MSIX_IDENTITY_NAME`, `MSIX_PUBLISHER` or `APPLE_TEAM_ID` is unset or a stand-in (`script/check_store_identifiers.rb`), or while the Play key is unpinned (`script/check_build_channel.rb`). Set a variable with `gh variable set NAME --repo setdef/dot_popper`, and a secret with `gh secret set NAME --repo setdef/dot_popper`. Apple's signing will add certificates and an App Store Connect API key here, all as secrets, once that work is done. The Microsoft Store signs an MSIX itself, so it needs no key.
+`ruby script/check_store_identifiers.rb CHANNEL` fails while an identifier that channel's build needs is unset or a stand-in: the two `MSIX_` variables for `microsoft-store`, `APPLE_TEAM_ID` for `mac-app-store` and `app-store`, and none for `website` or `google-play`. No workflow releases a store's build yet, so nothing runs it; a store's release job will. A `google-play` build fails its check while the Play key is unpinned (`script/check_build.rb`). Set a variable with `gh variable set NAME --repo setdef/dot_popper`, and a secret with `gh secret set NAME --repo setdef/dot_popper`. Apple's signing will add certificates and an App Store Connect API key here, all as secrets, once that work is done. The Microsoft Store signs an MSIX itself, so it needs no key.
+
+## setdef's website (the `website` channel)
+
+The downloads for Windows, macOS and Linux that sell Pro outside any store, through a checkout in the player's browser and a license key ([store and Pro](design/store-and-pro.md), License keys).
+
+- **Account:** none for the builds. The checkout's payment company and setdef's server (`/buy`, issuing and emailing keys) are outside this repository.
+- **The build:** the Package workflow's `website` jobs make it on every push, one for each system. Each sets the channel with `ruby script/set_build_channel.rb website` before `lota fuse`, so the app sells Pro through `BrowserCheckout` and trusts only setdef's keys. Each unpacks every file it made and checks the app in it with `ruby script/check_build.rb website VERSION FOLDER` (the channel, setdef's pins, that no test key or fake receipt grants anything, the version), then plays the app with the bot, which makes it an automated run that reaches no outside host, and requires Ed25519 to verify in the packaged Ruby. They upload `website-windows-x64`, `website-macos-arm64` and `website-linux-x86_64`, never mixed with the test builds' `dot-popper-*` artifacts. Like the test builds, they are not signed or notarized.
+- **How Pro is bought:** Buy opens `https://dot-popper.setdef.com/buy` (`BrowserCheckout::URL`) in the browser, the server sends the license key by email, and Paste license key enters it. `WebsiteStore::PRICE` (`$1.99`) must match the checkout's price; no check can see the checkout, so compare them by hand.
+- **Releasing it:**
+  1. Choose the tag. `WEBSITE_TAGS` in `script/release_kind.rb` is the one place that says which tags sell Pro: today `v1.0.0` and up, and with a suffix (`v1.0.0-rc.1`) a prerelease of the same. To sell from another number, change that line in a commit first; `ruby script/release_kind.rb TAG` prints `website` for a tag that sells Pro. Every `v0.*` tag that does not match stays a playtest release.
+  2. Set `version:` in `fledge.yml` to the tag's number (without the `v` or a suffix) in the commit you tag. The check fails every website build whose version differs.
+  3. Push the commit to `trunk`, wait for the Package workflow to pass on it, then tag it and push the tag.
+  4. The Package workflow's `website-release` job, once the tests and all three website builds pass, makes the tag's release with the website builds alone: an ordinary release, or a prerelease for a tag with a suffix. It refuses a tag that already has a release. The Kits and Android workflows attach nothing to it, since the test builds and kits give Pro away through their fake checkout. The `privacy-document` job publishes the privacy document as for any tag.
+- **Unverified:** a real purchase through the checkout; the server's key matching the game's pins (enter a key issued by the server in a website build); the release job itself, which runs only on a website tag.
 
 ## Google Play
 
@@ -79,7 +93,7 @@ A `v1*` tag fails (the Release channel workflow) while `MSIX_IDENTITY_NAME`, `MS
   5. Uploads `mac-app-store-unsigned`, an unsigned `productbuild` package. It is never attached to a playtest release.
 - **How Pro is bought:** the game starts the helper once for each request, with the iOS host's `dotpopper-store://` URL, and reads the answer from the helper's standard output. The answer carries StoreKit's signed transaction. The game checks it offline against Apple Root CA - G3 at every launch, the same code as iOS (`Receipt::Apple`). An automated run starts no helper.
 - **What needs the maintainer's account:**
-  - The Apple Developer Program, and the Team ID in the repository variable `APPLE_TEAM_ID` (a `v1*` tag fails without it).
+  - The Apple Developer Program, and the Team ID in the repository variable `APPLE_TEAM_ID` (`script/check_store_identifiers.rb mac-app-store` fails without it).
   - A Mac App Store provisioning profile for `com.setdef.DotPopper`. It adds `com.apple.application-identifier` and `com.apple.developer.team-identifier` to the app's entitlements.
   - Signing with the "Apple Distribution" (or "3rd Party Mac Developer Application") identity in the order above. The package is signed with "3rd Party Mac Developer Installer": `productbuild --component "Dot Popper.app" /Applications --sign "3rd Party Mac Developer Installer: …" Dot-Popper.pkg`. Upload with Transporter or `xcrun altool`.
   - An App Store Connect record (the same bundle identifier serves the App Store and the Mac App Store) and the non-consumable `com.setdef.DotPopper.pro`.

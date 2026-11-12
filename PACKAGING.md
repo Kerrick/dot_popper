@@ -26,6 +26,8 @@ The [Package workflow](.github/workflows/package.yml) builds all three platforms
 2. Open the [Package workflow's runs](https://github.com/setdef/dot_popper/actions/workflows/package.yml) and choose a run with a green check mark.
 3. At the bottom of the run's page, under Artifacts, download `dot-popper-windows-x64`, `dot-popper-macos-arm64`, or `dot-popper-linux-x86_64`. Each one is a `.zip` holding that platform's two files.
 
+Those are test builds, for playtesting: their Buy uses a fake checkout. The same run's `website-windows-x64`, `website-macos-arm64` and `website-linux-x86_64` are the builds for sale, with the `website` channel set, whose Buy opens setdef's checkout in the browser ([doc/publishing.md](doc/publishing.md)).
+
 GitHub deletes artifacts after its retention period, which is 90 days by default.
 
 ### Installing on Windows
@@ -58,7 +60,7 @@ A packaged build saves the score record, the sound setting, and the playtest log
    $ git tag v0.9.0 && git push origin v0.9.0
    ```
 
-Pushing a tag that starts with `v0.` makes the Package workflow attach the apps, and the Kits workflow the playtest kits, to a new prerelease for that tag. A tag with a suffix, such as `v0.8.2-rc.1`, works the same way, which is how to try a release's kits before the release itself.
+Pushing a playtest tag, which today is any tag that starts with `v0.`, makes the Package workflow attach the apps, and the Kits workflow the playtest kits, to a new prerelease for that tag. A tag with a suffix, such as `v0.8.2-rc.1`, works the same way, which is how to try a release's kits before the release itself. `ruby script/release_kind.rb TAG` says what a tag releases: `playtest`, `website` (the builds for sale alone, from `v1.0.0` on; see [doc/publishing.md](doc/publishing.md)), or `none`.
 
 ## How the build is put together
 
@@ -111,13 +113,16 @@ Use the gem for your platform: `x64-mingw-ucrt` on Windows with RubyInstaller's 
 
 ## What CI checks
 
-The [Package workflow](.github/workflows/package.yml) runs on every push to `trunk`, on every tag that starts with `v0.`, and when started by hand from GitHub's Actions page. It has five jobs:
+The [Package workflow](.github/workflows/package.yml) runs on every push to `trunk`, on every tag that starts with `v`, and when started by hand from GitHub's Actions page. Its jobs:
 
 - **Test**, on Ubuntu, runs `bundle exec rake test`.
 - **Windows x64**, on `windows-latest`; **macOS arm64**, on `macos-15`; and **Linux x86_64**, on `ubuntu-24.04` (its glibc is 2.39, Fledge's Linux floor), each run `lota fuse`, unpack the app under a folder with a space in its name, play it with the autoplay bot for 20 seconds with no Ruby on its `PATH` and an all but empty environment, and upload the `dot-popper-windows-x64`, `dot-popper-macos-arm64`, or `dot-popper-linux-x86_64` artifact. GitHub's Windows and Linux runners have no graphics card, so the game draws there with Mesa's software OpenGL (llvmpipe): on Windows, Mesa's `opengl32.dll` from the runner's MSYS2 goes beside the program, and on Linux it draws on Xvfb. The run must exit with status 0 and print its frame rate. The Windows job then plays the app again allowed only Vulkan (`DOT_POPPER_RENDERERS=vulkan`), which the runner can't start, and checks that the game ran its own `Dot Popper.exe` again without Vulkan, drew with OpenGL, and exited with status 0 ([ADR-0007](doc/adr/0007-renderers-per-platform-with-a-relaunch-without-vulkan.md)).
-- **Release** runs only for a `v0.` tag. It attaches the apps to a GitHub prerelease for the tag. It requires the Windows job to have passed. Nothing is published to RubyGems.
+- **What this run releases** asks `script/release_kind.rb` about the tag, if any, and gives the other jobs the version the apps must have.
+- **Website build**, on each of the same three runners, sets the `website` channel, fuses, checks the app in every file it made with `script/check_build.rb`, plays it with the bot as above, and uploads `website-windows-x64`, `website-macos-arm64` or `website-linux-x86_64`. The **Windows MSIX** and **Mac App Store** jobs, the stores' own builds, run the same check on their apps ([doc/publishing.md](doc/publishing.md)).
+- **Release** runs only for a playtest tag. It attaches the test builds and the MSIX to a GitHub prerelease for the tag. It requires the Windows job to have passed. Nothing is published to RubyGems.
+- **Release the website builds** runs only for a website tag, once the tests and every website build have passed. It makes the tag's release with the website builds alone.
 
-The [Kits workflow](.github/workflows/kits.yml), on `v*` tags and by hand, builds the playtest kits and attaches them to the tag's release too. The [Android workflow](.github/workflows/android.yml) does the same for the experimental Android kit. Both are described below.
+The [Kits workflow](.github/workflows/kits.yml), on `v*` tags and by hand, builds the playtest kits and attaches them to a playtest tag's release too, never to a website release. The [Android workflow](.github/workflows/android.yml) does the same for the experimental Android kit. Both are described below.
 
 ## Playtest kits
 

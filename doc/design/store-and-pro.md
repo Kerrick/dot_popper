@@ -35,9 +35,10 @@ Nothing the game writes grants Pro: no file, flag or count. Within a run nothing
 
 What a build trusts and sells is decided by the build alone, never by anything a player can set at run time (the maintainer's rule: a kitchen-table workaround such as setting a variable must not grant Pro).
 
-- `DotPopper::Build::CHANNEL` (`lib/dot_popper/build.rb`) is the channel the build is sold through, or nil for a test build. `Presentation::Storefront::BUILD_CHANNEL` is the same constant. `Storefront.test_build?` is `BUILD_CHANNEL.nil?`.
-- The repository's own file keeps it nil, so every playtest kit and CI run is a test build. A store build's CI job sets it before `lota fuse` with `ruby script/set_build_channel.rb CHANNEL`, which rewrites the `CHANNEL = nil` line and refuses any channel but `mac-app-store`, `microsoft-store` and `website`. The Package workflow's `msix` job runs it with `microsoft-store`, and its `mac-app-store` job with `mac-app-store`.
-- No channel name exists for the App Store or Google Play builds yet; on a phone any channel other than `website` gives the native port.
+- `DotPopper::Build::CHANNEL` (`lib/dot_popper/build.rb`) is the channel the build is sold through, or nil for a test build. `Presentation::Storefront::BUILD_CHANNEL` is the same constant. `Storefront.test_build?` is `BUILD_CHANNEL.nil?`. A build with a channel is a store build in the code's words (`Build.store?`), the `website` channel's included.
+- The channels' names are listed once, in `Build`: `app-store`, `mac-app-store`, `google-play` and `microsoft-store` (`Build::STORES`, the app stores), and `website` (`Build::WEBSITE`), together `Build::CHANNEL_NAMES`. `Storefront::MAC_APP_STORE`, `MICROSOFT_STORE` and `WEBSITE` are the same strings, and the scripts take the list from `Build`.
+- The repository's own file keeps it nil, so every playtest kit and every test build CI makes is a test build. A channel's own CI job sets it before `lota fuse` with `ruby script/set_build_channel.rb CHANNEL`, which rewrites the `CHANNEL = nil` line and refuses a name not in `Build::CHANNEL_NAMES`. The Package workflow's `website` jobs run it with `website`, its `msix` job with `microsoft-store`, and its `mac-app-store` job with `mac-app-store`. No workflow builds `app-store` or `google-play` yet. On a phone any channel other than `website` gives the native port.
+- **License keys:** `Build.license_keys?` is false for the four app stores' channels, whose copies never accept, keep, verify or send a website license key (Apple 3.1.1; Google's billing rules): `Shell::App#license_store` keeps nothing in place of `license.txt`, so a key left on disk grants nothing and is never sent. The website channel and a test build keep `license.txt`.
 
 ### Developer settings in a store build
 
@@ -53,7 +54,7 @@ In a store build, also:
 - free games are always metered (`Shell::App#player?` is true, so the bot and scenarios do not skip the limit);
 - an automated run still sells through the build's channel and uses the real pins, so a pipeline that wants fakes runs the test build.
 
-Tests: `test/build_test.rb`, `test/shell/store_build_test.rb`, `test/set_build_channel_test.rb`.
+Tests: `test/build_test.rb`, `test/shell/store_build_test.rb`, `test/set_build_channel_test.rb`, `test/check_build_test.rb`.
 
 ### Which store each build gets
 
@@ -69,7 +70,7 @@ Tests: `test/build_test.rb`, `test/shell/store_build_test.rb`, `test/set_build_c
 
 `FakeStore`, `NativeStore` and `StoreHelper` sit behind a `Storefront`; `WebsiteStore` and `NoStorefront` answer the Storefront's methods themselves. `Storefront::SYSTEMS` (iOS, Android) are the systems whose hosts catch the store URL; `HELPER_CHANNELS` maps each computer store's channel to its system. An iOS build never takes the website store (Apple 3.1.1). `Storefront::CHANNELS` is the registry for other computer channels (such as Steam), each a callable taking `entitlement:`; it is empty. `NoStorefront` offers nothing, so no one is offered a purchase that cannot complete. No environment variable selects any of this.
 
-`script/check_build_channel.rb` and the release checks are in [Release-tag checks](#release-tag-checks).
+`script/check_build.rb` and the release checks are in [Release checks](#release-checks).
 
 ## The Storefront port
 
@@ -157,7 +158,7 @@ A `Receipt::Trust` holds the Apple roots, the Play keys, the app's ID, the produ
 
 `Receipt::TestKey` is a throwaway RSA key whose private half ships on purpose, as `Continuity::TestKeys` do. A test receipt proves nothing in a store build, and an edited `store_answer.txt` or ledger proves nothing anywhere (both tested). On Windows, replacing `dot-popper-store.exe` in the package's read-only install folder would grant Pro; that is changing the app's code, which the maintainer accepts as inevitable.
 
-`Receipt::PLAY_KEYS` is empty until the maintainer copies the app's licensing key from the Play Console (Monetize, Monetization setup). Until then no Google Play purchase proves Pro, and `script/check_build_channel.rb` fails a release tag.
+`Receipt::PLAY_KEYS` is empty until the maintainer copies the app's licensing key from the Play Console (Monetize, Monetization setup). Until then no Google Play purchase proves Pro, and `script/check_build.rb` fails a `google-play` build.
 
 Tests: `test/receipt_test.rb` (including chains made in the test for `Receipt::Apple`), `test/entitlement_test.rb`.
 
@@ -248,14 +249,16 @@ The proof and the license requests always go to setdef's own server, never to a 
 
 Tests: `test/continuity/license_test.rb`, `test/continuity/signatures_test.rb`, `test/shell/store_build_test.rb`.
 
-## Release-tag checks
+## Release checks
 
-`.github/workflows/release-channel.yml` runs on every `v1*` tag, so a store release cannot ship a test build's fakes or a stand-in identifier:
+A build for sale is checked as it was built, not as the repository says: the repository's own `build.rb` is always a test build.
 
-- `ruby script/check_build_channel.rb` fails while `Storefront::BUILD_CHANNEL` is nil, and while `Receipt::PLAY_KEYS` is empty.
-- `ruby script/check_store_identifiers.rb` fails while any of the repository variables `MSIX_IDENTITY_NAME`, `MSIX_PUBLISHER` or `APPLE_TEAM_ID` is unset, still a placeholder (`setdef.DotPopper`, `CN=Dot Popper test`), or the wrong form.
+- `ruby script/check_build.rb CHANNEL VERSION FOLDER` loads the game's code from the unpacked app in FOLDER (its `game/dot_popper`, as `lota fuse` lays it out), with Lota installed, and fails unless all of it is the app's own; `Build::CHANNEL` is CHANNEL; `Shell::App#trusted_pins` are `SETDEF_PINS` and share no key with `TEST_PINS`; no license key signed by any of `Continuity::TestKeys` verifies, no proof certificate by the test root verifies, and the fake store's receipt proves nothing in it, each beside its control (the same proof does verify against the test build's trust, so a Ruby that verifies nothing fails); no setting grants Pro or changes the server; and the app's `fledge.yml` says VERSION. A `google-play` build also needs `Receipt::PLAY_KEYS`; a `website` build needs no Play key or store identifier. It reaches nothing on the internet.
+- The Package workflow runs it on every build for sale it makes: each file of each `website` build (the `.zip` and the installer on Windows, the `.tar.gz` and the `.dmg` on macOS, the `.tar.gz` and the AppImage on Linux), the MSIX's folder and the Mac App Store app. The packaged Ruby's Ed25519 is checked by each playthrough instead (`DOT_POPPER_PERF=1`; see [License keys](#license-keys)).
+- `ruby script/check_store_identifiers.rb CHANNEL` fails while an identifier CHANNEL needs is unset in the environment, still a placeholder (`setdef.DotPopper`, `CN=Dot Popper test`), or the wrong form: `MSIX_IDENTITY_NAME` and `MSIX_PUBLISHER` for `microsoft-store`, `APPLE_TEAM_ID` for `mac-app-store` and `app-store`, none for `website` or `google-play`. No workflow releases a store's build yet, so none runs it; the store's release job will, with the repository variables.
+- `ruby script/release_kind.rb TAG` says what a tag releases: `website`, `playtest` or `none` (its `WEBSITE_TAGS`). A `website` release carries the website builds alone; the test builds and the kits, whose fakes give Pro away, go only to a `playtest` prerelease. How to release is in [doc/publishing.md](../publishing.md).
 
-Tests: `test/store_identifiers_test.rb`, `test/set_build_channel_test.rb`.
+Tests: `test/check_build_test.rb` (an app laid out as `lota fuse` lays it out), `test/release_kind_test.rb`, `test/store_identifiers_test.rb`, `test/set_build_channel_test.rb`, `test/build_test.rb`.
 
 ## Unverified
 

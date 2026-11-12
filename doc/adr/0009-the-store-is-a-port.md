@@ -30,13 +30,13 @@ Chosen: option 1, because a test build then sells and limits free games through 
 
 * Good, because everything above the port (the offer, Buy, Restore, the thanks, `Entitlement`, the free-game count) is one body of code for every store.
 * Good, because a new channel is a new adapter, registered by name, with no feature changed, since features ask only `Entitlement#pro?`.
-* Bad, because a store build must set its channel (`Build::CHANNEL`) or it ships the fake store; a `v1*` tag fails while it is nil (`script/check_build_channel.rb`), and the store build jobs set it with `script/set_build_channel.rb`.
+* Bad, because a store build must set its channel (`Build::CHANNEL`) or it ships the fake store; the jobs for sale set it with `script/set_build_channel.rb`, and `script/check_build.rb` checks it in the app they built.
 * Bad, because playtests never touch a real store, so a sandbox purchase on a real phone has to be tried by hand before a store release.
 * Neutral, because a developer reaches the port's failures only in a test build, with `DOT_POPPER_FAKE_STORE_FAILS`.
 
 ### Confirmation
 
-`test/presentation/store_contract.rb` is one suite of what any adapter must do, run against `FakeStore`, `NativeStore` over a real answer file and a stand-in for the host, and `Shell::StoreHelper`; `test/presentation/storefront_test.rb` checks which adapter each channel and system get. `.github/workflows/release-channel.yml` runs the release checks on a `v1*` tag.
+`test/presentation/store_contract.rb` is one suite of what any adapter must do, run against `FakeStore`, `NativeStore` over a real answer file and a stand-in for the host, and `Shell::StoreHelper`; `test/presentation/storefront_test.rb` checks which adapter each channel and system get. The Package workflow runs `script/check_build.rb` on every build for sale it makes.
 
 ## More Information
 

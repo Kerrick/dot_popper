@@ -35,11 +35,11 @@ The Microsoft Store has no receipt the game can verify: Windows.Services.Store p
 * Good, because a test build's fakes (`Receipt::TestKey`, `Continuity::TestKeys`) sign real proofs that verify only in a test build, so playtests exercise the same checks.
 * Bad, because a store copy is Free for the moment before the store answers at launch, and every new `DOT_POPPER_*` setting is inert in a store build until someone adds it to `Build::HARMLESS`.
 * Bad, because an automated run of a store build uses the store's real channel and pins, so a pipeline that wants fakes must run the test build.
-* Bad, because no Play purchase proves Pro until the maintainer pins the app's Play key (`Receipt::PLAY_KEYS`); a `v1*` tag fails while it is empty.
+* Bad, because no Play purchase proves Pro until the maintainer pins the app's Play key (`Receipt::PLAY_KEYS`); a `google-play` build fails its check while it is empty (`script/check_build.rb`).
 
 ### Confirmation
 
-`test/receipt_test.rb`, `test/entitlement_test.rb`, `test/build_test.rb`, `test/shell/store_build_test.rb` and `test/continuity/license_test.rb` check that only verified proof grants Pro, that edited files and test keys prove nothing in a store build, and which settings a store build obeys. `script/check_build_channel.rb` gates `v1*` tags.
+`test/receipt_test.rb`, `test/entitlement_test.rb`, `test/build_test.rb`, `test/shell/store_build_test.rb` and `test/continuity/license_test.rb` check that only verified proof grants Pro, that edited files and test keys prove nothing in a store build, and which settings a store build obeys. `script/check_build.rb` checks each build for sale as it was built.
 
 ## More Information
 
