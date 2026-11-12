@@ -241,6 +241,38 @@ class ScreenPlansTest < Minitest::Test
     end
   end
 
+  # On an upright phone the card showed "Pop a bright dot that has been
+  # on screen for at least 3", its last word cut: the goal's sentence
+  # was wrapped and only its first two lines drawn. Every goal, on every
+  # card Home lays out, shows its whole sentence in at most two lines,
+  # each across the room left of the divider, and all above the card's
+  # bottom edge and its padding. Only the smallest windows leave the card
+  # out, as they always have; phones and roomy windows keep it.
+  def test_homes_goal_card_shows_every_goal_whole
+    measure = RoughMeasure.new
+    kept = [[400, 850], [412, 832], [375, 812], [844, 390], [850, 400], [1200, 800], [1920, 1080]]
+    (SIZES + DESKTOPS).each do |width, height|
+      screen_layout = layout(width, height)
+      [3, 4].product([true, false]) do |tiles, window|
+        rect = HomeScreen.new(layout: screen_layout, type: Style::TYPE, words: WORDS, measure:, played: true,
+                              tile_names: %i[stats achievements themes groups].first(tiles), window:).plan.goal
+        assert rect, "#{width}x#{height}, #{tiles} tiles, window #{window}: the card is shown" if kept.include?([width, height])
+        next unless rect
+
+        DotPopper::DailyGoal::LIST.each do |goal|
+          sentence = WORDS.goal_sentence(goal)
+          card = GoalCard.fit(rect, sentence, measure)
+          name = "#{width}x#{height}, #{tiles} tiles, window #{window}, #{goal}"
+          assert_equal sentence, card.lines.join(" "), name
+          assert_operator card.lines.size, :<=, 2, name
+          card.lines.each { assert_operator measure.width(:bold, card.text_size, it), :<=, card.divider - rect.x - (2 * card.pad) + 1e-6, "#{name}: #{it}" }
+          bottom = card.top + (card.lines.size * measure.height(:bold, card.text_size))
+          assert_operator bottom, :<=, rect.bottom - (card.pad / 2.0) + 1e-6, name
+        end
+      end
+    end
+  end
+
   # The Credits screen: at 400x850, 850x400, 1200x800 and every other
   # size, the heading, the window of text and Back are apart and inside
   # the safe area, every line fits across the window, and scrolled to

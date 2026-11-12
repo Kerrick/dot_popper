@@ -53,20 +53,18 @@ module DotPopper
       def goal(show, rect, alpha)
         palette = pen.palette
         Card.new(pen:).draw(rect, alpha:)
-        pad = [rect.height * 0.18, 16.0].min
-        streak_width = rect.height * 1.1
-        divider = rect.right - streak_width
-        label = pen.fonts.semibold([(rect.height * 0.15).round, 12].max)
-        text = pen.fonts.bold([(rect.height * 0.2).round, 14].max)
+        card = Presentation::GoalCard.fit(rect, show.words.goal_sentence(show.stats_book.goal), FontMeasure.new(pen.fonts))
+        pad = card.pad
+        divider = card.divider
+        label = pen.fonts.semibold(card.label_size)
+        text = pen.fonts.bold(card.text_size)
         done = show.stats_book.goal_done?
         tone = done ? palette.gain : palette.soft
         title = show.words.goal_card_label
         pen.text(title, label, rect.x + pad + (label.width(title) / 2.0), rect.y + pad + (label.height / 2.0), tone, alpha)
         Glyphs.new(pen:).draw(:check, rect.x + pad + label.width(title) + (label.height * 0.9), rect.y + pad + (label.height / 2.0), label.height * 0.9, color: palette.gain, alpha:) if done
-        lines = Presentation::Words.wrap(show.words.goal_sentence(show.stats_book.goal), divider - rect.x - (2 * pad)) { text.width(it) }.first(2)
-        lines.each_with_index do |line, i|
-          y = rect.y + pad + (label.height * 1.25) + (text.height * (i + 0.5))
-          pen.text(line, text, rect.x + pad + (text.width(line) / 2.0), y, done ? palette.gain : palette.cream, alpha)
+        card.lines.each_with_index do |line, i|
+          pen.text(line, text, rect.x + pad + (text.width(line) / 2.0), card.top + (text.height * (i + 0.5)), done ? palette.gain : palette.cream, alpha)
         end
         pen.color(palette.soft, 0.25 * alpha)
         G.line_width = pen.pixels.line_width(1)

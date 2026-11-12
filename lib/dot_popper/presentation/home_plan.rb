@@ -11,6 +11,42 @@ module DotPopper
       def play_button = play
     end
 
+    # Today's goal on Home's card, laid out in +rect+: +pad+ in from its
+    # edges, "Today's goal" at +label_size+, and the goal's whole sentence
+    # in +lines+ at +text_size+, the first line's top at +top+, all left
+    # of the +divider+ before the days in a row. Like a large button's
+    # words, the sentence's type shrinks until it fits, in at most LINES
+    # lines and above the card's bottom, down to SMALLEST; #whole? says
+    # whether it fit by then. Home shows the card only where every goal
+    # fits (.room?), so the card never cuts a goal short.
+    class GoalCard < Data.define(:rect, :pad, :divider, :label_size, :text_size, :top, :lines, :measure)
+      LINES = 2
+      SMALLEST = 11 # as small as a large button's words go (HomePainter#fit)
+
+      def self.fit(rect, sentence, measure)
+        pad = [rect.height * 0.18, 16.0].min
+        label_size = [(rect.height * 0.15).round, 12].max
+        card = new(rect:, pad:, divider: rect.right - (rect.height * 1.1), label_size:, text_size: [(rect.height * 0.2).round, 14].max,
+                   top: rect.y + pad + (measure.height(:semibold, label_size) * 1.25), lines: [], measure:)
+        card = card.at(sentence, card.text_size)
+        card = card.at(sentence, card.text_size - 1) until card.whole? || card.text_size <= SMALLEST
+        card
+      end
+
+      # Whether every daily goal, in +words+, fits whole on a card in +rect+.
+      def self.room?(rect, words, measure) = DailyGoal::LIST.all? { fit(rect, words.goal_sentence(it), measure).whole? }
+
+      def at(sentence, size) = with(text_size: size, lines: Words.wrap(sentence, room) { measure.width(:bold, size, it) })
+
+      def whole?
+        lines.size <= LINES && lines.all? { measure.width(:bold, text_size, it) <= room } &&
+          top + (lines.size * measure.height(:bold, text_size)) <= rect.bottom - (pad / 2.0)
+      end
+
+      # How wide a line may be, left of the divider.
+      def room = divider - rect.x - (2 * pad)
+    end
+
     # The first launch's legend, a reminder of the scoring with no word, in
     # the Tutorial's own signs (Tally): a bright dot, then "+1" and "+1"
     # with a stopwatch; under it a popped dot, then "−2" and "−2" with a
@@ -73,8 +109,11 @@ module DotPopper
         x, y = plan.quit_line
         quit = Rect.new(x: x - 100, y: y - 9, width: 200, height: 18)
         parts.all? { it.y >= safe.y - 1e-6 && it.bottom <= safe.bottom + 1e-6 } &&
-          (parts + [quit]).combination(2).none? { |one, other| one.overlaps?(other) }
+          (parts + [quit]).combination(2).none? { |one, other| one.overlaps?(other) } && (plan.goal.nil? || goal_room?(plan.goal))
       end
+
+      # Whether a card in +rect+ shows every daily goal whole.
+      def goal_room?(rect) = GoalCard.room?(rect, words, measure)
 
       # +tight+: 0 as drawn, 1 with less room between the parts, 2 also
       # without the goal's card.
@@ -153,9 +192,13 @@ module DotPopper
         right_width = safe.right - margin - right_x
         room = safe.height - (2 * margin)
         card_height, tile_height, pill_height = shares(room)
-        between = [(room - card_height - (tile_height * 2) - 10 - pill_height) / 2.0, 6.0].max
-        card_y = safe.y + margin
-        tile_y = card_y + card_height + between
+        card = Rect.new(x: right_x, y: safe.y + margin, width: right_width, height: card_height)
+        card = nil unless played && goal_room?(card)
+        # Where the card is left out after a game, the large buttons and the
+        # bottom row share its room. A first launch keeps it, as before.
+        above = card || !played ? card_height : 0.0
+        between = [(room - above - (tile_height * 2) - 10 - pill_height) / 2.0, 6.0].max
+        tile_y = safe.y + margin + above + between
         pill_y = tile_y + (tile_height * 2) + 10 + between
         tile_width = (right_width - 10) / 2.0
         tiles = tile_rects(tile_names.each_slice(2).to_a, right_x, tile_y, tile_width, tile_height, 10.0)
@@ -169,7 +212,7 @@ module DotPopper
         name = Rect.new(x: safe.x + margin, y: play_y - name_height - 4, width: left_width, height: name_height)
         HomePlan.new(name:, name_size: size, legend: nil, legend_size: nil,
                      play: Rect.new(x: safe.x + margin, y: play_y, width: left_width, height: play_height),
-                     goal: Rect.new(x: right_x, y: card_y, width: right_width, height: card_height), tiles:, pills:,
+                     goal: card, tiles:, pills:,
                      quit_line: [safe.x + margin + (left_width / 2.0), play_y + play_height + 18.0])
       end
 
