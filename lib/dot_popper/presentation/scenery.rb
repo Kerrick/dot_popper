@@ -4,7 +4,8 @@ module DotPopper
   module Presentation
     # What stands in a theme's night, as plain shapes in graphics units:
     # silhouettes of trees, hills, a crooked house, a fence, graves, bats,
-    # the wood's trunks, fir boughs and a farm. It knows no drawing library;
+    # the wood's trunks, fir boughs and presents, snowy rooftops and a
+    # sleigh, and a farm. It knows no drawing library;
     # Shell::Scene bakes these once, for the screen's size, into a canvas
     # at the screen's own resolution.
     #
@@ -26,6 +27,7 @@ module DotPopper
         when :churchyard then churchyard(width, height)
         when :boughs then boughs(width, height)
         when :farm then farm(width, height)
+        when :rooftops then rooftops(width, height)
         else []
         end
       end
@@ -308,6 +310,117 @@ module DotPopper
             out << segment(at, tip, 2.0, 0.8, color)
           end
         end
+      end
+
+      # Snowy rooftops on Christmas Eve: a far row of houses, near roofs
+      # with chimneys, dim lit windows, and a sleigh with its reindeer
+      # going over.
+      def rooftops(width, height)
+        out = []
+        land = width > height
+        far = Color.hex("#101a3a")
+        near = Color.hex("#03050e")
+        snow_far = Color.hex("#34457a")
+        snow_near = Color.hex("#28345e")
+        lamp = Color.hex("#8a6a34", 0.55)
+        base = height * (land ? 0.8 : 0.84)
+        x = -10.0
+        r = Random.new(23)
+        while x < width
+          w = r.rand(0.8..1.3) * (land ? 70 : 46)
+          h = r.rand(0.5..0.9) * w
+          house(out, far, snow_far, lamp, x, base + r.rand(0.0..8.0), w, h, r.rand < 0.5, r)
+          x += w + r.rand(-6.0..4.0)
+        end
+        ground = height * (land ? 0.9 : 0.92)
+        x = -20.0
+        r = Random.new(41)
+        while x < width
+          w = r.rand(0.9..1.4) * (land ? 130 : 90)
+          h = r.rand(0.35..0.6) * w
+          house(out, near, snow_near, lamp, x, ground, w, h, true, r)
+          x += w + r.rand(4.0..20.0)
+        end
+        out << Fan.new(color: near, points: [[0, ground], [width, ground], [width, height], [0, height]])
+        snowy_fir(out, near, snow_near, width * (land ? 0.07 : 0.1), ground + 6, height * (land ? 0.55 : 0.42), land ? 120 : 82)
+        snowy_fir(out, near, snow_near, width * (land ? 0.95 : 0.93), ground + 6, height * (land ? 0.36 : 0.27), land ? 80 : 56)
+        sleigh(out, Color.hex("#060a1c"), width * (land ? 0.72 : 0.8), height * (land ? 0.3 : 0.36), land ? 1.7 : 1.35)
+        out
+      end
+
+      # A house seen from the street: walls, a gable roof with snow along
+      # its edges, a chimney, and perhaps a lit window.
+      def house(out, color, snow, lamp, x, ground, w, h, chimney, random)
+        roof = h * 0.55
+        out << Fan.new(color:, points: [[x, ground + 4], [x + w, ground + 4], [x + w, ground - h], [x, ground - h]])
+        if chimney
+          cx = x + (w * random.rand(0.6..0.78))
+          out << Fan.new(color:, points: [[cx, ground - h - (roof * 0.2)], [cx + (w * 0.11), ground - h - (roof * 0.2)],
+                                          [cx + (w * 0.11), ground - h - (roof * 0.95)], [cx, ground - h - (roof * 0.95)]])
+          out << Fan.new(color: snow, points: [[cx - 1.5, ground - h - (roof * 0.95)], [cx + (w * 0.11) + 1.5, ground - h - (roof * 0.95)],
+                                               [cx + (w * 0.11) + 1, ground - h - (roof * 0.95) - 3.5], [cx - 1, ground - h - (roof * 0.95) - 3.5]])
+          smoke(out, cx + (w * 0.055), ground - h - (roof * 0.95) - 6, w * 0.22) if random.rand < 0.5
+        end
+        out << Fan.new(color:, points: [[x + (w / 2), ground - h - roof], [x + w + (w * 0.06), ground - h + 2], [x - (w * 0.06), ground - h + 2]])
+        t = [w * 0.035, 2.5].max
+        out << segment([x - (w * 0.06), ground - h + 1], [x + (w / 2), ground - h - roof], t, t, snow)
+        out << segment([x + (w / 2), ground - h - roof], [x + w + (w * 0.06), ground - h + 1], t, t, snow)
+        return unless random.rand < 0.45
+
+        wx = x + (w * random.rand(0.2..0.6))
+        wy = ground - (h * random.rand(0.45..0.7))
+        s = w * 0.12
+        out << Fan.new(color: lamp, points: [[wx, wy], [wx + s, wy], [wx + s, wy + (s * 1.2)], [wx, wy + (s * 1.2)]])
+      end
+
+      # A tall fir in snow: tiers, each with snow along its lower edge.
+      def snowy_fir(out, color, snow, x, ground, h, w)
+        out << Fan.new(color:, points: [[x - (w * 0.06), ground], [x + (w * 0.06), ground], [x + (w * 0.06), ground - (h * 0.12)], [x - (w * 0.06), ground - (h * 0.12)]])
+        tiers = 6
+        tiers.times do |i|
+          f = i.to_f / tiers
+          bottom = ground - (h * 0.08) - (h * 0.82 * f)
+          half = w * (1 - (f * 0.85)) / 2
+          top = bottom - (h * 0.3)
+          edge = [[x - half, bottom], [x - (half * 0.5), bottom - (h * 0.025)], [x, bottom + (h * 0.01)], [x + (half * 0.5), bottom - (h * 0.025)], [x + half, bottom]]
+          out << Fan.new(color:, points: [[x, top], *edge, [x, top]])
+          edge.each_cons(2) { |a, b| out << segment(a, b, [h * 0.012, 2.0].max, [h * 0.012, 2.0].max, snow) }
+        end
+      end
+
+      # Smoke rising from a chimney at +x+, +y+, faint, drifting left.
+      def smoke(out, x, y, size)
+        8.times do |i|
+          f = i / 7.0
+          out << Dot.new(x: x - (f * size * 2.2) + (Math.sin(f * 5) * size * 0.3), y: y - (f * size * 4), radius: size * (0.25 + (f * 0.55)),
+                         color: Color.hex("#8a96c0", 0.07 * (1 - (f * 0.6))))
+        end
+      end
+
+      REINDEER = [[-1.0, 0.0], [-0.7, -0.25], [-0.2, -0.3], [0.35, -0.28], [0.62, -0.5], [0.8, -0.62], [0.95, -0.55], [0.82, -0.4],
+                  [0.7, -0.15], [0.55, 0.05], [0.7, 0.42], [0.58, 0.45], [0.38, 0.1], [-0.3, 0.12], [-0.62, 0.45], [-0.75, 0.42],
+                  [-0.68, 0.1]].freeze
+
+      # Santa's sleigh and four reindeer, flying up to the left.
+      def sleigh(out, color, x, y, scale)
+        tilt = -0.18
+        place = lambda do |px, py|
+          [x + (scale * ((Math.cos(tilt) * px) - (Math.sin(tilt) * py))), y + (scale * ((Math.sin(tilt) * px) + (Math.cos(tilt) * py)))]
+        end
+        body = [[0, -2], [14, -2], [18, -9], [22, -10], [21, -4], [17, 4], [2, 5], [-3, 8], [24, 8], [27, 5], [28, 7], [24, 11], [-4, 11], [-6, 6]]
+        out << Fan.new(color:, points: [place.call(10, 3), *body.map { |a, b| place.call(a, b) }, place.call(*body.first)])
+        out << Fan.new(color:, points: [place.call(5, -2), place.call(4, -11), place.call(9, -14), place.call(13, -9), place.call(12, -2)])
+        lead = [0, 0]
+        4.times do |i|
+          hx = -24 - (i * 19)
+          hy = -6 - (i * 1.5)
+          deer = REINDEER.map { |a, b| place.call(hx + (a * 8), hy + (b * 8)) }
+          out << Fan.new(color:, points: [place.call(hx, hy), *deer, deer.first])
+          out << segment(place.call(hx + 6, hy - 4), place.call(hx + 4, hy - 9), 1.2, 0.8, color)
+          out << segment(place.call(hx + 7, hy - 4), place.call(hx + 9, hy - 9), 1.2, 0.8, color)
+          lead = [hx, hy]
+        end
+        out << segment(place.call(-2, 0), place.call(lead[0] + 6, lead[1] - 1), 0.9, 0.9, color)
       end
 
       # A farm at dusk: a field, a barn and silo, shocks of corn, a fence,
