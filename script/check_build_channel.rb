@@ -10,8 +10,8 @@ require_relative "../lib/dot_popper/presentation"
 
 channel = DotPopper::Presentation::Storefront::BUILD_CHANNEL
 if channel.nil?
-  warn "BUILD_CHANNEL is nil: this build sells through the fake store. Set it in " \
-       "lib/dot_popper/presentation/storefront.rb (ADR-0009) before tagging."
+  warn "BUILD_CHANNEL is nil: this build sells through the fake store. Set Build::CHANNEL in " \
+       "lib/dot_popper/build.rb (ADR-0009) before tagging."
   exit 1
 end
 
