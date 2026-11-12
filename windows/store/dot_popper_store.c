@@ -27,14 +27,14 @@
 // come from StoreContext.GetAppLicenseAsync, which Windows answers from
 // its own license store, so a launch with no internet should still find
 // Pro (unverified). The add-on is found by its in-app offer token, which
-// must be com.setdef.DotPopper.pro, the product ID every store uses.
+// must be com.setdef.dotpopper.pro, the product ID every store uses.
 //
 // Plain C against the WinRT ABI, since the build machines and CI have
 // MinGW and no C++/WinRT: interfaces are called by their vtable slots,
 // in the order of Windows' metadata (as windows-rs lists them), and
 // asynchronous calls are waited on by polling IAsyncInfo.
 //
-//   dot-popper-store.exe "dotpopper-store://open?n=1&product=com.setdef.DotPopper.pro&file=-"
+//   dot-popper-store.exe "dotpopper-store://open?n=1&product=com.setdef.dotpopper.pro&file=-"
 //   dot-popper-store.exe --check     says it runs, and asks the Store nothing
 //
 // Build: gcc -O2 -municode -o dot-popper-store.exe dot_popper_store.c -lruntimeobject -lole32
@@ -450,9 +450,9 @@ static int self_test(void) {
   char action[16], product[128];
   int number = 0, ok = 1;
   HSTRING item = NULL, got = NULL;
-  ok &= parse("dotpopper-store://buy?n=12&product=com.setdef.DotPopper.pro&file=-", action, sizeof action, product,
+  ok &= parse("dotpopper-store://buy?n=12&product=com.setdef.dotpopper.pro&file=-", action, sizeof action, product,
               sizeof product, &number) &&
-        !strcmp(action, "buy") && !strcmp(product, "com.setdef.DotPopper.pro") && number == 12;
+        !strcmp(action, "buy") && !strcmp(product, "com.setdef.dotpopper.pro") && number == 12;
   ok &= !parse("dotpopper-store://buy?n=1&product=x&file=%2Fsave%2Fanswer.txt", action, sizeof action, product,
                sizeof product, &number);
   ok &= !parse("https://buy?n=1&product=x&file=-", action, sizeof action, product, sizeof product, &number);

@@ -8,7 +8,7 @@ How Dot Popper sells Pro and decides who has it: Free and Pro, the build's chann
 
 ## Free and Pro
 
-Pro is one purchase, the non-consumable product `com.setdef.DotPopper.pro` (`Presentation::Storefront::PRODUCT_ID`, `Receipt::PRODUCT_ID`, and `ios/store_check/Tests/DotPopper.storekit`). It adds four things, as the offer lists them (`Style::WORDS.offer[:includes]`):
+Pro is one purchase, the non-consumable product `com.setdef.dotpopper.pro`, all lowercase because Google Play takes no capitals in a product id, and the same in every store (`Presentation::Storefront::PRODUCT_ID`, `Receipt::PRODUCT_ID`, and `ios/store_check/Tests/DotPopper.storekit`). It adds four things, as the offer lists them (`Style::WORDS.offer[:includes]`):
 
 | Pro adds | Free has |
 | --- | --- |
@@ -76,7 +76,7 @@ Tests: `test/build_test.rb`, `test/shell/store_build_test.rb`, `test/set_build_c
 
 `Presentation::Storefront` (`lib/dot_popper/presentation/storefront.rb`) is the game's half of every store purchase: the offer, Buy, Restore, the thanks, and proving Pro. Its only way to a store is a port: `open(url)`, answering whether the request was taken, and `read`, `remove` and `path` for the answer.
 
-**The request.** A URL in the scheme `dotpopper-store` (`Storefront::SCHEME`): `dotpopper-store://ACTION?n=NUMBER&product=com.setdef.DotPopper.pro&file=PATH`, where ACTION is `open`, `buy` or `restore`, NUMBER counts up with each request, and PATH is where to answer (`-` for a store helper's standard output). The scheme is registered with no system, so no other app can send one.
+**The request.** A URL in the scheme `dotpopper-store` (`Storefront::SCHEME`): `dotpopper-store://ACTION?n=NUMBER&product=com.setdef.dotpopper.pro&file=PATH`, where ACTION is `open`, `buy` or `restore`, NUMBER counts up with each request, and PATH is where to answer (`-` for a store helper's standard output). The scheme is registered with no system, so no other app can send one.
 
 **The answer.** The whole state each time, as `name=value` lines, so a missed answer costs nothing:
 
@@ -115,7 +115,7 @@ Both ask for owned purchases first (StoreKit's `Transaction.currentEntitlements`
 
 `StoreHelper` starts the helper once for each request with the same URL and `file=-` (`StoreHelper::PIPE`), and reads the same whole-state answers from its standard output, each ending with an empty line, on a thread of its own. Two helpers can run at once; the newest request's answer is kept. `StoreHelper.find` looks for the helper, and for it in a `Helpers` folder, from the game's folder and up to six folders above it (`DEPTH`). With no helper, or in an automated run (`Automation`), `open` answers false and the request is refused. Both helpers take `--check`, which asks the store nothing; the Windows helper's `--self-test` runs in CI and in `test/windows_store_helper_test.rb`. Signing and packaging are in [doc/publishing.md](../publishing.md).
 
-**`FakeStore`** (`lib/dot_popper/presentation/fake_store.rb`) is a test build's store on a phone, behind the same port. It answers `loading` or `working` at once and the real answer `FakeStore::READS` (2) reads later, so a purchase takes the same asynchronous road. Its price is `$1.99` (`FakeStore::PRICE`). Its ledger, `fake_store.txt`, is the store's own record of what this install bought, apart from `Entitlement`: Buy writes a receipt there (`Receipt.issue`, Play's form signed by `Receipt::TestKey`), and every answer while owned hands that receipt over, so the game proves a fake purchase with the code that proves a real one. A ledger edited to say anything else does not verify. Nothing on any screen says the store is a fake.
+**`FakeStore`** (`lib/dot_popper/presentation/fake_store.rb`) is a test build's store on a phone, behind the same port. It answers `loading` or `working` at once and the real answer `FakeStore::READS` (2) reads later, so a purchase takes the same asynchronous road. Its price is `$1.99` (`FakeStore::PRICE`). Its ledger, `fake_store.txt`, is the store's own record of what this install bought, apart from `Entitlement`: Buy writes a receipt there (`Receipt.issue`, Play's form signed by `Receipt::TestKey`), and every answer while owned hands that receipt over, so the game proves a fake purchase with the code that proves a real one. A ledger edited to say anything else does not verify. A receipt bought before the product id was lowercased (`com.setdef.DotPopper.pro`, `FakeStore::EARLIER`) is bought again under today's id when the ledger is read, so a playtester keeps pretend Pro. Nothing on any screen says the store is a fake.
 
 `DOT_POPPER_FAKE_STORE_FAILS` (`FakeStore::FAILS_BY`) makes the fake go wrong, for a developer only and in a test build only: `refused` (the system will not take the request), `unavailable` (no store answers), and `failed`, `cancelled` or `pending` (how a Buy can end; a Restore takes `failed` and `cancelled`, and `pending` is a Buy's alone).
 

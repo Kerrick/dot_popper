@@ -51,8 +51,15 @@ class StorefrontTest < Minitest::Test
     @store.update(Storefront::EVERY)
   end
 
+  # Play takes only lowercase letters, digits, "_" and "." in a product
+  # id, and one id serves every store.
+  def test_pro_has_one_product_id_every_store_accepts
+    assert_match(/\A[a-z][a-z0-9_.]*\z/, Storefront::PRODUCT_ID)
+    assert_equal DotPopper::Receipt::PRODUCT_ID, Storefront::PRODUCT_ID
+  end
+
   def test_a_url_names_the_action_the_request_the_product_and_where_to_answer
-    assert_equal "dotpopper-store://buy?n=3&product=com.setdef.DotPopper.pro&file=%2Fsave%20dir%2Fanswer.txt",
+    assert_equal "dotpopper-store://buy?n=3&product=com.setdef.dotpopper.pro&file=%2Fsave%20dir%2Fanswer.txt",
                  Storefront.url(:buy, 3, "/save dir/answer.txt")
   end
 

@@ -33,6 +33,9 @@ module DotPopper
       # How many reads of the answer, a quarter second apart, a request
       # takes to come back.
       READS = 2
+      # What a pretend purchase was signed for before Pro's product id was
+      # lowercased.
+      EARLIER = Receipt::TEST.with(product_id: "com.setdef.DotPopper.pro")
 
       # The failure +env+ asks for, or nil.
       def self.failure(env) = env.fetch(FAILS_BY, "").then { it if FAILURES.include?(it) }
@@ -109,7 +112,15 @@ module DotPopper
         owned? ? "restored" : "none"
       end
 
-      def receipt = @ledger.read.to_s.strip
+      # What the ledger holds. A pretend purchase made under Pro's earlier
+      # product id is bought again under today's, as a store would carry
+      # its own purchase over, so a playtester keeps pretend Pro.
+      def receipt
+        text = @ledger.read.to_s.strip
+        return text unless Receipt.valid?(text, EARLIER)
+
+        Receipt.issue.tap { @ledger.write(it) }
+      end
 
       def owned? = !receipt.empty?
 

@@ -30,6 +30,21 @@ class FakeStoreContractTest < Minitest::Test
     refute_predicate entitlement, :pro?
   end
 
+  # A playtester's pretend Pro was bought before Pro's product id was
+  # lowercased; it still owns Pro, under today's id.
+  def test_a_pretend_purchase_under_the_earlier_product_id_carries_over
+    ledger = DotPopper::ScoreRecord::Memory.new
+    ledger.write(DotPopper::Receipt.issue(product_id: "com.setdef.DotPopper.pro"))
+    entitlement = DotPopper::Entitlement.test
+    front = Storefront.new(port: new_store(ledger:), entitlement:)
+    front.connect
+    settle(front) { front.price }
+    3.times { front.update(Storefront::EVERY) }
+
+    assert_predicate entitlement, :pro?
+    assert DotPopper::Receipt.valid?(ledger.read, DotPopper::Receipt::TEST)
+  end
+
   def test_a_failure_is_for_a_developers_setting_only
     assert_nil FakeStore.failure({})
     assert_nil FakeStore.failure({ "DOT_POPPER_FAKE_STORE_FAILS" => "nonsense" })

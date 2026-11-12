@@ -34,7 +34,7 @@ module DotPopper
     Trust = Data.define(:apple_roots, :play_keys, :app_id, :product_id, :windows_license)
 
     APP_ID = "com.setdef.DotPopper"
-    PRODUCT_ID = "com.setdef.DotPopper.pro"
+    PRODUCT_ID = "com.setdef.dotpopper.pro"
 
     # Whether +text+ is a receipt for Pro that +trust+ accepts.
     def self.valid?(text, trust)

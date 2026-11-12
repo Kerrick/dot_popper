@@ -13,7 +13,7 @@
           "locale" : "en_US"
         }
       ],
-      "productID" : "com.setdef.DotPopper.pro",
+      "productID" : "com.setdef.dotpopper.pro",
       "referenceName" : "Pro",
       "type" : "NonConsumable"
     }

@@ -79,7 +79,7 @@ class ReceiptTest < Minitest::Test
 
   def test_an_edited_transaction_does_not_verify
     head, body, signature = apple.delete_prefix("apple:").split(".")
-    edited = JSON.parse(decode(body)).merge("productId" => "com.setdef.DotPopper.pro ").to_json
+    edited = JSON.parse(decode(body)).merge("productId" => "com.setdef.dotpopper.pro ").to_json
 
     refute Receipt.valid?("apple:#{head}.#{encode(edited)}.#{signature}", trust)
   end

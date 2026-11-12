@@ -25,7 +25,7 @@
 // Pro. Then it exits. A purchase approved later (Ask to Buy) is found by
 // the next launch's open.
 //
-//   dot-popper-store 'dotpopper-store://open?n=1&product=com.setdef.DotPopper.pro&file=-'
+//   dot-popper-store 'dotpopper-store://open?n=1&product=com.setdef.dotpopper.pro&file=-'
 //   dot-popper-store --check     says it runs, and asks StoreKit nothing
 import AppKit
 import Foundation

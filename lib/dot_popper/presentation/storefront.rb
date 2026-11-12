@@ -29,7 +29,7 @@ module DotPopper
       SCHEME = "dotpopper-store"
       # The one product, as App Store Connect and the Play Console must
       # name it (and ios/store_check's StoreKit configuration file).
-      PRODUCT_ID = "com.setdef.DotPopper.pro"
+      PRODUCT_ID = "com.setdef.dotpopper.pro"
       # The systems whose hosts catch SCHEME, as Lota::System.os names them.
       SYSTEMS = %w[iOS Android].freeze
       # How often, in seconds, the answer file is read.
