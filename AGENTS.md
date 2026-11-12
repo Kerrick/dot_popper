@@ -18,6 +18,7 @@ These rules bind every agent working on Dot Popper. The maintainer set each of t
 - Read `INSIPIRATION.md` in full (it's spelled that way) before designing anything a player sees. Let those books decide, and name them in the ADR (`doc/adr/`) or design document (`doc/design/`) that records the choice.
 - Be judicious about adding screens, but add one where it's the right answer rather than crowding an existing one.
 - Pro never changes how the game plays or scores, and a theme never makes the game easier or harder. Hit areas and bounces stay circles.
+- In every theme, all popped dots look the same as each other, with no colour variants.
 - A button names the action it takes.
 - How to play must never depend on reading English.
 - Don't deliver work you can see is flawed. Look at every image at the size it will be seen, and fix it first.
