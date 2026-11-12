@@ -5,10 +5,10 @@ module DotPopper
     # What stands in a theme's night, as plain shapes in graphics units:
     # silhouettes of trees, hills, a crooked house, a fence, graves, bats,
     # the wood's trunks, fir boughs and presents, snowy rooftops and a
-    # sleigh, a snowy yard, a mantel by the fire, a sleigh ride, a farm at
-    # Thanksgiving, and the edge of a wood where turkeys roost. It knows
-    # no drawing library; Shell::Scene bakes these once, for the screen's
-    # size, into a canvas at the screen's own resolution.
+    # sleigh, a snowy yard, a mantel by the fire, a sleigh ride, a
+    # kitchen, a farm at Thanksgiving, and the edge of a wood where turkeys
+    # roost. It knows no drawing library; Shell::Scene bakes these once,
+    # for the screen's size, into a canvas at the screen's own resolution.
     #
     # Every shape is convex or a fan about its first point, so a plain
     # filled polygon draws it.
@@ -33,6 +33,7 @@ module DotPopper
         when :snowfield then snowfield(width, height)
         when :mantel then mantel(width, height)
         when :sleigh_ride then sleigh_ride(width, height)
+        when :kitchen then kitchen(width, height)
         else []
         end
       end
@@ -731,6 +732,112 @@ module DotPopper
         out << segment(at.call(17, -14), at.call(17, -19), 0.8 * s, 0.8 * s, color)
         out << Dot.new(x: at.call(17, -12)[0], y: at.call(17, -12)[1], radius: 7 * s, color: Color.hex("#ffb050", 0.1))
         out << Dot.new(x: at.call(17, -12)[0], y: at.call(17, -12)[1], radius: 2 * s, color: Color.hex("#ffc870", 0.45))
+      end
+
+      # A kitchen on a snowy night: a window onto the snow with a garland
+      # over it, cupboards, and on the counter a gingerbread house with
+      # icing on its roof, a cookie jar and a rolling pin, and one
+      # gingerbread man running off along the counter.
+      def kitchen(width, height)
+        out = []
+        land = width > height
+        far = Color.hex("#141c30")
+        ink = Color.hex("#060910")
+        icing = Color.hex("#343c58")
+        pane = Color.hex("#1a2440")
+        counter = height * (land ? 0.8 : 0.84)
+        # The window, its panes, and snow on their sills.
+        ww = width * (land ? 0.3 : 0.5)
+        wx = (width - ww) / 2
+        wy = height * (land ? 0.1 : 0.14)
+        wh = height * (land ? 0.42 : 0.28)
+        out << Fan.new(color: far, points: [[wx - 14, wy - 14], [wx + ww + 14, wy - 14], [wx + ww + 14, wy + wh + 14], [wx - 14, wy + wh + 14]])
+        [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1]].each do |i, j|
+          px = wx + (i * ww / 3) + 4
+          py = wy + (j * wh / 2) + 4
+          pw = (ww / 3) - 8
+          ph = (wh / 2) - 8
+          out << Fan.new(color: pane, points: [[px, py], [px + pw, py], [px + pw, py + ph], [px, py + ph]])
+          drift = ->(f) { py + ph - (ph * (0.1 + (0.05 * Math.sin((f * 6) + i + (j * 2))))) }
+          (0...10).each do |k|
+            x1 = px + (pw * k / 10.0)
+            x2 = px + (pw * (k + 1) / 10.0)
+            out << Fan.new(color: icing, points: [[x1, drift.call(k / 10.0)], [x2, drift.call((k + 1) / 10.0)], [x2, py + ph], [x1, py + ph]])
+          end
+        end
+        out << Fan.new(color: far, points: [[wx - 24, wy + wh + 8], [wx + ww + 24, wy + wh + 8], [wx + ww + 24, wy + wh + 20], [wx - 24, wy + wh + 20]])
+        out << segment([wx - 24, wy + wh + 8], [wx + ww + 24, wy + wh + 8], 4, 4, icing)
+        garland(out, far, wx - 24, wx + ww + 24, wy - 10, land ? 3 : 2)
+        # Cupboards at the sides, high up.
+        cw = width * (land ? 0.22 : 0.16)
+        [[0, cw], [width - cw, width]].each do |x1, x2|
+          out << Fan.new(color: far, points: [[x1, -10], [x2, -10], [x2, height * (land ? 0.36 : 0.3)], [x1, height * (land ? 0.36 : 0.3)]])
+        end
+        # The counter.
+        out << Fan.new(color: ink, points: [[0, counter], [width, counter], [width, height], [0, height]])
+        out << Fan.new(color: ink, points: [[-5, counter - 8], [width + 5, counter - 8], [width + 5, counter + 2], [-5, counter + 2]])
+        s = land ? 1.5 : 1.0
+        gingerbread_house(out, ink, icing, width * (land ? 0.3 : 0.3), counter - 8, s * 1.25)
+        cookie_jar(out, ink, width * (land ? 0.72 : 0.82), counter - 8, s)
+        rolling_pin(out, ink, width * (land ? 0.55 : 0.62), counter - 8, s)
+        runner(out, ink, width * (land ? 0.86 : 0.6), counter - 8, s * 0.9)
+        out
+      end
+
+      # A gingerbread house: walls, a door and windows, and a roof with
+      # icing dripping from its eaves and snow along its ridge.
+      def gingerbread_house(out, color, icing, x, ground, s)
+        w = 46 * s
+        h = 30 * s
+        out << Fan.new(color:, points: [[x - w, ground], [x + w, ground], [x + w, ground - h], [x - w, ground - h]])
+        out << Fan.new(color:, points: [[x, ground - h - (40 * s)], [x + w + (10 * s), ground - h + (4 * s)], [x - w - (10 * s), ground - h + (4 * s)]])
+        out << Fan.new(color:, points: [[x + (18 * s), ground - h - (26 * s)], [x + (28 * s), ground - h - (18 * s)], [x + (28 * s), ground - h - (40 * s)], [x + (18 * s), ground - h - (40 * s)]])
+        # Icing along both eaves, in drips.
+        [-1, 1].each do |side|
+          a = [x, ground - h - (40 * s)]
+          b = [x + (side * (w + (10 * s))), ground - h + (4 * s)]
+          out << segment(a, b, 3.5 * s, 3.5 * s, icing)
+          6.times do |k|
+            t = (k + 0.5) / 6
+            at = [a[0] + ((b[0] - a[0]) * t), a[1] + ((b[1] - a[1]) * t)]
+            out << Dot.new(x: at[0], y: at[1] + (3 * s), radius: 2.6 * s, color: icing)
+          end
+        end
+        out << segment([x - w, ground - h + (6 * s)], [x + w, ground - h + (6 * s)], 2.2 * s, 2.2 * s, icing)
+        out << Fan.new(color: Color.hex("#8a5a24", 0.5), points: [[x - (6 * s), ground], [x + (6 * s), ground], [x + (6 * s), ground - (16 * s)], [x - (6 * s), ground - (16 * s)]])
+        [-1, 1].each do |side|
+          wx = x + (side * 26 * s)
+          out << Fan.new(color: Color.hex("#8a5a24", 0.5), points: [[wx - (6 * s), ground - (12 * s)], [wx + (6 * s), ground - (12 * s)], [wx + (6 * s), ground - (22 * s)], [wx - (6 * s), ground - (22 * s)]])
+        end
+        [-34, -20, 20, 34].each { |dx| out << Dot.new(x: x + (dx * s), y: ground - (3 * s), radius: 3 * s, color: icing) }
+      end
+
+      # A cookie jar with a knobbed lid.
+      def cookie_jar(out, color, x, ground, s)
+        out << Fan.new(color:, points: [[x - (17 * s), ground], [x + (17 * s), ground], [x + (21 * s), ground - (20 * s)], [x + (17 * s), ground - (40 * s)], [x - (17 * s), ground - (40 * s)], [x - (21 * s), ground - (20 * s)]])
+        out << Fan.new(color:, points: [[x - (19 * s), ground - (40 * s)], [x + (19 * s), ground - (40 * s)], [x + (14 * s), ground - (47 * s)], [x - (14 * s), ground - (47 * s)]])
+        out << Dot.new(x:, y: ground - (50 * s), radius: 5 * s, color:)
+      end
+
+      # A rolling pin lying on the counter, its handles out at each end.
+      def rolling_pin(out, color, x, ground, s)
+        out << segment([x - (24 * s), ground - (6 * s)], [x + (24 * s), ground - (6 * s)], 12 * s, 12 * s, color)
+        out << segment([x - (38 * s), ground - (6 * s)], [x + (38 * s), ground - (6 * s)], 4 * s, 4 * s, color)
+        [-1, 1].each { |side| out << Dot.new(x: x + (side * 39 * s), y: ground - (6 * s), radius: 3.2 * s, color:) }
+      end
+
+      # A gingerbread man running off to the right: head, body, arms
+      # swinging and legs mid-stride.
+      def runner(out, color, x, ground, s)
+        out << Dot.new(x: x + (3 * s), y: ground - (40 * s), radius: 7 * s, color:)
+        out << segment([x + (1 * s), ground - (32 * s)], [x - (1 * s), ground - (16 * s)], 12 * s, 11 * s, color)
+        out << segment([x, ground - (28 * s)], [x + (12 * s), ground - (34 * s)], 6 * s, 5 * s, color)
+        out << segment([x - (1 * s), ground - (28 * s)], [x - (12 * s), ground - (22 * s)], 6 * s, 5 * s, color)
+        out << segment([x, ground - (16 * s)], [x + (11 * s), ground - (3 * s)], 6.5 * s, 5.5 * s, color)
+        out << segment([x - (2 * s), ground - (16 * s)], [x - (12 * s), ground - (6 * s)], 6.5 * s, 5.5 * s, color)
+        [[x + (12 * s), ground - (34 * s)], [x - (12 * s), ground - (22 * s)], [x + (11 * s), ground - (3 * s)], [x - (12 * s), ground - (6 * s)]].each do |hx, hy|
+          out << Dot.new(x: hx, y: hy, radius: 2.8 * s, color:)
+        end
       end
 
       # The edge of a wood at nightfall, where turkeys roost: a far line of
