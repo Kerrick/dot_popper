@@ -157,6 +157,21 @@ class PrivacyDeclaredTest < Minitest::Test
     end
   end
 
+  # What the server's public page shows of the document, in GLOSSARY.md's
+  # words: a record, Stats, and the player's private code (the code and
+  # the API alone say token), and a game is a game.
+  def test_what_the_privacy_page_shows_uses_the_glossarys_words
+    document = Privacy::Document.new.to_h
+    files = document.dig(:on_device, :files)
+    shown = [*document.dig(:on_device, :for_players), *files.filter_map { it[:label] }, *files.map { it[:holds] },
+             *document.dig(:network, :requests).map { it[:when] }, *document[:deletion].values_at(:sentence, :shown)]
+
+    shown.each { refute_match(/\btokens?\b|\bbest\b|\bstatistics\b/i, it) }
+    assert_includes document.dig(:on_device, :for_players), "Your record"
+    assert_includes document.dig(:on_device, :for_players), "Your Stats"
+    assert_equal "/games", DotPopper::Groups::REQUESTS.fetch(:game).path
+  end
+
   # Only a license key, from a website purchase, concerns one; a store's
   # copy never sends it (STORE_LABELS' license_key).
   def test_nothing_else_sent_concerns_a_purchase

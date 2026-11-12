@@ -88,7 +88,7 @@ module DotPopper
         screen = words.button(:privacy_title)
         control = words.button(:privacy_delete)
         { screen:, control:, gesture: "press and hold for #{Presentation::GroupPanel::HOLD.to_i} seconds", prompt: words.button(:privacy_hold),
-          sentence: "In the game's #{words.button(:settings_title)}, open \"#{screen}\", then press and hold \"#{control}\".", shown: "once this device has a token",
+          sentence: "In the game's #{words.button(:settings_title)}, open \"#{screen}\", then press and hold \"#{control}\".", shown: "once this device has a private code",
           request: Groups::REQUESTS.fetch(:deleted).then { "#{it.verb.to_s.upcase} #{it.path}" } }
       end
 

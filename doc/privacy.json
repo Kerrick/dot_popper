@@ -3,8 +3,8 @@
   "game_version": "0.9.13",
   "on_device": {
     "for_players": [
-      "Your best score",
-      "Your statistics",
+      "Your record",
+      "Your Stats",
       "Your achievements",
       "Your license key, if you bought Pro on the website",
       "Whether setdef's server has stopped answering",
@@ -15,23 +15,23 @@
       "The date you first played",
       "How many free games you have left",
       "A history of your games",
-      "A copy of your records, if you clear them",
+      "A copy of your Stats, if you clear them",
       "What the game has shown you"
     ],
     "files": [
       {
         "name": "score_record.txt",
-        "label": "Your best score",
+        "label": "Your record",
         "not_for_players": null,
-        "holds": "your best score for each dot size",
+        "holds": "your record for each dot size",
         "made_by": "the game",
         "also_sent": []
       },
       {
         "name": "stats.txt",
-        "label": "Your statistics",
+        "label": "Your Stats",
         "not_for_players": null,
-        "holds": "your statistics: totals, chart bars and goal streak",
+        "holds": "your Stats: totals, chart bars and goal streak",
         "made_by": "the game",
         "also_sent": []
       },
@@ -128,9 +128,9 @@
       },
       {
         "name": "<record>-YYYYMMDD-HHMMSS.txt",
-        "label": "A copy of your records, if you clear them",
+        "label": "A copy of your Stats, if you clear them",
         "not_for_players": null,
-        "holds": "a backup of your records from when you cleared them",
+        "holds": "a copy of your record, Stats and achievements from when you cleared them",
         "made_by": "the game",
         "also_sent": []
       },
@@ -178,7 +178,7 @@
         "name": "group.txt",
         "label": "Your private code and any unsent score, if you use friend groups",
         "not_for_players": null,
-        "holds": "your anonymous group token, an unsent score, whether you were in a group, the newest title change you were shown of each, and any achievements waiting to be sent",
+        "holds": "your private code, an unsent score, whether you were in a group, the newest title change you were shown of each, and any achievements waiting to be sent",
         "made_by": "the game",
         "also_sent": [
           "your private code",
@@ -192,7 +192,7 @@
           "kind": "diagnostics",
           "reason": "Only the names of the backups to replace next time."
         },
-        "holds": "the names of the backups made by the last clearing of your records",
+        "holds": "the names of the backups made by the last clearing of your Stats",
         "made_by": "the game",
         "also_sent": []
       },
@@ -256,7 +256,7 @@
         "query": {},
         "body": {},
         "sends_token": false,
-        "when": "The first time this device creates or joins a group: the game asks the server for an anonymous token.",
+        "when": "The first time this device creates or joins a group: the game asks the server for a private code.",
         "in_this_build": true
       },
       {
@@ -267,7 +267,7 @@
         "query": {},
         "body": {},
         "sends_token": true,
-        "when": "At launch and when the groups' screen opens, once this device has a token.",
+        "when": "At launch and when the groups' screen opens, once this device has a private code.",
         "in_this_build": true
       },
       {
@@ -352,7 +352,7 @@
         "in_this_build": true
       },
       {
-        "kind": "cabinet",
+        "kind": "game",
         "to": "https://server.dot-popper.setdef.com",
         "method": "POST",
         "path": "/games",
@@ -374,7 +374,7 @@
         },
         "body": {},
         "sends_token": false,
-        "when": "When the game is online, to learn which themes are available; for every player, Free too, with no token.",
+        "when": "When the game is online, to learn which themes are available; for every player, Free too, with no private code.",
         "in_this_build": true
       },
       {
@@ -523,7 +523,7 @@
     "gesture": "press and hold for 2 seconds",
     "prompt": "Hold to leave every friend group and delete your scores online.",
     "sentence": "In the game's Settings, open \"Privacy\", then press and hold \"Delete my friend group data\".",
-    "shown": "once this device has a token",
+    "shown": "once this device has a private code",
     "request": "DELETE /player"
   },
   "store_labels": {
@@ -541,7 +541,7 @@
           "sent_by": [
             "join",
             "achievement",
-            "cabinet"
+            "game"
           ]
         },
         {
@@ -561,7 +561,7 @@
             "achievement",
             "left",
             "deleted",
-            "cabinet"
+            "game"
           ]
         },
         {
@@ -594,7 +594,7 @@
           "sent_by": [
             "join",
             "achievement",
-            "cabinet"
+            "game"
           ]
         },
         {
@@ -611,7 +611,7 @@
             "achievement",
             "left",
             "deleted",
-            "cabinet"
+            "game"
           ]
         },
         {

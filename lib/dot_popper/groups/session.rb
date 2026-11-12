@@ -225,7 +225,7 @@ module DotPopper
         return unless @pending && member? && !@sending && !waiting_out?
 
         @sending = true
-        ask(Job.of(:cabinet, body: { score: @pending }))
+        ask(Job.of(:game, body: { score: @pending }))
       end
 
       def fetch_changes(id)
@@ -243,7 +243,7 @@ module DotPopper
 
       def settle(job, reply)
         @running -= 1
-        @sending = false if job.kind == :cabinet
+        @sending = false if job.kind == :game
         @fetching.delete(job.group_id) if job.kind == :history
         @sending_achievements.delete(job.body[:key]) if job.kind == :achievement
         return @error = :offline if reply.offline? && job.loud
@@ -261,7 +261,7 @@ module DotPopper
 
       def refused(job, reply)
         wait_out(reply.retry_after) if reply.status == 429
-        return give_up_pending if job.kind == :cabinet && NEVER_TAKEN.include?(reply.status)
+        return give_up_pending if job.kind == :game && NEVER_TAKEN.include?(reply.status)
         return gone(job.group_id) if reply.status == 404 && %i[group history left].include?(job.kind)
         return drop_achievement(job.body[:key]) if job.kind == :achievement && NEVER_TAKEN.include?(reply.status)
         return forget_identity if reply.status == 404 && job.kind == :deleted
@@ -285,7 +285,7 @@ module DotPopper
         when :achievement then finish_achievement(job.body[:key], reply.body)
         when :left then gone(job.group_id)
         when :deleted then forget_identity
-        when :cabinet then finish_game(job.body[:score], reply.body)
+        when :game then finish_game(job.body[:score], reply.body)
         end
       end
 
