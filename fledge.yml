@@ -5,7 +5,7 @@
 # fused Lota game; main.rb here is the game's own, which only defines
 # Lota's callbacks, so it is not the program to build.
 name: Dot Popper
-version: "0.9.16"
+version: "0.9.17"
 publisher: setdef
 copyright: © 2026 setdef
 installers: [dmg, nsis]
