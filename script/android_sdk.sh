@@ -58,7 +58,7 @@ mkdir -p "$cache"
 # The revision of an installed package, from its source.properties.
 revision() {
   local folder=$1/${2//;//}
-  sed -n 's/^Pkg.Revision=//p' "$folder/source.properties" 2> /dev/null | tr -d '\r'
+  sed -n 's/^Pkg\.Revision *= *//p' "$folder/source.properties" 2> /dev/null | tr -d '\r'
 }
 
 # Installs PACKAGE=REVISION... into the SDK at $1 with its sdkmanager, and
