@@ -22,7 +22,7 @@ module DotPopper
     # The app's public key from the Play Console (Monetize, Monetization
     # setup, Licensing), Base64 as the Console shows it. Empty until the
     # maintainer pins it, so until then no Google Play purchase verifies;
-    # script/check_build_channel.rb fails a store release while it is.
+    # script/check_build.rb fails a Google Play build while it is.
     PLAY_KEYS = [].freeze
 
     # The throwaway key the test build's fake store signs with, public on

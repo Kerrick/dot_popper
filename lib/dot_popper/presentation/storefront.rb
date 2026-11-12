@@ -68,14 +68,14 @@ module DotPopper
       # StoreKit or Windows.Services.Store: the Mac App Store's uses StoreKit
       # 2 (macos/store), the Microsoft Store's Windows.Services.Store
       # (windows/store). On any other system those channels offer nothing.
-      MAC_APP_STORE = "mac-app-store"
-      MICROSOFT_STORE = "microsoft-store"
+      MAC_APP_STORE = Build::MAC_APP_STORE
+      MICROSOFT_STORE = Build::MICROSOFT_STORE
       HELPER_CHANNELS = { MAC_APP_STORE => "OS X", MICROSOFT_STORE => "Windows" }.freeze
 
       # The channel for copies no store controls: setdef's website, whose
       # store is a WebsiteStore (license keys). An iOS build never takes it
       # (Apple 3.1.1); an Android build for an APK or another store does.
-      WEBSITE = "website"
+      WEBSITE = Build::WEBSITE
 
       # The storefront for this build, chosen once: with no +channel+, a
       # test build, on a phone the +fake+ store port, and on a computer the

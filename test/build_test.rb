@@ -32,6 +32,24 @@ class BuildTest < Minitest::Test
     assert_equal SETTINGS, DotPopper::Build.settings(SETTINGS, channel: nil)
   end
 
+  # Apple's and Google's rules: an app store's copy never takes a website
+  # license key, and each of the four stores is named here.
+  def test_the_app_stores_copies_take_no_license_key_and_the_website_and_a_test_build_do
+    assert_equal %w[app-store mac-app-store google-play microsoft-store], DotPopper::Build::STORES
+    DotPopper::Build::STORES.each { refute DotPopper::Build.license_keys?(it), it }
+    assert DotPopper::Build.license_keys?("website")
+    assert DotPopper::Build.license_keys?(nil)
+  end
+
+  def test_every_channel_is_named_once_and_the_storefront_uses_those_names
+    assert_equal %w[app-store mac-app-store google-play microsoft-store website], DotPopper::Build::CHANNEL_NAMES
+    storefront = DotPopper::Presentation::Storefront
+
+    assert_equal [storefront::MAC_APP_STORE, storefront::MICROSOFT_STORE, storefront::WEBSITE],
+                 [DotPopper::Build::MAC_APP_STORE, DotPopper::Build::MICROSOFT_STORE, DotPopper::Build::WEBSITE]
+    assert_empty storefront::HELPER_CHANNELS.keys - DotPopper::Build::CHANNEL_NAMES
+  end
+
   def test_the_storefront_takes_its_channel_from_the_build
     assert_same DotPopper::Build::CHANNEL,DotPopper::Presentation::Storefront::BUILD_CHANNEL
   end

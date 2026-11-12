@@ -30,6 +30,16 @@ class SetBuildChannelTest < Minitest::Test
     assert_includes source, %(    CHANNEL = "microsoft-store"\n)
   end
 
+  def test_every_channel_the_build_names_can_be_stamped
+    DotPopper::Build::CHANNEL_NAMES.each do |channel|
+      FileUtils.cp(File.join(ROOT, "lib", "dot_popper", "build.rb"), File.join(@copy, "lib", "dot_popper", "build.rb"))
+      ok, source = stamp(channel)
+
+      assert ok, channel
+      assert_includes source, %(    CHANNEL = "#{channel}"\n)
+    end
+  end
+
   def test_an_unknown_or_missing_channel_changes_nothing
     [["steam"], []].each do |channel|
       ok, source = stamp(channel)

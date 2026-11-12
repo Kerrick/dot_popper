@@ -1,18 +1,17 @@
 # frozen_string_literal: true
 
-# Makes this working copy a store build: sets DotPopper::Build::CHANNEL in
-# lib/dot_popper/build.rb to CHANNEL, before `lota fuse` builds the app, so
-# the channel is fixed in the app and nothing a player sets can change it
-# (ADR-0010). CI runs
-# it in a store build's job only; the repository's own file stays nil, a
-# test build. Refuses a channel no store build is made for.
+# Makes this working copy a build for sale: sets DotPopper::Build::CHANNEL
+# in lib/dot_popper/build.rb to CHANNEL, before `lota fuse` builds the app,
+# so the channel is fixed in the app and nothing a player sets can change
+# it (ADR-0010). CI runs it in a channel's own jobs only; the repository's
+# own file stays nil, a test build. Refuses a name not in
+# Build::CHANNEL_NAMES. script/check_build.rb then checks the app that was
+# built.
 #
-#   ruby script/set_build_channel.rb mac-app-store
-require_relative "../lib/dot_popper"
-require_relative "../lib/dot_popper/presentation"
+#   ruby script/set_build_channel.rb website
+require_relative "../lib/dot_popper/build"
 
-storefront = DotPopper::Presentation::Storefront
-KNOWN = [*storefront::HELPER_CHANNELS.keys, storefront::WEBSITE].freeze
+KNOWN = DotPopper::Build::CHANNEL_NAMES
 FILE = File.expand_path("../lib/dot_popper/build.rb", __dir__)
 LINE = /^    CHANNEL = nil$/
 

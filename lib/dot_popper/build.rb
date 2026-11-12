@@ -10,9 +10,19 @@ module DotPopper
   # could grant Pro, change the server, or skip the free-game limit
   # (ADR-0010).
   module Build
-    # The channel this build is sold through, or nil for a test build. A
-    # build for a store MUST set it (script/check_build_channel.rb).
+    # The channel this build is sold through, one of CHANNEL_NAMES, or nil
+    # for a test build. A build for sale MUST set it, and its release
+    # checks that the app it built did (script/check_build.rb).
     CHANNEL = nil
+
+    # Every channel a build can be sold through: the app stores', and
+    # setdef's website, for copies no store controls. This is the one list
+    # of their names, which the scripts take from here.
+    APP_STORE = "app-store"
+    MAC_APP_STORE = "mac-app-store"
+    GOOGLE_PLAY = "google-play"
+    MICROSOFT_STORE = "microsoft-store"
+    WEBSITE = "website"
 
     PREFIX = "DOT_POPPER_"
 
@@ -33,8 +43,9 @@ module DotPopper
 
     # The channels of the app stores, whose copies never accept, keep,
     # verify or send a website license key (Apple 3.1.1; Google's billing
-    # rules). Every other channel, "website" and a test build, may.
-    STORES = %w[app-store mac-app-store google-play microsoft-store].freeze
+    # rules). Every other channel, WEBSITE and a test build, may.
+    STORES = [APP_STORE, MAC_APP_STORE, GOOGLE_PLAY, MICROSOFT_STORE].freeze
+    CHANNEL_NAMES = [*STORES, WEBSITE].freeze
 
     def self.license_keys?(channel = CHANNEL) = !STORES.include?(channel)
 
