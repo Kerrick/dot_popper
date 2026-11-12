@@ -49,7 +49,7 @@ jobs:
         with:
           ruby-version: .ruby-version
       - run: bundle install
-      - run: bundle exec rake test
+      - run: bundle exec rake
 
   privacy-document:
     name: Publish the privacy document
