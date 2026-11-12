@@ -5,8 +5,8 @@
 // glossy spiced custard set a little below it, and a piped swirl of
 // whipped cream in the middle casting its shadow. A popped dot is the same
 // dish after dinner, in the dark, the pie gone: the bare glazed dish, its
-// fluted rim catching the light, its floor wiped clean but for a few
-// crumbs. Every empty dish is alike. The vertex color says what kind of
+// fluted rim, its floor wiped clean but for a few crumbs, all in dark
+// tones. Every empty dish is alike. The vertex color says what kind of
 // dot it is, as in dot.glsl.
 
 uniform float extent;
@@ -92,7 +92,7 @@ const float FLOOR = 0.58;
 const float RIM_IN = 0.8;
 float dish_rim(vec2 p) {
   float u = fract(atan(p.y, p.x) / TAU * CRIMPS + 0.5) - 0.5;
-  return 0.95 + 0.03 * (0.5 + 0.5 * cos(TAU * u));
+  return 0.94 + 0.045 * (0.5 + 0.5 * cos(TAU * u));
 }
 float dish_h(vec2 p) {
   float r = length(p);
@@ -171,18 +171,21 @@ vec3 dot_body(vec2 p, float d, float aa, float fresh, float bonus) {
   lit *= 1.0 - 0.35 * exp(-pow((d - INNER) / 0.018, 2.0));
 
   // --- The dish after dinner, in the dark ---
-  // The pie is gone. The glaze is a deep rust; the rim and the wall
-  // facing the light catch it, and the flutes each take a glint.
+  // The pie is gone. All of it is dark, read by its shape: the glaze a
+  // deep rust, the rim a little less dark than the floor, each flute
+  // rounded by shade alone, with no glint or sheen.
   vec2 dg = vec2(dish_h(p + vec2(e, 0.0)) - dish_h(p - vec2(e, 0.0)), dish_h(p + vec2(0.0, e)) - dish_h(p - vec2(0.0, e))) / (2.0 * e);
   vec3 dn = normal_of(dg, 0.1);
   float relief = dot(dn, L) - L.z;
-  vec3 glaze = mix(vec3(0.15, 0.065, 0.05), vec3(0.3, 0.15, 0.11), smoothstep(RIM_IN - 0.04, RIM_IN + 0.06, d));
-  vec3 dark = glaze * clamp(1.0 + 2.6 * relief, 0.35, 2.2);
-  dark += vec3(0.62, 0.5, 0.44) * pow(max(dot(dn, HALF_V), 0.0), 60.0) * 0.55 * step(FLOOR + 0.05, d);
-  // The floor, wiped clean: a broad soft reflection of the room.
-  dark += vec3(0.1, 0.06, 0.055) * exp(-pow(length((p - vec2(-0.16, -0.2)) / vec2(0.36, 0.24)), 2.0)) * (1.0 - smoothstep(FLOOR - 0.1, FLOOR, d));
+  vec3 glaze = mix(vec3(0.13, 0.055, 0.045), vec3(0.25, 0.12, 0.09), smoothstep(RIM_IN - 0.04, RIM_IN + 0.06, d));
+  vec3 dark = glaze * clamp(1.0 + 1.6 * relief, 0.45, 1.2);
+  // Dark grooves between the flutes, and the wall in shadow where the
+  // rim meets the floor, draw the dish's shape.
+  float flute_u = fract(atan(p.y, p.x) / TAU * CRIMPS + 0.5) - 0.5;
+  dark *= 1.0 - 0.55 * smoothstep(0.3, 0.5, abs(flute_u)) * smoothstep(RIM_IN - 0.02, RIM_IN + 0.04, d);
+  dark *= 1.0 - 0.5 * exp(-pow((d - RIM_IN + 0.03) / 0.04, 2.0));
   // Past the flutes, the dish's outer edge falls away into shadow.
-  dark = mix(dark, vec3(0.08, 0.035, 0.03), fill(dish_rim(p) - d, aa));
+  dark = mix(dark, vec3(0.07, 0.03, 0.026), fill(dish_rim(p) - d, aa));
   // A trail of crust flakes where the last slice was lifted, the same
   // in every dish, each with its shadow.
   vec3 flakes[5];
@@ -197,7 +200,7 @@ vec3 dot_body(vec2 p, float d, float aa, float fresh, float bonus) {
     float cd = length(q * vec2(0.8, 1.3)) - edge;
     vec2 sq = p - flakes[i].xy - vec2(0.014, 0.02);
     dark *= 1.0 - 0.5 * fill(length(sq) - cr * 1.05, aa * 2.0) * step(0.0, cd);
-    vec3 crumb = mix(vec3(0.28, 0.18, 0.1), vec3(0.6, 0.45, 0.28), clamp(0.5 + dot(p - flakes[i].xy, L.xy) / cr * 0.55, 0.0, 1.0));
+    vec3 crumb = mix(vec3(0.13, 0.08, 0.05), vec3(0.25, 0.17, 0.1), clamp(0.5 + dot(p - flakes[i].xy, L.xy) / cr * 0.55, 0.0, 1.0));
     dark = mix(dark, crumb, fill(cd, aa));
   }
 
