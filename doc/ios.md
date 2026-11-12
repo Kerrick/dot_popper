@@ -22,7 +22,7 @@ The bundle identifier is `com.setdef.DotPopper`, set in `fledge.yml`.
 
 | Setting | Value | Why |
 | --- | --- | --- |
-| Lota | 0.3.1, built with its experimental iOS engine from a clone of its `v0.3.1` tag, with the iOS host its gem carries | Lota before 0.1.3 neither builds for iOS nor calls `Lota.touchpressed` for a touchscreen; 0.3.0 is the first release whose guide documents the phone route and ships the host |
+| Lota | 0.3.1, built with its experimental iOS engine from a clone of its `v0.3.1` tag, with the iOS host its gem carries | Lota before 0.1.3 neither builds for iOS nor calls `Lota.touchpressed` for a touchscreen; 0.3.0 was the first release whose guide documents the phone route and ships the host |
 | `t.highdpi` | `true`, already set in `conf.rb` | Without it, LÖVE, and so Lota, draws at 1× on a Retina iPad, and everything looks blurry |
 | Orientations | All four on iPad (`UISupportedInterfaceOrientations~ipad`); portrait and both landscapes on iPhone | The field is the whole window and rebuilds itself whenever the window changes size. Because `conf.rb` makes the window resizable, SDL allows every orientation that Info.plist allows |
 | Multitasking | Leave `UIRequiresFullScreen` unset | Split View and Stage Manager resize the window, which the game handles exactly as it handles a rotation |

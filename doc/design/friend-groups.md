@@ -64,7 +64,7 @@ One line each: the token, the unsent score, whether the player was last known to
 
 ## Identity: numbers, drawn
 
-A member of a group is a number the server gives, in join order, never reused (`Groups::Member`). It is the only identity a player has: no name and nothing a player supplies, so there is nothing to filter, report or block. A group is known by its id. The game draws both and names both, from those values alone, so every device shows the same and the server stores no picture and no name.
+A member of a group is a number the server gives, in join order, never reused (`Groups::Member`). It is the only identity a player has: no name or anything else a player supplies, so there is nothing to filter, report or block. A group is known by its id. The game draws both and names both, from those values alone, so every device shows the same and the server stores no picture and no name.
 
 **Member icons** (`Presentation::MemberIcon`, `lib/dot_popper/presentation/member_icon.rb`): a disc of two colours with a pattern, like an old GitHub identicon, drawn by the game (`Shell::MemberIconPainter`), with no emoji. A pattern is a choice of `FOLDS` (3, 4, 5, 6, 8), an `OUTER` motif (dots, petals, diamonds, spokes) and an `INNER` motif (dot, ring, star), 60 combinations (`COMBINATIONS`). A member's number walks those combinations by a step the group's id picks, coprime with 60, so numbers fewer than 60 apart never share a structure. A light or dark ground alternates along the same walk, so neighbours differ in grayscale too (Westland & Maggio: colour alone never carries information). The colours come from eight `SCHEMES`, chosen for contrast at phone size. `MemberIcon.seed` is an FNV-1a hash, the same on every device and run.
 
