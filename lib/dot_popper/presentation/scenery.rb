@@ -3,10 +3,10 @@
 module DotPopper
   module Presentation
     # What stands in a theme's night, as plain shapes in graphics units:
-    # silhouettes of trees, hills, a crooked house, a fence, graves, bats
-    # and the wood's trunks. It knows no drawing library; Shell::Scene
-    # bakes these once, for the screen's size, into a canvas at the
-    # screen's own resolution.
+    # silhouettes of trees, hills, a crooked house, a fence, graves, bats,
+    # the wood's trunks and fir boughs. It knows no drawing library;
+    # Shell::Scene bakes these once, for the screen's size, into a canvas
+    # at the screen's own resolution.
     #
     # Every shape is convex or a fan about its first point, so a plain
     # filled polygon draws it.
@@ -24,6 +24,7 @@ module DotPopper
         when :dusk then dusk(width, height)
         when :wood then wood(width, height)
         when :churchyard then churchyard(width, height)
+        when :boughs then boughs(width, height)
         else []
         end
       end
@@ -193,6 +194,67 @@ module DotPopper
             side = random.rand < 0.5 ? -1 : 1
             reach = random.rand(0.8..3.2) * w
             out << Fan.new(color:, points: [[at, y - (w * 0.1)], [at, y + (w * 0.22)], [at + (side * reach), y - (reach * 0.55) + (w * 0.08)], [at + (side * reach), y - (reach * 0.55) - (w * 0.03)]])
+          end
+        end
+      end
+
+      # Fir boughs hanging in from the top corners.
+      def boughs(width, height)
+        out = []
+        land = width > height
+        reach = land ? 0.42 : 0.62
+        [[Color.hex("#0b1a16"), 0], [Color.hex("#040b09"), 1]].each do |ink, layer|
+          [[0, 1], [width, -1]].each_with_index do |(x0, side), k|
+            r = Random.new(70 + (layer * 10) + k)
+            3.times do |b|
+              y0 = (b * 0.09 * height) - (layer * 30) + r.rand(-20.0..20.0)
+              length = width * reach * r.rand(0.6..1.0) * (layer.zero? ? 1.1 : 0.9)
+              angle = side.positive? ? r.rand(0.15..0.5) : Math::PI - r.rand(0.15..0.5)
+              bough(out, ink, x0, y0, angle, length, r)
+            end
+          end
+        end
+        out
+      end
+
+      # A fir bough: a drooping stem with twigs either side, all of them
+      # thick with short needles.
+      def bough(out, color, x, y, angle, length, random)
+        steps = 10
+        droop = Math.cos(angle).positive? ? 0.06 : -0.06
+        points = [[x, y]]
+        bent = angle
+        steps.times do
+          bent += droop
+          points << [points.last[0] + (Math.cos(bent) * length / steps), points.last[1] + (Math.sin(bent) * length / steps)]
+        end
+        points.each_cons(2).with_index do |(a, b), i|
+          f = i.to_f / steps
+          out << segment(a, b, (6 * (1 - f)) + 2, (6 * (1 - f - (1.0 / steps))) + 2, color)
+          needles(out, color, a, b, 13 * (1 - (f * 0.4)), random)
+          next if i.zero?
+
+          dir = Math.atan2(b[1] - a[1], b[0] - a[0])
+          [-1, 1].each do |side|
+            twig = dir + (side * 0.75) + random.rand(-0.15..0.15)
+            reach = length * 0.22 * (1 - (f * 0.6)) * random.rand(0.7..1.0)
+            tip = [a[0] + (Math.cos(twig) * reach), a[1] + (Math.sin(twig) * reach) + (reach * 0.15)]
+            out << segment(a, tip, 2.4, 1.2, color)
+            needles(out, color, a, tip, 9 * (1 - (f * 0.4)), random)
+          end
+        end
+      end
+
+      # Short needles either side of the twig from +a+ to +b+, swept forward.
+      def needles(out, color, a, b, size, random)
+        dir = Math.atan2(b[1] - a[1], b[0] - a[0])
+        6.times do |n|
+          t = (n + 0.5) / 6.0
+          at = [a[0] + ((b[0] - a[0]) * t), a[1] + ((b[1] - a[1]) * t)]
+          [-1, 1].each do |side|
+            angle = dir + (side * 0.9) + random.rand(-0.12..0.12)
+            tip = [at[0] + (Math.cos(angle) * size), at[1] + (Math.sin(angle) * size) + (size * 0.2)]
+            out << segment(at, tip, 2.0, 0.8, color)
           end
         end
       end

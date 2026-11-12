@@ -137,7 +137,7 @@ On a pop the phone buzzes 15 ms, and on a mistake 40 ms (`Style::HAPTICS`; 0 tur
 
 ## Themes
 
-A theme is a set of art and sound for the whole game. Five ship in `Style::THEMES`: the ordinary one, Classic, first, and four with art. A theme changes how the game looks and sounds, never how it plays: gameplay, scores, speeds and touch targets are untouched, hit areas and bounces stay circles, and no theme makes the game easier or harder (Schell's elemental tetrad: aesthetics changes, mechanics do not).
+A theme is a set of art and sound for the whole game. Six ship in `Style::THEMES`: the ordinary one, Classic, first, and five with art. A theme changes how the game looks and sounds, never how it plays: gameplay, scores, speeds and touch targets are untouched, hit areas and bounces stay circles, and no theme makes the game easier or harder (Schell's elemental tetrad: aesthetics changes, mechanics do not).
 
 | Theme | Key | File | Dot | Night | Title |
 | --- | --- | --- | --- | --- | --- |
@@ -146,18 +146,19 @@ A theme is a set of art and sound for the whole game. Five ship in `Style::THEME
 | Jack-o'-lantern | `:jack_o_lantern` | `themes/jack_o_lantern.rb` | `jack_o_lantern.glsl`: a carved pumpkin lit by a flickering candle, unlit when popped | Dusk (`:dusk`) | Creepster, O's as dots |
 | Awake | `:awake` | `themes/awake.rb` | `awake.glsl`: an open cat's eye, a shut lid when popped | A dark wood (`:wood`) | Anton, O's as dots |
 | Eclipse | `:eclipse` | `themes/eclipse.rb` | `eclipse.glsl`: a harvest moon, in eclipse when popped, so a bright dot sliding out from under a popped one is a crescent | A churchyard (`:churchyard`) | IM Fell Double Pica, beside a small crescent |
+| Ornament | `:ornament` | `themes/ornament.rb` | `ornament.glsl`: a glass ornament lit gold from within, its cap inside the circle; the same ornament in dark red, green or blue glass, its light out, when popped | Fir boughs over a low warm glow (`:boughs`) | Fredoka, O's as dots |
 
 The theme files are in `lib/dot_popper/presentation/themes/`, their dot shaders in `assets/shaders/themes/`, and the title fonts' licenses in [assets/fonts/README.md](../../assets/fonts/README.md). Theme names are in `Style::WORDS.themes`.
 
 ### A theme is one file and one shader
 
-Each theme is a module with one method, `theme(base, hex)`, that returns a `Presentation::Theme`: its `key` (what is saved, and what the server names), its `palette` (the ordinary palette `with` its own colours), its `art` (a `ThemeArt`: the dot shader's name, its sky as a `ThemeSky` for `scene.glsl`, its scenery's kind, its title font and whether the title's O's are dots, and the sound patches it plays instead of the ordinary ones, `pop` and `bonk` in all four), and its `opens_on` date. Replacing one theme touches nothing else.
+Each theme is a module with one method, `theme(base, hex)`, that returns a `Presentation::Theme`: its `key` (what is saved, and what the server names), its `palette` (the ordinary palette `with` its own colours), its `art` (a `ThemeArt`: the dot shader's name, its sky as a `ThemeSky` for `scene.glsl`, its scenery's kind, its title font and whether the title's O's are dots, and the sound patches it plays instead of the ordinary ones, `pop` and `bonk` in all of them), and its `opens_on` date. Replacing one theme touches nothing else.
 
 When a theme is used, everything takes it: every dot, the night, buttons, words, effects and the tutorial come from the palette in use (`Pen#palette`); the rings and flashes `Style` colours from the ordinary palette are mapped to the palette in use by their job (`Pen#themed`); the shaders are given its colours (`Pen#paint_shaders`); its dot shader is made ready; the title is set by `Shell::ThemedTitle`; and `Speaker#use` swaps in its sounds. The theme in use is settled when the game starts, when Home shows, and when the player chooses one, never in a game, so a purchase or midnight never repaints a game (`ThemeKeeper#refresh`, `App#use_theme`).
 
 ### Scenery is drawn once
 
-A theme's night is baked once for the screen's size into a canvas at the screen's own resolution and drawn 1:1 each frame, so scenery costs one quad on an old phone (`Shell::Scene`): its sky by `scene.glsl`, its silhouettes (trees, hills, a crooked house, a fence, graves, bats, the wood's trunks) as plain filled polygons from `Presentation::Scenery`, then fog by the shader over them where the sky has any. It is baked again whenever the theme or the window changes (`Renderer#prepare`). Without the `scene` shader, or if a canvas can't be made, the ordinary night is drawn.
+A theme's night is baked once for the screen's size into a canvas at the screen's own resolution and drawn 1:1 each frame, so scenery costs one quad on an old phone (`Shell::Scene`): its sky by `scene.glsl`, its silhouettes (trees, hills, a crooked house, a fence, graves, bats, the wood's trunks, fir boughs) as plain filled polygons from `Presentation::Scenery`, then fog by the shader over them where the sky has any. It is baked again whenever the theme or the window changes (`Renderer#prepare`). Without the `scene` shader, or if a canvas can't be made, the ordinary night is drawn.
 
 ### Contrast
 
