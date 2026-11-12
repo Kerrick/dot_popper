@@ -36,7 +36,7 @@ Why fitting is the default: [ADR-0001](../adr/0001-dots-fit-the-screen-by-defaul
 | Choice | Constant | Radius | Saved as |
 | --- | --- | --- | --- |
 | Fit the screen (the default) | `DotSizing::SIZED_TO_SCREEN`, `DotSizing::DEFAULT` | `DotSize.fitted(width, height)` | `fitted` |
-| Standard | `DotSizing::STANDARD` | `Rules::RADIUS`, 50 units | `same` |
+| Standard | `DotSizing::STANDARD` | `Rules::RADIUS`, 50 units | `standard` |
 
 **The formula** (`DotSize.fitted`): R = √(width × height ÷ 384), the radius that makes the field `Rules::FITTED_AREA`, 24 × 16 = 384 square radii, the desktop window's area. It is clamped:
 
@@ -45,7 +45,7 @@ Why fitting is the default: [ADR-0001](../adr/0001-dots-fit-the-screen-by-defaul
 
 On an upright phone the floor applies: the exact fit would be about 29.6, so the field is 373 R² rather than 384.
 
-**Saving.** The choice is kept in `dot_size.txt`. It is written only when the player picks a size. `DotSizing.parse` reads `same` or `fitted`; a missing, empty or unreadable file means the player never chose, and gets `DEFAULT`.
+**Saving.** The choice is kept in `dot_size.txt`. It is written only when the player picks a size. `DotSizing.parse` reads `standard` or `fitted`, and `same`, Standard's name in saves from before it was called standard (`DotSizing::EARLIER_NAMES`); a missing, empty or unreadable file means the player never chose, and gets `DEFAULT`.
 
 **When it applies.** `Cabinet#field` gives a new game `sizing.fit(screen)`. A game keeps its radius until it ends. `Cabinet#sizing=` changes the choice only on Home, so a game in play is never resized by it. Speeds are in radii per second, so they scale with R. Buttons and their reaches do not, since they are sized for a finger, not for the field.
 

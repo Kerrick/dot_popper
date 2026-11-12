@@ -9,22 +9,28 @@ module DotPopper
   # STANDARD, the standard dot size, is the spec's fixed radius: DotSize's
   # on every screen, so a small screen crowds sooner and plays harder.
   # Either way the radius is set when a game starts and kept until it
-  # ends, and speeds stay in radii per second. A save file still writes
-  # STANDARD as "same", its name from before it was called standard.
+  # ends, and speeds stay in radii per second. A save file from before
+  # it was called standard says "same" (EARLIER_NAMES), which is read as
+  # STANDARD.
   class DotSizing < Data.define(:name)
     def initialize(name:) = super(name: -name)
 
-    STANDARD = new(name: "same")
+    STANDARD = new(name: "standard")
     SIZED_TO_SCREEN = new(name: "fitted")
+    # Names a save file once held, and the choice each is.
+    EARLIER_NAMES = { "same" => STANDARD }.freeze
 
     # What a player who never chose gets (the maintainer's call after the
     # iPhone playtest).
     DEFAULT = SIZED_TO_SCREEN
 
     # The choice a save file holds, or DEFAULT for any other text. The
-    # file is written only when the player picks a size, so "same" is
+    # file is written only when the player picks a size, so "standard" is
     # always a choice the player made, and is kept.
-    def self.parse(text) = [STANDARD, SIZED_TO_SCREEN].find { it.name == text.to_s.strip } || DEFAULT
+    def self.parse(text)
+      name = text.to_s.strip
+      [STANDARD, SIZED_TO_SCREEN].find { it.name == name } || EARLIER_NAMES.fetch(name, DEFAULT)
+    end
 
     def sized_to_screen? = self == SIZED_TO_SCREEN
 

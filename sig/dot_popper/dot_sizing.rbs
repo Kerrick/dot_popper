@@ -10,6 +10,8 @@ module DotPopper
 
     SIZED_TO_SCREEN: DotSizing
 
+    EARLIER_NAMES: Hash[String, DotSizing]
+
     DEFAULT: DotSizing
 
     def self.parse: (String? text) -> DotSizing

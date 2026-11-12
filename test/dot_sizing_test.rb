@@ -30,8 +30,16 @@ class DotSizingTest < Minitest::Test
     assert_equal DotSizing::STANDARD, DotSizing.parse("#{DotSizing::STANDARD.to_text}\n")
   end
 
+  # The save says "standard", the screen's word. Before, it said "same",
+  # which a player who chose standard dots keeps.
+  def test_the_standard_size_is_saved_as_standard_and_read_by_its_earlier_name_too
+    assert_equal "standard", DotSizing::STANDARD.to_text
+    assert_equal DotSizing::STANDARD, DotSizing.parse("standard\n")
+    assert_equal DotSizing::STANDARD, DotSizing.parse("same\n")
+  end
+
   # A player who never chose gets dots sized to the screen; one who chose
-  # the standard size ("same", written only by a choice) keeps it.
+  # the standard size (written only by a choice) keeps it.
   def test_a_player_who_never_chose_gets_dots_sized_to_the_screen
     assert_equal DotSizing::SIZED_TO_SCREEN, DotSizing::DEFAULT
     assert_equal DotSizing::DEFAULT, DotSizing.parse(nil)
