@@ -21,6 +21,13 @@ module DotPopper
 
       # The farthest below its center a dot's shadow reaches.
       def shadow_edge = shadow_offset + shadow_reach
+
+      # The seed a dot shader is given for the dot with +id+, so a theme
+      # may make each bright dot its own. Every popped dot gets the same
+      # one, so popped dots all look alike (look-and-sound.md, "Themes").
+      def seed(id, fresh:) = fresh ? id : POPPED_SEED
+
+      POPPED_SEED = 0
     end
   end
 end

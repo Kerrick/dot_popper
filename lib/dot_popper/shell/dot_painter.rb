@@ -17,7 +17,7 @@ module DotPopper
       SEGMENTS = 64
 
       def draw(stack, animations, now, radius)
-        paint { |shader| stack.bottom_up.each { |dot| one(dot.x, dot.y, radius, animations.pose(dot, now), 1.0, dot.bonus?, shader, dot.id) } }
+        paint { |shader| stack.bottom_up.each { |dot| one(dot.x, dot.y, radius, animations.pose(dot, now), 1.0, dot.bonus?, shader, seed(dot)) } }
       end
 
       # What of the dots glows, for Bloom: the fresh dots alone. The glow
@@ -27,14 +27,14 @@ module DotPopper
         paint do |shader|
           stack.bottom_up.each do |dot|
             pose = animations.pose(dot, now)
-            one(dot.x, dot.y, radius, pose, pose.freshness, dot.bonus?, shader, dot.id) if pose.freshness.positive?
+            one(dot.x, dot.y, radius, pose, pose.freshness, dot.bonus?, shader, seed(dot)) if pose.freshness.positive?
           end
         end
       end
 
       # One dot that is not in play, such as the title's examples.
       def icon(x, y, radius, fresh:, opacity: 1.0, bonus: false)
-        paint { |shader| one(x, y, radius, fresh ? Presentation::Pose::FRESH : Presentation::Pose::STILL, opacity, bonus, shader, 9) }
+        paint { |shader| one(x, y, radius, fresh ? Presentation::Pose::FRESH : Presentation::Pose::STILL, opacity, bonus, shader, pen.style::DOT.seed(9, fresh:)) }
       end
 
       # One plain dot in the colors of +palette+, whichever theme is in use,
@@ -59,6 +59,8 @@ module DotPopper
           yield shader
         end
       end
+
+      def seed(dot) = pen.style::DOT.seed(dot.id, fresh: dot.fresh?)
 
       def one(x, y, radius, pose, opacity, bonus, shader, seed)
         return flat(x, y, radius, pose, opacity, bonus) unless shader

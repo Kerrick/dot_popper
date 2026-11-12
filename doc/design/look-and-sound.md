@@ -143,10 +143,10 @@ A theme is a set of art and sound for the whole game. Seven ship in `Style::THEM
 | --- | --- | --- | --- | --- | --- |
 | Classic | `:classic` | `Style::PALETTE` | `dot.glsl`: gumdrops | `backdrop.glsl` | Fredoka, candy lettering |
 | Ghost | `:ghost` | `themes/ghost.rb` | `ghost.glsl`: a little ghost, white and glowing, gone near black when popped | A foggy graveyard (`:graveyard`) | Fredoka, its O's the theme's bright dots |
-| Jack-o'-lantern | `:jack_o_lantern` | `themes/jack_o_lantern.rb` | `jack_o_lantern.glsl`: a carved pumpkin lit by a flickering candle, unlit when popped | Dusk (`:dusk`) | Creepster, O's as dots |
+| Jack-o'-lantern | `:jack_o_lantern` | `themes/jack_o_lantern.rb` | `jack_o_lantern.glsl`: a carved pumpkin lit by a flickering candle, unlit when popped, every one with the same face | Dusk (`:dusk`) | Creepster, O's as dots |
 | Awake | `:awake` | `themes/awake.rb` | `awake.glsl`: an open cat's eye, a shut lid when popped | A dark wood (`:wood`) | Anton, O's as dots |
 | Eclipse | `:eclipse` | `themes/eclipse.rb` | `eclipse.glsl`: a harvest moon, in eclipse when popped, so a bright dot sliding out from under a popped one is a crescent | A churchyard (`:churchyard`) | IM Fell Double Pica, beside a small crescent |
-| Ornament | `:ornament` | `themes/ornament.rb` | `ornament.glsl`: a glass ornament lit gold from within, its cap inside the circle; the same ornament in dark red, green or blue glass, its light out, when popped | Fir boughs over a low warm glow (`:boughs`) | Fredoka, O's as dots |
+| Ornament | `:ornament` | `themes/ornament.rb` | `ornament.glsl`: a glass ornament lit gold from within, its cap inside the circle; the same ornament in dark red glass, its light out, when popped | Fir boughs over a low warm glow (`:boughs`) | Fredoka, O's as dots |
 | Pumpkin pie | `:pumpkin_pie` | `themes/pumpkin_pie.rb` | `pumpkin_pie.glsl`: a pumpkin pie seen from above, its fluted crust the circle's edge, a dollop of cream in the middle; the empty dish, with crumbs, when popped | A farm at dusk, with a barn, shocks of corn and geese (`:farm`) | Fredoka, O's as dots |
 
 The theme files are in `lib/dot_popper/presentation/themes/`, their dot shaders in `assets/shaders/themes/`, and the title fonts' licenses in [assets/fonts/README.md](../../assets/fonts/README.md). Theme names are in `Style::WORDS.themes`.
@@ -163,7 +163,7 @@ A theme's night is baked once for the screen's size into a canvas at the screen'
 
 ### Contrast
 
-Every theme keeps a bright dot told from a popped one by shape and lightness, not hue (Hodent; Westland and Maggio, *Universal Principles of Color*). `test/presentation/theme_test.rb` holds every theme's palette to these:
+Every theme keeps a bright dot told from a popped one by shape and lightness, not hue (Hodent; Westland and Maggio, *Universal Principles of Color*). Every popped dot looks like every other popped dot: no color, pattern or shape is chosen per dot, so the eye learns one popped look and passes over it, and only bright dots may each be their own. A dot shader learns which dot it draws only from its `seed`, which `DotStyle#seed` gives each bright dot by its id and every popped dot the same; no dot shader may read where on the screen it draws. `test/presentation/theme_test.rb` holds every theme's palette to these:
 
 | Rule | At least |
 | --- | --- |
@@ -178,7 +178,7 @@ Every theme keeps a bright dot told from a popped one by shape and lightness, no
 | Every colour words use against `ink_bottom` | 4.5:1 |
 | Colours that differ between any two themes | 10 |
 
-It also checks that Classic comes first and is the only theme without art, and that every theme has a name.
+It also checks that Classic comes first and is the only theme without art, that every theme has a name, that every popped dot gets the same seed while each bright dot gets its own, and that no dot shader reads where on the screen it draws.
 
 ### The server unlocks them
 

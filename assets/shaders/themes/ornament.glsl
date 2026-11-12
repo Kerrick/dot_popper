@@ -81,8 +81,7 @@ vec3 dot_body(vec2 p, float d, float aa, float fresh, float bonus) {
   }
 
   // Popped: the same ornament in dark glass, its light out.
-  float kind = mod(seed, 3.0);
-  vec3 glass = kind < 0.5 ? vec3(0.24, 0.047, 0.078) : (kind < 1.5 ? vec3(0.055, 0.18, 0.141) : vec3(0.055, 0.094, 0.22));
+  vec3 glass = vec3(0.24, 0.047, 0.078);
   vec3 dark = glass * (0.45 + 0.75 * clamp(0.5 + 0.6 * lam, 0.0, 1.0));
   dark = mix(dark, vec3(0.32, 0.34, 0.33), win * 0.4);
   dark = mix(dark, glass * 1.4, band * 0.4);

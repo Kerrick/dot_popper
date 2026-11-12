@@ -69,6 +69,28 @@ class ThemeTest < Minitest::Test
     end
   end
 
+  # Every popped dot looks like every other popped dot, in every theme: no
+  # color, pattern or shape is chosen per dot. A dot shader is told which
+  # dot it draws only through its seed, so a popped dot's seed is the same
+  # for all of them, while each bright dot keeps its own.
+  def test_every_popped_dot_looks_like_every_other
+    seeds = (0..40).map { Style::DOT.seed(it, fresh: false) }
+
+    assert_equal 1, seeds.uniq.size, "popped dots are told apart by their seeds"
+    assert_equal 41, (0..40).map { Style::DOT.seed(it, fresh: true) }.uniq.size
+  end
+
+  # Nor can a theme's dot shader tell one dot from another by where it
+  # is on the screen.
+  def test_no_dot_shader_reads_where_on_the_screen_it_draws
+    shaders = THEMES.filter_map(&:art).map { File.read("assets/shaders/themes/#{it.dot}.glsl") } << File.read("assets/shaders/dot.glsl")
+    shaders.each do |source|
+      body = source.gsub(%r{//.*}, "").sub(/vec4 effect\([^)]*\)/, "")
+
+      refute_match(/\bscreen\b|gl_FragCoord|love_PixelCoord/, body)
+    end
+  end
+
   private
 
   def each_style = THEMES.each { yield it.key, it.palette }
