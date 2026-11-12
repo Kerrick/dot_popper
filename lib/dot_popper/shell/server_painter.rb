@@ -30,7 +30,7 @@ module DotPopper
         end
       end
 
-      # One centred line, smaller until it fits across, as a long address may need.
+      # One centered line, smaller until it fits across, as a long address may need.
       def line(text, plan, y, color)
         size = 17
         size -= 1 while size > 10 && pen.fonts.semibold(size).width(text) > plan.width

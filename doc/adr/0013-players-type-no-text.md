@@ -13,7 +13,7 @@ Friend groups let a few invited friends compete for one title. A first build had
 ## Decision Drivers
 
 * The maintainer's decision, as the record states it: any text a player enters is a liability. `AGENTS.md` makes it a rule: players type no text, and nothing a player could type is stored or shown to anyone else.
-* Members must tell each other apart in grayscale and for colour-blind players (Johnson, *Designing with the Mind in Mind*, on not relying on colour alone; Westland and Maggio).
+* Members must tell each other apart in grayscale and for color-blind players (Johnson, *Designing with the Mind in Mind*, on not relying on color alone; Westland and Maggio).
 * Joining must work by touch or a controller alone, with no keyboard.
 * A code must not spell a word in any language, and must resist guessing.
 

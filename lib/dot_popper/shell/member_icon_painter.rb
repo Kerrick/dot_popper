@@ -35,7 +35,7 @@ module DotPopper
         end
       end
 
-      # A shape as a fan of triangles from its own centre, which suits the
+      # A shape as a fan of triangles from its own center, which suits the
       # convex motifs and the concave star alike.
       def fill(points, x, y, radius)
         placed = points.each_slice(2).map { |px, py| [x + (px * radius), y + (py * radius)] }

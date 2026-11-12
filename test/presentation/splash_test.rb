@@ -30,7 +30,7 @@ class SplashTest < Minitest::Test
     %w[DOT_POPPER_AUTOPLAY DOT_POPPER_SCENARIO DOT_POPPER_NO_SPLASH].each { assert Splash.skipped?({ it => "1" }) }
   end
 
-  def test_the_logotype_is_centred_and_keeps_setdefs_proportions
+  def test_the_logotype_is_centered_and_keeps_setdefs_proportions
     mark = Logotype.new(size: 100)
     left = mark.left(600)
     assert_in_delta 600, left + (mark.width / 2.0), 1e-9

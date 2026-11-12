@@ -34,7 +34,7 @@ class FieldTest < Minitest::Test
     assert measurements.all?(Float)
   end
 
-  def test_a_field_narrower_than_a_dot_centres_it
+  def test_a_field_narrower_than_a_dot_centers_it
     narrow = DotPopper::Field.new(60, 600, R)
 
     assert_equal 30.0, narrow.random_center(Random.new(1)).first

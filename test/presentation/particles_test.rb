@@ -53,7 +53,7 @@ class ParticlesTest < Minitest::Test
     assert_in_delta 0.0, SpriteArt.twinkle(1, 1)
   end
 
-  def test_sprite_pixels_are_sampled_at_their_centres
+  def test_sprite_pixels_are_sampled_at_their_centers
     assert_operator SpriteArt.alpha(:droplet, 15, 15, 32), :>, 0.99
     assert_in_delta 0.0, SpriteArt.alpha(:droplet, 0, 0, 32)
   end

@@ -76,7 +76,7 @@ module DotPopper
     end
 
     # The grid of achievements: as many columns as fit, a short last row
-    # centred, as tall as it needs, in a window that scrolls.
+    # centered, as tall as it needs, in a window that scrolls.
     class AchievementsScreen < Data.define(:layout, :ids)
       def window = layout.page
       def radius = short? ? 36.0 : (layout.safe.width < 600 ? 44.0 : 56.0)

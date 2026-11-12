@@ -3,9 +3,9 @@
 module DotPopper
   module Shell
     # The setdef splash: its black ground over the whole window, and its
-    # logotype (Presentation::Logotype) centred on it, in setdef's amber.
+    # logotype (Presentation::Logotype) centered on it, in setdef's amber.
     # The letters and the block sit on setdef's glow (brand/README.md):
-    # both blurred by a Bloom, in the mark's own colour at 55%, under the
+    # both blurred by a Bloom, in the mark's own color at 55%, under the
     # crisp mark. The blur is a fixed share of the logotype's size
     # (Logotype#glow), so it looks alike at every window size; where there
     # is no blur shader there is no glow. The block blinks, as Presentation::Splash says, and

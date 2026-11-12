@@ -11,9 +11,9 @@
 #
 # Each PNG shows VIEW of the SVG's 128-unit square, the hand with a thin
 # clear margin, so the game knows its fingertip and wrist from where they
-# are in it. Its clear pixels take the colour of the nearest pixel of the
+# are in it. Its clear pixels take the color of the nearest pixel of the
 # hand (Bleed), so when the game draws it smaller, with linear filtering
-# and mipmaps, the edge blends into the hand's own colour and never into
+# and mipmaps, the edge blends into the hand's own color and never into
 # black: no dark fringe.
 
 require "open3"
@@ -23,7 +23,7 @@ require_relative "../lib/dot_popper/presentation/pointing_hand"
 SOURCE = "assets/emoji/emoji_u1f446.svg"
 VIEW = DotPopper::Presentation::PointingHand::VIEW
 
-# Gives every clear pixel of an RGBA image the colour of its nearest
+# Gives every clear pixel of an RGBA image the color of its nearest
 # pixel with any opacity, found breadth first, leaving its opacity 0.
 module Bleed
   module_function

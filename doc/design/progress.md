@@ -100,7 +100,7 @@ Otherwise Game Over says "New record!", or how the score compares (`Words#short_
 3. the longest time to pop,
 4. the shortest time to pop.
 
-Game Over names only the first, once the score has counted up, in the gain colour: "New record: 18 dots in a row without a mistake" (`Words#record`). The share text puts the same line under the score. The order puts skill before luck: a long row without a mistake is the patience the game asks for, and it is what makes a game last; a fast pop mostly means a dot appeared in the open. One line keeps the screen quiet.
+Game Over names only the first, once the score has counted up, in the gain color: "New record: 18 dots in a row without a mistake" (`Words#record`). The share text puts the same line under the score. The order puts skill before luck: a long row without a mistake is the patience the game asks for, and it is what makes a game last; a fast pop mostly means a dot appeared in the open. One line keeps the screen quiet.
 
 A class's first game sets no record. Neither does a game that only equals a record as the game shows it: a game's length counts in whole seconds, a time to pop in tenths, so "New record" always shows a bigger number than before. A record must also beat something more than nothing.
 

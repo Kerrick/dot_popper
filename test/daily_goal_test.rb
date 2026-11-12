@@ -15,7 +15,7 @@ class DailyGoalTest < Minitest::Test
     assert_equal 0x6d1e1b30, DailyGoal.fnv("2026-11-05"), "the hash must never change, or a day's goal would"
   end
 
-  def test_a_year_of_days_uses_every_goal_and_favours_none
+  def test_a_year_of_days_uses_every_goal_and_favors_none
     year = (Date.new(2026, 1, 1)..Date.new(2026, 12, 31)).map { DailyGoal.for(it) }
     counts = year.tally
 

@@ -52,7 +52,7 @@ class SpawnerTest < Minitest::Test
     refute spawn.redrawn?
   end
 
-  # A target's centre must be 44 from a dot above's at R 50. The popped
+  # A target's center must be 44 from a dot above's at R 50. The popped
   # dot leaving at 120 a second gets there in about a third of a second.
   # The one by the edge would get there at 60 a second, but it bounces
   # 10 units on and comes back, so it is never more than 40 away.

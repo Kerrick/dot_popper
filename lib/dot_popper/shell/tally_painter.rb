@@ -4,7 +4,7 @@ module DotPopper
   module Shell
     # A Presentation::Tally drawn: its number, outlined so it reads over a
     # light dot or a dark one, and for the clock, the small stopwatch after
-    # it, in the same colour. The Tutorial flies these into the HUD, and
+    # it, in the same color. The Tutorial flies these into the HUD, and
     # the title's legend shows the same ones, so they read as one language.
     class TallyPainter < Data.define(:pen)
       G = ::Lota::Graphics
@@ -37,7 +37,7 @@ module DotPopper
         G.circle(:fill, x, y, size * 0.42, 32)
       end
 
-      # A small stopwatch, +size+ across, centred on +x+, +y+: its face, a
+      # A small stopwatch, +size+ across, centered on +x+, +y+: its face, a
       # hand, and the button on top, over a dark edge.
       def stopwatch(x, y, size, color, alpha)
         pixels = pen.pixels

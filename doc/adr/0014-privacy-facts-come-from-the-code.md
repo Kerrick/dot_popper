@@ -31,7 +31,7 @@ Chosen: option 1, because a declaration that the code can't bypass, and a test t
 * Good, because `Shell::SaveFile` refuses an undeclared name, a session's jobs are built only from `Groups::REQUESTS`, source scans forbid network calls outside `Groups::Link` and file writes outside `SaveFile`, and a wire test plays every request against a local server.
 * Good, because exact lists (shipped gems, Android dependencies and permissions, iOS usage strings, the privacy manifest's data types) fail `bundle exec rake` when something new appears, and Billing's version is pinned so a bump makes someone re-read its manifest.
 * Bad, because every new save file, request or field takes a declaration, a label or reason for players, and a regenerated `doc/privacy.json` before the suite passes.
-* Bad, because the server's own behaviour (its logs and IP addresses) is outside the code, so the document defers to the server's policy there.
+* Bad, because the server's own behavior (its logs and IP addresses) is outside the code, so the document defers to the server's policy there.
 
 ### Confirmation
 

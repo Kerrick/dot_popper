@@ -16,7 +16,7 @@ module DotPopper
     class Ring < Data.define(:x, :y, :style, :scale, :born, :follow)
       def initialize(x:, y:, style:, scale:, born:, follow: nil) = super
 
-      # Where the ring's centre is, given the dots in play.
+      # Where the ring's center is, given the dots in play.
       def center(dots)
         dot = follow && dots&.find { it.id == follow }
         dot ? [dot.x, dot.y] : [x, y]

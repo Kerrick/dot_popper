@@ -26,7 +26,7 @@ class PixelsTest < Minitest::Test
     assert_in_delta 0.5, Pixels.new(scale: 2).line_width(0)
   end
 
-  def test_an_odd_width_line_sits_on_a_pixel_centre
+  def test_an_odd_width_line_sits_on_a_pixel_center
     retina = Pixels.new(scale: 2)
 
     assert_in_delta 10.25, retina.line_at(10.1, 1)

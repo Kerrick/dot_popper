@@ -209,7 +209,7 @@ module DotPopper
       def controls = [[:policy, policy], [:notice_later, later], [:notice_go, go]]
     end
 
-    # The notice, as a dialog over the friend groups' screen: centred in
+    # The notice, as a dialog over the friend groups' screen: centered in
     # the safe area, no wider than 520, the sentence balanced over its
     # lines, the link under it, and Not now beside the button that goes on,
     # which takes the larger share.

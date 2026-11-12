@@ -11,7 +11,7 @@ module DotPopperGui
       @scale_y = image.height.to_f / height
     end
 
-    # The colour at +x+, +y+, as [red, green, blue] from 0 to 1.
+    # The color at +x+, +y+, as [red, green, blue] from 0 to 1.
     def color(x, y)
       px = (x * @scale_x).floor.clamp(0, @image.width - 1)
       py = (y * @scale_y).floor.clamp(0, @image.height - 1)
@@ -21,7 +21,7 @@ module DotPopperGui
     def lightness(x, y) = lightness_of(color(x, y))
 
     # A fresh dot's body is light and warm, red over blue (Look::PALETTE's
-    # fresh colours); the night behind the dots and a popped dot are dark
+    # fresh colors); the night behind the dots and a popped dot are dark
     # and cool.
     def fresh?(x, y)
       red, green, blue = color(x, y)

@@ -34,7 +34,7 @@ class MemberIconTest < Minitest::Test
     assert_kind_of Icon, Icon.of(5, 9_999_999_999)
   end
 
-  def test_neighbours_differ_in_grayscale
+  def test_neighbors_differ_in_grayscale
     Icon::SCHEMES.first(Icon::DARK).each { assert_operator it[0].luminance, :<, 0.2 }
     Icon::SCHEMES.last(Icon::DARK).each { assert_operator it[0].luminance, :>, 0.45 }
   end

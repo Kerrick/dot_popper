@@ -7,8 +7,8 @@ module DotPopper
     def initialize(width:, height:, radius:) = super(width: width.to_f, height: height.to_f, radius: radius.to_f)
 
     # A uniformly random point whose distance from every edge is at least
-    # one radius, so a dot centred there starts wholly on screen. On a
-    # field narrower than a dot, the centre line is the only choice.
+    # one radius, so a dot centered there starts wholly on screen. On a
+    # field narrower than a dot, the center line is the only choice.
     def random_center(random)
       [random_between(random, min_x, max_x), random_between(random, min_y, max_y)]
     end

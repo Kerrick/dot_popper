@@ -15,7 +15,7 @@ Dot Popper has two rules a new player must learn: a bright dot pays a point and 
 * How to play must never depend on reading English (a rule in `AGENTS.md`).
 * Players don't read during intense action (Johnson, *Designing with the Mind in Mind*; Hodent, *The Gamer's Brain*), and a penalty is the wrong moment to ask them to (Saffer, *Microinteractions*).
 * A demonstration must show what the game really does (Hodent); players learn the pattern they see (Koster, *A Theory of Fun*).
-* Recognising something already seen is easier than recalling it (Johnson), and symbols such as ✕ or ✓ are not universal (Westland and Maggio).
+* Recognizing something already seen is easier than recalling it (Johnson), and symbols such as ✕ or ✓ are not universal (Westland and Maggio).
 * A first game should start at once; a lesson must be short and skippable.
 
 ## Considered Options

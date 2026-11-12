@@ -4,7 +4,7 @@ Dot Popper is the kind of game people write in LÖVE: a window, some
 circles, a clock. LÖVE games are written in Lua, and Lota runs the same
 engine under Ruby. So the fair question is what Ruby buys a game like this
 one, and what it costs. This essay answers with the game's own code,
-next to the Lua a LÖVE programmer would write for the same job. The Lua is
+next to the Lua a LÖVE programr would write for the same job. The Lua is
 idiomatic, not a straw man; most of it is the shape of LÖVE's own
 tutorials.
 
@@ -95,7 +95,7 @@ end
 Each callback holds a piece of every state, so adding a state means
 editing every callback. In Ruby a state's rules sit in one class, and a
 state that does not handle a message fails loudly. Lua can do the state
-pattern with metatables, and good Lua programmers do; Ruby makes it the
+pattern with metatables, and good Lua programrs do; Ruby makes it the
 short way rather than the disciplined way.
 
 ## Blocks and Enumerable

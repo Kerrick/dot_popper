@@ -4,7 +4,7 @@ module DotPopper
   module Presentation
     # One block of a Column: a line of words, a few lines, or a button,
     # +height+ units tall, +gap+ units below the block before it, and
-    # +width+ units across, centred. A block with a +drop+ rank may be
+    # +width+ units across, centered. A block with a +drop+ rank may be
     # left out when the column has no room for it, the lowest rank first;
     # one without is always kept.
     class Block < Data.define(:name, :height, :gap, :width, :drop)
@@ -32,7 +32,7 @@ module DotPopper
     end
 
     # Blocks stacked one under the next inside +room+ (a Rect), the first
-    # block's gap left out, as a group centred down the room or from its
+    # block's gap left out, as a group centered down the room or from its
     # top (+align+ :center or :top). A group too tall for the room starts
     # at its top and runs past its bottom.
     #

@@ -17,10 +17,10 @@ module DotPopper
     end
 
     # A Gaussian blur's nine taps folded into five texture reads: the
-    # centre, and on each side two reads that fall between a pair of
+    # center, and on each side two reads that fall between a pair of
     # pixels, where the GPU's linear filter blends the pair in the right
-    # proportion. +offsets+ are in pixels from the centre and +weights+
-    # what each read counts, the centre first.
+    # proportion. +offsets+ are in pixels from the center and +weights+
+    # what each read counts, the center first.
     class BlurKernel < Data.define(:offsets, :weights)
       def self.gaussian(sigma)
         taps = (0..4).map { Math.exp(-(it**2) / (2.0 * (sigma**2))) }

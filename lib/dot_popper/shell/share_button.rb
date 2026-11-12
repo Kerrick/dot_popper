@@ -41,7 +41,7 @@ module DotPopper
         G.rectangle(:line, x + inset, y + inset, width - (2 * inset), height - (2 * inset), corner, corner, 48)
       end
 
-      # The glyph and the words after it, centred together.
+      # The glyph and the words after it, centered together.
       def label(text, x, y, width, height, alpha)
         glyph = height * Plan::SHARE_GLYPH
         font = fit(text, width - (height * (Plan::SHARE_GLYPH + Plan::SHARE_SIDES)), height)
@@ -51,7 +51,7 @@ module DotPopper
         pen.text(text, font, left + glyph + (font.width(text) / 2.0), middle, pen.palette.cream, alpha)
       end
 
-      # Three dots joined by two lines, +size+ across from +x+, centred on
+      # Three dots joined by two lines, +size+ across from +x+, centered on
       # +y+: the bright dot on the left, sharing with the two on the right.
       def share_glyph(x, y, size, alpha)
         palette = pen.palette

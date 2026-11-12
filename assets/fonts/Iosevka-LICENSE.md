@@ -49,7 +49,7 @@ or substituting -- in part or in whole -- any of the components of the
 Original Version, by changing formats or by porting the Font Software to a
 new environment.
 
-`"Author"` refers to any designer, engineer, programmer, technical
+`"Author"` refers to any designer, engineer, programr, technical
 writer or other person who contributed to the Font Software.
 
 

@@ -9,7 +9,7 @@
   what Back does itself, as Escape (Shell::App), so the meta-data below
   asks SDL to trap Back; and the activity also handles the changes
   Lota's list leaves out: grammatical gender, a SIM (mcc, mnc), a
-  touchscreen, and the display's colour mode, each of which would
+  touchscreen, and the display's color mode, each of which would
   otherwise end the game, as SDL can't survive its activity being made
   again. Lota's notes follow.
 

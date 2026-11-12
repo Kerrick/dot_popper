@@ -105,7 +105,7 @@ module DotPopper
 
     # Where a part of the Stats screen goes: +item+ is a section's title
     # or the chart's (a String), a RecordRow, :chart, or a ChartNote. A text line is
-    # centred on +y+; the chart's box starts at +y+ and is +height+ tall.
+    # centered on +y+; the chart's box starts at +y+ and is +height+ tall.
     class Placed < Data.define(:item, :x, :y, :width, :height)
       def right = x + width
     end

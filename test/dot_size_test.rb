@@ -10,7 +10,7 @@ class DotSizeTest < Minitest::Test
     assert_match(/logical pixels/, size.reason)
   end
 
-  def test_a_touch_dot_falls_back_to_fifty_points_for_about_eight_millimetres
+  def test_a_touch_dot_falls_back_to_fifty_points_for_about_eight_millimeters
     assert_equal 50, DotPopper::DotSize.for("iOS").radius
     assert_match(/points, about 8 mm/, DotPopper::DotSize.for("iOS").reason)
     assert_match(/dp/, DotPopper::DotSize.for("Android").reason)

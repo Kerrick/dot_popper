@@ -37,7 +37,7 @@ class WindowButtonsTest < Minitest::Test
     assert_equal :window, @window.display
   end
 
-  # A labelled button pressed on purpose is no stray press, so it asks
+  # A labeled button pressed on purpose is no stray press, so it asks
   # nothing more, as a gamepad's B does; aimed at with a gamepad's
   # cursor and pressed with A, it is as deliberate.
   def test_a_click_on_quit_quits_at_once_and_so_does_a_gamepads_press_on_it

@@ -200,7 +200,7 @@ module DotPopper
         end.to_h
       end
 
-      # The bottom row, centred on +center+, each as wide as its words.
+      # The bottom row, centered on +center+, each as wide as its words.
       def pill_row(center, y, height)
         widths = pill_names.map { pill_width(it, height) }
         gap = 10.0

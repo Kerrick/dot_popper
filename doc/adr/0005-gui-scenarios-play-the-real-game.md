@@ -15,17 +15,17 @@ The unit suite never runs the shell, the part that talks to Lota. A resize once 
 * The maintainer asked that the suite be fast and reliable above all.
 * Tests must not depend on the speed of the machine or the window system.
 * CI has no display; the maintainer's Mac must not show windows.
-* Checks should be about behaviour, which stays stable when the art changes.
+* Checks should be about behavior, which stays stable when the art changes.
 
 ## Considered Options
 
-1. Start the real game with `bundle exec lota run` once per scripted scenario; a director, loaded only when `DOT_POPPER_SCENARIO` names one, steps each frame by the time the scenario asks for (a sixtieth of a second), pushes presses onto Lota's own event queue, checks behaviour and pixels as it goes, and exits 0 or 1.
+1. Start the real game with `bundle exec lota run` once per scripted scenario; a director, loaded only when `DOT_POPPER_SCENARIO` names one, steps each frame by the time the scenario asks for (a sixtieth of a second), pushes presses onto Lota's own event queue, checks behavior and pixels as it goes, and exits 0 or 1.
 2. Unit tests and the static defined-calls check only, with no window.
 3. Render stills and compare them with recorded ones, as deckbuilder's `rake test:gui` does.
 
 ## Decision Outcome
 
-Chosen: option 1, because it alone exercises the shell's real calls into Lota while staying deterministic: a driven clock plays the same on a busy runner as on an idle one, and a run takes seconds. Option 2 was kept alongside it, not instead. Option 3's still comparison was set aside in favour of checking behaviour; the stills it would make are kept as galleries outside the suite. The record says there was no good reason to avoid windows, since Xvfb gives CI a screen and a hidden session gives the Mac one. Confidence: high; the suite runs on every push.
+Chosen: option 1, because it alone exercises the shell's real calls into Lota while staying deterministic: a driven clock plays the same on a busy runner as on an idle one, and a run takes seconds. Option 2 was kept alongside it, not instead. Option 3's still comparison was set aside in favor of checking behavior; the stills it would make are kept as galleries outside the suite. The record says there was no good reason to avoid windows, since Xvfb gives CI a screen and a hidden session gives the Mac one. Confidence: high; the suite runs on every push.
 
 ### Consequences
 

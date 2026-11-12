@@ -6,7 +6,7 @@ module DotPopper
     # last, on top, each with its own shadow and halo in that same order:
     # a popped dot covers the halo of a fresh dot beneath it. Each dot is
     # drawn at its rule position; its pose only scales it about that
-    # centre, and at rest it ends at its hit circle (Presentation::DotStyle).
+    # center, and at rest it ends at its hit circle (Presentation::DotStyle).
     #
     # With the dot shader, a dot is drawn from its geometry in one square.
     # Without it, plain circles keep the same distinction: a light disc

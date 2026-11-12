@@ -20,7 +20,7 @@ module DotPopper
         steps(show, plan) if show.input == Presentation::InputKind::GAMEPAD
       end
 
-      # LB and RB, labelled with their arrows, at the top right.
+      # LB and RB, labeled with their arrows, at the top right.
       def steps(show, plan)
         glyphs = Glyphs.new(pen:)
         plan.steps.each do |name, rect|

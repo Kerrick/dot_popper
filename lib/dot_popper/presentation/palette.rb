@@ -11,7 +11,7 @@ module DotPopper
     # dark, matte, opaque, with a thin rim and a sunken crater. Hue only adds to that.
     #
     # A bonus dot is a fresh dot in mint, as light as any, and marked by a
-    # dark star, a shape, so it reads without colour too. Mint is the colour
+    # dark star, a shape, so it reads without color too. Mint is the color
     # of gain (+1s), the reward it pays.
     class Palette < Data.define(
       :ink_top, :ink_bottom, :ink_glow, :ink_edge,

@@ -44,7 +44,7 @@ module DotPopper
         word.chars.map { %w[O o].include?(it) ? (cap * DOT_RADIUS * 2) + (cap * 0.08) : font.width(it) }
       end
 
-      # The name beside a small crescent, the two centred as one.
+      # The name beside a small crescent, the two centered as one.
       def crescent_title(word, art, center_x, center_y, size, alpha, room)
         font = pen.fonts.face(art.wordmark, size)
         font = pen.fonts.face(art.wordmark, (size * room / span(word, font)).floor) if room && span(word, font) > room

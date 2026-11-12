@@ -150,7 +150,7 @@ static int string_of(void *o, int slot, char *out, int size) {
 }
 
 // Waits for an IAsyncOperation and takes its result: NULL if it failed,
-// was cancelled, or ran out of time.
+// was canceled, or ran out of time.
 static void *await(void *operation) {
   void *info = NULL;
   void *result = NULL;

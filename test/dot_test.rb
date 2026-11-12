@@ -12,7 +12,7 @@ class DotTest < Minitest::Test
     assert_in_delta 270, moving.y
   end
 
-  def test_the_distance_travelled_does_not_depend_on_the_frame_rate
+  def test_the_distance_traveled_does_not_depend_on_the_frame_rate
     at_30 = dot(400, 300, velocity_x: 300, velocity_y: 240)
     at_144 = dot(400, 300, velocity_x: 300, velocity_y: 240)
 

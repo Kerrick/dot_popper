@@ -94,7 +94,7 @@ module DotPopper
 
       def color(color, alpha = color.a) = G.color = [color.r, color.g, color.b, alpha]
 
-      # A square of half sides +half_width+ and +half_height+ centred on
+      # A square of half sides +half_width+ and +half_height+ centered on
       # (+x+, +y+), for a shader to draw in.
       def square(x, y, half_width, half_height) = G.draw(@square, x, y, 0, half_width, half_height, 1, 1)
 
@@ -123,7 +123,7 @@ module DotPopper
         G.blend_mode = :alpha
       end
 
-      # +text+ centred on +x+ and +y+, on whole device pixels.
+      # +text+ centered on +x+ and +y+, on whole device pixels.
       def text(text, font, x, y, color, alpha = color.a)
         color(color, alpha)
         G.print(text, font, pixels.snap(x - (font.width(text) / 2.0)), pixels.snap(y - (font.height / 2.0)))

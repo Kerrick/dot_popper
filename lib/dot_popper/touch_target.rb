@@ -1,21 +1,21 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # Where on a fresh dot a fingertip could land: the centres a touch
+  # Where on a fresh dot a fingertip could land: the centers a touch
   # target, a circle Rules::TOUCH_TARGET units across, may have while lying
   # wholly on a dot of a given radius. The target is the same size
   # whatever the dot's radius, because a fingertip is.
   #
-  # The centres are samples of the disc +reach+ around the dot's centre:
+  # The centers are samples of the disc +reach+ around the dot's center:
   # rings SPACING apart, each with points about SPACING apart along it and
-  # every other ring turned by half a point, then the centre itself. The
+  # every other ring turned by half a point, then the center itself. The
   # outermost ring comes first, because a dot partly covered is open at
   # its edge.
   #
   # Every point of the disc is then within 3.5 units of a sample, for any
   # radius from 30 to 120 (the tests check it), so a target this misses
   # has less than 3.5 units to spare around its 22-unit radius: an opening
-  # a fingertip could barely use. Samples are only ever real centres, so a
+  # a fingertip could barely use. Samples are only ever real centers, so a
   # target it finds is always a real one.
   class TouchTarget < Data.define(:reach, :offsets)
     HALF = Rules::TOUCH_TARGET / 2.0
@@ -23,7 +23,7 @@ module DotPopper
 
     # The target on a dot of +radius+. A dot under TOUCH_TARGET across,
     # smaller than the rules allow, has no room for one: its reach is
-    # negative and it has no centres.
+    # negative and it has no centers.
     def self.on(radius)
       reach = radius.to_f - HALF
       new(reach:, offsets: reach.negative? ? [] : rings(reach))
@@ -47,11 +47,11 @@ module DotPopper
 
     def fits? = !reach.negative?
 
-    # Whether +dot+, above a dot centred at (+x+, +y+), leaves no room for
+    # Whether +dot+, above a dot centered at (+x+, +y+), leaves no room for
     # a target anywhere on it.
     def covered_by?(x, y, dot) = Math.hypot(dot.x - x, dot.y - y) + reach < dot.radius + HALF
 
-    # Whether a target fits on a dot centred at (+x+, +y+) and clear of
+    # Whether a target fits on a dot centered at (+x+, +y+) and clear of
     # every dot in +above+, touching allowed.
     def clear_on?(x, y, above)
       near = above.filter_map do |dot|
@@ -66,7 +66,7 @@ module DotPopper
       end
       return true if near.empty?
 
-      near.sort_by!(&:last) # the closest dot rules out the most centres, so it is asked first
+      near.sort_by!(&:last) # the closest dot rules out the most centers, so it is asked first
       offsets.any? do |dx, dy|
         near.none? { |offset_x, offset_y, limit| ((offset_x - dx)**2) + ((offset_y - dy)**2) < limit }
       end

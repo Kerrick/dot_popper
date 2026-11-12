@@ -47,7 +47,7 @@ module DotPopper
 
       private
 
-      # The icon and the word side by side, centred together in the pill.
+      # The icon and the word side by side, centered together in the pill.
       def beside(text, icon, x, y, width, height, color, alpha)
         mark = height * GLYPH
         gap = height * GAP

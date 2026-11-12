@@ -18,7 +18,7 @@ class VisibilityTest < Minitest::Test
   end
 
   def test_a_dot_half_covered_shows_about_half
-    # Two circles whose centres are one radius apart overlap in a lens of 39% of a disc.
+    # Two circles whose centers are one radius apart overlap in a lens of 39% of a disc.
     assert_in_delta 0.61, DotPopper::Visibility.of(dot(400, 300), [dot(400 + R, 300)]), 0.02
   end
 

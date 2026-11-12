@@ -504,7 +504,7 @@ class GroupPanelTest < Minitest::Test
 
   # With a controller's labels, and with the notice open, nothing on a
   # friend groups' screen overlaps or leaves the safe area, at any size.
-  def test_labelled_screens_and_the_notice_fit_every_size
+  def test_labeled_screens_and_the_notice_fit_every_size
     SIZES.each do |width, height|
       @session = Groups::Session.new(store: DotPopper::ScoreRecord::Memory.new, worker: @worker)
       build(width:, height:)

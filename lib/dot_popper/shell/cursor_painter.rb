@@ -3,8 +3,8 @@
 module DotPopper
   module Shell
     # The gamepad cursor's reticle, over everything: a thin cream ring
-    # with four ticks and a pip at its centre, each on a dark edge so it
-    # reads over a light dot or the night. Its centre and strokes sit on
+    # with four ticks and a pip at its center, each on a dark edge so it
+    # reads over a light dot or the night. Its center and strokes sit on
     # whole device pixels; the press lands where the cursor really is.
     class CursorPainter < Data.define(:pen)
       G = ::Lota::Graphics

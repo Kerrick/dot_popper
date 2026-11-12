@@ -19,7 +19,7 @@ module DotPopper
       BLOCK_LEFT = ((WORD.length - 1) * ADVANCE) + CELL + BLOCK_GAP # from the first letter's start
       WIDTH = BLOCK_LEFT + BLOCK_WIDTH # in ems
       # setdef's glow (brand/README.md): the mark blurred, in its own
-      # colour at 55%, under the mark. The spec calls it "a blur of
+      # color at 55%, under the mark. The spec calls it "a blur of
       # 0.12em"; the artwork's filter is a Gaussian with a standard
       # deviation of 60 of Iosevka's 1000 units, 0.06em, which is what
       # the screen matches.

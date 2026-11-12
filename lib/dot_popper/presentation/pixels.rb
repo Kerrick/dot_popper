@@ -16,7 +16,7 @@ module DotPopper
       def line_width(count = 1) = [count.round, 1].max / scale
 
       # Where to put a line of +count+ device pixels' width at +value+ so
-      # it covers whole pixels: an odd width sits on a pixel's centre.
+      # it covers whole pixels: an odd width sits on a pixel's center.
       def line_at(value, count = 1) = [count.round, 1].max.odd? ? snap(value) + (0.5 / scale) : snap(value)
 
       # The nearest whole number of device pixels to +value+ units, at

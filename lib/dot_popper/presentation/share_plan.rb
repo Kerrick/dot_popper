@@ -121,7 +121,7 @@ module DotPopper
       end
 
       # Close and Copy, each as tall as a button and half the row at
-      # most, a margin apart and centred in it.
+      # most, a margin apart and centered in it.
       def buttons(row)
         apart = layout.margin
         width = [(row.width - apart) / 2.0, row.height * BUTTON].min

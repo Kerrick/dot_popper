@@ -7,7 +7,7 @@ class ColumnTest < Minitest::Test
 
   ROOM = Rect.new(x: 0, y: 100, width: 200, height: 300)
 
-  def test_blocks_stack_as_a_group_centred_down_the_room_each_its_gap_below_the_last
+  def test_blocks_stack_as_a_group_centered_down_the_room_each_its_gap_below_the_last
     placed = Column.new(room: ROOM).place([Block.new(name: :a, height: 40, gap: 99, width: 80),
                                            Block.new(name: :b, height: 60, gap: 20, width: 120)])
 

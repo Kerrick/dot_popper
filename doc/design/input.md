@@ -30,7 +30,7 @@ A press during setdef's splash only skips the splash (`App#skip_splash`), and th
 ## Mouse
 
 - Any of the three buttons presses.
-- A motion counts as using the mouse only once the pointer has really travelled 8 units (`Presentation::MouseTravel::ENOUGH`), so a window opening or resizing under a still pointer does not take the words or hide the gamepad cursor. For 0.5 seconds after the window opens or changes size (`App::SETTLE`), motions do not count at all.
+- A motion counts as using the mouse only once the pointer has really traveled 8 units (`Presentation::MouseTravel::ENOUGH`), so a window opening or resizing under a still pointer does not take the words or hide the gamepad cursor. For 0.5 seconds after the window opens or changes size (`App::SETTLE`), motions do not count at all.
 - Only the mouse hovers. A button under it brightens (`Show#hovered`, `Style::HOVER`), and the system pointer becomes the pointing hand (`App#point_the_mouse`). After a finger or gamepad press, nothing hovers. [screens.md](screens.md) has the hover's look.
 - The wheel scrolls a list (`Show#wheel_scroll`, `Style::CREDITS.wheel` lines a notch).
 - When the window loses focus, every held press is let go (`App#focus`): dragged dots, "Clear my stats…", and the hold to leave a friend group.
@@ -82,7 +82,7 @@ The cursor goes only where the stick sends it, and never drifts toward a dot. A 
 
 ### How the cursor is drawn
 
-`Shell::CursorPainter` draws a reticle over everything: a thin cream ring of radius 0.3 R (`ring`), four ticks from 0.42 R to 0.6 R (`ticks`), and a pip of 4 device pixels at the centre (`pip`), with a stroke of 0.04 R (`line`), at least one device pixel. Each part sits on a dark edge two pixels wider (the palette's shadow at 0.75), so it shows on a light dot or the night. It is open in the middle, so it never hides the dot it is over. Its centre and strokes sit on whole device pixels, while the press lands where the cursor really is.
+`Shell::CursorPainter` draws a reticle over everything: a thin cream ring of radius 0.3 R (`ring`), four ticks from 0.42 R to 0.6 R (`ticks`), and a pip of 4 device pixels at the center (`pip`), with a stroke of 0.04 R (`line`), at least one device pixel. Each part sits on a dark edge two pixels wider (the palette's shadow at 0.75), so it shows on a light dot or the night. It is open in the middle, so it never hides the dot it is over. Its center and strokes sit on whole device pixels, while the press lands where the cursor really is.
 
 ### The triggers
 
@@ -100,7 +100,7 @@ The left trigger, with the same thresholds, opens Friend groups from Home (LT).
 | Start | `:start` | The screen's main button (`Show#start`), except on a friend group, where holding it leaves the group |
 | B | `:leave` | Back, Close or Home (`Show#back`); on Home, Quit, asked twice |
 | View, Back, Select or Share (`GamepadButtons::SETTINGS`, LÖVE's `:back`) | `:select` | Settings on Home; Sound in Settings |
-| X, Y, LB, RB | `:x`, `:y`, `:lb`, `:rb` | Each screen's own buttons, labelled on it (`Show#pad`) |
+| X, Y, LB, RB | `:x`, `:y`, `:lb`, `:rb` | Each screen's own buttons, labeled on it (`Show#pad`) |
 
 The d-pad has no intent of its own: it moves the cursor. The right stick scrolls a list (`Show#stick_scroll`, `Style::CREDITS.stick` lines a second at full tilt) and, on Game Over, rolls the pile ([look-and-sound.md](look-and-sound.md)).
 

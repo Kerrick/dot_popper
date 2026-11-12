@@ -15,11 +15,11 @@ module DotPopper
     # +legend+ is the size of the title's example dots.
     class DotStyle < Data.define(:extent, :rim, :shadow_offset, :shadow_reach, :shadow_alpha, :halo_width,
                                 :halo_alpha, :legend)
-      # How strongly a fresh dot's halo shows +distance+ from its centre,
+      # How strongly a fresh dot's halo shows +distance+ from its center,
       # as the shader draws it.
       def halo(distance) = halo_alpha * Math.exp(-((([distance - 1, 0].max) / halo_width)**2))
 
-      # The farthest below its centre a dot's shadow reaches.
+      # The farthest below its center a dot's shadow reaches.
       def shadow_edge = shadow_offset + shadow_reach
     end
   end

@@ -3,7 +3,7 @@
 module DotPopper
   module Presentation
     # How dots move on top of their rule positions. Every motion here
-    # scales a dot about its own centre and never moves the centre, so a
+    # scales a dot about its own center and never moves the center, so a
     # dot is always drawn where a tap reaches it.
     #
     # +spawn+ scales a new dot in from a seed; +pop_stretch+ is the width

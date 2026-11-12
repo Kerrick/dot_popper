@@ -15,7 +15,7 @@ module DotPopper
     # title's dots change. It sees only what a player sees: the dots and
     # the screen.
     class Autopilot
-      # Where it looks for an uncovered part of the fresh dot: its centre,
+      # Where it looks for an uncovered part of the fresh dot: its center,
       # then points around it, in radii.
       PROBES = [[0, 0]] + (0...8).map { [0.6 * Math.cos(it * Math::PI / 4), 0.6 * Math.sin(it * Math::PI / 4)] }
 

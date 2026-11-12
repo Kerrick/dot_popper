@@ -2,7 +2,7 @@
 
 module DotPopper
   module Shell
-    # The game's icons, drawn as thin strokes on a 24-unit grid centred on
+    # The game's icons, drawn as thin strokes on a 24-unit grid centered on
     # 12, 12, so they stay crisp at any size, and the same for a Free and
     # a Pro player. Each is a list of parts: [:line, x, y, x, y, ...] a
     # stroked path, [:circle, x, y, r] a ring, [:disc, x, y, r] a filled

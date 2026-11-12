@@ -154,7 +154,7 @@ Dot Popper: screenshot <data>/Library/Application Support/dot_popper/shot-4.png
 
 After them, under the category `app`, the host program logs that the app exited with status 0. The renderer and screen lines are from an iPhone 13 mini Simulator turned landscape; the screen line comes again on every resize or turn. The same command run on a Mac (`bundle exec lota run .` with the same variables) printed the same lines, except that the first said "50 logical pixels", the renderer and screen were the Mac's, and the paths were under `~/Library/Application Support/Lota/dot_popper`.
 
-### Diagnostic colours
+### Diagnostic colors
 
 The iPhone 13 mini playtest found a thin magenta strip at the right edge in landscape. To tell where such a strip comes from, set `DOT_POPPER_DIAGNOSTIC_COLORS=1` (in Xcode's scheme under Run > Arguments > Environment Variables, or as `SIMCTL_CHILD_DOT_POPPER_DIAGNOSTIC_COLORS=1` for `simctl launch`):
 
@@ -163,9 +163,9 @@ The iPhone 13 mini playtest found a thin magenta strip at the right edge in land
 
 Then a **green** strip is a gap that SDL's view doesn't cover; a **blue** one is part of what the game draws to that its drawing leaves bare; and a strip still **pink** (or black) is in the drawable but outside anything the game's drawing, even its clear, reaches, which is LÖVE's or Lota's to look at.
 
-In an iPhone 13 mini Simulator turned landscape, the drawable is 2338 pixels wide, Lota's dimensions 811 units at a scale of 2.88 (811.8 rounded down), and with the variable set the game's own screenshot is blue up to column 2335, but columns 2336 and 2337 stay black: not even the clear reaches them. Nothing green shows. Upright, columns 1078 and 1079 of 1080 do the same. So in the Simulator the strip lies inside the drawable, outside what LÖVE draws to; a real phone may leave those pixels a different colour.
+In an iPhone 13 mini Simulator turned landscape, the drawable is 2338 pixels wide, Lota's dimensions 811 units at a scale of 2.88 (811.8 rounded down), and with the variable set the game's own screenshot is blue up to column 2335, but columns 2336 and 2337 stay black: not even the clear reaches them. Nothing green shows. Upright, columns 1078 and 1079 of 1080 do the same. So in the Simulator the strip lies inside the drawable, outside what LÖVE draws to; a real phone may leave those pixels a different color.
 
-The cause was LÖVE's Metal backend: it made the default stencil and depth buffers from the whole-unit width, 811 × 2.88 = 2336 pixels, and a Metal render pass is only as wide as its narrowest attachment, so nothing was drawn to the drawable's last two columns. Since `conf.rb` asks for neither buffer (`t.window.stencil = false`, `t.window.depth = false`), the same run from trunk, with the diagnostic colours, samples pure blue (0,0,255) at columns 2333 to 2337 of the game's own screenshot, on rows 108, 324, 540, 756 and 972 of 1080, and at columns 2335 to 2339 of `simctl io screenshot`'s 2340-pixel capture of the panel. No green shows anywhere: the layer stretches the 2338-pixel drawable over the panel's 2340.
+The cause was LÖVE's Metal backend: it made the default stencil and depth buffers from the whole-unit width, 811 × 2.88 = 2336 pixels, and a Metal render pass is only as wide as its narrowest attachment, so nothing was drawn to the drawable's last two columns. Since `conf.rb` asks for neither buffer (`t.window.stencil = false`, `t.window.depth = false`), the same run from trunk, with the diagnostic colors, samples pure blue (0,0,255) at columns 2333 to 2337 of the game's own screenshot, on rows 108, 324, 540, 756 and 972 of 1080, and at columns 2335 to 2339 of `simctl io screenshot`'s 2340-pixel capture of the panel. No green shows anywhere: the layer stretches the 2338-pixel drawable over the panel's 2340.
 
 ### What a bad run logs
 

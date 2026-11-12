@@ -2,7 +2,7 @@
 
 module DotPopper
   module Shell
-    # A labelled segmented control, on whole device pixels: the title's
+    # A labeled segmented control, on whole device pixels: the title's
     # "Dot size". Its segments share one pill, each with a fresh dot drawn
     # at the size its option gives, then its option's name with what it
     # does here in smaller type under it, and the chosen one is filled, so
@@ -57,7 +57,7 @@ module DotPopper
 
       # The chosen segment is a lighter pill inside the frame, with its
       # words in ink; the other's are cream on the frame's dark. The icon
-      # and the words are centred together, the note under the name.
+      # and the words are centered together, the note under the name.
       def segment(rect, (name, note), chosen, icon, (font, small), alpha, hover)
         palette = pen.palette
         inner = snapped(rect.inset(pen.pixels.snap(rect.height * 0.08)))

@@ -4,7 +4,7 @@
 -->
 # Friend groups: the game's side
 
-How the game takes part in friend groups: where the server is, how the client talks to it, how members and groups are shown with no text from any player, the screens, and the announcements of a title change. For anyone working on `lib/dot_popper/groups` or the friend groups' screens. The server's rules (the title, the top score, group sizes, join codes) are summarised in [doc/server.md](../server.md), and its API is the server repository's `docs/api.md`. Why members are drawn icons and codes are digits is [ADR-0013](../adr/0013-players-type-no-text.md). What is sent and kept is declared in [doc/privacy.json](../privacy.json) and described in [privacy.md](privacy.md).
+How the game takes part in friend groups: where the server is, how the client talks to it, how members and groups are shown with no text from any player, the screens, and the announcements of a title change. For anyone working on `lib/dot_popper/groups` or the friend groups' screens. The server's rules (the title, the top score, group sizes, join codes) are summarized in [doc/server.md](../server.md), and its API is the server repository's `docs/api.md`. Why members are drawn icons and codes are digits is [ADR-0013](../adr/0013-players-type-no-text.md). What is sent and kept is declared in [doc/privacy.json](../privacy.json) and described in [privacy.md](privacy.md).
 
 ## Who can take part
 
@@ -66,11 +66,11 @@ One line each: the token, the unsent score, whether the player was last known to
 
 A member of a group is a number the server gives, in join order, never reused (`Groups::Member`). It is the only identity a player has: no name or anything else a player supplies, so there is nothing to filter, report or block. A group is known by its id. The game draws both and names both, from those values alone, so every device shows the same and the server stores no picture and no name.
 
-**Member icons** (`Presentation::MemberIcon`, `lib/dot_popper/presentation/member_icon.rb`): a disc of two colours with a pattern, like an old GitHub identicon, drawn by the game (`Shell::MemberIconPainter`), with no emoji. A pattern is a choice of `FOLDS` (3, 4, 5, 6, 8), an `OUTER` motif (dots, petals, diamonds, spokes) and an `INNER` motif (dot, ring, star), 60 combinations (`COMBINATIONS`). A member's number walks those combinations by a step the group's id picks, coprime with 60, so numbers fewer than 60 apart never share a structure. A light or dark ground alternates along the same walk, so neighbours differ in grayscale too (Westland & Maggio: colour alone never carries information). The colours come from eight `SCHEMES`, chosen for contrast at phone size. `MemberIcon.seed` is an FNV-1a hash, the same on every device and run.
+**Member icons** (`Presentation::MemberIcon`, `lib/dot_popper/presentation/member_icon.rb`): a disc of two colors with a pattern, like an old GitHub identicon, drawn by the game (`Shell::MemberIconPainter`), with no emoji. A pattern is a choice of `FOLDS` (3, 4, 5, 6, 8), an `OUTER` motif (dots, petals, diamonds, spokes) and an `INNER` motif (dot, ring, star), 60 combinations (`COMBINATIONS`). A member's number walks those combinations by a step the group's id picks, coprime with 60, so numbers fewer than 60 apart never share a structure. A light or dark ground alternates along the same walk, so neighbors differ in grayscale too (Westland & Maggio: color alone never carries information). The colors come from eight `SCHEMES`, chosen for contrast at phone size. `MemberIcon.seed` is an FNV-1a hash, the same on every device and run.
 
 **A group's crest** is the same drawing at number -1 (`MemberIcon.crest`). It shows beside the group's name in the list, over the group's screen, and on an announcement.
 
-**Names** (`Presentation::Names`, `lib/dot_popper/presentation/names.rb`): a group reads plural and a member singular, from separate lists, so one is never mistaken for the other: "Brave Puffins", "Purple Kiwi". Group names pair a character adjective with a bird; member names pair a colour with a fruit, and numbers fewer than `Names::COMBINATIONS` apart never share one within a group. The words are a hand-picked subset of Ivan Malopinsky's wordlists (MIT; `assets/wordlists-LICENSE.txt`, credited on the Credits screen), leaving out unkind words, words with a second meaning, and colours that also name skin; `test/presentation/names_test.rb` tries every pair against a list of bad words.
+**Names** (`Presentation::Names`, `lib/dot_popper/presentation/names.rb`): a group reads plural and a member singular, from separate lists, so one is never mistaken for the other: "Brave Puffins", "Purple Kiwi". Group names pair a character adjective with a bird; member names pair a color with a fruit, and numbers fewer than `Names::COMBINATIONS` apart never share one within a group. The words are a hand-picked subset of Ivan Malopinsky's wordlists (MIT; `assets/wordlists-LICENSE.txt`, credited on the Credits screen), leaving out unkind words, words with a second meaning, and colors that also name skin; `test/presentation/names_test.rb` tries every pair against a list of bad words.
 
 ## The screens
 
@@ -99,7 +99,7 @@ Going on is remembered in `group_notice.txt` (`Presentation::GroupNotice`), so t
 
 ### Controller labels
 
-As everywhere, a free cursor and a labelled button for every action: on a controller each button's word names the controller button that presses it, as "Join (X)" (`GroupWords.pressed_by`). B is Back on every screen.
+As everywhere, a free cursor and a labeled button for every action: on a controller each button's word names the controller button that presses it, as "Join (X)" (`GroupWords.pressed_by`). B is Back on every screen.
 
 | Screen | Buttons |
 | --- | --- |

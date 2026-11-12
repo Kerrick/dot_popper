@@ -82,7 +82,7 @@ module DotPopper
       end
 
       # The opacity of +sprite+ at pixel (+column+, +row+) of a square
-      # +pixels+ wide, sampled at the pixel's centre.
+      # +pixels+ wide, sampled at the pixel's center.
       def alpha(sprite, column, row, pixels)
         across = ((column + 0.5) / pixels * 2) - 1
         down = ((row + 0.5) / pixels * 2) - 1

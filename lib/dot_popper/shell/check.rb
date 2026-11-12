@@ -2,12 +2,12 @@
 
 module DotPopper
   module Shell
-    # A check mark, drawn as two strokes in the gain colour, before a line
+    # A check mark, drawn as two strokes in the gain color, before a line
     # of text: "✓ Today's goal is done." The font has no check of its own.
     class Check < Data.define(:pen)
       G = ::Lota::Graphics
 
-      # The check and +text+ together, centred on +x+ and +y+.
+      # The check and +text+ together, centered on +x+ and +y+.
       def labelled(text, font, x, y, alpha)
         size = font.height
         mark = size * 0.5
@@ -19,7 +19,7 @@ module DotPopper
 
       private
 
-      # A check +width+ across, from +x+, centred on +y+.
+      # A check +width+ across, from +x+, centered on +y+.
       def draw(x, y, width, alpha)
         pen.color(pen.palette.gain, alpha)
         G.line_width = pen.pixels.whole(width * 0.22)

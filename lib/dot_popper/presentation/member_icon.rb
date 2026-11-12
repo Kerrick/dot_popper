@@ -2,13 +2,13 @@
 
 module DotPopper
   module Presentation
-    # A circle of the icon's, in a unit disc (radius 1, centre 0, 0).
+    # A circle of the icon's, in a unit disc (radius 1, center 0, 0).
     class IconDot < Data.define(:x, :y, :r, :tone); end
 
     # A filled shape of the icon's, its points flat as x1, y1, x2, y2…
     class IconShape < Data.define(:points, :tone); end
 
-    # A member's face in a group: a disc of two colours, patterned like an
+    # A member's face in a group: a disc of two colors, patterned like an
     # old GitHub identicon but game, and drawn by the game, so it looks the
     # same everywhere and no emoji is involved. It is worked out from the
     # group's id and the member's number and nothing else, so everyone sees
@@ -20,7 +20,7 @@ module DotPopper
     # of those combinations by a step the group's id picks and coprime with
     # their count, so numbers less than COMBINATIONS apart never repeat one,
     # however many members have come and gone. Light or dark ground comes
-    # from the same walk, so neighbours differ in grayscale too.
+    # from the same walk, so neighbors differ in grayscale too.
     class MemberIcon < Data.define(:base, :ink, :accent, :shapes)
       FOLDS = [3, 4, 5, 6, 8].freeze
       OUTER = %i[dots petals diamonds spokes].freeze

@@ -13,7 +13,7 @@ module DotPopper
     # [:leave] Back, Close or Home, and on Home, Quit, asked twice (B)
     # [:select] Settings on Home, and Sound in Settings (View, Back,
     #   Select, or Share: SETTINGS)
-    # [:x], [:y], [:lb], [:rb] each screen's own buttons, labelled on it
+    # [:x], [:y], [:lb], [:rb] each screen's own buttons, labeled on it
     #
     # The d-pad has no intent of its own: it moves the cursor, as the left
     # stick does (GamepadCursor); the right stick scrolls a list. B, X, and

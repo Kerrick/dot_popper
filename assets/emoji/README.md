@@ -4,4 +4,4 @@
 
 The SVG is unchanged from https://github.com/googlefonts/noto-emoji/blob/99701e07d3d1fe1bdbcdb14964547f0fd592966f/2D/svg/emoji_u1f446.svg, at commit 99701e07d3d1fe1bdbcdb14964547f0fd592966f of https://github.com/googlefonts/noto-emoji.
 
-The `hand-SIZE.png` files are modified from it: `script/make_hand.rb` (`ruby script/make_hand.rb`, with `rsvg-convert` and `magick`) renders it at each size, a square cut close around the hand, and gives each clear pixel the colour of the hand's nearest pixel, so the edge never darkens as the game draws it smaller. The drawing itself is Noto's, unchanged.
+The `hand-SIZE.png` files are modified from it: `script/make_hand.rb` (`ruby script/make_hand.rb`, with `rsvg-convert` and `magick`) renders it at each size, a square cut close around the hand, and gives each clear pixel the color of the hand's nearest pixel, so the edge never darkens as the game draws it smaller. The drawing itself is Noto's, unchanged.

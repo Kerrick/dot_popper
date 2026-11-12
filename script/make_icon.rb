@@ -36,7 +36,7 @@ def circle(x, y, cx, cy, r) = Math.hypot(x - cx, y - cy) - r
 
 def ring(x, y, cx, cy, r, width) = (Math.hypot(x - cx, y - cy) - r).abs - width / 2.0
 
-# Layers, bottom to top: [colour, distance function].
+# Layers, bottom to top: [color, distance function].
 LAYERS = [
   [INK, ->(x, y) { rounded_square(x, y, 0.04, 0.2) }],
   [FRESH, ->(x, y) { circle(x, y, 0.62, 0.62, 0.25) }],
@@ -53,14 +53,14 @@ def render(size)
       x = (i + 0.5) / size
       y = (j + 0.5) / size
       r = g = b = a = 0.0
-      LAYERS.each do |colour, distance|
+      LAYERS.each do |color, distance|
         coverage = (0.5 - distance.call(x, y) * size).clamp(0.0, 1.0)
         next if coverage.zero?
 
         # "Over" compositing, premultiplied.
-        r = colour[0] * coverage + r * (1 - coverage)
-        g = colour[1] * coverage + g * (1 - coverage)
-        b = colour[2] * coverage + b * (1 - coverage)
+        r = color[0] * coverage + r * (1 - coverage)
+        g = color[1] * coverage + g * (1 - coverage)
+        b = color[2] * coverage + b * (1 - coverage)
         a = coverage + a * (1 - coverage)
       end
       pixel = a.zero? ? [0, 0, 0, 0] : [r / a, g / a, b / a, a * 255].map { |c| c.round.clamp(0, 255) }

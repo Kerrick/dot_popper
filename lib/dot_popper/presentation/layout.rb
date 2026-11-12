@@ -26,7 +26,7 @@ module DotPopper
       # The rectangle grown by +amount+ on every side, or shrunk when negative.
       def inset(amount) = Rect.new(x: x + amount, y: y + amount, width: width - (2 * amount), height: height - (2 * amount))
 
-      # The rectangle grown about its centre to at least +least+ across and
+      # The rectangle grown about its center to at least +least+ across and
       # down, as a button's hit area around its drawn shape.
       def reach(least)
         wide = [width, least].max
@@ -35,7 +35,7 @@ module DotPopper
       end
     end
 
-    # A labelled choice between options side by side, as a segmented
+    # A labeled choice between options side by side, as a segmented
     # control: where its label goes, and each option's segment, left to
     # right.
     class Segmented < Data.define(:label, :options)
@@ -112,8 +112,8 @@ module DotPopper
       def heading_y = short? ? safe.y + page_margin + (control_height / 2.0) : safe.y + (phone? ? 34.0 : 55.0)
 
       # A screen's heading for +text+: its type size and the middle of its
-      # line across. It is centred, shrunk until it fits; on a short window
-      # too narrow to centre it clear of Back, it sits in the room right of
+      # line across. It is centered, shrunk until it fits; on a short window
+      # too narrow to center it clear of Back, it sits in the room right of
       # Back instead.
       def heading_place(text, measure)
         fit = lambda do |room, least|

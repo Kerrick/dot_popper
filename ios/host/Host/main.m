@@ -16,11 +16,11 @@
 //
 // Dot Popper's copy (doc/ios.md) is Lota 0.3.1's (ext/lota/phone/host/ios
 // in the gem), which kits.yml lays it over in the phone project, with four
-// additions. The colour behind SDL's view, on its window and the window's
+// additions. The color behind SDL's view, on its window and the window's
 // root view, as each window becomes key: the night's ink (#0c0b22), so
 // nothing pink or white can show behind the game, or, with
 // DOT_POPPER_DIAGNOSTIC_COLORS set, pure green, so that a strip the game
-// does not cover shows as green (doc/ios.md, "Diagnostic colours"). And
+// does not cover shows as green (doc/ios.md, "Diagnostic colors"). And
 // the system's share sheet, for Share my score: the game opens a
 // dotpopper-share: URL (SheetSharing), and DotPopperApplication, the
 // app's UIApplication (Info.plist's NSPrincipalClass, in place of Lota's
@@ -189,7 +189,7 @@ static UIViewController *top_controller(void) {
 
 // Shows the system's share sheet for +text+ over the game, which plays on
 // behind it. A sheet already up is left as it is. On an iPad the sheet is
-// a popover, centred, with no arrow, since the game's button is not a
+// a popover, centered, with no arrow, since the game's button is not a
 // view to point at.
 static void present_share_sheet(NSString *text) {
   UIViewController *top = top_controller();

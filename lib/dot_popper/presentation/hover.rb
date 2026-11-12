@@ -75,8 +75,8 @@ module DotPopper
     end
 
     # How a button shows the mouse over it: it brightens over +seconds+,
-    # and dims as quickly once the mouse leaves. +fill+ is the colour its
-    # backing brightens to, and +edge+ the colour of its outline then.
+    # and dims as quickly once the mouse leaves. +fill+ is the color its
+    # backing brightens to, and +edge+ the color of its outline then.
     class HoverStyle < Data.define(:seconds, :fill, :edge); end
 
     # Which button the mouse is over, and how lit each one is, from 0 to

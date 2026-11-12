@@ -8,7 +8,7 @@ deciders: the maintainer (Kerrick Long), for Vulkan on Windows; coding agents, f
 
 ## Context and Problem Statement
 
-LÖVE tries its renderers in a fixed order, Vulkan first, whatever order a game lists, and falls back only when a renderer can't be created at all. A computer with a Vulkan driver but no GPU it can use (old integrated graphics, a virtual machine, a remote desktop, Xvfb) gets "Failed to initialize graphics" and can't play; this was found on the maintainer's Linux machine. Lota keeps LÖVE's behaviour here by design, so the choice is the game's, in `conf.rb`. On Windows, though, the Xbox Game Bar's overlay shows over the game only with Vulkan. Which renderers may each platform use, and what happens when Vulkan can't start the game?
+LÖVE tries its renderers in a fixed order, Vulkan first, whatever order a game lists, and falls back only when a renderer can't be created at all. A computer with a Vulkan driver but no GPU it can use (old integrated graphics, a virtual machine, a remote desktop, Xvfb) gets "Failed to initialize graphics" and can't play; this was found on the maintainer's Linux machine. Lota keeps LÖVE's behavior here by design, so the choice is the game's, in `conf.rb`. On Windows, though, the Xbox Game Bar's overlay shows over the game only with Vulkan. Which renderers may each platform use, and what happens when Vulkan can't start the game?
 
 ## Decision Drivers
 

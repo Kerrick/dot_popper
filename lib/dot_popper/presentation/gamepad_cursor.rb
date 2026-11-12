@@ -15,7 +15,7 @@ module DotPopper
     # to +trigger_press+ (of 1) and lets go below +trigger_release+, so a
     # trigger resting near the line does not chatter. The reticle's
     # +ring+ and its +ticks+ (from, to) are in radii, +line+ is its
-    # stroke, in radii too, and +pip+ is the dot at its centre, in device
+    # stroke, in radii too, and +pip+ is the dot at its center, in device
     # pixels across.
     class GamepadStyle < Data.define(:dead_zone, :curve, :speed, :crossing, :ramp, :trigger_press, :trigger_release,
                                     :ring, :ticks, :line, :pip)

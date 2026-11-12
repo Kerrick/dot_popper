@@ -35,7 +35,7 @@ class HoldToConfirmTest < Minitest::Test
     assert held.done?(2.0)
   end
 
-  def test_cancelling_forgets_the_hold_and_the_hint
+  def test_canceling_forgets_the_hold_and_the_hint
     assert_equal @hold, @hold.press(:y, 0.0).cancel
     assert_equal @hold, @hold.press(:y, 0.0).release(:y, 0.1).cancel
   end

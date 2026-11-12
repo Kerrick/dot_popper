@@ -121,7 +121,7 @@ class PrivacyDeclaredTest < Minitest::Test
     assert_equal %i[privacy_title privacy_delete privacy_hold].map { words.button(it) }, deletion.values_at(:screen, :control, :prompt)
   end
 
-  def test_every_file_is_labelled_for_players_or_set_aside_with_a_reason
+  def test_every_file_is_labeled_for_players_or_set_aside_with_a_reason
     assert_raises(ArgumentError) { Privacy::KeptFile.new(name: "x.txt", holds: "x") }
     assert_raises(ArgumentError) { Privacy::KeptFile.new(name: "x.txt", holds: "x", label: "X", aside: Privacy::Aside.new(kind: :diagnostics, reason: "y")) }
     assert_raises(ArgumentError) { Privacy::Aside.new(kind: :because, reason: "y") }
