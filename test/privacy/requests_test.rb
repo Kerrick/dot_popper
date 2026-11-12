@@ -81,7 +81,7 @@ class PrivacyRequestsTest < Minitest::Test
     pump
     DotPopper::Presentation::ThemeFeed.new(worker: Instant.new(Groups::Link.new("http://127.0.0.1:#{@server.addr[1]}")),
                                            theme_keeper: DotPopper::Presentation::ThemeKeeper.plain([]), store: DotPopper::ScoreRecord::Memory.new,
-                                           today: -> { Date.new(2026, 11, 8) }).ask
+                                           clock: -> { Time.utc(2026, 11, 8, 12) }).ask
     @session.delete_everything
     pump
     play_continuity

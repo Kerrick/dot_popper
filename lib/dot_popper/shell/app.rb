@@ -516,7 +516,7 @@ module DotPopper
       def theme_feed(theme_keeper)
         url = server_url or return
         Presentation::ThemeFeed.new(worker: Groups::Worker.new(Groups::Link.new(url)), theme_keeper:,
-                                    store: SaveFile.new(name: "started_on.txt"), today:)
+                                    store: SaveFile.new(name: "started_on.txt"), clock: utc_clock)
       end
 
       # Puts on the Show's look if it has changed (Presentation::ThemeKeeper),
@@ -744,6 +744,15 @@ module DotPopper
         start = Integer(@env.fetch("DOT_POPPER_FREE_GAMES", ""), exception: false)
         FreeGames.new(store, today:, entitlement:, metered:,
                       **(start ? { bank: start, daily: start } : {}))
+      end
+
+      # The moment the server's dates are told from, in UTC: now, or
+      # midnight UTC of DOT_POPPER_TODAY's day.
+      def utc_clock
+        pretend = Date.iso8601(@env.fetch("DOT_POPPER_TODAY", ""))
+        -> { Time.utc(pretend.year, pretend.month, pretend.day) }
+      rescue Date::Error
+        -> { Time.now.utc }
       end
 
       # The player's local date, or DOT_POPPER_TODAY's, to try another

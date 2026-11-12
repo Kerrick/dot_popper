@@ -80,14 +80,23 @@ class ThemeFeedTest < Minitest::Test
     @worker = FakeWorker.new
     @paid = false
     @theme_keeper = ThemeKeeper.new(@store, themes: Style::THEMES, entitlement: DotPopper::Entitlement.new(forced: @paid))
-    @feed = ThemeFeed.new(worker: @worker, theme_keeper: @theme_keeper, store: @dated, today: -> { Date.new(2026, 11, 8) })
+    @feed = ThemeFeed.new(worker: @worker, theme_keeper: @theme_keeper, store: @dated, clock: -> { Time.utc(2026, 11, 8, 12) })
   end
 
   def test_sends_the_first_play_date_and_keeps_it_for_good
     @feed.ask
     assert_equal "/themes?started_on=2026-11-08", @worker.started.path
-    feed = ThemeFeed.new(worker: @worker, theme_keeper: @theme_keeper, store: @dated, today: -> { Date.new(2027, 1, 1) })
+    feed = ThemeFeed.new(worker: @worker, theme_keeper: @theme_keeper, store: @dated, clock: -> { Time.utc(2027, 1, 1, 12) })
     feed.ask
+    assert_equal "/themes?started_on=2026-11-08", @worker.started.path
+  end
+
+  def test_sends_the_utc_date_not_the_local_one
+    late_in_los_angeles = Time.new(2026, 11, 8, 20, 0, 0, "-08:00")
+    ThemeFeed.new(worker: @worker, theme_keeper: @theme_keeper, store: Memory.new, clock: -> { late_in_los_angeles }).ask
+    assert_equal "/themes?started_on=2026-11-09", @worker.started.path
+    early_in_auckland = Time.new(2026, 11, 9, 5, 0, 0, "+13:00")
+    ThemeFeed.new(worker: @worker, theme_keeper: @theme_keeper, store: Memory.new, clock: -> { early_in_auckland }).ask
     assert_equal "/themes?started_on=2026-11-08", @worker.started.path
   end
 
