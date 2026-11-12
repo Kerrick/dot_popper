@@ -5,7 +5,7 @@
 #   ANDROID_HOME=/home/you/.cache/dot_popper/android-sdk-<pins>
 #
 #   script/android_sdk.sh             the platform, build tools and NDK
-#   script/android_sdk.sh --emulator  also adb, the emulator and an API 33 image
+#   script/android_sdk.sh --emulator  also adb, the emulator and an API 33 image (stable channel)
 #
 # Linux on x86_64 only, with a JDK on PATH (MISE_ENV=android mise install
 # gives one). Google's command-line tools come from their zip at a pinned
@@ -31,9 +31,9 @@ PACKAGES=(
   "ndk;30.0.16248370=30.0.16248370"
 )
 EMULATOR_PACKAGES=(
-  "platform-tools=37.0.3"
-  "emulator=37.3.9"
-  "system-images;android-33;google_apis;x86_64="
+  "platform-tools=37.0.1"
+  "emulator=37.2.13"
+  "system-images;android-33;google_apis;x86_64=17"
 )
 
 emulator=false
