@@ -25,7 +25,22 @@ class DefinedCallsTest < Minitest::Test
     end
   end
 
+  # main.rb hands each Lota callback to a method of the App; one it lacks
+  # would fail only when Lota first called it in front of a player.
+  def test_every_method_main_hands_a_lota_callback_to_exists
+    main = File.expand_path("../../main.rb", __dir__)
+    handed = main_calls(Prism.parse_file(main).value)
+    refute_empty handed
+    handed.each { assert DotPopper::Shell::App.method_defined?(it), "main.rb hands a callback to App##{it}, which it doesn't define" }
+  end
+
   private
+
+  def main_calls(node, found = [])
+    found << node.name if node.is_a?(Prism::CallNode) && node.receiver.is_a?(Prism::InstanceVariableReadNode) && node.receiver.name == :@app
+    node.compact_child_nodes.each { main_calls(it, found) }
+    found.uniq
+  end
 
   def check(node, namespace, path)
     case node

@@ -106,7 +106,6 @@ def Lota.mousefocus(focused) = @app&.mouse_focus(focused)
 
 def Lota.wheelmoved(_x, y, *) = @app&.wheel_moved(y)
 def Lota.keypressed(key) = @app.key_pressed(key)
-def Lota.textinput(text) = @app&.text_input(text)
 def Lota.resize(_width, _height) = @app&.resize
 
 # Gamepads, from Lota 0.1.3. Lota passes the Joystick first, as LÖVE
