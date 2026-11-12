@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
 //
 // One dot as a peppermint, a round hard candy seen from above that fills
-// the dot's circle: white candy with red stripes swirled about its middle
-// like a pinwheel, a clear white band at its edge, and a glossy dome. A
-// bright dot is a whole mint in the light. A popped dot is the same mint
-// crunched, in shadow: cracked through into three pieces, the dark gaps
-// between them showing, its stripes deep red and its white gone slate.
+// the dot's circle: a starlight mint, white candy with red wedges swirled
+// about its middle like a pinwheel, each widening out to the edge so the
+// red goes round the outside and the white makes a star in the middle,
+// under a glossy dome. A bright dot is a whole mint in the light. A
+// popped dot is the same mint crunched, in shadow: cracked through into
+// three pieces, the dark gaps between them showing, its stripes deep red
+// and its white gone slate.
 // Every crunched mint is cracked alike. The bonus mint is a spearmint,
 // green-striped, with a dark star at its heart. The vertex color says
 // what kind of dot it is, as in dot.glsl.
@@ -22,23 +24,22 @@ uniform float time;
 
 const vec3 L = vec3(-0.4336, -0.6401, 0.6341);
 const vec3 HALF_V = vec3(-0.2288, -0.3378, 0.9130);
-const float STRIPES = 7.0;
+const float STRIPES = 8.0;
 
 vec4 over(vec4 top, vec4 bottom) { return top + bottom * (1.0 - top.a); }
 float cover_of(float sd, float aa) { return clamp(0.5 - sd / aa, 0.0, 1.0); }
 float hash1(vec2 q) { return fract(sin(dot(q, vec2(127.1, 311.7))) * 43758.5453); }
 
 // How far +p+ is inside a red stripe, as a signed distance in radii:
-// negative inside. The stripes swirl about the middle and widen outward,
-// and stop short of the edge, leaving the white band.
+// negative inside. The stripes swirl about the middle and widen outward
+// all the way to the edge, leaving a white star in the middle.
 float stripe(vec2 p) {
   float r = length(p);
   float a = atan(p.y, p.x) + 1.1 * r - 0.25;
   float f = fract(a * STRIPES / 6.28318) - 0.5;
-  float half_w = mix(0.06, 0.27, smoothstep(0.08, 0.78, r));
+  float half_w = mix(0.03, 0.3, smoothstep(0.12, 0.9, r));
   float across = (abs(f) - half_w) * 6.28318 / STRIPES * max(r, 0.05);
-  float ends = max(r - 0.8, 0.13 - r);
-  return max(across, ends);
+  return max(across, 0.12 - r);
 }
 
 // The three cracks of a crunched mint, as a distance from the nearest,
@@ -81,8 +82,6 @@ vec3 mint(vec2 p, float d, float aa, float fresh, float bonus) {
   float grain = hash1(floor(p * 90.0)) - 0.5;
   vec3 white = mix(vec3(0.84, 0.82, 0.86), vec3(1.0, 0.985, 0.975), clamp(lam * 1.15, 0.0, 1.0));
   white *= 1.0 + 0.025 * grain;
-  // The white band at the edge is clearer candy: a little cool and glassy.
-  white = mix(white, vec3(0.93, 0.95, 0.99), smoothstep(0.8, 0.95, d) * 0.5);
   vec3 red_lo = bonus > 0.5 ? vec3(0.05, 0.42, 0.24) : vec3(0.62, 0.04, 0.09);
   vec3 red_hi = bonus > 0.5 ? vec3(0.32, 0.86, 0.52) : vec3(0.98, 0.2, 0.22);
   vec3 red = mix(red_lo, red_hi, clamp(lam * 1.1, 0.0, 1.0));
@@ -118,7 +117,6 @@ vec3 mint(vec2 p, float d, float aa, float fresh, float bonus) {
   float sd2 = stripe(ps);
   float lam2 = lam * (k < 0.5 ? 1.0 : (k < 1.5 ? 0.85 : 0.92));
   vec3 slate = mix(vec3(0.07, 0.055, 0.075), vec3(0.17, 0.14, 0.18), clamp(lam2 * 1.1, 0.0, 1.0));
-  slate = mix(slate, vec3(0.13, 0.12, 0.16), smoothstep(0.8, 0.95, d) * 0.4);
   vec3 deep = mix(vec3(0.15, 0.02, 0.045), vec3(0.3, 0.05, 0.08), clamp(lam2 * 1.1, 0.0, 1.0));
   vec3 s = mix(slate, deep, cover_of(sd2, aa));
   // A dull sheen, still candy.
