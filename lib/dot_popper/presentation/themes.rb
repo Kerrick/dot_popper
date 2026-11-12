@@ -12,23 +12,27 @@ module DotPopper
     class ThemeCard < Data.define(:theme, :rect); end
 
     # The Themes screen laid out under its heading (Layout#heading_y), over
-    # Back: one card for each theme, all in one row where each still has
-    # room for its name, and otherwise two to a row, the first across the
-    # whole width when the count is odd. The cards sit a little above the
+    # Back: one card for each theme, in as few rows of equal count as
+    # give each card room for its name (one row while they fit), and
+    # otherwise two to a row, the first across the whole width when the
+    # count is odd. The cards sit a little above the
     # middle of their room. On a controller, LB and RB stand at the top
     # right, where Back's row is on a short window.
     class ThemesLayout < Data.define(:layout, :themes, :style)
-      NARROWEST = 150.0 # a card's least width in a single row
+      NARROWEST = 150.0 # a card's least width in a row of them
+      ROWS = 3 # the most rows of them before two to a row
 
       def heading_size = layout.heading_size
       def heading_y = layout.heading_y
 
       def cards
         gap = layout.page_margin * 0.6
-        across = (room.width - ((themes.size - 1) * gap)) / themes.size
-        width = [across, layout.scaled(style.widest)].min
-        return row(width, gap) if width >= NARROWEST && width * style.ratio <= room.height
-
+        (1..ROWS).each do |rows|
+          per = (themes.size / rows.to_f).ceil
+          across = (room.width - ((per - 1) * gap)) / per
+          width = [across, layout.scaled(style.widest)].min
+          return rows_of(per, width, gap) if width >= NARROWEST && (rows * width * style.ratio) + ((rows - 1) * gap) <= room.height
+        end
         grid(gap)
       end
 
@@ -45,11 +49,18 @@ module DotPopper
 
       def room = layout.page
 
-      def row(width, gap)
+      # Rows of +per+ cards, each row centered, the block a little above
+      # the middle of the room.
+      def rows_of(per, width, gap)
         height = width * style.ratio
-        left = layout.center_x - (((themes.size * width) + ((themes.size - 1) * gap)) / 2.0)
-        top = room.y + [(room.height - height) / 3.0, 0.0].max
-        themes.each_with_index.map { |theme, i| ThemeCard.new(theme:, rect: Rect.new(x: left + (i * (width + gap)), y: top, width:, height:)) }
+        slices = themes.each_slice(per).to_a
+        block = (slices.size * height) + ((slices.size - 1) * gap)
+        top = room.y + [(room.height - block) / 3.0, 0.0].max
+        slices.each_with_index.flat_map do |slice, r|
+          left = layout.center_x - (((slice.size * width) + ((slice.size - 1) * gap)) / 2.0)
+          y = top + (r * (height + gap))
+          slice.each_with_index.map { |theme, i| ThemeCard.new(theme:, rect: Rect.new(x: left + (i * (width + gap)), y:, width:, height:)) }
+        end
       end
 
       def grid(gap)

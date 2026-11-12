@@ -89,13 +89,22 @@ class ThemesTest < Minitest::Test
       end
     end
   end
-  # Every theme in one row where each card has room for its name, as on
-  # a computer's window; on a phone, two to a row, the first across the
+  # On a computer's window, the themes in as few rows as give each card
+  # room for its name: one row while they fit, as seven do, then rows
+  # of equal count; on a phone, two to a row, the first across the
   # whole width when the count is odd.
-  def test_the_cards_stand_in_one_row_or_two_to_a_row
+  def test_the_cards_stand_in_as_few_rows_as_fit_or_two_to_a_row
+    seven = ThemesLayout.new(layout: layout(1200, 800), themes: Style::THEMES.first(7), style: Style::THEMES_LAYOUT).cards
+    assert_equal [seven.first.rect.y], seven.map { it.rect.y }.uniq
+
+    twelve = Array.new(12) { Style::THEMES[it % Style::THEMES.size] }
+    wide = ThemesLayout.new(layout: layout(1200, 800), themes: twelve, style: Style::THEMES_LAYOUT).cards
+    rows = wide.group_by { it.rect.y }.values
+    assert_equal [6, 6], rows.map(&:size)
+    wide.each { assert_operator it.rect.width, :>=, ThemesLayout::NARROWEST }
+    assert_operator wide.map { it.rect.bottom }.max, :<=, layout(1200, 800).page.bottom
+
     themes = Style::THEMES
-    wide = ThemesLayout.new(layout: layout(1200, 800), themes:, style: Style::THEMES_LAYOUT).cards
-    assert_equal [wide.first.rect.y], wide.map { it.rect.y }.uniq
 
     narrow = ThemesLayout.new(layout: layout(400, 850), themes:, style: Style::THEMES_LAYOUT).cards
     first, *rest = narrow.map(&:rect)
