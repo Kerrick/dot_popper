@@ -112,7 +112,7 @@ class NativeStoreContractTest < Minitest::Test
     end
 
     def on_restore
-      return @fails if %w[failed cancelled].include?(@fails)
+      return @fails if %w[failed canceled].include?(@fails)
 
       @owned ? "restored" : "none"
     end

@@ -74,7 +74,7 @@ final class StoreCheckTests: XCTestCase {
     _ = request("open")
     _ = try await answer(["ready"])
     XCTAssertTrue(request("buy"))
-    let fields = try await answer(["ready", "failed", "cancelled"])
+    let fields = try await answer(["ready", "failed", "canceled"])
     XCTAssertEqual(fields["state"], "ready")
     XCTAssertEqual(fields["owned"], "1")
   }

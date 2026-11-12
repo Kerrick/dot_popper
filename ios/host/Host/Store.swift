@@ -11,7 +11,7 @@
 //
 //   answer=7              the number of the request this answers
 //   owned=1               whether this player has the product
-//   state=ready           loading, working, ready, pending, cancelled,
+//   state=ready           loading, working, ready, pending, canceled,
 //                         restored, none, failed or unavailable
 //   price=$1.99           the store's own, in the player's currency
 //   receipt=apple:<JWS>   while owned, the transaction as StoreKit signed
@@ -139,13 +139,13 @@ final class StoreKeeper {
       case .pending:
         state = "pending"
       case .userCancelled:
-        state = "cancelled"
+        state = "canceled"
       @unknown default:
         state = "failed"
       }
     } catch {
       NSLog("Dot Popper: the purchase failed: %@", String(describing: error))
-      state = cancelled(error) ? "cancelled" : "failed"
+      state = canceled(error) ? "canceled" : "failed"
     }
     write()
   }
@@ -160,12 +160,12 @@ final class StoreKeeper {
       await refreshOwned()
       state = owned ? "restored" : "none"
     } catch {
-      state = cancelled(error) ? "cancelled" : "failed"
+      state = canceled(error) ? "canceled" : "failed"
     }
     write()
   }
 
-  private func cancelled(_ error: Error) -> Bool {
+  private func canceled(_ error: Error) -> Bool {
     if case StoreKitError.userCancelled = error { return true }
     return false
   }

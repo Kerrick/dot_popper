@@ -14,7 +14,7 @@
 # stores (ADR-0009).
 module StoreContract
   Storefront = DotPopper::Presentation::Storefront
-  STATES = %w[loading working ready pending cancelled restored none failed unavailable].freeze
+  STATES = %w[loading working ready pending canceled restored none failed unavailable].freeze
   UNDER_WAY = %w[loading working].freeze
 
   def setup
@@ -126,7 +126,7 @@ module StoreContract
   end
 
   def test_going_wrong_buying_owns_nothing
-    %w[failed cancelled pending].each do |outcome|
+    %w[failed canceled pending].each do |outcome|
       store = new_store(fails: outcome)
       open_it(store)
       ask(store, :buy)
@@ -138,7 +138,7 @@ module StoreContract
   end
 
   def test_going_wrong_restoring_says_how
-    %w[failed cancelled].each do |outcome|
+    %w[failed canceled].each do |outcome|
       store = new_store(fails: outcome)
       open_it(store)
       ask(store, :restore)

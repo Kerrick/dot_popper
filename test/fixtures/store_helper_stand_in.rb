@@ -47,7 +47,7 @@ outcome = if fails == "unavailable" then "unavailable"
                 "ready"
               end
             when "restore"
-              if %w[failed cancelled].include?(fails) then fails
+              if %w[failed canceled].include?(fails) then fails
               else owned.call ? "restored" : "none"
               end
             else "failed"

@@ -84,7 +84,7 @@ Tests: `test/build_test.rb`, `test/shell/store_build_test.rb`, `test/set_build_c
 | --- | --- |
 | `answer=7` | the number of the request it answers |
 | `owned=1` | whether the store says the player owns Pro; it grants nothing |
-| `state=ready` | `loading`, `working`, `ready`, `pending`, `cancelled`, `restored`, `none`, `failed` or `unavailable` |
+| `state=ready` | `loading`, `working`, `ready`, `pending`, `canceled`, `restored`, `none`, `failed` or `unavailable` |
 | `price=$1.99` | the store's own price, in the player's currency |
 | `receipt=…` | while owned, the store's receipt (see [Receipts](#receipts)) |
 
@@ -117,7 +117,7 @@ Both ask for owned purchases first (StoreKit's `Transaction.currentEntitlements`
 
 **`FakeStore`** (`lib/dot_popper/presentation/fake_store.rb`) is a test build's store on a phone, behind the same port. It answers `loading` or `working` at once and the real answer `FakeStore::READS` (2) reads later, so a purchase takes the same asynchronous road. Its price is `$1.99` (`FakeStore::PRICE`). Its ledger, `fake_store.txt`, is the store's own record of what this install bought, apart from `Entitlement`: Buy writes a receipt there (`Receipt.issue`, Play's form signed by `Receipt::TestKey`), and every answer while owned hands that receipt over, so the game proves a fake purchase with the code that proves a real one. A ledger edited to say anything else does not verify. A receipt bought before the product id was lowercased (`com.setdef.DotPopper.pro`, `FakeStore::EARLIER`) is bought again under today's id when the ledger is read, so a playtester keeps pretend Pro. Nothing on any screen says the store is a fake.
 
-`DOT_POPPER_FAKE_STORE_FAILS` (`FakeStore::FAILS_BY`) makes the fake go wrong, for a developer only and in a test build only: `refused` (the system will not take the request), `unavailable` (no store answers), and `failed`, `cancelled` or `pending` (how a Buy can end; a Restore takes `failed` and `cancelled`, and `pending` is a Buy's alone).
+`DOT_POPPER_FAKE_STORE_FAILS` (`FakeStore::FAILS_BY`) makes the fake go wrong, for a developer only and in a test build only: `refused` (the system will not take the request), `unavailable` (no store answers), and `failed`, `canceled` or `pending` (how a Buy can end; a Restore takes `failed` and `canceled`, and `pending` is a Buy's alone).
 
 **`WebsiteStore`** (`lib/dot_popper/presentation/website_store.rb`) is the store for copies no store controls: setdef's website, itch.io, Homebrew, winget, a Linux package or an APK. It answers the Storefront's methods, plus `#keys?` (true: a license key is how Pro arrives) and `#paste`. Its price is `WebsiteStore::PRICE` (`$1.99`), which must match the checkout page. It has no Restore: the key is the purchase, on any device. Its checkout is a port, `#buy` answering the state to show:
 

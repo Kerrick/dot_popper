@@ -158,7 +158,7 @@ class StorefrontTest < Minitest::Test
     hear("answer=1\nowned=0\nstate=ready\nprice=$1.99\n")
 
     assert_equal :busy, @store.status
-    hear("answer=2\nowned=0\nstate=cancelled\nprice=$1.99\n")
+    hear("answer=2\nowned=0\nstate=canceled\nprice=$1.99\n")
 
     assert_equal :ready, @store.status
   end

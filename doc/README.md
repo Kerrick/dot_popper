@@ -99,7 +99,7 @@ The game reads these from its environment. `main.rb` lists them all.
 | `DOT_POPPER_FAKE_GAMEPAD=1` | Plays as if a gamepad were in hand: the words name its buttons, and its cursor shows |
 | `DOT_POPPER_FAKE_TILT=0.6,0` | Stands in for a tablet's accelerometer, to roll the pile at Game Over |
 | `DOT_POPPER_PRO=1` | Plays as if Pro were bought. `0` plays free |
-| `DOT_POPPER_FAKE_STORE_FAILS=failed` | In a test build, makes the fake store go wrong: `refused`, `unavailable`, `failed`, `cancelled` or `pending` |
+| `DOT_POPPER_FAKE_STORE_FAILS=failed` | In a test build, makes the fake store go wrong: `refused`, `unavailable`, `failed`, `canceled` or `pending` |
 | `DOT_POPPER_SERVER=URL` | Uses this friend-group server, in place of the one set in the game |
 | `DOT_POPPER_CALM=1` | Turns off the screen shake, and makes the pile settle gently. Players use this one too |
 

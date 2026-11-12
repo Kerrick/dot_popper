@@ -38,7 +38,7 @@ module DotPopper
       UNRESERVED = /[^A-Za-z0-9\-._~]/n
       # The hosts' states that a screen tells apart; any other is :failed.
       STATES = { "loading" => :loading, "working" => :busy, "ready" => :ready, "pending" => :pending,
-                 "cancelled" => :ready, "restored" => :ready, "none" => :none, "failed" => :failed,
+                 "canceled" => :ready, "restored" => :ready, "none" => :none, "failed" => :failed,
                  "unavailable" => :unavailable }.freeze
 
       attr_reader :status, :price

@@ -24,11 +24,11 @@ module DotPopper
     # +fails+ takes the part of the store going wrong, for a developer
     # (FAILS_BY) and never on any screen: "refused", the system would not
     # take the request; "unavailable", no store answers; and "failed",
-    # "cancelled" and "pending", what a Buy or a Restore can come back as
+    # "canceled" and "pending", what a Buy or a Restore can come back as
     # ("pending" is a Buy's alone; a Restore goes on as usual).
     class FakeStore
       FAILS_BY = "DOT_POPPER_FAKE_STORE_FAILS"
-      FAILURES = %w[refused unavailable failed cancelled pending].freeze
+      FAILURES = %w[refused unavailable failed canceled pending].freeze
       PRICE = "$1.99"
       # How many reads of the answer, a quarter second apart, a request
       # takes to come back.
@@ -100,14 +100,14 @@ module DotPopper
 
       def bought
         return "failed" if @price.empty?
-        return @fails if %w[failed cancelled pending].include?(@fails)
+        return @fails if %w[failed canceled pending].include?(@fails)
 
         @ledger.write(Receipt.issue)
         "ready"
       end
 
       def restored
-        return @fails if %w[failed cancelled].include?(@fails)
+        return @fails if %w[failed canceled].include?(@fails)
 
         owned? ? "restored" : "none"
       end

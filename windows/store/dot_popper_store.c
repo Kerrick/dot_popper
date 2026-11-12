@@ -13,7 +13,7 @@
 //
 //   answer=7              the number of the request this answers
 //   owned=1               whether this player has the add-on
-//   state=ready           loading, working, ready, pending, cancelled,
+//   state=ready           loading, working, ready, pending, canceled,
 //                         restored, none, failed or unavailable
 //   price=$1.99           the Store's own, in the player's currency
 //   receipt=microsoft:<token>:<SKU>
@@ -392,7 +392,7 @@ static void buy(void *context, Answer *a) {
   if (status == 0 || status == 1)
     a->state = a->owned ? "ready" : "failed";
   else if (status == 2)
-    a->state = "cancelled";
+    a->state = "canceled";
   else
     a->state = "failed";
 done:

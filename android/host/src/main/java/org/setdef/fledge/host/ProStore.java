@@ -36,7 +36,7 @@ import java.util.List;
  * <pre>
  *   answer=7          the number of the request this answers
  *   owned=1           whether this player has the product
- *   state=ready       loading, working, ready, pending, cancelled,
+ *   state=ready       loading, working, ready, pending, canceled,
  *                     restored, none, failed or unavailable
  *   price=$1.99       the store's own, in the player's currency
  *   receipt=play:J:S  while owned, the purchase's original JSON (J) and
@@ -200,7 +200,7 @@ final class ProStore implements PurchasesUpdatedListener {
             take(purchases);
             finish(owned ? "ready" : "pending");
         } else if (code == BillingClient.BillingResponseCode.USER_CANCELED) {
-            finish("cancelled");
+            finish("canceled");
         } else if (code == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
             queryOwned(false);
         } else {
