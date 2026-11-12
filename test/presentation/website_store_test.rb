@@ -49,6 +49,27 @@ class WebsiteStoreTest < Minitest::Test
     assert_equal "Buy for $1.99", format(s.words.offer[:buy], s.offer_price)
   end
 
+  # Enter, Space and Start mean "continue" or "back" elsewhere, so a
+  # purchase never starts from them: they close the offer, and Buy has only
+  # its own button.
+  def test_enter_space_and_start_go_back_and_never_buy
+    s = show
+    s.open_offer
+    s.primary
+
+    refute s.offer?
+    assert_empty s.offer_status.to_s
+    s.open_offer
+    s.start
+
+    refute s.offer?
+    assert_empty s.offer_status.to_s
+    s.open_offer
+    click(s, :buy)
+
+    assert_equal s.words.offer[:copied], s.offer_status
+  end
+
   def test_buy_then_paste_license_key_makes_the_player_pro
     s = show
     s.open_offer

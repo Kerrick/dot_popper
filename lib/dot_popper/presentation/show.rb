@@ -402,13 +402,14 @@ module DotPopper
 
       # Presses this screen's main button, as Enter, Space, a gamepad's
       # Start, or its A aimed at no button do: Play on the title, Back on
-      # the Stats screen, Continue on Game Over, once its grace is over,
-      # and Copy in the share preview. In a game it does nothing, since
+      # the Stats screen and the Pro offer (Buy has only its own button),
+      # Continue on Game Over, once its grace is over, and Copy in the
+      # share preview. In a game it does nothing, since
       # only a press at a place may touch the score.
       def primary
         if arrival? then answer_arrival(use: true)
         elsif sharing? then copy_result
-        elsif offer? then buy
+        elsif offer? then close_offer
         elsif dialog then close_dialog
         elsif group_open? then @groups.primary
         elsif page then leave
@@ -1142,7 +1143,7 @@ module DotPopper
         in [nil, :y] then how_to_play
         in [nil, :lb] then open_achievements
         in [nil, :rb] then open_themes
-        in [nil, :lt] then @groups.open
+        in [nil, :lt] then (@groups.open if on_home?)
         in [nil, :select] then open_settings
         in [:stats, :y] then clear_or_undo(:y)
         in [:achievements, :x] then open_achievement(Achievement::IDS.first)
