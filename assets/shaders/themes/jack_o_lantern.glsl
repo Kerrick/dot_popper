@@ -132,9 +132,9 @@ vec4 pumpkin(vec2 p, float d, float aa, float fresh, float bonus) {
   float flicker = 0.92 + 0.08 * sin(time * 17.0 + seed) * sin(time * 7.3 + seed * 2.0);
   float spill = exp(-max(fd, 0.0) / 0.05);
   lit = mix(lit, vec3(1.0, 0.71, 0.29), spill * spill * 0.45 * flicker);
-  float centre = exp(-pow(max(-fd, 0.0) / 0.05, 2.0));
-  vec3 hot = bonus > 0.5 ? mix(vec3(0.957, 1.0, 0.824), vec3(0.717, 1.0, 0.431), pow(centre, 0.7))
-                         : mix(HOT, FLAME, pow(centre, 0.7));
+  float center = exp(-pow(max(-fd, 0.0) / 0.05, 2.0));
+  vec3 hot = bonus > 0.5 ? mix(vec3(0.957, 1.0, 0.824), vec3(0.717, 1.0, 0.431), pow(center, 0.7))
+                         : mix(HOT, FLAME, pow(center, 0.7));
   // Looked into from above, each cut's far wall stands lit, the hot light behind it.
   vec3 wall_col = mix(vec3(1.0, 0.478, 0.078), vec3(1.0, 0.722, 0.27), clamp(-fd / 0.06, 0.0, 1.0));
   hot = mix(hot, wall_col, step(0.0, back));

@@ -10,9 +10,9 @@ How Dot Popper draws its dots, its night and its effects, how the Game Over pile
 
 The ordinary theme's picture is "gumdrops at night" (`Presentation::Palette`, `Style::PALETTE`): bright dots are light, warm and glossy on a deep indigo night; popped dots are dark, matte, opaque discs with a light rim and a sunken crater. The game's icon shows that picture.
 
-The two kinds differ in lightness and in shape, not only in hue, so every player can tell them apart, in greyscale and with colour blindness too. In the ordinary palette a bright dot's body (`fresh_body`) is 5.4:1 against a popped dot's top (`popped_top`) and 9.9:1 against the night (`ink_top`).
+The two kinds differ in lightness and in shape, not only in hue, so every player can tell them apart, in grayscale and with color blindness too. In the ordinary palette a bright dot's body (`fresh_body`) is 5.4:1 against a popped dot's top (`popped_top`) and 9.9:1 against the night (`ink_top`).
 
-A bonus dot is a bright dot in mint, as light as any bright dot and marked by a dark four-pointed star, a shape, so it reads without colour too. Mint is the colour of gain. When it appears and how it pays are in [rules.md](rules.md).
+A bonus dot is a bright dot in mint, as light as any bright dot and marked by a dark four-pointed star, a shape, so it reads without color too. Mint is the color of gain. When it appears and how it pays are in [rules.md](rules.md).
 
 ### The bright dot's edge is its hit circle
 
@@ -35,7 +35,7 @@ A player aims at a moving target by its edge and tracks it by what they perceive
 
 ### The tests that hold them
 
-- `test/presentation/color_test.rb` (the ordinary palette): every bright colour at least 2.5:1 against every popped colour, `fresh_body` at least 4.5:1 against `popped_top` and 3:1 against `popped_lip`, a bright dot at least 7:1 against the night, a popped dot's rim at least 3:1 against it, every colour words use at least 4.5:1 on the night, and the bonus dot as light as a bright one, with its star at least 7:1 on its body.
+- `test/presentation/color_test.rb` (the ordinary palette): every bright color at least 2.5:1 against every popped color, `fresh_body` at least 4.5:1 against `popped_top` and 3:1 against `popped_lip`, a bright dot at least 7:1 against the night, a popped dot's rim at least 3:1 against it, every color words use at least 4.5:1 on the night, and the bonus dot as light as a bright one, with its star at least 7:1 on its body.
 - `test/presentation/theme_test.rb` holds every theme to the same, and more (see "Themes").
 - `test/presentation/style_test.rb`: `test_a_dot_at_rest_ends_at_its_hit_circle` (the rim, halo, shadow and extent limits above) and `test_nothing_blooms_around_the_fresh_dot`.
 - `test/presentation/dot_animations_test.rb`: a bright dot at rest is drawn at exactly its size.
@@ -49,7 +49,7 @@ Every shader is optional. One that fails to compile on the player's graphics dri
 | Without | What is drawn |
 | --- | --- |
 | `dot` | Plain circles (`DotPainter#flat`): a bright dot is its rim as a full disc with the body inside it, so its edge is still the hit circle (the rim at least 2 device pixels), with a highlight; a popped dot is a dark disc with a rim and a crater. The shadow is the dot's own disc dropped 0.07 R, a crescent below. |
-| A theme's dot shader | The ordinary `dot` shader, in the theme's colours. |
+| A theme's dot shader | The ordinary `dot` shader, in the theme's colors. |
 | `backdrop` | The night as 16 bands from `ink_top` to `ink_bottom` (`Renderer#flat_backdrop`). |
 | `scene` | The ordinary night, with no scenery (`Shell::Scene#bake`). |
 | `blur` | No bloom. |
@@ -59,7 +59,7 @@ A Box2D world that cannot be made leaves the dots where they are at Game Over. S
 
 ## The night
 
-Behind everything is the night: the `backdrop` shader in the palette's four inks, or a theme's baked scene (see "Themes"). It reaches a unit past Lota's dimensions (`Renderer#cover`), and every frame is cleared first to the night's darkest ink, `ink_edge` (`Renderer#prepare`), so a pixel nothing draws is never black or another colour. Lota's dimensions are whole units, rounded down, while the drawable may be a fraction of a unit wider: on an iPhone 13 mini turned landscape it is 2338 pixels at a scale of 2.88, 811.8 units, which Lota reports as 811.
+Behind everything is the night: the `backdrop` shader in the palette's four inks, or a theme's baked scene (see "Themes"). It reaches a unit past Lota's dimensions (`Renderer#cover`), and every frame is cleared first to the night's darkest ink, `ink_edge` (`Renderer#prepare`), so a pixel nothing draws is never black or another color. Lota's dimensions are whole units, rounded down, while the drawable may be a fraction of a unit wider: on an iPhone 13 mini turned landscape it is 2338 pixels at a scale of 2.88, 811.8 units, which Lota reports as 811.
 
 The game prints one line on what its window is as it starts and on every resize or rotation (`Presentation::ScreenReport`, `App#report_screen`): its size in units and pixels, the dpi scale as Lota reports it and natively, the safe area and the window's mode. It lets a run on a real device be set beside an SDL test program's on the same one. `DOT_POPPER_DIAGNOSTIC_COLORS=1` clears each frame to pure blue and draws no night ([ios.md](../ios.md)).
 
@@ -86,7 +86,7 @@ It is off: `BLOOM.strength` is 0. Any bloom strong enough to see spreads several
 Droplets and twinkles are LÖVE's `ParticleSystem`s (`Shell::Sparks`). A `Presentation::Burst` says everything about a burst: how many, how fast, how long each lives, how big, the air's drag, gravity, opacity, spin and its sprite. `Presentation::Emission` turns it into a particle system's settings in graphics units for the dots' radius.
 
 - **Sprites.** Two, drawn in code at the screen's density, each `PARTICLE_SPRITE`, 24 units, across (`Presentation::SpriteArt`): a soft round droplet, and a twinkle with four thin rays so its spin shows.
-- **Systems.** A system runs all its particles through the same colours over their lifetime, so there is one system for each burst and colour, made when first needed and reused, with room for four bursts at once. A burst's droplets are shared evenly among its colours (`Burst#shares`).
+- **Systems.** A system runs all its particles through the same colors over their lifetime, so there is one system for each burst and color, made when first needed and reused, with room for four bursts at once. A burst's droplets are shared evenly among its colors (`Burst#shares`).
 - **Limits.** A droplet lives at most `Burst::LONGEST_LIFE`, 0.45 s, so a burst never hides the dots around it for long; it shrinks to 0.45 of its size as it goes and fades from its burst's opacity. A pop's droplets live 0.25 to 0.42 s at 80%. Game Over's sparkles may outlive that, at most 1.4 s (`GAME_OVER.sparkle_life`), since no game is behind them: three bursts of 60 spinning twinkles for a new record, and 22 for a met daily goal.
 - Droplets are drawn additively, so they only brighten (`EffectsPainter#droplets`).
 
@@ -98,7 +98,7 @@ When a game ends its rules are frozen and its dots are only scenery. `Shell::Pil
 
 The pile is a toy. Schell's lens of the toy (*The Art of Game Design*) asks whether something is fun to play with even with no goal, and a toy is found by playing with it (Sicart, *Play Matters*), so Game Over says nothing about it.
 
-**Scale.** Box2D works best with objects about a metre across, so a Box2D metre is `PILE.meter`, 2 R, which makes a dot a ball one metre across. Gravity is 20 R a second squared. Each physics step covers at most 1/30 s (`longest_step`), so a slow frame cannot tunnel a dot through a wall. A resized window moves the walls and brings back inside any ball the new walls would leave out (`Pile#refit`).
+**Scale.** Box2D works best with objects about a meter across, so a Box2D meter is `PILE.meter`, 2 R, which makes a dot a ball one meter across. Gravity is 20 R a second squared. Each physics step covers at most 1/30 s (`longest_step`), so a slow frame cannot tunnel a dot through a wall. A resized window moves the walls and brings back inside any ball the new walls would leave out (`Pile#refit`).
 
 | Setting | `PILE` | `CALM_PILE` (`DOT_POPPER_CALM=1`) |
 | --- | --- | --- |
@@ -127,7 +127,7 @@ The pile is a toy. Schell's lens of the toy (*The Art of Game Design*) asks whet
 
 There are no sound files. Every sound is synthesized when the game starts from `Style::PATCHES` (`Presentation::Synth`, mono, from `Note`s of sine, triangle, square or noise): `pop` (a bubbly bloop), `bonus` (a bell's three notes up), `bonus_pop`, `bonk` (a low, dull fall), `tick` (a woodblock), `start` (three notes up), `game_over` (three notes down) and `new_score_record` (an arpeggio). `Shell::Speaker` plays each with four voices, so quick taps overlap rather than cut each other off, at `SOUND.volume`, 0.8. A pop's pitch climbs 0.02 for each point of the score, up to 1.4; the last seconds' ticks climb 0.12 a second.
 
-**Stereo placement.** Every sound is mono, so OpenAL can place it. A pop and a mistake are placed where the tap was across the screen (`Presentation::Stereo#pan`), never more than 60% to one side (`SOUND.stereo`), so both ears hear every sound. `Stereo.position` puts the source on a circle one unit from the listener, at the angle of its pan, so its distance and loudness never change. Every other sound plays from the centre. Sound placed where the eye is looking helps a player connect it to its cause. `test/presentation/stereo_test.rb` checks the pan and the distance.
+**Stereo placement.** Every sound is mono, so OpenAL can place it. A pop and a mistake are placed where the tap was across the screen (`Presentation::Stereo#pan`), never more than 60% to one side (`SOUND.stereo`), so both ears hear every sound. `Stereo.position` puts the source on a circle one unit from the listener, at the angle of its pan, so its distance and loudness never change. Every other sound plays from the center. Sound placed where the eye is looking helps a player connect it to its cause. `test/presentation/stereo_test.rb` checks the pan and the distance.
 
 **Mute.** M mutes; so does Settings' Sound ([screens.md](screens.md)). `sound.txt` remembers it (`muted` or `on`), so a player who mutes need not mute again. With no audio device, the game plays nothing and goes on.
 
@@ -153,9 +153,9 @@ The theme files are in `lib/dot_popper/presentation/themes/`, their dot shaders 
 
 ### A theme is one file and one shader
 
-Each theme is a module with one method, `theme(base, hex)`, that returns a `Presentation::Theme`: its `key` (what is saved, and what the server names), its `palette` (the ordinary palette `with` its own colours), its `art` (a `ThemeArt`: the dot shader's name, its sky as a `ThemeSky` for `scene.glsl`, its scenery's kind, its title font and whether the title's O's are dots, and the sound patches it plays instead of the ordinary ones, `pop` and `bonk` in all of them), and its `opens_on` date. Replacing one theme touches nothing else.
+Each theme is a module with one method, `theme(base, hex)`, that returns a `Presentation::Theme`: its `key` (what is saved, and what the server names), its `palette` (the ordinary palette `with` its own colors), its `art` (a `ThemeArt`: the dot shader's name, its sky as a `ThemeSky` for `scene.glsl`, its scenery's kind, its title font and whether the title's O's are dots, and the sound patches it plays instead of the ordinary ones, `pop` and `bonk` in all of them), and its `opens_on` date. Replacing one theme touches nothing else.
 
-When a theme is used, everything takes it: every dot, the night, buttons, words, effects and the tutorial come from the palette in use (`Pen#palette`); the rings and flashes `Style` colours from the ordinary palette are mapped to the palette in use by their job (`Pen#themed`); the shaders are given its colours (`Pen#paint_shaders`); its dot shader is made ready; the title is set by `Shell::ThemedTitle`; and `Speaker#use` swaps in its sounds. The theme in use is settled when the game starts, when Home shows, and when the player chooses one, never in a game, so a purchase or midnight never repaints a game (`ThemeKeeper#refresh`, `App#use_theme`).
+When a theme is used, everything takes it: every dot, the night, buttons, words, effects and the tutorial come from the palette in use (`Pen#palette`); the rings and flashes `Style` colors from the ordinary palette are mapped to the palette in use by their job (`Pen#themed`); the shaders are given its colors (`Pen#paint_shaders`); its dot shader is made ready; the title is set by `Shell::ThemedTitle`; and `Speaker#use` swaps in its sounds. The theme in use is settled when the game starts, when Home shows, and when the player chooses one, never in a game, so a purchase or midnight never repaints a game (`ThemeKeeper#refresh`, `App#use_theme`).
 
 ### Scenery is drawn once
 
@@ -167,7 +167,7 @@ Every theme keeps a bright dot told from a popped one by shape and lightness, no
 
 | Rule | At least |
 | --- | --- |
-| Every bright colour against every popped colour | 2.5:1 |
+| Every bright color against every popped color | 2.5:1 |
 | `fresh_body` against `popped_top`; against `popped_lip` | 4.5:1; 3:1 |
 | `fresh_body` lighter than `popped_rim`, in luminance | 0.15 |
 | `fresh_body` against the night (`ink_top`) | 7:1 |
@@ -175,8 +175,8 @@ Every theme keeps a bright dot told from a popped one by shape and lightness, no
 | `popped_rim` against `fresh_rim`, so a bright dot under a popped one keeps its edge and the stack's order shows | 2.5:1 |
 | `fresh_rim` against `popped_top`; `popped_lip` against `popped_crater` | 4.5:1; 2.2:1 |
 | The alarm against `popped_top` | 2.8:1 |
-| Every colour words use against `ink_bottom` | 4.5:1 |
-| Colours that differ between any two themes | 10 |
+| Every color words use against `ink_bottom` | 4.5:1 |
+| Colors that differ between any two themes | 10 |
 
 It also checks that Classic comes first and is the only theme without art, that every theme has a name, that every popped dot gets the same seed while each bright dot gets its own, and that no dot shader reads where on the screen it draws.
 
@@ -193,7 +193,7 @@ Using a theme other than Classic is Pro's: a Free player always uses Classic, an
 
 ### The Themes screen
 
-Home's Themes tile (RB on a gamepad), whose note names the theme in use, opens the Themes screen over Home's dimmed dots (`Show#open_themes`, `Shell::ThemesPainter`, `Presentation::ThemesLayout`). It has one card for each theme the player has (`ThemeKeeper#shown`: Classic and every unlocked theme), all in one row where each still has room for its name, otherwise two to a row. A card is its theme in small: its own night, a bright dot partly under a popped one as in the game, and its name. The theme in use has a thick cream outline and a check, so what is chosen shows without a word. A tap on a card uses it at once, and the whole screen and Home's dots behind it take its colours, so the choice is seen before it is left (Tidwell's Preview); there is no confirm (`Show#use`). LB and RB step to the previous and next theme. A Free player's tap opens the offer over the screen. Back, Escape and B return to Home. The screen's place among the others is in [screens.md](screens.md).
+Home's Themes tile (RB on a gamepad), whose note names the theme in use, opens the Themes screen over Home's dimmed dots (`Show#open_themes`, `Shell::ThemesPainter`, `Presentation::ThemesLayout`). It has one card for each theme the player has (`ThemeKeeper#shown`: Classic and every unlocked theme), all in one row where each still has room for its name, otherwise two to a row. A card is its theme in small: its own night, a bright dot partly under a popped one as in the game, and its name. The theme in use has a thick cream outline and a check, so what is chosen shows without a word. A tap on a card uses it at once, and the whole screen and Home's dots behind it take its colors, so the choice is seen before it is left (Tidwell's Preview); there is no confirm (`Show#use`). LB and RB step to the previous and next theme. A Free player's tap opens the offer over the screen. Back, Escape and B return to Home. The screen's place among the others is in [screens.md](screens.md).
 
 ### The new-theme card
 

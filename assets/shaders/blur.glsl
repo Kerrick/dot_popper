@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
 //
 // One direction of a separable Gaussian blur, for the fresh dots' and
-// droplets' glow: five reads, the centre and two on each side between
+// droplets' glow: five reads, the center and two on each side between
 // pixels, so the linear filter does the work of nine taps.
 // DotPopper::Presentation::BlurKernel computes +offsets+ and +weights+;
 // +texel_step+ is one blurred pixel along the blur's direction, in uv.
