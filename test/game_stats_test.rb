@@ -105,17 +105,17 @@ class GameStatsTest < Minitest::Test
     recorder = GameStats::Recorder.new
     cabinet.subscribe(recorder)
     dots = DotPopper::Stack.new(dots: [dot(300, 300, popped: true), dot(340, 300, popped: true), dot(500, 300)])
-    cabinet.resume(field: field, dots:, score: 2, seconds: 12.0)
+    cabinet.resume(field: field, dots:, score: 2, seconds: 12.0, dots_in_a_row: 1)
 
     stats = recorder.stats
-    assert_equal [2, 2, 2, 2], [stats.pops, stats.score, stats.dots_in_a_row, stats.most_dots_in_a_row]
+    assert_equal [2, 2, 1, 1], [stats.pops, stats.score, stats.dots_in_a_row, stats.most_dots_in_a_row]
     assert_empty stats.times_to_pop
     assert_nil stats.shortest_time_to_pop
 
     cabinet.update(1.5)
     fresh = cabinet.game.dots.to_a.last
     cabinet.press(fresh.x, fresh.y)
-    assert_equal [3, 3, 3], [recorder.stats.pops, recorder.stats.score, recorder.stats.most_dots_in_a_row]
+    assert_equal [3, 3, 2], [recorder.stats.pops, recorder.stats.score, recorder.stats.most_dots_in_a_row], "the row is the game's own"
     assert_equal [1.5], recorder.stats.times_to_pop.map { it.round(6) }, "the first wait runs from the clock starting"
   end
 end

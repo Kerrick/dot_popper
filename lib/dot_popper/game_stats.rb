@@ -15,11 +15,11 @@ module DotPopper
 
     # The stats of +game+ as it starts: none for a game begun afresh;
     # for one that goes on from the tutorial (Game.resume), a pop for
-    # each of its popped dots, in a row, and its score. Those pops came
+    # each of its popped dots, its score, and the row the game carries. Those pops came
     # before the clock ran, so none has a wait.
     def self.opening(game)
       pops = game.dots.count(&:popped?)
-      start.with(pops:, score: game.score, dots_in_a_row: pops, most_dots_in_a_row: pops)
+      start.with(pops:, score: game.score, dots_in_a_row: game.dots_in_a_row, most_dots_in_a_row: game.dots_in_a_row)
     end
 
     def initialize(pops:, mistakes:, softened:, times_to_pop:, fresh_since:, duration:, score: 0, dots_in_a_row: 0, most_dots_in_a_row: 0, bonuses: 0)
