@@ -8,7 +8,7 @@ module DotPopper
       G = ::Lota::Graphics
 
       # The check and +text+ together, centered on +x+ and +y+.
-      def labelled(text, font, x, y, alpha)
+      def labeled(text, font, x, y, alpha)
         size = font.height
         mark = size * 0.5
         gap = size * 0.25

@@ -112,7 +112,7 @@ module DotPopper
 
         rect = plan[:note]
         font = pen.fonts.semibold(plan.size(:note))
-        Check.new(pen:).labelled(show.words.copied, font, rect.center_x, rect.center_y, alpha * copied)
+        Check.new(pen:).labeled(show.words.copied, font, rect.center_x, rect.center_y, alpha * copied)
       end
     end
   end

@@ -39,18 +39,18 @@ module DotPopperGui
           panel.press(:notice_go, :touch, show.now)
           "123".each_char { panel.press([:code_digit, it], :touch, show.now) }
           shoot("join")
-          labelled("join")
+          labeled("join")
           "4567".each_char { panel.press([:code_digit, it], :touch, show.now) }
           panel.press(:code_submit, :touch, show.now)
           wait_for("the group", within: 900) { panel.page == :group }
           show.back
         end
         shoot("groups", settle: 1.5)
-        labelled("groups")
+        labeled("groups")
         panel.press([:group_show, panel.groups.groups.first.id], :touch, show.now)
         panel.press(:group_code, :touch, show.now)
         shoot("group", settle: 1.5)
-        labelled("group")
+        labeled("group")
         panel.press(:group_history, :touch, show.now)
         wait_for("the history", within: 900) { panel.history_entries.any? }
         shoot("history", settle: 1.5)
@@ -63,7 +63,7 @@ module DotPopperGui
     private
 
     # The screen showing now, again with a controller's labels.
-    def labelled(name)
+    def labeled(name)
       before = show.input
       show.input = P::InputKind::GAMEPAD
       shoot("#{name}-gamepad", settle: 0.3)

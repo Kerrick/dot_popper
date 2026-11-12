@@ -123,8 +123,8 @@ module DotPopper
         end
         return [fit.(safe.width - (2 * page_margin), 18) || 18, center_x] unless short?
 
-        centred = fit.(2.0 * (center_x - back_button.right - page_margin), 24)
-        return [centred, center_x] if centred
+        centered = fit.(2.0 * (center_x - back_button.right - page_margin), 24)
+        return [centered, center_x] if centered
 
         left = back_button.right + page_margin
         right = safe.right - page_margin

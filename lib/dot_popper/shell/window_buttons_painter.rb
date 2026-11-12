@@ -21,11 +21,11 @@ module DotPopper
         hover = show.hover
         fullscreen = show.window.fullscreen?
         words = show.words
-        labelled = buttons.labelled
-        PillButton.new(pen:).draw(buttons.fullscreen, (words.fullscreen_button(fullscreen) if labelled), alpha:,
+        labeled = buttons.labeled
+        PillButton.new(pen:).draw(buttons.fullscreen, (words.fullscreen_button(fullscreen) if labeled), alpha:,
                                   hover: hover.level(:fullscreen),
                                   icon: ->(x, y, size) { corners(x, y, size, !fullscreen, alpha) })
-        PillButton.new(pen:).draw(buttons.quit, (words.quit if labelled), alpha:, hover: hover.level(:quit),
+        PillButton.new(pen:).draw(buttons.quit, (words.quit if labeled), alpha:, hover: hover.level(:quit),
                                   icon: ->(x, y, size) { power(x, y, size, alpha) })
       end
 
