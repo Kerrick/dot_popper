@@ -297,28 +297,4 @@ class CabinetTest < Minitest::Test
       @cabinet.press(fresh.x, fresh.y)
     end
   end
-  def test_the_title_resumes_a_game_from_where_the_tutorial_left_it
-    dots = DotPopper::Stack.new(dots: [dot(300, 300, popped: true, id: 0), dot(500, 300, id: 1)])
-    @cabinet.resume(field: field, dots:, score: 1, seconds: 11.0)
-
-    assert_instance_of Cabinet::Playing, @cabinet.state
-    assert_equal [1, 11.0], [@cabinet.game.score, @cabinet.game.countdown.remaining]
-    assert_equal dots, @cabinet.game.dots
-    started = @heard.last
-    assert_instance_of Events::GameStarted, started
-    assert_same @cabinet.game, started.game
-
-    @cabinet.update(20)
-    assert_instance_of Cabinet::GameOver, @cabinet.state
-    assert_equal 1, @cabinet.state.score
-    assert_equal 1, @cabinet.score_record.of(@cabinet.size_class), "it counts toward the records as any game does"
-  end
-
-  def test_only_the_title_resumes_a_game
-    @cabinet.press(0, 0)
-    game = @cabinet.game
-    @cabinet.resume(field: field, dots: DotPopper::Stack.new(dots: [dot(500, 300)]), score: 5, seconds: 11.0)
-
-    assert_same game, @cabinet.game
-  end
 end

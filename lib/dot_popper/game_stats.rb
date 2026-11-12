@@ -13,10 +13,12 @@ module DotPopper
                                           :bonuses)
     def self.start = new(pops: 0, mistakes: 0, softened: 0, times_to_pop: [], fresh_since: 0.0, duration: 0.0)
 
-    # The stats of +game+ as it starts: none for a game begun afresh;
-    # for one that goes on from the tutorial (Game.resume), a pop for
-    # each of its popped dots, its score, and the row the game carries. Those pops came
-    # before the clock ran, so none has a wait.
+    # The stats of +game+ as play begins: none for a game begun afresh;
+    # for one the tutorial played over while it was paused
+    # (Cabinet::Paused), a pop for each of its popped dots, its score, and
+    # its row. Those pops came before the clock ran, so none has a wait;
+    # and the guide's mistake, which the player did not make, is not one
+    # of theirs.
     def self.opening(game)
       pops = game.dots.count(&:popped?)
       start.with(pops:, score: game.score, dots_in_a_row: game.dots_in_a_row, most_dots_in_a_row: game.dots_in_a_row)

@@ -46,8 +46,6 @@ module DotPopper
 
     def start_game: (?Integer seed) -> Playing
 
-    def resume: (field: Field, dots: Stack, score: Integer, seconds: number, ?dots_in_a_row: Integer) -> self
-
     def start_paused: (Stack dots, ?Integer seed) -> self
 
     def press_paused: (number x, number y) -> tap_event?

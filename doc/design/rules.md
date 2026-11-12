@@ -134,7 +134,7 @@ Tests: `test/spawner_test.rb`, `test/touch_target_test.rb`.
 - Popping it pays 3 points and 3 seconds on top of a pop's own: "+4" and "+4s".
 - A mistake starts the count over. A bonus dot already earned stays until it is popped. Popping it starts the count over, without counting itself.
 - Nothing is random. No draw is made for it, so a seed gives the same dots with the rule on or off.
-- `Game#dots_in_a_row` is the count toward the next bonus dot. A game that goes on from the tutorial (`Game.resume`, `Cabinet#resume`) starts with the row the tutorial showed (`Tutorial#dots_in_a_row`), so the dot lit there stays lit; a skipped tutorial starts at 0. See [tutorial.md](tutorial.md).
+- `Game#dots_in_a_row` is the count toward the next bonus dot. A game the tutorial played over begins play with the row its pops made there (`Cabinet#unpause`), so the dot lit there stays lit, whether the tutorial ended or was skipped. See [tutorial.md](tutorial.md).
 - `Game.new(..., bonus: nil)` turns the rule off, as the simulator does to compare.
 - `GameStats#bonuses` counts the bonus dots popped.
 

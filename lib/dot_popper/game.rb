@@ -7,34 +7,24 @@ module DotPopper
   class Game
     attr_reader :field, :dots, :score, :countdown, :elapsed, :spawns, :dots_in_a_row, :bonus
 
-    # A game that goes on from where it was left before its clock first
-    # ran, as the tutorial leaves it: +dots+ (a Stack) as they are, its
-    # fresh dot under the rest, the +score+ they made, +seconds+ on the
-    # clock, and +dots_in_a_row+, the row the player was shown. From there it is a game like any other: its clock runs
-    # from its first update, each pop spawns a dot under every dot there,
-    # and a tap reaches only the topmost.
-    def self.resume(field, dots:, score:, seconds:, dots_in_a_row: 0, random: Random.new, spawn_tries: Rules::SPAWN_TRIES,
-                    bonus: Rules::BONUS)
-      new(field, random:, dots:, score:, seconds:, spawn_tries:, bonus:, dots_in_a_row:)
-    end
-
-    # +spawn_tries+ is how hard a spawn works for a touch target (Spawner);
-    # 0 turns the rule off, as the simulator does to measure it. +bonus+
+    # +dots+ (a Stack), when given, are its first dots, in place of the
+    # one it would spawn, as the tutorial places its first. +spawn_tries+
+    # is how hard a spawn works for a touch target (Spawner); 0 turns the
+    # rule off, as the simulator does to measure it. +bonus+
     # (Rules::Bonus) is the row's reward; nil turns it off, likewise.
-    # +row+ counts the dots in a row since the last wrong tap or bonus
-    # dot, toward the next bonus dot.
-    def initialize(field, random: Random.new, dots: nil, score: Rules::LOWEST_SCORE,
-                   seconds: Rules::STARTING_SECONDS, spawn_tries: Rules::SPAWN_TRIES, bonus: Rules::BONUS, dots_in_a_row: 0)
+    # +dots_in_a_row+ counts the dots in a row since the last wrong tap or
+    # bonus dot, toward the next bonus dot.
+    def initialize(field, random: Random.new, dots: nil, spawn_tries: Rules::SPAWN_TRIES, bonus: Rules::BONUS)
       @field = field
       @bonus = bonus
-      @dots_in_a_row = dots_in_a_row
+      @dots_in_a_row = 0
       @random = random
       @spawner = Spawner.for(field, tries: spawn_tries)
       @spawns = []
       @next_id = 0
-      @score = score
+      @score = Rules::LOWEST_SCORE
       @elapsed = 0.0
-      @countdown = Countdown.new(remaining: seconds)
+      @countdown = Countdown.new(remaining: Rules::STARTING_SECONDS)
       @dots = dots || Stack.new.slide_under(spawn(Stack.new))
       @next_id = @dots.map(&:id).max.to_i + 1
     end

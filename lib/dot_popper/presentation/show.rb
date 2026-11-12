@@ -80,7 +80,6 @@ module DotPopper
         @style = style
         @input = input
         @words = style::WORDS.for(input)
-        @random = random
         @calm = calm
         @effects = Effects.new(radius:, random:, calm:)
         @animations = DotAnimations.new(style::MOTION)
@@ -169,14 +168,13 @@ module DotPopper
         @words = style::WORDS.for(kind)
       end
 
-      # Whether the title is showing: the game is on its title, and the
-      # Tutorial is not playing over it.
-      def home? = cabinet.state.is_a?(Cabinet::Home) && !tutorial?
+      # Whether the title is showing.
+      def home? = cabinet.state.is_a?(Cabinet::Home)
 
-      # Whether the Tutorial is playing (#tutorial). The game stays on its
-      # title meanwhile, so its clock is not running, and no tap there
-      # reaches the game; once it ends, the game goes on from where it
-      # left its dots, score and time.
+      # Whether the Tutorial is playing (#tutorial) over the game, which is
+      # paused meanwhile (Cabinet::Paused), so its clock is not running,
+      # and no tap reaches it but the ones the Tutorial passes on; once it
+      # ends, or is skipped, the game plays on from the state it is in.
       def tutorial? = !@tutorial.nil?
 
       # Whether the Stats screen is open over the title. It is the
@@ -419,29 +417,31 @@ module DotPopper
         end
       end
 
-      # The title's Play: a game starts, or on a first Play, the Tutorial
-      # (TutorialFlag), which is seen from then on.
+      # The title's Play: a game starts, or on a first Play, a game with
+      # the Tutorial over it (TutorialFlag), which is seen from then on.
       def play
         return unless on_home?
-        return open_tutorial if @tutorial_flag.due?(played: stats_offered?)
+        return with_a_game { open_tutorial } if @tutorial_flag.due?(played: stats_offered?)
 
         start_game
       end
 
-      # The title's "How to play", H, or a gamepad's Y there: the Tutorial,
-      # at once, whether it was seen or not, handing over into a game as
-      # it does on a first Play.
+      # The title's "How to play", H, or a gamepad's Y there: a game with
+      # the Tutorial over it, at once, whether it was seen or not, as on a
+      # first Play.
       def how_to_play
-        open_tutorial if on_home?
+        with_a_game { open_tutorial } if on_home?
       end
 
-      # The Tutorial's skip button, Escape, or a gamepad's B: the game
-      # starts at once, as a Play would start it.
+      # The Tutorial's skip button, Escape, or a gamepad's B: the Tutorial
+      # goes, showing at once what it had yet to show of the game, and the
+      # game plays on from the state it is in. Nothing starts or ends: the
+      # game began when the Tutorial opened.
       def skip_tutorial
         return unless tutorial?
 
-        @tutorial = nil
-        start_game
+        @tutorial.catch_up
+        play_on
       end
 
       # Where a tap reaches the Tutorial's skip button, where it is drawn.
@@ -1219,7 +1219,6 @@ module DotPopper
       # size changes with it, as dots sized to the screen do.
       def resize(layout, field)
         @layout = layout
-        @tutorial&.refit(Field.new(field.width, field.height, @tutorial.field.radius))
         lay_out_credits if credits?
         @attract = field.radius == attract.field.radius ? attract.refit(field) : Attract.spawn(field, style::HOME)
       end
@@ -1234,7 +1233,7 @@ module DotPopper
         effects.update(seconds)
         follow_tutorial(seconds) if tutorial?
         @attract = attract.update(seconds) if home?
-        follow_game if cabinet.game
+        follow_game if cabinet.game && !tutorial?
         follow_game_over if game_over?
       end
 
@@ -1253,9 +1252,10 @@ module DotPopper
 
       private
 
-      # The one way into a real game: Play, Skip, and the Tutorial's end
-      # all come through here. It spends a game (FreeGames) and starts it
-      # with the block; with none left, the offer of Pro opens instead.
+      # The one way into a game: Play, and the Tutorial, whose game begins
+      # as it opens, both come through here. It spends a game (FreeGames)
+      # and starts it with the block; with none left, the offer of Pro
+      # opens instead.
       def with_a_game
         return offer_for_play unless games.spend!
 
@@ -1275,15 +1275,15 @@ module DotPopper
         @offer_focus = :games
       end
 
-      # Plays the Tutorial on the field a game would start on, and sizes
-      # the effects to its dots.
+      # Plays the Tutorial over a game made paused on the field a game
+      # would start on (Cabinet#start_paused), and sizes the effects to
+      # its dots.
       def open_tutorial
         @tutorial_flag.seen!
-        field = cabinet.field
         effects.clear
-        effects.scale_to(field.radius)
-        @tutorial = Tutorial.new(field:, center: [layout.center_x, layout.center_y], effects:, sounds:,
-                                 haptics: @haptics, style:, now:, random: @random, calm: @calm, palette:)
+        effects.scale_to(cabinet.field.radius)
+        @tutorial = Tutorial.new(cabinet:, center: [layout.center_x, layout.center_y], effects:, sounds:,
+                                 haptics: @haptics, style:, now:, calm: @calm, palette:)
       end
 
       # A tap in the Tutorial: its skip button, or the scene's.
@@ -1293,23 +1293,21 @@ module DotPopper
         @tutorial.tap(x, y)
       end
 
-      # The Tutorial moves on, and once it is over, the game goes on from
-      # exactly where it left its dots, score, time and row (Cabinet#resume), and
+      # The Tutorial moves on, and once it is over, the game plays on, and
       # only its clock starts, lit as it starts to run (LeadIn).
       def follow_tutorial(seconds)
         @tutorial.update(seconds)
         return unless @tutorial.over?
 
-        scene, @tutorial = @tutorial, nil
-        effects.clear unless games.can_play?
-        with_a_game { go_on_from(scene) }
+        play_on
+        @lead_in = LeadIn.new(at: now, style: style::TUTORIAL.lead)
       end
 
-      def go_on_from(scene)
-        @handing_over = scene
-        cabinet.resume(field: scene.field, dots: scene.dots, score: scene.score, seconds: scene.seconds,
-                       dots_in_a_row: scene.dots_in_a_row)
-        @lead_in = LeadIn.new(at: now, style: style::TUTORIAL.lead)
+      # The Tutorial goes, and its game plays on as it is (Cabinet#unpause),
+      # drawn as the Tutorial drew it (#game_started).
+      def play_on
+        @handing_over, @tutorial = @tutorial, nil
+        cabinet.unpause
       end
 
       # The HUD reads the game. While the Tutorial's lead-in lights the
@@ -1539,9 +1537,9 @@ module DotPopper
 
       def within_safe(reach) = reach.with(height: [reach.height, layout.safe.bottom - reach.y].min)
 
-      # A game begins: afresh, its dot growing in, or, from the Tutorial,
-      # with the scene's dots as they were drawn, their animations, its
-      # effects still playing, and its HUD, so nothing on screen jumps.
+      # Play begins: afresh, its dot growing in, or, under the Tutorial,
+      # with the dots as it drew them, their animations, its effects still
+      # playing, and its HUD, so nothing on screen jumps.
       def game_started(event)
         scene, @handing_over = @handing_over, nil
         @scale = event.game.field.radius

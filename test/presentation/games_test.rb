@@ -98,94 +98,111 @@ class GamesTest < Minitest::Test
     assert_equal "3 games left", @show.games_line
   end
 
-  def test_the_tutorial_costs_no_play
-    show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, games: @games, storefront: Store.new,
-                    tutorial_flag: TutorialFlag.new(Memory.new))
+  # The tutorial plays over a game, which is spent as it begins, when the
+  # tutorial opens; its end and Skip start nothing, so spend nothing.
+  def test_the_tutorials_game_is_spent_as_it_opens_and_skip_spends_no_more
+    show = tutorial_show
     press_main(show)
 
     assert_predicate show, :tutorial?
-    assert_equal 3, @games.left
+    assert_equal 2, @games.left
     show.skip_tutorial
 
-    assert_equal 2, @games.left, "the game it skips into is a play"
+    assert_predicate show, :playing?
+    assert_equal 2, @games.left, "the game it skips into is the one already spent"
   end
 
-  def test_skipping_the_tutorial_with_none_left_opens_the_offer
-    3.times { @games.spend! }
-    show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, games: @games, storefront: Store.new,
-                    tutorial_flag: TutorialFlag.new(Memory.new))
-    press_main(show)
-    show.skip_tutorial
-
-    assert_predicate show, :offer?
-  end
-
-  # Every way into a real game, as a table: each spends exactly one game
-  # as the game starts, and with none left opens the offer instead. A
-  # new way in belongs here, and must go through Show#with_a_game.
+  # Every way into a game, as a table: each spends exactly one game as
+  # the game begins, and with none left opens the offer instead. A new
+  # way in belongs here, and must go through Show#with_a_game.
   WAYS_IN = {
     "Play" => ->(test, show) { test.press_main(show) },
     "Enter/Start" => ->(_test, show) { show.primary },
-    "Skip from a first Play" => lambda do |test, show|
-      test.open_first_play(show)
-      show.skip_tutorial
-    end,
-    "Skip from How to Play" => lambda do |_test, show|
-      show.how_to_play
-      show.skip_tutorial
-    end,
-    "A first Play's tutorial, played to its end" => lambda do |test, show|
-      test.open_first_play(show)
-      test.play_out(show)
-    end,
-    "How to Play, played to its end" => lambda do |test, show|
-      show.how_to_play
-      test.play_out(show)
-    end
+    "A first Play" => ->(test, show) { test.press_main(show) },
+    "How to Play" => ->(_test, show) { show.how_to_play }
   }.freeze
 
-  WAYS_IN.each do |name, way_in|
-    define_method("test_#{name.downcase.gsub(/[^a-z]+/, "_")}_spends_one_game") do
-      show = tutorial_show(seen: name.match?(/\APlay\z|Start|How to Play/))
-      started = started_games
+  # The ways a game the tutorial plays over goes on into play.
+  PLAYING_ON = {
+    "skipped" => ->(_test, show) { show.skip_tutorial },
+    "played to its end" => ->(test, show) { test.play_out(show) }
+  }.freeze
 
+  def self.test_name(*words) = "test_#{words.join(" ").downcase.gsub(/[^a-z]+/, "_")}"
+
+  WAYS_IN.each do |name, way_in|
+    seen = name.match?(/\APlay\z|Start|How to Play/)
+    tutorial = name.match?(/first|How to/)
+
+    define_method(test_name(name, "spends one game")) do
+      show = tutorial_show(seen:)
       way_in.call(self, show)
 
-      assert_predicate show, :playing?, name
+      assert_equal tutorial, show.tutorial?, name
+      assert_predicate show, :playing?, name unless tutorial
       assert_equal 2, @games.left, name
-      assert_equal 1, started.size, name
     end
 
-    define_method("test_#{name.downcase.gsub(/[^a-z]+/, "_")}_with_none_left_opens_the_offer") do
+    define_method(test_name(name, "with none left opens the offer")) do
       3.times { @games.spend! }
-      show = tutorial_show(seen: name.match?(/\APlay\z|Start|How to Play/))
+      show = tutorial_show(seen:)
       started = started_games
 
       way_in.call(self, show)
 
       refute_predicate show, :playing?, name
+      refute_predicate show, :tutorial?, name
       assert_predicate show, :offer?, name
       assert_equal 0, @games.left, name
       assert_empty started, name
     end
+
+    next unless tutorial
+
+    PLAYING_ON.each do |how, play_on|
+      define_method(test_name(name, "and its game", how, "spend one game in all")) do
+        show = tutorial_show(seen:)
+        started = started_games
+        way_in.call(self, show)
+        play_on.call(self, show)
+
+        assert_predicate show, :playing?, name
+        assert_equal 2, @games.left, name
+        assert_equal 1, started.size, name
+      end
+    end
   end
 
   def test_nothing_starts_a_game_except_through_the_one_door
-    callers = Dir[File.expand_path("../../lib/dot_popper/{presentation,shell}/**/*.rb", __dir__)].flat_map do |path|
-      File.readlines(path).filter_map { |line| [path, line] if line.match?(/cabinet\.resume|cabinet\.start_game/) }
+    lines = Dir[File.expand_path("../../lib/dot_popper/{presentation,shell}/**/*.rb", __dir__)].flat_map do |path|
+      File.readlines(path).filter_map { |line| [File.basename(path), line.strip] if line.match?(/cabinet\.start_|Tutorial\.new|open_tutorial\b/) }
     end
+    show = lines.select { it.first == "show.rb" }.map(&:last).reject { it.start_with?("def ", "#") }
 
-    assert_equal ["show.rb"], callers.map { File.basename(it.first) }
-    assert_includes File.read(File.expand_path("../../lib/dot_popper/presentation/show.rb", __dir__)), "with_a_game { go_on_from(scene) }"
+    assert_equal %w[show.rb tutorial.rb], lines.map(&:first).uniq.sort
+    assert_equal ["cabinet.start_paused"], lines.select { it.first == "tutorial.rb" }.map { it.last[/cabinet\.start_\w+/] }
+    assert(show.grep(/open_tutorial/).all? { it.include?("with_a_game { open_tutorial }") }, show.inspect)
+    assert_equal 1, show.grep(/Tutorial\.new/).size
   end
 
-  def test_with_none_left_how_to_play_can_still_be_watched
+  def test_with_none_left_how_to_play_opens_the_offer_as_play_does
     3.times { @games.spend! }
-    show = tutorial_show
+    show = tutorial_show(seen: true)
     show.how_to_play
 
-    assert_predicate show, :tutorial?
-    assert_equal 0, @games.left
+    refute_predicate show, :tutorial?
+    assert_predicate show, :offer?
+  end
+
+  def test_with_none_left_a_first_play_leaves_the_tutorial_due
+    3.times { @games.spend! }
+    flag = TutorialFlag.new(Memory.new)
+    show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, games: @games,
+                    entitlement: @entitlement, storefront: Store.new, tutorial_flag: flag)
+    press_main(show)
+
+    refute_predicate show, :tutorial?
+    assert flag.due?(played: false), "it opens once there is a game to play"
   end
 
   def test_buying_makes_play_unlimited_and_hides_the_count
@@ -203,11 +220,6 @@ class GamesTest < Minitest::Test
                                                 entitlement: @entitlement, storefront: Store.new, tutorial_flag: TutorialFlag.new(Memory.new).tap { it.seen! if seen })
 
   def started_games = [].tap { |seen| @cabinet.subscribe { |event| seen << event if event.is_a?(DotPopper::Events::GameStarted) } }
-
-  def open_first_play(show)
-    press_main(show)
-    assert_predicate show, :tutorial?
-  end
 
   # The Tutorial played out as a player would, tapping each dot on its turn.
   def play_out(show)

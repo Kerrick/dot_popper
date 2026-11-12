@@ -105,9 +105,9 @@ class GuiScenariosTest < Minitest::Test
 
   def test_the_tutorial_played_through_with_a_mouse
     play("tutorial", "the first Play opens the tutorial", "a tap on the popped dot does nothing",
-         "the rules hear nothing yet", "a tap on the clear bright dot pops it", "the game goes on with the tutorial's dots",
-         "and its 10 seconds",
-         "the tutorial told the rules nothing", "tutorial.txt remembers", DOT_POPPER_TUTORIAL: "1")
+         "the game hears nothing of it", "a tap on the clear bright dot pops it", "the same game plays on",
+         "the game goes on with the tutorial's dots", "and its 10 seconds",
+         "no one heard of the game until play began", "tutorial.txt remembers", DOT_POPPER_TUTORIAL: "1")
   end
 
   def test_the_tutorial_by_touch_on_an_upright_phone_sized_window
@@ -117,7 +117,7 @@ class GuiScenariosTest < Minitest::Test
 
   def test_the_tutorial_skipped_by_escape_and_by_a_tap
     play("tutorial_skip", "Escape skips it", "the skip button is drawn", "a tap on the skip button skips it",
-         DOT_POPPER_TUTORIAL: "1")
+         "the same game", "with the pop the player made", "which the HUD shows", DOT_POPPER_TUTORIAL: "1")
   end
 
   def test_the_tutorial_skipped_by_a_gamepads_b

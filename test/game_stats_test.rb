@@ -100,22 +100,30 @@ class GameStatsTest < Minitest::Test
     clear_around!(@cabinet.game, fresh)
     @cabinet.press(fresh.x, fresh.y)
   end
-  def test_a_resumed_game_counts_the_pops_it_carries_without_a_wait
+  # The tutorial's game: two pops and the guide's mistake while it is
+  # paused, heard by the rules but announced to no one, then play.
+  def test_a_game_the_tutorial_played_over_counts_its_pops_without_a_wait_and_no_mistake
     cabinet = Cabinet.new(field, random: Random.new(9))
     recorder = GameStats::Recorder.new
     cabinet.subscribe(recorder)
-    dots = DotPopper::Stack.new(dots: [dot(300, 300, popped: true), dot(340, 300, popped: true), dot(500, 300)])
-    cabinet.resume(field: field, dots:, score: 2, seconds: 12.0, dots_in_a_row: 1)
+    cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
+    cabinet.press_paused(300, 300)
+    cabinet.press_paused(300, 300)
+    spawned = cabinet.game.dots.to_a.last
+    clear_around!(cabinet.game, spawned)
+    cabinet.press_paused(spawned.x, spawned.y)
+    cabinet.unpause
 
     stats = recorder.stats
-    assert_equal [2, 2, 1, 1], [stats.pops, stats.score, stats.dots_in_a_row, stats.most_dots_in_a_row]
+    assert_equal [2, 0, 1, 1, 1], [stats.pops, stats.mistakes, stats.score, stats.dots_in_a_row, stats.most_dots_in_a_row]
     assert_empty stats.times_to_pop
     assert_nil stats.shortest_time_to_pop
 
     cabinet.update(1.5)
     fresh = cabinet.game.dots.to_a.last
+    clear_around!(cabinet.game, fresh)
     cabinet.press(fresh.x, fresh.y)
-    assert_equal [3, 3, 2], [recorder.stats.pops, recorder.stats.score, recorder.stats.most_dots_in_a_row], "the row is the game's own"
+    assert_equal [3, 2, 2], [recorder.stats.pops, recorder.stats.score, recorder.stats.most_dots_in_a_row], "the row is the game's own"
     assert_equal [1.5], recorder.stats.times_to_pop.map { it.round(6) }, "the first wait runs from the clock starting"
   end
 end

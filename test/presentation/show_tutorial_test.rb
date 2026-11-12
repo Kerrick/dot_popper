@@ -2,9 +2,9 @@
 
 require_relative "presentation_helper"
 
-# The Tutorial as the Show plays it: opened by a first Play over the
-# title, before the clock runs, and ended by its last beat, which the
-# game goes on from, or by a skip, which starts a game as Play does.
+# The Tutorial as the Show plays it: opened by a first Play over a game
+# paused before its clock runs, and ended by its last beat or by a skip,
+# after which that same game plays on from the state it is in.
 class ShowTutorialTest < Minitest::Test
   include PresentationTest
 
@@ -21,23 +21,26 @@ class ShowTutorialTest < Minitest::Test
     @show = show
   end
 
-  def test_a_first_play_opens_the_tutorial_and_the_game_stays_on_its_title
+  def test_a_first_play_opens_the_tutorial_over_a_paused_game
     press_main
 
     assert @show.tutorial?
     refute @show.home?
-    assert_instance_of DotPopper::Cabinet::Home, @cabinet.state
+    refute @show.playing?
+    assert_instance_of DotPopper::Cabinet::Paused, @cabinet.state
     assert_empty @events.grep(->(it) { it == DotPopper::Events::GameStarted })
     assert_equal "seen", @store.read, "it is seen from the moment it opens"
   end
 
-  def test_the_game_goes_on_from_its_dots_score_and_time_with_only_the_clock_starting
+  def test_the_game_plays_on_as_it_is_with_only_the_clock_starting
     play_through(hand_over: false)
     scene = @show.tutorial
+    paused = @cabinet.game
     update_for(STEP) while @show.tutorial?
 
     assert @show.playing?
     game = @cabinet.game
+    assert_same paused, game, "the one game, not a copy"
     assert_equal scene.dots.map(&:id), game.dots.map(&:id), "the same dots, in the same order"
     assert_equal [true, true, false], game.dots.map(&:popped?)
     assert_equal 1, game.score, "two pops, less what the guide's wrong tap cost"
@@ -73,9 +76,12 @@ class ShowTutorialTest < Minitest::Test
     assert_nil @show.lead_in
   end
 
-  def test_its_skip_button_starts_a_fresh_game_at_once
+  # Kerrick: "Skip should skip all the tutorial-y bits being added to the
+  # current game, and get out of the way so the player can play."
+  def test_its_skip_button_takes_the_tutorial_away_and_the_same_game_plays_on
     press_main
     update_for(2.0)
+    paused = @cabinet.game
     @show.tutorial.tap(*@show.tutorial.dots.first.then { [it.x, it.y] })
     reach = @show.skip_reach
     @show.tap(reach.center_x, reach.center_y)
@@ -83,11 +89,16 @@ class ShowTutorialTest < Minitest::Test
     refute @show.tutorial?
     assert @show.playing?
     assert_nil @show.lead_in
-    assert_equal [0, 1], [@cabinet.game.score, @cabinet.game.dots.size], "nothing of the tutorial's comes with it"
-    assert_in_delta DotPopper::Rules::STARTING_SECONDS, @cabinet.game.countdown.remaining
+    assert_same paused, @cabinet.game
+    assert_equal [1, 2], [@cabinet.game.score, @cabinet.game.dots.size], "the pop the player made is the game's"
+    assert_in_delta 11.0, @cabinet.game.countdown.remaining
+    assert_equal [true, false], @cabinet.game.dots.map(&:popped?)
+    assert_equal [DotPopper::Events::GameStarted], @events.uniq - [DotPopper::Events::HomeShown], "nothing else starts"
+    @show.update(0.0)
+    assert_equal [1, 11], [@show.hud.score, @show.hud.seconds], "and the HUD shows the game as it is"
   end
 
-  def test_a_skip_leaves_the_row_behind
+  def test_a_skip_keeps_the_row
     press_main
     update_for(0.1) until @show.tutorial.beat == :aim
     tap_dot(@show.tutorial.dots.find { it.id == Tutorial::BRIGHT })
@@ -95,9 +106,49 @@ class ShowTutorialTest < Minitest::Test
     @show.back
 
     assert @show.playing?
-    assert_equal [0, 1, 0], [@cabinet.game.score, @cabinet.game.dots.size, @cabinet.game.dots_in_a_row]
+    assert_equal [1, 2, 1], [@cabinet.game.score, @cabinet.game.dots.size, @cabinet.game.dots_in_a_row]
     update_for(STEP)
-    assert_equal 0, @show.hud.dots_in_a_row
+    assert_equal 1, @show.hud.dots_in_a_row
+  end
+
+  def test_a_skip_before_any_pop_plays_on_with_the_first_dot
+    press_main
+    update_for(0.5)
+    first = @cabinet.game.dots.first
+    @show.back
+
+    assert @show.playing?
+    assert_equal [first], @cabinet.game.dots.to_a, "the dot where it was"
+    assert_equal [0, 10.0], [@cabinet.game.score, @cabinet.game.countdown.remaining]
+  end
+
+  # Skipped after the guide's mistake, the game plays on with what it
+  # cost, but that mistake was the guide's, so Stats count none.
+  def test_a_skip_after_the_guides_mistake_keeps_its_cost_and_counts_no_mistake
+    press_main
+    update_for(0.1) until @show.tutorial.beat == :aim
+    tap_dot(@show.tutorial.dots.find { it.id == Tutorial::BRIGHT })
+    update_for(0.05) until @show.tutorial.flights.any? { it.to.name == :score && it.text.start_with?("−") }
+    @show.back
+
+    assert_equal [0, 9.0, 0], [@cabinet.game.score, @cabinet.game.countdown.remaining, @cabinet.game.dots_in_a_row]
+    assert_equal [1, 0], [@show.game_stats.pops, @show.game_stats.mistakes]
+  end
+
+  # While the tutorial hides what the rules already did, Skip shows it at
+  # once: the dot the player popped takes its popped look, and the dot
+  # spawned under it is born.
+  def test_a_skip_shows_what_the_tutorial_had_yet_to_show
+    press_main
+    update_for(0.1) until @show.tutorial.beat == :aim
+    tap_dot(@show.tutorial.dots.find { it.id == Tutorial::BRIGHT })
+    assert_equal 1, @show.tutorial.dots.size
+    @show.back
+
+    popped, born = @cabinet.game.dots.map { @show.animations.pose(it, @show.now) }
+    assert_in_delta 1.0, popped.freshness, 1e-9, "the popped dot turns from bright to popped from now"
+    assert_operator popped.scale_x * popped.scale_y, :>, 1.2, "with its squash"
+    assert_in_delta 0.15, born.scale_x, 1e-9, "and the new one grows in from now"
   end
 
   # The guide's wrong tap, whatever the hand: touch, a mouse, and a
@@ -131,11 +182,13 @@ class ShowTutorialTest < Minitest::Test
     update_for(0.05) until @show.tutorial.beat == :aim_next
     popped = @show.tutorial.dots.find { it.id == Tutorial::BRIGHT }
     kept = @show.tutorial.hud.then { [it.score, it.seconds] }
+    game = @cabinet.game.then { [it.score, it.countdown.remaining, it.dots_in_a_row] }
     @sounds.played.clear
 
     %i[mouse tap gamepad].each { @show.tap(popped.x, popped.y, by: it) }
 
     assert_equal kept, @show.tutorial.hud.then { [it.score, it.seconds] }
+    assert_equal game, @cabinet.game.then { [it.score, it.countdown.remaining, it.dots_in_a_row] }, "no press reaches the game"
     assert_equal :aim_next, @show.tutorial.beat
     assert_empty @sounds.names
   end
@@ -191,7 +244,7 @@ class ShowTutorialTest < Minitest::Test
     @show.tap(reach.center_x, reach.center_y)
 
     assert @show.tutorial?
-    assert_instance_of DotPopper::Cabinet::Home, @cabinet.state
+    assert_instance_of DotPopper::Cabinet::Paused, @cabinet.state
     assert_equal "seen", @store.read
     play_through(opened: true)
     assert @show.playing?
@@ -211,7 +264,8 @@ class ShowTutorialTest < Minitest::Test
 
   def test_its_dots_follow_a_resized_window
     press_main
-    @show.resize(layout(400, 850), DotPopper::Field.new(400, 850, R))
+    @cabinet.screen = DotPopper::Field.new(400, 850, R)
+    @show.resize(layout(400, 850), @cabinet.field)
 
     dot = @show.tutorial.dots.first
     assert dot.x.between?(R, 400 - R)

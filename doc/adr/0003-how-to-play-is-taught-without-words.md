@@ -31,9 +31,9 @@ Chosen: option 1. Option 2 depends on reading and covered the field mid-game. Op
 ### Consequences
 
 * Good, because the lesson works muted and unread, and every sign it uses is one the player sees again in play.
-* Good, because the first game keeps the tutorial's dots, score, time and dots in a row, so nothing is unlearned; a Skip starts a clean game, since a player who skips was forced through nothing.
+* Good, because the first game keeps the tutorial's dots, score, time and dots in a row, so nothing is unlearned. (That a Skip starts a clean game is superseded by [ADR-0016](0016-the-tutorial-is-a-layer-over-a-paused-game.md): the same game plays on.)
 * Bad, because the tutorial is the most tuned part of the presentation (beats, timings, the guide's hand), and every change to the game's feedback must be checked in it too.
-* Bad, because a demonstrated mistake shows its cost but must never charge the learner, which makes the tutorial's own rules differ from a game's in that one respect.
+* Bad, because a demonstrated mistake shows its cost but must never charge the learner. (That this makes the tutorial's rules differ from a game's is superseded by [ADR-0016](0016-the-tutorial-is-a-layer-over-a-paused-game.md): the learner's press never reaches the game.)
 * Neutral, because a game after the tutorial, or after How to play, spends a free game like any other ([ADR-0012](0012-free-games-20-then-3-a-day.md)).
 
 ### Confirmation
@@ -42,4 +42,4 @@ Chosen: option 1. Option 2 depends on reading and covered the field mid-game. Op
 
 ## More Information
 
-How the tutorial runs, beat by beat, and the wordless signs are in [the tutorial](../design/tutorial.md).
+How the tutorial runs, beat by beat, and the wordless signs are in [the tutorial](../design/tutorial.md). [ADR-0016](0016-the-tutorial-is-a-layer-over-a-paused-game.md) makes the tutorial a layer over the first game, paused, and Skip take that layer away.

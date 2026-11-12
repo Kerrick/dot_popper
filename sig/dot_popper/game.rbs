@@ -26,9 +26,7 @@ module DotPopper
 
     @next_id: Integer
 
-    def self.resume: (Field field, dots: Stack, score: Integer, seconds: number, ?dots_in_a_row: Integer, ?random: Random, ?spawn_tries: Integer, ?bonus: Rules::Bonus?) -> Game
-
-    def initialize: (Field field, ?random: Random, ?dots: Stack?, ?score: Integer, ?seconds: number, ?spawn_tries: Integer, ?bonus: Rules::Bonus?, ?dots_in_a_row: Integer) -> void
+    def initialize: (Field field, ?random: Random, ?dots: Stack?, ?spawn_tries: Integer, ?bonus: Rules::Bonus?) -> void
 
     def over?: () -> bool
 

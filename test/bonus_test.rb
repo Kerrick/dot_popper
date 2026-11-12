@@ -112,14 +112,6 @@ class BonusTest < Minitest::Test
     assert(events.all? { it.points == Rules::POP_POINTS })
   end
 
-  def test_a_game_resumed_from_the_tutorial_starts_its_dots_in_a_row_at_none
-    popped = [dot(300, 300, popped: true), dot(500, 300, popped: true)]
-    game = DotPopper::Game.resume(field, dots: DotPopper::Stack.new(dots: popped + [dot(100, 100)]), score: 2,
-                                           seconds: 10)
-
-    assert_equal 0, game.dots_in_a_row
-  end
-
   def test_stats_count_the_bonus_dots_popped
     stats = DotPopper::GameStats.start
     game = calm_game

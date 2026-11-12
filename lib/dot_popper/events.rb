@@ -20,7 +20,9 @@ module DotPopper
     # A tap hit no dot.
     class Missed < Data.define(:x, :y); end
 
-    # A game began, its dots drawn from +seed+.
+    # Play began on a game, its dots drawn from +seed+: at once from Play,
+    # or, for a game the tutorial plays over, as the tutorial ends or is
+    # skipped (Cabinet#unpause).
     class GameStarted < Data.define(:game, :seed); end
 
     # A game's clock reached zero; +best+ is the device's best score on

@@ -176,8 +176,9 @@ class AchievementWatchTest < Minitest::Test
   # begins. The watch counts the row from there, as the game, its HUD and
   # its Stats do, so twenty in a row on screen earn Steady hand.
   def test_a_game_that_begins_with_a_dot_in_its_row_counts_on_from_it
-    begun = DotPopper::Game.new(field, random: Random.new(1), dots_in_a_row: 1,
-                                       dots: DotPopper::Stack.new(dots: [dot(100, 100, popped: true), dot(600, 400)]))
+    begun = game_with(dot(100, 100, popped: true), dot(600, 400))
+    begun.tap_at(600, 400)
+    assert_equal 1, begun.dots_in_a_row
     watch(begun)
     18.times { pop_fresh(after: 0.7) }
     assert_empty @watch.earned

@@ -4,10 +4,10 @@ module DotPopperGui
   # The tutorial a first Play opens, played through as a new player would,
   # with one tap too soon on the popped dot, and each beat's freeze kept
   # as a screenshot. The director leaves the tutorial out of every other
-  # session, so this one forces it (DOT_POPPER_TUTORIAL=1). The game stays
-  # on its title until its end, and then the game goes on from its dots,
-  # its score and its time, with only the clock starting. Its wrong taps,
-  # the guide's and the player's, cost what they do in play.
+  # session, so this one forces it (DOT_POPPER_TUTORIAL=1). It plays over
+  # a game paused before its clock runs, and at its end that game plays
+  # on as it is, with only the clock starting. The guide's wrong tap costs
+  # what it does in play; the player's never reaches the game.
   #
   # It plays with the mouse, or with DOT_POPPER_GUI_INPUT=touch, a finger.
   # With DOT_POPPER_GUI_INPUT=gamepad, it opens the tutorial with Start,
@@ -49,7 +49,7 @@ module DotPopperGui
       play = show.play_reach
       how.call(play.center_x, play.center_y)
       check(show.tutorial?, "the first Play opens the tutorial")
-      check(cabinet.state.is_a?(DotPopper::Cabinet::Home) && cabinet.game.nil?, "the game stays on its title meanwhile")
+      check(cabinet.paused?, "over its game, paused meanwhile")
     end
 
     def by_gamepad
@@ -59,7 +59,7 @@ module DotPopperGui
       wait(0.6)
       keep_screenshot(name("1-tap"))
       pad(:b)
-      check(show.playing?, "a gamepad's B skips it, and the game starts at once")
+      check(show.playing?, "a gamepad's B skips it, and its game plays on at once")
     end
 
     # Waits for the beat that freezes time, and for it to settle.
@@ -108,7 +108,7 @@ module DotPopperGui
       wait(0.3)
       keep_screenshot(name("2-row"))
       check_equal([1, 11], shown, "the stopwatch lands in the time")
-      check(cabinet.game.nil?, "nothing is scored for real")
+      check(cabinet.paused? && game.score == 1 && story.none?(:Popped), "the paused game has scored the pop, and told no one")
       wait_for("time to flow again", within: 120) { tutorial.beat == :peek }
       check(dot(T::BRIGHT).popped? && dot(T::NEXT)&.fresh?, "as it does, the dot is popped, and one born under it")
       wait(0.3)
@@ -162,20 +162,23 @@ module DotPopperGui
       x = popped.x + ((popped.x - peeking.x).positive? ? 0.5 : -0.5) * popped.radius
       how.call(x, popped.y)
       check_equal([0, 9], shown, "a tap on the popped dot does nothing")
-      check(cabinet.game.nil? && story.none?(:Penalized), "the rules hear nothing yet: no clock is running")
+      check(game.score.zero? && game.countdown.remaining == 9.0 && story.none?(:Penalized),
+            "the game hears nothing of it, and its clock stands still")
       check_equal(:aim_next, tutorial.beat, "the turn goes on")
     end
 
     # The last pop spawns a bright dot under the two popped ones, and the
-    # game goes on from there: the same dots, the point and the 8 seconds
-    # the guide's wrong tap left, and only the clock starts.
+    # game plays on from there: the same game, its dots, the point and the
+    # 10 seconds the tutorial left, and only the clock starts.
     def now_it_runs
       wait_for("the light on the clock", within: 300) { tutorial.nil? || tutorial.beat == :ending }
       check_equal([true, true, false], (tutorial || game).dots.map(&:popped?),
                   "as time flows, its pop spawns a bright dot under them")
       scene = tutorial&.dots&.map(&:id)
       keep_screenshot(name("4-handover")) if scene
+      paused = game
       wait_for("the game", within: 300) { show.playing? }
+      check(game.equal?(paused), "the same game plays on")
       check_equal([T::BRIGHT, T::NEXT, T::LAST], game.dots.map(&:id), "the game goes on with the tutorial's dots")
       check_equal([true, true, false], game.dots.map(&:popped?), "popped and fresh as they were")
       check_equal(1, game.score, "and its point")
@@ -186,7 +189,7 @@ module DotPopperGui
       check(show.lead_in, "the clock is lit as it starts to run")
       wait(0.3)
       keep_screenshot(name("4-runs"))
-      check_equal(%i[GameStarted], story.uniq - %i[HomeShown], "the tutorial told the rules nothing until then")
+      check_equal(%i[GameStarted], story.uniq - %i[HomeShown], "no one heard of the game until play began")
       wait(1.2)
       check(game.countdown.remaining < 9.0, "the clock runs")
     end

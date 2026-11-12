@@ -85,18 +85,6 @@ module DotPopper
       begin_game(Game.new(field, random: Random.new(seed)), seed)
     end
 
-    # From the title, the game that goes on from where the tutorial left
-    # its +dots+, +score+, +seconds+ and +dots_in_a_row+, on its +field+ (Game.resume). The
-    # clock was never running before, so nothing was scored or timed
-    # outside Playing; from here the game counts as any other does. Its
-    # new dots are drawn from a seed of its own, as #start_game's are.
-    def resume(field:, dots:, score:, seconds:, dots_in_a_row: 0)
-      return self unless state.is_a?(Home)
-
-      seed = @random.rand(LARGEST_SEED)
-      advance(begin_game(Game.resume(field, dots:, score:, seconds:, dots_in_a_row:, random: Random.new(seed)), seed))
-    end
-
     # From Home, a game made as #start_game makes one, with +dots+ (a
     # Stack) as its first, paused before its clock first runs, for the
     # tutorial to play over (Paused). Nothing is announced: its events

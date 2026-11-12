@@ -10,7 +10,7 @@ Dot Popper's architecturally significant decisions, one per record, in the MADR 
 | --- | --- | --- |
 | [0001](0001-dots-fit-the-screen-by-default.md) | Dots fit the screen by default, and Standard is the player's choice | accepted |
 | [0002](0002-a-new-dot-offers-a-touch-target-within-a-second.md) | A new dot offers a touch target within its first second | accepted |
-| [0003](0003-how-to-play-is-taught-without-words.md) | How to play is taught without words, as the opening of the first game | accepted |
+| [0003](0003-how-to-play-is-taught-without-words.md) | How to play is taught without words, as the opening of the first game | accepted; Skip and the tutorial's rules superseded by 0016 |
 | [0004](0004-steep-checks-the-rules-strictly.md) | Steep checks the rules strictly against RBS signatures | accepted |
 | [0005](0005-gui-scenarios-play-the-real-game.md) | GUI scenarios play the real game in real windows, on a driven clock | accepted |
 | [0006](0006-lota-fuse-builds-the-desktop-apps.md) | `lota fuse` builds every desktop app, from released tools only | accepted |
@@ -23,6 +23,7 @@ Dot Popper's architecturally significant decisions, one per record, in the MADR 
 | [0013](0013-players-type-no-text.md) | Players type no text: friend-group members are drawn icons, and codes are digits | accepted |
 | [0014](0014-privacy-facts-come-from-the-code.md) | The privacy facts are generated from declarations the tests enforce | accepted |
 | [0015](0015-all-rights-reserved-after-v0-9-9.md) | Dot Popper is all rights reserved after v0.9.9 | accepted |
+| [0016](0016-the-tutorial-is-a-layer-over-a-paused-game.md) | The tutorial is a layer over the first game, paused, and Skip takes the layer away | accepted |
 
 ## Keeping the log
 
