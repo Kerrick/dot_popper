@@ -78,16 +78,13 @@ jobs:
           echo "LOTA_SOURCE=$lota" >> "$GITHUB_ENV"
           echo "LOTA_COMMIT=$(git -C "$lota" rev-parse HEAD)" >> "$GITHUB_ENV"
 
-      - name: Use Java 21, and install ccache, Ninja, and the NDK
+      # The Android SDK and NDK come from script/android_sdk.sh, pinned, as
+      # on any computer; the runner gives Java 21, CMake and ccache, and
+      # Ninja from apt (mise.android.toml pins the same tools elsewhere).
+      - name: Use Java 21, and install ccache and Ninja
         run: |
           echo "JAVA_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
           sudo apt-get update -qq && sudo apt-get install --assume-yes -qq ccache ninja-build > /dev/null
-          # yes ends on a broken pipe once sdkmanager stops reading.
-          (yes 2> /dev/null || true) | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK_REVISION" \
-            > "$RUNNER_TEMP/sdkmanager.log" || { tail -20 "$RUNNER_TEMP/sdkmanager.log"; exit 1; }
-          echo "ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/$NDK_REVISION" >> "$GITHUB_ENV"
-          grep Pkg.Revision "$ANDROID_HOME/ndk/$NDK_REVISION/source.properties"
-          ls "$ANDROID_HOME/platforms" "$ANDROID_HOME/build-tools"
           cmake --version | head -1
           ninja --version
           echo "CCACHE_DIR=$HOME/.cache/lota/ccache" >> "$GITHUB_ENV"
@@ -108,110 +105,26 @@ jobs:
             ${{ runner.temp }}/lota/vendor/sources/android
           key: android-deps-${{ env.LOTA_COMMIT }}-${{ env.NDK_REVISION }}
 
-      # rake android:deps skips the build when its recipe and the NDK have
-      # not changed, as with a cache from the same Lota commit.
-      - name: Build LÖVE's libraries and SDL3 for arm64-v8a and x86_64 with rake android:deps
-        working-directory: ${{ env.LOTA_SOURCE }}
-        env:
-          BUNDLE_PATH: ${{ runner.temp }}/lota-bundle
+      # script/android_build.sh: rake android:deps in the Lota clone (which
+      # skips the build when its recipe and the NDK have not changed, as
+      # with a cache from the same Lota commit), the phone project, fledge
+      # build android, and Gradle's debug APK and release App Bundle.
+      - name: Build the debug APK and the App Bundle with script/android_build.sh
         run: |
-          bundle install --quiet
-          echo "RICE_DIR=$(bundle info rice --path)" >> "$GITHUB_ENV"
-          time bundle exec rake android:deps || { tail -80 tmp/android/deps/build.log; exit 1; }
-          for abi in arm64-v8a x86_64; do
-            echo "== $abi"; ls -la "tmp/android/deps/$abi/lib"
-            "$ANDROID_NDK_ROOT"/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf -h -d "tmp/android/deps/$abi/lib/libopenal.so" \
-              | grep -E "Machine|NEEDED|SONAME"
-          done
-
-      # A gem named by its path carries its whole folder into the app, so
-      # the project names a folder of only what Lota's gem packages.
-      - name: Make a folder of Lota's packaged files
-        working-directory: ${{ env.LOTA_SOURCE }}
-        run: |
-          mkdir -p tmp/phone
-          gem build lota.gemspec --output tmp/phone/lota.gem
-          gem unpack tmp/phone/lota.gem --target tmp/phone
-          gem specification tmp/phone/lota.gem --ruby > tmp/phone/lota/lota.gemspec
-          du -sh tmp/phone/lota
-          echo "LOTA_GEM=$LOTA_SOURCE/tmp/phone/lota" >> "$GITHUB_ENV"
-
-      # The phone project of Lota's guide: everything in it but the hosts
-      # goes into the app, so the game's copy leaves out what only the
-      # repository needs. Dot Popper's android/host (its manifest, which
-      # traps Back, and a MainActivity that takes the emulator checks'
-      # settings) goes over Lota's host, which brings SDL's Java classes.
-      - name: Lay out the phone project
-        run: |
-          phone=$RUNNER_TEMP/phone
-          game=$phone/game/dot_popper
-          mkdir -p "$game"
-          git archive HEAD | tar -x -C "$game"
-          (cd "$game" && rm -rf .github vendor android ios macos windows test doc playtest script sig server Steepfile Rakefile \
-            Gemfile Gemfile.lock mise.toml .ruby-version AGENTS.md GLOSSARY.md INSIPIRATION.md PACKAGING.md README.md)
-          cp android/android_kit "$phone/main.rb"
-          cp -R "$LOTA_GEM/ext/lota/phone/host" "$phone/host"
-          rm -rf "$phone/host/ios"
-          cp -R android/host/. "$phone/host/android/"
-          ls "$phone/host/android/src/main/java/org/libsdl/app"
+          time script/android_build.sh --bundle || {
+            tail -80 "$LOTA_SOURCE/tmp/android/deps/build.log" tmp/android/out/*.log 2> /dev/null; exit 1; }
+          echo "ANDROID_HOME=$(script/android_sdk.sh | sed -n 's/^ANDROID_HOME=//p')" >> "$GITHUB_ENV"
+          echo "APP_VERSION=$(ruby -ryaml -e 'print YAML.load_file("fledge.yml").fetch("version")')" >> "$GITHUB_ENV"
+          ccache --show-stats | head -12 || true
+          mkdir -p "$RUNNER_TEMP/out"
+          cp tmp/android/out/DotPopper-debug.apk tmp/android/out/DotPopper-release.aab tmp/android/out/fledge.log "$RUNNER_TEMP/out/"
+          cat tmp/android/phone/Gemfile tmp/android/phone/fledge.yml
+          head -c 600 tmp/android/phone/NOTICES.txt; grep -c . tmp/android/phone/NOTICES.txt
           # Neither SDL's Java nor MainActivity asks Android for audio focus,
           # so the game's sound plays alongside another app's music.
-          if grep -rl "requestAudioFocus" "$phone/host/android/src/main/java"; then
+          if grep -rl "requestAudioFocus" tmp/android/phone/host/android/src/main/java; then
             echo "::warning::the host's Java requests audio focus, which may stop other apps' music"
           fi
-          # Lota's rake android:notices writes the phone project's NOTICES.txt
-          # at its top, two folders above the game, where the Credits screen
-          # looks (Shell::NoticeFiles), and copies OpenAL Soft's source, which
-          # its LGPL asks the app to carry, into the project's sources folder.
-          (cd "$LOTA_SOURCE" && BUNDLE_PATH="$RUNNER_TEMP/lota-bundle" bundle exec rake "android:notices[$phone]")
-          head -c 600 "$phone/NOTICES.txt"; grep -c . "$phone/NOTICES.txt"
-          cat > "$phone/Gemfile" <<EOF
-          # frozen_string_literal: true
-
-          # Written by android.yml for fledge build android.
-          source "https://rubygems.org"
-
-          gem "lota", path: "$LOTA_GEM"
-          gem "fledge", git: "https://github.com/setdef/Fledge", tag: "$FLEDGE_TAG", group: :development
-          EOF
-          ruby -ryaml -e '
-            program = YAML.load_file("fledge.yml").fetch("programs").first
-            config = {
-              "name" => ENV.fetch("APP_NAME"),
-              "identifier" => program.fetch("identifier"),
-              "version" => YAML.load_file("fledge.yml").fetch("version"),
-              "icon" => File.join("game/dot_popper", program.fetch("icon")),
-              "android" => { "host" => "host/android" }
-            }
-            File.write(ARGV[0], "# Written by android.yml for fledge build android, from fledge.yml.\n" + YAML.dump(config))
-          ' "$phone/fledge.yml"
-          cat "$phone/Gemfile" "$phone/fledge.yml"
-          version=$(ruby -ryaml -e 'print YAML.load_file("fledge.yml").fetch("version")')
-          echo "APP_VERSION=$version" >> "$GITHUB_ENV"
-
-      - name: fledge build android, and Gradle's debug APK
-        working-directory: ${{ runner.temp }}/phone
-        env:
-          BUNDLE_GEMFILE: ${{ runner.temp }}/phone/Gemfile
-          BUNDLE_PATH: ${{ runner.temp }}/app-bundle
-          XDG_CACHE_HOME: ${{ runner.temp }}/cache
-        run: |
-          bundle config set --local build.lota \
-            "--with-lota-source=$LOTA_SOURCE --with-lota-android-deps=$LOTA_SOURCE/tmp/android/deps --with-rice-dir=$RICE_DIR"
-          bundle lock --add-platform ruby
-          bundle install --quiet
-          bundle exec fledge --version
-          mkdir -p "$RUNNER_TEMP/out"
-          time bundle exec fledge build android 2> >(tee "$RUNNER_TEMP/out/fledge.log" >&2)
-          ccache --show-stats | head -12 || true
-          cd "dist/$APP_NAME-android"
-          time ./gradlew --no-daemon --quiet assembleDebug
-          find . -name "*.apk" -exec ls -la {} +
-          cp build/outputs/apk/debug/*.apk "$RUNNER_TEMP/out/DotPopper-debug.apk"
-          # Google Play takes an App Bundle, not an APK. Fledge's Gradle
-          # project leaves a release unsigned, for the next step to sign.
-          time ./gradlew --no-daemon --quiet bundleRelease
-          cp build/outputs/bundle/release/*.aab "$RUNNER_TEMP/out/DotPopper-release.aab"
 
       # With the maintainer's upload key in the repository's secrets
       # (ANDROID_UPLOAD_KEYSTORE, the keystore in base64, and
@@ -307,8 +220,7 @@ jobs:
           name: ci-results-android-build-logs
           path: |
             ${{ runner.temp }}/lota/tmp/android/deps/build.log
-            ${{ runner.temp }}/out/fledge.log
-            ${{ runner.temp }}/cache/**/*.log
+            tmp/android/out/*.log
           if-no-files-found: warn
           retention-days: 14
 

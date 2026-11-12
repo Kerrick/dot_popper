@@ -1,0 +1,14 @@
+# The tools the Android build needs beyond the game's own (mise.toml),
+# for script/android_build.sh: a JDK for Gradle, and the CMake and Ninja
+# Lota's rake android:deps builds LÖVE's libraries with, the versions
+# Lota pins. mise reads this file only with MISE_ENV=android, so an
+# ordinary `mise install` for the desktop game downloads none of it:
+#
+#   MISE_ENV=android mise install
+#
+# The Android SDK and NDK come from script/android_sdk.sh, which mise
+# cannot install.
+[tools]
+java = "temurin-21.0.13+9.0.LTS"
+cmake = "4.3.2"
+ninja = "1.13.2"
