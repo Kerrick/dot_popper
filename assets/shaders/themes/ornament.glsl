@@ -25,7 +25,7 @@ const vec3 AMBER = vec3(0.55, 0.3, 0.07);
 const vec3 GOLD = vec3(0.98, 0.76, 0.36);
 const vec3 PALE = vec3(1.0, 0.95, 0.8);
 const vec3 SHADE_DARK = vec3(0.09, 0.015, 0.03);
-const vec3 SHADE_LIT = vec3(0.34, 0.06, 0.09);
+const vec3 SHADE_LIT = vec3(0.24, 0.04, 0.065);
 
 vec4 over(vec4 top, vec4 bottom) { return top + bottom * (1.0 - top.a); }
 float hash(vec2 q) { return fract(sin(dot(q, vec2(127.1, 311.7))) * 43758.5453); }
@@ -106,7 +106,7 @@ vec3 ice_glass(float b) {
   return mix(c, vec3(1.0), smoothstep(1.3, 1.7, b));
 }
 vec3 shade_glass(float b) {
-  return mix(SHADE_DARK, SHADE_LIT, smoothstep(0.1, 1.2, b)) + vec3(0.3, 0.2, 0.22) * smoothstep(1.2, 1.7, b);
+  return mix(SHADE_DARK, SHADE_LIT, smoothstep(0.1, 1.4, b));
 }
 
 vec3 ornament(vec2 p, float d, float aa, float fresh, float bonus) {
@@ -137,8 +137,9 @@ vec3 ornament(vec2 p, float d, float aa, float fresh, float bonus) {
   vec3 bright = bonus > 0.5 ? ice_glass(b) : gold_glass(b);
   float b0 = mix(room(r, up, max(fwidth(r.x), 1e-4), 0.0, 0.0), 1.15, fres * 0.3);
   vec3 dark = shade_glass(mix(b0, 0.6, 0.15));
-  // Still glass in the dark: a thin light along its rim, from the room behind.
-  dark += vec3(0.42, 0.16, 0.18) * smoothstep(0.82, 0.98, d) * clamp(0.3 + 0.9 * dot(p / max(d, 1e-3), vec2(-0.53, -0.848)), 0.0, 1.0);
+  // Still glass in the dark: only the faintest light along its rim, so
+  // nothing in a broken ornament is bright.
+  dark += vec3(0.08, 0.025, 0.03) * smoothstep(0.82, 0.98, d) * clamp(0.3 + 0.9 * dot(p / max(d, 1e-3), vec2(-0.53, -0.848)), 0.0, 1.0);
 
   // The frosted band round the middle, with a red rickrack along it.
   float band_w = 0.13;
@@ -153,8 +154,8 @@ vec3 ornament(vec2 p, float d, float aa, float fresh, float bonus) {
   vec3 berry = bonus > 0.5 ? vec3(0.12, 0.2, 0.5) : vec3(0.78, 0.09, 0.12);
   frost = mix(frost, berry * (0.6 + 0.5 * lam) + vec3(0.25, 0.15, 0.1) * grain * lam, red);
   bright = mix(bright, frost, in_band);
-  vec3 dull = mix(vec3(0.3, 0.27, 0.27), vec3(0.5, 0.46, 0.45), lam);
-  dull = mix(dull, vec3(0.3, 0.07, 0.09), red);
+  vec3 dull = mix(vec3(0.12, 0.1, 0.1), vec3(0.22, 0.19, 0.19), lam);
+  dull = mix(dull, vec3(0.2, 0.04, 0.055), red);
   dark = mix(dark, dull, in_band);
 
   // The bonus ornament's star, painted on the glass above the band.
@@ -173,9 +174,9 @@ vec3 ornament(vec2 p, float d, float aa, float fresh, float bonus) {
   float crack_line = cover_of(ck - 0.018, aa) * (1.0 - in_hole);
   float crack_shadow = cover_of(ck - 0.045, aa) * (1.0 - in_hole);
   dark = mix(dark, dark * 0.4, crack_shadow);
-  dark = mix(dark, vec3(0.6, 0.42, 0.44), crack_line);
+  dark = mix(dark, vec3(0.025, 0.008, 0.012), crack_line);
   dark = mix(dark, hollow, in_hole);
-  dark = mix(dark, vec3(0.6, 0.5, 0.38), lip * (1.0 - in_hole * 0.3));
+  dark = mix(dark, vec3(0.2, 0.13, 0.12), lip * (1.0 - in_hole * 0.3));
 
   vec3 c = mix(dark, bright, fresh);
 
@@ -191,15 +192,15 @@ vec3 ornament(vec2 p, float d, float aa, float fresh, float bonus) {
   float cyl = clamp(0.55 - 0.6 * cx + 0.25 * cos(ang), 0.0, 1.2);
   vec3 brass = mix(vec3(0.42, 0.29, 0.1), vec3(1.0, 0.86, 0.52), clamp(cyl * (0.7 + 0.3 * rib), 0.0, 1.0));
   brass = mix(brass, vec3(1.0, 0.97, 0.86), smoothstep(0.85, 1.0, cyl * (0.8 + 0.2 * rib)) * 0.7);
-  vec3 iron = mix(vec3(0.16, 0.15, 0.15), vec3(0.48, 0.46, 0.44), clamp(cyl * (0.7 + 0.3 * rib), 0.0, 1.0));
+  vec3 iron = mix(vec3(0.08, 0.075, 0.075), vec3(0.25, 0.24, 0.23), clamp(cyl * (0.7 + 0.3 * rib), 0.0, 1.0));
   float on_lid = cover_of(lid, aa);
   brass = mix(brass, mix(vec3(0.62, 0.48, 0.22), vec3(0.95, 0.82, 0.5), smoothstep(0.1, -0.12, p.x)), on_lid);
-  iron = mix(iron, vec3(0.36, 0.34, 0.33), on_lid);
+  iron = mix(iron, vec3(0.2, 0.19, 0.18), on_lid);
   // The wire loop, a small arch on the lid.
   float loop = abs(length(vec2(p.x / 0.07, (p.y - top_y + 0.005) / 0.035)) - 1.0) * 0.035 - 0.006;
   float in_loop = cover_of(loop, aa) * step(p.y, top_y);
   vec3 cap = mix(iron, brass, fresh);
-  cap = mix(cap, mix(vec3(0.3, 0.27, 0.22), vec3(0.85, 0.85, 0.82), fresh), in_loop);
+  cap = mix(cap, mix(vec3(0.16, 0.14, 0.12), vec3(0.85, 0.85, 0.82), fresh), in_loop);
   // The cap's shadow on the glass just below it.
   float shade = exp(-max(p.y - skirt, 0.0) / 0.05) * step(abs(p.x), 0.22) * (1.0 - in_cap);
   c *= 1.0 - shade * 0.45 * smoothstep(0.24, 0.12, abs(p.x));
@@ -207,7 +208,7 @@ vec3 ornament(vec2 p, float d, float aa, float fresh, float bonus) {
 
   float w = mix(max(0.038, 1.5 * aa), max(0.024, 1.5 * aa), fresh);
   float ring = clamp((d - (1.0 - w)) / aa + 0.5, 0.0, 1.0);
-  vec3 rim_color = mix(mix(vec3(0.24, 0.2, 0.15), vec3(0.45, 0.39, 0.3), clamp(0.5 + 0.6 * dot(p, vec2(-0.53, -0.848)), 0.0, 1.0)),
+  vec3 rim_color = mix(mix(vec3(0.17, 0.13, 0.12), vec3(0.3, 0.24, 0.22), clamp(0.5 + 0.6 * dot(p, vec2(-0.53, -0.848)), 0.0, 1.0)),
                        bonus > 0.5 ? vec3(0.9, 0.96, 1.0) : vec3(1.0, 0.93, 0.7), fresh);
   return mix(c, rim_color, ring);
 }
