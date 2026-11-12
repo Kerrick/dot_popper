@@ -891,8 +891,8 @@ module DotPopper
       # A farm at dusk on Thanksgiving, at three depths: far hills and a
       # line of trees; the farmhouse, its windows lit for dinner, with
       # smoke from its chimney, and a barn and silo; and near, a tall oak
-      # with its last leaves, shocks of corn, pumpkins, a split-rail
-      # fence, and geese going over.
+      # with its last leaves, pumpkins, a split-rail fence, and geese
+      # going over.
       def farm(width, height)
         out = []
         land = width > height
@@ -917,11 +917,6 @@ module DotPopper
         barn(out, mid_c, lamp, bx, mid.call(bx / width) + 4, land ? 1.6 : 1.0)
         near = ->(f) { height * ((land ? 0.9 : 0.915) + (0.014 * Math.sin((f * 2.6) + 0.6))) }
         hill_strip(out, ink, width, height, &near)
-        (land ? 6 : 3).times do |i|
-          rr = Random.new(600 + i)
-          f = (land ? 0.52 : 0.44) + (i * (land ? 0.045 : 0.1)) + rr.rand(-0.01..0.01)
-          shock(out, ink, width * f, near.call(f) + 4, rr.rand(40.0..54.0) * (land ? 1.1 : 0.9))
-        end
         [[0.06, 9], [0.12, 6.5], [0.3, 8], [0.36, 5.5]].each_with_index do |(f, size), i|
           next if !land && i == 3
 
@@ -966,15 +961,6 @@ module DotPopper
         out << Fan.new(color:, points: [[x + (30 * s), ground], [x + (44 * s), ground], [x + (44 * s), ground - (60 * s)], [x + (30 * s), ground - (60 * s)]])
         out << Dot.new(x: x + (37 * s), y: ground - (60 * s), radius: 7 * s, color:)
         out << Fan.new(color: lamp, points: [[x - (5 * s), ground - (38 * s)], [x + (5 * s), ground - (38 * s)], [x + (5 * s), ground - (30 * s)], [x - (5 * s), ground - (30 * s)]])
-      end
-
-      # A shock of corn: stalks bound into a cone, their tops splayed.
-      def shock(out, color, x, ground, h)
-        out << Fan.new(color:, points: [[x, ground - (h * 0.82)], [x + (h * 0.32), ground], [x - (h * 0.32), ground]])
-        out << segment([x - (h * 0.1), ground - (h * 0.6)], [x + (h * 0.1), ground - (h * 0.6)], 3, 3, color)
-        [-0.22, -0.1, 0.0, 0.12, 0.24].each do |lean|
-          out << segment([x, ground - (h * 0.7)], [x + (lean * h * 0.6), ground - (h * (1.02 - (lean.abs * 0.3)))], 2.6, 0.8, color)
-        end
       end
 
       # A pumpkin on the ground: two lobes and a stem.
