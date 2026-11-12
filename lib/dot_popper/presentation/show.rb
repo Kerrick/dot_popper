@@ -741,6 +741,24 @@ module DotPopper
         @storefront.buy
       end
 
+      # Buy's words, with the controller's button that presses it (Y) while
+      # a controller is in use. Buy's other ways are its own button, tapped
+      # or clicked, and Ctrl+B or Cmd+B; none is a press that means
+      # continue or back elsewhere.
+      def buy_label
+        label = offer_price ? format(words.offer[:buy], offer_price) : words.offer[:retry]
+        input == InputKind::GAMEPAD ? "#{label} (Y)" : label
+      end
+
+      # Ctrl+B or Cmd+B, or a controller's Y, on the offer: Buy, where Pro
+      # is sold and not yet bought. Says whether it took the press.
+      def buy_shortcut
+        return false unless offer? && @storefront.sold? && !@entitlement.pro?
+
+        buy
+        true
+      end
+
       def credits? = @page == :credits
 
       # How far down the Credits screen is scrolled (CreditsScroll), while
@@ -1441,6 +1459,7 @@ module DotPopper
       def pad_offer(name)
         case name
         when :x then @storefront.keys? ? paste_key : @storefront.restore
+        when :y then buy_shortcut
         end
       end
 

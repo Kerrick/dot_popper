@@ -128,8 +128,7 @@ module DotPopper
       # Buy, while Pro is sold, and Restore Purchases or Paste license key.
       def buttons(show, plan, words)
         if plan.key?(:buy)
-          label = show.offer_price ? format(words[:buy], show.offer_price) : words[:retry]
-          PrimaryButton.new(pen:).draw(plan[:buy], label, hover: show.hover.level(:buy))
+          PrimaryButton.new(pen:).draw(plan[:buy], show.buy_label, hover: show.hover.level(:buy))
         end
         %i[restore paste].each { PillButton.new(pen:).draw(plan[it], words[it], hover: show.hover.level(it)) if plan.key?(it) }
       end

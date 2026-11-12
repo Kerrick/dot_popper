@@ -49,25 +49,55 @@ class WebsiteStoreTest < Minitest::Test
     assert_equal "Buy for $1.99", format(s.words.offer[:buy], s.offer_price)
   end
 
-  # Enter, Space and Start mean "continue" or "back" elsewhere, so a
-  # purchase never starts from them: they close the offer, and Buy has only
-  # its own button.
-  def test_enter_space_and_start_go_back_and_never_buy
+  # Enter, Space, Start, Escape, B and the tap-less A mean "continue" or
+  # "back" elsewhere, so a purchase never starts from them: they close the
+  # offer. Buy keeps its own control for each input that can complete a
+  # purchase alone.
+  def test_no_press_that_means_continue_or_back_buys
     s = show
-    s.open_offer
-    s.primary
+    [-> { s.primary }, -> { s.start }, -> { s.back }].each do |press|
+      s.open_offer
+      press.call
 
-    refute s.offer?
-    assert_empty s.offer_status.to_s
-    s.open_offer
-    s.start
+      refute s.offer?
+      assert_empty s.offer_status.to_s
+    end
+  end
 
-    refute s.offer?
-    assert_empty s.offer_status.to_s
+  def test_a_tap_or_a_click_on_buy_buys
+    s = show
     s.open_offer
     click(s, :buy)
 
     assert_equal s.words.offer[:copied], s.offer_status
+  end
+
+  def test_a_controllers_y_buys_and_the_button_says_so
+    s = show
+    s.input = InputKind::GAMEPAD
+    s.open_offer
+
+    assert_equal "Buy for $1.99 (Y)", s.buy_label
+    s.pad(:y)
+
+    assert_equal s.words.offer[:copied], s.offer_status
+  end
+
+  def test_the_keyboards_buy_shortcut_buys_only_on_the_offer
+    s = show
+
+    refute s.buy_shortcut
+    s.open_offer
+
+    assert s.buy_shortcut
+    assert_equal s.words.offer[:copied], s.offer_status
+  end
+
+  def test_the_buy_label_has_no_controller_button_for_a_finger_or_mouse
+    s = show
+    s.open_offer
+
+    assert_equal "Buy for $1.99", s.buy_label
   end
 
   def test_buy_then_paste_license_key_makes_the_player_pro

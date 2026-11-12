@@ -334,6 +334,9 @@ module DotPopper
         return skip_splash if @splash
 
         return if key == :v && paste_chord? && @show.paste_shortcut
+        # Ctrl+B or Cmd+B buys on the offer: a chord, so no press that means
+        # continue or back, and no letter of a typed license key, buys.
+        return if key == :b && paste_chord? && @show.buy_shortcut
         return if @show.type_key(key)
         return @speaker.toggle_mute if key == :m
         return @show.how_to_play if key == :h
