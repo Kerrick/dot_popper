@@ -650,19 +650,20 @@ module DotPopper
         sounds.play(:tick)
       end
 
-      # Whether the Stats screen offers the way to Pro: where
-      # there is a store, to a player who has not bought it. It is offered
-      # here and nowhere else, and asks for nothing; a player finds it or
-      # does not (doc/design/store-and-pro.md).
+      # Whether Pro can be offered at all: where there is a store, to a
+      # player who has not bought it. No screen has a button for it. The
+      # offer opens from what Pro brings (an achievement, a theme, a friend
+      # group) and from Play with no game left
+      # (doc/design/store-and-pro.md).
       def offer_offered? = @storefront.offered? && !@entitlement.pro?
 
       # Whether the player has Pro.
       def pro? = @entitlement.pro?
 
-      # Whether the offer of Pro is open, over the Stats screen.
+      # Whether the offer of Pro is open, over the screen it was opened from.
       def offer? = @offer
 
-      # Opens the offer over the Stats screen, and asks the store for the
+      # Opens the offer over the screen in view, and asks the store for the
       # price, or asks again if an earlier request was never answered.
       def open_offer
         return unless offer_offered?
