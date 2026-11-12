@@ -5,9 +5,9 @@ module DotPopper
     # What stands in a theme's night, as plain shapes in graphics units:
     # silhouettes of trees, hills, a crooked house, a fence, graves, bats,
     # the wood's trunks, fir boughs and presents, snowy rooftops and a
-    # sleigh, a snowy yard, and a farm. It knows no drawing library;
-    # Shell::Scene bakes these once, for the screen's size, into a canvas
-    # at the screen's own resolution.
+    # sleigh, a snowy yard, a mantel by the fire, and a farm. It knows no
+    # drawing library; Shell::Scene bakes these once, for the screen's
+    # size, into a canvas at the screen's own resolution.
     #
     # Every shape is convex or a fan about its first point, so a plain
     # filled polygon draws it.
@@ -29,6 +29,7 @@ module DotPopper
         when :farm then farm(width, height)
         when :rooftops then rooftops(width, height)
         when :snowfield then snowfield(width, height)
+        when :mantel then mantel(width, height)
         else []
         end
       end
@@ -462,6 +463,180 @@ module DotPopper
         out << Fan.new(color: ink, points: [[lx - 8, ly - (height * 0.2)], [lx + 8, ly - (height * 0.2)], [lx + 5, ly - (height * 0.2) - 16], [lx - 5, ly - (height * 0.2) - 16]])
         out << Fan.new(color: lamp, points: [[lx - 5, ly - (height * 0.2) - 2], [lx + 5, ly - (height * 0.2) - 2], [lx + 3.5, ly - (height * 0.2) - 13], [lx - 3.5, ly - (height * 0.2) - 13]])
         out
+      end
+
+      # A parlor on Christmas Eve, by firelight: striped paper on the far
+      # wall and a wreath, the mantel with a garland, a jar of candy canes
+      # and candles on it, stockings hung from it with candy canes in them,
+      # and the fire's opening below, its logs and low flames.
+      def mantel(width, height)
+        out = []
+        land = width > height
+        wall = Color.hex("#1a4434", 0.22)
+        far = Color.hex("#0e241c")
+        ink = Color.hex("#030806")
+        stripe = land ? 46.0 : 34.0
+        x = stripe * 0.3
+        while x < width
+          out << Fan.new(color: wall, points: [[x, -5], [x + (stripe * 0.32), -5], [x + (stripe * 0.32), height], [x, height]])
+          x += stripe
+        end
+        shelf = height * (land ? 0.5 : 0.52)
+        floor = height * (land ? 0.93 : 0.94)
+        wreath(out, far, width * 0.5, shelf - (height * (land ? 0.2 : 0.17)), [width, height].min * (land ? 0.13 : 0.15))
+        # The chimney breast, its opening, and the hearth.
+        left = width * (land ? 0.2 : 0.06)
+        right = width - left
+        post = (right - left) * (land ? 0.13 : 0.16)
+        opening = shelf + ((floor - shelf) * 0.22)
+        # The firebox's sooty back, so only the fire lights it.
+        out << Fan.new(color: Color.hex("#0d0a07"), points: [[left + post, opening], [right - post, opening], [right - post, floor], [left + post, floor]])
+        out << Fan.new(color: far, points: [[left, shelf], [left + post, shelf], [left + post, floor], [left, floor]])
+        out << Fan.new(color: far, points: [[right - post, shelf], [right, shelf], [right, floor], [right - post, floor]])
+        out << Fan.new(color: far, points: [[left, shelf], [right, shelf], [right, opening], [left, opening]])
+        arch_r = (right - left - (2 * post)) / 2
+        steps = 14
+        (0...steps).each do |i|
+          a1 = Math::PI * i / steps
+          a2 = Math::PI * (i + 1) / steps
+          cx = width / 2.0
+          rise = [arch_r * 0.28, (floor - opening) * 0.3].min
+          y1 = opening + rise - (Math.sin(a1) * rise)
+          y2 = opening + rise - (Math.sin(a2) * rise)
+          x1 = cx - (Math.cos(a1) * arch_r)
+          x2 = cx - (Math.cos(a2) * arch_r)
+          out << Fan.new(color: far, points: [[x1, opening - 1], [x2, opening - 1], [x2, y2], [x1, y1]])
+        end
+        fire(out, width / 2.0, floor, arch_r, land)
+        out << Fan.new(color: ink, points: [[0, floor], [width, floor], [width, height], [0, height]])
+        out << Fan.new(color: ink, points: [[left - 14, floor - 8], [right + 14, floor - 8], [right + 14, floor + 2], [left - 14, floor + 2]])
+        # The shelf itself, and what stands on it.
+        out << Fan.new(color: ink, points: [[left - 18, shelf - 12], [right + 18, shelf - 12], [right + 18, shelf + 2], [left - 18, shelf + 2]])
+        out << Fan.new(color: ink, points: [[left - 8, shelf + 2], [right + 8, shelf + 2], [right + 8, shelf + 8], [left - 8, shelf + 8]])
+        nutcracker(out, ink, left + ((right - left) * 0.2), shelf - 12, land ? 1.5 : 1.1)
+        candle(out, ink, left + ((right - left) * 0.3), shelf - 12, land ? 1.3 : 1.0, 0.6)
+        candle(out, ink, left + ((right - left) * 0.7), shelf - 12, land ? 1.3 : 1.0, 0.9)
+        candle(out, ink, left + ((right - left) * 0.78), shelf - 12, land ? 1.3 : 1.0, 0.65)
+        garland(out, ink, left - 18, right + 18, shelf - 4, land ? 5 : 3)
+        count = land ? 5 : 4
+        count.times do |i|
+          f = (i + 0.5) / count
+          stocking(out, ink, left + (post * 0.4) + ((right - left - (post * 0.8)) * f), shelf + 6, land ? 1.35 : 1.15, i)
+        end
+        out
+      end
+
+      # A wreath on the wall: a ring of fir and a bow at its foot.
+      def wreath(out, color, x, y, radius)
+        r = Random.new(31)
+        36.times do |i|
+          a = Math::PI * 2 * i / 36
+          at = [x + (Math.cos(a) * radius), y + (Math.sin(a) * radius)]
+          to = [x + (Math.cos(a + 0.2) * radius), y + (Math.sin(a + 0.2) * radius)]
+          out << segment(at, to, radius * 0.18, radius * 0.18, color)
+          needles(out, color, at, to, radius * 0.16, r)
+        end
+        bow(out, color, x, y + radius + 4, radius * 0.32)
+        out << segment([x - 3, y + radius + 6], [x - (radius * 0.18), y + (radius * 1.45)], 4, 2.5, color)
+        out << segment([x + 3, y + radius + 6], [x + (radius * 0.2), y + (radius * 1.42)], 4, 2.5, color)
+      end
+
+      FLAME = [Color.hex("#ff9a3a", 0.3), Color.hex("#ffc060", 0.26)].freeze
+
+      # Logs on a grate, and low flames over them, kept dim.
+      def fire(out, x, floor, half, land)
+        s = land ? 1.4 : 1.0
+        14.times { |i| out << Dot.new(x:, y: floor - (half * 0.12), radius: half * (1.0 - (i * 0.065)), color: Color.hex("#c0581c", 0.028)) }
+        [[-0.9, 0.6], [0.95, 0.5], [-0.25, 0.78], [0.4, 0.64], [0.0, 0.5]].each_with_index do |(dx, h), i|
+          fx = x + (dx * half * 0.3)
+          fh = half * h * (land ? 0.55 : 0.75)
+          flame(out, FLAME[0], fx, floor - (8 * s), fh, fh * 0.34, (i.even? ? 1 : -1) * 0.12)
+          flame(out, FLAME[1], fx + (fh * 0.02), floor - (8 * s), fh * 0.6, fh * 0.2, (i.even? ? 1 : -1) * 0.1)
+        end
+        ink = Color.hex("#030806")
+        out << segment([x - (half * 0.62), floor - (12 * s)], [x + (half * 0.5), floor - (17 * s)], 13 * s, 13 * s, ink)
+        out << segment([x - (half * 0.4), floor - (19 * s)], [x + (half * 0.62), floor - (10 * s)], 12 * s, 12 * s, ink)
+        out << Fan.new(color: ink, points: [[x - (half * 0.7), floor - (4 * s)], [x + (half * 0.7), floor - (4 * s)], [x + (half * 0.7), floor], [x - (half * 0.7), floor]])
+      end
+
+      # One flame, a teardrop from its base at +x+, +y+, its tip bent by
+      # +lean+.
+      def flame(out, color, x, y, h, w, lean)
+        side = (0..8).map do |i|
+          t = i / 8.0
+          half = w * Math.sin(Math::PI * (t**0.7)) * (1 - (t * 0.35))
+          [half, y - (h * t), x + (lean * h * t * t)]
+        end
+        left = side.map { |half, py, cx| [cx - half, py] }
+        right = side.reverse.map { |half, py, cx| [cx + half, py] }
+        out << Fan.new(color:, points: [[x, y - (h * 0.3)], *left, *right, left.first])
+      end
+
+      # A nutcracker standing guard on the shelf at +x+, +y+: boots, legs,
+      # a coat with a belt, arms at his sides, his head and tall hat.
+      def nutcracker(out, color, x, y, s)
+        out << Fan.new(color:, points: [[x - (8 * s), y], [x + (8 * s), y], [x + (8 * s), y - (4 * s)], [x - (8 * s), y - (4 * s)]])
+        out << Fan.new(color:, points: [[x - (5.5 * s), y - (4 * s)], [x + (5.5 * s), y - (4 * s)], [x + (5 * s), y - (20 * s)], [x - (5 * s), y - (20 * s)]])
+        out << Fan.new(color:, points: [[x - (6.5 * s), y - (19 * s)], [x + (6.5 * s), y - (19 * s)], [x + (6 * s), y - (36 * s)], [x - (6 * s), y - (36 * s)]])
+        out << Fan.new(color:, points: [[x - (10 * s), y - (35 * s)], [x + (10 * s), y - (35 * s)], [x + (9 * s), y - (38 * s)], [x - (9 * s), y - (38 * s)]])
+        out << segment([x - (8 * s), y - (35 * s)], [x - (9 * s), y - (22 * s)], 3.2 * s, 3.2 * s, color)
+        out << segment([x + (8 * s), y - (35 * s)], [x + (9 * s), y - (22 * s)], 3.2 * s, 3.2 * s, color)
+        out << Fan.new(color:, points: [[x - (5 * s), y - (37 * s)], [x + (5 * s), y - (37 * s)], [x + (5 * s), y - (46 * s)], [x - (5 * s), y - (46 * s)]])
+        out << Fan.new(color:, points: [[x - (5.5 * s), y - (46 * s)], [x + (5.5 * s), y - (46 * s)], [x + (4.5 * s), y - (60 * s)], [x - (4.5 * s), y - (60 * s)]])
+        out << Dot.new(x:, y: y - (61 * s), radius: 2 * s, color:)
+      end
+
+      # A candy cane's hook, from +top+, curling to +side+.
+      def hook(out, color, top, radius, side, thick)
+        cx = top[0] + (side * radius)
+        6.times do |i|
+          a1 = Math::PI * i / 6
+          a2 = Math::PI * (i + 1) / 6
+          p1 = [cx - (side * Math.cos(a1) * radius), top[1] - (Math.sin(a1) * radius)]
+          p2 = [cx - (side * Math.cos(a2) * radius), top[1] - (Math.sin(a2) * radius)]
+          out << segment(p1, p2, thick, thick, color)
+          out << Dot.new(x: p2[0], y: p2[1], radius: thick / 2, color:)
+        end
+      end
+
+      # A candle in a holder, its flame a dim glow.
+      def candle(out, color, x, y, s, tall)
+        h = 40 * s * tall
+        out << Fan.new(color:, points: [[x - (9 * s), y], [x + (9 * s), y], [x + (5 * s), y - (6 * s)], [x - (5 * s), y - (6 * s)]])
+        out << Fan.new(color:, points: [[x - (4.5 * s), y - (6 * s)], [x + (4.5 * s), y - (6 * s)], [x + (4.5 * s), y - (6 * s) - h], [x - (4.5 * s), y - (6 * s) - h]])
+        tip = y - (6 * s) - h
+        out << Dot.new(x:, y: tip - (7 * s), radius: 9 * s, color: Color.hex("#ffb050", 0.08))
+        out << Fan.new(color: Color.hex("#ffc870", 0.3), points: [[x, tip - (11 * s)], [x + (2.6 * s), tip - (4 * s)], [x, tip - (1 * s)], [x - (2.6 * s), tip - (4 * s)]])
+      end
+
+      # A garland along the shelf's edge: swags of fir with dim lights.
+      def garland(out, color, from, to, y, swags)
+        r = Random.new(17)
+        span = (to - from) / swags
+        swags.times do |k|
+          points = (0..10).map { |i| [from + (span * (k + (i / 10.0))), y + (Math.sin(Math::PI * i / 10.0) * span * 0.12)] }
+          points.each_cons(2).with_index do |(a, b), i|
+            out << segment(a, b, 7, 7, color)
+            needles(out, color, a, b, 7, r)
+            out << Dot.new(x: b[0], y: b[1] + 4, radius: 2.2, color: LIGHTS[(i + k) % LIGHTS.size]) if i.odd?
+          end
+        end
+      end
+
+      # A stocking hung from the shelf: its loop, a cuff, the leg and a foot
+      # with its toe to the right, and the hook of a candy cane in its top.
+      def stocking(out, color, x, top, s, index)
+        out << segment([x, top - 2], [x, top + (6 * s)], 2, 2, color)
+        out << Fan.new(color:, points: [[x - (15 * s), top + (6 * s)], [x + (15 * s), top + (6 * s)], [x + (15 * s), top + (19 * s)], [x - (15 * s), top + (19 * s)]])
+        out << Fan.new(color:, points: [[x - (12 * s), top + (19 * s)], [x + (12 * s), top + (19 * s)], [x + (12 * s), top + (54 * s)], [x - (12 * s), top + (54 * s)]])
+        out << Dot.new(x: x - (1 * s), y: top + (56 * s), radius: 12 * s, color:)
+        out << Fan.new(color:, points: [[x, top + (44 * s)], [x + (20 * s), top + (50 * s)], [x + (26 * s), top + (58 * s)], [x + (20 * s), top + (67 * s)], [x - (2 * s), top + (68 * s)]])
+        return if index.odd?
+
+        base = [x + (5 * s), top + (6 * s)]
+        tip = [x + (7 * s), top - (10 * s)]
+        out << segment(base, tip, 3.6 * s, 3.6 * s, color)
+        hook(out, color, tip, 5 * s, -1, 3.6 * s)
       end
 
       # A farm at dusk: a field, a barn and silo, shocks of corn, a fence,

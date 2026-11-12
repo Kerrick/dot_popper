@@ -272,7 +272,7 @@ class WebsiteStoreTest < Minitest::Test
     refute keeper.open_by_date(today, 179)
     assert_equal [:classic], keeper.choices.map(&:key)
     assert keeper.open_by_date(today, 180)
-    assert_equal %i[ghost jack_o_lantern ornament pumpkin_pie santa snowman], keeper.choices.reject(&:ordinary?).map(&:key).sort
+    assert_equal %i[ghost jack_o_lantern ornament peppermint pumpkin_pie santa snowman], keeper.choices.reject(&:ordinary?).map(&:key).sort
     assert keeper.open_by_date(Date.new(2027, 10, 1), 400)
     assert_equal Style::THEMES.size, keeper.choices.size
   end
