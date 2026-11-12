@@ -106,7 +106,7 @@
         "name": "games.txt",
         "label": "How many free games you have left",
         "not_for_players": null,
-        "holds": "how many free games are left and used today",
+        "holds": "how many of your first games are used, and how many of today's games",
         "made_by": "the game",
         "also_sent": []
       },

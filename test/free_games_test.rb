@@ -81,6 +81,38 @@ class FreeGamesTest < Minitest::Test
     assert_equal FreeGames::BANK - 2, again.bank_left
   end
 
+  def test_the_save_counts_the_first_games_used
+    (FreeGames::DAILY + 2).times { games().spend! }
+
+    assert_equal "day=2026-11-08\nspent=#{FreeGames::DAILY}\nfirst_games_used=2\n", @store.read
+  end
+
+  # Before the save counted the first games used, it kept those left.
+  def test_an_earlier_save_of_the_first_games_left_carries_over
+    @store.write("day=2026-11-08\nspent=1\nbank=17\n")
+    games = games()
+
+    assert_equal 17, games.bank_left
+    assert_equal FreeGames::DAILY - 1, games.daily_left
+    FreeGames::DAILY.times { games.spend! }
+
+    assert_equal 16, games().bank_left
+    assert_includes @store.read, "first_games_used=4"
+    refute_includes @store.read, "bank"
+  end
+
+  def test_an_earlier_save_with_more_left_than_the_first_games_has_used_none
+    @store.write("bank=#{FreeGames::BANK + 5}\n")
+
+    assert_equal FreeGames::BANK, games().bank_left
+  end
+
+  def test_more_used_than_the_first_games_leaves_none
+    @store.write("first_games_used=#{FreeGames::BANK + 5}\n")
+
+    assert_equal 0, games().bank_left
+  end
+
   def test_a_day_rolled_over_in_the_save_starts_the_day_afresh
     games().spend!
     @day += 1
@@ -89,7 +121,7 @@ class FreeGamesTest < Minitest::Test
   end
 
   def test_a_save_that_is_not_readable_is_a_fresh_one
-    @store.write("day=never\nspent=-3\nbank=lots\n")
+    @store.write("day=never\nspent=-3\nbank=lots\nfirst_games_used=-1\n")
 
     assert_equal FreeGames::DAILY + FreeGames::BANK, games().left
   end

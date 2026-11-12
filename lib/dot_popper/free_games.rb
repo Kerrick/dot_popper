@@ -13,9 +13,12 @@ module DotPopper
   # game.
   #
   # The store answers +read+ and +write(text)+ as ScoreRecord's does; its
-  # lines are +day=2026-11-08+, +spent=2+ and +bank=17+. A store with
-  # nothing in it, as on every save made before games were counted, is a
-  # full bank. A player's clock is trusted, as the other saves trust it.
+  # lines are +day=2026-11-08+, +spent=2+ and +first_games_used=3+. A
+  # store with nothing in it, as on every save made before games were
+  # counted, is a full bank. An earlier save kept the first games left
+  # instead, as +bank=17+; it is read as BANK less those, and written the
+  # new way at the next game. A player's clock is trusted, as the other
+  # saves trust it.
   class FreeGames
     # The one-time bank, and the games each day. Both are provisional
     # (ADR-0012).
@@ -40,7 +43,8 @@ module DotPopper
       end
       @day = day(values["day"])
       @spent = count(values["spent"], 0)
-      @bank = count(values["bank"], bank)
+      @bank = bank
+      @used = count(values["first_games_used"], bank - [count(values["bank"], bank), bank].min)
     end
 
     # Whether games are counted and shown: where Pro can be
@@ -49,7 +53,7 @@ module DotPopper
 
     # The games left today, those the bank holds, and both together.
     def daily_left = @day == today ? [@daily - @spent, 0].max : @daily
-    def bank_left = @bank
+    def bank_left = [@bank - @used, 0].max
     def left = daily_left + bank_left
 
     # How many free games come each day.
@@ -67,9 +71,9 @@ module DotPopper
         @spent = (@day == today ? @spent : 0) + 1
         @day = today
       else
-        @bank -= 1
+        @used += 1
       end
-      @store.write("day=#{@day&.iso8601}\nspent=#{@spent}\nbank=#{@bank}\n")
+      @store.write("day=#{@day&.iso8601}\nspent=#{@spent}\nfirst_games_used=#{@used}\n")
       true
     end
 

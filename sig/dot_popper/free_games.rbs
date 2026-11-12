@@ -11,6 +11,7 @@ module DotPopper
     @day: Date?
     @spent: Integer
     @bank: Integer
+    @used: Integer
 
     attr_reader daily: Integer
 
