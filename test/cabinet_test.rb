@@ -176,6 +176,110 @@ class CabinetTest < Minitest::Test
     refute_equal first, @heard.last.seed
   end
 
+  def test_a_paused_game_is_made_on_the_title_and_announced_only_when_unpaused
+    first = DotPopper::Stack.new(dots: [dot(300, 300, id: 0)])
+    @cabinet.start_paused(first)
+
+    assert_instance_of Cabinet::Paused, @cabinet.state
+    assert_predicate @cabinet, :paused?
+    assert_equal first, @cabinet.game.dots
+    assert_equal [0, 10.0], [@cabinet.game.score, @cabinet.game.countdown.remaining]
+    assert_empty @heard.grep(Events::GameStarted)
+  end
+
+  def test_a_paused_games_clock_does_not_run_and_no_press_reaches_it
+    @cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, velocity_x: 50, id: 0)]))
+    @cabinet.update(3.0)
+    @cabinet.press(300, 300)
+
+    assert_equal [300.0, 10.0, 0.0], [@cabinet.game.dots.first.x, @cabinet.game.countdown.remaining, @cabinet.game.elapsed]
+    assert_equal [false], @cabinet.game.dots.map(&:popped?)
+    @cabinet.move_paused(1.0)
+    assert_in_delta 350.0, @cabinet.game.dots.first.x, 1e-9, "its dots move only as the tutorial moves them"
+    assert_in_delta 10.0, @cabinet.game.countdown.remaining
+  end
+
+  def test_the_tutorials_presses_reach_a_paused_game_by_the_usual_rules_and_tell_no_one
+    @cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
+    popped = @cabinet.press_paused(300, 300)
+    fresh = @cabinet.game.dots.find(&:fresh?)
+    clear_around!(@cabinet.game, @cabinet.game.dots.first)
+    penalized = @cabinet.press_paused(300, 300)
+
+    assert_instance_of Events::Popped, popped
+    assert_equal 1, popped.spawned.id
+    assert_equal fresh.id, popped.spawned.id
+    assert_instance_of Events::Penalized, penalized
+    assert_equal [0, 9.0, 0], [@cabinet.game.score, @cabinet.game.countdown.remaining, @cabinet.game.dots_in_a_row]
+    assert_empty @heard.grep(Events::Popped)
+    assert_empty @heard.grep(Events::Penalized)
+  end
+
+  def test_the_tutorial_arranges_a_paused_games_dots
+    @cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
+    @cabinet.arrange(@cabinet.game.dots.first.with(velocity_y: -60.0))
+
+    assert_equal(-60.0, @cabinet.game.dots.first.velocity_y)
+  end
+
+  def test_unpausing_begins_play_on_the_same_game_as_it_is
+    @cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
+    @cabinet.press_paused(300, 300)
+    game = @cabinet.game
+    @cabinet.unpause
+
+    assert_instance_of Cabinet::Playing, @cabinet.state
+    assert_same game, @cabinet.game
+    started = @heard.last
+    assert_instance_of Events::GameStarted, started
+    assert_same game, started.game
+    assert_equal [1, 11.0], [game.score, game.countdown.remaining]
+    @cabinet.update(0.5)
+    assert_in_delta 10.5, game.countdown.remaining, 1e-9, "its clock runs from there"
+  end
+
+  def test_a_paused_games_seed_replays_the_dots_it_spawns
+    first = DotPopper::Stack.new(dots: [dot(300, 300, id: 0)])
+    @cabinet.start_paused(first)
+    @cabinet.press_paused(300, 300)
+    @cabinet.unpause
+    seeded = DotPopper::Game.new(field, random: Random.new(@heard.last.seed), dots: first)
+    seeded.tap_at(300, 300)
+
+    assert_equal seeded.dots.to_a, @cabinet.game.dots.to_a
+  end
+
+  def test_a_paused_game_counts_among_the_records_of_the_screen_it_was_made_on
+    @cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
+    made_on = @cabinet.size_class
+    @cabinet.screen = DotPopper::Field.new(2000, 1500, R)
+    @cabinet.unpause
+
+    refute_equal made_on, @cabinet.size_class
+    assert_equal made_on, @cabinet.state.size_class
+  end
+
+  def test_a_resized_window_keeps_a_paused_games_dots_on_it
+    @cabinet.start_paused(DotPopper::Stack.new(dots: [dot(700, 300, id: 0)]))
+    @cabinet.screen = DotPopper::Field.new(400, 850, R)
+
+    assert_equal 400, @cabinet.game.field.width
+    assert @cabinet.game.dots.first.x.between?(R, 400 - R)
+  end
+
+  def test_only_the_title_makes_a_paused_game_and_only_a_paused_game_unpauses
+    @cabinet.unpause
+    assert_instance_of Cabinet::Home, @cabinet.state
+    @cabinet.press(0, 0)
+    game = @cabinet.game
+    @cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
+    @cabinet.unpause
+
+    assert_same game, @cabinet.game
+    assert_nil @cabinet.press_paused(game.dots.first.x, game.dots.first.y)
+    assert_equal 1, @heard.grep(Events::GameStarted).size
+  end
+
   private
 
   def finish_and_restart

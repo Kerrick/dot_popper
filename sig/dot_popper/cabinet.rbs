@@ -6,7 +6,7 @@ module DotPopper
       def call: (event event) -> void
     end
 
-    type state = Home | Playing | GameOver
+    type state = Home | Playing | Paused | GameOver
 
     attr_reader state: state
 
@@ -38,6 +38,8 @@ module DotPopper
 
     def sizing=: (DotSizing sizing) -> void
 
+    def paused?: () -> bool
+
     def announce: [E < event] (E? event) -> E?
 
     def show_home: () -> Home
@@ -46,11 +48,21 @@ module DotPopper
 
     def resume: (field: Field, dots: Stack, score: Integer, seconds: number, ?dots_in_a_row: Integer) -> self
 
+    def start_paused: (Stack dots, ?Integer seed) -> self
+
+    def press_paused: (number x, number y) -> tap_event?
+
+    def move_paused: (number seconds) -> void
+
+    def arrange: (*Dot dots) -> void
+
+    def unpause: () -> self
+
     def finish: (Game game, Integer seed, SizeClass size_class) -> GameOver
 
     private
 
-    def begin_game: (Game game, Integer seed) -> Playing
+    def begin_game: (Game game, Integer seed, ?SizeClass size_class) -> Playing
 
     def advance: (state next_state) -> self
 
@@ -80,6 +92,20 @@ module DotPopper
       private
 
       def settle: (Cabinet cabinet) -> (Playing | GameOver)
+    end
+
+    class Paused < ::Data
+      attr_reader game: Game
+
+      attr_reader seed: Integer
+
+      attr_reader size_class: SizeClass
+
+      def self.new: (game: Game, seed: Integer, size_class: SizeClass) -> instance
+
+      def press: (Cabinet cabinet, number x, number y) -> Paused
+
+      def update: (Cabinet cabinet, number seconds) -> Paused
     end
 
     class GameOver < ::Data

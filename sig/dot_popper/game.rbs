@@ -36,6 +36,10 @@ module DotPopper
 
     def tap_at: (number x, number y) -> tap_event?
 
+    def move_dots: (number seconds) -> void
+
+    def arrange: (*Dot placed) -> void
+
     def field=: (Field field) -> void
 
     private

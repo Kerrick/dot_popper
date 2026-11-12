@@ -44,7 +44,7 @@ module DotPopper
     def update(seconds)
       return if over?
 
-      @dots = dots.map_dots { it.move(seconds, field) }
+      move_dots(seconds)
       @elapsed += [seconds, countdown.remaining].min # a game plays no longer than its clock
       @countdown = countdown.tick(seconds)
     end
@@ -60,6 +60,21 @@ module DotPopper
       elsif dot.fresh? then pop(dot, x, y)
       else penalize(dot, x, y)
       end
+    end
+
+    # Moves the dots +seconds+ on, and only the dots: the clock does not
+    # run. A paused game's tutorial moves them at its own pace
+    # (Cabinet::Paused).
+    def move_dots(seconds)
+      @dots = dots.map_dots { it.move(seconds, field) }
+    end
+
+    # Puts each of +placed+ in the place of the dot of its id, where it
+    # is and going as it goes, at the same depth in the stack. Only a
+    # paused game's tutorial arranges its dots, to show them as it
+    # teaches (Cabinet#arrange).
+    def arrange(*placed)
+      @dots = placed.reduce(dots) { |stack, dot| stack.replace(dot) }
     end
 
     # Fits the game to a window that changed size, or a phone turned,

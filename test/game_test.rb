@@ -144,6 +144,24 @@ class GameTest < Minitest::Test
     assert_equal 0, game.score
   end
 
+  def test_moving_the_dots_runs_no_clock
+    game = game_with(dot(400, 300, velocity_x: 60), random: Random.new(1))
+    game.move_dots(0.5)
+
+    assert_in_delta 430.0, game.dots.first.x
+    assert_equal [10.0, 0.0], [game.countdown.remaining, game.elapsed]
+  end
+
+  def test_arranging_puts_dots_in_place_of_their_ids_at_the_same_depth
+    top = dot(400, 300, popped: true, id: 0)
+    under = dot(420, 300, id: 1)
+    game = game_with(top, under)
+    game.arrange(under.with(x: 600.0, velocity_y: 60.0), top.with(velocity_y: -60.0))
+
+    assert_equal [[0, 400.0, -60.0], [1, 600.0, 60.0]], game.dots.map { [it.id, it.x, it.velocity_y] }
+    assert_equal [0, 10.0], [game.score, game.countdown.remaining]
+  end
+
   def test_resizing_keeps_every_dot_on_screen
     game = game_with(dot(780, 590))
 
