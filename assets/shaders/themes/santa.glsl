@@ -59,22 +59,26 @@ vec3 santa(vec2 p, float d, float aa, float fresh, float bonus) {
   float lam = clamp(0.35 + 0.75 * dot(n, L), 0.0, 1.0);
 
   // Where each part is.
-  float trim_mid = -0.3 + 0.16 * p.x * p.x;
+  float trim_mid = -0.37 + 0.16 * p.x * p.x;
   float puff = 0.03 * abs(sin(p.x * 9.0 + 0.6)) + 0.012 * sin(p.x * 23.0);
-  float trim = max(trim_mid - 0.13 - puff - p.y, p.y - (trim_mid + 0.12 + puff));
+  float trim = max(trim_mid - 0.12 - puff - p.y, p.y - (trim_mid + 0.1 + puff));
   vec2 pom_c = vec2(0.6, -0.6);
   float pom_r = 0.2 + 0.02 * sin(atan(p.y - pom_c.y, p.x - pom_c.x) * 9.0);
   float pom = length(p - pom_c) - pom_r;
   float hat = p.y - (trim_mid - 0.08);
   float face = ellipse(p, vec2(0.0, 0.0), vec2(0.52, 0.32));
-  float brows = min(ellipse(p, vec2(-0.22, -0.13), vec2(0.13, 0.045)), ellipse(p, vec2(0.22, -0.13), vec2(0.13, 0.045)));
+  // Bushy brows raised in arches, as a smile lifts them.
+  vec2 bq = vec2(abs(p.x) - 0.21, p.y);
+  float brow_t = clamp(bq.x / 0.13, -1.0, 1.0);
+  float brows = max(abs(bq.y - (-0.14 - 0.045 * (1.0 - brow_t * brow_t))) - 0.036 * (1.0 - 0.45 * brow_t * brow_t), abs(bq.x) - 0.13);
   // The mustache: a lobe each side of the nose, curling up at its tip.
   vec2 mq = vec2(abs(p.x), p.y);
   float must_y = 0.22 - 0.16 * smoothstep(0.12, 0.52, mq.x) * smoothstep(0.12, 0.52, mq.x);
   float must = ellipse(mq, vec2(0.25, must_y), vec2(0.27, (0.12 - 0.06 * smoothstep(0.22, 0.52, mq.x)) * (0.45 + 0.55 * smoothstep(0.0, 0.14, mq.x))));
   float nose = length(p - vec2(0.0, 0.09)) - 0.115;
-  float mouth = ellipse(p, vec2(0.0, 0.39), vec2(0.11, 0.06));
-  vec2 eye_c = vec2(abs(p.x), p.y) - vec2(0.21, -0.04);
+  // A laughing mouth: its top edge turned up at the corners, its bottom round.
+  float mouth = max(ellipse(p, vec2(0.0, 0.335), vec2(0.15, 0.115)), (0.345 - 0.07 * (p.x / 0.15) * (p.x / 0.15)) - p.y);
+  vec2 eye_c = vec2(abs(p.x), p.y) - vec2(0.21, -0.03);
 
   // --- Awake, in the light ---
   float red_shade = clamp(lam + 0.25 * smoothstep(-1.0, -0.4, p.y), 0.0, 1.0);
@@ -97,25 +101,30 @@ vec3 santa(vec2 p, float d, float aa, float fresh, float bonus) {
     skin = mix(skin, vec3(0.97, 0.5, 0.5), exp(-pow((p.x - sx * 0.34) / 0.12, 2.0) - pow((p.y - 0.08) / 0.08, 2.0)) * 0.75);
   }
   vec3 c = mix(fur, skin, cover_of(face, aa));
-  // His eyes: dark, crinkled by a smile, each with a twinkle.
+  // His eyes: dark, pushed up from below by his smiling cheeks, so their
+  // lower edge bows up, each with a twinkle.
   float blink = 0.85 + 0.15 * sin(time * 1.7 + seed * 3.0);
-  float eye_open;
-  eye_open = cover_of(ellipse(eye_c, vec2(0.0), vec2(0.065, 0.085)), aa);
+  float cheek_line = 0.045 - 0.05 * (1.0 - pow(clamp(eye_c.x / 0.075, -1.0, 1.0), 2.0));
+  float eye_open = cover_of(max(ellipse(eye_c, vec2(0.0), vec2(0.072, 0.09)), eye_c.y - cheek_line), aa);
   c = mix(c, vec3(0.1, 0.06, 0.08), eye_open);
-  float glint = cover_of(length(eye_c - vec2(-0.022, -0.03)) - 0.024, aa) * blink;
-  c = mix(c, vec3(1.0), glint);
-  float crinkle = abs(length((eye_c - vec2(0.0, 0.11)) / vec2(1.0, 0.8)) - 0.1) - 0.008;
-  c = mix(c, vec3(0.75, 0.42, 0.36), cover_of(crinkle, aa) * step(0.0, eye_c.y) * step(abs(eye_c.x), 0.07) * 0.8);
+  float glint = cover_of(length(eye_c - vec2(-0.022, -0.035)) - 0.024, aa) * blink;
+  c = mix(c, vec3(1.0), glint * eye_open);
+  // The crease of the cheek under each eye.
+  float crease = abs(eye_c.y - cheek_line - 0.035) - 0.009;
+  c = mix(c, vec3(0.8, 0.46, 0.4), cover_of(crease, aa) * smoothstep(0.085, 0.05, abs(eye_c.x)) * 0.8);
   vec3 nose_col = mix(vec3(0.85, 0.36, 0.34), vec3(1.0, 0.62, 0.56), clamp(lam + 0.2, 0.0, 1.0));
   nose_col = mix(nose_col, vec3(1.0, 0.92, 0.88), cover_of(length(p - vec2(-0.035, 0.035)) - 0.03, aa) * 0.85);
   c = mix(c, nose_col, cover_of(nose, aa));
-  c = mix(c, mix(vec3(0.45, 0.1, 0.12), vec3(0.28, 0.04, 0.07), smoothstep(0.31, 0.36, p.y)), cover_of(mouth, aa));
+  vec3 mouth_col = mix(vec3(0.42, 0.06, 0.1), vec3(0.3, 0.03, 0.06), smoothstep(0.3, 0.4, p.y));
+  mouth_col = mix(mouth_col, vec3(0.93, 0.45, 0.47), cover_of(ellipse(p, vec2(0.0, 0.455), vec2(0.095, 0.06)), aa));
+  c = mix(c, mouth_col, cover_of(mouth, aa));
   // The mustache, whiter than the beard, shadows the beard below it.
   c *= 1.0 - 0.32 * cover_of(ellipse(mq, vec2(0.25, must_y + 0.05), vec2(0.28, 0.12)), aa * 8.0) * (1.0 - cover_of(must, aa));
   float must_lit = clamp(0.6 + 0.5 * lam - 0.55 * smoothstep(-0.02, 0.1, p.y - must_y), 0.0, 1.0);
   vec3 must_col = mix(vec3(0.74, 0.77, 0.88), vec3(1.0), must_lit);
   must_col *= 0.88 + 0.12 * (0.5 + 0.5 * sin((p.y - must_y) * 60.0 - mq.x * 20.0));
   c = mix(c, must_col, cover_of(must, aa));
+  c *= 1.0 - 0.25 * cover_of(brows - 0.02, aa * 6.0) * step(0.0, brows) * cover_of(face, aa);
   c = mix(c, trim_fur, cover_of(brows, aa));
   c = mix(c, cloth, cover_of(hat, aa));
   // The trim throws a shadow on the brow below it.
@@ -135,35 +144,41 @@ vec3 santa(vec2 p, float d, float aa, float fresh, float bonus) {
   vec3 awake = c;
 
   // --- Asleep, in the dark ---
-  vec3 night_fur = mix(vec3(0.16, 0.17, 0.26), vec3(0.27, 0.28, 0.39), clamp(lam * 0.8 + lock * 0.2, 0.0, 1.0));
-  vec3 night_trim = mix(vec3(0.17, 0.18, 0.27), vec3(0.29, 0.3, 0.41), clamp(lam * 0.8 + lock_small * 0.15, 0.0, 1.0));
-  vec3 night_skin = mix(vec3(0.13, 0.12, 0.19), vec3(0.22, 0.2, 0.29), lam);
-  vec3 night_cloth = mix(vec3(0.06, 0.02, 0.045), vec3(0.17, 0.05, 0.08), red_shade) * (1.0 - 0.3 * fold);
+  // As dark as the shipped themes' popped dots: the beard and trim only a
+  // step above the face and hat, so the sleeping face is carried by shapes
+  // (the lids, the nose, the snore) rather than by light.
+  vec3 night_fur = mix(vec3(0.075, 0.075, 0.125), vec3(0.14, 0.14, 0.215), clamp(lam * 0.8 + lock * 0.2, 0.0, 1.0));
+  vec3 night_trim = mix(vec3(0.09, 0.09, 0.145), vec3(0.17, 0.17, 0.25), clamp(lam * 0.8 + lock_small * 0.15, 0.0, 1.0));
+  vec3 night_skin = mix(vec3(0.075, 0.06, 0.1), vec3(0.13, 0.1, 0.15), lam);
+  vec3 night_cloth = mix(vec3(0.05, 0.015, 0.035), vec3(0.14, 0.04, 0.065), red_shade) * (1.0 - 0.3 * fold);
   vec3 s = mix(night_fur, night_skin, cover_of(face, aa));
-  // Shut eyes: a lid's curve, bowed down, with three lashes.
+  // Shut eyes: a lid's curve, bowed down, with three lashes, only a little
+  // lighter than his face, as Ghost's hollow eyes are than its body.
   vec2 e = eye_c;
-  float lid = abs(e.y - 0.04 * (1.0 - pow(e.x / 0.09, 2.0))) - 0.02;
+  float lid = abs(e.y - 0.04 * (1.0 - pow(e.x / 0.09, 2.0))) - 0.024;
   float shut = cover_of(lid, aa) * step(abs(e.x), 0.09);
   for (int i = 0; i < 3; i++) {
     float lx = -0.045 + float(i) * 0.045;
     vec2 r = e - vec2(lx * 1.2, 0.04 * (1.0 - pow(lx * 1.2 / 0.09, 2.0)));
     shut = max(shut, cover_of(segment_lash(r, lx), aa));
   }
-  s = mix(s, vec3(0.6, 0.6, 0.74), shut);
-  s = mix(s, mix(vec3(0.07, 0.04, 0.07), vec3(0.15, 0.09, 0.13), lam), cover_of(nose, aa));
-  float snore = ellipse(p, vec2(0.0, 0.4), vec2(0.11, 0.12));
-  s = mix(s, vec3(0.02, 0.012, 0.03), cover_of(snore, aa));
+  s = mix(s, vec3(0.22, 0.2, 0.31), shut);
+  // His nose, a dim rose a little lighter than his face, round by its shading.
+  vec3 night_nose = mix(vec3(0.13, 0.06, 0.08), vec3(0.25, 0.12, 0.15), clamp(lam + 0.25 - 2.0 * length(p - vec2(-0.03, 0.06)), 0.0, 1.0));
+  s = mix(s, night_nose, cover_of(nose, aa));
+  float snore = ellipse(p, vec2(0.0, 0.4), vec2(0.1, 0.11));
+  s = mix(s, vec3(0.015, 0.008, 0.02), cover_of(snore, aa));
   s *= 1.0 - 0.3 * cover_of(ellipse(mq, vec2(0.25, must_y + 0.05), vec2(0.28, 0.12)), aa * 8.0) * (1.0 - cover_of(must, aa));
-  s = mix(s, night_fur * (0.8 + 0.5 * must_lit), cover_of(must, aa));
+  s = mix(s, night_fur * (0.85 + 0.4 * must_lit), cover_of(must, aa));
   s = mix(s, night_trim, cover_of(brows, aa));
   s = mix(s, night_cloth, cover_of(hat, aa));
   s = mix(s, night_trim, cover_of(trim, aa));
-  s = mix(s, mix(vec3(0.15, 0.15, 0.22), vec3(0.3, 0.31, 0.42), pom_lit * 0.7 + lock_small * 0.3), cover_of(pom, aa));
+  s = mix(s, mix(vec3(0.08, 0.08, 0.13), vec3(0.18, 0.18, 0.27), pom_lit * 0.7 + lock_small * 0.3), cover_of(pom, aa));
 
   vec3 col = mix(s, awake, fresh);
   float w = mix(max(0.038, 1.5 * aa), max(0.022, 1.5 * aa), fresh);
   float ring = clamp((d - (1.0 - w)) / aa + 0.5, 0.0, 1.0);
-  vec3 rim_color = mix(mix(vec3(0.26, 0.26, 0.36), vec3(0.44, 0.45, 0.58), clamp(0.5 + 0.6 * dot(p, vec2(-0.53, -0.848)), 0.0, 1.0)),
+  vec3 rim_color = mix(mix(vec3(0.2, 0.19, 0.3), vec3(0.34, 0.33, 0.48), clamp(0.5 + 0.6 * dot(p, vec2(-0.53, -0.848)), 0.0, 1.0)),
                        vec3(1.0, 0.97, 0.92), fresh);
   return mix(col, rim_color, ring);
 }
