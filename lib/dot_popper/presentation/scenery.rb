@@ -5,9 +5,10 @@ module DotPopper
     # What stands in a theme's night, as plain shapes in graphics units:
     # silhouettes of trees, hills, a crooked house, a fence, graves, bats,
     # the wood's trunks, fir boughs and presents, snowy rooftops and a
-    # sleigh, a snowy yard, a mantel by the fire, and a farm. It knows no
-    # drawing library; Shell::Scene bakes these once, for the screen's
-    # size, into a canvas at the screen's own resolution.
+    # sleigh, a snowy yard, a mantel by the fire, and a farm at
+    # Thanksgiving. It knows no drawing library; Shell::Scene bakes these
+    # once, for the screen's size, into a canvas at the screen's own
+    # resolution.
     #
     # Every shape is convex or a fan about its first point, so a plain
     # filled polygon draws it.
@@ -639,49 +640,156 @@ module DotPopper
         hook(out, color, tip, 5 * s, -1, 3.6 * s)
       end
 
-      # A farm at dusk: a field, a barn and silo, shocks of corn, a fence,
-      # and geese going over.
+      # A farm at dusk on Thanksgiving, at three depths: far hills and a
+      # line of trees; the farmhouse, its windows lit for dinner, with
+      # smoke from its chimney, and a barn and silo; and near, a tall oak
+      # with its last leaves, shocks of corn, pumpkins, a split-rail
+      # fence, and geese going over.
       def farm(width, height)
         out = []
-        ink = Color.hex("#07050c")
         land = width > height
-        far = ->(f) { height * ((land ? 0.82 : 0.85) + (0.02 * Math.sin((f * 4) + 2.1))) }
-        hill_strip(out, Color.hex("#140c18"), width, height, &far)
-        ridge = ->(f) { height * ((land ? 0.88 : 0.9) + (0.02 * Math.sin((f * 2.6) + 0.6))) }
-        bx = width * (land ? 0.16 : 0.2)
-        by = far.call(land ? 0.16 : 0.2) + 6
-        s = land ? 1.6 : 1.1
-        barn = [[-30, 0], [-30, -30], [-22, -46], [0, -58], [22, -46], [30, -30], [30, 0]]
-        out << Fan.new(color: Color.hex("#0d0912"), points: [[bx, by - (25 * s)], *barn.map { |a, b| [bx + (a * s), by + (b * s)] }, [bx + (barn.first[0] * s), by + (barn.first[1] * s)]])
-        out << Fan.new(color: Color.hex("#0d0912"), points: [[bx + (34 * s), by], [bx + (50 * s), by], [bx + (50 * s), by - (62 * s)], [bx + (34 * s), by - (62 * s)]])
-        out << Dot.new(x: bx + (42 * s), y: by - (62 * s), radius: 8 * s, color: Color.hex("#0d0912"))
-        out << Fan.new(color: Color.hex("#8a5a24", 0.55), points: [[bx - (5 * s), by - (40 * s)], [bx + (5 * s), by - (40 * s)], [bx + (5 * s), by - (30 * s)], [bx - (5 * s), by - (30 * s)]])
-        hill_strip(out, ink, width, height, &ridge)
-        (land ? 7 : 4).times do |i|
-          r = Random.new(600 + i)
-          f = 0.45 + (i * 0.5 / (land ? 7 : 4)) + r.rand(-0.02..0.02)
-          x = width * f
-          g = ridge.call(f) + 4
-          h = r.rand(38.0..54.0)
-          out << Fan.new(color: ink, points: [[x, g - h], [x + (h * 0.3), g], [x - (h * 0.3), g]])
-          out << Fan.new(color: ink, points: [[x, g - (h * 0.75)], [x - (h * 0.12), g - (h * 1.05)], [x + (h * 0.02), g - (h * 0.7)]])
-          out << Fan.new(color: ink, points: [[x, g - (h * 0.75)], [x + (h * 0.14), g - (h * 1.02)], [x + (h * 0.02), g - (h * 0.7)]])
+        far_c = Color.hex("#2a1726")
+        mid_c = Color.hex("#150c17")
+        ink = Color.hex("#07050c")
+        lamp = Color.hex("#c8843a", 0.62)
+        far = ->(f) { height * ((land ? 0.73 : 0.77) + (0.025 * Math.sin((f * 5) + 1)) + (0.008 * Math.sin(f * 17))) }
+        hill_strip(out, far_c, width, height, &far)
+        r = Random.new(70)
+        x = 0.0
+        while x < width
+          f = x / width
+          out << Dot.new(x:, y: far.call(f) - 2, radius: r.rand(6.0..12.0) * (land ? 1.2 : 1.0), color: far_c) if f < 0.3 || f > 0.55
+          x += r.rand(8.0..15.0)
         end
-        f = 0.02
-        while f < (land ? 0.42 : 0.4)
-          gx = width * f
-          gy = ridge.call(f)
-          out << Fan.new(color: ink, points: [[gx - 2, gy + 6], [gx - 2, gy - 16], [gx + 2, gy - 16], [gx + 2, gy + 6]])
-          f += land ? 0.03 : 0.07
+        mid = ->(f) { height * ((land ? 0.83 : 0.855) + (0.012 * Math.sin((f * 3) + 0.4))) }
+        hill_strip(out, mid_c, width, height, &mid)
+        hx = width * (land ? 0.16 : 0.2)
+        farmhouse(out, mid_c, lamp, hx, mid.call(hx / width) + 4, land ? 1.8 : 1.1)
+        bx = width * (land ? 0.42 : 0.6)
+        barn(out, mid_c, lamp, bx, mid.call(bx / width) + 4, land ? 1.6 : 1.0)
+        near = ->(f) { height * ((land ? 0.9 : 0.915) + (0.014 * Math.sin((f * 2.6) + 0.6))) }
+        hill_strip(out, ink, width, height, &near)
+        (land ? 6 : 3).times do |i|
+          rr = Random.new(600 + i)
+          f = (land ? 0.52 : 0.44) + (i * (land ? 0.045 : 0.1)) + rr.rand(-0.01..0.01)
+          shock(out, ink, width * f, near.call(f) + 4, rr.rand(40.0..54.0) * (land ? 1.1 : 0.9))
         end
-        out << segment([0, ridge.call(0) - 10], [width * 0.42, ridge.call(0.42) - 10], 2.5, 2.5, ink)
-        geese = land ? [[0.62, 0.5], [0.6, 0.47], [0.64, 0.47], [0.58, 0.44], [0.66, 0.44]] : [[0.62, 0.56], [0.58, 0.535], [0.66, 0.535], [0.54, 0.51]]
-        geese.each do |gx, gy|
-          at = [width * gx, height * gy]
-          out << segment([at[0] - 9, at[1] - 5], at, 2.2, 2.6, ink)
-          out << segment(at, [at[0] + 9, at[1] - 5], 2.6, 2.2, ink)
+        [[0.06, 9], [0.12, 6.5], [0.3, 8], [0.36, 5.5]].each_with_index do |(f, size), i|
+          next if !land && i == 3
+
+          pumpkin(out, ink, width * f, near.call(f) + 2, size * (land ? 1.3 : 1.0))
+        end
+        fence(out, ink, 0, width * (land ? 0.4 : 0.38), near, width)
+        ox = land ? 0.88 : 0.87
+        oak(out, ink, width * ox, near.call(ox) + 8, -Math::PI / 2 - 0.1, height * (land ? 0.2 : 0.17), land ? 40 : 30, 5, Random.new(31))
+        geese = land ? [0.3, 0.2] : [0.36, 0.3]
+        [[0, 0], [-1, -1], [1, -1], [-2, -2], [2, -2], [-3, -3]].each do |i, j|
+          at = [width * geese[0] + (i * 16 * (land ? 1.2 : 1.0)), height * geese[1] + (j * -9 * (land ? 1.2 : 1.0))]
+          goose(out, Color.hex("#100a18"), at, land ? 1.5 : 1.2)
         end
         out
+      end
+
+      # A farmhouse: two storeys, a gable roof, a porch, a chimney with
+      # smoke, and windows lit warm.
+      def farmhouse(out, color, lamp, x, ground, s)
+        w = 62 * s
+        h = 40 * s
+        out << Fan.new(color:, points: [[x - (w / 2), ground], [x + (w / 2), ground], [x + (w / 2), ground - h], [x - (w / 2), ground - h]])
+        out << Fan.new(color:, points: [[x, ground - h - (26 * s)], [x + (w / 2) + (5 * s), ground - h + (2 * s)], [x - (w / 2) - (5 * s), ground - h + (2 * s)]])
+        cx = x + (14 * s)
+        out << Fan.new(color:, points: [[cx, ground - h - (4 * s)], [cx + (7 * s), ground - h - (4 * s)], [cx + (7 * s), ground - h - (26 * s)], [cx, ground - h - (26 * s)]])
+        smoke(out, cx + (3.5 * s), ground - h - (30 * s), 9 * s)
+        out << Fan.new(color:, points: [[x - (w / 2) - (6 * s), ground - (15 * s)], [x + (w / 2) + (6 * s), ground - (15 * s)], [x + (w / 2) + (2 * s), ground - (19 * s)], [x - (w / 2) - (2 * s), ground - (19 * s)]])
+        [[-20, -31], [-4, -31], [12, -31], [-20, -10], [12, -10]].each_with_index do |(wx, wy), i|
+          next if i == 2
+
+          a = [x + ((wx - 3) * s), ground + ((wy - 4.5) * s)]
+          b = [x + ((wx + 3) * s), ground + ((wy + 4.5) * s)]
+          out << Fan.new(color: lamp, points: [a, [b[0], a[1]], b, [a[0], b[1]]])
+          out << segment([x + (wx * s), a[1]], [x + (wx * s), b[1]], 0.9 * s, 0.9 * s, color)
+        end
+      end
+
+      # A barn with a gambrel roof and a hay door, and a silo beside it.
+      def barn(out, color, lamp, x, ground, s)
+        shape = [[-26, 0], [-26, -26], [-20, -42], [0, -52], [20, -42], [26, -26], [26, 0]]
+        out << Fan.new(color:, points: [[x, ground - (25 * s)], *shape.map { |a, b| [x + (a * s), ground + (b * s)] }, [x + (shape.first[0] * s), ground + (shape.first[1] * s)]])
+        out << Fan.new(color:, points: [[x + (30 * s), ground], [x + (44 * s), ground], [x + (44 * s), ground - (60 * s)], [x + (30 * s), ground - (60 * s)]])
+        out << Dot.new(x: x + (37 * s), y: ground - (60 * s), radius: 7 * s, color:)
+        out << Fan.new(color: lamp, points: [[x - (5 * s), ground - (38 * s)], [x + (5 * s), ground - (38 * s)], [x + (5 * s), ground - (30 * s)], [x - (5 * s), ground - (30 * s)]])
+      end
+
+      # A shock of corn: stalks bound into a cone, their tops splayed.
+      def shock(out, color, x, ground, h)
+        out << Fan.new(color:, points: [[x, ground - (h * 0.82)], [x + (h * 0.32), ground], [x - (h * 0.32), ground]])
+        out << segment([x - (h * 0.1), ground - (h * 0.6)], [x + (h * 0.1), ground - (h * 0.6)], 3, 3, color)
+        [-0.22, -0.1, 0.0, 0.12, 0.24].each do |lean|
+          out << segment([x, ground - (h * 0.7)], [x + (lean * h * 0.6), ground - (h * (1.02 - (lean.abs * 0.3)))], 2.6, 0.8, color)
+        end
+      end
+
+      # A pumpkin on the ground: two lobes and a stem.
+      def pumpkin(out, color, x, ground, size)
+        out << Dot.new(x: x - (size * 0.42), y: ground - (size * 0.8), radius: size * 0.8, color:)
+        out << Dot.new(x: x + (size * 0.42), y: ground - (size * 0.8), radius: size * 0.8, color:)
+        out << Dot.new(x:, y: ground - (size * 0.85), radius: size * 0.88, color:)
+        out << segment([x, ground - (size * 1.6)], [x + (size * 0.25), ground - (size * 2.15)], size * 0.28, size * 0.18, color)
+      end
+
+      # A split-rail fence along the ground from +x1+ to +x2+.
+      def fence(out, color, x1, x2, ground, width)
+        x = x1 + 6
+        prev = nil
+        while x < x2
+          g = ground.call(x / width)
+          out << Fan.new(color:, points: [[x - 2.2, g + 6], [x - 2.2, g - 22], [x + 2.2, g - 22], [x + 2.2, g + 6]])
+          if prev
+            out << segment([prev[0], prev[1] - 17], [x, g - 15], 2.4, 2.4, color)
+            out << segment([prev[0], prev[1] - 8], [x, g - 6], 2.4, 2.4, color)
+          end
+          prev = [x, g]
+          x += 30
+        end
+      end
+
+      # A goose flying left: a body, a long neck, and its wings up.
+      def goose(out, color, at, s)
+        x, y = at
+        out << segment([x - (9 * s), y], [x + (6 * s), y + (1 * s)], 3.2 * s, 2.0 * s, color)
+        out << segment([x - (9 * s), y], [x - (15 * s), y - (1.5 * s)], 1.4 * s, 1.2 * s, color)
+        out << segment([x - (2 * s), y], [x + (3 * s), y - (8 * s)], 2.2 * s, 0.8 * s, color)
+        out << segment([x - (2 * s), y], [x + (1 * s), y + (6 * s)], 2.0 * s, 0.8 * s, color)
+      end
+
+      # An oak late in the fall: a broad crown of crooked limbs, a few
+      # leaves still on their tips.
+      def oak(out, color, x, y, angle, length, width, depth, random)
+        steps = 3
+        points = [[x, y]]
+        bent = angle
+        steps.times do
+          bent += normal(random, 0.25)
+          points << [points.last[0] + (Math.cos(bent) * length / steps), points.last[1] + (Math.sin(bent) * length / steps)]
+        end
+        points.each_cons(2).with_index do |(a, b), i|
+          w1 = width * (1 - (i.to_f / steps * 0.4))
+          w2 = width * (1 - ((i + 1).to_f / steps * 0.4))
+          out << segment(a, b, w1, w2, color)
+          out << Dot.new(x: a[0], y: a[1], radius: w1 / 2.0, color:)
+        end
+        tip = points.last
+        if depth.zero?
+          random.rand(0..3).times do
+            out << Dot.new(x: tip[0] + random.rand(-7.0..7.0), y: tip[1] + random.rand(-7.0..7.0), radius: random.rand(2.0..3.6), color:)
+          end
+          return
+        end
+        out << Dot.new(x: tip[0], y: tip[1], radius: width * 0.3, color:)
+        spread = depth > 3 ? 1.1 : 0.8
+        random.rand(3..4).times do
+          oak(out, color, tip[0], tip[1], bent + random.rand(-spread..spread), length * random.rand(0.58..0.74), width * 0.55, depth - 1, random)
+        end
       end
     end
   end
