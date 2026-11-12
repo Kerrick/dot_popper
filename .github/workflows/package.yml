@@ -718,10 +718,9 @@ jobs:
         run: |
           ls -la artifacts
           for file in 'Dot Popper-x64-mingw-ucrt.zip' 'Dot Popper-x64-mingw-ucrt-setup.exe' 'Dot Popper-arm64-darwin.dmg' \
-              'Dot Popper-arm64-darwin.tar.gz' 'Dot Popper-x86_64-linux-gnu.tar.gz'; do
+              'Dot Popper-arm64-darwin.tar.gz' 'Dot Popper-x86_64-linux.tar.gz' 'Dot Popper-x86_64-linux.AppImage'; do
             [ -f "artifacts/$file" ] || { echo "::error::$file is missing"; exit 1; }
           done
-          ls artifacts/*.AppImage > /dev/null || { echo "::error::the AppImage is missing"; exit 1; }
           tag="$GITHUB_REF_NAME"
           if gh release view "$tag" -R "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             echo "::error::$tag already has a release; a website release carries the website builds alone, so delete that one first"
