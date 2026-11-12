@@ -331,8 +331,19 @@ class GroupPanelTest < Minitest::Test
     change = Groups::TitleChange.new(id: 1, champion_number: 2, previous_champion_number: 1, score: 31, at: "2026-11-05T01:00:00Z")
     names = Words.entry(7, change).map(&:first).join
     assert_equal "#{DotPopper::Presentation::Names.member(7, 2)} took the title from #{DotPopper::Presentation::Names.member(7, 1)} with 31.", names
+    passed = Groups::TitleChange.new(id: 3, champion_number: 2, previous_champion_number: 1, score: 31, at: "2026-11-05T01:00:00Z", passed_on: true)
+    assert_equal "The title passed to #{DotPopper::Presentation::Names.member(7, 2)} with 31.", Words.entry(7, passed).map(&:first).join
+    won = passed.with(passed_on: false)
+    assert_equal names, Words.entry(7, won).map(&:first).join
     earned = Groups::MemberAchievement.new(id: 2, member_number: 2, key: :blink, at: "2026-11-05T01:00:00Z")
     assert_equal "#{DotPopper::Presentation::Names.member(7, 2)} earned Blink.", Words.entry(7, earned).map(&:first).join
+  end
+
+  def test_a_pass_is_worded_apart_from_a_win
+    announce = ->(kind) { Words.announcement(Groups::Announcement.new(group_id: 7, champion_number: 2, score: 31, kind: kind)) }
+    assert_equal "The title is yours.", announce.(:passed_to_you)
+    assert_equal "The title passed to a friend.", announce.(:passed)
+    assert_equal "A friend took the title with 31.", announce.(:changed)
   end
 
   def test_back_climbs_the_screens

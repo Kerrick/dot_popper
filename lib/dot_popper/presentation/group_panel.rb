@@ -60,12 +60,15 @@ module DotPopper
       end
 
       # What a history entry says, as runs of [text, bold]: who took the
-      # title from whom and with what, or who earned which achievement.
+      # title from whom and with what (or to whom it passed when its
+      # champion left), or who earned which achievement.
       def entry(group_id, change)
         name = ->(number) { [Names.member(group_id, number), true] }
         case change
         in Groups::MemberAchievement
           [name.(change.member_number), [" earned ", false], [AchievementWords.name(change.key), true], [".", false]]
+        in { passed_on: true }
+          [["The title passed to ", false], name.(change.champion_number), [" with ", false], [change.score.to_s, true], [".", false]]
         else
           took = [name.(change.champion_number)]
           took += change.previous_champion_number ? [[" took the title from ", false], name.(change.previous_champion_number)] : [[" took the title", false]]
@@ -92,6 +95,8 @@ module DotPopper
         case item.kind
         in :you_won then "You took the title with #{item.score}!"
         in :you_lost then "A friend took your title with #{item.score}."
+        in :passed_to_you then "The title is yours."
+        in :passed then "The title passed to a friend."
         in :changed then "A friend took the title with #{item.score}."
         end
       end

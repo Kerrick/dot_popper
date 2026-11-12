@@ -33,8 +33,10 @@ class SessionTest < Minitest::Test
       "reign_started_at" => "2026-11-01T00:00:00Z", "members" => numbers.map { { "number" => it, "top_score" => it * 10 } } }
   end
 
-  def change(id, champion: 1, previous: nil, score: 50)
-    { "id" => id, "champion_number" => champion, "previous_champion_number" => previous, "score" => score, "at" => "2026-11-05T10:00:00Z" }
+  def change(id, champion: 1, previous: nil, score: 50, passed_on: :unsaid)
+    entry = { "id" => id, "champion_number" => champion, "previous_champion_number" => previous, "score" => score, "at" => "2026-11-05T10:00:00Z" }
+    entry["passed_on"] = passed_on unless passed_on == :unsaid
+    entry
   end
 
   def answer(status, body = {}, retry_after: nil)
@@ -541,6 +543,22 @@ class SessionTest < Minitest::Test
     refreshed([group(top: 60, you: 5, numbers: [5])], changes: [change(2, champion: 7, previous: 1, score: 60)])
 
     assert_equal :changed, @session.next_announcement.kind
+  end
+
+  def test_a_title_passed_on_is_announced_as_a_pass_and_a_win_or_a_missing_word_as_today
+    joined
+    refreshed([group(top: 60, champion: 2)], changes: [change(3, champion: 2, previous: 1, score: 60, passed_on: true)])
+
+    assert_equal :passed_to_you, @session.next_announcement.kind
+    refreshed([group(top: 70, champion: 1)], changes: [change(4, champion: 1, previous: 3, score: 70, passed_on: true), change(3)])
+
+    assert_equal :passed, @session.next_announcement.kind
+    refreshed([group(top: 80, champion: 2)], changes: [change(5, champion: 2, previous: 1, score: 80, passed_on: false), change(4)])
+
+    assert_equal :you_won, @session.next_announcement.kind
+    refreshed([group(top: 90, champion: 1)], changes: [change(6, champion: 1, previous: 2, score: 90), change(5)])
+
+    assert_equal :you_lost, @session.next_announcement.kind
   end
 
   def test_history_keeps_newest_first_and_look_at_refetches

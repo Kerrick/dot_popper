@@ -45,14 +45,20 @@ module DotPopper
 
     # One entry in a group's history of its title. +previous_champion_number+
     # is nil when the title was vacant: a group's first champion, or the
-    # first after a vacancy.
-    class TitleChange < Data.define(:id, :champion_number, :previous_champion_number, :score, :at)
+    # first after a vacancy. +passed_on+ is true when the title passed to
+    # this champion because the previous one left, false when they won it,
+    # and nil when the server does not say.
+    class TitleChange < Data.define(:id, :champion_number, :previous_champion_number, :score, :at, :passed_on)
+      def initialize(id:, champion_number:, previous_champion_number:, score:, at:, passed_on: nil)
+        super
+      end
+
       def self.parse(data)
         return unless data.is_a?(Hash) && data["id"].is_a?(Integer) && data["champion_number"].is_a?(Integer)
         return unless data["kind"].nil? || data["kind"] == "title_change"
 
         new(id: data["id"], champion_number: data["champion_number"], previous_champion_number: data["previous_champion_number"],
-            score: data["score"].to_i, at: data["at"])
+            score: data["score"].to_i, at: data["at"], passed_on: data["passed_on"] == true || data["passed_on"] == false ? data["passed_on"] : nil)
       end
     end
 
@@ -69,13 +75,17 @@ module DotPopper
 
     # Something to tell the player about a group's title, once, with no
     # answer asked of them. +kind+ is :you_won, :you_lost (someone took it
-    # from this player) or :changed (it passed between others).
+    # from this player) or :changed (it passed between others). A title
+    # that passed because its champion left is :passed_to_you or :passed.
     class Announcement < Data.define(:group_id, :champion_number, :score, :kind)
       def self.of(group, change)
         new(group_id: group.id, champion_number: change.champion_number, score: change.score, kind: kind_of(group, change))
       end
 
       def self.kind_of(group, change)
+        if change.passed_on
+          return change.champion_number == group.you ? :passed_to_you : :passed
+        end
         return :you_won if change.champion_number == group.you
 
         change.previous_champion_number == group.you ? :you_lost : :changed
