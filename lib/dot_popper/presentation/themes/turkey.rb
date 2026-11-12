@@ -26,11 +26,11 @@ module DotPopper
                                 glow_amount: 0.4, edge: hex["#08060e"], stars: 0.7),
               wordmark: "assets/fonts/Fredoka-Bold.ttf", title_dots: true,
               sounds: {
-                # A gobble: a quick warble of falling notes.
-                pop: Patch.new(notes: [Note.new(wave: :triangle, from: 620, to: 520, length: 0.04, attack: 0.003, volume: 0.6),
-                                       Note.new(wave: :triangle, from: 560, to: 440, start: 0.04, length: 0.04, attack: 0.003, volume: 0.55),
-                                       Note.new(wave: :triangle, from: 600, to: 470, start: 0.08, length: 0.04, attack: 0.003, volume: 0.5),
-                                       Note.new(wave: :triangle, from: 520, to: 380, start: 0.12, length: 0.06, attack: 0.003, volume: 0.45),
+                # A gobble: a quick warble of falling notes, pitched low.
+                pop: Patch.new(notes: [Note.new(wave: :triangle, from: 521, to: 437, length: 0.04, attack: 0.003, volume: 0.6),
+                                       Note.new(wave: :triangle, from: 471, to: 370, start: 0.04, length: 0.04, attack: 0.003, volume: 0.55),
+                                       Note.new(wave: :triangle, from: 505, to: 395, start: 0.08, length: 0.04, attack: 0.003, volume: 0.5),
+                                       Note.new(wave: :triangle, from: 437, to: 320, start: 0.12, length: 0.06, attack: 0.003, volume: 0.45),
                                        Note.new(wave: :noise, from: 1, length: 0.03, attack: 0.002, volume: 0.15)]),
                 # A low, cross "putt".
                 bonk: Patch.new(notes: [Note.new(wave: :square, from: 220, to: 140, length: 0.09, attack: 0.004, volume: 0.35),
