@@ -5,10 +5,10 @@ module DotPopper
     # What stands in a theme's night, as plain shapes in graphics units:
     # silhouettes of trees, hills, a crooked house, a fence, graves, bats,
     # the wood's trunks, fir boughs and presents, snowy rooftops and a
-    # sleigh, a snowy yard, a mantel by the fire, and a farm at
-    # Thanksgiving. It knows no drawing library; Shell::Scene bakes these
-    # once, for the screen's size, into a canvas at the screen's own
-    # resolution.
+    # sleigh, a snowy yard, a mantel by the fire, a sleigh ride, and a
+    # farm at Thanksgiving. It knows no drawing library; Shell::Scene
+    # bakes these once, for the screen's size, into a canvas at the
+    # screen's own resolution.
     #
     # Every shape is convex or a fan about its first point, so a plain
     # filled polygon draws it.
@@ -31,6 +31,7 @@ module DotPopper
         when :rooftops then rooftops(width, height)
         when :snowfield then snowfield(width, height)
         when :mantel then mantel(width, height)
+        when :sleigh_ride then sleigh_ride(width, height)
         else []
         end
       end
@@ -638,6 +639,97 @@ module DotPopper
         tip = [x + (7 * s), top - (10 * s)]
         out << segment(base, tip, 3.6 * s, 3.6 * s, color)
         hook(out, color, tip, 5 * s, -1, 3.6 * s)
+      end
+
+      # A sleigh ride through the snow at night: snowy hills at three
+      # depths, firs on them, a split-rail fence, and a one-horse open
+      # sleigh with its lantern going along the middle hill.
+      def sleigh_ride(width, height)
+        out = []
+        land = width > height
+        far = Color.hex("#2c2052")
+        mid = Color.hex("#1a1336")
+        near = Color.hex("#0a0818")
+        snow_far = Color.hex("#43357a")
+        snow_mid = Color.hex("#2e2662")
+        snow_near = Color.hex("#1e1a48")
+        ridge_far = ->(f) { height * ((land ? 0.66 : 0.72) + (0.04 * Math.sin((f * 5.0) + 1.0)) + (0.015 * Math.sin(f * 13))) }
+        hill_strip(out, far, width, height, &ridge_far)
+        (land ? 16 : 9).times do |i|
+          r = Random.new(800 + i)
+          f = (i + r.rand(0.0..0.8)) / (land ? 16 : 9)
+          snowy_fir(out, far, snow_far, width * f, ridge_far.call(f) + 3, r.rand(30.0..60.0), r.rand(16.0..26.0)) if r.rand < 0.75
+        end
+        ridge_mid = ->(f) { height * ((land ? 0.78 : 0.82) + (0.035 * Math.sin((f * 3.2) + 2.4))) }
+        hill_strip(out, mid, width, height, &ridge_mid)
+        hill_line(out, snow_mid, width, ridge_mid)
+        f = 0.0
+        while f < 1.0
+          rail(out, mid, width * f, ridge_mid.call(f), width * (land ? 0.06 : 0.1), ridge_mid.call(f + (land ? 0.06 : 0.1)) - ridge_mid.call(f))
+          f += land ? 0.06 : 0.1
+        end
+        sx = land ? 0.36 : 0.42
+        open_sleigh(out, mid, width * sx, ridge_mid.call(sx) + 2, land ? 2.3 : 1.6)
+        ridge_near = ->(f) { height * ((land ? 0.9 : 0.92) + (0.025 * Math.sin((f * 2.2) + 4.0))) }
+        hill_strip(out, near, width, height, &ridge_near)
+        hill_line(out, snow_near, width, ridge_near)
+        snowy_fir(out, near, snow_near, width * (land ? 0.06 : 0.08), ridge_near.call(0.06) + 8, height * (land ? 0.72 : 0.62), land ? 150 : 110)
+        snowy_fir(out, near, snow_near, width * (land ? 0.17 : 0.27), ridge_near.call(0.16) + 8, height * (land ? 0.36 : 0.26), land ? 80 : 56)
+        snowy_fir(out, near, snow_near, width * (land ? 0.93 : 0.92), ridge_near.call(0.93) + 8, height * (land ? 0.58 : 0.46), land ? 130 : 90)
+        out
+      end
+
+      # Snow along a hill's crest.
+      def hill_line(out, snow, width, ridge, steps = 48)
+        (0...steps).each do |i|
+          a = [width * i / steps.to_f, ridge.call(i / steps.to_f) + 1.5]
+          b = [width * (i + 1) / steps.to_f, ridge.call((i + 1) / steps.to_f) + 1.5]
+          out << segment(a, b, 3.0, 3.0, snow)
+        end
+      end
+
+      # One bay of a split-rail fence: a post and two rails.
+      def rail(out, color, x, ground, span, rise)
+        out << Fan.new(color:, points: [[x - 2.5, ground + 4], [x + 2.5, ground + 4], [x + 2, ground - 26], [x - 2, ground - 26]])
+        out << segment([x, ground - 20], [x + span, ground - 20 + rise], 3.0, 3.0, color)
+        out << segment([x, ground - 9], [x + span, ground - 9 + rise], 3.0, 3.0, color)
+      end
+
+      # A horse drawing an open sleigh to the right, a driver in it, and a
+      # lantern hung at its front.
+      def open_sleigh(out, color, x, ground, s)
+        at = ->(a, b) { [x + (a * s), ground + (b * s)] }
+        # The sleigh: a runner curling up at the front, the box, its back.
+        runner = [[-30, -2], [10, -2], [16, -5], [18, -11], [15, -14], [13, -11], [14, -7], [10, -5], [-30, -5]]
+        runner.each_cons(2) { |a, b| out << segment(at.call(*a), at.call(*b), 2.2 * s, 2.2 * s, color) }
+        out << segment(at.call(-24, -5), at.call(-24, -10), 2 * s, 2 * s, color)
+        out << segment(at.call(4, -5), at.call(4, -10), 2 * s, 2 * s, color)
+        out << Fan.new(color:, points: [at.call(-28, -10), at.call(8, -10), at.call(12, -18), at.call(-18, -18), at.call(-30, -26), at.call(-32, -20)])
+        # The driver, and his reins.
+        out << Fan.new(color:, points: [at.call(-16, -18), at.call(-6, -18), at.call(-7, -31), at.call(-15, -31)])
+        out << Dot.new(x: at.call(-11, -35)[0], y: at.call(-11, -35)[1], radius: 4.5 * s, color:)
+        out << Fan.new(color:, points: [at.call(-16, -38), at.call(-6, -38), at.call(-8, -43), at.call(-14, -43)])
+        out << segment(at.call(-7, -27), at.call(26, -26), 0.8 * s, 0.8 * s, color)
+        # Shafts to the horse.
+        out << segment(at.call(10, -12), at.call(30, -18), 1.6 * s, 1.6 * s, color)
+        # The horse, trotting.
+        out << segment(at.call(28, -24), at.call(52, -25), 13 * s, 12 * s, color)
+        out << Dot.new(x: at.call(28, -24)[0], y: at.call(28, -24)[1], radius: 6.5 * s, color:)
+        out << Dot.new(x: at.call(52, -25)[0], y: at.call(52, -25)[1], radius: 6 * s, color:)
+        out << segment(at.call(53, -28), at.call(60, -42), 7 * s, 5 * s, color)
+        out << segment(at.call(60, -42), at.call(68, -38), 5 * s, 3.4 * s, color)
+        out << segment(at.call(59, -46), at.call(61, -50), 1.5 * s, 1 * s, color)
+        [[31, 0, 25, -2], [36, -2, 37, 0], [48, -1, 55, -6], [53, -2, 50, 0]].each_with_index do |(kx, ky, fx, fy), i|
+          hip = at.call(i < 2 ? 30 + (i * 4) : 50 + ((i - 2) * 3), -20)
+          knee = at.call(kx, -10 + ky)
+          out << segment(hip, knee, 3 * s, 2.4 * s, color)
+          out << segment(knee, at.call(fx, fy), 2.4 * s, 2 * s, color)
+        end
+        out << segment(at.call(22, -26), at.call(16, -14), 3 * s, 1.5 * s, color)
+        # The lantern, dimly lit.
+        out << segment(at.call(17, -14), at.call(17, -19), 0.8 * s, 0.8 * s, color)
+        out << Dot.new(x: at.call(17, -12)[0], y: at.call(17, -12)[1], radius: 7 * s, color: Color.hex("#ffb050", 0.1))
+        out << Dot.new(x: at.call(17, -12)[0], y: at.call(17, -12)[1], radius: 2 * s, color: Color.hex("#ffc870", 0.45))
       end
 
       # A farm at dusk on Thanksgiving, at three depths: far hills and a
