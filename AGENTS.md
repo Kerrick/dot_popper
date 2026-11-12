@@ -49,8 +49,9 @@ Follow `~/.claude/skills/trunk-based-development/SKILL.md`.
 
 ## Hands off
 
-- Never edit the maintainer's own checkout, which he plays from. Use a worktree or clone.
-- Never edit Lota's or the server's repositories from here. Ask their sessions.
+- The maintainer plays from his own checkout and follows the work from it. Do unfinished work in a worktree of it, so that it stays playable, and never leave it behind `origin/trunk` after a push of yours.
+- Never edit Lota's repository. Send what you find to its session, which serves every Lota game and not only this one.
+- Edit the server's repository only in a session the maintainer has added it to, and follow its `AGENTS.md` there.
 - Never touch the maintainer's devices, or his wife's, without being asked. On her devices, install only `com.setdef.DotPopper`, and never erase, update or change settings.
 - Create no accounts, repositories or store listings, and never read or copy secrets.
 - Never name specific agents in the repository.
