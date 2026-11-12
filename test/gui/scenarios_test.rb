@@ -141,6 +141,11 @@ class GuiScenariosTest < Minitest::Test
          DOT_POPPER_GUI_INPUT: "gamepad", DOT_POPPER_FAKE_GAMEPAD: "1")
   end
 
+  def test_no_popped_dot_is_bright
+    play("popped_dots", "no popped dot is brighter than the shipped dark themes'",
+         "every theme listed as too light still is", DOT_POPPER_PRO: "1")
+  end
+
   def test_a_game_without_shaders
     play("game", "screens come in order", DOT_POPPER_NO_SHADERS: "1")
   end

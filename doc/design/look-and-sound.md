@@ -198,6 +198,15 @@ Every theme keeps a bright dot told from a popped one by shape and lightness, no
 
 It also checks that Classic comes first and is the only theme without art, that every theme has a name, that every popped dot gets the same seed while each bright dot gets its own, and that no dot shader reads where on the screen it draws.
 
+Nothing in a popped dot is bright: no highlight, rim light, sheen, pale band, light eye or vivid accent that the eye could take for a piece of the bright dot. A popped dot reads by its shape in dark tones, as Jack-o'-lantern's carved face is darker than its dark body and Ghost's eye holes are only a little lighter than its own. A playtester could not tell popped Santas from the bright one while they had a pale beard and light eyes. The palette can't show this, because a shader draws the dot, so `test/gui/scenarios/popped_dots.rb` (in `rake test:gui`) draws each theme's popped dot alone and measures the screenshot's lightness (`Shot#lightness`, 0 to 1) over its disc:
+
+| Rule | At most |
+| --- | --- |
+| The lightest hundredth of a popped dot's disc | 0.26 |
+| The lightest thousandth | 0.3 |
+
+These limits come from the shipped themes drawn in dark tones. Jack-o'-lantern, Ghost and Eclipse reach 0.17, 0.25 and 0.15 at the hundredth (Ghost's eye holes and rim are the lightest) and 0.21, 0.25 and 0.21 at the thousandth. The thousandth catches a small glint that is too few points to move the hundredth. Themes not yet redrawn to this rule are named in the scenario's `TOO_LIGHT` list, which the scenario keeps honest: a listed theme that passes fails the run until it is taken off. Classic's gray crater and Awake's pale lashes, both from before this rule, are on the list with the holiday themes still to redraw.
+
 ### The server unlocks them
 
 A theme other than Classic exists to the player only once the server has named it (`Presentation::ThemeKeeper`). Until then no screen shows a trace of it: no placeholder, no teaser, no count. People do not miss what was never promised (Johnson), and an offer you can see and not have is pressure (Rigby and Ryan, *Glued to Games*).
