@@ -199,29 +199,45 @@ module DotPopper
         end
       end
 
-      # Inside a Christmas tree: fir boughs, far ones paler, reaching in
-      # from both sides at every height, with near ones heavy at the top
-      # corners.
+      # Inside a Christmas tree: fir boughs reaching in from both sides at
+      # every height, in two depths, strung with dim lights and hung with
+      # far ornaments, and presents on the floor below.
       def boughs(width, height)
         out = []
         land = width > height
-        layers = [[Color.hex("#0b1d18"), land ? 4 : 5, 0.34..0.55, 0.75],
-                  [Color.hex("#061210"), land ? 3 : 4, 0.4..0.62, 0.9],
-                  [Color.hex("#030a08"), 2, 0.5..0.75, 1.15]]
-        presents(out, Color.hex("#050a08"), width, height)
+        presents(out, Color.hex("#040907"), width, height)
+        layers = [[Color.hex("#0a1d17"), land ? 4 : 5, 0.38..0.6, 0.85], [Color.hex("#020806"), 2, 0.5..0.75, 1.15]]
         layers.each_with_index do |(ink, count, reach, scale), layer|
           [[0, 1], [width, -1]].each_with_index do |(x0, side), k|
             r = Random.new(70 + (layer * 10) + k)
             count.times do |b|
-              span = layer == 2 ? 0.22 : 0.98
-              y0 = (((b + 0.5 + (side.positive? ? 0 : 0.5)) / count * span) - (layer == 2 ? 0.04 : 0.02)) * height + r.rand(-12.0..12.0)
+              span = layer == 1 ? 0.22 : 0.92
+              y0 = (((b + 0.5 + (side.positive? ? 0 : 0.5)) / count * span) - (layer == 1 ? 0.04 : 0.02)) * height + r.rand(-12.0..12.0)
               length = [width, height].min * r.rand(reach) * (land ? 1.25 : 1.0)
               angle = side.positive? ? r.rand(0.05..0.4) : Math::PI - r.rand(0.05..0.4)
-              bough(out, ink, x0 - (side * 10), y0, angle, length, r, scale)
+              stem = bough(out, ink, x0 - (side * 10), y0, angle, length, r, scale)
+              trim(out, stem, r) if layer.zero?
             end
           end
         end
         out
+      end
+
+      LIGHTS = [Color.hex("#ffd27a", 0.4), Color.hex("#ff8a7a", 0.35), Color.hex("#9ad6ff", 0.35), Color.hex("#b4f0a0", 0.3)].freeze
+
+      # A far bough's trimmings, kept dim behind the play: a string of
+      # small lights along it, and an ornament hung near its tip.
+      def trim(out, stem, random)
+        stem.each_with_index do |(x, y), i|
+          next if i.zero? || i.odd?
+
+          out << Dot.new(x:, y: y + random.rand(2.0..7.0), radius: 2.2, color: LIGHTS[(i / 2) % LIGHTS.size])
+        end
+        tip = stem[-3]
+        drop = random.rand(10.0..22.0)
+        out << segment(tip, [tip[0], tip[1] + drop], 1.0, 1.0, Color.hex("#0a1d17"))
+        out << Dot.new(x: tip[0], y: tip[1] + drop + 8, radius: 8, color: Color.hex(%w[#2c1c1e #2a2a1c #1c2430].sample(random:)))
+        out << Fan.new(color: Color.hex("#0a1d17"), points: [[tip[0] - 2.5, tip[1] + drop - 1], [tip[0] + 2.5, tip[1] + drop - 1], [tip[0] + 2.5, tip[1] + drop + 2], [tip[0] - 2.5, tip[1] + drop + 2]])
       end
 
       # The floor under the tree, and presents on it, each with a bow.
@@ -277,6 +293,7 @@ module DotPopper
             needles(out, color, a, tip, 10 * scale * (1 - (f * 0.4)), random)
           end
         end
+        points
       end
 
       # Short needles either side of the twig from +a+ to +b+, swept forward.

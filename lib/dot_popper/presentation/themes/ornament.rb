@@ -3,7 +3,8 @@
 module DotPopper
   module Presentation
     module Themes
-      # Mirrored gold glass ornaments on a tree; broken, in shadow, when popped.
+      # Mirrored gold glass ornaments on a tree; broken, dark red glass in
+      # shadow, when popped.
       module Ornament
         def self.theme(base, hex)
           Theme.new(
@@ -12,8 +13,8 @@ module DotPopper
               ink_top: hex["#0b1a17"], ink_bottom: hex["#0c1420"], ink_glow: hex["#1c2c26"], ink_edge: hex["#040a08"],
               fresh_light: hex["#fffbea"], fresh_body: hex["#ffe6a8"], fresh_deep: hex["#d9a443"],
               fresh_bounce: hex["#fff0c4"], fresh_rim: hex["#fff8e0"], halo: hex["#ffd98a"],
-              popped_top: hex["#2a2017"], popped_bottom: hex["#140f0b"], popped_rim: hex["#7a6b5a"],
-              popped_crater: hex["#070504"], popped_lip: hex["#5a4a3a"],
+              popped_top: hex["#3a1018"], popped_bottom: hex["#1c070c"], popped_rim: hex["#8a6670"],
+              popped_crater: hex["#0a0305"], popped_lip: hex["#6e3e48"],
               shadow: hex["#020605"], alarm: hex["#ff6a5a"],
               cream: hex["#fff4de"], soft: hex["#b9c9c0"], gain: hex["#a9e6d0"], urgent: hex["#ff7a6a"],
               pill: hex["#06100e", 0.85], pill_edge: hex["#b58b3a", 0.8],
@@ -21,8 +22,8 @@ module DotPopper
             ),
             art: ThemeArt.new(
               dot: "ornament", scenery: :boughs,
-              sky: ThemeSky.new(top: hex["#07130f"], mid: hex["#0e221c"], bottom: hex["#3a2a16"], glow: hex["#b0702c"], glow_at: [0.5, 1.02],
-                                glow_amount: 0.55, edge: hex["#030806"], stars: 0.0),
+              sky: ThemeSky.new(top: hex["#0d2620"], mid: hex["#173a2f"], bottom: hex["#4a3418"], glow: hex["#b8742c"], glow_at: [0.5, 1.02],
+                                glow_amount: 0.55, edge: hex["#06100d"], stars: 0.0),
               wordmark: "assets/fonts/Fredoka-Bold.ttf", title_dots: true,
               sounds: {
                 pop: Patch.new(notes: [Note.new(wave: :sine, from: 2637, length: 0.26, attack: 0.001, volume: 0.55),
