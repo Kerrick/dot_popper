@@ -67,24 +67,23 @@ vec3 snowman(vec2 p, float d, float aa, float bonus) {
   // Glitter where the light catches the crust.
   float g = step(0.985, hash(floor(p * 60.0) + floor(seed))) * (0.5 + 0.5 * sin(time * 3.0 + hash(floor(p * 60.0)) * 30.0));
   c = mix(c, vec3(1.0), g * lam);
-  // Cold cheeks.
-  for (int i = 0; i < 2; i++) {
-    float sx = i == 0 ? -1.0 : 1.0;
-    c = mix(c, vec3(1.0, 0.72, 0.78), exp(-pow((p.x - sx * 0.42) / 0.13, 2.0) - pow((p.y - 0.1) / 0.09, 2.0)) * 0.55);
-  }
-  // Coal eyes and a coal smile, each lump with a glint.
-  float eyes = min(coal(p, vec2(-0.24, -0.1), 0.095), coal(p, vec2(0.24, -0.1), 0.095));
+  // Coal eyes, round and wide open, looking straight out, and a broad coal
+  // smile: a cheerful face with nothing sly in it.
+  vec2 eye_l = vec2(-0.22, -0.1), eye_r = vec2(0.22, -0.1);
+  float eyes = min(ellipse(p, eye_l, vec2(0.088, 0.108)), ellipse(p, eye_r, vec2(0.088, 0.108)));
   float smile = 1.0;
   for (int i = 0; i < 5; i++) {
     float t = (float(i) - 2.0) / 2.0;
-    smile = min(smile, coal(p, vec2(t * 0.32, 0.36 + 0.09 * (1.0 - t * t) - 0.08), 0.05));
+    smile = min(smile, coal(p, vec2(t * 0.3, 0.27 + 0.15 * (1.0 - t * t)), 0.05));
   }
   float lumps = min(eyes, smile);
-  c *= 1.0 - 0.3 * cover_of(min(coal(p - vec2(0.02, 0.03), vec2(-0.24, -0.1), 0.09), coal(p - vec2(0.02, 0.03), vec2(0.24, -0.1), 0.09)), aa * 6.0);
+  c *= 1.0 - 0.3 * cover_of(min(ellipse(p - vec2(0.02, 0.03), eye_l, vec2(0.085, 0.105)), ellipse(p - vec2(0.02, 0.03), eye_r, vec2(0.085, 0.105))), aa * 6.0);
   vec3 coal_col = vec3(0.07, 0.07, 0.09) + vec3(0.12) * smoothstep(0.6, 1.0, noise(p * 40.0));
   c = mix(c, coal_col, cover_of(lumps, aa));
-  float glints = min(length(p - vec2(-0.27, -0.13)) - 0.022, length(p - vec2(0.21, -0.13)) - 0.022);
-  c = mix(c, vec3(0.9, 0.92, 1.0), cover_of(glints, aa));
+  // A big catchlight high in each eye, and a small one below it.
+  float glints = min(length(p - eye_l - vec2(-0.028, -0.04)) - 0.032, length(p - eye_r - vec2(-0.028, -0.04)) - 0.032);
+  glints = min(glints, min(length(p - eye_l - vec2(0.03, 0.04)) - 0.014, length(p - eye_r - vec2(0.03, 0.04)) - 0.014));
+  c = mix(c, vec3(0.92, 0.94, 1.0), cover_of(glints, aa));
   // The carrot, stuck in at a slant.
   vec2 ra = vec2(0.0, 0.08), rb = vec2(0.44, 0.17);
   c *= 1.0 - 0.3 * cover_of(carrot(p - vec2(0.02, 0.05), ra, rb, 0.075), aa * 6.0);
@@ -123,32 +122,47 @@ vec3 snowman(vec2 p, float d, float aa, float bonus) {
 }
 
 vec3 puddle(vec2 p, float d, float aa) {
-  // Dark meltwater, with the night's light lying across it in ripples.
+  // Dark meltwater with faint ripples. Nothing in a puddle is bright: it
+  // reads by its shapes in dark tones, as the shipped popped dots do.
   vec3 c = mix(vec3(0.05, 0.07, 0.12), vec3(0.11, 0.14, 0.22), clamp(0.5 - 0.6 * dot(p, LIGHT), 0.0, 1.0));
   float ripple = sin(length(p - vec2(-0.2, -0.25)) * 26.0) * 0.5 + 0.5;
-  c = mix(c, vec3(0.2, 0.25, 0.36), smoothstep(0.8, 1.0, ripple) * smoothstep(0.75, 0.2, length(p - vec2(-0.2, -0.25))) * 0.5);
+  c = mix(c, vec3(0.13, 0.16, 0.24), smoothstep(0.8, 1.0, ripple) * smoothstep(0.75, 0.2, length(p - vec2(-0.2, -0.25))) * 0.5);
   // Slush left at the edge.
   float edge_n = noise(vec2(atan(p.y, p.x) * 3.0, 1.0)) * 0.12;
   float slush = smoothstep(0.78 - edge_n, 0.86 - edge_n, d);
-  vec3 slush_col = mix(vec3(0.15, 0.17, 0.25), vec3(0.3, 0.33, 0.44), clamp(0.5 + 0.6 * dot(p / max(d, 1e-3), LIGHT) + (noise(p * 9.0) - 0.5) * 0.6, 0.0, 1.0));
+  vec3 slush_col = mix(vec3(0.09, 0.1, 0.16), vec3(0.16, 0.18, 0.26), clamp(0.5 + 0.6 * dot(p / max(d, 1e-3), LIGHT) + (noise(p * 9.0) - 0.5) * 0.6, 0.0, 1.0));
   c = mix(c, slush_col, slush);
-  // His hat, sodden, lying flat at the top left.
-  vec2 hq = p - vec2(-0.3, -0.34);
-  float hat = ellipse(hq, vec2(0.0), vec2(0.3, 0.17)) + 0.03 * sin(atan(hq.y, hq.x) * 4.0);
-  vec3 hat_col = mix(vec3(0.05, 0.13, 0.09), vec3(0.11, 0.24, 0.16), clamp(0.5 - 2.0 * hq.y, 0.0, 1.0));
-  hat_col = mix(hat_col, vec3(0.3, 0.29, 0.26), step(0.5, fract(hq.y * 7.0)) * 0.6);
-  hat_col = mix(hat_col, vec3(0.28, 0.05, 0.06), cover_of(abs(hq.y - 0.11) - 0.05, aa) * 0.9);
-  c *= 1.0 - 0.35 * cover_of(hat - 0.04, aa * 6.0);
+  // His knit hat, whole, lying flat at the top left: the same hat as on his
+  // head, a dome of stripes over its ribbed red cuff, in the dark.
+  vec2 hq = p - vec2(-0.27, -0.36);
+  float ha = -0.3;
+  vec2 q = vec2(cos(ha) * hq.x + sin(ha) * hq.y, -sin(ha) * hq.x + cos(ha) * hq.y);
+  float dome = max(ellipse(q, vec2(0.0), vec2(0.29, 0.29)), q.y);
+  vec2 cq = abs(q - vec2(0.0, -0.03)) - vec2(0.29, 0.045);
+  float cuff_sd = length(max(cq, 0.0)) + min(max(cq.x, cq.y), 0.0) - 0.012;
+  float hat = min(dome, cuff_sd);
+  // Up from the cuff, as on his head: cream, green, cream, green.
+  float hs = 0.5;
+  float w = (-q.y + 0.03 * (q.x / 0.29) * (q.x / 0.29)) / hs;
+  vec3 hat_col = mix(vec3(0.04, 0.14, 0.085), vec3(0.19, 0.18, 0.16), step(0.5, fract(w * 4.2)));
+  vec2 k = vec2(q.x * 26.0, w * 16.0);
+  hat_col *= 0.8 + 0.2 * smoothstep(-0.3, 0.3, abs(fract(k.x) - 0.5) * 2.0 - fract(k.y));
+  float in_cuff = cover_of(cuff_sd, aa);
+  hat_col = mix(hat_col, vec3(0.27, 0.04, 0.055) * (0.75 + 0.25 * cos(q.x * 110.0)), in_cuff);
+  // The fold where the cuff turns up, and the cloth lit from the top left.
+  hat_col *= 1.0 - 0.35 * cover_of(abs(q.y + 0.075) - 0.008, aa) * (1.0 - step(0.0, cuff_sd + 0.004));
+  hat_col *= clamp(0.85 + 0.9 * dot(hq, LIGHT), 0.6, 1.1) * (0.72 + 0.28 * smoothstep(0.0, 0.035, -hat));
+  c *= 1.0 - 0.4 * cover_of(min(max(ellipse(q - vec2(0.03, 0.04), vec2(0.0), vec2(0.29, 0.29)), q.y - 0.04), cuff_sd - 0.02), aa * 6.0);
   c = mix(c, hat_col, cover_of(hat, aa));
-  // His carrot, floating.
+  // His carrot, floating, dull in the dark water.
   vec2 ra = vec2(0.05, 0.2), rb = vec2(0.52, -0.08);
   c *= 1.0 - 0.4 * cover_of(carrot(p - vec2(0.02, 0.04), ra, rb, 0.075), aa * 6.0);
-  c = mix(c, carrot_color(p, ra, rb, 0.075, 1.0) * 0.62, cover_of(carrot(p, ra, rb, 0.075), aa));
+  c = mix(c, mix(carrot_color(p, ra, rb, 0.075, 1.0), vec3(0.5), 0.25) * 0.33, cover_of(carrot(p, ra, rb, 0.075), aa));
   // His coal, sunk in the water.
   float lumps = min(min(coal(p, vec2(-0.2, 0.34), 0.1), coal(p, vec2(0.04, 0.5), 0.08)),
                     min(min(coal(p, vec2(0.3, 0.4), 0.075), coal(p, vec2(-0.44, 0.12), 0.075)), coal(p, vec2(0.44, 0.14), 0.065)));
   c = mix(c, vec3(0.015, 0.015, 0.02), cover_of(lumps, aa));
-  c = mix(c, vec3(0.32, 0.35, 0.45), cover_of(abs(lumps + 0.014) - 0.009, aa) * 0.8 * smoothstep(-0.2, 0.3, -dot(p, LIGHT) + 0.2));
+  c = mix(c, vec3(0.1, 0.11, 0.16), cover_of(abs(lumps + 0.014) - 0.009, aa) * 0.8 * smoothstep(-0.2, 0.3, -dot(p, LIGHT) + 0.2));
   return c;
 }
 
@@ -170,7 +184,7 @@ vec4 effect(vec4 params, Image tex, vec2 uv, vec2 screen) {
   vec3 body = fresh > 0.001 ? mix(puddle(p, d, aa), snowman(p, d, aa, bonus), fresh) : puddle(p, d, aa);
   float w = mix(max(0.038, 1.5 * aa), max(0.022, 1.5 * aa), fresh);
   float ring = clamp((d - (1.0 - w)) / aa + 0.5, 0.0, 1.0);
-  vec3 rim = mix(mix(vec3(0.3, 0.33, 0.44), vec3(0.52, 0.56, 0.68), clamp(0.5 + 0.6 * dot(p, LIGHT), 0.0, 1.0)), vec3(1.0), fresh);
+  vec3 rim = mix(mix(vec3(0.19, 0.21, 0.3), vec3(0.32, 0.35, 0.46), clamp(0.5 + 0.6 * dot(p, LIGHT), 0.0, 1.0)), vec3(1.0), fresh);
   body = mix(body, rim, ring);
   body = mix(body, alarm, alarmed * smoothstep(0.78, 0.96, d));
   color = over(vec4(body * cover, cover), color) * params.a;
