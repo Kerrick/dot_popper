@@ -43,9 +43,12 @@ module DotPopper
       @tapped = false
     end
 
+    # A game begins with the row it has: none from Play, and from the
+    # tutorial, the dots popped there since its last mistake.
     def begin_game(game)
       reset
       @game = game
+      @dots_in_a_row = game.dots_in_a_row
     end
 
     def popped(event, game)
