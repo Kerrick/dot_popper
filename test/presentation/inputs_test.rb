@@ -55,7 +55,7 @@ class InputsTest < Minitest::Test
 
   # Controls only a controller is offered, and how a finger or a mouse
   # does the same: stepping through the themes, an achievement's dialogs,
-  # and the friend groups, where a cursor is slower than an input.
+  # and the friend groups, where moving a cursor is slower than a tap or a click.
   PAD_ONLY = {
     theme_prev: "a tap on the theme", theme_next: "a tap on the theme",
     achievement_prev: "Close, then a tap on the achievement", achievement_next: "Close, then a tap on the achievement",
