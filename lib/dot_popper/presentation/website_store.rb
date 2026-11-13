@@ -62,10 +62,10 @@ module DotPopper
       # and Enter enters what was typed. Says whether it took the key.
       def type(key)
         name = key.to_s
-        if (char = name[/\A(?:kp)?([0-9a-z])\z/, 1]) then add(char)
-        elsif %w[minus kpminus].include?(name) then add("-")
-        elsif %w[backspace delete].include?(name) then erase
-        elsif %w[return kpenter].include?(name) && !@typed.empty? then enter(@typed)
+        if (char = name[/\A[0-9a-z]\z/]) then add(char)
+        elsif key == :minus then add("-")
+        elsif %i[backspace delete].include?(key) then erase
+        elsif key == :enter && !@typed.empty? then enter(@typed)
         else return false
         end
         true

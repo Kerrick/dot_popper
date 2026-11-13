@@ -179,7 +179,7 @@ The words that say what to do follow the input the player used last. `Show#input
 
 ## Keyboard
 
-`App#key_pressed`, in order. The first that applies wins.
+`App#key_pressed`, in order. The first that applies wins. `Shell::LotaInput#key` first names the key as the game does, so the presentation never hears LÖVE's names: a letter or digit by itself (`:a`, `:"7"`), the keypad's digits, hyphen and Enter as the main keys', `:enter`, `:page_up` and `:page_down`. A key the game doesn't name only makes Buy name its key on the offer ([store-and-pro.md](store-and-pro.md)), as every key does.
 
 | Key | What it does |
 | --- | --- |

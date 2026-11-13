@@ -833,7 +833,7 @@ module DotPopper
 
         moved = scroll.key(name, line: scroll_line)
         credits? ? @credits = moved : @scroll = moved
-        %i[up down pageup pagedown home end].include?(name.to_s.to_sym)
+        %i[up down page_up page_down home end].include?(name)
       end
 
       # A finger or the mouse, +by+ (as #tap names it), dragged to +y+,

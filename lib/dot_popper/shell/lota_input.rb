@@ -10,13 +10,24 @@ module DotPopper
     # 1 coordinates), or that came from the mouse (+mouse+), is no finger.
     # A gamepad's buttons and triggers come by LÖVE's names for an Xbox
     # pad's (SDL maps every other gamepad to them), and leave here by the
-    # game's (Presentation::GamepadButtons).
+    # game's (Presentation::GamepadButtons); so do the keys.
     class LotaInput < Data.define(:router)
       # LÖVE's names for the buttons the game names. The rest (the d-pad,
       # the sticks' clicks, the guide button) name nothing.
       BUTTONS = { a: :a, b: :b, x: :x, y: :y, start: :start, back: :select, leftshoulder: :lb, rightshoulder: :rb }.freeze
       # LÖVE's names for the trigger axes.
       TRIGGERS = { "triggerleft" => :left, "triggerright" => :right }.freeze
+
+      # LÖVE's names for the keys the game names, the keypad's as the
+      # main keys': the letters and digits, and the keys that edit, move,
+      # confirm and leave. The rest (Shift, Tab, the other function keys)
+      # name nothing.
+      KEYS = {
+        **[*("a".."z"), *("0".."9")].to_h { [it, it.to_sym] }, **("0".."9").to_h { ["kp#{it}", it.to_sym] },
+        "minus" => :minus, "kpminus" => :minus, "backspace" => :backspace, "delete" => :delete,
+        "return" => :enter, "kpenter" => :enter, "space" => :space, "escape" => :escape, "f11" => :f11,
+        "up" => :up, "down" => :down, "pageup" => :page_up, "pagedown" => :page_down, "home" => :home, "end" => :end
+      }.freeze
 
       def initialize(router: Presentation::InputRouter.new) = super
 
@@ -34,6 +45,9 @@ module DotPopper
       # :left or :right for the trigger axis LÖVE calls +axis+, or nil for
       # another axis.
       def trigger(axis) = TRIGGERS[axis.to_s]
+
+      # The game's name for the key LÖVE calls +name+, or nil.
+      def key(name) = KEYS[name.to_s]
 
       def gamepad_pressed(cursor) = router.gamepad_pressed(cursor)
       def gamepad_released(cursor) = router.gamepad_released(cursor)

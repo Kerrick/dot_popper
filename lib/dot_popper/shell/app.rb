@@ -266,10 +266,13 @@ module DotPopper
       # The mouse wheel turned +y+ notches, up when positive.
       def wheel_moved(y) = @show.wheel_scroll(y)
 
-      def key_pressed(key)
+      # A key went down, which Lota calls +name+ (LotaInput#key names it as
+      # the game does; a key the game doesn't name only shows Buy's key).
+      def key_pressed(name)
         return skip_splash if @splash
 
         @show.keyboard_used(@platform.command_key? ? "\u2318B" : "Ctrl+B") unless @touch
+        key = @input.key(name) or return
         return if key == :v && paste_chord? && @show.paste_shortcut
         # Ctrl+B or Cmd+B buys on the offer: a chord, so no press that means
         # continue or back, and no letter of a typed license key, buys.
@@ -296,11 +299,11 @@ module DotPopper
         case key
         when :escape then ::Lota::Event.quit
         when :f11 then toggle_fullscreen
-        when :return, :kpenter then toggle_fullscreen if fullscreen_chord?
+        when :enter then toggle_fullscreen if fullscreen_chord?
         end
       end
 
-      PRIMARY_KEYS = %i[return kpenter space].freeze
+      PRIMARY_KEYS = %i[enter space].freeze
 
       # The window changed size, or moved to a screen of another density.
       # For a moment after the window opens or changes size, the pointer

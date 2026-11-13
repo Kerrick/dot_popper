@@ -191,11 +191,11 @@ module DotPopper
 
       # What the arrows, Page keys, Home and End do, for a line +line+ tall.
       def key(name, line:)
-        case name.to_s.to_sym
+        case name
         in :up then by(-line)
         in :down then by(line)
-        in :pageup then page(-1)
-        in :pagedown then page(1)
+        in :page_up then page(-1)
+        in :page_down then page(1)
         in :home then to_start
         in :end then to_end
         else self

@@ -139,7 +139,7 @@ class CreditsTest < Minitest::Test
     show.wheel_scroll(-1)
     line = show.credits_layout.line
     assert_in_delta line * Style::CREDITS.wheel, show.credits.offset, 1e-6
-    assert show.scroll_key(:pagedown)
+    assert show.scroll_key(:page_down)
     refute show.scroll_key(:escape)
     show.stick_scroll(Stick.new(x: 0, y: 1.0), 1.0)
     assert_operator show.credits.offset, :>, line * 4

@@ -52,4 +52,11 @@ class LotaInputTest < Minitest::Test
   def test_only_the_trigger_axes_are_triggers
     assert_equal [:left, :right, nil, nil], [:triggerleft, "triggerright", :leftx, :righty].map { @input.trigger(it) }
   end
+
+  def test_lotas_keys_are_named_as_the_game_names_them_the_keypads_as_the_main_keys
+    assert_equal %i[a z 0 9 7 minus minus enter enter page_up page_down escape],
+                 %w[a z 0 9 kp7 minus kpminus return kpenter pageup pagedown escape].map { @input.key(it) }
+    assert_equal :space, @input.key(:space)
+    %w[lshift tab f1 kpplus].each { assert_nil @input.key(it) }
+  end
 end

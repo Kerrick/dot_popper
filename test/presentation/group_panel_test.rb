@@ -254,18 +254,19 @@ class GroupPanelTest < Minitest::Test
     assert_empty @worker.started
   end
 
-  # On a keyboard the keypad takes typed digits, the keypad's own too,
-  # Backspace takes the last away, and Enter joins.
+  # On a keyboard the keypad takes typed digits (Shell::LotaInput names
+  # the keypad's as the main keys'), Backspace takes the last away, and
+  # Enter joins.
   def test_typed_digits_fill_the_code_and_enter_joins
     open_join
-    "2345".each_char { assert @show.type_key(it) }
-    %w[kp6 kp7 8].each { @show.type_key(it) }
+    "2345".each_char { assert @show.type_key(it.to_sym) }
+    %i[6 7 8].each { @show.type_key(it) }
     assert_equal "2345678", panel.code, "the eighth digit has no place"
     assert panel.code_complete?
-    assert @show.type_key("backspace")
+    assert @show.type_key(:backspace)
     assert_equal "234567", panel.code
-    refute @show.type_key("m"), "a letter is not the keypad's"
-    @show.type_key("8")
+    refute @show.type_key(:m), "a letter is not the keypad's"
+    @show.type_key(:"8")
     @show.primary
     tick
     refute_empty @worker.started

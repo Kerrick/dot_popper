@@ -169,7 +169,7 @@ class WebsiteStoreTest < Minitest::Test
     s = show
     s.open_offer
     text = C::LicenseKey.issue(C::TestKeys::LICENSE).text
-    refute s.type_key(:return), "Enter with nothing typed is the button's"
+    refute s.type_key(:enter), "Enter with nothing typed is the button's"
     text.each_char do |c|
       next if c == " "
 
@@ -179,7 +179,7 @@ class WebsiteStoreTest < Minitest::Test
     refute s.pro?
     s.type_key(:backspace)
     s.type_key(text[-1].downcase.to_sym)
-    assert s.type_key(:return)
+    assert s.type_key(:enter)
     assert s.pro?
   end
 

@@ -312,9 +312,8 @@ module DotPopper
       def type(key)
         return false unless open? && page == :join && !asking
 
-        name = key.to_s
-        if (digit = name[/\A(?:kp)?(\d)\z/, 1]) then tap_digit(digit)
-        elsif %w[backspace delete].include?(name) then erase
+        if (digit = key.to_s[/\A\d\z/]) then tap_digit(digit)
+        elsif %i[backspace delete].include?(key) then erase
         else return false
         end
         true
