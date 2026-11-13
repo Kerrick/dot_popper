@@ -2,12 +2,14 @@
 
 # A stand-in for the friend groups' server, in memory, for trying the
 # game's screens without one: `ruby script/group_stub.rb [port]`, then run
-# the game with DOT_POPPER_SERVER=http://127.0.0.1:9293. It answers the
-# game's whole API, and starts with groups to look at: one full of members
-# with a history of its title, joined by code 1234567.
+# the game with DOT_POPPER_SERVER=http://127.0.0.1:9293. It answers every
+# request friend groups declare (test/groups/group_stub_test.rb holds it
+# to DotPopper::Groups::REQUESTS), and starts with groups to look at: one
+# full of members with a history of its title, joined by code 1234567.
 
 require "json"
 require "socket"
+require "time"
 
 # The server's rules and its answers, without the sockets.
 class GroupStub
@@ -19,7 +21,8 @@ class GroupStub
     @groups = {}
     @changes = {}
     @next_id = 1
-    @next_change = 1
+    # After the seeded history's, so what happens here is newer.
+    @next_change = 101
     seed
   end
 
@@ -40,6 +43,7 @@ class GroupStub
     when "POST /groups" then Reply.new(201, group_json(new_group(you: 1, joined: true)))
     when "POST /memberships" then join(body["join_code"])
     when "POST /games" then cabinet(body["score"].to_i)
+    when "POST /achievements" then achievement(body["key"].to_s)
     when %r{\AGET /groups/(\d+)\z} then one($1.to_i)
     when %r{\AGET /groups/(\d+)/history\z} then Reply.new(200, @changes.fetch($1.to_i, []).first(20))
     when %r{\ADELETE /groups/(\d+)/membership\z} then leave($1.to_i)
@@ -65,6 +69,17 @@ class GroupStub
 
   def cabinet(score)
     Reply.new(200, { groups: @groups.values.select { it[:joined] }.map { { group: group_json(play(it, score)), won_title: it[:won] } } })
+  end
+
+  # The achievement goes into the history of every group the player is in.
+  def achievement(key)
+    joined = @groups.values.select { it[:joined] }
+    joined.each do |group|
+      entry = { kind: "achievement", id: @next_change, member_number: group[:you], key:, at: Time.now.utc.iso8601 }
+      @next_change += 1
+      @changes[group[:id]] = [entry, *@changes[group[:id]]]
+    end
+    Reply.new(201, { groups: joined.map { group_json(it) } })
   end
 
   def play(group, score)
@@ -138,6 +153,5 @@ ensure
 end
 
 if __FILE__ == $PROGRAM_NAME
-  require "time"
   serve(Integer(ARGV.fetch(0, "9293")))
 end
