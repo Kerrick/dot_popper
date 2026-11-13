@@ -371,12 +371,13 @@ module DotPopper
       class HomeStyle < Data.define(:dots, :drift, :dim, :breath, :faintest, :intro); end
       HOME = HomeStyle.new(dots: 7, drift: 0.35, dim: 0.76, breath: 2.4, faintest: 0.8,
                             intro: Tween.new(from: 0.0, to: 1.0, duration: 0.5, ease: :out_cubic))
-      # Settings' "Dot size" choice is offered only where standard dots,
-      # worked out from the screen, would be more than a tenth smaller or
-      # bigger than the fixed size; nearer than that, as in the 24 × 16 R
-      # window, the two look alike. Each segment shows a dot: the fixed
-      # size's about a third of the segment's height across, Standard's in
-      # proportion to it, from half as big to a little over twice.
+      # Standard dots, worked out from the screen, look different from the
+      # bigger or smaller size where they are more than a tenth smaller or
+      # bigger than it; nearer than that, as in the 24 × 16 R window, the
+      # two look alike. Each of Settings' "Dot size" segments shows a dot:
+      # the bigger or smaller size's about a third of the segment's height
+      # across, Standard's in proportion to it, from half as big to a
+      # little over twice.
       SIZING = SizingStyle.new(alike: 0.1, icon: 0.16, icons: 0.5..2.2)
       # ...and Home's words, from its name to its prompt, sit on a
       # faint backing, so a dot drifting behind them dims further.

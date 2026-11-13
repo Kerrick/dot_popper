@@ -74,10 +74,10 @@ module DotPopper
     LARGE_FIELD_FROM = 700
 
     # Standard dots (DotSizing::STANDARD), the default, which the player
-    # may change for the fixed RADIUS: each game's radius is the one that
-    # makes its field STANDARD_AREA square radii, the 24 × 16 R desktop
-    # window's area, so every screen is about as crowded as that one. It is
-    # never below SMALLEST_STANDARD_RADIUS, 30 units, a dot 60 points
+    # may change for the bigger or smaller size, RADIUS: each game's
+    # radius is the one that makes its field STANDARD_AREA square radii,
+    # the 24 × 16 R desktop window's area, so every screen is about as
+    # crowded as that one. It is never below SMALLEST_STANDARD_RADIUS, 30 units, a dot 60 points
     # across, well over Apple's 44-point smallest touch target; and never
     # above LARGEST_STANDARD_SHARE of the screen's shorter side, so a dot on
     # a long, thin window stays a dot and not a wall.

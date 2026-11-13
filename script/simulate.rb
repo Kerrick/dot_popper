@@ -20,7 +20,7 @@
 # (DailyGoal) a game meets, for each candidate and without a bonus dot.
 #
 # Every device plays with each choice of dot size (DotSizing): the
-# fixed size, as the spec has it, and Standard, worked out from the screen. Each plays
+# bigger or smaller size, as the spec has it, and Standard, worked out from the screen. Each plays
 # twice, with the spawn rule (Spawner) and without it, to show how often
 # a new dot is redrawn and what that does to the score. Each run plays in
 # its own Ractor, in parallel, and then again one after
@@ -68,7 +68,7 @@ module Simulation
     def count(&) = spawns.count(&)
   end
 
-  SIZINGS = [DotPopper::DotSizing::FIXED, DotPopper::DotSizing::STANDARD].freeze
+  SIZINGS = [DotPopper::DotSizing::BIGGER_OR_SMALLER, DotPopper::DotSizing::STANDARD].freeze
 
   # One device with one choice of dot size, and the spawn rule's tries
   # (0 turns it off).
@@ -195,7 +195,7 @@ module Simulation
   # "old score" the mean score without it.
   def self.report(games, all_results)
     JOBS.zip(all_results).group_by { |job, _| job.sizing }.each do |sizing, rows|
-      puts sizing.standard? ? "\nStandard dots, worked out from the screen" : "\nThe fixed dot size"
+      puts sizing.standard? ? "\nStandard dots, worked out from the screen" : "\nThe bigger or smaller dot size"
       puts format("%-26s %6s %6s %6s %6s %6s %7s %6s %8s %7s %9s %9s", "device", "R", "area", "score", "p90", "secs",
                   "endless", "pen", "redrawn", "moved", "no target", "old score")
       rows.each_slice(TRIES.size) { |(job, results), (_, unruled)| report_row(job, results, unruled, games) }

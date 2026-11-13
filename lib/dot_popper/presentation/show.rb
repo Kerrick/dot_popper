@@ -275,7 +275,7 @@ module DotPopper
       def sizing_preview = SizingPreview.of(cabinet.screen, style::SIZING)
 
       # Whether Settings offers the choice of dot size: where the two sizes
-      # look different, and wherever the fixed size is saved
+      # look different, and wherever the bigger or smaller size is saved
       # (SizingPreview#offered?). Where they look alike and Standard is
       # saved, the choice is left out, and games follow it.
       def sizing_offered? = sizing_preview.offered?(cabinet.sizing)

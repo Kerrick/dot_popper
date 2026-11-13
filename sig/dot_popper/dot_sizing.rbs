@@ -6,6 +6,8 @@ module DotPopper
 
     def initialize: (name: String) -> void
 
+    BIGGER_OR_SMALLER: DotSizing
+
     FIXED: DotSizing
 
     STANDARD: DotSizing
