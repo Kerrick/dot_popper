@@ -39,8 +39,7 @@ module DotPopper
       attr_reader :cabinet, :effects, :animations, :hud, :attract, :layout, :home_entrance, :game_over, :sounds, :now, :style,
                   :stats_book, :input, :words, :clock_highlight, :window
 
-      # Their old names, until no caller says them.
-      alias marquee home_entrance
+      # Its old name, until no caller says it.
       alias lead_in clock_highlight
 
       def initialize(cabinet:, layout:, sounds:, radius:, start_game:, finish_game:, buy_pro:, use_theme:, join_or_create_friend_group:,

@@ -14,8 +14,5 @@ module DotPopper
         1 - swing - (swing * Math.cos((now - at) * 2 * Math::PI / style.breath))
       end
     end
-
-    # Its old name, until no caller says it.
-    Marquee = HomeEntrance
   end
 end
