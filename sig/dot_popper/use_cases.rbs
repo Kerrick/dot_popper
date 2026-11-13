@@ -185,8 +185,6 @@ module DotPopper
 
       def initialize: (achievements: Achievements, entitlement: Entitlement, stats_book: StatsBook, score_record: ScoreRecord) -> void
 
-      def locked?: () -> bool
-
       def status: (Achievement::id id) -> (:earned | :not_earned | :offer)
 
       def earned?: (Achievement::id id) -> bool
@@ -198,6 +196,8 @@ module DotPopper
       def progress: (Achievement::id id) -> [Integer, Integer]?
 
       private
+
+      def locked?: () -> bool
 
       def most_dots_in_a_row: (Array[Stats::RecordSet] records) -> Integer
     end

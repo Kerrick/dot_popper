@@ -17,10 +17,6 @@ module DotPopper
         @score_record = score_record
       end
 
-      # Whether what was earned is held back, as for a Free player, whose
-      # dialog leads to Pro instead.
-      def locked? = !@entitlement.pro?
-
       # What +id+'s dialog says of it: :earned or :not_earned for Pro, and
       # for a Free player :offer, since the dialog offers Pro instead.
       def status(id)
@@ -54,6 +50,10 @@ module DotPopper
       end
 
       private
+
+      # Whether what was earned is held back, as for a Free player, whose
+      # dialog leads to Pro instead.
+      def locked? = !@entitlement.pro?
 
       def most_dots_in_a_row(records) = records.map(&:most_dots_in_a_row).max.to_i
     end

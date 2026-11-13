@@ -24,7 +24,6 @@ class ViewAchievementsTest < Minitest::Test
   def test_pro_sees_what_was_earned_when_and_how_many
     pro = view(pro: true)
 
-    refute_predicate pro, :locked?
     assert pro.earned?(:blink)
     refute pro.earned?(:steady)
     assert_equal "2026-11-01", pro.day(:blink)
@@ -45,7 +44,6 @@ class ViewAchievementsTest < Minitest::Test
   def test_a_free_player_sees_none_of_it_though_it_is_kept
     free = view(pro: false)
 
-    assert_predicate free, :locked?
     refute free.earned?(:blink)
     assert_nil free.day(:blink)
     assert_nil free.count
