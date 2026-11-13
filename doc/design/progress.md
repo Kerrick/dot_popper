@@ -76,7 +76,7 @@ A game's records count only among games of its size class (`SizeClass`, `lib/dot
 
 | Class | Which games | Rule |
 | --- | --- | --- |
-| `SizeClass::FITTED` | every game with standard dots | `DotSizing#size_class` |
+| `SizeClass::STANDARD` | every game with standard dots | `DotSizing#size_class` |
 | `SizeClass::SMALL` | the fixed size, field under 250 R² | `Rules::SMALL_FIELD_BELOW` |
 | `SizeClass::MEDIUM` | the fixed size, 250 to under 700 R² | |
 | `SizeClass::LARGE` | the fixed size, 700 R² or more | `Rules::LARGE_FIELD_FROM` |

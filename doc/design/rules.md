@@ -35,13 +35,13 @@ The default size, Standard, is worked out from the screen, so every screen is ab
 
 | Choice | Constant | Radius | Saved as |
 | --- | --- | --- | --- |
-| Standard (the default) | `DotSizing::SIZED_TO_SCREEN`, `DotSizing::DEFAULT` | `DotSize.fitted(width, height)` | `fitted` |
-| Bigger or Smaller (the fixed size) | `DotSizing::STANDARD` | `Rules::RADIUS`, 50 units | `standard` |
+| Standard (the default) | `DotSizing::STANDARD`, `DotSizing::DEFAULT` | `DotSize.standard(width, height)` | `fitted` |
+| Bigger or Smaller (the fixed size) | `DotSizing::FIXED` | `Rules::RADIUS`, 50 units | `standard` |
 
-**The formula** (`DotSize.fitted`): R = √(width × height ÷ 384), the radius that makes the field `Rules::FITTED_AREA`, 24 × 16 = 384 square radii, the desktop window's area. It is clamped:
+**The formula** (`DotSize.standard`): R = √(width × height ÷ 384), the radius that makes the field `Rules::STANDARD_AREA`, 24 × 16 = 384 square radii, the desktop window's area. It is clamped:
 
-- never below `Rules::SMALLEST_FITTED_RADIUS`, 30 units, a dot 60 points across, well over Apple's 44-point smallest touch target;
-- never above `Rules::LARGEST_FITTED_SHARE`, a seventh of the window's shorter side (or 30 units, if that is larger), so a dot on a long, thin window stays a dot.
+- never below `Rules::SMALLEST_STANDARD_RADIUS`, 30 units, a dot 60 points across, well over Apple's 44-point smallest touch target;
+- never above `Rules::LARGEST_STANDARD_SHARE`, a seventh of the window's shorter side (or 30 units, if that is larger), so a dot on a long, thin window stays a dot.
 
 On an upright phone the floor applies: the exact fit would be about 29.6, so the field is 373 R² rather than 384.
 

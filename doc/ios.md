@@ -144,7 +144,7 @@ A good run logs these lines, in this order, under the category `ruby`. Here `<da
 Dot Popper: a dot's radius is 50 points, about 8 mm
 Dot Popper: renderer Metal 2.1 /  / Apple iOS simulator GPU
 Dot Popper: screen 811x375 units, 2338x1080 pixels, dpi scale 2.88 (native 2.8793), safe area 49,0,711,355, mode 812x375 fullscreen desktop, usedpiscale true
-Dot Popper: dots are sized to the screen as each game starts
+Dot Popper: dots are standard, worked out from the screen as each game starts
 Dot Popper: each game is logged in <data>/Library/Application Support/dot_popper/games.csv
 Dot Popper: screenshot <data>/Library/Application Support/dot_popper/shot-1.png
 Dot Popper: screenshot <data>/Library/Application Support/dot_popper/shot-2.png
