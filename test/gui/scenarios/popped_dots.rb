@@ -64,10 +64,10 @@ module DotPopperGui
     NEAREST = 45
 
     def play
-      keeper = show.instance_variable_get(:@theme_keeper)
+      keeper = show.instance_variable_get(:@themes)
       wait(0.5)
-      keeper.receive(P::Style::THEMES.map(&:key))
-      keeper.told(keeper.arrival) until keeper.arrival.nil?
+      keeper.release(P::Style::THEMES.map(&:key))
+      keeper.told(keeper.new_theme) until keeper.new_theme.nil?
       drawn = themes.map { draw(keeper, it) }
       drawn.each { alike(it) }
       say "ok - popped dots differ in no color, lightness or size"

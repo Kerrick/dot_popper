@@ -13,9 +13,9 @@ module DotPopperGui
     P = DotPopper::Presentation
 
     def play
-      keeper = show.instance_variable_get(:@theme_keeper)
+      keeper = show.instance_variable_get(:@themes)
       wait(0.5)
-      keeper.told(keeper.arrival) until keeper.arrival.nil?
+      keeper.told(keeper.new_theme) until keeper.new_theme.nil?
       @size = "1200x800"
       shoot("home-first", settle: 1.5)
       quick_game

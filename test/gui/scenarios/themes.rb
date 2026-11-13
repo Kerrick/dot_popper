@@ -8,8 +8,8 @@ module DotPopperGui
     scenario :themes
 
     def play
-      keeper = show.instance_variable_get(:@theme_keeper)
-      keeper.told(keeper.arrival) until keeper.arrival.nil?
+      keeper = show.instance_variable_get(:@themes)
+      keeper.told(keeper.new_theme) until keeper.new_theme.nil?
       quick_game
       reach = show.reach_of(:themes)
       check(reach, "Home offers Themes")

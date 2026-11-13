@@ -156,12 +156,12 @@ module DotPopper
         @entitlement = Entitlement.new(forced: Entitlement.forced?(settings.env, platform:), license:, trust: Receipt.trusted(channel))
         clipboard = @engine.clipboard
         @server_choice = Presentation::ServerChoice.new(file("server.txt"), gone: @gone, clipboard:)
-        theme_keeper = Presentation::ThemeKeeper.new(file("themes.txt"), themes: Style::THEMES)
-        use_theme = UseCases::UseTheme.new(themes: theme_keeper.rules, entitlement:)
-        use_fixture(theme_keeper, use_theme)
-        theme_keeper.open_by_date(today.call, @gone.days(today.call))
-        @gone.subscribe(@server_choice).subscribe(theme_keeper)
-        @theme_feed = theme_feed_for(theme_keeper)
+        themes = Themes.new(file("themes.txt"))
+        use_theme = UseCases::UseTheme.new(themes:, entitlement:)
+        use_fixture(themes, use_theme)
+        themes.open_by_date(today.call, @gone.days(today.call))
+        @gone.subscribe(@server_choice).subscribe(themes)
+        @theme_feed = theme_feed_for(themes)
         @pen = @engine.pen(shaders: !flag?("DOT_POPPER_NO_SHADERS"))
         current = Style::THEMES.find { it.key == use_theme.current }
         @pen.use(current)
@@ -189,7 +189,7 @@ module DotPopper
           window: @window,
           tutorial_flag: Presentation::TutorialFlag.new(file("tutorial.txt"), mode: Presentation::TutorialFlag.mode(settings.env)),
           group_notice: Presentation::GroupNotice.new(file("group_notice.txt")),
-          theme_keeper:, links: @engine.opener, server_choice: @server_choice, **use_cases
+          themes:, links: @engine.opener, server_choice: @server_choice, **use_cases
         )
         # The Show hears the rules' events, and each game as FinishGame
         # finishes it, for Game Over; a store's purchase landing ticks on
@@ -209,9 +209,9 @@ module DotPopper
       end
 
       # A scenario's unlocks and theme, in place of the server's.
-      def use_fixture(theme_keeper, use_theme)
+      def use_fixture(themes, use_theme)
         keys = settings["DOT_POPPER_THEME_UNLOCKS"]
-        theme_keeper.receive(keys.split(",")) if keys
+        themes.release(keys.split(",")) if keys
         key = settings["DOT_POPPER_THEME"]&.to_sym or return
 
         use_theme.call(key)
@@ -257,11 +257,12 @@ module DotPopper
         WebsiteStore.new(checkout:, entitlement:, gone: @gone, clipboard:, entered: -> { @watch.start })
       end
 
-      # The feed that reads the server's unlocks, if the game has a server.
-      def theme_feed_for(theme_keeper)
+      # What asks the server which themes are released, if the game has a
+      # server.
+      def theme_feed_for(themes)
         url = server_url or return
-        Presentation::ThemeFeed.new(worker: Network::Worker.new(Network::Link.new(url)), theme_keeper:,
-                                    store: file("started_on.txt"), clock: settings.utc_clock)
+        ThemeReleases.new(worker: Network::Worker.new(Network::Link.new(url)), themes:,
+                          store: file("started_on.txt"), clock: settings.utc_clock)
       end
     end
   end
