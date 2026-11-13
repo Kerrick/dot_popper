@@ -49,7 +49,7 @@ class GuiScenariosTest < Minitest::Test
          "a gamepad's B goes back to Settings", "Escape again goes back Home")
   end
 
-  def test_choosing_a_holiday_style_from_the_pro_version
+  def test_using_a_theme_with_pro
     play("themes", "Home offers Themes",
          "a click on the ordinary theme's card uses it at once", "Escape leaves Themes for Home",
          DOT_POPPER_PRO: "1", DOT_POPPER_THEME_UNLOCKS: "ghost")
