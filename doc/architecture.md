@@ -12,7 +12,7 @@ Dot Popper is Ruby on [Lota](https://github.com/setdef/Lota), which runs LÖVE's
 
 | Part | Where | Holds | May use |
 | --- | --- | --- | --- |
-| **Core** | `lib/dot_popper/*.rb`, and `groups/`, `continuity/`, `receipt/` | The rules (dots, the field, the score, the clock, spawning), the flow from Home to a game to Game Over (`Cabinet`), Stats and records, free games, Pro (`Entitlement`, `Receipt`, `Continuity`), the friend-group client (`Groups`), the build's kind (`Build`), and the guard on automated runs (`Automation`) | Ruby's standard library only |
+| **Core** | `lib/dot_popper/*.rb`, and `network/`, `groups/`, `continuity/`, `receipt/` | The rules (dots, the field, the score, the clock, spawning), the flow from Home to a game to Game Over (`Cabinet`), Stats and records, free games, Pro (`Entitlement`, `Receipt`, `Continuity`), the HTTP client every request goes through (`Network`), the friend-group client (`Groups`), the build's kind (`Build`), and the guard on automated runs (`Automation`) | Ruby's standard library only |
 | **Presentation** | `lib/dot_popper/presentation/` | Everything a player sees, hears and presses that isn't a rule: every number, color, word, size, timing and animation (`Style`, `Words`), layout plans, effects, the tutorial, the sound synthesizer, input routing, and the `Show`, which ties them to the core's events | The core |
 | **Shell** | `lib/dot_popper/shell/` | Carrying the presentation out with Lota: painters, the `Renderer`, the `Speaker`, gamepads, the Game Over pile's physics, save files, the clipboard, URLs, the store helper, and `App`, which wires everything together | The presentation, the core and Lota |
 | **Entry points** | `main.rb`, `conf.rb`, `bin/dot_popper` | `conf.rb` sets Lota's window and renderers before the window opens; `main.rb` hands each Lota callback to `Shell::App`; `bin/dot_popper` starts the game fused, for the phone builds | Everything |
@@ -25,7 +25,7 @@ Dot Popper is Ruby on [Lota](https://github.com/setdef/Lota), which runs LÖVE's
 - **Dependencies point inward.** The core names nothing in the presentation or the shell; the presentation names nothing in the shell. `lib/dot_popper/privacy/` is the exception, by design: it is not loaded by the game, and reads the presentation's words to write the privacy document.
 - **The core is values.** Its state is immutable `Data` values, frozen deeply enough to be shared between Ractors (`test/ractor_test.rb`), and changes return new values. `Cabinet` holds the current state and is the one mutable object players' presses reach.
 - **The core is typed.** Steep checks `lib/dot_popper.rb` and `lib/dot_popper/*.rb` against `sig/` in strict mode ([ADR-0004](adr/0004-steep-checks-the-rules-strictly.md)). The presentation, the shell and the core's subfolders are not typed.
-- **Every outside party is behind a port.** The network is reached only through `Groups::Link`; a store only through the `Storefront` port ([ADR-0009](adr/0009-the-store-is-a-port.md)); a file only through `Shell::SaveFile`; the system's share sheet and stores only by a URL the host catches or a helper process ([ADR-0008](adr/0008-native-features-live-outside-the-ruby-process.md)). Tests source-scan for the first and third ([ADR-0014](adr/0014-privacy-facts-come-from-the-code.md)).
+- **Every outside party is behind a port.** The network is reached only through `Network::Link`, by a request made only from its declaration ([privacy](design/privacy.md#requests)); a store only through the `Storefront` port ([ADR-0009](adr/0009-the-store-is-a-port.md)); a file only through `Shell::SaveFile`; the system's share sheet and stores only by a URL the host catches or a helper process ([ADR-0008](adr/0008-native-features-live-outside-the-ruby-process.md)). Tests source-scan for the first and third ([ADR-0014](adr/0014-privacy-facts-come-from-the-code.md)).
 - **The build decides what it trusts.** `Build::CHANNEL` is nil in a test build (every playtest kit and CI run) and names a store in a store build. It alone chooses the store's adapter, the keys and receipts trusted, and which `DOT_POPPER_*` settings are obeyed ([ADR-0010](adr/0010-pro-comes-only-from-proof.md)). `Shell::App` reads the environment only through `Build.settings`.
 - **Automated runs reach no outside host.** A test, a GUI scenario, the bot, or any run told to quit or take screenshots by itself sets `Automation.on?`, and `Automation.guard!` then refuses every connection to a host that isn't this machine.
 
@@ -60,7 +60,7 @@ Everything the game keeps is a text file in Lota's save folder, read and written
 
 ## Threads
 
-The game runs on Lota's one thread. Network requests run on `Groups::Worker`'s thread, at low priority, started by the first request, so a player with no friend group has no thread; the theme feed and the setdef watch use workers too. A frame reads finished replies and never waits. The simulator and one test use Ractors; the game does not.
+The game runs on Lota's one thread. Friend groups' requests and the theme feed's each run on a `Network::Worker`'s thread, at low priority, started by its first request, so a player with no friend group has no thread for them; the setdef watch has a thread of its own. A frame reads finished replies and never waits. The simulator and one test use Ractors; the game does not.
 
 ## Platforms
 

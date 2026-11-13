@@ -172,10 +172,10 @@ It prints `gui: screenshot PATH` for each file it saves in the save folder. `DOT
 
 - **Automated** means any of `Automation::FLAGS` is set to something other than empty or `0`: `DOT_POPPER_AUTOMATED`, `DOT_POPPER_AUTOPLAY`, `DOT_POPPER_SCENARIO`, `DOT_POPPER_QUIT_AFTER` or `DOT_POPPER_SHOTS`. That covers the test suite (`test/test_helper.rb` sets `DOT_POPPER_AUTOMATED=1`), the GUI scenarios and galleries, the bot, CI's packaged-app playthroughs and the Android emulator checks (which pass `DOT_POPPER_AUTOMATED=1`). In a store build, `Build.settings` drops `DOT_POPPER_AUTOMATED` and `DOT_POPPER_SCENARIO`, so there only the bot, `QUIT_AFTER` and `SHOTS` make a run automated.
 - **The guard.** `Automation.guard!` prepends modules to `TCPSocket.new`, `TCPSocket.open` (which `Net::HTTP` uses) and `Socket.tcp` that refuse any host but `localhost`, `127.0.0.1` and `::1`. In the tests, a refusal raises `Automation::OutsideConnection` (an `Exception`, not a `StandardError`). In the game (`Shell::App#initialize`, `exit_on_attempt: true`), it prints why and exits with status 70, so the check that started it fails.
-- **What else follows.** An automated run has no friend-group server unless `DOT_POPPER_SERVER` names one (`Groups::Settings.server_url`), starts no store helper (`Shell::StoreHelper`), and never asks setdef's real server whether it is gone (`Shell::App#watch`).
+- **What else follows.** An automated run has no friend-group server unless `DOT_POPPER_SERVER` names one (`Network::Settings.server_url`), starts no store helper (`Shell::StoreHelper`), and never asks setdef's real server whether it is gone (`Shell::App#watch`).
 - **Local fakes are allowed**, such as `script/group_stub.rb` and `test/privacy`'s local server.
 
-`test/automation_test.rb` checks which settings make a run automated, that the suite cannot reach an outside host by either socket call or through `Groups::Link`, and that a local server is reachable. `test/build_test.rb` checks that `DOT_POPPER_AUTOMATED` and `DOT_POPPER_SCENARIO` don't make a store build automated.
+`test/automation_test.rb` checks which settings make a run automated, that the suite cannot reach an outside host by either socket call or through `Network::Link`, and that a local server is reachable. `test/build_test.rb` checks that `DOT_POPPER_AUTOMATED` and `DOT_POPPER_SCENARIO` don't make a store build automated.
 
 ## The simulator
 

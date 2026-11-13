@@ -8,7 +8,7 @@ How the game's privacy facts are declared, generated and enforced: every file it
 
 ## One source, generated
 
-The declarations live in `lib/dot_popper/privacy/` and `lib/dot_popper/groups/requests.rb`. `Privacy::Document` (`lib/dot_popper/privacy/document.rb`) turns them into `doc/privacy.json`:
+The declarations live in `lib/dot_popper/privacy/`, and each request's with the part of the game that makes it. `Privacy::Document` (`lib/dot_popper/privacy/document.rb`) turns them into `doc/privacy.json`:
 
 ```
 bundle exec rake privacy
@@ -28,19 +28,28 @@ The document has: what stays on the device (`on_device`), every request (`networ
 
 ### Requests
 
-`Groups::REQUESTS` (`lib/dot_popper/groups/requests.rb`) lists every request the game makes as a `Groups::Request`: its kind, verb and path, its `query` and `body` fields (each a `Groups::Field` with what it is, in a player's words, and the store label it counts under), whether it sends the player's token, when it happens, its feature, and `to`, the host when it is not the game's server (the connectivity checks).
+Each part of the game that makes requests declares its own, as `REQUESTS`, where it lives. Each is a `Network::Request`: its kind, verb and path, its `query` and `body` fields (each a `Network::Field` with what it is, in a player's words, and the store label it counts under), whether it sends the player's token, when it happens, its feature, and `to`, the host when it is not the game's server (the connectivity checks).
 
-`Groups::Session::Job.of` is the only way to make a friend groups job: it takes the verb and path from the declaration and raises unless the body's fields are exactly the declared ones. `Continuity::SetdefServer` takes its paths from the same declarations. The requests are: `/player`, `/groups`, `/memberships`, `/groups/:id`, `/groups/:id/history`, `/achievements`, `/groups/:id/membership`, `/games` and `DELETE /player` for friend groups ([friend-groups.md](friend-groups.md)); `GET /themes` with `started_on`, for every player, with no token; `GET /proof`, `POST /licenses` and `POST /license_checks` for license keys and setdef being gone ([store-and-pro.md](store-and-pro.md)); and the three connectivity checks to `captive.apple.com`, `connectivitycheck.gstatic.com` and `www.msftconnecttest.com`.
+| Part | Declares |
+| --- | --- |
+| `Groups::REQUESTS` (`lib/dot_popper/groups/requests.rb`) | `POST /player`, `GET /groups`, `POST /groups`, `POST /memberships`, `GET /groups/:id`, `GET /groups/:id/history`, `POST /achievements`, `DELETE /groups/:id/membership`, `DELETE /player` and `POST /games`, for friend groups ([friend-groups.md](friend-groups.md)) |
+| `Presentation::ThemeFeed::REQUESTS` (`lib/dot_popper/presentation/theme_feed.rb`) | `GET /themes` with `started_on`, for every player, with no token ([look-and-sound.md](look-and-sound.md)) |
+| `Continuity::SetdefServer::REQUESTS` (`lib/dot_popper/continuity/setdef_server.rb`) | `GET /proof`, `POST /licenses` and `POST /license_checks`, for setdef being there and license keys ([store-and-pro.md](store-and-pro.md)) |
+| `Continuity::Connectivity::REQUESTS` (the same file) | the three connectivity checks, to `captive.apple.com`, `connectivitycheck.gstatic.com` and `www.msftconnecttest.com` |
 
-`Groups::UNBUILT_REQUESTS` holds requests declared before they are built, which the wire test then leaves out and the document marks `in_this_build: false`. It is empty. `test_unbuilt_requests_are_only_those_not_yet_in_the_code` fails as soon as an unbuilt request's query fields appear in the game's code, so a request cannot ship without being played in the wire test.
+`Privacy::REQUESTS` (`lib/dot_popper/privacy/requests.rb`) merges them in the order of `Privacy::PARTS`, which is the document's, and refuses a kind declared twice.
+
+`Network::Job.of` is the only way to make a request: it takes the verb and path from a declaration, fills in the path's id and the query, and raises unless the body's and the query's fields are exactly the declared ones; `Job.new` is private, and `Network::Link` takes a job, never a verb and a path. Friend groups' `Session::Job.of` makes each of its jobs by it, and the theme feed, `Continuity::SetdefServer` and `Continuity::Connectivity` make theirs by it, each from its own declarations.
+
+`Privacy::UNBUILT_REQUESTS` holds the declarations of requests not yet built, which the wire test then leaves out and the document marks `in_this_build: false`; once a request is built, its declaration moves to its part. It is empty. `test_unbuilt_requests_are_only_those_not_yet_in_the_code` fails as soon as an unbuilt request's query fields appear in the game's code, so a request cannot ship without being played in the wire test.
 
 ## The tests
 
-**The wire test.** `test/privacy/requests_test.rb` plays every built request through a real `Session` and a real `Link` against a local server on `127.0.0.1`, plus the themes check, the proof, a key's entry and check, and the three connectivity checks pointed at that server. It compares what arrived with each declaration (method, path, fields, token), fails for a declared request never sent, and fails for anything sent that nothing declares. It also checks that the saved token and unsent score really leave the device, and that a job can only be made from a declaration.
+**The wire test.** `test/privacy/requests_test.rb` plays every built request through a real `Session` and a real `Network::Link` against a local server on `127.0.0.1`, plus the themes check, the proof, a key's entry and check, and the three connectivity checks pointed at that server. It compares what arrived with each declaration (method, path, fields, token), fails for a declared request never sent, and fails for anything sent that nothing declares. It also checks that the saved token and unsent score really leave the device, that a job can only be made from a declaration, and that every part declaring requests is in `Privacy::PARTS`, with no request declared anywhere else.
 
 **Source scans.** Comments are stripped first (Prism).
 
-- No network primitive (`Net::`, sockets, `OpenSSL`, `open-uri`, HTTP gems) appears outside `groups/link.rb`, except `automation.rb`, which only refuses connections, and the signature checks in `continuity/ed25519.rb` and `receipt/`, which may use OpenSSL's keys and certificates and nothing that connects. The native hosts use no `URLSession`, `NSURLConnection`, `HttpURLConnection`, OkHttp or Volley.
+- No network primitive (`Net::`, sockets, `OpenSSL`, `open-uri`, HTTP gems) appears outside `network/link.rb`, except `automation.rb`, which only refuses connections, and the signature checks in `continuity/ed25519.rb` and `receipt/`, which may use OpenSSL's keys and certificates and nothing that connects. The native hosts use no `URLSession`, `NSURLConnection`, `HttpURLConnection`, OkHttp or Volley.
 - No file write, delete or rename appears outside `shell/save_file.rb`, except `StoreAnswers`' `File.delete` and the screenshot capture in `shell/app.rb`.
 - Every `SaveFile.new` name in the code is declared and every declared fixed name is in the code; exactly three names are computed, and those match their patterns.
 - Only `accelerometer.rb` reads `Lota::Sensor`, and only `url_opener.rb` calls `open_url`, whose own schemes are `dotpopper-share` and `dotpopper-store`.
@@ -55,7 +64,7 @@ The document has: what stays on the device (`on_device`), every request (`networ
 | `Privacy::IOS_USAGE_STRINGS` | `NS*UsageDescription` keys in `ios/host/Host/Info.plist`: none |
 | `Privacy::STORE_LABELS`, `APPLE_PURPOSE`, `APPLE_TRACKING`, `APPLE_TRACKING_DOMAINS`, `APPLE_APIS` | `ios/host/Host/PrivacyInfo.xcprivacy` |
 
-Every label must be used by some request, and the labels with an Apple type must equal the manifest's data types. INTERNET's stated purpose must name exactly the features this build reaches the server for (`Groups.features_built`). `ANDROID_MERGED` records what Play Billing's own manifest adds (`com.android.vending.BILLING`), read by hand.
+Every label must be used by some request, and the labels with an Apple type must equal the manifest's data types. INTERNET's stated purpose must name exactly the features this build reaches the server for (`Privacy.features_built`). `ANDROID_MERGED` records what Play Billing's own manifest adds (`com.android.vending.BILLING`), read by hand.
 
 Also tested: what each file says it sends is really sent; the "stays on your device" sentence names every exception; no request but a license key's concerns a purchase; the deletion words are the screens' own.
 

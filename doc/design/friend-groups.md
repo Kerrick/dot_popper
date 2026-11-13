@@ -14,7 +14,7 @@ Only a game that counts is sent: one played by a member of a group, with dots si
 
 ## The server's address
 
-`Groups::Settings` (`lib/dot_popper/groups/settings.rb`) is the one place it is set:
+`Network::Settings` (`lib/dot_popper/network/settings.rb`) is the one place it is set, for friend groups, themes and setdef's own checks alike:
 
 - `Settings::SERVER_URL` is `https://server.dot-popper.setdef.com`, for every build.
 - `DOT_POPPER_SERVER` names another server, to try one out; empty means none, and then the game offers no friend groups and makes no connection for them. A store build ignores it (`Build.settings`, [store-and-pro.md](store-and-pro.md)).
@@ -30,13 +30,13 @@ Only a game that counts is sent: one played by a member of a group, with dots si
 `Groups::Session` (`lib/dot_popper/groups/session.rb`, Lota-free) is what this device knows of its groups and everything it asks the server for. It is called only from the game's thread.
 
 - **Nothing is sent until a Pro player creates or joins a group.** A session with no saved token makes no connection. The first Create or Join first sends `POST /player`, which answers an anonymous token, and then the Create or Join. A player is only a token: no name, nothing they supply.
-- **Every job comes from a declaration.** `Session::Job.of(kind, body:)` is the only way to make one; it takes the verb and path from `Groups::REQUESTS` and refuses a body whose fields differ from the declared ones ([privacy.md](privacy.md)).
+- **Every job comes from a declaration.** `Session::Job.of(kind, body:)` is the only way to make one; it takes the verb and path from `Groups::REQUESTS`, friend groups' own declarations, by `Network::Job.of`, which refuses a body whose fields differ from the declared ones ([privacy.md](privacy.md)).
 - **What it asks for, and when**: the player's groups (`GET /groups`) at launch and when the screen opens, once there is a token (`#refresh`); a group (`GET /groups/:id`) and its history (`GET /groups/:id/history`) when the player opens one (`#look_at`); `POST /groups` to create, `POST /memberships` with `join_code` to join, `DELETE /groups/:id/membership` to leave, `DELETE /player` to delete everything; `POST /games` with a score that counts; and `POST /achievements` with each achievement key a Pro player earns, once each, and those already earned on buying Pro (`Show#follow_store`).
 - **Scores are clamped** to 0 to 100,000 (`Session::HIGHEST_SCORE`).
 
 ### The low-priority thread
 
-`Groups::Worker` (`lib/dot_popper/groups/worker.rb`) runs a `Link`'s requests in order on a thread of its own at priority -2 (`Worker::PRIORITY`), so a frame never waits on the network. The thread starts with its first job, so a player with no group has no thread. `Groups::Link` (`lib/dot_popper/groups/link.rb`) makes one HTTPS request at a time with `Net::HTTP`, OpenSSL's default certificate store, a 5-second open and 8-second read timeout, and a bearer token when the job sends one. It requires `net/http` and `json` on first use, on the worker's thread, so the game starts as fast as ever and a player who never joins a group never loads them.
+`Network::Worker` (`lib/dot_popper/network/worker.rb`) runs a `Link`'s requests in order on a thread of its own at priority -2 (`Worker::PRIORITY`), so a frame never waits on the network. The thread starts with its first job, so a player with no group has no thread. `Network::Link` (`lib/dot_popper/network/link.rb`) makes one HTTPS request at a time with `Net::HTTP`, OpenSSL's default certificate store, a 5-second open and 8-second read timeout, and a bearer token when the job sends one. It requires `net/http` and `json` on first use, on the worker's thread, so the game starts as fast as ever. `Network` is the game's HTTP client, which the theme feed and setdef's checks use too ([privacy.md](privacy.md#requests)).
 
 **Nothing is handed to the worker during a game.** `Session#update(quiet:)` takes up finished replies every frame but starts waiting jobs only when `quiet` is true; `Show#update` passes `quiet: !playing?`.
 
@@ -140,4 +140,4 @@ The Privacy screen, opened from Settings, says "In a friend group, Dot Popper ke
 
 ## Tests
 
-`test/groups/session_test.rb`, `test/groups/link_test.rb`, `test/presentation/group_panel_test.rb`, `test/presentation/member_icon_test.rb`, `test/presentation/names_test.rb`, and `test/privacy/requests_test.rb`, which plays every request through a real `Session` and `Link` against a local server.
+`test/groups/session_test.rb`, `test/network/link_test.rb`, `test/presentation/group_panel_test.rb`, `test/presentation/member_icon_test.rb`, `test/presentation/names_test.rb`, and `test/privacy/requests_test.rb`, which plays every request through a real `Session` and `Link` against a local server.

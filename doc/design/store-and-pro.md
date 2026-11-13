@@ -236,7 +236,7 @@ The watch runs once each start (`Shell::App#load`) and again when a key is enter
 | Build | Watch |
 | --- | --- |
 | test build | `Continuity::FakeSetdef`, in this process, signing with the test keys and sending nothing; `DOT_POPPER_FAKE_SETDEF=here\|gone\|offline\|moved` sets how it behaves, for a developer; its ledger is `fake_setdef.txt` |
-| store build, live pins, not automated | `Continuity::SetdefServer` on `Groups::Settings::SERVER_URL`, and the real connectivity checks |
+| store build, live pins, not automated | `Continuity::SetdefServer` on `Network::Settings::SERVER_URL`, and the real connectivity checks |
 | otherwise | `Continuity::NoWatch`: setdef is never gone and a key never moves |
 
 The proof and the license requests always go to setdef's own server, never to a replacement chosen with Change Server.
