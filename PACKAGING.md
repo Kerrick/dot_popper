@@ -97,6 +97,14 @@ Lota isn't on RubyGems.org, so its gems come from `vendor/cache`, and `Gemfile.l
 
 The repository is copied into the app's `game/dot_popper` folder, except `.git`, `.bundle`, `vendor/cache`, and what `lota fuse --exclude` leaves out in `.github/actions/fuse`: tests, docs, signatures, scripts, the playtest kits, the phone hosts, and the repository's own files. A build by hand without those flags ships them too, which is harmless.
 
+`script/channel_contents.rb` says what an unpacked package holds that its channel doesn't need: another channel's way of selling Pro (the website checkout and license keys, another store's receipts or library), the test build's fakes and test keys, and files no build loads. Each is listed by its own files and by every file that names it.
+
+```console
+$ ruby script/channel_contents.rb list mac-app-store "unpacked/Dot Popper.app"
+```
+
+Today every package holds every channel's Ruby, the fakes and the test keys, because the game's loaders (`lib/dot_popper.rb`, `continuity.rb`, `receipt.rb`, `presentation.rb`, `shell.rb`) require every file, and the composition root names every adapter. Leaving one of those files out would stop the app starting. So a channel's build can leave out only what no build loads: the privacy document's sources other than `privacy/save_files.rb`.
+
 ## Building on your own computer
 
 You need Ruby 4.0.9, the version in `.ruby-version`, and Git. Each platform can build only its own app, so build the macOS app on a Mac, the Windows app on Windows, and the Linux app on Linux.
