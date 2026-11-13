@@ -153,10 +153,8 @@ module DotPopper
       # The art of the theme in use (UseCases::UseTheme answers its key).
       def in_use = theme_of(@use_theme.current)
 
-      # Whether tapping a theme leads to Pro, as it does for a Free player,
-      # and whether +theme+ is open to use, earned or in season. They show
-      # the same to either player.
-      def themes_locked? = @use_theme.locked?
+      # Whether +theme+ is open to use, earned or in season. It shows the
+      # same to either player.
       def theme_open?(theme) = @themes.open?(theme.key)
 
       # Where the Themes screen's cards go (LooksLayout).
