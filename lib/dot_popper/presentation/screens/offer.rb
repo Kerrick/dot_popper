@@ -45,6 +45,16 @@ module DotPopper
           show.paste_key
           true
         end
+
+        def pressed(name, by)
+          case name
+          in :buy then show.buy
+          in :restore then show.restore
+          in :paste then show.paste_key
+          in :back then show.close_offer
+          else nil
+          end
+        end
       end
     end
   end

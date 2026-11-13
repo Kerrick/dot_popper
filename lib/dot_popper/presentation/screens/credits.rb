@@ -12,6 +12,8 @@ module DotPopper
 
         # The text is read with the left stick too, and the cursor waits.
         def stick_scrolls? = true
+
+        def empty(_x, y, by) = show.start_scroll(by, y)
       end
     end
   end

@@ -39,6 +39,20 @@ module DotPopper
         end
 
         def scrolls? = true
+
+        def pressed(name, by)
+          case name
+          in [:sound, on] then show.set_sound(on)
+          in DotSizing => sizing then show.choose_sizing(sizing)
+          in [:display, mode] then show.window.display = mode
+          in :credits then show.open_credits
+          in :privacy then show.open_privacy
+          in :server then show.open_server
+          else super
+          end
+        end
+
+        def empty(_x, y, by) = show.start_scroll(by, y)
       end
     end
   end

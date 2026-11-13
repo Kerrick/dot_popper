@@ -22,6 +22,14 @@ module DotPopper
           show.answer_arrival(use: false)
           true
         end
+
+        def pressed(name, by)
+          case name
+          in :arrival_use then show.answer_arrival(use: true)
+          in :arrival_later then show.answer_arrival(use: false)
+          else nil
+          end
+        end
       end
     end
   end

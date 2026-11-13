@@ -34,6 +34,21 @@ module DotPopper
         end
 
         def scrolls? = true
+
+        # Back, the notice's privacy policy, and every other button the
+        # panel's (GroupPanel#press).
+        def pressed(name, by)
+          case name
+          in :back then show.group_panel.back
+          in :policy then show.open_policy
+          else show.group_panel.press(name, by, show.now)
+          end
+        end
+
+        # A row of the list of groups.
+        def list_row?(name) = show.group_panel.page == :list && (name in [:group_show, _])
+
+        def empty(_x, y, by) = show.start_scroll(by, y)
       end
     end
   end

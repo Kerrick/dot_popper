@@ -20,6 +20,14 @@ module DotPopper
           else nil
           end
         end
+
+        def pressed(name, by)
+          case name
+          in :policy then show.open_policy
+          in :privacy_delete then show.group_panel.hold_delete(by, show.now)
+          else super
+          end
+        end
       end
     end
   end

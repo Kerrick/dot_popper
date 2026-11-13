@@ -36,6 +36,20 @@ module DotPopper
           else nil
           end
         end
+
+        def pressed(name, by)
+          case name
+          in :play then show.play
+          in :stats then show.open_stats
+          in :achievements then show.open_achievements
+          in :themes then show.open_themes
+          in :groups then show.group_panel.open
+          in :how_to_play then show.how_to_play
+          in :settings then show.open_settings
+          in :quit then show.window.quit
+          else nil
+          end
+        end
       end
     end
   end

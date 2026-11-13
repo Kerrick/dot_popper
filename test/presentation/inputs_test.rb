@@ -15,10 +15,10 @@ require_relative "hands"
 # reach every screen the others reach, and press every control it is
 # offered there, to some effect. A screen or control added later is
 # found the same way, and fails here if an input cannot reach it. What
-# keeps that honest is that the code is read too: every control
-# Show#press and GroupPanel#press answer, and every screen Show#open_page
-# and GroupPanel::PAGES name, must be found by the exploring, or be listed
-# in NOT_FOUND with the reason no screen offers it.
+# keeps that honest is that the code is read too: every control a screen
+# answers (each Screens file's #pressed, and GroupPanel#press), and every
+# screen Show#open_page and GroupPanel::PAGES name, must be found by the
+# exploring, or be listed in NOT_FOUND with the reason no screen offers it.
 #
 # What this cannot see is Shell::App's own part, which needs Lota: which
 # key or button calls which of the Show's methods (App#key_pressed,
@@ -64,7 +64,6 @@ class InputsTest < Minitest::Test
 
   # Controls the Show answers that no screen offers, and why.
   NOT_FOUND = {
-    offer: "no screen has a button for the offer of Pro; it opens from what Pro brings (Show#offer_offered?)",
     group_delete: "no friend-group screen offers it; Delete my friend group data is Privacy's (:privacy_delete)"
   }.freeze
 
@@ -111,14 +110,19 @@ class InputsTest < Minitest::Test
     end
   end
 
-  # The controls Show#press and GroupPanel#press answer, by kind (Hands.kind).
+  # The controls each screen answers (Screens::Screen#pressed in each
+  # screen's file, and GroupPanel#press for the friend groups'), by kind
+  # (Hands.kind). A screen that answers controls has a pressed method, or
+  # takes its taps itself (the Tutorial's and a game's #tap).
   def answered
-    show = File.read(File.expand_path("../../lib/dot_popper/presentation/show.rb", __dir__))
-    groups = File.read(File.expand_path("../../lib/dot_popper/presentation/group_panel.rb", __dir__))
-    body = ->(text) { text[/^      def press\(name.*?\n      end\n/m] or flunk "no press method" }
-    names = ->(text) { body.(text).scan(/^\s+in \[?:(\w+)/).flatten.map(&:to_sym) }
+    folder = File.expand_path("../../lib/dot_popper/presentation", __dir__)
+    texts = Dir["#{folder}/screens/*.rb"].map { File.read(it) }
+    refute_empty texts, "no screens"
+    texts.each { |text| assert_match(/def (pressed|tap)\(/, text) unless text.include?("< Page") }
+    bodies = texts.filter_map { it[/^ +def pressed\(name.*?\n {8}end\n/m] }
+    bodies << (File.read("#{folder}/group_panel.rb")[/^      def press\(name.*?\n      end\n/m] or flunk "no GroupPanel#press")
     kinds = { "Theme" => :theme, "DotSizing" => :dot_size }
-    names.(show) + names.(groups) + body.(show).scan(/^\s+in (\w+) =>/).flatten.filter_map { kinds[it] }
+    bodies.flat_map { it.scan(/^\s+in \[?:(\w+)/).flatten.map(&:to_sym) + it.scan(/^\s+in (\w+) =>/).flatten.filter_map { kinds[it] } }
   end
 
   def found = WORLDS.each_key.flat_map { |world| InputsTest.maps(world).values.flat_map { |map| map.nodes.values.flat_map(&:names) } }

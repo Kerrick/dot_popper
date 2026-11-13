@@ -29,6 +29,40 @@ module DotPopper
         # apart.
         def controls = []
 
+        # A tap at +x+, +y+, by +by+ (a finger's id, :mouse, or :gamepad,
+        # which Show#let_go names when it lets go): it presses the button
+        # under it, or, on a list's row, waits for its release, so a drag
+        # that starts on a row scrolls the list instead.
+        def tap(x, y, by)
+          name = show.control_at(x, y)&.name
+          return show.press_list(x, y, by) if list_row?(name)
+
+          press(name, x, y, by)
+        end
+
+        # What a press does: the control +name+ pressed, or with none, a
+        # gamepad's A presses the main button, and anything else presses
+        # empty space at +x+, +y+.
+        def press(name, x, y, by)
+          return pressed(name, by) if name
+          return primary if by == :gamepad
+
+          empty(x, y, by)
+        end
+
+        # The control +name+ this screen offers was pressed, by +by+.
+        def pressed(name, by) = nil
+
+        # A press at +x+, +y+ that reached no button.
+        def empty(x, y, by) = show.toy_tap(x, y)
+
+        # Whether the control +name+ is a row of a list that scrolls.
+        def list_row?(name) = false
+
+        # Whether a press at +x+, +y+ waits to be let go before it counts,
+        # as it may become a drag of Game Over's pile (PileGrabs).
+        def waits_for_release?(x, y) = false
+
         # Presses this screen's main button, as Enter, Space, a gamepad's
         # Start, or its A aimed at no button do.
         def primary = nil
@@ -85,6 +119,8 @@ module DotPopper
       # Back, and its main button, close it.
       class Page < Screen
         def primary = show.close_page
+
+        def pressed(name, by) = (show.close_page if name == :back)
 
         def back
           show.close_page

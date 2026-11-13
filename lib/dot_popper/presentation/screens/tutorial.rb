@@ -13,6 +13,9 @@ module DotPopper
           show.skip_tutorial
           true
         end
+
+        # A tap is Skip's, or the Tutorial's own (Show#tutorial_tap).
+        def tap(x, y, _by) = show.tutorial_tap(x, y)
       end
     end
   end

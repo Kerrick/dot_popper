@@ -29,6 +29,20 @@ module DotPopper
           show.continue_on
           true
         end
+
+        def pressed(name, by)
+          case name
+          in :play_again then show.play_again
+          in :home then show.continue_on
+          in :share then show.share
+          in :over_achievement then show.open_from_game_over(:achievement)
+          in :over_group then show.open_from_game_over(:group)
+          else nil
+          end
+        end
+
+        # A press away from its buttons waits, as it may drag the pile.
+        def waits_for_release?(x, y) = show.control_at(x, y).nil?
       end
     end
   end

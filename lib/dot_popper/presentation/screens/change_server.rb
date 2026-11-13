@@ -16,6 +16,14 @@ module DotPopper
           show.paste_server
           true
         end
+
+        def pressed(name, by)
+          case name
+          in :server_paste then show.paste_server
+          in :server_reset then show.reset_server
+          else super
+          end
+        end
       end
     end
   end

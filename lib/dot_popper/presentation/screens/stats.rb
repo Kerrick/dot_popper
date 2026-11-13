@@ -16,6 +16,16 @@ module DotPopper
         def pad(button) = (show.clear_or_undo(:y) if button == :y)
 
         def scrolls? = true
+
+        def pressed(name, by)
+          case name
+          in :undo then show.undo
+          in :clear then show.hold_clear(by)
+          else super
+          end
+        end
+
+        def empty(_x, y, by) = show.start_scroll(by, y)
       end
     end
   end

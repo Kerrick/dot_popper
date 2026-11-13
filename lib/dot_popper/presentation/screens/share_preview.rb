@@ -20,6 +20,17 @@ module DotPopper
 
         # Y again copies, as Copy does.
         def pad(button) = (show.copy_result if button == :y)
+
+        def pressed(name, by)
+          case name
+          in :copy then show.copy_result
+          in :close then show.close_share
+          else nil
+          end
+        end
+
+        # A tap beside the card closes it; on the card it does nothing.
+        def empty(x, y, _by) = (show.close_share unless show.share_plan.card.contains?(x, y))
       end
     end
   end

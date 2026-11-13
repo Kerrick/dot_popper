@@ -20,6 +20,15 @@ module DotPopper
           else nil
           end
         end
+
+        def pressed(name, by)
+          case name
+          in Theme => theme then show.use(theme)
+          in :theme_prev then show.step_theme(-1)
+          in :theme_next then show.step_theme(1)
+          else super
+          end
+        end
       end
     end
   end

@@ -19,6 +19,17 @@ module DotPopper
         def pad(button) = (show.open_achievement(DotPopper::Achievement::IDS.first) if button == :x)
 
         def scrolls? = true
+
+        def pressed(name, by)
+          case name
+          in [:achievement, id] then show.open_achievement(id)
+          else super
+          end
+        end
+
+        def list_row?(name) = name in [:achievement, _]
+
+        def empty(_x, y, by) = show.start_scroll(by, y)
       end
     end
   end

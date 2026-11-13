@@ -322,14 +322,7 @@ module DotPopper
       # Home's bright dots pops it, for fun, and a tap away from the share
       # preview's card closes it. A gamepad's A, which aims at no button,
       # presses the screen's main one (#primary).
-      def tap(x, y, by: :tap)
-        return cabinet.press(x, y) if playing?
-        return tutorial_tap(x, y) if tutorial?
-
-        return press_list(x, y, by) if list_row_at?(x, y)
-
-        press(control_at(x, y)&.name, x, y, by)
-      end
+      def tap(x, y, by: :tap) = screen.tap(x, y, by)
 
       # A key typed on a keyboard (+key+, as Shell::LotaInput names it)
       # that the screen on top takes as its own: the keypad's digits that
@@ -341,59 +334,9 @@ module DotPopper
       # computer: Paste license key's other way in (WebsiteStore#type).
       def typed_license_key(key) = @buy_pro.type(key)
 
-      # What a control does when pressed.
-      def press(name, x, y, by)
-        case name
-        in :play then play
-        in :play_again then play_again
-        in :home then continue_on
-        in :over_achievement then open_from_game_over(:achievement)
-        in :over_group then open_from_game_over(:group)
-        in :back then leave
-        in :credits then open_credits
-        in :privacy then open_privacy
-        in :settings then open_settings
-        in :themes then open_themes
-        in :groups then @groups.open
-        in :achievements then open_achievements
-        in [:achievement, id] then open_achievement(id)
-        in :achievement_close then close_dialog
-        in :achievement_prev then step_achievement(-1)
-        in :achievement_next then step_achievement(1)
-        in :achievement_pro then achievement_pro
-        in Theme => theme then use(theme)
-        in :theme_prev then step_theme(-1)
-        in :theme_next then step_theme(1)
-        in :how_to_play then how_to_play
-        in [:sound, on] then set_sound(on)
-        in [:display, mode] then window.display = mode
-        in :quit then window.quit
-        in :stats then open_stats
-        in :policy then open_policy
-        in :privacy_delete then @groups.hold_delete(by, now)
-        in :arrival_use then answer_arrival(use: true)
-        in :arrival_later then answer_arrival(use: false)
-        in :offer then open_offer
-        in :buy then buy
-        in :restore then @buy_pro.restore
-        in :paste then paste_key
-        in :server then open_server
-        in :server_paste then paste_server
-        in :server_reset then reset_server
-        in DotSizing => sizing then choose_sizing(sizing)
-        in :share then share
-        in :copy then copy_result
-        in :close then close_share
-        in :undo then undo
-        in :clear then hold_clear(by)
-        in Symbol | Array => pressed if group_open? then @groups.press(pressed, by, now)
-        in nil if by == :gamepad then primary
-        in nil if sharing? then (close_share unless share_plan.card.contains?(x, y))
-        in nil if dialog then (close_dialog unless dialog_plan.card.contains?(x, y))
-        in nil if group_open? then start_scroll(by, y)
-        in nil then scrolling? ? start_scroll(by, y) : toy_tap(x, y)
-        end
-      end
+      # What a press does on the screen on top: the control +name+, or
+      # with none, empty space at +x+, +y+ (Screens::Screen#press).
+      def press(name, x, y, by) = screen.press(name, x, y, by)
 
       # The buttons this screen offers (Control), each where it is drawn
       # and where a press reaches it, no two reaching the same point, so a
@@ -519,7 +462,7 @@ module DotPopper
       # Game Over, anywhere but its buttons, since it may become a drag of
       # the pile (PileGrabs). Everywhere else, the share preview over Game
       # Over too, a press counts the moment it goes down.
-      def waits_for_release?(x, y) = game_over? && !sharing? && !offer? && control_at(x, y).nil?
+      def waits_for_release?(x, y) = screen.waits_for_release?(x, y)
 
       # A gamepad's Start: the screen's main button (#primary), except on
       # a friend group, where holding it leaves the group (GroupPanel#start).
@@ -851,14 +794,8 @@ module DotPopper
         @drag = [by, y]
       end
 
-      def list_row_at?(x, y)
-        return false unless @page == :achievements || group_list?
+      def list_row_at?(x, y) = screen.list_row?(control_at(x, y)&.name)
 
-        name = control_at(x, y)&.name
-        name.is_a?(Array) && %i[achievement group_show].include?(name.first)
-      end
-
-      def group_list? = group_open? && @groups.page == :list && !offer?
 
       # A gamepad's Y on the Stats screen, held by +by+: Undo while it is
       # offered, or else the start of holding "Clear my stats…".
@@ -1233,6 +1170,34 @@ module DotPopper
         window.display = order[(order.index(window.display).to_i + 1) % order.size]
       end
 
+      # A tap in the Tutorial: its skip button, or the scene's.
+      def tutorial_tap(x, y)
+        return skip_tutorial if control_at(x, y)&.name == :skip
+
+        @tutorial.tap(x, y)
+      end
+
+      # A tap on Home away from its buttons: a bright dot there pops
+      # for fun, with no score; anywhere else, nothing happens.
+      def toy_tap(x, y)
+        return unless home? && !stats? && !group_open?
+
+        dot = attract.dots.top_at(x, y)
+        toy_pop(dot, x, y) if dot&.bright?
+      end
+
+      def undo
+        @keeper.restore(@undo.cleared)
+        @undo = nil
+        stats_changed
+        sounds.play(:tick, pitch: 1.2)
+      end
+
+      def hold_clear(by)
+        @clearing = clearing.press(by, now)
+        sounds.play(:tick, pitch: 0.7)
+      end
+
       private
 
       # Opens the offer straight from Home, as Play does when no play
@@ -1260,13 +1225,6 @@ module DotPopper
         effects.clear
         effects.scale_to(cabinet.field.radius)
         @tutorial = Tutorial.new(cabinet:, effects:, sounds:, haptics: @haptics, style:, now:, calm: @calm, palette:)
-      end
-
-      # A tap in the Tutorial: its skip button, or the scene's.
-      def tutorial_tap(x, y)
-        return skip_tutorial if control_at(x, y)&.name == :skip
-
-        @tutorial.tap(x, y)
       end
 
       # The Tutorial moves on, and once it is over, the game plays on, and
@@ -1318,11 +1276,6 @@ module DotPopper
         sounds.play(:tick, pitch: 1.3) if offer? && granted.by == :receipt
       end
 
-      def hold_clear(by)
-        @clearing = clearing.press(by, now)
-        sounds.play(:tick, pitch: 0.7)
-      end
-
       # "Clear my stats…" was held long enough: Stats go, and Undo
       # is offered.
       def clear_stats
@@ -1331,13 +1284,6 @@ module DotPopper
         stats_changed
         sounds.play(:bonk, pitch: 0.7)
         @haptics.buzz(style::HAPTICS.penalty)
-      end
-
-      def undo
-        @keeper.restore(@undo.cleared)
-        @undo = nil
-        stats_changed
-        sounds.play(:tick, pitch: 1.2)
       end
 
       # Stats changed under the Stats screen: it, and Home's
@@ -1471,15 +1417,6 @@ module DotPopper
         @game_over = nil
         @preview = nil
         @marquee = Marquee.new(style: style::HOME, score_record: event.score_record, at: now)
-      end
-
-      # A tap on Home away from its buttons: a bright dot there pops
-      # for fun, with no score; anywhere else, nothing happens.
-      def toy_tap(x, y)
-        return unless home? && !stats? && !group_open?
-
-        dot = attract.dots.top_at(x, y)
-        toy_pop(dot, x, y) if dot&.bright?
       end
 
       # One of Home's dots, popped by a tap: its droplets, its ring,
