@@ -39,10 +39,6 @@ module DotPopper
         def body = sent.body
       end
 
-      # What this device remembers of a group's title: the newest change it
-      # has shown, and how the group looked when it read the history.
-      Seen = Data.define(:last, :fingerprint)
-
       # The highest score the server takes.
       HIGHEST_SCORE = 100_000
       # What a status means, by the kind of job it answers.
@@ -431,29 +427,19 @@ module DotPopper
         save
       end
 
-      # Saved one per line: token, unsent score, whether last known to be in
-      # a group, for each group the newest change shown and how the
-      # group looked then, and achievements not yet sent.
+      # group.txt (GroupFile).
       def load_saved
-        token, pending, member, seen, unsent = @store.read.to_s.split("\n", -1)
-        @token = token unless token.to_s.empty?
-        @pending = Integer(pending.to_s, 10, exception: false)
-        @was_member = member == "1"
-        @seen = parse_seen(seen.to_s)
-        @unsent_achievements = unsent.to_s.split(",")
-      end
-
-      def parse_seen(line)
-        line.split.to_h do |entry|
-          id, last, fingerprint = entry.split("|", 3)
-          id = Integer(id, 10, exception: false) || id
-          [id, Seen.new(last: last.to_i, fingerprint:)]
-        end
+        saved = GroupFile.parse(@store.read)
+        @token = saved.token
+        @pending = saved.unsent_score
+        @was_member = saved.member
+        @seen = saved.seen
+        @unsent_achievements = saved.unsent_achievements
       end
 
       def save
-        seen = @seen.map { |id, entry| "#{id}|#{entry.last}|#{entry.fingerprint}" }.join(" ")
-        @store.write([@token.to_s, @pending.to_s, (@was_member ? "1" : ""), seen, @unsent_achievements.join(",")].join("\n"))
+        @store.write(GroupFile.new(token: @token, unsent_score: @pending, member: @was_member, seen: @seen,
+                                   unsent_achievements: @unsent_achievements).to_s)
       end
     end
   end

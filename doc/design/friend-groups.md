@@ -68,7 +68,7 @@ If a counting game cannot be sent at once, the highest such score waits and goes
 
 ### What `group.txt` holds
 
-One line each: the token, the unsent score, whether the player was last known to be in a group, for each group the newest title change shown and how the group looked then (`id|last|fingerprint`), and the achievement keys not yet sent. After a launch with no network the groups are unknown, but a member's games still count (`Session#member?`).
+One line each: the token, the unsent score, whether the player was last known to be in a group (`1`, or empty), for each group the newest title change shown and how the group looked then (`id|last|fingerprint`, separated by spaces), and the achievement keys not yet sent (separated by commas). `Groups::GroupFile` reads and writes it, leniently: a line missing or unreadable keeps its starting value, so the four lines written before achievements were sent read too. `test/groups/group_file_test.rb` holds it to the bytes players' builds write. After a launch with no network the groups are unknown, but a member's games still count (`Session#member?`).
 
 ## Identity: numbers, drawn
 
