@@ -33,7 +33,7 @@ module DotPopper
       request(kind: :deleted, verb: :delete, path: "/player",
               happens: "When the player holds the delete control (see deletion)."),
       request(kind: :game, verb: :post, path: "/games",
-              body: { score: Network::Field.new(what: "the score of a game that counts: played by a group member, with standard dots, not the tutorial's", label: :gameplay_content) },
+              body: { score: Network::Field.new(what: "the score of a game that counts: played by a group member, not the tutorial's", label: :gameplay_content) },
               happens: "After a game that counts, or at the next contact if it could not be sent then, while the player is in a group.")
     ].to_h { [it.kind, it] }.freeze
   end
