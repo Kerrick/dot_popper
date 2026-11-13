@@ -5,29 +5,28 @@ module DotPopper
     # The card that tells of a new theme, once, at a calm moment on
     # Home: the theme's own two dots for a preview, its name, and an
     # immediate switch beside "Not now". Calm, and always answerable.
-    # Presentation::ArrivalPlan decides where each part goes.
+    # Presentation::ArrivalPlan decides where each part goes, and the
+    # screen hands it all (Presentation::ArrivalDrawing).
     class ArrivalPainter < Data.define(:pen, :dots)
       G = ::Lota::Graphics
 
-      def draw(show, layout)
-        theme = show.arrival
-        plan = show.arrival_plan
-        words = show.words.themes
-        veil(layout)
+      def draw(drawing)
+        plan = drawing.plan
+        veil(drawing.veil)
         card(plan)
-        preview(plan, theme)
+        preview(plan, drawing.theme)
         cream = pen.palette.cream
-        pen.text(words.fetch(:new), pen.fonts.semibold(plan.heading_size), plan.card.center_x, plan.heading_y, pen.palette.soft)
-        pen.text(words.fetch(theme.key), pen.fonts.bold(plan.name_size), plan.card.center_x, plan.name_y, cream)
-        PrimaryButton.new(pen:).draw(plan.use_button, show.arrival_use_word, hover: show.hover.level(:arrival_use))
-        PillButton.new(pen:).draw(plan.later_button, words.fetch(:later), hover: show.hover.level(:arrival_later))
+        pen.text(drawing.heading, pen.fonts.semibold(plan.heading_size), plan.card.center_x, plan.heading_y, pen.palette.soft)
+        pen.text(drawing.name, pen.fonts.bold(plan.name_size), plan.card.center_x, plan.name_y, cream)
+        PrimaryButton.new(pen:).draw(plan.use_button, drawing.use, hover: drawing.use_hover)
+        PillButton.new(pen:).draw(plan.later_button, drawing.later, hover: drawing.later_hover)
       end
 
       private
 
-      def veil(layout)
+      def veil(rect)
         pen.color(pen.palette.ink_edge, 0.72)
-        G.rectangle(:fill, layout.safe.x - 400, layout.safe.y - 400, layout.safe.width + 800, layout.safe.height + 800)
+        G.rectangle(:fill, rect.x, rect.y, rect.width, rect.height)
       end
 
       def card(plan)

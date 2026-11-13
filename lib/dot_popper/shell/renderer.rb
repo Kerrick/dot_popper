@@ -89,7 +89,7 @@ module DotPopper
         when Screens::Home, Screens::NewTheme
           veil(width, height, @pen.style::HOME.dim)
           @home.draw(@show, layout)
-          @arrival.draw(@show, layout) if screen.is_a?(Screens::NewTheme)
+          @arrival.draw(screen.drawing) if screen.is_a?(Screens::NewTheme)
         when Screens::Settings
           veil(width, height, @pen.style::STATS.veil)
           @settings.draw(screen.drawing)
