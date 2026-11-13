@@ -21,6 +21,12 @@ uniform float time;  // seconds, for the glitter
 const vec3 L = vec3(-0.4336, -0.6401, 0.6341);
 const vec2 LIGHT = vec2(-0.53, -0.848);
 
+// How much lighter the popped dot is drawn than its colors below say:
+// light enough to see what it is at a phone's size, as the popped
+// Jack-o'-lantern and Ghost are, and still far from the bright dot's
+// lightest colors (test/gui/scenarios/popped_dots.rb).
+const float POPPED_LIFT = 1.5;
+
 vec4 over(vec4 top, vec4 bottom) { return top + bottom * (1.0 - top.a); }
 float cover_of(float sd, float aa) { return clamp(0.5 - sd / aa, 0.0, 1.0); }
 float hash(vec2 q) { return fract(sin(dot(q, vec2(127.1, 311.7))) * 43758.5453); }
@@ -181,7 +187,8 @@ vec4 effect(vec4 params, Image tex, vec2 uv, vec2 screen) {
   float a = exp(-pow((d - 1.05) / 0.1, 2.0)) * alarmed * fade_out;
   color = over(vec4(alarm * a, a), color);
   float cover = clamp((1.0 - d) / aa + 0.5, 0.0, 1.0);
-  vec3 body = bright_look > 0.001 ? mix(puddle(p, d, aa), snowman(p, d, aa, bonus), bright_look) : puddle(p, d, aa);
+  vec3 pool = puddle(p, d, aa) * POPPED_LIFT;
+  vec3 body = bright_look > 0.001 ? mix(pool, snowman(p, d, aa, bonus), bright_look) : pool;
   float w = mix(max(0.038, 1.5 * aa), max(0.022, 1.5 * aa), bright_look);
   float ring = clamp((d - (1.0 - w)) / aa + 0.5, 0.0, 1.0);
   vec3 rim = mix(mix(vec3(0.19, 0.21, 0.3), vec3(0.32, 0.35, 0.46), clamp(0.5 + 0.6 * dot(p, LIGHT), 0.0, 1.0)), vec3(1.0), bright_look);
