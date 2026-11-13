@@ -415,7 +415,7 @@ module DotPopper
       # padded by +bubble+, and the screen behind it veiled by +veil+.
       SHARE_PREVIEW = SharePreviewStyle.new(arrive: Tween.new(from: 0.0, to: 1.0, duration: 0.22, ease: :out_cubic),
                                            confirm: Tween.new(from: 0.0, to: 1.0, duration: 0.25, ease: :out_cubic),
-                                           lift: 14, width: 680, pad: 24, bubble: 14, veil: 0.6)
+                                           lift: 14, width: 680, pad: 24, bubble: 14, veil: 0.6, corner: 22)
 
       # Game Over's words, from "Time's up!" to the Play again button, sit on a
       # soft dark backing, 60% at its middle, so they read over the pile;

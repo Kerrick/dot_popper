@@ -10,6 +10,17 @@ module DotPopper
     # +card+ behind them all; the +close+ and +copy+ buttons, side by side
     # in the buttons row, Copy on the right; and the +bubble+'s padding
     # around the message's lines (and +side+ at its sides).
+    # Everything Shell::SharePreviewPainter draws for the share preview:
+    # how far it has come in (+shown+, 0 to 1), which fades the veil
+    # behind it (+veil+, its ink's alpha) and lifts the card (+lift+, how
+    # far below its place it still is), the card's +corner+, its +plan+
+    # (SharePlan), each of the plan's lines as its runs of words and
+    # emoji (ShareGlyphs.runs), "Share your score", "Copied! Paste it
+    # anywhere." and how far it has come in (+copied+, 0 to 1), Close's
+    # and Copy's words, and how lit each is.
+    class ShareDrawing < Data.define(:shown, :veil, :lift, :corner, :plan, :runs, :heading, :copied_word, :copied, :close, :copy,
+                                     :close_hover, :copy_hover); end
+
     class SharePlan < Data.define(:placed, :sizes, :lines, :card, :close, :copy, :bubble, :side)
       def [](name) = placed[name]
       def size(name) = sizes.fetch(name)

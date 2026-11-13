@@ -145,6 +145,34 @@ class DrawingsTest < Minitest::Test
     end
   end
 
+  # The share preview on a computer: it fades in and lifts into place,
+  # its lines as words and the game's own shapes, and once Copy has
+  # copied, "Copied!" comes in.
+  def test_the_share_preview_comes_in_and_says_when_it_has_copied
+    fixture = self.fixture
+    show = fixture.show
+    screen = show.screens.fetch(:share_preview)
+    screen.open_with(SharePreview.open("🟡 27 dots\n⏱ 30s", show.now))
+    look = Style::SHARE_PREVIEW
+    start = screen.drawing
+    assert_equal 0.0, start.shown
+    assert_equal look.lift * show.layout.ui, start.lift
+    assert_equal [[:bright, " 27 dots"], [:clock, " 30s"]], start.runs
+    assert_equal [show.words.share_heading, show.words.close, show.words.copy], [start.heading, start.close, start.copy]
+
+    fixture.tick(1.0)
+    shown = screen.drawing
+    assert_equal 1.0, shown.shown
+    assert_equal [look.veil, 0.0], [shown.veil, shown.lift]
+    assert_equal 0.0, shown.copied
+    assert_same shown, screen.drawing
+
+    screen.copy
+    fixture.tick(1.0)
+    assert_equal 1.0, screen.drawing.copied
+    assert_equal show.words.copied, screen.drawing.copied_word
+  end
+
   # Nothing changed, nothing made: the same drawing, frame after frame.
   def test_change_server_is_not_made_again_while_nothing_changes
     fixture = fixture(gone: true)

@@ -3,7 +3,7 @@
 module DotPopper
   module Presentation
     # How the share preview looks: SHARE_PREVIEW in Style says each.
-    class SharePreviewStyle < Data.define(:arrive, :confirm, :lift, :width, :pad, :bubble, :veil); end
+    class SharePreviewStyle < Data.define(:arrive, :confirm, :lift, :width, :pad, :bubble, :veil, :corner); end
 
     # The result to share, open over Game Over since +at+: the very +text+
     # Copy puts on the clipboard, shown before anything is copied, so the

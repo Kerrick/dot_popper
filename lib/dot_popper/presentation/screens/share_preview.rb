@@ -22,8 +22,33 @@ module DotPopper
           show.open_layer(self)
         end
 
-        # Where its card, words and buttons go (SharePlan).
-        def plan = ShareScreen.new(layout:, type: style::TYPE, words:, measure:, style: style::SHARE_PREVIEW, lines: preview.lines).plan
+        # Where its card, words and buttons go (SharePlan), laid out again
+        # only when the window, the words or the text changes.
+        def plan
+          layout = self.layout
+          words = self.words
+          text = preview.text
+          (@plan ||= Memo.new).fetch([layout, words, text]) do
+            ShareScreen.new(layout:, type: style::TYPE, words:, measure:, style: style::SHARE_PREVIEW, lines: preview.lines).plan
+          end
+        end
+
+        # Everything its painter draws (ShareDrawing), made again only
+        # while it comes in or confirms a copy, or when the plan, the words
+        # or a button's light changes.
+        def drawing
+          plan = self.plan
+          words = self.words
+          hover = show.hover
+          look = style::SHARE_PREVIEW
+          shown = preview.arrival(now, look).clamp(0.0, 1.0)
+          copied = preview.confirmation(now, look)
+          (@drawing ||= Memo.new).fetch([plan, words, hover, shown, copied]) do
+            ShareDrawing.new(shown:, veil: look.veil * shown, lift: (1 - shown) * look.lift * layout.ui, corner: look.corner * layout.ui, plan:,
+                             runs: plan.lines.map { ShareGlyphs.runs(it) }, heading: words.share_heading, copied_word: words.copied, copied:,
+                             close: words.close, copy: words.copy, close_hover: hover.level(:close), copy_hover: hover.level(:copy))
+          end
+        end
 
         # Copy: exactly the text it shows.
         def copy
