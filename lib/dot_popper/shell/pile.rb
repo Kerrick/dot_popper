@@ -26,7 +26,7 @@ module DotPopper
 
       def call(event)
         case event
-        when Events::GameEnded then fill(event.game)
+        when Events::GameEnded then fill(event)
         when Events::GameStarted, Events::HomeShown then empty
         end
       end
@@ -116,15 +116,17 @@ module DotPopper
 
       private
 
-      def fill(game)
+      # The finished game's dots (Events::GameEnded), where they were as
+      # its clock reached zero, begin to fall.
+      def fill(ended)
         empty
-        radius = @radius = game.field.radius
-        @field = game.field
+        radius = @radius = ended.field.radius
+        @field = ended.field
         @lid = false
         P.meter = @style.meter_for(radius)
         @world = P::World.new(0, @style.gravity_for(radius), true)
-        @walls = walls(game.field)
-        @stack = game.dots
+        @walls = walls(ended.field)
+        @stack = ended.dots
         @balls = @stack.to_h { [it.id, ball(it)] }
       rescue StandardError => e
         warn "Dot Popper: the dots stay put at game over (#{e.message})"
