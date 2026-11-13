@@ -19,6 +19,7 @@ class StartGameTest < Minitest::Test
   end
 
   def test_it_starts_a_game_in_play_and_spends_one
+    refute_predicate @start, :none_left?
     assert_equal :started, @start.call
 
     assert_predicate @cabinet, :playing?
@@ -42,6 +43,7 @@ class StartGameTest < Minitest::Test
   def test_with_none_left_nothing_starts
     2.times { @start.call.then { finish_game } }
 
+    assert_predicate @start, :none_left?
     assert_equal :none_left, @start.call
     assert_equal :none_left, @start.call(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
     assert_instance_of Cabinet::Home, @cabinet.state

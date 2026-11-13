@@ -8,6 +8,8 @@ module DotPopper
 
       def initialize: (cabinet: Cabinet, free_games: FreeGames) -> void
 
+      def none_left?: () -> bool
+
       def call: (?Stack? opening) -> result
     end
 

@@ -458,7 +458,7 @@ module DotPopper
       # over Game Over, which Back closes to Game Over as it was.
       def play_again
         return unless game_over? && cabinet.state.ready?
-        return offer_over_game_over if !games.can_play? && offer_offered?
+        return offer_over_game_over if @start_game.none_left? && offer_offered?
 
         continue_on
         play
@@ -979,12 +979,12 @@ module DotPopper
       def games_line = (words.games_left(games.left) if games.metered?)
 
       # What Play says, and what it leaves to say beneath it.
-      def play_word = games.can_play? ? words.play : words.button(:get_pro)
+      def play_word = @start_game.none_left? ? words.button(:get_pro) : words.play
 
       def play_note
         return unless games.metered?
 
-        games.can_play? ? words.games_left(games.left) : words.no_games_left(games.daily)
+        @start_game.none_left? ? words.no_games_left(games.daily) : words.games_left(games.left)
       end
 
       # A large button's name and its one value.
@@ -1204,7 +1204,7 @@ module DotPopper
 
         GameOverScreen.new(layout:, type: style::TYPE, words:, measure: @measure, scrim: style::GAME_OVER_BACKING, game_over:,
                            below: layout.safe.y, radius: cabinet.game&.field&.radius || @radius, chips: game_over_chips,
-                           play_word: games.can_play? ? words.play_again : words.button(:get_pro), play_note:)
+                           play_word: @start_game.none_left? ? words.button(:get_pro) : words.play_again, play_note:)
       end
 
       # The window changed size. Home's dots are respawned if their

@@ -15,6 +15,10 @@ module DotPopper
         @free_games = free_games
       end
 
+      # Whether Play would find no game left to start, and lead to the
+      # offer of Pro instead.
+      def none_left? = !@free_games.can_play?
+
       # Starts a game from Home and spends a free game on it: in play at
       # once, or with +opening+ (a Stack), paused before its clock first
       # runs, with those dots first, for the tutorial to play over.
