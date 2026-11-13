@@ -22,12 +22,19 @@ class SettingsTest < Minitest::Test
 
     @show.tap(*middle(@show.reach_of(DotPopper::DotSizing::SIZED_TO_SCREEN)))
     assert @cabinet.sizing.sized_to_screen?
-    assert_equal DotPopper::DotSizing::SIZED_TO_SCREEN.to_text, @sizing_store.read
+    assert_equal "fitted", @sizing_store.read, "dot_size.txt's word for the default, as every build wrote it"
     assert @show.settings?, "the tap never leaves Settings"
     assert_in_delta 35.4, @show.attract.dots.first.radius, 0.1, "Home's dots follow the choice"
     @show.back
     press_main
     assert_in_delta 35.4, @cabinet.game.field.radius, 0.1
+  end
+
+  def test_the_size_that_is_the_same_everywhere_saves_as_standard
+    @cabinet.sizing = DotPopper::DotSizing::DEFAULT
+    @show.tap(*middle(@show.reach_of(DotPopper::DotSizing::DEFAULT.toggled)))
+
+    assert_equal "standard", @sizing_store.read, "dot_size.txt's word for it, as every build wrote it"
   end
 
   # On the 24 × 16 R window, dots sized to it are the standard size, so
