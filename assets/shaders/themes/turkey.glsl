@@ -7,7 +7,8 @@
 // blue head with its red wattle. A popped dot is the same tom asleep on
 // his roost at night, all in dark tones: his fan folded shut like a
 // closed hand fan and hanging behind the limb, his wings folded, his head
-// sunk into his shoulders with his eyes shut. Every sleeping turkey is alike. The
+// sunk into his shoulders with his eyes shut, every part of him far
+// darker than the bright tom's mid tones. Every sleeping turkey is alike. The
 // vertex color says what kind of dot it is, as in dot.glsl.
 
 uniform float extent;
@@ -110,7 +111,9 @@ vec3 turkey(vec2 p, float d, float aa, float bright_look, float bonus) {
   float in_cov = cover_of((t - tip2) * reach, aa) * step(abs(phi), span2);
   vec3 fan = back * (1.0 - 0.45 * exp(-pow((t - tip2 - 0.02) / 0.045, 2.0)) * step(abs(phi), span2));
   fan = mix(fan, cov, in_cov);
-  fan *= 0.72 + 0.4 * lam;
+  // Lit from the upper left, but the fan's shaded side kept light enough
+  // that no part of it nears the sleeping tom's tones.
+  fan *= 0.8 + 0.32 * lam;
 
   // His wings, dropped at his sides: dark primaries barred pale.
   float wing_t = t * 7.0 + abs(phi) * 1.2;
@@ -164,7 +167,7 @@ vec3 turkey(vec2 p, float d, float aa, float bright_look, float bonus) {
 
   // --- Asleep on his roost ---
   // The night behind him, and the limb he sits on.
-  vec3 s = mix(vec3(0.065, 0.05, 0.07), vec3(0.11, 0.08, 0.095), clamp(0.5 - 0.5 * p.y, 0.0, 1.0));
+  vec3 s = mix(vec3(0.04, 0.03, 0.045), vec3(0.07, 0.05, 0.065), clamp(0.5 - 0.5 * p.y, 0.0, 1.0));
   float limb_y = 0.72 + 0.05 * p.x;
   float limb = abs(p.y - limb_y) - 0.07;
   // His fan, folded shut like a closed hand fan and hanging down behind
@@ -179,11 +182,11 @@ vec3 turkey(vec2 p, float d, float aa, float bright_look, float bonus) {
   float ftip = 0.6 - 0.035 * pow(2.0 * abs(ff), 2.0);
   float ft = length(fq) / ftip;
   float closed_fan = max(max(length(fq) - ftip, abs(fphi) - half_fan), -fq.y);
-  vec3 folded = mix(feather_color(floor(fu), 0.0), vec3(0.55, 0.4, 0.3), 0.6) * 0.22;
+  vec3 folded = mix(feather_color(floor(fu), 0.0), vec3(0.55, 0.4, 0.3), 0.6) * 0.16;
   folded = mix(folded * 0.5, folded, smoothstep(0.3, 0.8, ft));
   folded *= 0.75 + 0.35 * cos(ff * PI) - 0.3 * smoothstep(0.35, 0.5, abs(ff));
   folded = mix(folded, vec3(0.05, 0.03, 0.03), smoothstep(0.82, 0.84, ft));
-  folded = mix(folded, vec3(0.2, 0.17, 0.14) * (0.8 + 0.2 * cos(ff * PI)), smoothstep(0.9, 0.92, ft));
+  folded = mix(folded, vec3(0.12, 0.09, 0.07) * (0.8 + 0.2 * cos(ff * PI)), smoothstep(0.9, 0.92, ft));
   s *= 1.0 - 0.45 * cover_of(max(max(length(fq - vec2(0.03, 0.04)) - ftip, abs(fphi) - half_fan - 0.03), -fq.y), aa * 8.0) * (1.0 - cover_of(closed_fan, aa));
   s = mix(s, folded, cover_of(closed_fan, aa));
   // His feet gripping the limb.
@@ -191,7 +194,7 @@ vec3 turkey(vec2 p, float d, float aa, float bright_look, float bonus) {
     float sx = i == 0 ? -1.0 : 1.0;
     float toes = min(capsule(p, vec2(sx * 0.17, limb_y - 0.1), vec2(sx * 0.1, limb_y - 0.03), 0.024),
                      capsule(p, vec2(sx * 0.17, limb_y - 0.1), vec2(sx * 0.24, limb_y - 0.03), 0.024));
-    s = mix(s, vec3(0.2, 0.14, 0.12), cover_of(toes, aa));
+    s = mix(s, vec3(0.12, 0.08, 0.065), cover_of(toes, aa));
   }
   // His body, round, bronze in the dark, a copper edge on each feather.
   vec2 rc = vec2(0.0, 0.32);
@@ -200,8 +203,8 @@ vec3 turkey(vec2 p, float d, float aa, float bright_look, float bonus) {
   vec3 ball_n = normalize(vec3((p - rc) / rr, 0.6));
   float rlam = clamp(0.25 + 0.85 * dot(ball_n, L), 0.0, 1.0);
   float rs = scallops(p - rc + vec2(0.0, 0.6), 0.15);
-  vec3 bird = mix(vec3(0.09, 0.06, 0.045), vec3(0.26, 0.16, 0.1), rlam);
-  bird = mix(bird, vec3(0.34, 0.22, 0.14) * (0.45 + 0.65 * rlam), rs * 0.35);
+  vec3 bird = mix(vec3(0.06, 0.038, 0.032), vec3(0.14, 0.085, 0.06), rlam);
+  bird = mix(bird, vec3(0.19, 0.115, 0.075) * (0.45 + 0.65 * rlam), rs * 0.35);
   // His wings folded at his sides, their tips barred pale.
   for (int i = 0; i < 2; i++) {
     float sx = i == 0 ? -1.0 : 1.0;
@@ -210,14 +213,14 @@ vec3 turkey(vec2 p, float d, float aa, float bright_look, float bonus) {
     float w = ellipse(p, wc, wr);
     float along = p.y - wc.y;
     float bar = smoothstep(0.42, 0.52, fract(along * 7.0)) * (1.0 - smoothstep(0.72, 0.82, fract(along * 7.0))) * step(0.12, along);
-    vec3 wcol = mix(vec3(0.07, 0.045, 0.04), vec3(0.24, 0.15, 0.1), rlam);
-    wcol = mix(wcol, vec3(0.22, 0.19, 0.17) * (0.7 + 0.4 * rlam), bar * 0.6);
+    vec3 wcol = mix(vec3(0.04, 0.028, 0.026), vec3(0.13, 0.08, 0.055), rlam);
+    wcol = mix(wcol, vec3(0.13, 0.1, 0.085) * (0.7 + 0.4 * rlam), bar * 0.6);
     bird *= 1.0 - 0.4 * cover_of(ellipse(p, wc - vec2(sx * 0.04, -0.02), wr + 0.03), aa * 8.0) * (1.0 - cover_of(w, aa));
     bird = mix(bird, wcol, cover_of(w, aa));
   }
   s *= 1.0 - 0.5 * cover_of(ellipse(p, rc + vec2(0.04, 0.05), rr + 0.03), aa * 12.0) * (1.0 - cover_of(ball, aa));
   s = mix(s, bird, cover_of(ball, aa));
-  vec3 bark = mix(vec3(0.08, 0.055, 0.05), vec3(0.2, 0.15, 0.12), smoothstep(0.07, -0.07, p.y - limb_y));
+  vec3 bark = mix(vec3(0.05, 0.034, 0.032), vec3(0.12, 0.085, 0.07), smoothstep(0.07, -0.07, p.y - limb_y));
   bark *= 0.9 + 0.1 * smoothstep(0.3, 0.7, sin(p.x * 13.0 + 2.0 * sin(p.y * 20.0)));
   s = mix(s, bark, cover_of(limb, aa) * (1.0 - cover_of(ball, aa)));
   // His head, sunk into his shoulders, as big as by day, slate in the
@@ -225,16 +228,16 @@ vec3 turkey(vec2 p, float d, float aa, float bright_look, float bonus) {
   vec2 rh = vec2(0.0, -0.1);
   float rhead = ellipse(p, rh, hr);
   s *= 1.0 - 0.45 * cover_of(ellipse(p, rh + vec2(0.02, 0.06), hr + 0.03), aa * 8.0) * (1.0 - cover_of(rhead, aa));
-  s = mix(s, mix(vec3(0.09, 0.095, 0.13), vec3(0.21, 0.22, 0.27), clamp(0.2 + 0.9 * dot(normalize(vec3((p - rh) / hr, 0.7)), L), 0.0, 1.0)), cover_of(rhead, aa));
+  s = mix(s, mix(vec3(0.05, 0.043, 0.052), vec3(0.105, 0.088, 0.095), clamp(0.2 + 0.9 * dot(normalize(vec3((p - rh) / hr, 0.7)), L), 0.0, 1.0)), cover_of(rhead, aa));
   vec2 re = vec2(abs(p.x), p.y) - vec2(0.075, -0.13);
   float lid = abs(re.y - 0.026 * (1.0 - pow(re.x / 0.052, 2.0))) - 0.014;
-  s = mix(s, vec3(0.05, 0.035, 0.05), cover_of(lid, aa) * step(abs(re.x), 0.054));
-  vec3 night_flesh = mix(vec3(0.13, 0.045, 0.05), vec3(0.24, 0.085, 0.085), lam);
+  s = mix(s, vec3(0.018, 0.01, 0.014), cover_of(lid, aa) * step(abs(re.x), 0.054));
+  vec3 night_flesh = mix(vec3(0.1, 0.035, 0.04), vec3(0.19, 0.065, 0.065), lam);
   float rwattle = min(ellipse(p, vec2(0.02, 0.04), vec2(0.07, 0.085)), ellipse(p, vec2(-0.015, 0.12), vec2(0.06, 0.075)));
   s *= 1.0 - 0.3 * cover_of(ellipse(p, vec2(0.04, 0.1), vec2(0.085, 0.13)), aa * 6.0) * (1.0 - cover_of(rwattle, aa));
   s = mix(s, night_flesh, cover_of(rwattle, aa));
   float rbeak = max(abs(p.x) - 0.06 * (1.0 - (p.y + 0.1) / 0.11), max(-0.1 - p.y, p.y - 0.01));
-  s = mix(s, vec3(0.22, 0.18, 0.13), cover_of(rbeak, aa));
+  s = mix(s, vec3(0.11, 0.085, 0.055), cover_of(rbeak, aa));
 
   vec3 col = mix(s, display, bright_look);
   float wr = mix(max(0.036, 1.5 * aa), max(0.022, 1.5 * aa), bright_look);
