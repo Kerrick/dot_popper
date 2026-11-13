@@ -19,6 +19,17 @@ module DotPopper
         # since it opens the offer.
         def use_word = @use_theme.locked? ? words.offer.fetch(:entry) : format(words.themes.fetch(:use), words.themes.fetch(show.arrival.key))
 
+        # Each frame: the moment the card for a new theme first shows.
+        def update
+          theme = show.arrival
+          @seen = [theme.key, now] if theme && @seen&.first != theme.key
+        end
+
+        # Whether the card for this theme has been up Style::ARRIVAL_GRACE
+        # since it first showed, so a press meant for Home as it came
+        # answers nothing.
+        def settled? = @seen&.first == show.arrival&.key && now - @seen.last >= style::ARRIVAL_GRACE
+
         # Where its parts go (ArrivalPlan).
         def plan = ArrivalPlan.new(layout:, word: (use_word if show.arrival?), measure:)
 
@@ -27,7 +38,7 @@ module DotPopper
         # tapping Themes. For its first moments (Style::ARRIVAL_GRACE) it
         # answers nothing, so a press meant for Home as it came does not.
         def answer(use:)
-          return :waiting unless show.arrival_settled?
+          return :waiting unless settled?
 
           theme = show.arrival or return
 
@@ -40,7 +51,7 @@ module DotPopper
 
         # No button for its first moments, as it answers nothing.
         def controls
-          return [] unless show.arrival_settled?
+          return [] unless settled?
 
           plan = self.plan
           [button(:arrival_later, plan.later_button), button(:arrival_use, plan.use_button)]

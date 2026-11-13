@@ -37,7 +37,7 @@ module DotPopper
       SIZINGS = Screens::Settings::SIZINGS
 
       attr_reader :cabinet, :effects, :animations, :hud, :attract, :layout, :home_entrance, :game_over, :sounds, :now, :style,
-                  :stats_book, :input, :words, :tutorial, :clock_highlight, :window
+                  :stats_book, :input, :words, :clock_highlight, :window
 
       # Their old names, until no caller says them.
       alias marquee home_entrance
@@ -66,8 +66,6 @@ module DotPopper
         @use_theme = use_theme
         @view_achievements = view_achievements
         @layers = [] # the screens open over the game's state, the top one last
-        @tutorial = nil
-        @handing_over = nil
         @clock_highlight = nil
         @measure = measure
         @stats_book = stats_book
@@ -144,7 +142,7 @@ module DotPopper
       def arrival? = !arrival.nil?
       # Whether the card for this theme has been up ARRIVAL_GRACE since it
       # first appeared, so a press meant for Home as it came answers nothing.
-      def arrival_settled? = @arrival_seen&.first == arrival&.key && now - @arrival_seen.last >= style::ARRIVAL_GRACE
+      def arrival_settled? = @screens[:new_theme].settled?
       def arrival_plan = @screens[:new_theme].plan
 
       # The switch's word: a Free player's is "Get Pro", since it opens the offer.
@@ -183,7 +181,10 @@ module DotPopper
       # paused meanwhile (Cabinet::Paused), so its clock is not running,
       # and no tap reaches it but the ones the Tutorial passes on; once it
       # ends, or is skipped, the game plays on from the state it is in.
-      def tutorial? = !@tutorial.nil?
+      def tutorial? = @screens[:tutorial].playing?
+
+      # The Tutorial's scene (Presentation::Tutorial), while it plays.
+      def tutorial = @screens[:tutorial].scene
 
       # Whether the Stats screen is on top. It is the presentation's alone:
       # the game stays on Home meanwhile, and no tap there reaches the
@@ -325,12 +326,7 @@ module DotPopper
       # goes, showing at once what it had yet to show of the game, and the
       # game plays on from the state it is in. Nothing starts or ends: the
       # game began when the Tutorial opened.
-      def skip_tutorial
-        return unless tutorial?
-
-        @tutorial.catch_up
-        play_on
-      end
+      def skip_tutorial = @screens[:tutorial].skip
 
       # Where a tap reaches the Tutorial's skip button, where it is drawn.
       def skip_reach = reach_of(:skip)
@@ -719,7 +715,7 @@ module DotPopper
         @now += seconds
         @groups.update(now, quiet: !playing?, showing: screen.announces?)
         offer.update(seconds)
-        @arrival_seen = [arrival.key, now] if arrival? && @arrival_seen&.first != arrival.key
+        @screens[:new_theme].update
         @screens[:stats].update
         @hover = hover.at(hovered).update(seconds, style::HOVER)
         effects.update(seconds)
@@ -775,7 +771,7 @@ module DotPopper
       def tutorial_began
         effects.clear
         effects.scale_to(cabinet.field.radius)
-        @tutorial = Tutorial.new(cabinet:, effects:, sounds:, haptics: @haptics, style:, now:, calm: @calm, palette:)
+        @screens[:tutorial].play(Tutorial.new(cabinet:, effects:, sounds:, haptics: @haptics, style:, now:, calm: @calm, palette:))
       end
 
       # One of Home's dots, popped by a tap: its droplets, its ring,
@@ -794,18 +790,9 @@ module DotPopper
       # The Tutorial moves on, and once it is over, the game plays on, and
       # only its clock starts, lit as it starts to run (ClockHighlight).
       def follow_tutorial(seconds)
-        @tutorial.update(seconds)
-        return unless @tutorial.over?
+        return unless @screens[:tutorial].follow(seconds)
 
-        play_on
         @clock_highlight = ClockHighlight.new(at: now, style: style::TUTORIAL.lead)
-      end
-
-      # The Tutorial goes, and its game plays on as it is (Cabinet#unpause),
-      # drawn as the Tutorial drew it (#game_started).
-      def play_on
-        @handing_over, @tutorial = @tutorial, nil
-        cabinet.unpause
       end
 
       # The HUD reads the game. While the Tutorial's lead-in lights the
@@ -825,7 +812,7 @@ module DotPopper
       # with the dots as it drew them, their animations, its effects still
       # playing, and its HUD, so nothing on screen jumps.
       def game_started(event)
-        scene, @handing_over = @handing_over, nil
+        scene = @screens[:tutorial].take_handed_over
         @scale = event.field.radius
         effects.scale_to(@scale)
         if scene

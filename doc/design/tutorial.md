@@ -22,7 +22,7 @@ While it plays, `Cabinet` holds the game in its `Paused` state ([ADR-0016](../ad
 | Numbers in flight | `Presentation::TravelingNumber` (`traveling_number.rb`), drawn as a `Presentation::Tally` (`tally.rb`) |
 | Whether pressing Play opens it | `Presentation::TutorialFlag` (`tutorial_flag.rb`), `tutorial.txt` |
 | The paused game | `Cabinet::Paused`, `Cabinet::Starts#paused`, `Cabinet#press_paused`, `#move_paused`, `#arrange`, `#unpause`; `Game#move_dots`, `#arrange` |
-| Opening, skipping and playing on | `Show#play`, `#how_to_play`, `#skip_tutorial`, `#open_tutorial`, `#follow_tutorial`, `#play_on`; `Tutorial.opening`; `UseCases::StartGame` |
+| Opening, skipping and playing on | `Show#play`, `#how_to_play`, `#skip_tutorial`, `#follow_tutorial`; `Screens::Tutorial` (its scene while it plays, `#skip`, `#follow`); `Screens::Home#open_tutorial`; `Tutorial.opening`; `UseCases::StartGame` |
 | Drawing | `Shell::TutorialPainter`, `Shell::GuidePainter`, `Shell::HandSprites`, `Shell::TallyPainter`, and `Shell::Renderer#tutorial` |
 
 ## When it opens
@@ -34,7 +34,7 @@ While it plays, `Cabinet` holds the game in its `Paused` state ([ADR-0016](../ad
 
 ## Skip
 
-A Skip button stands at the bottom right of the safe area (`Layout#skip_button`), the skip sign (`Glyphs` `:skip`, a triangle and a bar) before the word, so it reads without English. A tap on it, Escape, and a gamepad's B (`Show#back`) skip at any beat. Skip takes the tutorial away, and its game plays on at once from the state it is in, with no lead-in (`Show#skip_tutorial`, `#play_on`): the dots where they are, and the score, the clock and the row as the rules have them. Nothing starts or ends, since the game began when the tutorial opened. What the tutorial had yet to show of the game is shown at once (`Tutorial#catch_up`): a dot the rules popped takes its popped look, a dot they spawned is born, and the HUD reads the game from the next frame. The spotlight, the guide, the numbers in flight and the row's ring go with the tutorial. The maintainer's words: "Skip should skip all the tutorial-y bits being added to the current game, and get out of the way so the player can play."
+A Skip button stands at the bottom right of the safe area (`Layout#skip_button`), the skip sign (`Glyphs` `:skip`, a triangle and a bar) before the word, so it reads without English. A tap on it, Escape, and a gamepad's B (`Show#back`) skip at any beat. Skip takes the tutorial away, and its game plays on at once from the state it is in, with no lead-in (`Screens::Tutorial#skip`): the dots where they are, and the score, the clock and the row as the rules have them. Nothing starts or ends, since the game began when the tutorial opened. What the tutorial had yet to show of the game is shown at once (`Tutorial#catch_up`): a dot the rules popped takes its popped look, a dot they spawned is born, and the HUD reads the game from the next frame. The spotlight, the guide, the numbers in flight and the row's ring go with the tutorial. The maintainer's words: "Skip should skip all the tutorial-y bits being added to the current game, and get out of the way so the player can play."
 
 ## The beats
 
@@ -143,7 +143,7 @@ A pop of the player's plays the game's burst, shockwave, pop sound and, on Andro
 
 ## Play begins
 
-When the beat is `:over`, `Show#follow_tutorial` takes the tutorial away and unpauses its game (`Show#play_on`, `Cabinet#unpause`). Nothing is copied: the game is the one the tutorial played over, with its three dots where they are and going as they go, the two popped ones on top and the bright one under them; its score, 1, its clock, 10 seconds, and its row, 1, which are always so, since the player's own taps on a popped dot never reach it. The `Show` keeps the tutorial's dot animations, its effects still playing and its HUD, so nothing on screen jumps (`Show#game_started`).
+When the beat is `:over`, `Show#follow_tutorial` takes the tutorial away and unpauses its game (`Screens::Tutorial#follow`, `Cabinet#unpause`). Nothing is copied: the game is the one the tutorial played over, with its three dots where they are and going as they go, the two popped ones on top and the bright one under them; its score, 1, its clock, 10 seconds, and its row, 1, which are always so, since the player's own taps on a popped dot never reach it. The `Show` keeps the tutorial's dot animations, its effects still playing and its HUD, so nothing on screen jumps (`Show#game_started`).
 
 Only the clock starts. Nothing fades, nothing resets and no dot is added. The light on the clock (`ClockHighlight`, `Style::TUTORIAL.lead`) fades out in 0.6 s, so the game's dots are never hidden for more than a moment, and a halo stays on the clock for 1.3 s, then fades in 0.4 s. While it shows, the clock's first second down ticks. A skip has no lead-in.
 
