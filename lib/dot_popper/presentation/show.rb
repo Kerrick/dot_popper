@@ -818,8 +818,6 @@ module DotPopper
         effects.ring(dot.x, dot.y, style::SHOCKWAVE)
         sounds.play(:pop, pan: pan(x))
       end
-      # Its old name, until no caller says it.
-      alias toy_pop pop_home_dot
       private
 
       # The art of the theme +key+ (Theme), or nil for none.
