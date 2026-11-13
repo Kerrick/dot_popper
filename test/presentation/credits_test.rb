@@ -137,7 +137,7 @@ class CreditsTest < Minitest::Test
     assert_operator show.credits.farthest, :>, 0.0
 
     show.wheel_scroll(-1)
-    line = show.credits_layout.line
+    line = show.screens.fetch(:credits).plan.line
     assert_in_delta line * Style::CREDITS.wheel, show.credits.offset, 1e-6
     assert show.scroll_key(:page_down)
     refute show.scroll_key(:escape)
@@ -189,7 +189,7 @@ class CreditsTest < Minitest::Test
     show.resize(layout(400, 850), field(400, 850))
 
     assert show.credits?
-    assert_in_delta show.credits_lines.height - show.credits_layout.window.height, show.credits.offset, 1e-6
+    assert_in_delta show.screens.fetch(:credits).lines.height - show.screens.fetch(:credits).plan.window.height, show.credits.offset, 1e-6
   end
 
   private

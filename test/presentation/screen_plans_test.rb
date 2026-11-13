@@ -282,7 +282,7 @@ class ScreenPlansTest < Minitest::Test
       screen_layout = layout(width, height)
       show = credits_show(screen_layout)
       show.open_credits
-      page = show.credits_layout
+      page = show.screens.fetch(:credits).plan
       window = page.window
       name = "#{width}x#{height}"
       title = show.words.button(:credits_heading)
@@ -296,13 +296,13 @@ class ScreenPlansTest < Minitest::Test
       assert_operator window.right, :<=, screen_layout.safe.right, name
       assert_operator window.height, :>, page.line * 2, "#{name}: room to read"
       measure = RoughMeasure.new
-      show.credits_lines.rows.each do |row|
+      show.screens.fetch(:credits).lines.rows.each do |row|
         face = { heading: :bold, legal: :mono }.fetch(row.kind, :semibold)
         size = row.kind == :heading ? CreditsLines.heading_size(page.text_size) : page.text_size
         assert_operator measure.width(face, size, row.text), :<=, window.width + 1e-6, "#{name}: #{row.text}"
       end
       show.scroll_key(:end)
-      assert_in_delta show.credits_lines.height - window.height, show.credits.offset, 1e-6, name
+      assert_in_delta show.screens.fetch(:credits).lines.height - window.height, show.credits.offset, 1e-6, name
     end
   end
 

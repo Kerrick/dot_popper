@@ -13,7 +13,7 @@ module DotPopperGui
       open_settings
       click_credits
       check(show.credits?, "a click on Credits and licenses opens them")
-      page = show.credits_layout.window
+      page = show.screens.fetch(:credits).plan.window
       check(show.credits.farthest.positive?, "the page is longer than the window")
       lit = screenshot.lit_in(page)
       check(lit > 100, "the Credits screen shows its text (#{lit} light pixels)")

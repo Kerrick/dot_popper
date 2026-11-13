@@ -489,13 +489,6 @@ module DotPopper
       # it is open.
       def credits = @screens[:credits].scroll
 
-      # The Credits screen's lines (CreditsLines), laid out for the
-      # screen's size, while it is open.
-      def credits_lines = @screens[:credits].lines
-
-      # Where the Credits screen's heading and its window of text go.
-      def credits_layout = @screens[:credits].plan
-
       # Opens the Credits screen over the Stats screen, at the top.
       def open_credits = @screens[:credits].open
 
