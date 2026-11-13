@@ -14,7 +14,7 @@
 # window reports on frames 60 and 600, each touch and key the game
 # receives (with the state it arrives in), each event the game announces,
 # the frame the setdef splash is over on (a key before then only skips
-# the splash), and, every 15 frames of a game, where its topmost fresh
+# the splash), and, every 15 frames of a game, where its topmost bright
 # dot is.
 if ENV["DOT_POPPER_KIT_PROBE"] == "1"
   $stdout.sync = true
@@ -83,7 +83,7 @@ if ENV["DOT_POPPER_KIT_PROBE"] == "1"
         end
         state = @kit_game&.state
         if (frames % 15).zero? && state.respond_to?(:game) && state.class.name.end_with?("Playing")
-          dot = state.game.dots.find(&:fresh?)
+          dot = state.game.dots.find(&:bright?)
           width, height = Lota::Graphics.dimensions
           puts "kit probe: dot at #{dot.x.round(1)}, #{dot.y.round(1)} in #{width}x#{height}, score #{state.game.score}" if dot
         end
