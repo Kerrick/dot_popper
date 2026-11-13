@@ -109,7 +109,7 @@ end
 started = Time.now
 seen = 0
 origin = nil
-pops = 0
+pop_taps = 0
 probe_failed = false
 last_tap = nil
 pending_shots = shots.sort
@@ -150,7 +150,7 @@ loop do
     adb("shell", "input", "keyevent", key[:code])
     say "sent #{key[:code]}, #{key[:seconds]} s after a line matched #{key[:pattern].source}"
   end
-  if pop && pops < 5 && lines.none? { it.include?("kit probe: event Popped") }
+  if pop && pop_taps < 5 && lines.none? { it.include?("kit probe: event Popped") }
     probe = lines.reverse.find { it.include?("kit probe: dot at") }
     match = probe&.match(/dot at ([\d.]+), ([\d.]+) in ([\d.]+)x([\d.]+)/)
     if match && probe != last_tap
@@ -159,7 +159,7 @@ loop do
       px = (x / w * width).round
       py = (y / h * height).round
       adb("shell", "input", "tap", px.to_s, py.to_s)
-      pops += 1
+      pop_taps += 1
       say "tapped the dot at #{x.round}, #{y.round} of #{w.round}x#{h.round}: #{px}, #{py} on the screen"
     end
   end
