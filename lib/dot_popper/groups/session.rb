@@ -141,14 +141,16 @@ module DotPopper
       def delete_everything = ask(Job.of(:deleted, loud: true))
 
       # A game just ended. The server cannot tell how a score was won, so
-      # only a game that counts is sent: one played by a member, with dots
-      # sized to the screen, and not the tutorial's (+sized_to_screen+ is
-      # false for the others). If it cannot be sent now, the highest-scoring such game
-      # waits and is sent with the next contact.
-      def game_finished(score:, sized_to_screen:)
+      # only a game that counts is sent: one played by a member, not the
+      # tutorial's (+counts+ is false for that one), with a score above 0,
+      # whatever its dot size. If it cannot be sent now, the highest-scoring such game
+      # waits and is sent with the next contact. +sized_to_screen+ is
+      # +counts+'s old name, until no commit uses it.
+      def game_finished(score:, counts: nil, sized_to_screen: nil)
         @game_result = nil
         @result_due = false
-        return unless member? && sized_to_screen == true && score.positive?
+        counts = sized_to_screen if counts.nil?
+        return unless member? && counts == true && score.positive?
 
         @last_score = score.clamp(0, HIGHEST_SCORE)
         @pending = [@last_score, @pending.to_i].max

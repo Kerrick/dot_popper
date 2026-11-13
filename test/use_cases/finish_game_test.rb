@@ -18,7 +18,7 @@ class FinishGameTest < Minitest::Test
       @achievements = []
     end
 
-    def game_finished(score:, sized_to_screen:) = @games << [score, sized_to_screen]
+    def game_finished(score:, counts:) = @games << [score, counts]
     def report_achievements(ids) = @achievements << ids
   end
 
@@ -65,12 +65,16 @@ class FinishGameTest < Minitest::Test
     assert_equal [%i[blink]], @groups.achievements
   end
 
-  def test_only_a_game_with_dots_sized_to_the_screen_and_no_tutorial_counts_in_a_friend_group
+  # The maintainer: "Somebody's gonna choose a dot size they like and
+  # stick with it, usually. Nobody who does that should be excluded from
+  # enjoying friend groups." So a game counts whatever its dot size; only
+  # the tutorial's never does.
+  def test_every_game_but_the_tutorials_counts_in_a_friend_group_whatever_its_dot_size
     @finish.finish(ended(score: 4), stats: stats)
     @finish.finish(ended(score: 5, tutorial: true), stats: stats)
     @finish.finish(ended(score: 6, size_class: DotPopper::SizeClass::SMALL), stats: stats)
 
-    assert_equal [[4, true], [5, false], [6, false]], @groups.games
+    assert_equal [[4, true], [5, false], [6, true]], @groups.games
   end
 
   # Heard as the rules announce each event, what it finishes with is the

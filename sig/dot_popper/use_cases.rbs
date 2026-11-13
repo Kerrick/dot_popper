@@ -21,7 +21,7 @@ module DotPopper
     # A player's friend groups, as Groups::Session tells them of games
     # and achievements.
     interface _FriendGroups
-      def game_finished: (score: Integer, sized_to_screen: bool) -> void
+      def game_finished: (score: Integer, counts: bool) -> void
 
       def report_achievements: (Array[Achievement::id] ids) -> void
     end

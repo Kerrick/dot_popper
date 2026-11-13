@@ -51,11 +51,11 @@ module DotPopper
 
       # +ended+ is the game's Events::GameEnded, +stats+ its numbers
       # (GameStats), and +earned+ the achievements its play earned. A game
-      # the tutorial opened never counts in a friend group; nor does one
-      # with the fixed size.
+      # the tutorial opened never counts in a friend group; any other does,
+      # whatever its dot size.
       def finish(ended, stats:, earned: [])
         recorded = @stats_book.record(stats, ended.size_class)
-        @friend_groups.game_finished(score: ended.score, sized_to_screen: ended.size_class == SizeClass::FITTED && !ended.tutorial)
+        @friend_groups.game_finished(score: ended.score, counts: !ended.tutorial)
         fresh = @achievements.award(earned, day: @stats_book.today.iso8601)
         pro = @entitlement.pro?
         @friend_groups.report_achievements(fresh) if pro
