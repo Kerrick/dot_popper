@@ -122,9 +122,9 @@ class PrivacyRequestsTest < Minitest::Test
   def test_a_job_can_only_be_made_from_a_declaration
     themes = DotPopper::ThemeReleases::REQUESTS.fetch(:themes)
 
-    assert_raises(KeyError) { Groups::Session::Job.of(:brand_new) }
-    assert_raises(ArgumentError) { Groups::Session::Job.of(:join, body: { other: 1 }) }
-    assert_raises(NoMethodError) { Groups::Session::Job.new(kind: :join, verb: :get, path: "/x") }
+    assert_raises(KeyError) { Groups::Job.new(:brand_new) }
+    assert_raises(ArgumentError) { Groups::Job.new(:join, body: { other: 1 }) }
+    assert_raises(ArgumentError) { Groups::Job.new(:join, verb: :get, path: "/x") }
     assert_raises(ArgumentError) { Network::Job.of(themes) }
     assert_raises(ArgumentError) { Network::Job.of(themes, query: { started_on: "2026-11-08", other: 1 }) }
     assert_raises(ArgumentError) { Network::Job.of(themes, query: { started_on: "2026-11-08" }, body: { other: 1 }) }

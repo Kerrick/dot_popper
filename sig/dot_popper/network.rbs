@@ -41,7 +41,7 @@ module DotPopper
 
       attr_reader body: Hash[Symbol, untyped]?
 
-      def self.of: (Request request, ?body: Hash[Symbol, untyped]?, ?query: Hash[Symbol, untyped]?, ?id: Integer?) -> Job
+      def self.of: (Request request, ?body: Hash[Symbol, untyped]?, ?query: Hash[Symbol, untyped]?, ?id: (Integer | String)?) -> Job
     end
 
     class Reply < ::Data
@@ -54,6 +54,22 @@ module DotPopper
       def ok?: () -> bool
 
       def offline?: () -> bool
+    end
+
+    class Link
+      def initialize: (String url, ?raw: bool) -> void
+
+      def call: (untyped job, String? token) -> Reply
+    end
+
+    # Runs a Link's requests on a thread of its own: any job that answers
+    # a verb, a path and a body.
+    class Worker
+      def initialize: (Link link) -> void
+
+      def start: (untyped job, String? token) -> void
+
+      def finished: () -> Array[[untyped, Reply]]
     end
 
     # What runs a request off the game's thread (Worker), or a test's

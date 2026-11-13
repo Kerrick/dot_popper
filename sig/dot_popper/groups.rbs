@@ -239,5 +239,273 @@ module DotPopper
 
       def announce: (Group group, Array[TitleChange] changes) -> void
     end
+
+    REQUESTS: Hash[Symbol, Network::Request]
+
+    def self.request: (?token: bool, **untyped) -> Network::Request
+
+    # What a job's answers may do to the session: Session's answer methods.
+    interface _Answers
+      def adopt: (untyped body) -> void
+
+      def read_groups: (untyped body) -> void
+
+      def read_group: (untyped body) -> void
+
+      def arrived: (untyped body, loud: bool) -> void
+
+      def history_settled: (group_id id) -> void
+
+      def read_history: (group_id id, untyped body) -> void
+
+      def gone: (group_id id) -> void
+
+      def achievement_settled: (String key) -> void
+
+      def achievement_taken: (String key, untyped body) -> void
+
+      def drop_achievement: (String key) -> void
+
+      def score_settled: () -> void
+
+      def game_taken: (Integer score, untyped body) -> void
+
+      def give_up_score: () -> void
+
+      def forget_identity: () -> void
+    end
+
+    class Job
+      CONFLICTS: Hash[String, Symbol]
+
+      NEVER_TAKEN: Array[Integer]
+
+      @loud: bool
+
+      attr_reader sent: Network::Job
+
+      attr_reader next_job: Job?
+
+      def initialize: (Symbol kind, ?body: Hash[Symbol, untyped]?, ?id: group_id?, ?next_job: Job?, ?loud: bool) -> void
+
+      def loud?: () -> bool
+
+      def kind: () -> Symbol
+
+      def verb: () -> Symbol
+
+      def path: () -> String
+
+      def body: () -> Hash[Symbol, untyped]?
+
+      def refusals: () -> Hash[Integer, Symbol]
+
+      def reason: (Network::Reply reply) -> Symbol
+
+      def settled: (_Answers session) -> void
+
+      def taken: (_Answers session, Network::Reply reply) -> void
+
+      def refused: (_Answers session, Network::Reply reply) -> bool
+    end
+
+    class GroupJob < Job
+      attr_reader group_id: group_id
+
+      def initialize: (Symbol kind, group_id group_id, ?loud: bool) -> void
+    end
+
+    module Jobs
+      TOO_MANY_TRIES: Hash[Integer, Symbol]
+
+      class NewPlayer < Job
+        def initialize: (next_job: Job) -> void
+      end
+
+      class ListGroups < Job
+        def initialize: (loud: bool) -> void
+      end
+
+      class CreateGroup < Job
+        def initialize: () -> void
+      end
+
+      class JoinGroup < Job
+        REFUSALS: Hash[Integer, Symbol]
+
+        def initialize: (String code) -> void
+      end
+
+      class ReadGroup < GroupJob
+        def initialize: (group_id group_id) -> void
+      end
+
+      class ReadHistory < GroupJob
+        def initialize: (group_id group_id) -> void
+      end
+
+      class LeaveGroup < GroupJob
+        def initialize: (group_id group_id) -> void
+      end
+
+      class SendAchievement < Job
+        attr_reader key: String
+
+        def initialize: (String key) -> void
+      end
+
+      class SendGame < Job
+        attr_reader score: Integer
+
+        def initialize: (Integer score) -> void
+      end
+
+      class DeletePlayer < Job
+        def initialize: () -> void
+      end
+    end
+
+    class Session
+      include _Answers
+
+      # The thread friend groups' jobs run on, or what stands in for it.
+      interface _Worker
+        def start: (Job job, String? token) -> void
+
+        def finished: () -> Array[[Job, Network::Reply]]
+      end
+
+      class NoWorker
+        include _Worker
+      end
+
+      LONGEST_RETRY_WAIT: Integer
+
+      USUAL_WAIT: Integer
+
+      HIGHEST_SCORE: Integer
+
+      NO_WORKER: NoWorker
+
+      @store: ScoreRecord::_Store
+
+      @worker: _Worker
+
+      @clock: ^() -> Time
+
+      @available: bool
+
+      @waiting: Array[Job]
+
+      @running: Integer
+
+      @fetching: Array[group_id]
+
+      @error: Symbol?
+
+      @game_result: GameResult?
+
+      @result_due: bool
+
+      @last_score: Integer?
+
+      @token: String?
+
+      @outbox: Outbox
+
+      @read: ReadModel
+
+      @wait_until: Integer?
+
+      def self.off: () -> Session
+
+      def self.at: (String? url, store: ScoreRecord::_Store) -> Session
+
+      attr_reader error: Symbol?
+
+      attr_reader token: String?
+
+      attr_reader game_result: GameResult?
+
+      def initialize: (store: ScoreRecord::_Store, worker: _Worker, ?clock: ^() -> Time, ?available: bool) -> void
+
+      def available?: () -> bool
+
+      def known?: () -> bool
+
+      def busy?: () -> bool
+
+      def member?: () -> bool
+
+      def groups: () -> Array[Group]
+
+      def group: (group_id id) -> Group?
+
+      def title_changes: (group_id id) -> Array[TitleChange]?
+
+      def history: (group_id id) -> Array[TitleChange | MemberAchievement]?
+
+      def result_due?: () -> bool
+
+      def refresh: () -> void
+
+      def create: () -> void
+
+      def join: (String code) -> void
+
+      def look_at: (group_id id) -> void
+
+      def leave: (group_id id) -> void
+
+      def report_achievements: (Array[String | Symbol] keys) -> void
+
+      def delete_everything: () -> void
+
+      def game_finished: (score: Integer, counts: bool) -> void
+
+      def game_started: () -> void
+
+      def update: (quiet: bool) -> void
+
+      def next_announcement: () -> Announcement?
+
+      def take_arrival: () -> group_id?
+
+      private
+
+      def ask: (Job job) -> nil
+
+      def as_player: (Job job) -> void
+
+      def send_achievements: () -> void
+
+      def send_owed: () -> void
+
+      def fetch_changes: (group_id id) -> void
+
+      def waiting_out?: () -> bool
+
+      def wait_out: (Integer? seconds) -> void
+
+      def settle: (Job job, Network::Reply reply) -> void
+
+      def taken: (Job job, Network::Reply reply) -> void
+
+      def refused: (Job job, Network::Reply reply) -> void
+
+      def upsert: (Group group) -> void
+
+      def follow: (Group group) -> void
+
+      def outcome: (untyped item) -> outcome?
+
+      def listed_groups: (untyped body) -> Array[untyped]
+
+      def remember_membership: () -> void
+
+      def load_saved: () -> void
+
+      def save: () -> void
+    end
   end
 end

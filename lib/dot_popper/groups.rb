@@ -8,4 +8,4 @@ module DotPopper
   end
 end
 
-%w[requests group group_file outbox read_model session].each { require_relative "groups/#{it}" }
+%w[requests group group_file outbox read_model jobs session].each { require_relative "groups/#{it}" }

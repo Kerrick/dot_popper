@@ -100,6 +100,17 @@ module DotPopper
     # the groups whose titles it won, so Game Over can name and open one.
     class GameResult < Data.define(:won, :raised, :short, :reigning, :taken)
       def initialize(won:, raised:, short:, reigning:, taken: []) = super
+
+      # The result of a game that scored +score+, from each group's part in
+      # the server's answer, as [group, won_title, raised].
+      def self.of(outcomes, score)
+        won = outcomes.count { |_, won, _| won }
+        raised = outcomes.count { |_, _, raised| raised }
+        chasing = outcomes.reject { |group, won, _| won || group.champion? }
+        new(won:, raised:, short: chasing.map { |group, _, _| group.score_to_win - score }.select(&:positive?).min,
+            reigning: !outcomes.empty? && won.zero? && raised.zero? && chasing.empty?,
+            taken: outcomes.select { |_, won, _| won }.map { |group, _, _| group.id })
+      end
     end
   end
 end
