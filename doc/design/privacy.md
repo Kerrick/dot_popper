@@ -33,13 +33,13 @@ Each part of the game that makes requests declares its own, as `REQUESTS`, where
 | Part | Declares |
 | --- | --- |
 | `Groups::REQUESTS` (`lib/dot_popper/groups/requests.rb`) | `POST /player`, `GET /groups`, `POST /groups`, `POST /memberships`, `GET /groups/:id`, `GET /groups/:id/history`, `POST /achievements`, `DELETE /groups/:id/membership`, `DELETE /player` and `POST /games`, for friend groups ([friend-groups.md](friend-groups.md)) |
-| `Presentation::ThemeFeed::REQUESTS` (`lib/dot_popper/presentation/theme_feed.rb`) | `GET /themes` with `started_on`, for every player, with no token ([look-and-sound.md](look-and-sound.md)) |
+| `ThemeReleases::REQUESTS` (`lib/dot_popper/theme_releases.rb`) | `GET /themes` with `started_on`, for every player, with no token ([look-and-sound.md](look-and-sound.md)) |
 | `Continuity::SetdefServer::REQUESTS` (`lib/dot_popper/continuity/setdef_server.rb`) | `GET /proof`, `POST /licenses` and `POST /license_checks`, for setdef being there and license keys ([store-and-pro.md](store-and-pro.md)) |
 | `Continuity::Connectivity::REQUESTS` (the same file) | the three connectivity checks, to `captive.apple.com`, `connectivitycheck.gstatic.com` and `www.msftconnecttest.com` |
 
 `Privacy::REQUESTS` (`lib/dot_popper/privacy/requests.rb`) merges them in the order of `Privacy::PARTS`, which is the document's, and refuses a kind declared twice.
 
-`Network::Job.of` is the only way to make a request: it takes the verb and path from a declaration, fills in the path's id and the query, and raises unless the body's and the query's fields are exactly the declared ones; `Job.new` is private, and `Network::Link` takes a job, never a verb and a path. Friend groups' `Session::Job.of` makes each of its jobs by it, and the theme feed, `Continuity::SetdefServer` and `Continuity::Connectivity` make theirs by it, each from its own declarations.
+`Network::Job.of` is the only way to make a request: it takes the verb and path from a declaration, fills in the path's id and the query, and raises unless the body's and the query's fields are exactly the declared ones; `Job.new` is private, and `Network::Link` takes a job, never a verb and a path. Friend groups' `Session::Job.of` makes each of its jobs by it, and `ThemeReleases`, `Continuity::SetdefServer` and `Continuity::Connectivity` make theirs by it, each from its own declarations.
 
 `Privacy::UNBUILT_REQUESTS` holds the declarations of requests not yet built, which the wire test then leaves out and the document marks `in_this_build: false`; once a request is built, its declaration moves to its part. It is empty. `test_unbuilt_requests_are_only_those_not_yet_in_the_code` fails as soon as an unbuilt request's query fields appear in the game's code, so a request cannot ship without being played in the wire test.
 
