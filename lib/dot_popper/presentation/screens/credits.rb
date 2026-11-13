@@ -7,6 +7,11 @@ module DotPopper
       # scrolls, and Back.
       class Credits < Page
         def controls = [back_button]
+
+        def scrolls? = true
+
+        # The text is read with the left stick too, and the cursor waits.
+        def stick_scrolls? = true
       end
     end
   end

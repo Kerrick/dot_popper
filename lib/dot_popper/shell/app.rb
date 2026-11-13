@@ -330,11 +330,12 @@ module DotPopper
       def skip_splash = @splash = @splash.skip
 
       # The gamepad's left stick and d-pad for the cursor, which on the
-      # Credits screen scroll it instead and leave the cursor at rest.
+      # Credits screen scroll it instead and leave the cursor at rest
+      # (Show#stick_scrolls?).
       def read_with_stick(seconds)
         stick = @gamepads.stick
         @show.stick_scroll(@gamepads.right_stick, seconds)
-        return stick unless @show.credits?
+        return stick unless @show.stick_scrolls?
 
         @show.stick_scroll(stick, seconds)
         Presentation::Stick.rest

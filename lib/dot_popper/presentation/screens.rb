@@ -57,6 +57,14 @@ module DotPopper
         # took it.
         def buy = false
 
+        # Whether this screen's list scrolls, by the wheel, the keys, a
+        # drag and the right stick.
+        def scrolls? = false
+
+        # Whether the left stick and d-pad scroll it too, instead of moving
+        # the gamepad's cursor.
+        def stick_scrolls? = false
+
         private
 
         def layout = show.layout

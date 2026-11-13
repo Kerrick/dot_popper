@@ -17,6 +17,8 @@ module DotPopper
 
         # X: the first achievement's dialog.
         def pad(button) = (show.open_achievement(DotPopper::Achievement::IDS.first) if button == :x)
+
+        def scrolls? = true
       end
     end
   end

@@ -14,6 +14,8 @@ module DotPopper
 
         # Y: Undo while it is offered, or else hold to clear the stats.
         def pad(button) = (show.clear_or_undo(:y) if button == :y)
+
+        def scrolls? = true
       end
     end
   end

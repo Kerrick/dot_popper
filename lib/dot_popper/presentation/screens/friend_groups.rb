@@ -32,6 +32,8 @@ module DotPopper
 
           show.group_panel.pad(button)
         end
+
+        def scrolls? = true
       end
     end
   end

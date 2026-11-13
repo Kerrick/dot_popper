@@ -788,7 +788,11 @@ module DotPopper
       # (CreditsScroll), or nil where nothing scrolls.
       def scroll = credits? ? @credits : @scroll
 
-      def scrolling? = credits? || achievements_open? || stats? || settings? || group_open?
+      def scrolling? = screen.scrolls?
+
+      # Whether the left stick and d-pad scroll the screen on top, as on
+      # Credits, rather than move the gamepad's cursor.
+      def stick_scrolls? = screen.stick_scrolls?
 
       # The line a list moves by, per wheel notch or stick second.
       def scroll_line = credits? ? credits_layout.line : 40.0

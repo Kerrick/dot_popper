@@ -24,6 +24,10 @@ module DotPopper
           else nil
           end
         end
+
+        # The grid under it still scrolls, by the wheel, the keys and the
+        # right stick.
+        def scrolls? = true
       end
     end
   end

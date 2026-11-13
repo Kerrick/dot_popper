@@ -37,6 +37,8 @@ module DotPopper
           else nil
           end
         end
+
+        def scrolls? = true
       end
     end
   end
