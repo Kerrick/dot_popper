@@ -159,16 +159,16 @@ class ShowTest < Minitest::Test
 
   def test_the_share_preview_closes_by_close_by_back_and_by_a_tap_beside_it
     finish_game(back_home: false)
-    @show.share
+    tap_share
     @show.tap(*middle(@show.close_reach))
     refute @show.sharing?, "Close closes it"
 
-    @show.share
+    tap_share
     assert @show.back, "Escape and B close it"
     refute @show.sharing?
     assert @show.game_over?, "and go no further than Game Over"
 
-    @show.share
+    tap_share
     card = @show.share_plan.card
     @show.tap(card.x + 2, card.y + 2)
     assert @show.sharing?, "a tap on the card, away from its buttons, does nothing"
@@ -194,11 +194,11 @@ class ShowTest < Minitest::Test
   # gamepad's A aimed at nothing, and Y again all copy.
   def test_in_the_share_preview_the_main_button_and_y_copy
     finish_game(back_home: false)
-    @show.share
+    tap_share
     @show.primary
     assert_match(/\ADot Popper: 1 point\n/, @clipboard.text)
     @clipboard.copy(nil)
-    @show.share
+    @show.pad(:y)
     assert_match(/\ADot Popper: 1 point\n/, @clipboard.text)
     @clipboard.copy(nil)
     @show.tap(0, 0, by: :gamepad)
@@ -212,7 +212,7 @@ class ShowTest < Minitest::Test
   def test_the_share_preview_leaves_game_over_and_home_as_they_were
     finish_game(back_home: false)
     continue = middle(@show.home_reach)
-    @show.share
+    tap_share
     assert_equal %i[close copy], @show.controls.map(&:name).sort, "only the preview's buttons take a press"
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     assert @cabinet.state.ready?, "the grace runs on under the preview"
@@ -237,7 +237,7 @@ class ShowTest < Minitest::Test
     show = new_show(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, clipboard: @clipboard, sharing: sheet)
     press_main(show)
     @cabinet.update(20)
-    show.share
+    show.pad(:y)
 
     assert_match(/\ADot Popper: 0 points\n/, sheet.offered)
     refute show.sharing?
@@ -491,23 +491,19 @@ class ShowTest < Minitest::Test
     assert @show.on_home?
   end
 
-  def test_a_gamepads_y_shares_the_result_on_game_over_and_nothing_else
-    @show.share
-    assert @show.home?, "Y does nothing on Home"
-    refute @show.sharing?
-
+  def test_a_gamepads_y_shares_the_result_on_game_over_and_not_in_a_game
     @show.start
-    @show.share
+    @show.pad(:y)
     assert @show.playing?, "Y does nothing in a game"
     refute @show.sharing?
 
     @cabinet.update(20)
     @show.update(0.1)
-    @show.share
+    @show.pad(:y)
     assert @show.game_over?
     assert @show.sharing?
     assert_nil @clipboard.text
-    @show.share
+    @show.pad(:y)
     assert_match(/\ADot Popper: 0 points\n/, @clipboard.text)
   end
 
@@ -714,6 +710,9 @@ class ShowTest < Minitest::Test
   private
 
   def middle(rect) = [rect.center_x, rect.center_y]
+
+  # A tap on Game Over's "Share my score".
+  def tap_share = @show.tap(*middle(@show.share_reach))
 
   def put!(id, x, y)
     game = live(@cabinet)

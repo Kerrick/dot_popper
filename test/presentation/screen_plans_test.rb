@@ -336,7 +336,7 @@ class ScreenPlansTest < Minitest::Test
     cabinet.update(30)
     show.update(1.0)
     yield "Game Over", show
-    show.share
+    show.pad(:y)
     yield "the share preview", show
     show.close_share
     cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)

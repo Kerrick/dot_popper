@@ -146,16 +146,11 @@ module DotPopper
       def themes = @theme_keeper.shown
       def in_use = @use_theme.current
 
-      # Whether tapping a theme leads to Pro, as it does for a Free player;
-      # whether +theme+ is one this player has earned; and whether it is open
-      # to use, earned or in season. They show the same to either player.
+      # Whether tapping a theme leads to Pro, as it does for a Free player,
+      # and whether +theme+ is open to use, earned or in season. They show
+      # the same to either player.
       def themes_locked? = @use_theme.locked?
-      def theme_earned?(theme) = @theme_keeper.earned?(theme)
       def theme_open?(theme) = @theme_keeper.open?(theme)
-
-      # Whether the Stats screen offers Themes: always, the same to a Free
-      # player and a Pro one.
-      def themes_offered? = true
 
       # Where the Themes screen's cards go (LooksLayout).
       def themes_layout = @screens[:themes].plan
@@ -280,18 +275,11 @@ module DotPopper
       def game_over? = cabinet.state.is_a?(Cabinet::GameOver)
 
       # A tap at +x+, +y+, by +by+ (a finger's id, :mouse, or :gamepad),
-      # which #let_go names when it lets go. In a game, every tap goes to
-      # the game at once. Elsewhere a tap presses the screen's button under
-      # it (#controls): on Home, Play, the mute button, "How to play",
-      # "Your stats", the dot-size choice, and on a desktop "Full screen"
-      # and Quit; on Game Over, Play again, Home and
-      # "Share my score", and over it, the share preview's Copy and Close;
-      # and on the
-      # Stats screen, Back, Undo, or "Clear my stats…", which a press
-      # starts holding. Empty space does nothing, but a tap on one of
-      # Home's bright dots pops it, for fun, and a tap away from the share
-      # preview's card closes it. A gamepad's A, which aims at no button,
-      # presses the screen's main one (#primary).
+      # which #let_go names when it lets go, on the screen on top
+      # (Screens::Screen#tap): in a game it goes to the game at once;
+      # elsewhere it presses the button under it (#controls), or empty
+      # space, which each screen answers for itself. A gamepad's A, which
+      # aims at no button, presses the screen's main one (#primary).
       def tap(x, y, by: :tap) = screen.tap(x, y, by)
 
       # A key typed on a keyboard (+key+, as Shell::LotaInput names it)
@@ -345,15 +333,8 @@ module DotPopper
       # Where a tap reaches the Tutorial's skip button, where it is drawn.
       def skip_reach = reach_of(:skip)
 
-      # Game Over's Home (Screens::GameOver#continue_on).
-      def continue_on = @screens[:game_over].continue_on
-
       # Game Over's Play again (Screens::GameOver#play_again).
       def play_again = @screens[:game_over].play_again
-
-      # One of Game Over's lines that opens something
-      # (Screens::GameOver#open_from).
-      def open_from_game_over(what) = @screens[:game_over].open_from(what)
 
       # Game Over's lines in pills of their own (Screens::GameOver#chips).
       def game_over_chips = @screens[:game_over].chips
@@ -393,10 +374,9 @@ module DotPopper
       def ask_to_quit = @screens[:home].ask_to_quit
       def quit_prompt = @screens[:home].quit_prompt
 
-      # Escape, Android's Back, or a gamepad's B: closes the share
-      # preview, leaves the Stats screen, and goes on from Game Over to
-      # Home, as its Home button does. Says whether there was somewhere to go
-      # back from, so that elsewhere the key can do its usual job.
+      # Escape, Android's Back, or a gamepad's B, on the screen on top
+      # (Screens::Screen#back): its Back, Close or Home. Says whether it had
+      # one, so that elsewhere the key can do its usual job.
       def back = screen.back
 
       # Sizes dots as +sizing+ (DotSizing) says, from Settings
@@ -440,17 +420,6 @@ module DotPopper
         close_page
         offer.close(quiet: true)
       end
-
-      # Back, from the Credits screen to the Stats screen, or from the
-      # Stats screen to Home.
-      def leave
-        return close_offer if offer?
-        return @groups.back if group_open?
-
-        close_page if page
-      end
-
-      def close_offer = offer.close
 
       # What the open offer leads with (Screens::Offer#focus).
       def offer_focus = offer.focus
@@ -613,10 +582,6 @@ module DotPopper
       def list_row_at?(x, y) = screen.list_row?(control_at(x, y)&.name)
 
 
-      # A gamepad's Y on the Stats screen, held by +by+: Undo while it is
-      # offered, or else the start of holding "Clear my stats…".
-      def clear_or_undo(by) = @screens[:stats].clear_or_undo(by)
-
       # +by+ (as #tap names it) let go. A hold of "Clear my stats…" it
       # made ends, with nothing cleared, if it was let go too soon.
       def let_go(by)
@@ -645,11 +610,6 @@ module DotPopper
       # The gamepad button that holds "Clear my stats…", for its words.
       def holding_button = clearing.by == :y ? "Y" : "A"
 
-      # A gamepad's Y, or a tap on "Share my score": on Game Over, the
-      # game's result to share (Screens::GameOver#share); in the preview,
-      # Copy.
-      def share = sharing? ? copy_result : @screens[:game_over].share
-
       # Whether the share preview is open over Game Over. It is the
       # presentation's alone: the game stays on Game Over meanwhile, its
       # grace counting as ever, and no tap there reaches the game.
@@ -661,10 +621,6 @@ module DotPopper
       # Where the share preview's card, words and buttons go (SharePlan),
       # or nil while it is closed.
       def share_plan = (@screens[:share_preview].plan if sharing?)
-
-      # The share preview's Copy, the one press that writes the clipboard:
-      # it copies exactly the text the preview shows.
-      def copy_result = (@screens[:share_preview].copy if sharing?)
 
       # Closes the share preview, back to Game Over as it was.
       def close_share = @screens[:share_preview].close
@@ -724,7 +680,6 @@ module DotPopper
       # The words and buttons of Change Server (ServerScreen).
       def server_plan = @screens[:server].plan
       def paste_server = @screens[:server].paste_address
-      def reset_server = @screens[:server].reset
 
       # The system's paste shortcut (Ctrl+V, or Cmd+V on a Mac) on a
       # computer: Paste license key on the offer, or Paste server address on
@@ -745,10 +700,8 @@ module DotPopper
       def achievement_earned?(id) = @view_achievements.earned?(id)
 
       # An achievement's dialog (Screens::AchievementDialog): opened at
-      # +id+, closed, stepped, and its Get Pro.
+      # +id+, and its Get Pro.
       def open_achievement(id) = @screens[:achievement_dialog].open_at(id)
-      def close_dialog = @screens[:achievement_dialog].close
-      def step_achievement(by) = @screens[:achievement_dialog].step(by)
       def achievement_pro = @screens[:achievement_dialog].get_pro
 
       # What the dialog says of how far along the player is: [record, goal]
@@ -762,7 +715,6 @@ module DotPopper
       def dialog_status(id) = @screens[:achievement_dialog].status(id)
 
       def settings_plan = @screens[:settings].plan
-      def set_sound(on) = @screens[:settings].set_sound(on)
       def privacy_plan = @screens[:privacy].plan
 
       # A gamepad's button (+name+, a GamepadButtons intent) on the screen
@@ -813,24 +765,12 @@ module DotPopper
         end
       end
 
-      # The player has answered the card telling of a new theme
-      # (Screens::NewTheme#answer).
-      def answer_arrival(use:) = @screens[:new_theme].answer(use:)
-
-      def step_theme(by) = @screens[:themes].step(by)
-
-      def next_display = @screens[:settings].next_display
-
       # A tap in the Tutorial: its skip button, or the scene's.
       def tutorial_tap(x, y)
         return skip_tutorial if control_at(x, y)&.name == :skip
 
         @tutorial.tap(x, y)
       end
-
-      def undo = @screens[:stats].undo
-
-      def hold_clear(by) = @screens[:stats].hold_clear(by)
 
       # Opens +screen+ (a Screens::Screen, or its name in Screens.made_for)
       # over the screens open now, unless it is open already.
@@ -900,16 +840,6 @@ module DotPopper
         sounds.play(:tick)
       end
 
-
-      # "Clear my stats…" was held long enough (Screens::Stats#clear).
-      def clear_stats = @screens[:stats].clear
-
-      # Stats changed under the Stats screen: it, and Home's score record,
-      # show them as they are now.
-      def stats_changed
-        @screens[:stats].refresh if stats?
-        score_record_changed
-      end
 
       # Play begins: afresh, its dot growing in, or, under the Tutorial,
       # with the dots as it drew them, their animations, its effects still

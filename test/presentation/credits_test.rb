@@ -174,7 +174,7 @@ class CreditsTest < Minitest::Test
     show = a_show
     show.open_settings
     show.open_credits
-    show.clear_or_undo(:y)
+    show.pad(:y)
 
     refute show.clearing.held?
   end

@@ -169,7 +169,7 @@ The offer of Pro is calm: nothing pushes it, no badge, timer, count or prompt af
 **Where it opens.** Over the screen the player was on, and Back closes it to that screen as it was. While it is open nothing under it takes a press.
 
 - A Free player taps Get Pro in an achievement's dialog, a theme, Join or Create, or the new-theme card's Get Pro (`Show#open_offer_for`, focus `:achievements`, `:themes` or `:groups`).
-- Home's Play with no game left, which then says Get Pro (`Show#offer_for_play`, focus `:games`).
+- Home's Play with no game left, which then says Get Pro (`Screens::Offer#open_for_play`, focus `:games`).
 - Game Over's main button with no game left, which says Get Pro (`Screens::Offer#open_for_play`).
 
 **What it shows** (`OfferScreen` in `lib/dot_popper/presentation/offer_plan.rb`): under the heading "Dot Popper Pro", a note when it opened for want of a game ("No games left today."), the thing tapped (every theme but the ordinary one; the achievement's sign in the grid's dashed ring, its name and how to earn it, with no progress line, since progress is what Pro adds; or the feature's sign), its name, the rest of what Pro adds, a status line that keeps its place even when empty, then Buy and a second button. A short window held sideways puts the buttons on the right. Once the player has Pro only the thanks ("Thank you. It's yours.") and Back remain.

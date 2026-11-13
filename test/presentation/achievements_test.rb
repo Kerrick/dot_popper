@@ -139,12 +139,13 @@ class AchievementsOnStatsTest < Minitest::Test
     @show.open_stats
     assert_equal :earned, @show.stats.achievements.rows.first.mark
 
-    @show.send(:clear_stats)
+    @show.pad(:y)
+    @show.update(Style::STATS_CLEAR.hold)
     assert_empty @achievements.earned
     assert_equal :open, @show.stats.achievements.rows.first.mark
     assert_equal 1, @folder.call("cleared.txt").read.scan("achievements-").size
 
-    @show.undo_offer && @show.send(:undo)
+    @show.pad(:y)
     assert_equal [:sharpshooter], @achievements.earned
     assert_equal :earned, @show.stats.achievements.rows.first.mark
   end

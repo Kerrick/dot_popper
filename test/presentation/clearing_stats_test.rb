@@ -96,12 +96,12 @@ class ClearingStatsTest < Minitest::Test
   end
 
   def test_a_gamepads_y_holds_clear_and_then_undoes
-    @show.clear_or_undo(:y)
+    @show.pad(:y)
     assert_equal "Y", @show.holding_button
     @show.update(HOLD)
     assert @show.stats.empty
 
-    @show.clear_or_undo(:y)
+    @show.pad(:y)
     refute @show.stats.empty
   end
 

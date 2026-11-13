@@ -52,7 +52,6 @@ module DotPopper
         # A gamepad's Y, held by +by+: Undo while it is offered, or else the
         # start of holding "Clear my stats…".
         def clear_or_undo(by)
-          return if !show.stats? || show.offer?
           return undo if undo_offer
 
           hold_clear(by) if clear_offered?

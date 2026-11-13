@@ -82,9 +82,6 @@ class GamesTest < Minitest::Test
     assert_equal ["No games left today."], @show.offer_plan.note_lines
     assert_equal %i[buy restore back].sort, @show.controls.map(&:name).sort, "only the offer's buttons take a press"
     refute @show.waits_for_release?(5.0, 5.0), "no press under the offer drags the pile"
-    @show.share
-
-    refute_predicate @show, :sharing?, "Y is not Share my score under the offer"
     @show.back
 
     refute_predicate @show, :offer?

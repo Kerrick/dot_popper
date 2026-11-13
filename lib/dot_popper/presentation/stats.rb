@@ -26,8 +26,9 @@ module DotPopper
     class StatsSheet < Data.define(:records, :totals, :goal, :scores, :empty, :notes, :mine, :chart_note, :achievements)
       # The achievements as a section, each with its mark filled if earned
       # and a ring if not, the same for a Free player and a Pro one (what is
-      # earned while Free is kept, Achievements). Tapping it is what asks
-      # a Free player for Pro (Show#stats_controls).
+      # earned while Free is kept, Achievements). It takes no tap: a Free
+      # player is offered Pro from an achievement's dialog
+      # (Screens::AchievementDialog#get_pro).
       def self.achievements_section(achievements)
         return unless achievements
 

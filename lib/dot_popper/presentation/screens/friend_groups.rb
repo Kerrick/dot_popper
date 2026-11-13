@@ -27,7 +27,7 @@ module DotPopper
         # is open over the page (GroupNoticePlan), or nil.
         def notice_plan
           panel = show.group_panel
-          return unless panel.open? && panel.asking && !show.offer?
+          return unless panel.open? && panel.asking
 
           GroupNoticeDialog.new(layout:, measure:, policy_text: word(GroupWords.notice_policy),
                                 later_text: word(GroupWords.notice_later), go_text: word(GroupWords.notice_go(panel.asking))).plan

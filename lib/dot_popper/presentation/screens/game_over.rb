@@ -83,7 +83,7 @@ module DotPopper
         # game opens the share preview, and copies nothing yet; on a phone
         # it opens the system's share sheet, and no preview.
         def share
-          return unless show.game_over? && show.game_over && !show.offer?
+          return unless show.game_over? && show.game_over
 
           preview = @sharing.offer(share_text, now) or return sounds.play(:tick)
           show.screens.fetch(:share_preview).open_with(preview)
