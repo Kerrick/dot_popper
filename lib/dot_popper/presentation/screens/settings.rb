@@ -9,7 +9,7 @@ module DotPopper
       class Settings < Page
         # The dot-size choices in the order its row draws them: the
         # default, dots sized to the screen, first.
-        SIZINGS = [DotSizing::SIZED_TO_SCREEN, DotSizing::STANDARD].freeze
+        SIZINGS = [DotSizing::SIZED_TO_SCREEN, DotSizing::FIXED].freeze
 
         # +sizing_store+ keeps the player's DotSizing.
         def initialize(show, sizing_store:)

@@ -41,7 +41,7 @@ module DotPopper
       end
 
       def self.build(stats, score_record:, words:, streak: 0, size_class: SizeClass::MEDIUM, field: nil,
-                     sizing: DotSizing::STANDARD, preview: nil, achievements: nil)
+                     sizing: DotSizing::FIXED, preview: nil, achievements: nil)
         labels = words.labels
         mine = stats.records_in(size_class)
         records = StatsSection.new(heading: words.records_heading(sizing, preview), rows: [
