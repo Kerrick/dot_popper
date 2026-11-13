@@ -106,7 +106,8 @@ module DotPopper
         @undo = nil
         @pointer = nil
         @hover = Hover.none
-        @screens = Screens.made_for(self, clipboard:, buy_pro: @buy_pro, storefront:, entitlement:, start_game: @start_game, sharing:)
+        @screens = Screens.made_for(self, clipboard:, buy_pro: @buy_pro, storefront:, entitlement:, start_game: @start_game, sharing:,
+                                          view_achievements: @view_achievements)
         cabinet.subscribe(@recorder)
         cabinet.subscribe(self)
       end
@@ -861,72 +862,33 @@ module DotPopper
       def open_policy = @links.open(PRIVACY_URL)
 
       def open_achievements = open_page(:achievements)
-      def achievements_layout = AchievementsScreen.new(layout:, ids: Achievement::IDS)
+      def achievements_layout = @screens[:achievements].grid
       # How many achievements are earned, or nil where that is Pro's.
       def achievement_count = @view_achievements.count
 
       # The Achievements grid, each cell where it is on screen, with the
       # list scrolled to fit its window.
-      def achievement_cells
-        grid = achievements_layout
-        list_fit(grid.height, grid.window.height)
-        grid.cells(@scroll.offset)
-      end
+      def achievement_cells = @screens[:achievements].cells
 
       # A Free player sees only how each is earned; Pro also sees its day.
       def achievement_earned?(id) = @view_achievements.earned?(id)
 
-      def open_achievement(id)
-        open_layer(:achievement_dialog)
-        @screens[:achievement_dialog].achievement = id
-        sounds.play(:tick)
-      end
-
-      def close_dialog
-        close_layer(:achievement_dialog)
-        sounds.play(:tick, pitch: 0.8)
-      end
-
-      def step_achievement(by)
-        ids = Achievement::IDS
-        @screens[:achievement_dialog].achievement = ids[((ids.index(dialog) || 0) + by) % ids.size]
-        sounds.play(:tick)
-      end
-
-      # Get Pro, from a Free player's achievement dialog.
-      def achievement_pro
-        id = dialog
-        open_offer_for(:achievements)
-        offer.led_by_achievement(id)
-        close_layer(:achievement_dialog)
-      end
+      # An achievement's dialog (Screens::AchievementDialog): opened at
+      # +id+, closed, stepped, and its Get Pro.
+      def open_achievement(id) = @screens[:achievement_dialog].open_at(id)
+      def close_dialog = @screens[:achievement_dialog].close
+      def step_achievement(by) = @screens[:achievement_dialog].step(by)
+      def achievement_pro = @screens[:achievement_dialog].get_pro
 
       # What the dialog says of how far along the player is: [record, goal]
       # for the four the game measures (Steady hand, Unshaken, Big score,
       # Long haul), or nil for the rest and for a Free player.
       def achievement_progress(id) = @view_achievements.progress(id)
 
-      def dialog_plan
-        id = dialog or return
-        AchievementDialog.new(layout:, measure: @measure, how: AchievementWords.how(id), status: dialog_status(id), progress: achievement_progress(id),
-                              buttons: dialog_buttons).plan
-      end
+      def dialog_plan = (@screens[:achievement_dialog].plan if dialog)
 
-      # What the dialog says of its state: the earned day or "Not earned
-      # yet", or nothing for a Free player.
-      def dialog_status(id)
-        return if @view_achievements.locked?
-
-        day = @view_achievements.day(id)
-        day ? AchievementWords.earned_on(day) : words.button(:not_earned)
-      end
-
-      def dialog_buttons
-        steps = input == InputKind::GAMEPAD ? [[:achievement_prev, :prev], [:achievement_next, :next]] : []
-        return [[:achievement_close, :close], *steps] unless @view_achievements.locked?
-
-        [[:achievement_pro, :get_pro], [:achievement_close, :close], *steps]
-      end
+      # What the dialog says of +id+'s state (Screens::AchievementDialog#status).
+      def dialog_status(id) = @screens[:achievement_dialog].status(id)
 
       def settings_plan
         rows = [[:sound, words.button(:sound), :speaker, [[words.button(:on), !sounds.muted?, [:sound, true]], [words.button(:off), sounds.muted?, [:sound, false]]]]]
