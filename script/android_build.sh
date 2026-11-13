@@ -92,18 +92,13 @@ LOTA_GEM=$LOTA_SOURCE/tmp/phone/lota
 
 # The phone project of Lota's guide: everything in it but the hosts goes
 # into the app, so the game's copy leaves out what only the repository
-# needs. Dot Popper's android/host (its manifest, which traps Back, a
+# needs (script/android_game.sh). Dot Popper's android/host (its manifest, which traps Back, a
 # MainActivity that takes the emulator checks' settings, and Play
 # Billing's Gradle settings) goes over Lota's host, which brings SDL's
 # Java classes.
 phone=$work/phone
-game=$phone/game/dot_popper
 rm -rf "$phone"
-mkdir -p "$game"
-git -C "$repo" archive HEAD | tar -x -C "$game"
-(cd "$game" && rm -rf .github vendor android ios macos windows test doc playtest script sig server Steepfile Rakefile \
-  Gemfile Gemfile.lock mise.toml mise.android.toml .ruby-version AGENTS.md GLOSSARY.md INSIPIRATION.md PACKAGING.md README.md)
-cp "$repo/android/android_kit" "$phone/main.rb"
+"$repo/script/android_game.sh" "$phone"
 cp -R "$LOTA_GEM/ext/lota/phone/host" "$phone/host"
 rm -rf "$phone/host/ios"
 cp -R "$repo/android/host/." "$phone/host/android/"
