@@ -18,20 +18,25 @@ module DotPopper
     # it was last read, and the newest entry already shown is kept here for
     # each group, so only what is new is announced.
     class Session
-      # A request to make, and +then+ one to make after it succeeds.
+      # A request to make (+sent+, a Network::Job, whose kind, verb, path
+      # and body it answers), and +then+ one to make after it succeeds.
       # +group_id+ is the group it is about, and +loud+ that the player is
       # waiting to hear how it went. Made only by Job.of, from what
       # REQUESTS declares, by Network::Job.of, so nothing goes out that
       # isn't declared.
-      class Job < Data.define(:kind, :verb, :path, :body, :then, :group_id, :loud)
-        def initialize(kind:, verb:, path:, body: nil, then: nil, group_id: nil, loud: false) = super
+      class Job < Data.define(:sent, :then, :group_id, :loud)
+        def initialize(sent:, then: nil, group_id: nil, loud: false) = super
 
         def self.of(kind, body: nil, group_id: nil, **rest)
-          sent = Network::Job.of(REQUESTS.fetch(kind), body:, id: group_id)
-          new(kind:, verb: sent.verb, path: sent.path, body: sent.body, group_id:, **rest)
+          new(sent: Network::Job.of(REQUESTS.fetch(kind), body:, id: group_id), group_id:, **rest)
         end
 
         private_class_method :new, :[]
+
+        def kind = sent.kind
+        def verb = sent.verb
+        def path = sent.path
+        def body = sent.body
       end
 
       # What this device remembers of a group's title: the newest change it
