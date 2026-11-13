@@ -11,8 +11,14 @@ end
 # The game played in a real window, end to end (test/gui): each scenario
 # boots the game through Lota, plays a scripted session through Lota's
 # callbacks, and quits. It needs a display, so rake test leaves it out.
+# test/gui/scenarios_test.rb refuses to open windows unless asked
+# (DOT_POPPER_OPEN_WINDOWS=1); running this task is the ask.
 namespace :test do
-  Rake::TestTask.new(:gui) do |t|
+  task :open_windows do
+    ENV["DOT_POPPER_OPEN_WINDOWS"] = "1"
+  end
+
+  Rake::TestTask.new(gui: :open_windows) do |t|
     t.description = "Play scripted sessions of the game in real windows"
     t.libs << "lib" << "test"
     t.test_files = FileList["test/gui/**/*_test.rb"]

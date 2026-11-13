@@ -1,5 +1,20 @@
 # frozen_string_literal: true
 
+# Each test here starts the real game in a window, on whatever display it
+# finds, so anything that loads this file, a runner that requires every
+# test file included, would open windows on the screen of whoever runs
+# it. It refuses unless DOT_POPPER_OPEN_WINDOWS is 1, which rake test:gui
+# sets, and which a person sets to ask for the windows plainly.
+unless ENV["DOT_POPPER_OPEN_WINDOWS"] == "1"
+  abort <<~REFUSAL
+    #{__FILE__} starts the game in real windows, one a test, so it runs only when asked:
+      bundle exec rake test:gui
+    under a virtual display where no one is using the screen, as CI runs it:
+      xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" bash script/with-openbox.sh bundle exec rake test:gui
+    To open the windows anyway, set DOT_POPPER_OPEN_WINDOWS=1.
+  REFUSAL
+end
+
 require "minitest/autorun"
 require "open3"
 require "fileutils"
