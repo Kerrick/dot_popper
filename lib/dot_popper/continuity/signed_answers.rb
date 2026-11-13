@@ -47,19 +47,6 @@ module DotPopper
         bytes = Continuity.unhex(body["certificate"], Certificate::SIZE) or return nil
         Certificate.verified(bytes, roots: pins.roots, purpose: PROOF)&.public_key
       end
-
-      # What the test build's fake server answers (FakeSetdef), signed by
-      # the test keys.
-      def signed_proof(nonce)
-        { "nonce" => Continuity.hex(nonce), "signature" => Continuity.hex(Ed25519.sign(TestKeys::ONLINE, PROOF + nonce)),
-          "certificate" => Continuity.hex(TestKeys.online_certificate) }
-      end
-
-      def signed_verdict(verdict, id, nonce)
-        { "key_id" => Continuity.hex(id), "verdict" => verdict, "nonce" => Continuity.hex(nonce),
-          "signature" => Continuity.hex(Ed25519.sign(TestKeys::ONLINE, verdict_message(verdict, id, nonce))),
-          "certificate" => Continuity.hex(TestKeys.online_certificate) }
-      end
     end
   end
 end
