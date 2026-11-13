@@ -255,6 +255,28 @@ class RootTest < Minitest::Test
     BUILDS.compact.each { assert_instance_of C::NoWatch, root(channel: it, env: SETTINGS).watch, it }
   end
 
+  # The root subscribes the theme keeper and the chosen server to what the
+  # watch hears of setdef (Continuity::Gone): gone long enough, themes open
+  # by their dates; back again, a server chosen meanwhile is forgotten.
+  def test_what_the_watch_hears_of_setdef_reaches_the_themes_and_the_chosen_server
+    engine = FakeEngine.new("Linux")
+    game = root(engine:, env: SETTINGS)
+    gone = game.watch.gone
+
+    refute_includes game.show.themes.map(&:key), :ghost
+    gone.heard(:gone, Date.new(2030, 1, 1))
+    gone.heard(:unknown, Date.new(2030, 12, 1))
+
+    assert_includes game.show.themes.map(&:key), :ghost, "opened by its date"
+    engine.file("server.txt").write("https://groups.example.org\n")
+
+    assert_equal "https://groups.example.org", game.server_url
+    gone.heard(:here, Date.new(2030, 12, 2))
+
+    assert_equal "http://localhost:1", game.server_url, "setdef's own again"
+    assert_empty engine.file("server.txt").read.to_s
+  end
+
   def test_a_scenarios_theme_is_used_in_a_test_build_and_ignored_in_a_store_build
     env = { "DOT_POPPER_PRO" => "1", "DOT_POPPER_THEME" => "ghost", "DOT_POPPER_THEME_UNLOCKS" => "ghost" }
 
