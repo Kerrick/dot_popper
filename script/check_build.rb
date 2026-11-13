@@ -4,12 +4,18 @@
 # from the unpacked app in FOLDER (its game/dot_popper folder, as
 # `lota fuse` lays it out) and fails unless that code is a build for
 # CHANNEL at VERSION, which trusts setdef's real keys and no test key
-# (ADR-0010). It asks nothing of the internet. Only CHANNEL's own needs
+# (ADR-0010). The test build's proofs it is shown are made by this
+# repository's code, in a Ruby of their own, so a build for sale need not
+# carry the test keys to be shown that it refuses what they sign. It asks
+# nothing of the internet. Only CHANNEL's own needs
 # are checked: a website build needs no Play key or store identifier.
 # The Package workflow runs it on every build for sale it makes, and
 # Lota must be installed (the shell's code needs it to load).
 #
 #   ruby script/check_build.rb website 1.0.0 "unpacked/Dot Popper"
+require "json"
+require "open3"
+require "rbconfig"
 require "yaml"
 
 channel, version, folder = ARGV
@@ -23,6 +29,32 @@ abort "#{folder} holds #{games.size} copies of the game; expected one" unless ga
 # link (macOS's /var is /private/var) is still the app's own.
 game = File.realpath(games.first)
 puts "Checking the game in #{game}"
+
+# The test build's proofs, made by this repository's code (a test build's
+# keys, whatever channel the checkout is stamped with), each checked there
+# against the test build's own trust: the controls, so a Ruby that
+# verifies nothing cannot pass the checks below.
+MAKE_PROOFS = <<~RUBY
+  require "json"
+  require "dot_popper"
+  c = DotPopper::Continuity
+  hex = ->(bytes) { bytes.unpack1("H*") }
+  keys = [c::TestKeys::ROOT, c::TestKeys::LICENSE, c::TestKeys::ONLINE].map { c::LicenseKey.issue(it).text }
+  certificate = c::TestKeys.online_certificate
+  receipt = DotPopper::Receipt.issue
+  controls = {
+    "this Ruby verifies Ed25519" => c::Ed25519.available?,
+    "a key signed by the test key unlocks a test build" => c::LicenseKey.parse(keys[1])&.valid?(c::TEST_PINS) == true,
+    "a test build takes a proof certified by the test root" =>
+      !c::Certificate.verified(certificate, roots: c::TEST_PINS.roots, purpose: c::Certificate::PROOF).nil?,
+    "the fake store's receipt proves Pro in a test build" => DotPopper::Entitlement.new(trust: DotPopper::Receipt::TEST).prove(receipt) == true
+  }
+  puts JSON.generate("roots" => c::TEST_PINS.roots.map(&hex), "license_keys" => c::TEST_PINS.license_keys.map(&hex),
+                     "keys" => keys, "certificate" => hex.(certificate), "receipt" => receipt, "controls" => controls)
+RUBY
+made, status = Open3.capture2e(RbConfig.ruby, "-I", File.expand_path("../lib", __dir__), "-e", MAKE_PROOFS)
+abort "The repository could not make the test build's proofs:\n#{made}" unless status.success?
+proofs = JSON.parse(made.lines.last)
 
 $LOAD_PATH.unshift(File.join(game, "lib"))
 require "dot_popper"
@@ -51,29 +83,24 @@ c = DotPopper::Continuity
 check.call("#{channel.inspect} is a channel the game names (#{build::CHANNEL_NAMES.join(", ")})") { build::CHANNEL_NAMES.include?(channel) }
 check.call("the app was built for #{channel.inspect} (Build::CHANNEL is #{build::CHANNEL.inspect})") { build::CHANNEL == channel }
 
-root = DotPopper::Composition::Root
-pins = root.trusted_pins(build::CHANNEL)
+pins = c.pins_for(build::CHANNEL)
+hex = ->(bytes) { bytes.unpack1("H*") }
 check.call("it trusts setdef's own keys (Continuity::SETDEF_PINS)") { pins.equal?(c::PINNED) && c::PINNED == c::SETDEF_PINS && c.live?(pins) }
 check.call("it trusts no test key") do
-  (pins.roots & c::TEST_PINS.roots).empty? && (pins.license_keys & c::TEST_PINS.license_keys).empty?
+  (pins.roots.map(&hex) & proofs.fetch("roots")).empty? && (pins.license_keys.map(&hex) & proofs.fetch("license_keys")).empty?
 end
 
-# Each "grants nothing" below is shown against its control: the same
-# proof does grant in a test build, so a Ruby that verifies nothing
-# cannot pass them.
-seeds = [c::TestKeys::ROOT, c::TestKeys::LICENSE, c::TestKeys::ONLINE]
-check.call("this Ruby verifies Ed25519, and a key signed by the test key unlocks a test build") do
-  c::Ed25519.available? && c::LicenseKey.issue(c::TestKeys::LICENSE).valid?(c::TEST_PINS)
+# Each "grants nothing" below is shown against its control, checked by
+# the repository's code: the same proof does grant in a test build.
+proofs.fetch("controls").each { |what, held| check.call(what) { held } }
+check.call("no license key signed by a test key unlocks it") do
+  !defined?(c::LicenseKey) || proofs.fetch("keys").none? { c::LicenseKey.parse(it)&.valid?(pins) }
 end
-check.call("no license key signed by a test key unlocks it") { seeds.none? { c::LicenseKey.issue(it).valid?(pins) } }
 check.call("it takes no proof certified by the test root") do
-  c::Certificate.verified(c::TestKeys.online_certificate, roots: c::TEST_PINS.roots, purpose: c::Certificate::PROOF) &&
-    c::Certificate.verified(c::TestKeys.online_certificate, roots: pins.roots, purpose: c::Certificate::PROOF).nil?
+  c::Certificate.verified([proofs.fetch("certificate")].pack("H*"), roots: pins.roots, purpose: c::Certificate::PROOF).nil?
 end
 check.call("the fake store's receipt proves nothing in it") do
-  receipt = DotPopper::Receipt.issue
-  DotPopper::Entitlement.new(trust: DotPopper::Receipt::TEST).prove(receipt) &&
-    !DotPopper::Entitlement.new(trust: root.trusted_receipts(build::CHANNEL)).prove(receipt)
+  !DotPopper::Entitlement.new(trust: DotPopper::Receipt.trusted(build::CHANNEL)).prove(proofs.fetch("receipt"))
 end
 check.call("no setting grants Pro or changes the server in it") do
   env = build.settings({ "DOT_POPPER_PRO" => "1", "DOT_POPPER_SERVER" => "http://localhost:1" })

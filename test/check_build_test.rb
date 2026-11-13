@@ -77,6 +77,18 @@ class CheckBuildTest < Minitest::Test
 
   # Only the channel's own needs: Google Play's build needs the Play key,
   # which a website build does not.
+  # The test build's proofs come from this repository, so an app that
+  # carries no test keys is still shown refusing what they sign.
+  def test_an_app_without_the_test_keys_is_checked_with_the_repositorys
+    stamp("website")
+    File.write(File.join(@game, "lib/dot_popper/continuity/test_keys.rb"), "# frozen_string_literal: true\n")
+    ok, out = check("website")
+
+    assert ok, out
+    assert_match(/^ok   a key signed by the test key unlocks a test build$/, out)
+    assert_match(/^ok   no license key signed by a test key unlocks it$/, out)
+  end
+
   def test_a_google_play_build_needs_the_play_key
     stamp("google-play")
     ok, out = check("google-play")
