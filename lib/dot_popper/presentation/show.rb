@@ -724,8 +724,6 @@ module DotPopper
       # What the dialog says of +id+'s state (Screens::AchievementDialog#status).
       def dialog_status(id) = @screens[:achievement_dialog].status(id)
 
-      def settings_plan = @screens[:settings].plan
-
       # A gamepad's button (+name+, a GamepadButtons intent) on the screen
       # on top.
       def pad(name) = screen.pad(name)

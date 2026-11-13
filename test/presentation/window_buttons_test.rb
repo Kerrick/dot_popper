@@ -21,7 +21,7 @@ class WindowButtonsTest < Minitest::Test
     %i[borderless exclusive window].each do |mode|
       click([:display, mode])
       assert_equal mode, @window.display
-      chosen = @show.settings_plan.rows.find { it.key == :display }.choices.find { it[1] }
+      chosen = @show.screens.fetch(:settings).plan.rows.find { it.key == :display }.choices.find { it[1] }
       assert_equal [:display, mode], chosen.last
     end
     assert @show.settings?, "Settings stays open"
@@ -79,7 +79,7 @@ class WindowButtonsTest < Minitest::Test
     refute_includes show.controls.map(&:name), :quit
     show.open_settings
 
-    refute(show.settings_plan.rows.any? { it.key == :display })
+    refute(show.screens.fetch(:settings).plan.rows.any? { it.key == :display })
   end
 
   def test_the_words_say_what_each_does
