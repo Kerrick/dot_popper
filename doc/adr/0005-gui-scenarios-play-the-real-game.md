@@ -42,3 +42,5 @@ Chosen: option 1, because it alone exercises the shell's real calls into Lota wh
 ## More Information
 
 How the director works, how to write a scenario, and how to run a gallery are in [development](../design/development.md).
+
+Note (2026-11-13): no hidden session is used any more. The scenarios run under a virtual display everywhere, and no window opens on a screen someone is using.

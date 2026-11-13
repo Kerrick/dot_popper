@@ -100,7 +100,7 @@ A dot too small to hold a target (under 44 units across, smaller than the rules 
 
 **Sampling** (`TouchTarget`). The target's center may lie anywhere within `reach` = R − 22 of the dot's center. `TouchTarget.on(radius)` samples that disc with rings 5 units apart, points about 5 units apart along each ring, every other ring turned by half a point, then the center. The outermost ring comes first, because a partly covered dot is open at its edge. For any radius from 30 to 120, every possible center is within 3.5 units of a sample (`TouchTargetTest`), so a target the check misses had less than 3.5 units to spare around its 22-unit radius. Samples are real centers, so a target it finds is always real.
 
-**Cost** (measured, not enforced). `script/benchmark_spawn.rb` times a spawn with 100 popped dots on the field, in CPU time, on five fields. On the maintainer's Mac:
+**Cost** (measured, not enforced). `script/benchmark_spawn.rb` times a spawn with 100 popped dots on the field, in CPU time, on five fields. On one Mac:
 
 - On a 27-inch 1440p monitor's field with fixed-size dots, where long games really do reach 100 dots, a spawn took 0.08 ms on average and 0.6 ms at the 99th percentile.
 - On an upright phone's field with fixed-size dots, packed with 100 dots, it took 1.7 ms on average and 6 ms at the 99th percentile. There 70% of spawns were redrawn, and 10% used every try and kept their last draw.

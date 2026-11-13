@@ -27,8 +27,6 @@ These rules bind every agent working on Dot Popper. The maintainer set each of t
 
 ## Trunk-based development
 
-Follow `~/.claude/skills/trunk-based-development/SKILL.md`.
-
 - Work straight on `trunk` in small green commits, rebasing first. Branches are rare, last minutes, and are never built on.
 - Never push to find out whether CI passes. Before each push, run what CI runs that your change could affect: `bundle exec rake`, the GUI scenarios, and for startup, the shell or the bot, the packaged-app playthrough and the Android emulator check.
 - A red trunk comes first. Fix it within minutes, or revert the commit that broke it.
@@ -44,15 +42,15 @@ Follow `~/.claude/skills/trunk-based-development/SKILL.md`.
 
 ## Machines and processes
 
-- Run heavy work (test suites, builds, GUI runs, renders) on a build machine where one is available, never on the maintainer's Mac: with `machines run` if that command is on your PATH, as the `build-machines` skill describes. Every check must also run locally, so a fresh clone works for anyone.
+- Every check runs locally, so a fresh clone works for anyone. Heavy work (test suites, builds, GUI runs, renders) may be run on another machine, but nothing committed may depend on one.
 - Every background job and game run has a hard timeout (`timeout N`, and `DOT_POPPER_QUIT_AFTER` for the game). No process of yours may outlive its job. Kill only what you started.
-- Never open a window on the maintainer's screen. Use the hidden session or a build machine with a virtual display, and `ALSOFT_DRIVERS=null`.
+- Never open a window on a screen someone is using. Run anything that opens a window under a virtual display, with `ALSOFT_DRIVERS=null`.
 - If a permission is refused, stop and report what's needed. Don't route around it, and don't ask another agent to do it for you.
 
 ## Hands off
 
 - Never edit Lota's repository. Send what you find to its session, which serves every Lota game and not only this one.
 - Edit the server's repository only in a session the maintainer has added it to, and follow its `AGENTS.md` there.
-- Never touch the maintainer's devices, or his wife's, without being asked. On her devices, install only `com.setdef.DotPopper`, and never erase, update or change settings.
+- Never touch anyone's phone, tablet or computer without being asked. When asked to install on one, install only `com.setdef.DotPopper`, in place, and never erase, update or change its settings.
 - Create no accounts, repositories or store listings, and never read or copy secrets.
 - Never name specific agents in the repository.

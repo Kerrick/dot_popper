@@ -17,7 +17,7 @@ class LayoutTest < Minitest::Test
     assert_in_delta 1.5, width.to_f / height, 0.01
   end
 
-  # On the maintainer's PC, Windows at 200% counts the window in pixels:
+  # On a PC, Windows at 200% counts the window in pixels:
   # a 400 by 320 window was 200 by 160 units, too small for Home's
   # buttons. The window and its smallest size are the same in units on
   # every display.

@@ -152,7 +152,7 @@ The GUI workflow (`.github/workflows/gui.yml`) runs it on `ubuntu-latest` under 
 $ xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" bash script/with-openbox.sh bundle exec rake test:gui
 ```
 
-`script/with-openbox.sh` starts Openbox, waits until it has taken the screen (Openbox says so by running its `--startup` command), then runs the command, so the game's window has a window manager to go fullscreen with. Without one, no window goes fullscreen, and `resizing` and both `window_buttons` tests fail with "never saw … fullscreen within 5000 frames", as if the game were at fault; so the script fails at once, with Openbox's own words, if Openbox ends or hasn't taken the screen within a minute, and prints them too if Openbox ends while the command runs. Elsewhere, run it on a build machine under a virtual display, or in a hidden session, never on a screen someone is using ([AGENTS.md](../../AGENTS.md)).
+`script/with-openbox.sh` starts Openbox, waits until it has taken the screen (Openbox says so by running its `--startup` command), then runs the command, so the game's window has a window manager to go fullscreen with. Without one, no window goes fullscreen, and `resizing` and both `window_buttons` tests fail with "never saw … fullscreen within 5000 frames", as if the game were at fault; so the script fails at once, with Openbox's own words, if Openbox ends or hasn't taken the screen within a minute, and prints them too if Openbox ends while the command runs. Elsewhere, run it under a virtual display, never on a screen someone is using ([AGENTS.md](../../AGENTS.md)).
 
 `test/gui/scenarios_test.rb` opens windows on whatever display it finds, so it refuses to load unless they were asked for: it exits with 1 before Minitest runs anything, saying how to run it, unless `DOT_POPPER_OPEN_WINDOWS` is `1`. `rake test:gui` asks, through its prerequisite `test:open_windows`, which sets it. So `rake test` with `TEST=test/gui/scenarios_test.rb`, a runner that requires every test file, or `ruby test/gui/scenarios_test.rb` opens nothing, and says so. To run one scenario's test under a virtual display, ask through the task, `bundle exec rake test:gui TESTOPTS="--name=/resizing/"` (Rake reads a word after a space in `TESTOPTS` as a file), or plainly, `DOT_POPPER_OPEN_WINDOWS=1 bundle exec ruby -Itest test/gui/scenarios_test.rb -n /resizing/`. `test/gui_guard_test.rb` checks both sides, with no `PATH`, so it could start no game even if the guard let it through.
 
@@ -210,7 +210,7 @@ Each job plays in a Ractor of its own, and then all again one after another. Eac
 
 Ruby 4.0 stops every Ractor for each garbage collection, and a game makes much short-lived garbage (new dots and a new stack every step). With Ruby's default starting heap, the Ractors spend their time waiting for one another. So the script's first lines `exec` it again with `RUBY_GC_HEAP_0_INIT_SLOTS`, `_1_` and `_2_` at a million slots each (`GC_HEAP`, about 250 MB), unless they are already set.
 
-Measured, not enforced: with the default heap, 10 games per device caused about 1,100 collections, and the Ractors ran 0.7 to 1.2 times as fast as one after another; with the larger heap, about 25 collections, and 60 games per device took 28.9 s one after another and 14.5 s in Ractors on the maintainer's Mac, whose ten cores were mostly busy with other work. A run of 20 games took 36 seconds on an M1 Max ([developer guide](../README.md#tests)).
+Measured, not enforced: with the default heap, 10 games per device caused about 1,100 collections, and the Ractors ran 0.7 to 1.2 times as fast as one after another; with the larger heap, about 25 collections, and 60 games per device took 28.9 s one after another and 14.5 s in Ractors on a ten-core Mac whose cores were mostly busy with other work. A run of 20 games took 36 seconds on an M1 Max ([developer guide](../README.md#tests)).
 
 ### The `bonus` mode
 
@@ -224,7 +224,7 @@ Measured, not enforced: with the default heap, 10 games per device caused about 
 $ bundle exec ruby script/benchmark_spawn.rb [spawns]   # 500 by default
 ```
 
-Measured, not enforced, on the maintainer's Mac: on the 27-inch field a spawn took 0.08 ms on average and 0.6 ms at the 99th percentile; on an upright phone's field packed with 100 dots, 1.7 ms and 6 ms, with 70% of spawns redrawn and 10% using every try. A spawn happens once per pop, so it only has to be quick next to a frame.
+Measured, not enforced, on one Mac: on the 27-inch field a spawn took 0.08 ms on average and 0.6 ms at the 99th percentile; on an upright phone's field packed with 100 dots, 1.7 ms and 6 ms, with 70% of spawns redrawn and 10% using every try. A spawn happens once per pop, so it only has to be quick next to a frame.
 
 ## Playtest kits
 
