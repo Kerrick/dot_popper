@@ -69,7 +69,11 @@ class GlossaryTest < Minitest::Test
     "lifetime" => [[/particle.?lifetime|\.lifetime\b|def lifetime/i, "how long a particle lives, as LÖVE's ParticleSystem names it"]],
     "serial" => [[/\.serial\b/, "a certificate's serial number"]],
     "skin" => [[/\bskin (tone|color)s?\b/, "the color of a person's skin, which no name or emoji in the game picks"]],
-    "records" => [[/rows\("Records"/, "the heading of the Stats screen's card of records, each a record in the glossary's sense"]]
+    "records" => [[/rows\("Records"/, "the heading of the Stats screen's card of records, each a record in the glossary's sense"]],
+    "fitted" => [[/\.fitted\(|def fitted\(|\? fitted\(|\bfitted (to|beside|its)\b|\b(one|list) fitted$/,
+                  "a list, a line of text or a window fitted to the room it has"],
+                 [/"fitted"|`fitted`|\bfitted[=.,]|,fitted\b|%[wW]\[[^\]]*\bfitted\b|\\"fitted\\"/,
+                  "the word dot_size.txt, score_record.txt and stats.txt save Standard as, which builds in players' hands wrote"]]
   }.freeze
 
   # A row of the glossary's table: its term, and the words it replaces.
