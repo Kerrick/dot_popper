@@ -53,7 +53,7 @@ module DotPopper
         @cabinet.subscribe(@tilting)
         @dragging = Dragging.new(pile: @pile, show: @show, style: @game.grab_style)
         @cabinet.subscribe(@dragging)
-        @sparks = Sparks.new(Style)
+        @sparks = ParticleSystems.new(Style)
         @bloom = Bloom.new(@pen, Style::BLOOM)
         @renderer = Renderer.new(@show, @pen, pile: @pile, sparks: @sparks, bloom: @bloom,
                                              diagnostic: flag?("DOT_POPPER_DIAGNOSTIC_COLORS"))

@@ -53,7 +53,7 @@ Every shader is optional. One that fails to compile on the player's graphics dri
 | `backdrop` | The night as 16 bands from `ink_top` to `ink_bottom` (`Renderer#flat_backdrop`). |
 | `scene` | The ordinary night, with no scenery (`Shell::Scene#bake`). |
 | `blur` | No bloom. |
-| Particle sprites | No droplets (`Shell::Sparks#refresh`). |
+| Particle sprites | No droplets (`Shell::ParticleSystems#refresh`). |
 
 A Box2D world that cannot be made leaves the dots where they are at Game Over. Sound and haptics that fail are skipped likewise, each with one warning, and play goes on.
 
@@ -83,7 +83,7 @@ It is off: `BLOOM.strength` is 0. Any bloom strong enough to see spreads several
 
 ## Particles
 
-Droplets and twinkles are LÖVE's `ParticleSystem`s (`Shell::Sparks`). A `Presentation::Burst` says everything about a burst: how many, how fast, how long each lives, how big, the air's drag, gravity, opacity, spin and its sprite. `Presentation::Emission` turns it into a particle system's settings in graphics units for the dots' radius.
+Droplets and twinkles are LÖVE's `ParticleSystem`s (`Shell::ParticleSystems`). A `Presentation::Burst` says everything about a burst: how many, how fast, how long each lives, how big, the air's drag, gravity, opacity, spin and its sprite. `Presentation::Emission` turns it into a particle system's settings in graphics units for the dots' radius.
 
 - **Sprites.** Two, drawn in code at the screen's density, each `PARTICLE_SPRITE`, 24 units, across (`Presentation::SpriteArt`): a soft round droplet, and a twinkle with four thin rays so its spin shows.
 - **Systems.** A system runs all its particles through the same colors over their lives, so there is one system for each burst and color, made when first needed and reused, with room for four bursts at once. A burst's droplets are shared evenly among its colors (`Burst#shares`).

@@ -3,7 +3,7 @@
 module DotPopper
   module Shell
     # Draws what follows a tap: rings (each around its dot, if it follows
-    # one), the droplets that Sparks flies, and floating numbers, outlined
+    # one), the droplets that ParticleSystems flies, and floating numbers, outlined
     # so they read over any dot.
     class EffectsPainter < Data.define(:pen, :sparks)
       G = ::Lota::Graphics

@@ -7,7 +7,7 @@ module DotPopper
     # slows them, how hard they fall (radii a second squared), how opaque
     # they start, how fast they turn (radians a second, start to end), and
     # which sprite they are (SpriteArt). LÖVE's ParticleSystem flies them
-    # (Shell::Sparks); Emission turns this into its settings.
+    # (Shell::ParticleSystems); Emission turns this into its settings.
     class Burst < Data.define(:count, :speed, :life, :size, :drag, :gravity, :alpha, :spin, :sprite)
       # The longest any droplet may live, so a burst never hides the dots
       # around it for long.
