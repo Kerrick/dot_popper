@@ -131,6 +131,30 @@ class AchievementsOnStatsTest < Minitest::Test
     assert_equal before, @show.scroll.offset
   end
 
+  # An achievement's dialog holds every input while it is open: the
+  # wheel, the keys and the sticks scroll nothing of the grid under it,
+  # and Close finds the grid where it was.
+  def test_nothing_scrolls_under_an_achievements_dialog
+    show(pro: true)
+    @show.resize(layout(400, 500), field(400, 500))
+    @show.open_achievements
+    @show.achievement_cells
+    assert_operator @show.scroll.farthest, :>, 0.0, "the grid scrolls here"
+    @show.open_achievement(DotPopper::Achievement::IDS.first)
+
+    before = @show.scroll.offset
+    @show.wheel_scroll(-3)
+    refute @show.scroll_key(:end)
+    @show.stick_scroll(Stick.new(x: 0, y: 1.0), 1.0)
+
+    refute_predicate @show, :scrolling?
+    assert_equal before, @show.scroll.offset
+    @show.back
+    refute @show.dialog
+    assert_predicate @show, :scrolling?
+    assert_equal before, @show.scroll.offset
+  end
+
   def test_clearing_the_stats_clears_the_achievements_and_undo_brings_them_back
     show(pro: true)
     play_a_sharp_game

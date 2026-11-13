@@ -78,10 +78,6 @@ module DotPopper
           end
         end
 
-        # The grid under it still scrolls, by the wheel, the keys and the
-        # right stick.
-        def scrolls? = true
-
         def pressed(name, by)
           case name
           in :achievement_close then close
