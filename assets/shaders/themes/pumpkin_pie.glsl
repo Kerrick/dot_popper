@@ -28,6 +28,12 @@ const float TAU = 6.28318;
 const float CRIMPS = 20.0;
 const float INNER = 0.7;
 
+// How much lighter the popped dot is drawn than its colors below say:
+// light enough to see what it is at a phone's size, as the popped
+// Jack-o'-lantern and Ghost are, and still far from the bright dot's
+// lightest colors (test/gui/scenarios/popped_dots.rb).
+const float POPPED_LIFT = 1.35;
+
 vec4 over(vec4 top, vec4 bottom) { return top + bottom * (1.0 - top.a); }
 float hash(vec2 q) { return fract(sin(dot(q, vec2(127.1, 311.7))) * 43758.5453); }
 float noise(vec2 q) {
@@ -204,7 +210,7 @@ vec3 dot_body(vec2 p, float d, float aa, float bright_look, float bonus) {
     dark = mix(dark, crumb, fill(cd, aa));
   }
 
-  vec3 c = mix(dark, lit, bright_look);
+  vec3 c = mix(dark * POPPED_LIFT, lit, bright_look);
   float w = mix(max(0.034, 1.5 * aa), max(0.022, 1.5 * aa), bright_look);
   float ring = clamp((d - (1.0 - w)) / aa + 0.5, 0.0, 1.0);
   vec3 rim_dark = mix(POP_RIM * 0.62, POP_RIM * 1.1, clamp(0.5 + 0.6 * dot(p, vec2(-0.53, -0.848)), 0.0, 1.0));
