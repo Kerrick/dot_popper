@@ -8,7 +8,7 @@ class SizingPreviewTest < Minitest::Test
   FIXED = DotPopper::DotSizing::FIXED
   FITTED = DotPopper::DotSizing::SIZED_TO_SCREEN
 
-  def preview(fitted, standard: 50) = SizingPreview.new(standard:, fitted:, style: Style::SIZING)
+  def preview(fitted, fixed: 50) = SizingPreview.new(fixed:, fitted:, style: Style::SIZING)
   def named(sizing, fitted) = Style::WORDS.sizing(sizing, preview(fitted))
   def note(sizing, fitted) = Style::WORDS.sizing_note(sizing, preview(fitted))
 

@@ -2,25 +2,25 @@
 
 module DotPopper
   module Presentation
-    # Home's "Dot size" choice: the share of a radius by which the
-    # two sizes may differ and still look alike, the standard icon's
-    # radius as a share of its segment's height, and how far the fitted
+    # Settings' "Dot size" choice: the share of a radius by which the
+    # two sizes may differ and still look alike, the fixed size's icon's
+    # radius as a share of its segment's height, and how far Standard's
     # icon may shrink or grow from it.
     class SizingStyle < Data.define(:alike, :icon, :icons); end
 
-    # How Home's "Dot size" choice looks from where the player sits:
-    # what dots sized to this screen (DotSizing::SIZED_TO_SCREEN) would do
-    # here, next to the standard size. +standard+ and +fitted+ are the two
-    # radii on this screen; +style+ (SizingStyle) says how far apart they
+    # How Settings' "Dot size" choice looks from where the player sits:
+    # what standard dots (DotSizing::SIZED_TO_SCREEN), worked out from this
+    # screen, do here next to the fixed size. +fixed+ and +fitted+ are the
+    # two radii on this screen; +style+ (SizingStyle) says how far apart they
     # must be to be worth a choice, and how big the segments' dot icons are.
-    class SizingPreview < Data.define(:standard, :fitted, :style)
-      # The preview for +screen+, a Field at the standard dot size.
-      def self.of(screen, style) = new(standard: screen.radius, fitted: DotSizing::SIZED_TO_SCREEN.fit(screen).radius, style:)
+    class SizingPreview < Data.define(:fixed, :fitted, :style)
+      # The preview for +screen+, a Field at the fixed dot size.
+      def self.of(screen, style) = new(fixed: screen.radius, fitted: DotSizing::SIZED_TO_SCREEN.fit(screen).radius, style:)
 
-      # How big a fitted dot is next to a standard one.
-      def ratio = fitted.to_f / standard
+      # How big a standard dot is next to one of the fixed size.
+      def ratio = fitted.to_f / fixed
 
-      # What fitting the dots does here: :smaller, :bigger, or :alike when
+      # What standard dots do here, next to the fixed size: :smaller, :bigger, or :alike when
       # the two are within +style.alike+ of each other.
       def effect
         if ratio < 1 - style.alike then :smaller
@@ -33,7 +33,7 @@ module DotPopper
       def offered? = effect != :alike
 
       # The radius of +sizing+'s icon on a segment +height+ tall: the
-      # standard icon at a fixed share of it, and the fitted one in true
+      # fixed size's icon at a set share of it, and Standard's in true
       # proportion to it, kept within +style.icons+ so both stay legible.
       def icon(sizing, height)
         base = height * style.icon
