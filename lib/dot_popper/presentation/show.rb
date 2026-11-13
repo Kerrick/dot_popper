@@ -254,7 +254,7 @@ module DotPopper
       # What stands under Stats' heading where the two dot sizes differ:
       # "Stats for smaller dots".
       def stats_note
-        return unless sizing_offered?
+        return if sizing_preview.alike?
 
         "Stats for #{words.sizing(cabinet.sizing, sizing_preview).downcase} dots"
       end
@@ -270,10 +270,11 @@ module DotPopper
       # afresh each time, so a resized window is always seen as it is now.
       def sizing_preview = SizingPreview.of(cabinet.screen, style::SIZING)
 
-      # Whether Home offers the choice of dot size: once a game has
-      # finished, and only where the two sizes look different. Where they
-      # look alike, the saved choice stays as it was, and games follow it.
-      def sizing_offered? = sizing_preview.offered?
+      # Whether Settings offers the choice of dot size: where the two sizes
+      # look different, and wherever the fixed size is saved
+      # (SizingPreview#offered?). Where they look alike and Standard is
+      # saved, the choice is left out, and games follow it.
+      def sizing_offered? = sizing_preview.offered?(cabinet.sizing)
       def playing? = cabinet.playing?
       def game_over? = cabinet.state.is_a?(Cabinet::GameOver)
 
@@ -670,7 +671,10 @@ module DotPopper
       # (Layout#heading_place).
       def heading_place(text) = layout.heading_place(text, @measure)
 
-      def open_settings = open_page(:settings)
+      def open_settings
+        @screens[:settings].visit
+        open_page(:settings)
+      end
       def open_privacy = open_page(:privacy)
 
       # Change Server, from Settings, only while setdef is gone

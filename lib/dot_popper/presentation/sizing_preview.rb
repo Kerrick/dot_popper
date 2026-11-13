@@ -29,8 +29,14 @@ module DotPopper
         end
       end
 
-      # Whether the choice changes anything a player would see here.
-      def offered? = effect != :alike
+      # Whether the two sizes look alike here.
+      def alike? = effect == :alike
+
+      # Whether Settings offers the choice to a player whose saved size is
+      # +chosen+: where it changes anything they would see, and always
+      # while the fixed size is saved, so no player is left in a state no
+      # control shows or leaves.
+      def offered?(chosen = DotSizing::STANDARD) = !alike? || !chosen.standard?
 
       # The radius of +sizing+'s icon on a segment +height+ tall: the
       # fixed size's icon at a set share of it, and Standard's in true

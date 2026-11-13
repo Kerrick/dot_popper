@@ -51,6 +51,25 @@ class SettingsTest < Minitest::Test
     assert_nil @sizing_store.read
   end
 
+  # A player who saved the fixed size there is still offered the choice,
+  # and Standard, once chosen, stays in view until Settings is left; the
+  # next visit leaves the choice out again.
+  def test_where_the_sizes_look_alike_a_saved_fixed_size_is_still_offered
+    cabinet = DotPopper::Cabinet.new(field(1200, 800), random: Random.new(2), sizing: DotPopper::DotSizing::FIXED)
+    show = new_show(cabinet:, layout: layout(1200, 800), sounds: FakeSounds.new, radius: R, sizing_store: @sizing_store)
+    show.open_settings
+
+    assert show.reach_of(DotPopper::DotSizing::STANDARD), "the choice shows while the fixed size is saved"
+    show.tap(*middle(show.reach_of(DotPopper::DotSizing::STANDARD)))
+    assert cabinet.sizing.standard?
+    assert_equal "fitted", @sizing_store.read
+    assert show.reach_of(DotPopper::DotSizing::FIXED), "the row stays under the finger while Settings is open"
+
+    show.back
+    show.open_settings
+    assert_nil show.reach_of(DotPopper::DotSizing::FIXED), "the next visit leaves it out"
+  end
+
   def test_a_short_window_scrolls_to_what_does_not_fit
     show = new_show(cabinet: @cabinet, layout: layout(400, 320), sounds: FakeSounds.new, radius: R, window: FakeWindow.new)
     show.open_settings

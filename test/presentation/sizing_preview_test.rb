@@ -34,6 +34,17 @@ class SizingPreviewTest < Minitest::Test
     assert preview(55.1).offered?
   end
 
+  # A player whose saved size is the fixed one is always offered the
+  # choice, so they are never left in a state no control shows or leaves;
+  # where the two look alike, the fixed size is named "About the same".
+  def test_the_fixed_size_is_always_offered_and_named_about_the_same_where_alike
+    [45.1, 50, 54.9].each do
+      assert preview(it).offered?(FIXED)
+      refute preview(it).offered?(STANDARD)
+      assert_equal ["Standard", "About the same"], [named(STANDARD, it), named(FIXED, it)]
+    end
+  end
+
   def test_it_reads_this_screens_sizes
     assert_equal :smaller, SizingPreview.of(DotPopper::Field.new(400, 850, 50), Style::SIZING).effect
     assert_equal :bigger, SizingPreview.of(DotPopper::Field.new(2400, 1500, 50), Style::SIZING).effect

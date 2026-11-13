@@ -22,7 +22,7 @@ module DotPopper
         def plan
           sounds = self.sounds
           rows = [[:sound, words.button(:sound), :speaker, [[words.button(:on), !sounds.muted?, [:sound, true]], [words.button(:off), sounds.muted?, [:sound, false]]]]]
-          if show.sizing_offered?
+          if sizing_shown?
             cabinet = show.cabinet
             rows << [:dot_size, words.button(:dot_size), :dot, SIZINGS.map { [words.sizing(it, show.sizing_preview), it == cabinet.sizing, it] }]
           end
@@ -33,14 +33,24 @@ module DotPopper
           plan
         end
 
+        # A visit to Settings begins (Show#open_settings).
+        def visit = @chosen_here = false
+
+        # Whether the Dot size row shows: where Show#sizing_offered? says,
+        # and for the rest of a visit once a size is chosen in it, so a
+        # choice that takes the row away elsewhere (Standard, where the two
+        # sizes look alike) never pulls it from under the player.
+        def sizing_shown? = show.sizing_offered? || @chosen_here == true
+
         # Sizes dots as +sizing+ (DotSizing) says, while it offers the
         # choice, and remembers it. Home's dots and score record change
         # with it, so the choice shows at once.
         def choose_sizing(sizing)
           cabinet = show.cabinet
-          return unless show.settings? && show.sizing_offered?
+          return unless show.settings? && sizing_shown?
           return sounds.play(:tick, pitch: 0.8) if sizing == cabinet.sizing
 
+          @chosen_here = true
           cabinet.sizing = sizing
           @sizing_store.write(cabinet.sizing.to_text)
           show.sizing_changed
@@ -84,7 +94,7 @@ module DotPopper
         # X Credits and licenses, Y Privacy.
         def pad(button)
           case button
-          in :lb then choose_sizing(show.cabinet.sizing.toggled) if show.sizing_offered?
+          in :lb then choose_sizing(show.cabinet.sizing.toggled) if sizing_shown?
           in :rb then next_display
           in :x then show.open_credits
           in :y then show.open_privacy
