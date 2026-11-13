@@ -316,4 +316,15 @@ class RootTest < Minitest::Test
     assert_includes engine.files.keys, "score_record.txt"
     assert_includes engine.files.keys, "games.csv"
   end
+
+  # The root decides without Lota, and names nothing in the shell, which
+  # hands it what it needs.
+  def test_the_composition_root_names_neither_lota_nor_the_shell
+    root = File.expand_path("../..", __dir__)
+    named = Dir["#{root}/lib/dot_popper/composition/*.rb"].select do |path|
+      File.readlines(path).any? { !it.lstrip.start_with?("#") && it.match?(/\bLota\b|\bShell::/) }
+    end
+
+    assert_empty named.map { it.delete_prefix("#{root}/") }
+  end
 end
