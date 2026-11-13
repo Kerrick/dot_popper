@@ -103,9 +103,9 @@ vec4 pumpkin(vec2 p, float d, float aa, float bright_look, float bonus) {
   float spec = pow(max(dot(n, HALF_V), 0.0), 26.0);
   float jitter = sin(i * 7.3 + seed);
 
-  // One face for every pumpkin, so a pumpkin keeps its face as it goes
-  // out, and every unlit one is alike.
-  float variant = 0.0;
+  // One of three faces, the pumpkin's own, so it keeps its face as its
+  // candle goes out.
+  float variant = mod(floor(seed), 3.0);
   float fd = carved(vec2(th, lat), variant, bonus);
   if (abs(th) > 1.35) fd = 1.0;
   float back = carved(vec2(th, lat + 0.075), variant, bonus);

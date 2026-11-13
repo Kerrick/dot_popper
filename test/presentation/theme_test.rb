@@ -69,15 +69,17 @@ class ThemeTest < Minitest::Test
     end
   end
 
-  # Every popped dot looks like every other popped dot, in every theme: no
-  # color, pattern or shape is chosen per dot. A dot shader is told which
-  # dot it draws only through its seed, so a popped dot's seed is the same
-  # for all of them, while each bright dot keeps its own.
-  def test_every_popped_dot_looks_like_every_other
-    seeds = (0..40).map { Style::DOT.seed(it, bright: false) }
+  # A dot shader is told which dot it draws only through its seed. A dot
+  # keeps its seed for its whole life, so it is the same dot after its pop
+  # as before, with the same face and outline, while each dot may be a
+  # little its own. That popped dots still never differ in color,
+  # lightness or size is test/gui/scenarios/popped_dots.rb's to check,
+  # since a shader draws them.
+  def test_a_dot_keeps_its_seed_through_its_pop
+    dots = (1..40).map { DotPopper::Dot.new(id: it, x: 0, y: 0, velocity_x: 0, velocity_y: 0, radius: 1, popped: false, bonus: false) }
 
-    assert_equal 1, seeds.uniq.size, "popped dots are told apart by their seeds"
-    assert_equal 41, (0..40).map { Style::DOT.seed(it, bright: true) }.uniq.size
+    dots.each { assert_equal Style::DOT.seed(it), Style::DOT.seed(it.pop) }
+    assert_equal 40, dots.map { Style::DOT.seed(it.pop) }.uniq.size
   end
 
   # Nor can a theme's dot shader tell one dot from another by where it

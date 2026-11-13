@@ -34,7 +34,7 @@ module DotPopper
 
       # One dot that is not in play, such as Home's examples.
       def icon(x, y, radius, bright:, opacity: 1.0, bonus: false)
-        paint { |shader| one(x, y, radius, bright ? Presentation::Pose::BRIGHT : Presentation::Pose::STILL, opacity, bonus, shader, pen.style::DOT.seed(9, bright:)) }
+        paint { |shader| one(x, y, radius, bright ? Presentation::Pose::BRIGHT : Presentation::Pose::STILL, opacity, bonus, shader, Presentation::DotStyle::EXAMPLE_SEED) }
       end
 
       # One plain dot in the colors of +palette+, whichever theme is in use,
@@ -60,7 +60,7 @@ module DotPopper
         end
       end
 
-      def seed(dot) = pen.style::DOT.seed(dot.id, bright: dot.bright?)
+      def seed(dot) = pen.style::DOT.seed(dot)
 
       def one(x, y, radius, pose, opacity, bonus, shader, seed)
         return flat(x, y, radius, pose, opacity, bonus) unless shader
