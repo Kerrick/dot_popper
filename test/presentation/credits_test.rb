@@ -49,8 +49,8 @@ class CreditsTest < Minitest::Test
   end
 
   def test_no_line_is_wider_than_the_room_and_a_long_word_is_broken
-    book = CreditsText.new(blocks: [CreditsBlock.new(:legal, "a #{"w" * 200} b")])
-    lines = CreditsLines.set(book, size: 20, room: 300, line: 1.5, measure: RoughMeasure.new)
+    text = CreditsText.new(blocks: [CreditsBlock.new(:legal, "a #{"w" * 200} b")])
+    lines = CreditsLines.set(text, size: 20, room: 300, line: 1.5, measure: RoughMeasure.new)
 
     assert_operator lines.rows.size, :>, 3
     lines.rows.each { assert_operator RoughMeasure.new.width(:mono, 20, it.text), :<=, 300 }
@@ -58,8 +58,8 @@ class CreditsTest < Minitest::Test
   end
 
   def test_a_wrapped_line_keeps_its_indentation_on_every_piece
-    book = CreditsText.new(blocks: [CreditsBlock.new(:legal, "    12. #{"word " * 20}")])
-    lines = CreditsLines.set(book, size: 20, room: 300, line: 1.5, measure: RoughMeasure.new)
+    text = CreditsText.new(blocks: [CreditsBlock.new(:legal, "    12. #{"word " * 20}")])
+    lines = CreditsLines.set(text, size: 20, room: 300, line: 1.5, measure: RoughMeasure.new)
 
     assert_operator lines.rows.size, :>, 1
     lines.rows.each { assert_match(/\A {4}\S/, it.text) }
@@ -72,17 +72,17 @@ class CreditsTest < Minitest::Test
          "1. Neither the Font Software nor any of its components,\n   in Original or Modified Versions, may be sold.\n"
 
   def test_a_hard_wrapped_license_that_fits_is_shown_just_as_written
-    book = CreditsText.new(blocks: [CreditsBlock.new(:legal, HARD)])
-    widest = CreditsLines.widest_as_written(book, size: 20, measure: RoughMeasure.new)
-    lines = CreditsLines.set(book, size: 20, room: widest, line: 1.5, measure: RoughMeasure.new)
+    text = CreditsText.new(blocks: [CreditsBlock.new(:legal, HARD)])
+    widest = CreditsLines.widest_as_written(text, size: 20, measure: RoughMeasure.new)
+    lines = CreditsLines.set(text, size: 20, room: widest, line: 1.5, measure: RoughMeasure.new)
 
     assert_equal HARD.lines.map(&:rstrip).reject(&:empty?), lines.rows.map(&:text)
   end
 
   def test_a_hard_wrapped_license_too_wide_for_the_column_is_reflowed
-    book = CreditsText.new(blocks: [CreditsBlock.new(:legal, HARD)])
-    widest = CreditsLines.widest_as_written(book, size: 20, measure: RoughMeasure.new)
-    lines = CreditsLines.set(book, size: 20, room: widest - 1, line: 1.5, measure: RoughMeasure.new)
+    text = CreditsText.new(blocks: [CreditsBlock.new(:legal, HARD)])
+    widest = CreditsLines.widest_as_written(text, size: 20, measure: RoughMeasure.new)
+    lines = CreditsLines.set(text, size: 20, room: widest - 1, line: 1.5, measure: RoughMeasure.new)
 
     refute_equal HARD.lines.map(&:rstrip).reject(&:empty?), lines.rows.map(&:text)
     lines.rows.each { assert_operator RoughMeasure.new.width(:mono, 20, it.text), :<, widest }

@@ -11,7 +11,7 @@ module DotPopper
           @notices = notices
           @scroll = nil
           @lines = nil
-          @book = nil
+          @text = nil
         end
 
         # How far down it is scrolled (CreditsScroll), while it is open.
@@ -30,12 +30,12 @@ module DotPopper
         def forget = @scroll = nil
 
         # What it says (CreditsText), composed once.
-        def book = (@book ||= CreditsText.compose(words, @notices))
+        def text = (@text ||= CreditsText.compose(words, @notices))
 
         # Where its heading and its window of text go.
         def plan
           page = CreditsLayout.new(layout:, style: style::CREDITS)
-          page.with(wanted: CreditsLines.widest_as_written(book, size: page.text_size, measure:))
+          page.with(wanted: CreditsLines.widest_as_written(text, size: page.text_size, measure:))
         end
 
         # Its lines (CreditsLines), laid out for the screen's size.
@@ -46,7 +46,7 @@ module DotPopper
         def lay_out
           page = plan
           key = [page.text_size, page.room]
-          @lines = [key, CreditsLines.set(book, size: page.text_size, room: page.room, line: style::CREDITS.line, measure:)] if @lines&.first != key
+          @lines = [key, CreditsLines.set(text, size: page.text_size, room: page.room, line: style::CREDITS.line, measure:)] if @lines&.first != key
           @scroll = @scroll.fitted(content: lines.height, window: page.window.height)
         end
 

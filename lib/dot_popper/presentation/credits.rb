@@ -64,7 +64,7 @@ module DotPopper
       end
     end
 
-    # The book's text broken into lines for a column +room+ wide, at type
+    # The credits' text broken into lines for a column +room+ wide, at type
     # +size+, each with where its middle falls down the page (+y+, from the
     # top), and the page's +height+. A heading is bold and a size larger, a subheading bold.
     # +measure+ is the shell's (or RoughMeasure), which says how wide words
@@ -84,11 +84,11 @@ module DotPopper
 
       def self.heading_size(size) = size + [(size * 0.25).round, 1].max
 
-      def self.set(book, size:, room:, line:, measure:)
+      def self.set(text, size:, room:, line:, measure:)
         step = size * line
         rows = []
         y = 0.0
-        book.blocks.each_with_index do |block, i|
+        text.blocks.each_with_index do |block, i|
           y += step * GAP.fetch(block.kind) unless i.zero?
           broken(block, room, measure, size).each_with_index do |lines, p|
             y += step * 0.6 unless p.zero?
@@ -102,9 +102,9 @@ module DotPopper
       end
 
       # The widest line, at type +size+, of the hard-wrapped licenses in
-      # +book+, so the page can widen to show them as written; 0 with none.
-      def self.widest_as_written(book, size:, measure:)
-        book.blocks.select { it.kind == :legal && hard_wrapped?(it.text) }
+      # +text+, so the page can widen to show them as written; 0 with none.
+      def self.widest_as_written(text, size:, measure:)
+        text.blocks.select { it.kind == :legal && hard_wrapped?(it.text) }
             .flat_map { as_written(it.text) }.map { measure.width(:mono, size, it) }.max || 0.0
       end
 
@@ -232,8 +232,5 @@ module DotPopper
 
       def bottom = layout.short? ? layout.safe.bottom - layout.page_margin : layout.back_button.y - layout.page_margin
     end
-
-    # Its old name, until no caller says it.
-    CreditsBook = CreditsText
   end
 end
