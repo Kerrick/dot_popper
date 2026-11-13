@@ -8,7 +8,7 @@ What differs between Windows, macOS, Linux, iOS and iPadOS, and Android: the win
 
 ## At a glance
 
-`Shell::App#load` asks `Lota::System.os` once, and `Shell::Platforms` turns its answer into the game's own `Platform` (`lib/dot_popper/platform.rb`), the one place a system's name is compared; `test/platform_test.rb` fails if anything outside the shell names one. Every difference below follows one of its questions:
+`Shell::App#load` asks `Lota::System.os` once, and `Shell::Platforms` turns its answer into the game's own `Platform` (`lib/dot_popper/platform.rb`), the one place Lota's name for a system is compared. Ruby's (`RUBY_PLATFORM`) is read only by the shell's renderer choice and relaunch, below. `test/platform_test.rb` fails if anything outside the shell names a system by either. Every difference below follows one of its questions:
 
 | `Platform` | Means | True on |
 | --- | --- | --- |
@@ -56,7 +56,7 @@ Lota's dimensions are whole units, rounded down, while the drawable may be a fra
 
 ## Renderers
 
-`conf.rb` decides which of LÖVE's renderers the game allows before the window opens, through `Shell::VulkanRescue.choose`, which asks `Presentation::RendererChoice`. [ADR-0007](../adr/0007-renderers-per-platform-with-a-relaunch-without-vulkan.md) records why.
+`conf.rb` decides which of LÖVE's renderers the game allows before the window opens, through `Shell::VulkanRescue.choose`, which asks `Shell::RendererChoice`. [ADR-0007](../adr/0007-renderers-per-platform-with-a-relaunch-without-vulkan.md) records why.
 
 LÖVE tries its renderers in its own fixed order, Vulkan first wherever it may, whatever order a game lists. It falls back to the next only when a renderer cannot be created at all, not when Vulkan is created but finds no GPU it can use (a virtual machine, a remote desktop, old integrated graphics, Xvfb). Lota keeps LÖVE's behavior. So a game can put OpenGL first only by leaving Vulkan out.
 
@@ -80,10 +80,10 @@ When Vulkan fails to start the game, the game notes the day and runs itself agai
 
 | Part | What it does |
 | --- | --- |
-| `Presentation::RendererChoice` | The renderers (`renderers` for `t.graphics.renderers`, `excluded` for `t.graphics.excluderenderers`), and whether Vulkan may be tried (`#vulkan_allowed?`) |
-| `Presentation::VulkanFailure` | The note: the day Vulkan failed, as an ISO date. It holds for 30 days (`LASTS`); `#retry_on` is the first day Vulkan is tried again. A clock set back keeps the note |
-| `Presentation::Relaunch` | The command that starts the game again as it first started, or nil where there is none |
-| `Shell::VulkanRescue` | Carries them out from `conf.rb`, and tells LÖVE's failure to start a renderer from other errors by its words (`FAILED_START`, `.failed_start?`), so the presentation never reads an engine's error message |
+| `Shell::RendererChoice` | The renderers (`renderers` for `t.graphics.renderers`, `excluded` for `t.graphics.excluderenderers`), and whether Vulkan may be tried (`#vulkan_allowed?`) |
+| `Shell::VulkanFailure` | The note: the day Vulkan failed, as an ISO date. It holds for 30 days (`LASTS`); `#retry_on` is the first day Vulkan is tried again. A clock set back keeps the note |
+| `Shell::Relaunch` | The command that starts the game again as it first started, or nil where there is none |
+| `Shell::VulkanRescue` | Carries them out from `conf.rb`, and tells LÖVE's failure to start a renderer from other errors by its words (`FAILED_START`, `.failed_start?`) |
 | `conf.rb`'s `Lota.errorhandler` | Hands every error to `VulkanRescue#rescue` first, and to Lota's own error screen (`super`) when it answers nil |
 
 The error handler lives in `conf.rb`, not `main.rb`, because the window opens before `main.rb` loads.
@@ -112,7 +112,7 @@ On Windows, Ruby's `exec` runs the new process, waits for it, and exits with its
 
 **Where it applies.** On Windows, a PC with a Vulkan driver but no GPU it can use. On Android, a Vulkan failure asks the player to start the game again. Linux allows no Vulkan, and Apple's systems have only Metal, so `#vulkan_allowed?` is false there unless `DOT_POPPER_RENDERERS` names Vulkan.
 
-**Tests.** `test/presentation/renderer_choice_test.rb` covers each platform's list, `DOT_POPPER_RENDERERS`, the note's 30 days, and each `Relaunch` command; `test/shell/vulkan_rescue_test.rb` which errors are rescued. The Package workflow's Windows job (`.github/workflows/package.yml`, "Vulkan alone") plays the fused app with `DOT_POPPER_RENDERERS=vulkan` on a runner with no GPU, and requires that it starts again without Vulkan, draws with OpenGL, writes the note, and exits with 0.
+**Tests.** `test/shell/renderer_choice_test.rb` covers each platform's list, `DOT_POPPER_RENDERERS`, the note's 30 days, and each `Relaunch` command; `test/shell/vulkan_rescue_test.rb` which errors are rescued. The Package workflow's Windows job (`.github/workflows/package.yml`, "Vulkan alone") plays the fused app with `DOT_POPPER_RENDERERS=vulkan` on a runner with no GPU, and requires that it starts again without Vulkan, draws with OpenGL, writes the note, and exits with 0.
 
 ## The iOS host
 

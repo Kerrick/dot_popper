@@ -7,7 +7,7 @@ require "dot_popper/shell/vulkan_rescue"
 # words for a renderer that can't start the game, and only while Vulkan
 # may still be tried, so the game never starts a third time.
 class VulkanRescueTest < Minitest::Test
-  RendererChoice = DotPopper::Presentation::RendererChoice
+  RendererChoice = DotPopper::Shell::RendererChoice
   VulkanRescue = DotPopper::Shell::VulkanRescue
 
   WINDOWS = "x64-mingw-ucrt"
@@ -17,7 +17,7 @@ class VulkanRescueTest < Minitest::Test
   NO_GPU = RuntimeError.new("Vulkan: failed to find a suitable GPU.")
 
   def rescue_for(asked: [], platform: WINDOWS, vulkan_failed: false)
-    VulkanRescue.new(RendererChoice.decide(asked:, platform:, vulkan_failed:), title: "Dot Popper", env: {})
+    VulkanRescue.new(RendererChoice.decide(asked:, ruby_platform: platform, vulkan_failed:), title: "Dot Popper", env: {})
   end
 
   def test_it_rescues_vulkan_finding_no_gpu_while_vulkan_may_be_tried

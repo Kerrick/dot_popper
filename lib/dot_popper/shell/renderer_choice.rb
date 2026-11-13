@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
 module DotPopper
-  module Presentation
+  module Shell
     # Which of LÖVE's graphics renderers the game lets it try, decided in
     # conf.rb before the window opens. +renderers+ is the list for
     # t.graphics.renderers, or nil for LÖVE's own; +excluded+ is the list
-    # for t.graphics.excluderenderers; +platform+ is RUBY_PLATFORM.
+    # for t.graphics.excluderenderers; +ruby_platform+ is RUBY_PLATFORM,
+    # Ruby's name for the system, which only the shell reads.
     #
     # LÖVE tries Vulkan first wherever it may, and falls back to OpenGL
     # only when Vulkan can't be created at all, not when it is created but
@@ -15,16 +16,16 @@ module DotPopper
     # is left out there, and LÖVE takes its next renderer: OpenGL on
     # Windows, Metal on a Mac. Android's own "linux" gets LÖVE's order,
     # since it isn't the Linux of a desktop: Vulkan first, then OpenGL ES.
-    class RendererChoice < Data.define(:renderers, :excluded, :platform)
+    class RendererChoice < Data.define(:renderers, :excluded, :ruby_platform)
       # The choice for +asked+, the renderers DOT_POPPER_RENDERERS names
-      # (RendererChoice.asked), on +platform+, once Vulkan has failed here
+      # (RendererChoice.asked), on +ruby_platform+, once Vulkan has failed here
       # or not.
-      def self.decide(asked:, platform:, vulkan_failed: false)
-        listed = asked.empty? ? usual(platform) : asked
-        return new(renderers: listed, excluded: [], platform:) unless vulkan_failed
+      def self.decide(asked:, ruby_platform:, vulkan_failed: false)
+        listed = asked.empty? ? usual(ruby_platform) : asked
+        return new(renderers: listed, excluded: [], ruby_platform:) unless vulkan_failed
 
         rest = listed&.-([:vulkan])
-        new(renderers: rest&.empty? ? nil : rest, excluded: [:vulkan], platform:)
+        new(renderers: rest&.empty? ? nil : rest, excluded: [:vulkan], ruby_platform:)
       end
 
       # The renderers a comma-separated +text+ names, such as "opengl" or
@@ -32,7 +33,7 @@ module DotPopper
       def self.asked(text) = text.to_s.split(",").map(&:strip).reject(&:empty?).map(&:to_sym)
 
       # Only OpenGL on Linux; LÖVE's own order elsewhere, Android's too.
-      def self.usual(platform) = platform.include?("linux") && !platform.include?("android") ? [:opengl] : nil
+      def self.usual(ruby_platform) = ruby_platform.include?("linux") && !ruby_platform.include?("android") ? [:opengl] : nil
 
       # Whether LÖVE may try Vulkan: Apple's systems have only Metal. Only
       # while it may can leaving Vulkan out get past a failed start
@@ -41,7 +42,7 @@ module DotPopper
       def vulkan_allowed?
         return false if excluded.include?(:vulkan)
 
-        renderers ? renderers.include?(:vulkan) : !platform.match?(/darwin|ios/)
+        renderers ? renderers.include?(:vulkan) : !ruby_platform.match?(/darwin|ios/)
       end
     end
   end

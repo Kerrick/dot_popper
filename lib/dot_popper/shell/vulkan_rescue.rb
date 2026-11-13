@@ -2,9 +2,9 @@
 
 require "date"
 require "rbconfig"
-require_relative "../presentation/renderer_choice"
-require_relative "../presentation/vulkan_failure"
-require_relative "../presentation/relaunch"
+require_relative "renderer_choice"
+require_relative "vulkan_failure"
+require_relative "relaunch"
 require_relative "save_file"
 
 module DotPopper
@@ -15,9 +15,9 @@ module DotPopper
     # Lota.errorhandler hands each error to #rescue first.
     #
     # When Vulkan fails, #rescue notes the day in the save folder
-    # (Presentation::VulkanFailure), and starts the game again at once
-    # with DOT_POPPER_NO_VULKAN=1 (Presentation::Relaunch), so the player
-    # sees the game, not an error, on the very first launch. The note
+    # (VulkanFailure), and starts the game again at once with
+    # DOT_POPPER_NO_VULKAN=1 (Relaunch), so the player sees the game, not
+    # an error, on the very first launch. The note
     # spares the next launches the failed try, for a month. Where the game
     # can't start itself again, as on a phone, one line asks the player
     # to, and the note makes that start work.
@@ -40,8 +40,8 @@ module DotPopper
         noted = note&.holds?(today) || false
         puts "Dot Popper: Vulkan failed here on #{note}, so it is left out until #{note&.retry_on}" if noted
         failed = noted || env.fetch(NO_VULKAN, "") == "1"
-        asked = Presentation::RendererChoice.asked(env["DOT_POPPER_RENDERERS"])
-        choice = Presentation::RendererChoice.decide(asked:, platform: RUBY_PLATFORM, vulkan_failed: failed)
+        asked = RendererChoice.asked(env["DOT_POPPER_RENDERERS"])
+        choice = RendererChoice.decide(asked:, ruby_platform: RUBY_PLATFORM, vulkan_failed: failed)
         new(choice, title:, env:, today:)
       end
 
@@ -50,7 +50,7 @@ module DotPopper
       def self.note(identity)
         ::Lota::Filesystem.identity = identity
         contents, = ::Lota::Filesystem.read(NOTE) if ::Lota::Filesystem.info(NOTE)
-        Presentation::VulkanFailure.parse(contents)
+        VulkanFailure.parse(contents)
       rescue RuntimeError
         nil
       end
@@ -86,7 +86,7 @@ module DotPopper
 
         warn "Dot Popper: Vulkan couldn't start the game (#{error.message.split("\n").map(&:strip).join(' ')}), " \
              "so it starts again without Vulkan"
-        SaveFile.new(name: NOTE).write(Presentation::VulkanFailure.new(day: @today).to_s)
+        SaveFile.new(name: NOTE).write(VulkanFailure.new(day: @today).to_s)
         @env[NO_VULKAN] = "1"
         start_again
       end
@@ -97,9 +97,9 @@ module DotPopper
       # runs it, waits, and exits with its status), or else one line for
       # the player.
       def start_again
-        relaunch = Presentation::Relaunch.new(platform: RUBY_PLATFORM, fused: ::Lota::Filesystem.fused?,
-                                              program: File.expand_path($PROGRAM_NAME), arguments: ARGV.dup,
-                                              ruby: RbConfig.ruby, title: @title, exists: File.method(:file?))
+        relaunch = Relaunch.new(ruby_platform: RUBY_PLATFORM, fused: ::Lota::Filesystem.fused?,
+                                program: File.expand_path($PROGRAM_NAME), arguments: ARGV.dup,
+                                ruby: RbConfig.ruby, title: @title, exists: File.method(:file?))
         command = relaunch.command or return ask_to_start_again
         ::Lota::Window.close if ::Lota::Window.open?
         $stdout.flush

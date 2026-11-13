@@ -42,7 +42,7 @@ For a start that Vulkan fails:
 
 ## Decision Outcome
 
-Chosen: renderer option 1, because no Windows combination gave both the TV's game mode and the overlay, and the maintainer chose the working overlay; Linux keeps OpenGL alone, the renderer LÖVE has supported longest. Android keeps Vulkan first because Lota 0.3.0's host fixed Vulkan's crash on going to the background, and a smoothness run found Vulkan and OpenGL ES tied. And start option 1, because it alone works on the first launch; the game keeps its own relaunch (`Presentation::Relaunch`) over Lota's restart, since that route is the one proven on GitHub's GPU-less Windows runner and handles a phone, which can't start itself, with a message asking the player to. The note lasts 30 days, not forever, because a driver update or a move to real hardware can make Vulkan work, and the overlay is the reason Vulkan is allowed. Confidence: high that the rescue works where tested (Linux under Xvfb, a Mac, GitHub's Windows runner); medium overall, since no real Windows PC with a Vulkan driver and no usable GPU has been tried, and a battery comparison of the Android renderers is still owed.
+Chosen: renderer option 1, because no Windows combination gave both the TV's game mode and the overlay, and the maintainer chose the working overlay; Linux keeps OpenGL alone, the renderer LÖVE has supported longest. Android keeps Vulkan first because Lota 0.3.0's host fixed Vulkan's crash on going to the background, and a smoothness run found Vulkan and OpenGL ES tied. And start option 1, because it alone works on the first launch; the game keeps its own relaunch (`Shell::Relaunch`) over Lota's restart, since that route is the one proven on GitHub's GPU-less Windows runner and handles a phone, which can't start itself, with a message asking the player to. The note lasts 30 days, not forever, because a driver update or a move to real hardware can make Vulkan work, and the overlay is the reason Vulkan is allowed. Confidence: high that the rescue works where tested (Linux under Xvfb, a Mac, GitHub's Windows runner); medium overall, since no real Windows PC with a Vulkan driver and no usable GPU has been tried, and a battery comparison of the Android renderers is still owed.
 
 ### Consequences
 
@@ -54,7 +54,7 @@ Chosen: renderer option 1, because no Windows combination gave both the TV's gam
 
 ### Confirmation
 
-`test/presentation/renderer_choice_test.rb` tests the choice, and `test/shell/vulkan_rescue_test.rb` what the rescue takes. The Package workflow's Windows job plays the fused app allowed only Vulkan and fails unless it ran its own exe again, drew with OpenGL, wrote `vulkan_failed.txt` and exited 0.
+`test/shell/renderer_choice_test.rb` tests the choice, and `test/shell/vulkan_rescue_test.rb` what the rescue takes. The Package workflow's Windows job plays the fused app allowed only Vulkan and fails unless it ran its own exe again, drew with OpenGL, wrote `vulkan_failed.txt` and exited 0.
 
 ## More Information
 

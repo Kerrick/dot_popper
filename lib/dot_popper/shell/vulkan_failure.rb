@@ -3,7 +3,7 @@
 require "date"
 
 module DotPopper
-  module Presentation
+  module Shell
     # The note the game keeps in its save folder once Vulkan failed to
     # start it on this computer: the day it did. For LASTS days after,
     # the game starts without Vulkan. Then it tries Vulkan again, in case

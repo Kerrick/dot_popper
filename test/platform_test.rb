@@ -56,15 +56,27 @@ class PlatformTest < Minitest::Test
     assert_equal DotPopper::Platform::COMPUTER, on("Haiku")
   end
 
-  # A system's name in code, or the engine's question that answers it.
-  SYSTEM_NAMES = /"(?:iOS|Android|OS X|Windows|Linux)"|System\.os\b/
+  # A system's name in code: Lota's ("iOS", and the engine's question that
+  # answers it), or Ruby's (RUBY_PLATFORM, or one of its words in a string
+  # or a regex, as "linux" or /darwin|ios/).
+  SYSTEM_NAMES = Regexp.union(/"(?:iOS|Android|OS X|Windows|Linux)"|System\.os\b/,
+                              %r{RUBY_PLATFORM|["/](?:[\w-]*\|)*(?:mingw|mswin|darwin|linux|android|ios)(?:\|[\w-]*)*["/]})
   INSIDE = %w[lib/dot_popper.rb lib/dot_popper/**/*.rb].freeze
+  ROOT = File.expand_path("..", __dir__)
+
+  def naming_a_system(files) = files.select { |file| File.readlines(file).any? { !it.lstrip.start_with?("#") && it.match?(SYSTEM_NAMES) } }
+  def relative(files) = files.map { it.delete_prefix("#{ROOT}/") }.sort
 
   def test_nothing_but_the_shell_names_a_system
-    root = File.expand_path("..", __dir__)
-    files = INSIDE.flat_map { Dir[File.join(root, it)] }.reject { it.include?("/lib/dot_popper/shell/") }
-    named = files.select { |file| File.readlines(file).any? { !it.lstrip.start_with?("#") && it.match?(SYSTEM_NAMES) } }
+    files = INSIDE.flat_map { Dir[File.join(ROOT, it)] }.reject { it.include?("/lib/dot_popper/shell/") }
 
-    assert_empty named.map { it.delete_prefix("#{root}/") }
+    assert_empty relative(naming_a_system(files))
+  end
+
+  # The scan sees the names where they are meant to be, so it is not blind.
+  def test_the_scan_finds_the_shells_own_system_names
+    named = relative(naming_a_system(Dir[File.join(ROOT, "lib/dot_popper/shell/*.rb")]))
+
+    assert_equal %w[app platforms relaunch renderer_choice vulkan_rescue].map { "lib/dot_popper/shell/#{it}.rb" }, named
   end
 end

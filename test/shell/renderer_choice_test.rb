@@ -1,18 +1,19 @@
 # frozen_string_literal: true
 
-require_relative "presentation_helper"
+require "test_helper"
+require "dot_popper/shell/vulkan_rescue"
 
 class RendererChoiceTest < Minitest::Test
-  RendererChoice = DotPopper::Presentation::RendererChoice
-  VulkanFailure = DotPopper::Presentation::VulkanFailure
-  Relaunch = DotPopper::Presentation::Relaunch
+  RendererChoice = DotPopper::Shell::RendererChoice
+  VulkanFailure = DotPopper::Shell::VulkanFailure
+  Relaunch = DotPopper::Shell::Relaunch
 
   WINDOWS = "x64-mingw-ucrt"
   LINUX = "x86_64-linux"
   MAC = "arm64-darwin25"
   ANDROID = "aarch64-linux-android"
 
-  def decide(asked: [], platform: WINDOWS, vulkan_failed: false) = RendererChoice.decide(asked:, platform:, vulkan_failed:)
+  def decide(asked: [], platform: WINDOWS, vulkan_failed: false) = RendererChoice.decide(asked:, ruby_platform: platform, vulkan_failed:)
 
   def test_windows_keeps_loves_order_so_vulkan_comes_first
     choice = decide
@@ -75,7 +76,7 @@ class RendererChoiceTest < Minitest::Test
   end
 
   def relaunch(platform: WINDOWS, fused: true, exists: ->(_) { true })
-    Relaunch.new(platform:, fused:, program: "C:/Games/Dot Popper/app/main.rb", arguments: ["--x"],
+    Relaunch.new(ruby_platform: platform, fused:, program: "C:/Games/Dot Popper/app/main.rb", arguments: ["--x"],
                  ruby: "C:/Games/Dot Popper/ruby/bin/ruby.exe", title: "Dot Popper", exists:)
   end
 
