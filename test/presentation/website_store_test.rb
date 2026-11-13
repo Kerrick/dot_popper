@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "presentation_helper"
+require "platforms_helper"
 
 # Selling Pro to copies no store controls: Buy reaches a checkout, Paste
 # license key enters the key, and while setdef is gone Pro is no longer

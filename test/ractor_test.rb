@@ -39,7 +39,7 @@ class RactorTest < Minitest::Test
 
   def test_the_rule_numbers_can_be_read_from_any_ractor
     DotPopper::Rules.constants.each { assert Ractor.shareable?(DotPopper::Rules.const_get(it)), it }
-    DotPopper::Shell::Platforms::BY_NAME.each_value { assert Ractor.shareable?(it), it }
+    [DotPopper::Platform::COMPUTER, DotPopper::Platform::PHONE].each { assert Ractor.shareable?(it), it }
   end
 
   # Ruby 4.0.9 on Windows (x64-mingw-ucrt) deadlocks when a Ractor other

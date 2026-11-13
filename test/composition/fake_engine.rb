@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../presentation/presentation_helper"
+require "platforms_helper"
 require "dot_popper/composition/root"
 require "dot_popper/privacy/save_files"
 

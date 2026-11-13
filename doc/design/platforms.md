@@ -8,7 +8,7 @@ What differs between Windows, macOS, Linux, iOS and iPadOS, and Android: the win
 
 ## At a glance
 
-`Shell::App#load` asks `Lota::System.os` once, and `Shell::Platforms` turns its answer into the game's own `Platform` (`lib/dot_popper/platform.rb`), the one place Lota's name for a system is compared. Ruby's (`RUBY_PLATFORM`) is read only by the shell's renderer choice and relaunch, below. `test/platform_test.rb` fails if anything outside the shell names a system by either. Every difference below follows one of its questions:
+`Shell::App#load` asks `Lota::System.os` once, and `Shell::Platforms` turns its answer into the game's own `Platform` (`lib/dot_popper/platform.rb`), the one place Lota's name for a system is compared. Ruby's (`RUBY_PLATFORM`) is read only by the shell's renderer choice and relaunch, below. `test/shell/platforms_test.rb` fails if anything outside the shell names a system by either. Every difference below follows one of its questions:
 
 | `Platform` | Means | True on |
 | --- | --- | --- |

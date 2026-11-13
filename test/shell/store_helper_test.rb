@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../presentation/presentation_helper"
+require "platforms_helper"
 require_relative "../presentation/store_contract"
 require "dot_popper/shell/store_helper"
 require "rbconfig"

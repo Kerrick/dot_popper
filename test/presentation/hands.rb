@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "presentation_helper"
+require "platforms_helper"
 
 # The three inputs that must each be enough on their own: touch, a
 # controller, and a mouse with its keyboard. Each is a hand that works a

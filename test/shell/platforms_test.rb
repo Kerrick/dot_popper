@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require "platforms_helper"
 
 # What each system means for the game (Platform), as the shell makes it
 # from the name Lota::System.os gives the system (Shell::Platforms), and
 # that nothing but the shell compares a system's name.
-class PlatformTest < Minitest::Test
+class PlatformsTest < Minitest::Test
   def on(name) = DotPopperTest.platform(name)
 
   def test_a_phone_or_tablet_is_played_by_touch_in_the_phone_host
@@ -52,6 +52,10 @@ class PlatformTest < Minitest::Test
                  %w[iOS Android OS\ X Windows Linux Haiku].to_h { [it, DotPopper::Shell::Platforms.unit(it)] })
   end
 
+  def test_every_systems_platform_can_be_read_from_any_ractor
+    DotPopper::Shell::Platforms::BY_NAME.each_value { assert Ractor.shareable?(it), it }
+  end
+
   def test_a_system_the_shell_does_not_know_plays_as_a_computer
     assert_equal DotPopper::Platform::COMPUTER, on("Haiku")
   end
@@ -62,7 +66,7 @@ class PlatformTest < Minitest::Test
   SYSTEM_NAMES = Regexp.union(/"(?:iOS|Android|OS X|Windows|Linux)"|System\.os\b/,
                               %r{RUBY_PLATFORM|["/](?:[\w-]*\|)*(?:mingw|mswin|darwin|linux|android|ios)(?:\|[\w-]*)*["/]})
   INSIDE = %w[lib/dot_popper.rb lib/dot_popper/**/*.rb].freeze
-  ROOT = File.expand_path("..", __dir__)
+  ROOT = File.expand_path("../..", __dir__)
 
   def naming_a_system(files) = files.select { |file| File.readlines(file).any? { !it.lstrip.start_with?("#") && it.match?(SYSTEM_NAMES) } }
   def relative(files) = files.map { it.delete_prefix("#{ROOT}/") }.sort

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "presentation_helper"
+require "platforms_helper"
 
 # Buying Pro: the URLs the hosts catch, the answers they
 # write back, and the calm screen that offers it.

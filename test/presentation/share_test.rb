@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "presentation_helper"
+require "platforms_helper"
 
 # Sharing a result: "Share my score" comes in once the score lands, a
 # little more strongly on a new record, and the preview it opens holds
