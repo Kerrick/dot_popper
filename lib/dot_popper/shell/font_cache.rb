@@ -6,7 +6,7 @@ module DotPopper
     # made at its size in graphics units and rasterized at the screen's
     # pixel density, so text is drawn 1:1 with device pixels and never
     # scaled; a window moved to a screen of another density gets new ones.
-    class FontBook
+    class FontCache
       def initialize(type)
         @type = type
         @fonts = {}
@@ -43,5 +43,8 @@ module DotPopper
         ::Lota::Graphics::Font.new(size, dpiscale: @density)
       end
     end
+
+    # Its old name, until no caller says it.
+    FontBook = FontCache
   end
 end
