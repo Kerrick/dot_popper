@@ -61,4 +61,12 @@ class ThemeReleasesTest < Minitest::Test
     refute @feed.update
     assert_equal [:ghost], @themes.choices.drop(1)
   end
+
+  # Only a successful answer releases anything, whatever an error's body
+  # holds.
+  def test_an_error_answer_releases_nothing
+    @worker.finished_list = [[nil, Reply.new(status: 500, body: [{ "key" => "ghost" }])]]
+    refute @feed.update
+    assert_equal [:classic], @themes.choices
+  end
 end
