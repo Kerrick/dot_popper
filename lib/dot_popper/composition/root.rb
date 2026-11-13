@@ -82,45 +82,26 @@ module DotPopper
       # or nil.
       def fake_tilt = Presentation::Reading.parse(settings["DOT_POPPER_FAKE_TILT"])
 
-      # Whether someone is playing, not a machine: not the autoplay bot,
-      # and not a GUI scenario, unless it sets DOT_POPPER_FREE_GAMES to try
-      # the limit. A store build always counts its free games.
-      def player?
-        return true if settings.store_build?
-        return false if flag?("DOT_POPPER_AUTOPLAY")
+      # Whether someone is playing, not a machine (FreeGames.player?).
+      def player? = FreeGames.player?(settings.env, channel: settings.channel)
 
-        settings.fetch("DOT_POPPER_SCENARIO").empty? || settings.env.key?("DOT_POPPER_FREE_GAMES")
-      end
-
-      # The keys a build for +channel+ trusts, decided by the build alone:
-      # the test keys in a test build, setdef's in a store build, whatever
-      # the environment says. script/check_build.rb asks this of a build
-      # for sale.
-      def self.trusted_pins(channel) = Build.store?(channel) ? Continuity::PINNED : Continuity::TEST_PINS
-
-      # Whose receipts prove Pro, by the channel alone: in a test build only
-      # the fake store's; in the Microsoft Store's build Windows' word,
-      # which comes only down the store helper's pipe; in any other store
-      # build the signed receipts of Apple and Google.
-      def self.trusted_receipts(channel)
-        return Receipt::TEST unless Build.store?(channel)
-
-        channel == Build::MICROSOFT_STORE ? Receipt::MICROSOFT_STORE : Receipt::STORES
-      end
+      # The keys and the receipts a build for +channel+ trusts, as
+      # Monetization decides them, by the channel alone
+      # (Continuity.pins_for, Receipt.trusted).
+      def self.trusted_pins(channel) = Continuity.pins_for(channel)
+      def self.trusted_receipts(channel) = Receipt.trusted(channel)
 
       def trusted_pins = self.class.trusted_pins(settings.channel)
       def trusted_receipts = self.class.trusted_receipts(settings.channel)
 
-      # Where the license key is kept: license.txt, except in an app
-      # store's build, which never reads that file (so a key left on disk
-      # grants nothing and is never sent) and keeps nothing in its place.
-      def license_store = Build.license_keys?(settings.channel) ? file("license.txt") : ScoreRecord::Memory.new
+      # Where the license key is kept (Continuity::License.kept_in).
+      def license_store = Continuity::License.kept_in(settings.channel, ->(name) { file(name) })
 
-      # The games a free player has left, counted where Pro can be bought,
-      # as #player? allows. DOT_POPPER_FREE_GAMES=n starts a new save with
-      # n games in the bank and n for the day, to try the limit.
+      # The games a free player has left, counted as +metered+ says
+      # (FreeGames.metered?), starting as a developer may ask
+      # (FreeGames.starting).
       def free_games(entitlement, metered:, store: file("games.txt"))
-        start = Integer(settings.fetch("DOT_POPPER_FREE_GAMES"), exception: false)
+        start = FreeGames.starting(settings.env)
         FreeGames.new(store, today: settings.today, entitlement:, metered:,
                              **(start ? { bank: start, daily: start } : {}))
       end
@@ -200,7 +181,7 @@ module DotPopper
                     fake: Presentation::FakeStore.new(file("fake_store.txt"), fails: Presentation::FakeStore.failure(settings.env)),
                     website: ->(fake:) { website_store(clipboard, fake:) }
         )
-        games = free_games(entitlement, metered: storefront.offered? && player?)
+        games = free_games(entitlement, metered: FreeGames.metered?(settings.env, channel: settings.channel, offered: storefront.offered?))
         @haptics = platform.buzzes? ? @engine.buzzer : Presentation::NoHaptics.new
         @sharing = Presentation::SheetSharing.for(platform, opener: @engine.opener)
         groups = groups_session

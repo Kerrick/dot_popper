@@ -29,6 +29,29 @@ class LicenseTest < Minitest::Test
     watch.verdict
   end
 
+  # The keys a build trusts, by its channel alone: setdef's in a store
+  # build, the test keys in a test build (ADR-0010).
+  def test_a_build_trusts_setdefs_keys_by_its_channel_alone
+    assert_same C::TEST_PINS, C.pins_for(nil)
+    DotPopper::Build::CHANNEL_NAMES.each { assert_same C::PINNED, C.pins_for(it), it }
+    refute @key.valid?(C.pins_for(DotPopper::Build::WEBSITE))
+    assert @key.valid?(C.pins_for(nil))
+  end
+
+  # An app store's build never reads license.txt, so a key left on disk
+  # grants nothing and is never sent; the website's and a test build keep it.
+  def test_only_a_build_that_takes_license_keys_keeps_one_in_license_txt
+    files = Hash.new { |all, name| all[name] = Memory.new }
+    file = ->(name) { files[name] }
+    DotPopper::Build::STORES.each do |channel|
+      kept = C::License.kept_in(channel, file)
+
+      assert_instance_of Memory, kept, channel
+      refute_same files["license.txt"], kept, channel
+    end
+    [DotPopper::Build::WEBSITE, nil].each { assert_same files["license.txt"], C::License.kept_in(it, file), it.inspect }
+  end
+
   def test_a_valid_key_is_pro_at_once_offline_and_a_bad_one_is_refused
     license = C::License.new(Memory.new, pins: C::TEST_PINS)
 

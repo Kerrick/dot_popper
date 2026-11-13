@@ -25,6 +25,29 @@ module DotPopper
     BANK = 20
     DAILY = 3
 
+    # The developer setting that starts a new save with that many first
+    # games and that many a day, to try the limit.
+    STARTING = "DOT_POPPER_FREE_GAMES"
+
+    # Whether the free games of a run with the developer settings +env+
+    # (Build.settings) in a build for +channel+ are counted: where Pro can
+    # be bought (+offered+), as a limit with no way past it is a dead end,
+    # and someone is playing (.player?).
+    def self.metered?(env, channel:, offered:) = offered && player?(env, channel:)
+
+    # Whether someone is playing, not a machine: not the autoplay bot, and
+    # not a GUI scenario, unless it sets STARTING to try the limit. In a
+    # store build everyone is, whatever its settings say (ADR-0010).
+    def self.player?(env, channel:)
+      return true if Build.store?(channel)
+      return false if env["DOT_POPPER_AUTOPLAY"] == "1"
+
+      env.fetch("DOT_POPPER_SCENARIO", "").empty? || env.key?(STARTING)
+    end
+
+    # The games STARTING asks a new save to start with, or nil.
+    def self.starting(env) = Integer(env.fetch(STARTING, ""), exception: false)
+
     # Games that never count and never show: for a Show made without any.
     def self.unlimited = new(ScoreRecord::Memory.new, today: -> { Date.today }, entitlement: Entitlement.free, metered: false)
 

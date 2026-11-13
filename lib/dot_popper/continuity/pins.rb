@@ -39,6 +39,12 @@ module DotPopper
     # build asked setdef's real server anything (.live?).
     PINNED = SETDEF_PINS
 
+    # The keys a build for +channel+ (Build::CHANNEL) trusts, by the
+    # channel alone and never by anything set at run time (ADR-0010):
+    # setdef's in a store build, the test keys in a test build.
+    # script/check_build.rb asks this of a build for sale.
+    def self.pins_for(channel) = Build.store?(channel) ? PINNED : TEST_PINS
+
     # Whether this build trusts real keys, and so may ask the real server.
     def self.live?(pins = PINNED) = !pins.equal?(TEST_PINS)
   end

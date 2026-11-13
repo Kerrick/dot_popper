@@ -23,6 +23,7 @@ module DotPopper
       PUBLIC: String
     end
 
+    def self.trusted: (String? channel) -> Trust
     def self.valid?: (untyped text, Trust trust) -> bool
     def self.load_openssl: () -> void
     def self.issue: (?key: String, ?app_id: String, ?product_id: String, ?state: Integer, ?at: Time) -> String

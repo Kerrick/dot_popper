@@ -12,6 +12,17 @@ class ReceiptTest < Minitest::Test
   Receipt = DotPopper::Receipt
   TEST = Receipt::TEST
 
+  # Whose receipts a build trusts, by its channel alone (ADR-0010): in a
+  # test build the fake store's; in the Microsoft Store's build Windows'
+  # word; in any other store build the signed receipts of Apple and Google.
+  def test_a_build_trusts_receipts_by_its_channel_alone
+    assert_same TEST, Receipt.trusted(nil)
+    assert_same Receipt::MICROSOFT_STORE, Receipt.trusted(DotPopper::Build::MICROSOFT_STORE)
+    (DotPopper::Build::CHANNEL_NAMES - [DotPopper::Build::MICROSOFT_STORE]).each do |channel|
+      assert_same Receipt::STORES, Receipt.trusted(channel), channel
+    end
+  end
+
   # Play
 
   def test_the_fake_stores_receipt_proves_pro_in_a_test_build_only
