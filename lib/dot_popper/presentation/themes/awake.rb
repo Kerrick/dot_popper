@@ -7,7 +7,7 @@ module DotPopper
       module Awake
         def self.theme(base, hex)
           Theme.new(
-            key: :awake, opens_on: Date.new(2027, 10, 1),
+            key: :awake,
             palette: base.with(
               ink_top: hex["#0e1a14"], ink_bottom: hex["#101f18"], ink_glow: hex["#16261d"], ink_edge: hex["#040604"],
               bright_light: hex["#fff8a2"], bright_body: hex["#f6e43a"], bright_deep: hex["#d29a14"],

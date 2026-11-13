@@ -8,7 +8,7 @@ module DotPopper
       module Gingerbread
         def self.theme(base, hex)
           Theme.new(
-            key: :gingerbread, opens_on: Date.new(2026, 12, 1),
+            key: :gingerbread,
             palette: base.with(
               ink_top: hex["#170c12"], ink_bottom: hex["#12090e"], ink_glow: hex["#3a1a24"], ink_edge: hex["#080406"],
               bright_light: hex["#fff4e0"], bright_body: hex["#e8b070"], bright_deep: hex["#c88848"],

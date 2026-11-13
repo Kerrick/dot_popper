@@ -8,7 +8,7 @@ module DotPopper
       module Turkey
         def self.theme(base, hex)
           Theme.new(
-            key: :turkey, opens_on: Date.new(2026, 11, 1),
+            key: :turkey,
             palette: base.with(
               ink_top: hex["#12101f"], ink_bottom: hex["#1e1420"], ink_glow: hex["#3a2422"], ink_edge: hex["#08060e"],
               bright_light: hex["#fff4dc"], bright_body: hex["#f8b45a"], bright_deep: hex["#d9772a"],

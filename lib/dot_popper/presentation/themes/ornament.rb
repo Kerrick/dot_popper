@@ -8,7 +8,7 @@ module DotPopper
       module Ornament
         def self.theme(base, hex)
           Theme.new(
-            key: :ornament, opens_on: Date.new(2026, 12, 1),
+            key: :ornament,
             palette: base.with(
               ink_top: hex["#0b1a17"], ink_bottom: hex["#0c1420"], ink_glow: hex["#1c2c26"], ink_edge: hex["#040a08"],
               bright_light: hex["#fffbea"], bright_body: hex["#ffe6a8"], bright_deep: hex["#d9a443"],

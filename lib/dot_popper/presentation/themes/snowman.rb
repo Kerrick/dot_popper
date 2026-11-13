@@ -7,7 +7,7 @@ module DotPopper
       module Snowman
         def self.theme(base, hex)
           Theme.new(
-            key: :snowman, opens_on: Date.new(2026, 12, 1),
+            key: :snowman,
             palette: base.with(
               ink_top: hex["#0b1530"], ink_bottom: hex["#0e1a36"], ink_glow: hex["#22355e"], ink_edge: hex["#060b1c"],
               bright_light: hex["#ffffff"], bright_body: hex["#f4f8ff"], bright_deep: hex["#c3d0ea"],

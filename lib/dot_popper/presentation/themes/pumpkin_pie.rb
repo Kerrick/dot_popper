@@ -8,7 +8,7 @@ module DotPopper
       module PumpkinPie
         def self.theme(base, hex)
           Theme.new(
-            key: :pumpkin_pie, opens_on: Date.new(2026, 11, 1),
+            key: :pumpkin_pie,
             palette: base.with(
               ink_top: hex["#160f1e"], ink_bottom: hex["#22141e"], ink_glow: hex["#3a2026"], ink_edge: hex["#0a0610"],
               bright_light: hex["#fff3d6"], bright_body: hex["#f5ab5e"], bright_deep: hex["#d9843a"],

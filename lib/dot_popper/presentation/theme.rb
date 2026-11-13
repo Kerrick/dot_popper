@@ -16,16 +16,14 @@ module DotPopper
       def initialize(dot:, sky:, scenery:, wordmark: nil, dotted_name: false, sounds: {}) = super
     end
 
-    # A theme for the whole game: its +key+ (what is saved of it, and what
-    # the server names), its +palette+, and its +art+. The ordinary
+    # A theme's art and sound for the whole game: its +key+ (the theme it
+    # draws, DotPopper::Theme), its +palette+, and its +art+. The ordinary
     # theme has no art and is always there. Every theme lives in its own
     # file in presentation/themes/ with its shader in
-    # assets/shaders/themes/, so one can be swapped alone. +opens_on+ is
-    # the day after which it opens to everyone once setdef has been gone
-    # for ThemeKeeper::GONE_DAYS, or nil for one that waits for a
-    # replacement server to release it.
-    class Theme < Data.define(:key, :palette, :art, :opens_on)
-      def initialize(key:, palette:, art: nil, opens_on: nil) = super
+    # assets/shaders/themes/, so one can be swapped alone. Which themes a
+    # player has, and when one opens, is DotPopper::Themes'.
+    class Theme < Data.define(:key, :palette, :art)
+      def initialize(key:, palette:, art: nil) = super
 
       def ordinary? = art.nil?
 

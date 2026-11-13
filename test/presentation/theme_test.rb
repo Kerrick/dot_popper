@@ -19,10 +19,10 @@ class ThemeTest < Minitest::Test
   end
 
   # Every theme the rules know (DotPopper::Theme::ALL) has its art here,
-  # in the same order, and nothing else does.
+  # in the same order, the ordinary one without, and nothing else has.
   def test_every_theme_the_rules_know_has_its_art_in_the_same_order
     assert_equal DotPopper::Theme::ALL.map(&:key), THEMES.map(&:key)
-    assert_equal DotPopper::Theme::ALL.map(&:opens_on), THEMES.map(&:opens_on)
+    assert_equal DotPopper::Theme::ALL.map(&:ordinary?), THEMES.map(&:ordinary?)
   end
 
   def test_every_style_is_named_in_words

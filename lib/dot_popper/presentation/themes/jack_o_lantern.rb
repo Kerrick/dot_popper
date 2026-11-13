@@ -7,7 +7,7 @@ module DotPopper
       module JackOLantern
         def self.theme(base, hex)
           Theme.new(
-            key: :jack_o_lantern, opens_on: Date.new(2026, 10, 1),
+            key: :jack_o_lantern,
             palette: base.with(
               ink_top: hex["#1c1442"], ink_bottom: hex["#2a1a3a"], ink_glow: hex["#3a1f5e"], ink_edge: hex["#0b0820"],
               bright_light: hex["#fff6c2"], bright_body: hex["#ffa11f"], bright_deep: hex["#b6480b"],

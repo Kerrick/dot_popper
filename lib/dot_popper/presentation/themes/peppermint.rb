@@ -8,7 +8,7 @@ module DotPopper
       module Peppermint
         def self.theme(base, hex)
           Theme.new(
-            key: :peppermint, opens_on: Date.new(2026, 12, 1),
+            key: :peppermint,
             palette: base.with(
               ink_top: hex["#0c1f1a"], ink_bottom: hex["#0a1612"], ink_glow: hex["#1c3a2c"], ink_edge: hex["#040c09"],
               bright_light: hex["#ffffff"], bright_body: hex["#fbf6f4"], bright_deep: hex["#e3d6da"],
