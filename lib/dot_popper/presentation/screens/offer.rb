@@ -128,10 +128,15 @@ module DotPopper
         # back elsewhere.
         def buy_label
           label = price ? format(words.offer[:buy], price) : words.offer[:retry]
-          return "#{label} (Y)" if show.input == InputKind::GAMEPAD
+          return "#{label} (#{GamepadButtons::LABELS.fetch(BUTTONS.key(:buy))})" if show.input == InputKind::GAMEPAD
 
           @key_hint ? "#{label} (#{@key_hint})" : label
         end
+
+        # The key that buys, from the offer's own keys (KEY_BINDINGS):
+        # "Ctrl+B", or "⌘B" where the system's command key is Cmd
+        # (+command_key+).
+        def buy_key(command_key:) = KEY_BINDINGS.find { it.does == :buy }.hint(command_key:)
 
         # Buy's key on a computer's keyboard ("Ctrl+B", or "⌘B" on a Mac),
         # since a key was pressed, or nil since a pointer or a controller was.
@@ -173,15 +178,31 @@ module DotPopper
           true
         end
 
-        # X Paste license key on a copy that takes one, or else Restore
-        # Purchases; Y Buy.
+        # A controller's buttons here, by what each presses: Y Buy, and X
+        # Paste license key on a copy that takes one, or else Restore
+        # Purchases.
+        BUTTONS = { y: :buy, x: :paste_or_restore }.freeze
+
         def pad(button)
-          case button
-          in :x then keys? ? paste_key : restore
-          in :y then buy
+          case BUTTONS[button]
+          in :paste_or_restore then keys? ? paste_key : restore
+          in :buy then buy
           else nil
           end
         end
+
+        # Ctrl+V or Cmd+V pastes a license key, and Ctrl+B or Cmd+B buys:
+        # chords, so no press that means continue or back, and no letter
+        # of a typed license key, buys. Then, on a copy that takes license
+        # keys, a letter, digit or hyphen is typed into one, and Backspace,
+        # Delete or Enter edits or enters it, with Ctrl or Cmd held or not,
+        # so a key's letters are never shortcuts.
+        def key_bindings = KEY_BINDINGS
+        KEY_BINDINGS = [
+          KeyBinding.new(keys: :v, with: KeyBinding::COMMAND, does: :paste),
+          KeyBinding.new(keys: :b, with: KeyBinding::COMMAND, does: :buy),
+          KeyBinding.new(keys: [*("a".."z"), *("0".."9"), :minus, :backspace, :delete, :enter].map(&:to_sym), does: :type)
+        ].freeze
 
         # A license key typed, on a copy that takes one.
         def type(key) = keys? && type_license_key(key)

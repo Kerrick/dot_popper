@@ -51,7 +51,10 @@ module DotPopper
         # button (GroupPanel#start).
         def start = show.group_panel.start(:start, show.now)
 
-        # The keypad's digits, and Backspace (GroupPanel#type).
+        # The keypad's digits, and Backspace or Delete (GroupPanel#type).
+        def key_bindings = KEY_BINDINGS
+        KEY_BINDINGS = [KeyBinding.new(keys: [*(0..9).map { it.to_s.to_sym }, :backspace, :delete], does: :type)].freeze
+
         def type(key) = show.group_panel.type(key)
 
         # Each page's own (GroupPanel#pad); over the notice, X opens the

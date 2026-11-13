@@ -48,6 +48,10 @@ module DotPopper
         end
 
         # Paste server address: the clipboard's, as the server to use.
+        # Ctrl+V or Cmd+V pastes the address.
+        def key_bindings = KEY_BINDINGS
+        KEY_BINDINGS = [KeyBinding.new(keys: :v, with: KeyBinding::COMMAND, does: :paste)].freeze
+
         def paste_address
           return unless show.server?
 

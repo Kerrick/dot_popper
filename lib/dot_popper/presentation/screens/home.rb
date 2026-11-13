@@ -108,6 +108,9 @@ module DotPopper
         def primary = play
 
         # H opens How to play.
+        def key_bindings = KEY_BINDINGS
+        KEY_BINDINGS = [KeyBinding.new(keys: :h, does: :type)].freeze
+
         def type(key)
           return false unless key == :h
 

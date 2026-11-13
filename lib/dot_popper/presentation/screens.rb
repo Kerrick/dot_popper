@@ -94,6 +94,11 @@ module DotPopper
         # A gamepad's Start: the main button, unless the screen holds it.
         def start = primary
 
+        # The keys this screen takes itself, before those every screen takes
+        # (InputHandler::KEY_BINDINGS), in order: the first that answers a key and
+        # takes it wins (KeyBinding).
+        def key_bindings = []
+
         # A key typed on a keyboard (+key+, as Shell::LotaInput names it)
         # that this screen takes as its own. Says whether it took it.
         def type(key) = false

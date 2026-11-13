@@ -83,6 +83,10 @@ module DotPopper
         end
 
         # C opens Credits and licenses.
+        # C opens Credits and licenses.
+        def key_bindings = KEY_BINDINGS
+        KEY_BINDINGS = [KeyBinding.new(keys: :c, does: :type)].freeze
+
         def type(key)
           return false unless key == :c
 

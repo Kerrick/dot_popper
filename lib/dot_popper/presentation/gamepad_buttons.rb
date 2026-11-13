@@ -28,6 +28,9 @@ module DotPopper
 
       STANDARD = { a: :press, start: :start, y: :y, x: :x, b: :leave, SETTINGS => :select, lb: :lb, rb: :rb }.freeze
 
+      # How a button's label names each button, as on the pad: "Play (A)".
+      LABELS = { a: "A", b: "B", x: "X", y: "Y", start: "Start", select: "Select", lb: "LB", rb: "RB", lt: "LT" }.freeze
+
       def initialize(intents: STANDARD) = super
 
       # The intent of a press of +button+, or nil for none, as for a button

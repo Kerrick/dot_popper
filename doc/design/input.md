@@ -179,21 +179,24 @@ The words that say what to do follow the input the player used last. `Show#input
 
 ## Keyboard
 
-`Presentation::InputHandler`, in order. The first that applies wins. `Shell::LotaInput#key_press` first names the key, and the modifier keys held (`:ctrl`, `:alt`, `:command`), as the game does, so the presentation never hears LÖVE's names: a letter or digit by itself (`:a`, `:"7"`), the keypad's digits, hyphen and Enter as the main keys', `:enter`, `:page_up` and `:page_down`. A key the game doesn't name only makes Buy name its key on the offer ([store-and-pro.md](store-and-pro.md)), as every key does.
+`Shell::LotaInput#key_press` names the key, and the modifier keys held (`:ctrl`, `:alt`, `:command`), as the game does, so the presentation never hears LÖVE's names: a letter or digit by itself (`:a`, `:"7"`), the keypad's digits, hyphen and Enter as the main keys', `:enter`, `:page_up` and `:page_down`. The `InputHandler` then asks the screen on top's own keys (`Screens::Screen#key_bindings`) and, after them, the keys every screen takes (`InputHandler::KEY_BINDINGS`), in order: the first `KeyBinding` that answers the key and takes it wins. A binding whose screen does not take the key (Ctrl+V with nothing to paste) passes it on. During the splash any key only skips it, and on a computer any key, one the game names or not, makes Buy name its key on the offer ([store-and-pro.md](store-and-pro.md)), from the offer's own table (`Screens::Offer#buy_key`).
 
-| Key | What it does |
-| --- | --- |
-| Any key during the splash | Skips the splash |
-| Ctrl+V or Cmd+V | Pastes, where a screen takes a paste (`Show#paste_shortcut`) |
-| Digits, Backspace, Delete | On the keypad that joins a friend group: a digit, or the last one away (`GroupPanel#type`) |
-| Letters, digits, hyphen, Backspace, Enter | On a computer's Pro offer that takes license keys: the key being typed (`WebsiteStore#type`) |
-| M | Sound off or on (`SoundPlayer#toggle_mute`) |
-| H | How to play, from Home: Home's own key (`Screens::Home#type`) |
-| C | Credits and licenses, from Settings (`Screens::Settings#type`) |
-| Up, Down, Page Up, Page Down, Home, End | Scroll a list (`Show#scroll_key`). Only while a list scrolls do held keys repeat (`App#repeat_keys`) |
-| Enter, Space | The screen's main button (`Show#primary`), on any device. Nothing during a game |
-| Escape | Back, Close or Home where there is one (`Show#back`). Otherwise, on a computer it quits, during a game too; on Android's Home it leaves the app; on iOS it does nothing |
-| F11, Alt+Enter (Cmd+Enter on a Mac) | Switches fullscreen (`DesktopWindow#toggle_fullscreen`), on a computer only |
+The table below is the keys' order. `test/presentation/input_doc_test.rb` fails if it names a key no table binds, or misses one a table binds.
+
+| Key | Where | What it does |
+| --- | --- | --- |
+| Any key | During the splash | Skips the splash |
+| Ctrl+V or Cmd+V | Pro offer, Change Server | Pastes a license key, where the copy takes one, or a server's address (`Screens::Offer#paste`, `Screens::ChangeServer#paste`) |
+| Ctrl+B or Cmd+B | Pro offer | Buy (`Screens::Offer#buy`) |
+| Letters, digits, hyphen, Backspace, Delete, Enter | Pro offer | On a copy that takes license keys: the key being typed, Ctrl or Cmd held or not (`WebsiteStore#type`) |
+| Digits, Backspace, Delete | Friend groups | On the keypad that joins a friend group: a digit, or the last one away (`GroupPanel#type`) |
+| H | Home | How to play (`Screens::Home#type`) |
+| C | Settings | Credits and licenses (`Screens::Settings#type`) |
+| M | Every screen | Sound off or on (`SoundPlayer#toggle_mute`) |
+| Up, Down, Page Up, Page Down, Home, End | Every screen | Scroll a list (`Show#scroll_key`). Only while a list scrolls do held keys repeat (`App#repeat_keys`) |
+| Space, Enter | Every screen | The screen's main button (`Show#primary`), on any device. Nothing during a game. Not Enter with Alt or Cmd held |
+| Escape | Every screen | Back, Close or Home where there is one (`Show#back`). Otherwise, on a computer it quits, during a game too; on Android's Home it leaves the app; on iOS it does nothing |
+| F11, Alt+Enter (Cmd+Enter on a Mac) | Every screen | Switches fullscreen (`DesktopWindow#toggle_fullscreen`), on a computer only |
 
 Android's Back arrives as Escape ([platforms.md](platforms.md)). A phone's or tablet's keyboard never quits the app or leaves fullscreen.
 
@@ -210,6 +213,8 @@ Android's Back arrives as Escape ([platforms.md](platforms.md)). A phone's or ta
 | `test/presentation/chatter_test.rb` | Which presses and releases are dropped |
 | `test/presentation/mouse_travel_test.rb` | A deliberate move against a jitter |
 | `test/presentation/words_test.rb`, `show_test.rb` | The words for each input, and presses on each screen |
+| `test/presentation/hints_test.rb` | Every word that names a controller button or key, and that the input it names does what its label says on the screen that shows it; Buy's key and button, from the offer's own tables |
+| `test/presentation/input_doc_test.rb` | That the keyboard table above names exactly the keys the screens' tables and `InputHandler::KEY_BINDINGS` bind |
 | `test/presentation/controller_test.rb` | Each controller button, both triggers and both sticks on the screens that answer them, A and the right trigger as one press, unplugging |
 | `test/presentation/pointer_test.rb` | The mouse's buttons, a finger, the wheel, drags on a list and on the pile, the chatter filter, the settling window, the hover, losing focus |
 | `test/presentation/keyboard_test.rb` | Each key on the screens that answer it, the modifier keys, the order when a screen answers a key more than one way, and each system's rules for Escape and fullscreen |
