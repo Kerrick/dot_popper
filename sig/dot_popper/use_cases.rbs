@@ -149,15 +149,15 @@ module DotPopper
 
       def initialize: (groups: _Groups, entitlement: Entitlement) -> void
 
-      def locked?: () -> bool
-
       def start: () -> (:offer | :go)
-
-      def choose: () -> (:offer | :go)
 
       def create: () -> (:sent | :offer)
 
       def join: (String code) -> (:sent | :offer)
+
+      private
+
+      def locked?: () -> bool
     end
 
     class ViewAchievements

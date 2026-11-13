@@ -22,7 +22,6 @@ class JoinOrCreateFriendGroupTest < Minitest::Test
   def test_pro_creates_and_joins
     pro = joining(pro: true)
 
-    refute_predicate pro, :locked?
     assert_equal :go, pro.start
     assert_equal :sent, pro.create
     assert_equal :sent, pro.join("2345678")
@@ -32,7 +31,6 @@ class JoinOrCreateFriendGroupTest < Minitest::Test
   def test_a_free_player_is_offered_pro_and_nothing_is_sent
     free = joining(pro: false)
 
-    assert_predicate free, :locked?
     assert_equal :offer, free.start
     assert_equal :offer, free.create
     assert_equal :offer, free.join("2345678")
