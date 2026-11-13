@@ -82,7 +82,7 @@ module DotPopperGui
     # One theme's night, then each dot bright and popped, one at a time,
     # in the middle of a game, as Patches.
     def draw(keeper, theme)
-      show.instance_variable_get(:@use_theme).call(theme)
+      show.instance_variable_get(:@use_theme).call(theme.key)
       wait(0.5)
       check(show.in_use.key == theme.key, "#{theme.key} is in use")
       start_game

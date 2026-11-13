@@ -21,7 +21,7 @@ module DotPopper
         def use(theme)
           return unless show.themes?
 
-          case @use_theme.call(theme)
+          case @use_theme.call(theme.key)
           in :offer then show.offer.open_led_by(:themes)
           in :same then sounds.play(:tick, pitch: 0.8)
           in :used then sounds.play(:tick, pitch: 1.2)

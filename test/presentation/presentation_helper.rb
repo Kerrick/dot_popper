@@ -59,7 +59,7 @@ module PresentationTest
   def self.show(cabinet:, entitlement: DotPopper::Entitlement.free, storefront: NoStorefront.new, games: DotPopper::FreeGames.unlimited,
                 stats_book: DotPopper::StatsBook.new(DotPopper::ScoreRecord::Memory.new),
                 achievements: DotPopper::Achievements.new(DotPopper::ScoreRecord::Memory.new), groups: DotPopper::Groups::Session.off,
-                theme_keeper: ThemeKeeper.plain(Style::THEMES), use_theme: DotPopper::UseCases::UseTheme.new(themes: theme_keeper, entitlement:),
+                theme_keeper: ThemeKeeper.plain(Style::THEMES), use_theme: DotPopper::UseCases::UseTheme.new(themes: theme_keeper.rules, entitlement:),
                 **options)
     use_cases = DotPopper::Composition.use_cases(cabinet:, free_games: games, entitlement:, store: storefront, achievements:, stats_book:,
                                                  friend_groups: groups, use_theme:, starts: DotPopperTest.starts_of(cabinet))

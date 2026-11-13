@@ -327,7 +327,7 @@ class RootTest < Minitest::Test
     theme_keeper = ThemeKeeper.plain(Style::THEMES)
     use_cases = DotPopper::Composition.use_cases(cabinet:, free_games: DotPopper::FreeGames.unlimited, entitlement:, store: NoStorefront.new,
                                                  achievements:, stats_book:, friend_groups: groups,
-                                                 use_theme: DotPopper::UseCases::UseTheme.new(themes: theme_keeper, entitlement:))
+                                                 use_theme: DotPopper::UseCases::UseTheme.new(themes: theme_keeper.rules, entitlement:))
     heard = -> { [cabinet, entitlement].map { it.instance_variable_get(:@listeners).size } }
     before = heard.call
     Show.new(cabinet:, layout:, sounds: FakeSounds.new, radius: R, stats_book:, achievements:, theme_keeper:, groups:, **use_cases)

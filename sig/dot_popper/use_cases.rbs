@@ -121,31 +121,19 @@ module DotPopper
       def call: (Entitlement::ProGranted granted) -> void
     end
 
-    # The themes the game keeps (Presentation::ThemeKeeper): a theme is
-    # the presentation's Theme, which the core does not type.
-    interface _Themes
-      def ordinary: () -> untyped
-
-      def chosen: () -> untyped
-
-      def open?: (untyped theme) -> bool
-
-      def use: (untyped theme) -> void
-    end
-
     class UseTheme
-      @themes: _Themes
+      @themes: Themes
       @entitlement: Entitlement
 
-      attr_reader current: untyped
+      attr_reader current: theme_key
 
-      def initialize: (themes: _Themes, entitlement: Entitlement) -> void
+      def initialize: (themes: Themes, entitlement: Entitlement) -> void
 
       def locked?: () -> bool
 
-      def call: (untyped theme) -> (:offer | :same | :used)
+      def call: (theme_key key) -> (:offer | :same | :used)
 
-      def refresh: () -> untyped
+      def refresh: () -> theme_key
     end
 
     # What a friend group's Join and Create ask of Groups::Session.

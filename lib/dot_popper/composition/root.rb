@@ -164,15 +164,16 @@ module DotPopper
         clipboard = @engine.clipboard
         @server_choice = Presentation::ServerChoice.new(file("server.txt"), gone: @gone, clipboard:)
         theme_keeper = Presentation::ThemeKeeper.new(file("themes.txt"), themes: Style::THEMES)
-        use_theme = UseCases::UseTheme.new(themes: theme_keeper, entitlement:)
+        use_theme = UseCases::UseTheme.new(themes: theme_keeper.rules, entitlement:)
         use_fixture(theme_keeper, use_theme)
         theme_keeper.open_by_date(today.call, @gone.days(today.call))
         @gone.subscribe(@server_choice).subscribe(theme_keeper)
         @theme_feed = theme_feed_for(theme_keeper)
         @pen = @engine.pen(shaders: !flag?("DOT_POPPER_NO_SHADERS"))
-        @pen.use(use_theme.current)
+        current = Style::THEMES.find { it.key == use_theme.current }
+        @pen.use(current)
         @speaker = @engine.speaker(store: file("sound.txt"))
-        @speaker.use(use_theme.current)
+        @speaker.use(current)
         unless Presentation::Splash.skipped?(settings.env)
           @splash = Presentation::Splash.start(calm: settings.calm?, sounding: !@speaker.muted?)
         end
@@ -219,7 +220,7 @@ module DotPopper
         theme_keeper.receive(keys.split(",")) if keys
         key = settings["DOT_POPPER_THEME"]&.to_sym or return
 
-        Style::THEMES.find { it.key == key }&.then { use_theme.call(it) }
+        use_theme.call(key)
       end
 
       # What the player is assumed to hold before they press anything.

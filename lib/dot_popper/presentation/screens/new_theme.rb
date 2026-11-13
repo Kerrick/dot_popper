@@ -33,7 +33,7 @@ module DotPopper
 
           @theme_keeper.told(theme)
           return sounds.play(:tick, pitch: 0.8) unless use
-          return show.offer.open_led_by(:themes) if @use_theme.call(theme) == :offer
+          return show.offer.open_led_by(:themes) if @use_theme.call(theme.key) == :offer
 
           sounds.play(:tick, pitch: 1.2)
         end

@@ -144,7 +144,8 @@ module DotPopper
       # The switch's word: a Free player's is "Get Pro", since it opens the offer.
       def arrival_use_word = @screens[:new_theme].use_word
       def themes = @theme_keeper.shown
-      def in_use = @use_theme.current
+      # The art of the theme in use (UseCases::UseTheme answers its key).
+      def in_use = style::THEMES.find { it.key == @use_theme.current }
 
       # Whether tapping a theme leads to Pro, as it does for a Free player,
       # and whether +theme+ is open to use, earned or in season. They show
