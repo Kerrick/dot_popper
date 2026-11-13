@@ -109,8 +109,6 @@ module DotPopper
 
       def offered?: () -> bool
 
-      def owned?: () -> bool
-
       def sold?: () -> bool
 
       def keys?: () -> bool
@@ -134,6 +132,10 @@ module DotPopper
       def update: (Float seconds) -> void
 
       def call: (Entitlement::ProGranted granted) -> void
+
+      private
+
+      def owned?: () -> bool
     end
 
     class UseTheme

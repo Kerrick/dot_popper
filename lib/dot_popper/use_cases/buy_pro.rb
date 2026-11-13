@@ -27,9 +27,6 @@ module DotPopper
       # who has not bought it.
       def offered? = @store.offered? && !owned?
 
-      # Whether the player has Pro, which the offer thanks them for.
-      def owned? = @entitlement.pro?
-
       # Whether the store sells Pro here, and whether it takes a license
       # key (WebsiteStore) rather than restoring its purchases.
       def sold? = @store.sold?
@@ -77,6 +74,11 @@ module DotPopper
       def call(_granted)
         @friend_groups.report_achievements(@achievements.earned)
       end
+
+      private
+
+      # Whether the player has Pro, which the offer thanks them for.
+      def owned? = @entitlement.pro?
     end
   end
 end
