@@ -20,7 +20,7 @@ module DotPopper
         goal(show, plan.goal, intro) if plan.goal
         plan.tiles.each { |tile, rect| tile(show, tile, rect, intro) }
         plan.pills.each { |pill, rect| pill(show, pill, rect, intro) }
-        quit_prompt(show, plan)
+        quit_prompt(show, plan, layout)
       end
 
       private
@@ -138,14 +138,17 @@ module DotPopper
       end
 
       # "Press B again to quit" (or Escape, after Escape), above the
-      # bottom row, while a second press would quit.
-      def quit_prompt(show, plan)
+      # bottom row, while a second press would quit: smaller where it
+      # would run past the safe area's edge, as in a small window.
+      def quit_prompt(show, plan, layout)
         alpha = show.quit_prompt
         return unless alpha.positive?
 
         x, y = plan.quit_line
-        font = pen.fonts.semibold(18)
-        pen.text(show.quit_again, font, x, y, pen.palette.cream, alpha)
+        safe = layout.safe
+        text = show.quit_again
+        font = fit(text, 18, 2 * ([x - safe.x, safe.right - x].min - 4))
+        pen.text(text, font, x, y, pen.palette.cream, alpha)
       end
     end
   end
