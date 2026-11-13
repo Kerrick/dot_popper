@@ -69,6 +69,7 @@ The downloads for Windows, macOS and Linux that sell Pro outside any store, thro
   - A fix for the landscape lag. It blocks release: a portrait-only lock is not an acceptable workaround.
   - Ideally a Lota release that supports Android, so the build doesn't depend on an experiment branch.
 - **Already right:** arm64-v8a, targetSdk 36, Back handled, no permissions requested.
+- **An APK sold from setdef's website** (the `website` channel on Android) is not a Google Play build, and carries none of Google's purchase code. Google's Payments policy binds only "Play-distributed apps" to Google Play's billing system ([Payments policy](https://support.google.com/googleplay/android-developer/answer/9858738)), and such an APK sells Pro through the website's checkout and a license key, as the computers' website builds do. Its host leaves out `ProStore.java`, the Play Billing dependency in `android/host`'s `build.gradle` (and with it the `com.android.vending.BILLING` permission the library merges into the manifest), and `MainActivity`'s hand-off of `dotpopper-store://` URLs to `ProStore`. No such build is made yet: the Android kit is a test build, which sells through the fake store.
 
 ## Apple App Store (iPhone and iPad)
 
@@ -77,6 +78,7 @@ The downloads for Windows, macOS and Linux that sell Pro outside any store, thro
 - **What's missing:**
   - Signing with an Apple Distribution certificate and an App Store provisioning profile.
   - An App Store Connect record for `com.setdef.DotPopper`, then an upload through Xcode's Organizer or `xcrun altool`/Transporter, then TestFlight.
+  - **TestFlight takes the `app-store` channel's build**, never a test build: the build testers get is the one Apple reviews ("Any builds you've already added in TestFlight will appear in App Store Connect. Simply select the build you wish to publish and submit it for review", [TestFlight](https://developer.apple.com/testflight/)), and its purchases already go through Apple's sandbox ("Apps downloaded from TestFlight will automatically operate in a sandbox environment", [Testing subscriptions and In-App Purchases in TestFlight](https://developer.apple.com/help/app-store-connect/test-a-beta-version/testing-subscriptions-and-in-app-purchases-in-testflight/)). So it carries the real store and none of the fakes.
   - A privacy manifest (`PrivacyInfo.xcprivacy`) declaring no tracking and any required-reason APIs the runtime uses, such as file timestamps.
   - App icons at every required size.
   - The license decision above.
