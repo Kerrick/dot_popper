@@ -21,6 +21,14 @@ module DotPopper
       # dialog leads to Pro instead.
       def locked? = !@entitlement.pro?
 
+      # What +id+'s dialog says of it: :earned or :not_earned for Pro, and
+      # for a Free player :offer, since the dialog offers Pro instead.
+      def status(id)
+        return :offer if locked?
+
+        @achievements.earned?(id) ? :earned : :not_earned
+      end
+
       # Whether +id+ shows as earned.
       def earned?(id) = !locked? && @achievements.earned?(id)
 

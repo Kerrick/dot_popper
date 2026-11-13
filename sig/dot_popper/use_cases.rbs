@@ -170,6 +170,8 @@ module DotPopper
 
       def locked?: () -> bool
 
+      def status: (Achievement::id id) -> (:earned | :not_earned | :offer)
+
       def earned?: (Achievement::id id) -> bool
 
       def day: (Achievement::id id) -> String?

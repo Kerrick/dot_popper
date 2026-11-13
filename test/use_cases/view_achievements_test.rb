@@ -29,6 +29,8 @@ class ViewAchievementsTest < Minitest::Test
     refute pro.earned?(:steady)
     assert_equal "2026-11-01", pro.day(:blink)
     assert_equal 1, pro.count
+    assert_equal :earned, pro.status(:blink)
+    assert_equal :not_earned, pro.status(:steady)
   end
 
   def test_pro_sees_how_far_along_the_measured_ones_are_until_earned
@@ -48,6 +50,7 @@ class ViewAchievementsTest < Minitest::Test
     assert_nil free.day(:blink)
     assert_nil free.count
     assert_nil free.progress(:steady)
+    assert_equal :offer, free.status(:blink), "the dialog offers Pro instead"
     assert @achievements.earned?(:blink)
   end
 end
