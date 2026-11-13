@@ -112,7 +112,7 @@ module DotPopper
         when Screens::Offer
           veil(width, height, @pen.style::STATS.veil)
           @offer.draw(@show, layout)
-        when Screens::SharePreview then @share.draw(@show, layout, width, height)
+        when Screens::SharePreview then @share.draw(screen.drawing, width, height)
         end
       end
 

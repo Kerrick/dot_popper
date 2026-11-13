@@ -12,21 +12,20 @@ module DotPopper
     class SharePreviewPainter < Data.define(:pen, :dots)
       G = ::Lota::Graphics
 
-      def draw(show, layout, width, height)
-        preview = show.share_preview or return
-        style = pen.style::SHARE_PREVIEW
-        now = show.now
-        shown = preview.arrival(now, style).clamp(0.0, 1.0)
-        veil(width, height, style.veil * shown)
-        plan = show.share_plan
+      # Draws what the screen hands it (Presentation::ShareDrawing), over a
+      # veil +width+ by +height+.
+      def draw(drawing, width, height)
+        shown = drawing.shown
+        veil(width, height, drawing.veil)
+        plan = drawing.plan
         G.push do
-          G.translate(0, pen.pixels.snap((1 - shown) * style.lift * layout.ui))
-          card(plan.card, layout, shown)
-          heading(show, plan, shown)
-          message(show, plan, shown)
-          note(show, plan, preview.confirmation(now, style), shown)
-          PillButton.new(pen:).draw(plan.close, show.words.close, alpha: shown, hover: show.hover.level(:close))
-          PrimaryButton.new(pen:).draw(plan.copy, show.words.copy, alpha: shown, hover: show.hover.level(:copy),
+          G.translate(0, pen.pixels.snap(drawing.lift))
+          card(plan.card, drawing.corner, shown)
+          heading(drawing, plan, shown)
+          message(drawing, plan, shown)
+          note(drawing, plan, shown)
+          PillButton.new(pen:).draw(plan.close, drawing.close, alpha: shown, hover: drawing.close_hover)
+          PrimaryButton.new(pen:).draw(plan.copy, drawing.copy, alpha: shown, hover: drawing.copy_hover,
                                          ratio: PillButton::LABEL)
         end
       end
@@ -38,11 +37,10 @@ module DotPopper
         G.rectangle(:fill, 0, 0, width, height)
       end
 
-      def card(rect, layout, alpha)
+      def card(rect, corner, alpha)
         palette = pen.palette
         pixels = pen.pixels
         x, y, width, height = [rect.x, rect.y, rect.width, rect.height].map { pixels.snap(it) }
-        corner = 22 * layout.ui
         pen.color(palette.ink_top, 0.97 * alpha)
         G.rectangle(:fill, x, y, width, height, corner, corner, 48)
         pen.color(palette.soft, 0.35 * alpha)
@@ -51,15 +49,15 @@ module DotPopper
         G.rectangle(:line, x + inset, y + inset, width - (2 * inset), height - (2 * inset), corner, corner, 48)
       end
 
-      def heading(show, plan, alpha)
+      def heading(drawing, plan, alpha)
         rect = plan[:heading] or return
 
-        pen.text(show.words.share_heading, pen.fonts.bold(plan.size(:heading)), rect.center_x, rect.center_y,
+        pen.text(drawing.heading, pen.fonts.bold(plan.size(:heading)), rect.center_x, rect.center_y,
                  pen.palette.cream, alpha)
       end
 
       # The result's lines, in a bubble of the night's darkest ink.
-      def message(show, plan, alpha)
+      def message(drawing, plan, alpha)
         rect = plan[:message]
         pixels = pen.pixels
         x, y, width, height = [rect.x, rect.y, rect.width, rect.height].map { pixels.snap(it) }
@@ -68,15 +66,15 @@ module DotPopper
         G.rectangle(:fill, x, y, width, height, bubble, bubble, 32)
         font = pen.fonts.semibold(plan.size(:message))
         step = font.height * Presentation::ShareScreen::LINE
-        plan.lines.each_with_index do |line, i|
-          runs(line, font, x + plan.side, y + bubble + (font.height / 2.0) + (step * i), alpha)
+        drawing.runs.each_with_index do |runs, i|
+          runs(runs, font, x + plan.side, y + bubble + (font.height / 2.0) + (step * i), alpha)
         end
       end
 
-      # One line, left to right: its words, and a shape for each emoji.
-      def runs(line, font, x, y, alpha)
+      # One line's runs, left to right: its words, and a shape for each emoji.
+      def runs(runs, font, x, y, alpha)
         room = font.height * Presentation::ShareGlyphs::WIDTH
-        Presentation::ShareGlyphs.runs(line).each do |run|
+        runs.each do |run|
           if run.is_a?(Symbol)
             glyph(run, x + (room / 2.0), y, font.height * 0.34, alpha)
             x += room
@@ -107,12 +105,13 @@ module DotPopper
 
       # Once Copy has copied: "Copied! Paste it anywhere.", with a check,
       # fading in where the plan keeps room for it.
-      def note(show, plan, copied, alpha)
+      def note(drawing, plan, alpha)
+        copied = drawing.copied
         return unless copied.positive?
 
         rect = plan[:note]
         font = pen.fonts.semibold(plan.size(:note))
-        CheckMark.new(pen:).labeled(show.words.copied, font, rect.center_x, rect.center_y, alpha * copied)
+        CheckMark.new(pen:).labeled(drawing.copied_word, font, rect.center_x, rect.center_y, alpha * copied)
       end
     end
   end
