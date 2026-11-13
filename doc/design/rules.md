@@ -164,7 +164,7 @@ The GUI suite's director steps `App#update` by its scenario's fixed step, bypass
 
 ### Game Over's grace
 
-For `Rules::GAME_OVER_GRACE`, 0.9 s, after the clock runs out, Game Over ignores presses (`Cabinet::GameOver#ready?`). A player often taps at a dot in the game's last instant, and without the pause that tap would dismiss the final score unseen. How Continue shows the grace is in [screens.md](screens.md).
+For `Rules::GAME_OVER_GRACE`, 0.9 s, after the clock runs out, Game Over ignores presses (`Cabinet::GameOver#ready?`). A player often taps at a dot in the game's last instant, and without the pause that tap would dismiss the final score unseen. How Play again shows the grace is in [screens.md](screens.md).
 
 ## How crowded the field gets
 

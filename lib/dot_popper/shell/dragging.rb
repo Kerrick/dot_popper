@@ -7,7 +7,7 @@ module DotPopper
     # press is; this tells it where the pointers are and carries out what
     # it says on the Pile: each held ball is steered toward its pointer
     # every frame, a ball let go flies off, and a click goes to the Show,
-    # which presses a button there, or, for a gamepad's A, Continue.
+    # which presses a button there, or, for a gamepad's A, Play again.
     #
     # Lota 0.1.3 binds MouseJoint.new but none of its setters, so a joint
     # could never follow the pointer; a held ball is instead given the

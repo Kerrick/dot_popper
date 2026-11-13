@@ -418,7 +418,7 @@ module DotPopper
                                            confirm: Tween.new(from: 0.0, to: 1.0, duration: 0.25, ease: :out_cubic),
                                            lift: 14, width: 680, pad: 24, bubble: 14, veil: 0.6)
 
-      # Game Over's words, from "Time's up!" to the Continue button, sit on a
+      # Game Over's words, from "Time's up!" to the Play again button, sit on a
       # soft dark backing, 60% at its middle, so they read over the pile;
       # its edges feather out, so the pile still shows around them.
       GAME_OVER_BACKING = ScrimStyle.new(alpha: 0.6, feather: 40, layers: 10, pad: 18)

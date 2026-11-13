@@ -8,7 +8,7 @@ module DotPopper
     # with no name the game made up for itself. The words that say what to
     # do are ByInputs, said as a tap, a click, or a gamepad's button,
     # whichever +input+ (InputKind) the player last used (#for): +play+,
-    # +continue+, +go_back+, +credits+, +share+, +how_to_play+ and the
+    # +play_again+, +go_back+, +credits+, +share+, +how_to_play+ and the
     # share preview's +copy+ and +close+. +labels+ name the Stats
     # screen's sections
     # and rows, by what they count. +goals+ say each kind of DailyGoal as

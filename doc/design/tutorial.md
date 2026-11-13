@@ -172,7 +172,7 @@ After a game in which the player tapped a popped dot with a bright dot hidden un
 - **Which mistake.** The game's last such mistake (`Show#penalized` keeps a `Mistake`). If its bright dot was popped later, or either dot is gone, nothing on the pile shows which dot it was, so Game Over shows nothing and that Game Over isn't counted (`Mistake#among`).
 - **How often.** On at most `Style::LESSON.times`, 2, Game Overs ever, counted in `taught.txt` (`Presentation::Tutor`). A file saying `taught` counts as already taught twice; anything unreadable starts over at 0.
 - **When.** Once the score has counted up, then twice more 2.4 s apart (`LESSON.every`, `replays`: 3 in all), and then the pile is left in peace.
-- **How.** No sound, no shake, and every mark is a thin outline that hides no dot. The marks are drawn at the pile's own depth, under the veil that dims it and under Game Over's card, backing and buttons (`Renderer#draw`), so they read as part of the pile and never cross Continue. Continue works as before.
+- **How.** No sound, no shake, and every mark is a thin outline that hides no dot. The marks are drawn at the pile's own depth, under the veil that dims it and under Game Over's card, backing and buttons (`Renderer#draw`), so they read as part of the pile and never cross Play again. Play again works as before.
 
 Failure is the moment a player is ready to learn (Juul), and showing the consequence where it happened teaches better than a sentence about it (Hodent). The player saw the same penalty in the game and in the tutorial, so the replay needs no words. Game Over's layout is in [screens.md](screens.md); the pile is in [look-and-sound.md](look-and-sound.md).
 

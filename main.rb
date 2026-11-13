@@ -22,7 +22,7 @@
 #
 # Development settings, read from the environment:
 #
-#   DOT_POPPER_AUTOPLAY=1       a bot plays: title, a game, game over, and
+#   DOT_POPPER_AUTOPLAY=1       a bot plays: Home, a game, Game Over, and
 #                               game again. It mostly taps bright dots and
 #                               sometimes a popped one, so penalties show.
 #   DOT_POPPER_NO_SPLASH=1      leaves out setdef's splash before Home

@@ -283,7 +283,7 @@ module DotPopper
       # the game at once. Elsewhere a tap presses the screen's button under
       # it (#controls): on Home, Play, the mute button, "How to play",
       # "Your stats", the dot-size choice, and on a desktop "Full screen"
-      # and Quit; on Game Over, Continue and
+      # and Quit; on Game Over, Play again, Home and
       # "Share my score", and over it, the share preview's Copy and Close;
       # and on the
       # Stats screen, Back, Undo, or "Clear my stats…", which a press
@@ -402,7 +402,7 @@ module DotPopper
       # Presses this screen's main button, as Enter, Space, a gamepad's
       # Start, or its A aimed at no button do: Play on Home, Back on
       # the Stats screen and the Pro offer (Buy has only its own button),
-      # Continue on Game Over, once its grace is over, and Copy in the
+      # Play again on Game Over, once its grace is over, and Copy in the
       # share preview. In a game it does nothing, since
       # only a press at a place may touch the score.
       def primary
@@ -555,7 +555,7 @@ module DotPopper
 
       # Escape, Android's Back, or a gamepad's B: closes the share
       # preview, leaves the Stats screen, and goes on from Game Over to
-      # Home, as Continue does. Says whether there was somewhere to go
+      # Home, as its Home button does. Says whether there was somewhere to go
       # back from, so that elsewhere the key can do its usual job.
       def back
         if arrival? then answer_arrival(use: false)
@@ -951,7 +951,7 @@ module DotPopper
       end
 
       # Where a tap reaches "Share my score", where it is drawn: never
-      # less than a dot's width, short of where Continue's reach begins.
+      # less than a dot's width, short of where Play again's reach begins.
       # Nil without one, and while the share preview covers it.
       def share_reach = reach_of(:share)
 
