@@ -5,7 +5,7 @@ module DotPopper
   # again; or from Home, a game Paused before its clock first runs while
   # the tutorial plays over it, and then Playing. A game is started only
   # by being asked to, never by a press, and only through the cabinet's
-  # Starts, which it hands out once (#starts). Each state is a value that
+  # Starter, which it hands out once (#starter). Each state is a value that
   # answers +press+ and +update+ with the state that follows it, so each
   # transition reads in one place.
   # The Cabinet is the shell around them: it holds the current state, makes
@@ -33,10 +33,13 @@ module DotPopper
       @state = show_home
     end
 
-    # Asked for a cabinet's Starts a second time.
-    class StartsTaken < StandardError; end
+    # Asked for a cabinet's Starter a second time.
+    class StarterTaken < StandardError; end
 
-    # The one way to start a game on this cabinet (Starts), handed out
+    # Its old name, until no caller says it.
+    StartsTaken = StarterTaken
+
+    # The one way to start a game on this cabinet (Starter), handed out
     # once, to the one thing that starts every game (UseCases::StartGame,
     # which the composition root makes): asked again, it raises. The
     # cabinet has no method of its own that starts a game, so nothing
@@ -50,11 +53,11 @@ module DotPopper
     # its own from its seed, and draws from it only when a dot spawns, so
     # the same seed and the same taps give the same dots, whatever else
     # uses randomness meanwhile.
-    def starts
-      raise StartsTaken, "a Cabinet hands out its Starts once" if @starts_taken
+    def starter
+      raise StarterTaken, "a Cabinet hands out its Starter once" if @starts_taken
 
       @starts_taken = true
-      Starts.new(lambda do |opening, seed|
+      Starter.new(lambda do |opening, seed|
         seed ||= draw_seed
         next self unless state.is_a?(Home)
 
@@ -63,20 +66,26 @@ module DotPopper
       end)
     end
 
+    # Its old name, until no caller says it.
+    def starts = starter
+
     # Starting a game on a Cabinet, from Home, which only what holds its
-    # Starts can do (Cabinet#starts). Elsewhere it does nothing.
-    class Starts
+    # Starter can do (Cabinet#starter). Elsewhere it does nothing.
+    class Starter
       def initialize(start) = @start = start
 
       # A game in play at once, drawn from +seed+, by default one of the
-      # cabinet's own (Cabinet#starts). Answers the cabinet.
+      # cabinet's own (Cabinet#starter). Answers the cabinet.
       def game(seed = nil) = @start.call(nil, seed)
 
       # A game with +dots+ (a Stack) as its first, paused before its
-      # clock first runs, for the tutorial to play over (Cabinet#starts).
+      # clock first runs, for the tutorial to play over (Cabinet#starter).
       # Answers the cabinet.
       def paused(dots, seed = nil) = @start.call(dots, seed)
     end
+
+    # Its old name, until no caller says it.
+    Starts = Starter
 
     # Adds a listener: anything that answers +call(event)+.
     def subscribe(listener = nil, &block)
@@ -162,7 +171,7 @@ module DotPopper
 
     # The game's score counts among the records of +size_class+, the class
     # it started in, even if the window changed size meanwhile. +tutorial+
-    # says the tutorial played over its opening (Starts#paused).
+    # says the tutorial played over its opening (Starter#paused).
     def finish(game, seed, size_class, tutorial)
       first = score_record.first?(size_class)
       new_score_record = score_record.record(game.score, size_class)
@@ -191,7 +200,7 @@ module DotPopper
     # update.
 
     # Waiting to start. A press here reaches no rule: a game begins only
-    # when it is started (Starts).
+    # when it is started (Starter).
     class Home < Data.define
       def game = nil
       def press(_cabinet, _live, _x, _y) = self

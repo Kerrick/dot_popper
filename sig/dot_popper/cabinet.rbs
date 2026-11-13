@@ -24,12 +24,18 @@ module DotPopper
 
     @starts_taken: bool
 
-    class StartsTaken < StandardError
+    class StarterTaken < StandardError
     end
 
-    def starts: () -> Starts
+    class StartsTaken = StarterTaken
 
-    class Starts
+    def starter: () -> Starter
+
+    def starts: () -> Starter
+
+    class Starts = Starter
+
+    class Starter
       @start: ^(Stack?, Integer?) -> Cabinet
 
       def initialize: (^(Stack?, Integer?) -> Cabinet start) -> void
