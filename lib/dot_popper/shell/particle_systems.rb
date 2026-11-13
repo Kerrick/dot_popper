@@ -10,7 +10,7 @@ module DotPopper
     # and reused; a pop emits its share of droplets from each of its
     # colors' systems. Without a sprite, there are no droplets, and the
     # game goes on.
-    class Sparks
+    class ParticleSystems
       G = ::Lota::Graphics
       BUFFER = 4 # bursts of one look each system has room for at once
 
@@ -90,5 +90,8 @@ module DotPopper
         G::Image.new(data, dpiscale: density)
       end
     end
+
+    # Its old name, until no caller says it.
+    Sparks = ParticleSystems
   end
 end
