@@ -4,7 +4,7 @@ module DotPopper
   module Shell
     # A check mark, drawn as two strokes in the gain color, before a line
     # of text: "✓ Today's goal is done." The font has no check of its own.
-    class Check < Data.define(:pen)
+    class CheckMark < Data.define(:pen)
       G = ::Lota::Graphics
 
       # The check and +text+ together, centered on +x+ and +y+.
@@ -26,5 +26,8 @@ module DotPopper
         G.line(x, y, x + (width * 0.38), y + (width * 0.38), x + width, y - (width * 0.42))
       end
     end
+
+    # Its old name, until no caller says it.
+    Check = CheckMark
   end
 end
