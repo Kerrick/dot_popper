@@ -76,14 +76,14 @@ A game's records count only among games of its size class (`SizeClass`, `lib/dot
 
 | Class | Which games | Rule |
 | --- | --- | --- |
-| `SizeClass::FITTED` | every game with dots fitted to the screen | `DotSizing#size_class` |
-| `SizeClass::SMALL` | standard dots, field under 250 R² | `Rules::SMALL_FIELD_BELOW` |
-| `SizeClass::MEDIUM` | standard dots, 250 to under 700 R² | |
-| `SizeClass::LARGE` | standard dots, 700 R² or more | `Rules::LARGE_FIELD_FROM` |
+| `SizeClass::FITTED` | every game with standard dots | `DotSizing#size_class` |
+| `SizeClass::SMALL` | the fixed size, field under 250 R² | `Rules::SMALL_FIELD_BELOW` |
+| `SizeClass::MEDIUM` | the fixed size, 250 to under 700 R² | |
+| `SizeClass::LARGE` | the fixed size, 700 R² or more | `Rules::LARGE_FIELD_FROM` |
 
-With standard dots an upright phone is 134 R² (small), an 11-inch iPad, a 13-inch iPad Pro and the 24 × 16 R desktop window are 384 to 566 (medium), and a big monitor full screen is 1,475 to 2,035 (large). The cut-offs sit in the wide gaps between those devices, so a window resized a little stays in its class. Fitted games are one class, since a fitted field is about as crowded on any screen ([rules.md](rules.md#dot-size-fit-the-screen-and-standard)).
+With the fixed size an upright phone is 134 R² (small), an 11-inch iPad, a 13-inch iPad Pro and the 24 × 16 R desktop window are 384 to 566 (medium), and a big monitor full screen is 1,475 to 2,035 (large). The cut-offs sit in the wide gaps between those devices, so a window resized a little stays in its class. Games with standard dots are one class, since their field is about as crowded on any screen ([rules.md](rules.md#dot-size-standard-and-bigger-or-smaller)). The class names saved in `score_record.txt` and `stats.txt` (`fitted`, `small`, `medium`, `large`) never change, since builds in players' hands wrote them.
 
-**Why.** The same model player scores about 6 on a phone, 21 to 24 on a tablet or the desktop window, and 77 on a 6K monitor with standard dots ([rules.md](rules.md#how-crowded-the-field-gets)). Comparing those would tell a phone player they are bad at the game when the screen is the cause; Juul (*The Art of Failure*) holds that a failure should feel like the player's own, which is only fair when the comparison is. The totals, the chart and the streak stay across every class because they describe how much and how often someone plays, which isn't a contest.
+**Why.** The same model player scores about 6 on a phone, 21 to 24 on a tablet or the desktop window, and 77 on a 6K monitor with the fixed size ([rules.md](rules.md#how-crowded-the-field-gets)). Comparing those would tell a phone player they are bad at the game when the screen is the cause; Juul (*The Art of Failure*) holds that a failure should feel like the player's own, which is only fair when the comparison is. The totals, the chart and the streak stay across every class because they describe how much and how often someone plays, which isn't a contest.
 
 The Stats screen shows the records of the class a game started now would count in (`Cabinet#size_class`): the current dot size on the current screen.
 
@@ -108,7 +108,7 @@ A class's first game sets no record. Neither does a game that only equals a reco
 
 The Stats screen's chart shows the last 20 scores as bars, oldest on the left, in 20 places of equal width so it fills up as games are played (`Presentation::ScoreBars`). Bars share one scale, the highest score shown; a 0 still shows a one-pixel stub. The highest bar among the games that count toward the records shown is brighter; on a tie, the latest.
 
-A bar from a game outside the class whose records are shown is drawn at 30% (`Shell::StatsPainter::DIM`), keeps its true height, and is never the brighter one. When any bar is dimmed, a line under the chart says which bars count (`Words#chart_note`): "Brighter bars are games with standard dots on screens this size." or "Brighter bars are games with dots sized to the screen." Scores whose class is unknown are dimmed too. Dimming keeps the history visible while showing which games the records compare (Ferrara, *Playful Design*; Garfield, *Characteristics of Games*: honest feedback).
+A bar from a game outside the class whose records are shown is drawn at 30% (`Shell::StatsPainter::DIM`), keeps its true height, and is never the brighter one. When any bar is dimmed, a line under the chart says which bars count (`Words#chart_note`): "Brighter bars are games with standard dots.", or for the fixed size, by its name in Settings, "Brighter bars are games with bigger dots on screens this size." ("smaller" on a big monitor; where the two sizes look alike and Settings names neither, "Brighter bars are games on screens this size.") Scores whose class is unknown are dimmed too. Dimming keeps the history visible while showing which games the records compare (Ferrara, *Playful Design*; Garfield, *Characteristics of Games*: honest feedback).
 
 The rest of the Stats screen's layout (`StatsSheet`, `StatsLayout`) is in [screens.md](screens.md). Tests: `test/presentation/stats_test.rb`.
 

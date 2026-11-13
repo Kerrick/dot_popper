@@ -49,9 +49,9 @@ The rules never change with the window: the radius, the speeds, and the clock st
 
 ### Dot size
 
-The standard dot's radius is 50 points, about 8 mm (see `DotSize`), and the game prints that when it starts. Unless the player chooses **Standard**, a game's dots are sized to the screen instead (README, "How big the dots are"): about 30 points on an iPhone 13 mini, 51 on an 11-inch iPad, and 61 on a 13-inch iPad Pro. An iPad Pro 13-inch is 1032 × 1376 points, so a portrait field there is about 21 × 28 radii. An 11-inch iPad's is about 17 × 24.
+The usual dot's radius is 50 points, about 8 mm (see `DotSize`), and the game prints that when it starts. That is the fixed size, which a player may choose in Settings; by default a game's dots are the standard size, worked out from the screen (README, "Dot size"): about 30 points on an iPhone 13 mini, 51 on an 11-inch iPad, and 61 on a 13-inch iPad Pro. An iPad Pro 13-inch is 1032 × 1376 points, so a portrait field there is about 21 × 28 radii. An 11-inch iPad's is about 17 × 24.
 
-Once a game has been played, Home's **Dot size** control appears only where sizing the dots to the screen would change them by more than a tenth. On an iPad Pro 13-inch the fitted radius is about 61 points, so its first segment, **Fit the screen**, says "Bigger, less room" and its second, **Standard**, "Smaller, more room"; on an 11-inch iPad the fitted radius is about 51 points, so the two sizes look alike and the control is left out.
+Settings' **Dot size** control appears only where the two sizes differ by more than a tenth. On an iPad Pro 13-inch the standard radius is about 61 points, so its first segment, **Standard**, says "Less room" and its second, **Smaller**, "More room"; on an 11-inch iPad the standard radius is about 51 points, so the two sizes look alike and the control is left out.
 
 ### Input
 

@@ -47,3 +47,5 @@ Confidence: high that fitting narrows the spread. In `script/simulate.rb` the sa
 ## More Information
 
 The formula and its limits (`Rules::FITTED_AREA`, `SMALLEST_FITTED_RADIUS`, `LARGEST_FITTED_SHARE`, `DotSizing::DEFAULT`) are in [the rules](../design/rules.md), and the Settings control in [screens](../design/screens.md). Revisit if Lota gains a way to report a screen's physical density, which would let Standard be an exact 8 mm.
+
+**Note, 2026-11-13: the sizes' names on screen.** By the maintainer's decision, the screens now call the default size, which this record calls fitted or sized to the screen, "Standard", and the fixed size, which this record calls Standard, "Bigger" or "Smaller", by what it does on the player's device next to the default. The decision itself is unchanged. The words are in the [glossary](../../GLOSSARY.md) and [screens](../design/screens.md).

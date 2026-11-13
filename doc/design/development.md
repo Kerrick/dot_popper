@@ -214,7 +214,7 @@ Measured, not enforced: with the default heap, 10 games per device caused about 
 
 ### The `bonus` mode
 
-`bonus` compares candidate numbers for the bonus dot (`Rules::Bonus`) on three devices (`BONUS_DEVICES`: the upright iPhone, the reference window and the 27-inch monitor), with dots sized to the screen and the spawn rule on. `rows`, `points` and `seconds` are comma-separated lists; by default dots in a row of 6, 8, 10 and 12, 2 or 4 points, and 2, 4 or 6 seconds, every combination, and no bonus dot at all. For each it prints the mean and 90th-percentile score and length, the share of endless games, mistakes, bonus dots earned per game, and how often a game meets each of the daily goals (`DailyGoal::LIST`). It runs in Ractors only. The rules the numbers set are in [rules.md](rules.md).
+`bonus` compares candidate numbers for the bonus dot (`Rules::Bonus`) on three devices (`BONUS_DEVICES`: the upright iPhone, the reference window and the 27-inch monitor), with standard dots and the spawn rule on. `rows`, `points` and `seconds` are comma-separated lists; by default dots in a row of 6, 8, 10 and 12, 2 or 4 points, and 2, 4 or 6 seconds, every combination, and no bonus dot at all. For each it prints the mean and 90th-percentile score and length, the share of endless games, mistakes, bonus dots earned per game, and how often a game meets each of the daily goals (`DailyGoal::LIST`). It runs in Ractors only. The rules the numbers set are in [rules.md](rules.md).
 
 ## The spawn benchmark
 

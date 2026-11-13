@@ -33,7 +33,7 @@ A system Lota names that `Shell::Platforms` doesn't know plays as a computer. Wh
 | Starting input (`InputKind.starting`) | Mouse | Mouse | Mouse | Touch | Touch |
 | Dot size reason printed | "50 logical pixels" | as Windows | as Windows | "50 points, about 8 mm" | "50 dp, about 8 mm" |
 
-The standard dot is the same size on every platform ([rules.md](rules.md)). Selling Pro differs by build and store ([store-and-pro.md](store-and-pro.md), [ADR-0008](../adr/0008-native-features-live-outside-the-ruby-process.md), [ADR-0009](../adr/0009-the-store-is-a-port.md)), and so does sharing ([screens.md](screens.md)).
+The usual dot, `Rules::RADIUS`, is the same size on every platform ([rules.md](rules.md)). Selling Pro differs by build and store ([store-and-pro.md](store-and-pro.md), [ADR-0008](../adr/0008-native-features-live-outside-the-ruby-process.md), [ADR-0009](../adr/0009-the-store-is-a-port.md)), and so does sharing ([screens.md](screens.md)).
 
 ## Phones and tablets fill the screen
 

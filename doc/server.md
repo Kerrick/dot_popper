@@ -12,7 +12,7 @@ The server's tests make every exchange the game has with it against the real ser
 - Nothing decays and nothing happens daily.
 - If a champion leaves, the title passes to the remaining member with the score record above 0, or goes vacant if nobody has scored.
 - Every title change stays visible to every member, permanently, with nothing to acknowledge.
-- Only games played with dots sized to the screen are sent. A score is a whole number from 0 to 100,000.
+- Only games played with standard dots are sent. A score is a whole number from 0 to 100,000.
 
 ## Players and groups
 
