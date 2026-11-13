@@ -201,9 +201,10 @@ module DotPopper
 
       # The line under the Stats screen's chart, when some of its bars
       # are of games that do not count toward the records shown: "Brighter
-      # bars are games with standard dots.", in the same words as
-      # #records_heading.
-      def chart_note(sizing, preview = nil) = sized(:chart_note, sizing, preview)
+      # bars are games that count here." The line over the cards names the
+      # dot size where Settings does (Show#stats_note), so this one need
+      # not, and it fits across the narrowest card.
+      def chart_note = labels.fetch(:chart_note)
 
       # How many dots fit across +field+ and down it, side by side, to the
       # nearest whole dot, and never none.

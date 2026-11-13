@@ -110,9 +110,7 @@ module DotPopper
         labels: {
           records: "Your stats with %s dots", records_by_screen: "Your stats with %s dots on screens this size",
           records_unnamed: "Your stats on screens this size",
-          chart_note: "Brighter bars are games with %s dots.",
-          chart_note_by_screen: "Brighter bars are games with %s dots on screens this size.",
-          chart_note_unnamed: "Brighter bars are games on screens this size.",
+          chart_note: "Brighter bars are games that count here.",
           score_record: "Highest score", longest_game: "Longest game",
           most_dots_in_a_row: "Most dots in a row without a mistake", shortest_time_to_pop: "Shortest Time to Pop",
           longest_time_to_pop: "Longest Time to Pop",

@@ -56,7 +56,6 @@ class StatsSheetTest < Minitest::Test
                                        sizing: DotPopper::DotSizing::SIZED_TO_SCREEN, preview: SizingPreview.of(phone, Style::SIZING))
 
     assert_equal "Your stats with standard dots", fitted.records.heading
-    assert_equal "Brighter bars are games with standard dots.", fitted.chart_note
     assert_equal ["None yet"], fitted.records.rows.map(&:value).values_at(3)
     assert_equal ["This screen is about 7 dots wide and 14 dots tall."], fitted.notes
   end
@@ -72,7 +71,7 @@ class StatsSheetTest < Minitest::Test
                                         preview: SizingPreview.of(monitor, Style::SIZING))
 
     assert_equal "Your stats with bigger dots on screens this size", bigger.records.heading
-    assert_equal "Brighter bars are games with bigger dots on screens this size.", bigger.chart_note
+    assert_equal "Brighter bars are games that count here.", bigger.chart_note
     assert_equal "Your stats with smaller dots on screens this size", smaller.records.heading
   end
 
