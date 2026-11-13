@@ -236,7 +236,7 @@ class TutorialBeatsTest < Minitest::Test
       heard = played.size
       noted(seen[:flights], frame, tutorial.flights.map { [it.text, it.icon, it.to.name] })
       noted(seen[:spotlight], frame, tutorial.spotlight.to&.name)
-      pose = tutorial.ghost_pose
+      pose = tutorial.guide_pose
       seen[:guide] << [frame, pose.x.round(1), pose.y.round(1), pose.press.round(2)] if pose && (frame % 20).zero?
     end
     { changes:, places:, **seen }

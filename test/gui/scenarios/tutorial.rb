@@ -71,7 +71,7 @@ module DotPopperGui
 
     def tap_the_bright_dot
       freeze_on(:aim)
-      wait_for("the guide pressing", within: 200) { tutorial.ghost_pose&.press.to_f > 0.9 }
+      wait_for("the guide pressing", within: 200) { tutorial.guide_pose&.press.to_f > 0.9 }
       keep_screenshot(name("1-tap"))
       shot = screenshot
       bright = dot(T::BRIGHT)
@@ -133,8 +133,8 @@ module DotPopperGui
       check_equal(:alarm, tutorial.row_notice&.tone, "and rings red")
       wait(0.2)
       keep_screenshot(name("3-cost"))
-      wag = tutorial.ghost.style.wag
-      wait_for("the guide's finger-wag", within: 300) { tutorial.ghost_pose&.turn.to_f.abs > wag.angle * 0.8 }
+      wag = tutorial.guide.style.wag
+      wait_for("the guide's finger-wag", within: 300) { tutorial.guide_pose&.turn.to_f.abs > wag.angle * 0.8 }
       keep_screenshot(name("3-wag"))
       wait_for("the bright dot clear", within: 900) { tutorial.beat == :aim_next }
       check(tutorial.players_turn?, "the turn is the player's again")

@@ -4,7 +4,7 @@ module DotPopper
   module Shell
     # What the Tutorial draws over its dots and the HUD, with no word: the
     # dim around its spotlight, the numbers flying to and from the HUD, the
-    # guide (GhostPainter), and the skip button; and, in the game's first
+    # guide (GuidePainter), and the skip button; and, in the game's first
     # moments, its ClockHighlight, the light on the clock. The HUD itself
     # is never dimmed, and the number the spotlight is on is
     # haloed. Text and lines sit on whole device pixels.
@@ -36,7 +36,7 @@ module DotPopper
         row_ring(scene.row_notice, now, spots.fetch(:dots_in_a_row), pill, scene.hud.size) if scene.row_notice
         font = pen.fonts.bold(layout.scaled(pen.style::TYPE.floater))
         scene.flights.each { flight(it, now, scene.dots, spots, scene.radius, font) }
-        GhostPainter.new(pen:).draw(scene.ghost_pose, show.input, scene.radius)
+        GuidePainter.new(pen:).draw(scene.guide_pose, show.input, scene.radius)
         return unless show.skip_reach
 
         # Skip, bottom right, its sign before its word, so it reads without English.

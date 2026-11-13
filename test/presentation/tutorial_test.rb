@@ -68,13 +68,13 @@ class TutorialTest < Minitest::Test
     end
   end
 
-  def test_the_spotlight_finds_the_bright_dot_and_the_ghost_hand_taps_it
+  def test_the_spotlight_finds_the_bright_dot_and_the_guide_hand_taps_it
     play_for(SCRIPT.drift + 0.5)
     assert_equal Anchor.dot(Tutorial::BRIGHT), @tutorial.spotlight.to
     assert_operator @tutorial.spotlight.darkness(@tutorial.now), :>, 0.5
     poses = (0..100).map do
       play_for(STEP * 2)
-      @tutorial.ghost_pose
+      @tutorial.guide_pose
     end
     assert(poses.any? { it.press == 1.0 && near?(it, bright) }, "the hand presses on the dot")
     assert(poses.any?(&:since_press), "the press is marked, for its ring")
@@ -133,7 +133,7 @@ class TutorialTest < Minitest::Test
 
     pressed = nil
     play_until do
-      pose = @tutorial.ghost_pose
+      pose = @tutorial.guide_pose
       pressed ||= pose if pose&.press == 1.0
       @tutorial.flights.any?
     end
@@ -165,7 +165,7 @@ class TutorialTest < Minitest::Test
 
     poses = 15.times.map do
       play_for(STEP * 2)
-      @tutorial.ghost_pose
+      @tutorial.guide_pose
     end
     assert(poses.last(10).all? { it.press.zero? }, "then it lifts, and taps no more")
     assert(poses.last.then { !near?(it, bright) && !near?(it, next_dot) }, "and waits to one side")
@@ -177,7 +177,7 @@ class TutorialTest < Minitest::Test
     assert_in_delta 0.0, @tutorial.rate
     assert(48.times.any? do
       play_for(STEP * 2)
-      pose = @tutorial.ghost_pose
+      pose = @tutorial.guide_pose
       pose.press == 1.0 && near?(pose, next_dot)
     end, "the guide moves to the clear bright dot and taps it")
   end
@@ -191,11 +191,11 @@ class TutorialTest < Minitest::Test
     started = @tutorial.now
     turns = []
     play_until(within: 900) do
-      turns << [@tutorial.now - started, @tutorial.ghost_pose&.turn.to_f]
+      turns << [@tutorial.now - started, @tutorial.guide_pose&.turn.to_f]
       @tutorial.beat == :aim_next
     end
-    wag = SCRIPT.ghost.wag
-    arrives = (GhostHand::PRESSED * SCRIPT.ghost.loop) + SCRIPT.gap + (2 * (SCRIPT.flight + SCRIPT.gap)) + SCRIPT.ghost.glide
+    wag = SCRIPT.guide.wag
+    arrives = (GuideHand::PRESSED * SCRIPT.guide.loop) + SCRIPT.gap + (2 * (SCRIPT.flight + SCRIPT.gap)) + SCRIPT.guide.glide
     wagging = turns.select { |at, _| at.between?(arrives, arrives + wag.time) }.map(&:last)
 
     assert_operator wagging.max, :>, wag.angle * 0.8, "it wags one way"
@@ -203,15 +203,15 @@ class TutorialTest < Minitest::Test
     assert_operator wagging.each_cons(2).count { |a, b| a.negative? != b.negative? }, :>=, 3, "back and forth"
     assert(turns.select { |at, _| at < arrives || at > arrives + wag.time + (2 * STEP) }.all? { |_, turn| turn.abs < 1e-9 })
     waited = @tutorial.now - started
-    assert_operator waited, :>=, arrives + SCRIPT.ghost.waiting, "only once it has wagged and settled"
-    assert_operator waited, :<, arrives + SCRIPT.ghost.waiting + 0.4, "and soon after"
+    assert_operator waited, :>=, arrives + SCRIPT.guide.waiting, "only once it has wagged and settled"
+    assert_operator waited, :<, arrives + SCRIPT.guide.waiting + 0.4, "and soon after"
   end
 
   def test_a_calm_guide_wags_gentler
     calm = tutorial_on(DotPopper::Cabinet.new(@field), [600.0, 400.0], effects: @effects,
                         sounds: @sounds, haptics: @haptics, style: Style, calm: true)
-    assert_equal Style::CALM_WAG, calm.ghost.style.wag
-    assert_operator Style::CALM_WAG.angle, :<, SCRIPT.ghost.wag.angle
+    assert_equal Style::CALM_WAG, calm.guide.style.wag
+    assert_operator Style::CALM_WAG.angle, :<, SCRIPT.guide.wag.angle
   end
 
   # On an upright phone the first dot freezes near a side wall, where the

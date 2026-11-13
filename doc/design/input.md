@@ -175,7 +175,7 @@ The words that say what to do follow the input the player used last. `Show#input
 - Each phrase that varies is a `Presentation::ByInput`, with a `touch`, `mouse` and `gamepad` text. `Words#for(kind)` gives the words for one input, so painters read `words.play` and get the right one. A button's label inside `Style::WORDS.buttons` is read with `Words#button`.
 - Touch and mouse read alike. A gamepad's text names the button in parentheses: "Play (A)", "Back (B)", "Share my score (Y)", "Settings (Select)", "Dot size (LB)", "Display (RB)". Held buttons say so: "Hold Y to clear my stats…", "Hold Y to leave every friend group and delete your scores online."
 - Friend groups' labels add the button the same way (`GroupPanel#pressed_by`; [friend-groups.md](friend-groups.md)).
-- How to play does not depend on reading English ([ADR-0003](../adr/0003-how-to-play-is-taught-without-words.md)). The tutorial's guide is drawn as the hand in use: a pointing hand, a mouse pointer, or the gamepad's reticle with an A (`Shell::GhostPainter`; [tutorial.md](tutorial.md)).
+- How to play does not depend on reading English ([ADR-0003](../adr/0003-how-to-play-is-taught-without-words.md)). The tutorial's guide is drawn as the hand in use: a pointing hand, a mouse pointer, or the gamepad's reticle with an A (`Shell::GuidePainter`; [tutorial.md](tutorial.md)).
 
 ## Keyboard
 

@@ -16,14 +16,14 @@ While it plays, `Cabinet` holds the game in its `Paused` state ([ADR-0016](../ad
 | --- | --- |
 | The scene, its beats and its numbers | `Presentation::Tutorial` (`lib/dot_popper/presentation/tutorial.rb`) |
 | Its timings and looks | `Style::TUTORIAL` (a `TutorialStyle`), `Style::CALM_WAG` (`lib/dot_popper/presentation/style.rb`) |
-| The guide's motion | `Presentation::GhostHand`, `GhostStyle`, `WagStyle`, `GhostPose` (`ghost_hand.rb`) |
+| The guide's motion | `Presentation::GuideHand`, `GuideStyle`, `WagStyle`, `GuidePose` (`guide_hand.rb`) |
 | The pointing hand's geometry and PNG sizes | `Presentation::PointingHand` (`pointing_hand.rb`) |
 | The spotlight | `Presentation::Spotlight`, `SpotlightStyle` (`spotlight.rb`) |
 | Numbers in flight | `Presentation::Flight` (`flight.rb`), drawn as a `Presentation::Tally` (`tally.rb`) |
 | Whether pressing Play opens it | `Presentation::TutorialFlag` (`tutorial_flag.rb`), `tutorial.txt` |
 | The paused game | `Cabinet::Paused`, `Cabinet::Starts#paused`, `Cabinet#press_paused`, `#move_paused`, `#arrange`, `#unpause`; `Game#move_dots`, `#arrange` |
 | Opening, skipping and playing on | `Show#play`, `#how_to_play`, `#skip_tutorial`, `#open_tutorial`, `#follow_tutorial`, `#play_on`; `Tutorial.opening`; `UseCases::StartGame` |
-| Drawing | `Shell::TutorialPainter`, `Shell::GhostPainter`, `Shell::HandSprites`, `Shell::TallyPainter`, and `Shell::Renderer#tutorial` |
+| Drawing | `Shell::TutorialPainter`, `Shell::GuidePainter`, `Shell::HandSprites`, `Shell::TallyPainter`, and `Shell::Renderer#tutorial` |
 
 ## When it opens
 
@@ -96,7 +96,7 @@ The rings run under the beat and add no time. What a full row brings is left for
 
 ## The guide
 
-The guide is the player's own hand on the input they last used (`Presentation::InputKind`), drawn by `Shell::GhostPainter`:
+The guide is the player's own hand on the input they last used (`Presentation::InputKind`), drawn by `Shell::GuidePainter`:
 
 | Input | The guide |
 | --- | --- |
@@ -104,11 +104,11 @@ The guide is the player's own hand on the input they last used (`Presentation::I
 | Mouse | A pale arrow pointer (85% at most) that shrinks for a moment as it clicks and sends out three short rays |
 | Gamepad | A pale copy of the gamepad's reticle, with an A button beside it that goes down as it presses |
 
-**Tapping.** One tap's loop is `loop`, 1.6 s (`GhostHand#tap_pose`): the guide comes in from its rest, `rest` (0.75, 0.9) radii down and to the right of the dot, where it hides none of it, presses, holds, lifts and goes back. A press rings where it lands; the pointing hand sends two thin cream rings out from its fingertip. Moving between places, it glides in `glide`, 0.5 s, easing in and out; it fades in or out in `fade`, 0.25 s.
+**Tapping.** One tap's loop is `loop`, 1.6 s (`GuideHand#tap_pose`): the guide comes in from its rest, `rest` (0.75, 0.9) radii down and to the right of the dot, where it hides none of it, presses, holds, lifts and goes back. A press rings where it lands; the pointing hand sends two thin cream rings out from its fingertip. Moving between places, it glides in `glide`, 0.5 s, easing in and out; it fades in or out in `fade`, 0.25 s.
 
 **The pointing hand.** People recognize a familiar picture far faster than they decode a drawing of one (Johnson, *Designing with the Mind in Mind*), and a player has seen this emoji in every chat. Its yellow names no skin color.
 
-- It stands upright, its fingertip (`PointingHand::TIP_AT`) on the point it taps and the hand below, so it hides only the lower part of the dot. Its picture is `GhostPainter::HAND`, 3 radii square; the hand in it is about 2.8 radii tall (`REACH`).
+- It stands upright, its fingertip (`PointingHand::TIP_AT`) on the point it taps and the hand below, so it hides only the lower part of the dot. Its picture is `GuidePainter::HAND`, 3 radii square; the hand in it is about 2.8 radii tall (`REACH`).
 - Near the right edge it is mirrored, never turned (`PointingHand.facing`). It is never turned upside down; the tutorial's dots stay clear of the bottom.
 - As it presses it shrinks by `PRESS`, 6%, as if pushed into the glass.
 - LÖVE cannot draw the system's color emoji fonts, and Apple's artwork may not be shipped, so the game ships Noto's, under the Apache License 2.0 ([assets/emoji/README.md](../../assets/emoji/README.md)). Its credit is on the Credits screen (`Style::WORDS.notice`, `:emoji`).
@@ -117,9 +117,9 @@ The guide is the player's own hand on the input they last used (`Presentation::I
 
 ## The guide's mistake and its wag
 
-As the new bright dot peeks out from under the popped one, the guide taps the popped dot once (`Tutorial#show_the_cost`). As its press lands (`GhostHand::PRESSED` of the loop, about 0.54 s in), the game's own penalty plays (`Tutorial#guide_makes_a_mistake`): the dot's shudder and alarm ring, the dashed outline of the bright dot under it (`Stack#bright_beneath`, `Style::REVEAL`), the edge's glow (`PENALTY_FLASH`), and the bonk, panned to where it happened. Then its cost flies out, in turn. The screen does not shake and no phone buzzes, so it can't be mistaken for the player's own tap. There is no ✕ or other sign forbidding it: symbols and colors are not read alike everywhere (Westland and Maggio, *Universal Principles of Color*), and showing a consequence teaches better than a sign (Hodent).
+As the new bright dot peeks out from under the popped one, the guide taps the popped dot once (`Tutorial#show_the_cost`). As its press lands (`GuideHand::PRESSED` of the loop, about 0.54 s in), the game's own penalty plays (`Tutorial#guide_makes_a_mistake`): the dot's shudder and alarm ring, the dashed outline of the bright dot under it (`Stack#bright_beneath`, `Style::REVEAL`), the edge's glow (`PENALTY_FLASH`), and the bonk, panned to where it happened. Then its cost flies out, in turn. The screen does not shake and no phone buzzes, so it can't be mistaken for the player's own tap. There is no ✕ or other sign forbidding it: symbols and colors are not read alike everywhere (Westland and Maggio, *Universal Principles of Color*), and showing a consequence teaches better than a sign (Hodent).
 
-As the last of the cost leaves, the guide lifts and glides to wait above the popped dot (`Tutorial#waiting_place`): `hover`, 0.2 radii left of it and 4.6 above, so the whole hand hangs clear of both dots, and kept half a radius inside the field's sides so its thumb stays on screen as it wags. There it wags its finger, "no" (`WagStyle#turn`): twice side to side in 0.8 s, turning 0.21 radians (12°) each way about its wrist, the bottom middle of the emoji (`PointingHand::WRIST_AT`), easing in and out. It then holds still for `settle`, 0.25 s. A mouse pointer or a reticle, with no wrist, slides side to side as far instead (`GhostPainter::WAG`). With `DOT_POPPER_CALM=1` the wag is gentler, 0.1 radians (about 6°) over 1.0 s (`Style::CALM_WAG`).
+As the last of the cost leaves, the guide lifts and glides to wait above the popped dot (`Tutorial#waiting_place`): `hover`, 0.2 radii left of it and 4.6 above, so the whole hand hangs clear of both dots, and kept half a radius inside the field's sides so its thumb stays on screen as it wags. There it wags its finger, "no" (`WagStyle#turn`): twice side to side in 0.8 s, turning 0.21 radians (12°) each way about its wrist, the bottom middle of the emoji (`PointingHand::WRIST_AT`), easing in and out. It then holds still for `settle`, 0.25 s. A mouse pointer or a reticle, with no wrist, slides side to side as far instead (`GuidePainter::WAG`). With `DOT_POPPER_CALM=1` the wag is gentler, 0.1 radians (about 6°) over 1.0 s (`Style::CALM_WAG`).
 
 Time stays stopped while the cost flies and flows at 0.6 while the guide wags, so the wait for the next tap is the wag itself. Only once the bright dot is clear and the guide has wagged and settled does it move to the bright dot and tap (`Tutorial#follow`, `@waited_out`). A finger-wag is widely, though not universally, read as "no"; the cost has already shown what the mistake did, so a player who does not read it so loses nothing.
 
