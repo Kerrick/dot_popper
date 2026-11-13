@@ -12,6 +12,14 @@ module DotPopper
           [*chips, (button(:home, plan.home_button) if plan.home_button), (button(:share, plan.share_button) if plan.share_button),
            (primary_button(:play_again, plan.play_button) if plan.play_button)].compact
         end
+
+        def primary = show.play_again
+
+        # Escape or B goes Home, as Home does.
+        def back
+          show.continue_on
+          true
+        end
       end
     end
   end

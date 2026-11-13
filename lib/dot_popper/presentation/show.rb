@@ -418,17 +418,7 @@ module DotPopper
       # Play again on Game Over, once its grace is over, and Copy in the
       # share preview. In a game it does nothing, since
       # only a press at a place may touch the score.
-      def primary
-        if arrival? then answer_arrival(use: true)
-        elsif sharing? then copy_result
-        elsif offer? then close_offer
-        elsif dialog then close_dialog
-        elsif group_open? then @groups.primary
-        elsif page then leave
-        elsif home? then play
-        elsif game_over? then play_again
-        end
-      end
+      def primary = screen.primary
 
       # Home's Play: a game starts, or on a first Play, a game with
       # the Tutorial over it (TutorialFlag), which is seen from then on.
@@ -570,17 +560,7 @@ module DotPopper
       # preview, leaves the Stats screen, and goes on from Game Over to
       # Home, as its Home button does. Says whether there was somewhere to go
       # back from, so that elsewhere the key can do its usual job.
-      def back
-        if arrival? then answer_arrival(use: false)
-        elsif tutorial? then skip_tutorial
-        elsif sharing? then close_share
-        elsif dialog then close_dialog
-        elsif offer? || group_open? || page then leave
-        elsif game_over? then continue_on
-        else return false
-        end
-        true
-      end
+      def back = screen.back
 
       # Sizes dots as +sizing+ (DotSizing) says, on Home while it
       # offers the choice, and remembers it. Home's dots and score record
@@ -1248,6 +1228,22 @@ module DotPopper
         end
       end
 
+      # The player has answered the notice of a new theme. A Pro player's
+      # switch uses it at once; a Free player's opens the offer, the same
+      # as tapping Themes.
+      def answer_arrival(use:)
+        return :waiting unless arrival_settled?
+
+        theme = arrival
+        return unless theme
+
+        @theme_keeper.told(theme)
+        return sounds.play(:tick, pitch: 0.8) unless use
+        return open_offer_for(:themes) if @use_theme.call(theme) == :offer
+
+        sounds.play(:tick, pitch: 1.2)
+      end
+
       private
 
       # Opens the offer straight from Home, as Play does when no play
@@ -1324,22 +1320,6 @@ module DotPopper
                                                   measure: @measure)]
         end
         @credits = @credits.fitted(content: credits_lines.height, window: page.window.height)
-      end
-
-      # The player has answered the notice of a new theme. A Pro player's
-      # switch uses it at once; a Free player's opens the offer, the same
-      # as tapping Themes.
-      def answer_arrival(use:)
-        return :waiting unless arrival_settled?
-
-        theme = arrival
-        return unless theme
-
-        @theme_keeper.told(theme)
-        return sounds.play(:tick, pitch: 0.8) unless use
-        return open_offer_for(:themes) if @use_theme.call(theme) == :offer
-
-        sounds.play(:tick, pitch: 1.2)
       end
 
       # Pro arrived (Entitlement::ProGranted): a tick marks a store's

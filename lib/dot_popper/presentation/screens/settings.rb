@@ -6,7 +6,7 @@ module DotPopper
       # Settings, over Home (SettingsScreen): its rows of choices, Credits
       # and licenses, Privacy, Change Server while setdef is gone, and
       # Back. Only the buttons in view take presses.
-      class Settings < Screen
+      class Settings < Page
         def controls
           plan = show.settings_plan
           rows = plan.rows.flat_map { |row| row.choices.zip(row.rects).map { |(_, _, name), rect| button(name, rect) } }

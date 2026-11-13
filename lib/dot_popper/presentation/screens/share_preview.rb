@@ -10,6 +10,13 @@ module DotPopper
           plan = show.share_plan
           [button(:close, plan.close), button(:copy, plan.copy)]
         end
+
+        def primary = show.copy_result
+
+        def back
+          show.close_share
+          true
+        end
       end
     end
   end

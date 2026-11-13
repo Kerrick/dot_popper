@@ -13,6 +13,14 @@ module DotPopper
            (button(:paste, plan[:paste]) if plan.key?(:paste)),
            back_button].compact
         end
+
+        # Back: Buy has only its own controls, so no one buys by reflex.
+        def primary = show.close_offer
+
+        def back
+          show.close_offer
+          true
+        end
       end
     end
   end

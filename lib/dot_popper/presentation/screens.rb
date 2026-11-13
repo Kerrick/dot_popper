@@ -29,6 +29,15 @@ module DotPopper
         # apart.
         def controls = []
 
+        # Presses this screen's main button, as Enter, Space, a gamepad's
+        # Start, or its A aimed at no button do.
+        def primary = nil
+
+        # Escape, Android's Back, or a gamepad's B: Back, Close or Home
+        # where the screen has one. Says whether it had, so that elsewhere
+        # the key can do its usual job.
+        def back = false
+
         private
 
         def layout = show.layout
@@ -43,6 +52,17 @@ module DotPopper
         def back_button = button(:back, layout.back_button)
 
         def within_safe(reach) = reach.with(height: [reach.height, layout.safe.bottom - reach.y].min)
+      end
+
+      # A screen over Home, which Show#page names, with Back in its corner:
+      # Back, and its main button, close it.
+      class Page < Screen
+        def primary = show.close_page
+
+        def back
+          show.close_page
+          true
+        end
       end
     end
   end

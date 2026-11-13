@@ -5,7 +5,7 @@ module DotPopper
     module Screens
       # Credits and licenses, over Settings (CreditsLayout): the text that
       # scrolls, and Back.
-      class Credits < Screen
+      class Credits < Page
         def controls = [back_button]
       end
     end

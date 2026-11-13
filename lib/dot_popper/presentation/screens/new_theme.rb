@@ -14,6 +14,13 @@ module DotPopper
           plan = show.arrival_plan
           [button(:arrival_later, plan.later_button), button(:arrival_use, plan.use_button)]
         end
+
+        def primary = show.answer_arrival(use: true)
+
+        def back
+          show.answer_arrival(use: false)
+          true
+        end
       end
     end
   end

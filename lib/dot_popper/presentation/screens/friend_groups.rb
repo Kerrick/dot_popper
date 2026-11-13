@@ -9,6 +9,14 @@ module DotPopper
       # GroupNoticeDialog).
       class FriendGroups < Screen
         def controls = (show.group_notice_plan || show.group_plan).controls.map { |name, frame| button(name, frame) }
+
+        def primary = show.group_panel.primary
+
+        # Back up a level (GroupPanel#back).
+        def back
+          show.group_panel.back
+          true
+        end
       end
     end
   end

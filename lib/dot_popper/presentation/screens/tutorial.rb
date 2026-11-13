@@ -7,6 +7,12 @@ module DotPopper
       # button is Skip.
       class Tutorial < Screen
         def controls = [button(:skip, layout.skip_button)]
+
+        # Escape or B skips it.
+        def back
+          show.skip_tutorial
+          true
+        end
       end
     end
   end

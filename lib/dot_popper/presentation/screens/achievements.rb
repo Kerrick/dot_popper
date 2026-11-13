@@ -5,7 +5,7 @@ module DotPopper
     module Screens
       # Achievements, over Home (AchievementsScreen): a grid of cells that
       # scrolls, each opening its achievement's dialog, and Back.
-      class Achievements < Screen
+      class Achievements < Page
         def controls
           window = show.achievements_layout.window
           cells = show.achievement_cells.select { it.rect.y < window.bottom && it.rect.bottom > window.y }.map do

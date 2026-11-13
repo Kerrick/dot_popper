@@ -5,7 +5,7 @@ module DotPopper
     module Screens
       # Themes, over Home (ThemesLayout): a card for each theme, with a
       # controller the previous and next, and Back.
-      class Themes < Screen
+      class Themes < Page
         def controls
           plan = show.themes_layout
           steps = show.input == InputKind::GAMEPAD ? plan.steps.map { |name, rect| button(name, rect) } : []

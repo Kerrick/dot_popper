@@ -12,6 +12,8 @@ module DotPopper
           plan.pills.each { |name, rect| buttons << button(name, rect) }
           buttons << primary_button(:play, plan.play_button)
         end
+
+        def primary = show.play
       end
     end
   end
