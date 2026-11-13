@@ -132,14 +132,15 @@ module DotPopper
     def finish(game, seed, size_class)
       first = score_record.first?(size_class)
       new_score_record = score_record.record(game.score, size_class)
-      announce(Events::GameEnded.new(game:, score_record: score_record.of(size_class), new_score_record:, seed:, size_class:, first:))
+      announce(Events::GameEnded.new(game:, score_record: score_record.of(size_class), new_score_record:, seed:, size_class:, first:,
+                                     field: game.field, dots: game.dots, score: game.score, elapsed: game.elapsed))
       GameOver.new(game:, new_score_record:)
     end
 
     private
 
     def begin_game(game, seed, size_class = self.size_class)
-      announce(Events::GameStarted.new(game:, seed:))
+      announce(Events::GameStarted.new(game:, seed:, field: game.field, dots: game.dots, score: game.score, dots_in_a_row: game.dots_in_a_row))
       Playing.new(game:, seed:, size_class:)
     end
 

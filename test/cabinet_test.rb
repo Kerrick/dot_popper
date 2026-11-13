@@ -39,6 +39,27 @@ class CabinetTest < Minitest::Test
     assert_instance_of Events::Popped, @heard.last
   end
 
+  # Each event carries the game as it stood when the event was told, so
+  # a listener needs nothing but the event.
+  def test_every_event_carries_the_game_as_it_stood_when_it_was_told
+    @cabinet.press(0, 0)
+    game = @cabinet.game
+    assert_stood game, @heard.last, :field, :dots, :score, :dots_in_a_row
+    @cabinet.update(1.25)
+    bright = game.dots.first
+    @cabinet.press(bright.x, bright.y)
+    assert_stood game, @heard.last, :dots, :score, :countdown, :elapsed
+    popped = game.dots.first
+    @cabinet.press(popped.x, popped.y)
+    assert_stood game, @heard.last, :dots, :score, :countdown, :elapsed
+    @cabinet.update(20)
+    assert_stood game, @heard.last, :field, :dots, :score, :elapsed
+
+    assert_equal [Events::GameStarted, Events::Popped, Events::Penalized, Events::GameEnded], @heard.map(&:class)
+    # 10 seconds, +1 for the pop and -2 for the mistake, all played
+    assert_equal [1.25, 1.25, 9.0], @heard.drop(1).map(&:elapsed)
+  end
+
   def test_when_time_runs_out_the_game_is_over_and_shows_the_final_score
     play_to_score(1)
     @cabinet.update(20)
@@ -296,5 +317,9 @@ class CabinetTest < Minitest::Test
       clear_around!(@cabinet.game, bright)
       @cabinet.press(bright.x, bright.y)
     end
+  end
+
+  def assert_stood(game, event, *values)
+    values.each { assert_equal game.public_send(it), event.public_send(it), "#{event.class}##{it}" }
   end
 end

@@ -18,7 +18,15 @@ module DotPopper
 
       attr_reader spawned: Dot
 
-      def self.new: (dot: Dot, x: number, y: number, points: Integer, seconds: Float, spawned: Dot) -> instance
+      attr_reader dots: Stack
+
+      attr_reader score: Integer
+
+      attr_reader countdown: Countdown
+
+      attr_reader elapsed: Float
+
+      def self.new: (dot: Dot, x: number, y: number, points: Integer, seconds: Float, spawned: Dot, dots: Stack, score: Integer, countdown: Countdown, elapsed: Float) -> instance
     end
 
     class Penalized < ::Data
@@ -32,7 +40,15 @@ module DotPopper
 
       attr_reader seconds: Float
 
-      def self.new: (dot: Dot, x: number, y: number, points: Integer, seconds: Float) -> instance
+      attr_reader dots: Stack
+
+      attr_reader score: Integer
+
+      attr_reader countdown: Countdown
+
+      attr_reader elapsed: Float
+
+      def self.new: (dot: Dot, x: number, y: number, points: Integer, seconds: Float, dots: Stack, score: Integer, countdown: Countdown, elapsed: Float) -> instance
 
       def softened?: () -> bool
     end
@@ -50,7 +66,15 @@ module DotPopper
 
       attr_reader seed: Integer
 
-      def self.new: (game: Game, seed: Integer) -> instance
+      attr_reader field: Field
+
+      attr_reader dots: Stack
+
+      attr_reader score: Integer
+
+      attr_reader dots_in_a_row: Integer
+
+      def self.new: (game: Game, seed: Integer, field: Field, dots: Stack, score: Integer, dots_in_a_row: Integer) -> instance
     end
 
     class GameEnded < ::Data
@@ -66,11 +90,17 @@ module DotPopper
 
       attr_reader first: bool
 
-      def self.new: (game: Game, score_record: Integer, new_score_record: bool, seed: Integer, size_class: SizeClass, ?first: bool) -> instance
+      attr_reader field: Field
 
-      def initialize: (game: Game, score_record: Integer, new_score_record: bool, seed: Integer, size_class: SizeClass, ?first: bool) -> void
+      attr_reader dots: Stack
 
-      def score: () -> Integer
+      attr_reader score: Integer
+
+      attr_reader elapsed: Float
+
+      def self.new: (game: Game, score_record: Integer, new_score_record: bool, seed: Integer, size_class: SizeClass, field: Field, dots: Stack, score: Integer, elapsed: Float, ?first: bool) -> instance
+
+      def initialize: (game: Game, score_record: Integer, new_score_record: bool, seed: Integer, size_class: SizeClass, field: Field, dots: Stack, score: Integer, elapsed: Float, ?first: bool) -> void
     end
 
     class HomeShown < ::Data

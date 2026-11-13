@@ -14,9 +14,13 @@ class AchievementWatchTest < Minitest::Test
   # Starts watching +game+, as the game announces it.
   def watch(game)
     @game = game
-    @watch.call(Events::GameStarted.new(game:, seed: 1))
+    @watch.call(Events::GameStarted.new(game:, seed: 1, field: game.field, dots: game.dots, score: game.score,
+                                         dots_in_a_row: game.dots_in_a_row))
     game
   end
+
+  # What an event of the rules says of +game+ as it stands.
+  def as_it_stands(game) = { dots: game.dots, score: game.score, countdown: game.countdown, elapsed: game.elapsed }
 
   # Taps (x, y) in the game and tells the watch what the rules reported.
   def tap_at(x, y)
@@ -40,7 +44,8 @@ class AchievementWatchTest < Minitest::Test
 
   def end_game
     @watch.call(Events::GameEnded.new(game: @game, score_record: @game.score, new_score_record: false, seed: 1,
-                                       size_class: DotPopper::SizeClass::MEDIUM))
+                                       size_class: DotPopper::SizeClass::MEDIUM, field: @game.field, dots: @game.dots,
+                                       score: @game.score, elapsed: @game.elapsed))
   end
 
   # A game with a popped dot to mistake on and a bright one to pop.
@@ -55,7 +60,7 @@ class AchievementWatchTest < Minitest::Test
     spawned = dot(covered ? 400 : 700, 300, id: 7)
     gone = dot(100, 100, popped: true, id: 8)
     watch(game_with(dot(400, 300, popped: true), gone, spawned))
-    @watch.call(Events::Popped.new(dot: gone, x: 100, y: 100, points: 1, seconds: 1.0, spawned:))
+    @watch.call(Events::Popped.new(dot: gone, x: 100, y: 100, points: 1, seconds: 1.0, spawned:, **as_it_stands(@game)))
   end
 
   def test_a_game_with_nothing_done_earns_nothing
@@ -275,8 +280,9 @@ class AchievementWatchTest < Minitest::Test
 
   def test_events_before_any_game_are_ignored
     gone = dot(100, 100, popped: true)
-    @watch.call(Events::Popped.new(dot: gone, x: 1, y: 1, points: 1, seconds: 1.0, spawned: dot(5, 5)))
-    @watch.call(Events::Penalized.new(dot: gone, x: 1, y: 1, points: -2, seconds: -2.0))
+    stands = as_it_stands(game_with(gone, dot(5, 5)))
+    @watch.call(Events::Popped.new(dot: gone, x: 1, y: 1, points: 1, seconds: 1.0, spawned: dot(5, 5), **stands))
+    @watch.call(Events::Penalized.new(dot: gone, x: 1, y: 1, points: -2, seconds: -2.0, **stands))
 
     assert_empty @watch.earned
   end

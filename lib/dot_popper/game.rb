@@ -98,7 +98,7 @@ module DotPopper
       @dots = above.slide_under(spawned)
       @score += points
       @countdown = countdown.adjust(seconds)
-      Events::Popped.new(dot: popped, x:, y:, points:, seconds:, spawned:)
+      Events::Popped.new(dot: popped, x:, y:, points:, seconds:, spawned:, dots:, score:, countdown:, elapsed:)
     end
 
     # What a pop of +dot+ pays: a pop's own, and a bonus dot's besides.
@@ -126,7 +126,7 @@ module DotPopper
       lost = [Rules::PENALTY_POINTS, score - Rules::LOWEST_SCORE].min
       @score -= lost
       @countdown = countdown.adjust(-Rules::PENALTY_SECONDS)
-      Events::Penalized.new(dot:, x:, y:, points: -lost, seconds: -Rules::PENALTY_SECONDS)
+      Events::Penalized.new(dot:, x:, y:, points: -lost, seconds: -Rules::PENALTY_SECONDS, dots:, score:, countdown:, elapsed:)
     end
   end
 end

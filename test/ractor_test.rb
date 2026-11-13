@@ -10,12 +10,13 @@ class RactorTest < Minitest::Test
 
   def test_the_rules_values_can_be_shared_between_ractors
     stack = DotPopper::Stack.new(dots: [dot(100, 100), dot(200, 200, popped: true)])
+    stands = { dots: stack, score: 1, countdown: DotPopper::Countdown.new(remaining: 3), elapsed: 1.0 }
     values = [field, stack, stack.dots.first, DotPopper::Countdown.new(remaining: 3),
               DotPopper::DotSize.for("iOS"), DotPopper::DotSize.fitted(395, 850), DotPopper::DotSizing::SIZED_TO_SCREEN,
               DotPopper::SizeClass::FITTED, DotPopper::Events::Missed.new(x: 1, y: 2),
               DotPopper::Events::Popped.new(dot: stack.dots.first.pop, x: 1, y: 2, points: 1, seconds: 1.0,
-                                            spawned: stack.dots.last),
-              DotPopper::Events::Penalized.new(dot: stack.dots.last, x: 1, y: 2, points: -2, seconds: -2.0)]
+                                            spawned: stack.dots.last, **stands),
+              DotPopper::Events::Penalized.new(dot: stack.dots.last, x: 1, y: 2, points: -2, seconds: -2.0, **stands)]
 
     values.each { assert Ractor.shareable?(it), "#{it.class} is not shareable" }
   end
