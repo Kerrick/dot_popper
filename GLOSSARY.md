@@ -36,7 +36,6 @@ Dot Popper's Ubiquitous Language. Code, screens, docs and the server use the sam
 | **win / take the title** | To beat the group's top score. | steal, theft, thief |
 | **top score** | The highest score in a friend group since its members joined. | score to beat |
 | **title change** | The title passing to another member, seen by the whole group and never acknowledged. | news, theft |
-
 | **Home** | The main screen, with Play on it, and the button that returns there. | the title screen, main menu |
 
 ## Not yet decided
