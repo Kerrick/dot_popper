@@ -3,29 +3,28 @@
 module DotPopper
   module Shell
     # Settings, as Presentation::SettingsScreen lays it out: each row's
-    # name and its choices, then Credits and licenses and Privacy, and Back.
+    # name and its choices, then Credits and licenses and Privacy, and Back,
+    # as the screen hands it (Presentation::SettingsDrawing).
     class SettingsPainter < Data.define(:pen, :dots)
-      def draw(show, layout)
-        plan = show.settings_plan
-        Header.new(pen:).draw(show, layout, show.words.button(:settings_heading))
-        page = layout.page
+      def draw(drawing)
+        plan = drawing.plan
+        Header.new(pen:).draw(drawing.header)
+        clip = drawing.clip
         pixels = pen.pixels
-        ::Lota::Graphics.scissor = pixels.snap(layout.safe.x), pixels.snap(page.y), pixels.snap(layout.safe.width), pixels.snap(page.height)
-        plan.rows.each { row(show, it) }
-        pill(show, :credits, plan.credits, :document, show.words.button(:credits_licenses))
-        pill(show, :privacy, plan.privacy, :shield, show.words.button(:privacy))
-        pill(show, :server, plan.server, :crown, show.words.button(:server)) if plan.server
+        ::Lota::Graphics.scissor = pixels.snap(clip.x), pixels.snap(clip.y), pixels.snap(clip.width), pixels.snap(clip.height)
+        plan.rows.zip(drawing.choices).each { |row, choices| row(drawing, row, choices) }
+        pill(drawing, :credits, plan.credits, :document, drawing.credits)
+        pill(drawing, :privacy, plan.privacy, :shield, drawing.privacy)
+        pill(drawing, :server, plan.server, :crown, drawing.server) if plan.server
         ::Lota::Graphics.scissor = nil
       end
 
       private
 
-      def row(show, row)
+      def row(drawing, row, choices)
         label(row)
-        choices = row.choices.zip(row.rects).map do |(text, chosen, name), _rect|
-          [text, chosen, show.hover.level(name), icon(show, row, name)]
-        end
-        ChoiceRow.new(pen:).draw(row.frame, row.rects, choices)
+        drawn = choices.map { |text, chosen, hover, name| [text, chosen, hover, icon(drawing, row, name)] }
+        ChoiceRow.new(pen:).draw(row.frame, row.rects, drawn)
       end
 
       # The name and its small mark, on one line.
@@ -44,17 +43,17 @@ module DotPopper
       # set gap before the choice's name (ChoiceRow keeps 0.3 of the row's
       # height from the icon's middle to the name), so a dot drawn bigger
       # than the usual 0.16 grows away from the name, never over it.
-      def icon(show, row, name)
+      def icon(drawing, row, name)
         return unless row.key == :dot_size
 
         lambda do |x, y, height, _chosen|
-          radius = show.sizing_preview.icon(name, height)
+          radius = drawing.sizing_preview.icon(name, height)
           dots.icon(x + (height * 0.16) - radius, y, radius, bright: true)
         end
       end
 
-      def pill(show, name, rect, glyph, text)
-        PillButton.new(pen:).draw(rect, text, hover: show.hover.level(name),
+      def pill(drawing, name, rect, glyph, text)
+        PillButton.new(pen:).draw(rect, text, hover: drawing.lit.fetch(name),
                                   icon: ->(x, y, size) { Glyphs.new(pen:).draw(glyph, x, y, size * 0.42) })
       end
     end
