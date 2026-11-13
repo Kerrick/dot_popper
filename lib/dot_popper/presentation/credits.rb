@@ -30,7 +30,7 @@ module DotPopper
     # "Open-source licenses", Fredoka's, Iosevka's, Noto Emoji's, then
     # Lota's notices, then Fledge's.
     # Each license is shown if the build has it.
-    class CreditsBook < Data.define(:blocks)
+    class CreditsText < Data.define(:blocks)
       def self.compose(words, notices)
         say = words.notice
         blocks = [CreditsBlock.new(:heading, say.fetch(:made_by)), CreditsBlock.new(:note, say[:thanks]),
@@ -232,5 +232,8 @@ module DotPopper
 
       def bottom = layout.short? ? layout.safe.bottom - layout.page_margin : layout.back_button.y - layout.page_margin
     end
+
+    # Its old name, until no caller says it.
+    CreditsBook = CreditsText
   end
 end
