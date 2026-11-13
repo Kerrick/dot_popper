@@ -132,8 +132,7 @@ module DotPopper
           here: "This screen is about %d dots wide and %d dots tall.",
           played: "Played on a screen about %d dots wide and %d dots tall.",
           standard_played: "Played with standard dots.",
-          choice: "Dot size", standard: "Standard", smaller: "Smaller", bigger: "Bigger", smaller_note: "More room",
-          bigger_note: "Less room", alike_note: "",
+          choice: "Dot size", standard: "Standard", smaller: "Smaller", bigger: "Bigger",
           alike: "About the same"
         }.freeze,
         # The redesigned screens' words, said for each input where a

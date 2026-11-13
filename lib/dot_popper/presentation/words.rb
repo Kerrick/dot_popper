@@ -186,10 +186,6 @@ module DotPopper
       # words say what happens on this screen, not how a size is worked out.
       def sizing(sizing, preview) = screen_size.fetch(sizing.standard? ? :standard : effect_of(sizing, preview))
 
-      # What else that choice does, under its name: "More room" for the
-      # smaller dots, "Less room" for the bigger.
-      def sizing_note(sizing, preview) = screen_size.fetch(:"#{effect_of(sizing, preview)}_note")
-
       # The control's label: "Dot size".
       def sizing_label = screen_size.fetch(:choice)
 

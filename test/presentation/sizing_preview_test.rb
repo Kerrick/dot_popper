@@ -10,7 +10,6 @@ class SizingPreviewTest < Minitest::Test
 
   def preview(standard, fixed: 50) = SizingPreview.new(fixed:, standard:, style: Style::SIZING)
   def named(sizing, standard) = Style::WORDS.sizing(sizing, preview(standard))
-  def note(sizing, standard) = Style::WORDS.sizing_note(sizing, preview(standard))
 
   # The default is "Standard" everywhere, and the other is named for
   # what a player sees it do here, next to it. The maintainer: "A player
@@ -22,13 +21,6 @@ class SizingPreviewTest < Minitest::Test
     assert_equal ["Standard", "Bigger"], [named(STANDARD, 44.9), named(FIXED, 44.9)]
     assert_equal ["Standard", "Smaller"], [named(STANDARD, 55.1), named(FIXED, 55.1)]
     assert_equal ["Standard", "Smaller"], [named(STANDARD, 97), named(FIXED, 97)]
-  end
-
-  # Under its name, each says what else it does: smaller dots leave more
-  # room.
-  def test_each_choice_says_how_much_room_it_leaves
-    assert_equal ["More room", "Less room"], [note(STANDARD, 30), note(FIXED, 30)]
-    assert_equal ["Less room", "More room"], [note(STANDARD, 97), note(FIXED, 97)]
   end
 
   # Within a tenth either way the two look alike, and Home leaves
