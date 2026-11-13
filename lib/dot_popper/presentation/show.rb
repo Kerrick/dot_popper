@@ -71,7 +71,6 @@ module DotPopper
         @tutorial = nil
         @handing_over = nil
         @lead_in = nil
-        @notices = notices
         @measure = measure
         @plans = {}
         @stats_book = stats_book
@@ -98,13 +97,11 @@ module DotPopper
         @penalized_at = -Float::INFINITY
         @beckoned_at = nil
         @recorder = GameStats::Recorder.new
-        @credits = nil
-        @credits_drag = nil
         @keeper = keeper
         @pointer = nil
         @hover = Hover.none
         @screens = Screens.made_for(self, clipboard:, buy_pro: @buy_pro, storefront:, entitlement:, start_game: @start_game, sharing:,
-                                          view_achievements: @view_achievements, keeper:, stats_book:, achievements:, haptics:)
+                                          view_achievements: @view_achievements, keeper:, stats_book:, achievements:, haptics:, notices:)
         cabinet.subscribe(@recorder)
         cabinet.subscribe(self)
       end
@@ -597,32 +594,21 @@ module DotPopper
 
       # How far down the Credits screen is scrolled (CreditsScroll), while
       # it is open.
-      def credits = @credits
+      def credits = @screens[:credits].scroll
 
       # The Credits screen's lines (CreditsLines), laid out for the
       # screen's size, while it is open.
-      def credits_lines = @credits_lines&.last
+      def credits_lines = @screens[:credits].lines
 
       # Where the Credits screen's heading and its window of text go.
-      def credits_layout
-        page = CreditsLayout.new(layout:, style: style::CREDITS)
-        page.with(wanted: CreditsLines.widest_as_written(credits_book, size: page.text_size, measure: @measure))
-      end
-
-      def credits_book = (@credits_book ||= CreditsBook.compose(words, @notices))
+      def credits_layout = @screens[:credits].plan
 
       # Opens the Credits screen over the Stats screen, at the top.
-      def open_credits
-        return unless settings?
-
-        open_page(:credits)
-        @credits = CreditsScroll.at_top(content: 0.0, window: 0.0)
-        lay_out_credits
-      end
+      def open_credits = @screens[:credits].open
 
       # What a screen's list scrolls by, for Credits and the lists
       # (CreditsScroll), or nil where nothing scrolls.
-      def scroll = credits? ? @credits : @scroll
+      def scroll = credits? ? credits : @scroll
 
       def scrolling? = screen.scrolls?
 
@@ -635,7 +621,7 @@ module DotPopper
 
       # Keeps the open list's scroll, moved by +pixels+.
       def scroll_by(pixels)
-        return @credits = @credits.by(pixels) if credits?
+        return @screens[:credits].scroll = credits.by(pixels) if credits?
 
         @scroll = @scroll&.by(pixels)
       end
@@ -663,7 +649,7 @@ module DotPopper
         return false unless scrolling? && scroll
 
         moved = scroll.key(name, line: scroll_line)
-        credits? ? @credits = moved : @scroll = moved
+        credits? ? @screens[:credits].scroll = moved : @scroll = moved
         %i[up down page_up page_down home end].include?(name)
       end
 
@@ -932,7 +918,7 @@ module DotPopper
       # size changes with it, as dots sized to the screen do.
       def resize(layout, field)
         @layout = layout
-        lay_out_credits if credits?
+        @screens[:credits].lay_out if credits?
         @attract = field.radius == attract.field.radius ? attract.refit(field) : Attract.spawn(field, style::HOME)
       end
 
@@ -1086,18 +1072,6 @@ module DotPopper
       end
 
 
-      # The Credits text broken into lines for this screen, and the scroll
-      # kept at the same place on it.
-      def lay_out_credits
-        page = credits_layout
-        key = [page.text_size, page.room]
-        if @credits_lines&.first != key
-          @credits_lines = [key, CreditsLines.set(credits_book, size: page.text_size, room: page.room, line: style::CREDITS.line,
-                                                  measure: @measure)]
-        end
-        @credits = @credits.fitted(content: credits_lines.height, window: page.window.height)
-      end
-
       # Pro arrived (Entitlement::ProGranted): a tick marks a store's
       # purchase landing while the offer is open. A license key entered has
       # had its own tick as it was pressed.
@@ -1219,7 +1193,7 @@ module DotPopper
         offer.closed_at_home
         @groups.close if group_open?
         @layers.clear
-        @credits = nil
+        @screens[:credits].forget
         @screens[:stats].cancel_hold
         effects.clear
         @game_over = nil
