@@ -1132,7 +1132,7 @@ module DotPopper
 
       def update(seconds)
         @now += seconds
-        @groups.update(now, quiet: !playing?, showing: (home? && !stats?) || game_over?)
+        @groups.update(now, quiet: !playing?, showing: screen.announces?)
         @buy_pro.update(seconds)
         @arrival_seen = [arrival.key, now] if arrival? && @arrival_seen&.first != arrival.key
         clear_stats if clearing.done?(now)

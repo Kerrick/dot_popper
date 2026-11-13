@@ -568,6 +568,29 @@ class GroupPanelTest < Minitest::Test
     assert_equal 1, panel.banner.number
   end
 
+  # An announcement shows only where the renderer draws one, over Home
+  # and Game Over: on a screen over Home it waits, rather than passing
+  # unseen.
+  def test_an_announcement_waits_on_a_screen_over_home
+    join!
+    tap_control(:back)
+    tap_control(:back)
+    tick
+    @show.open_themes
+    @session.refresh
+    tick
+    reply(200, [group(top: 40, champion: 1)])
+    tick
+    reply(200, [{ "id" => 9, "champion_number" => 1, "previous_champion_number" => 2, "score" => 40 }])
+    tick(5.0)
+
+    assert_nil panel.banner, "not over Themes"
+    @show.back
+    tick
+
+    assert_match(/took your title/, panel.banner&.text.to_s)
+  end
+
   def test_game_over_holds_a_blank_for_the_line_and_then_says_it
     join!
     tap_control(:back)
