@@ -70,6 +70,15 @@ class SettingsTest < Minitest::Test
     assert_nil show.reach_of(DotPopper::DotSizing::BIGGER_OR_SMALLER), "the next visit leaves it out"
   end
 
+  # Standard, the default, is the first segment, as the default was before
+  # it was called Standard, so the filled segment does not move for anyone.
+  def test_standard_is_the_first_segment
+    standard = @show.reach_of(DotPopper::DotSizing::STANDARD)
+    other = @show.reach_of(DotPopper::DotSizing::BIGGER_OR_SMALLER)
+
+    assert_operator standard.x, :<, other.x
+  end
+
   def test_a_short_window_scrolls_to_what_does_not_fit
     show = new_show(cabinet: @cabinet, layout: layout(400, 320), sounds: FakeSounds.new, radius: R, window: FakeWindow.new)
     show.open_settings

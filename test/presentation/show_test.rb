@@ -416,6 +416,37 @@ class ShowTest < Minitest::Test
     assert_equal :smaller, @show.sizing_preview.effect
   end
 
+  # Stats' line over its cards names the saved size as Settings does,
+  # and says nothing where the two sizes look alike.
+  def test_stats_names_the_saved_size_where_the_two_sizes_look_different
+    notes = [DotPopper::DotSizing::STANDARD, DotPopper::DotSizing::BIGGER_OR_SMALLER].map do |sizing|
+      @cabinet.sizing = sizing
+      [[400, 850], [2560, 1440], [1200, 800]].map do |width, height|
+        @cabinet.screen = field(width, height)
+        @show.resize(layout(width, height), @cabinet.field)
+        @show.stats_note
+      end
+    end
+
+    assert_equal [["Stats for standard dots", "Stats for standard dots", nil],
+                  ["Stats for bigger dots", "Stats for smaller dots", nil]], notes
+  end
+
+  # The shared result's last line says "Played with standard dots." for a
+  # Standard game, and how big the screen was for the other size.
+  def test_the_shared_result_ends_with_the_games_dot_size_or_its_screen
+    lines = [DotPopper::DotSizing::STANDARD, DotPopper::DotSizing::BIGGER_OR_SMALLER].map do |sizing|
+      @cabinet.sizing = sizing
+      finish_game(back_home: false)
+      line = @show.game_over.screen
+      @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
+      press_main
+      line
+    end
+
+    assert_equal ["Played with standard dots.", "Played on a screen about 8 dots wide and 6 dots tall."], lines
+  end
+
   def test_your_stats_opens_over_home_and_back_goes_back
     finish_game
     @show.tap(*middle(@show.stats_reach))
