@@ -224,8 +224,9 @@ Ed25519 comes from OpenSSL in every build, with no pure-Ruby fallback (`Continui
 `Continuity::Pins` (`lib/dot_popper/continuity/pins.rb`) holds a build's 32-byte Ed25519 public keys: the proof roots that certify the server's online key, and the license-signing keys, each a main one and a sealed backup. Nothing a server sends can add to them.
 
 - `SETDEF_PINS` are setdef's own: two proof roots (ids `8336ad85d326749b` and `ad88ca8070d052b7`) and two license-signing keys. `PINNED = SETDEF_PINS`, which a store build trusts.
-- `TEST_PINS` are throwaway keys whose private seeds ship in `Continuity::TestKeys`, for the fakes. A test build trusts them, and nothing they sign verifies against `PINNED` (tested).
-- `Continuity.live?` is true when the pins are not the test pins: only then may a build ask the real server.
+- `TEST_PINS` are throwaway keys whose private seeds ship in `Continuity::TestKeys`, for the fakes, in the test build's own part (`lib/dot_popper/test_build/test_keys.rb`, loaded only when `Build::PARTS` names `test_build`). A test build trusts them, and nothing they sign verifies against `PINNED` (tested). A build for sale carries neither: `script/set_build_channel.rb` stamps its `Build::PARTS` empty, and its package leaves the folder out (`script/channel_contents.rb`).
+- `Continuity.pins_for(channel)` is `PINNED`; the test build's part prepends its own answer, `TEST_PINS` for no channel.
+- `Continuity.live?` is true when the pins are setdef's: only then may a build ask the real server.
 
 ## When setdef is gone
 

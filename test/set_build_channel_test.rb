@@ -5,6 +5,7 @@ require "open3"
 require "rbconfig"
 require "tmpdir"
 require "fileutils"
+require_relative "../script/set_build_channel"
 
 # A store build's job stamps its channel into a copy of the code before
 # fusing (script/set_build_channel.rb). Run on a copy, never this one.
@@ -28,6 +29,13 @@ class SetBuildChannelTest < Minitest::Test
 
     assert ok
     assert_includes source, %(    CHANNEL = "microsoft-store"\n)
+    assert_includes source, %(    PARTS = %w[].freeze\n)
+  end
+
+  # A build for sale loads none of the test build's code.
+  def test_no_build_for_sale_carries_the_test_builds_part
+    assert_includes DotPopper::Build::PARTS, "test_build"
+    DotPopper::Build::CHANNEL_NAMES.each { refute_includes BuildChannel::PARTS.fetch(it), "test_build", it }
   end
 
   def test_every_channel_the_build_names_can_be_stamped
@@ -46,6 +54,7 @@ class SetBuildChannelTest < Minitest::Test
 
       refute ok, channel.inspect
       assert_includes source, "    CHANNEL = nil\n"
+      assert_includes source, "    PARTS = %w[test_build].freeze\n"
     end
   end
 

@@ -6,6 +6,8 @@ require "rbconfig"
 require "tmpdir"
 require "fileutils"
 require "yaml"
+require_relative "../script/set_build_channel"
+require_relative "../script/channel_contents"
 
 # A release checks the app it built (script/check_build.rb), laid out here
 # as `lota fuse` lays one out: the game's copy in game/dot_popper.
@@ -26,7 +28,13 @@ class CheckBuildTest < Minitest::Test
 
   def teardown = @app && FileUtils.rm_rf(@app)
 
-  def stamp(channel) = edit("lib/dot_popper/build.rb", "    CHANNEL = nil\n", "    CHANNEL = #{channel.inspect}\n")
+  # Stamps the copy as script/set_build_channel.rb stamps a build, and
+  # leaves out what the channel's build leaves out.
+  def stamp(channel)
+    build = File.join(@game, "lib/dot_popper/build.rb")
+    File.write(build, BuildChannel.stamp(File.read(build), channel))
+    ChannelContents.left_out(channel).each { FileUtils.rm_rf(File.join(@game, it)) }
+  end
 
   def edit(path, from, to)
     file = File.join(@game, path)
@@ -65,7 +73,10 @@ class CheckBuildTest < Minitest::Test
 
   def test_a_build_that_trusts_the_test_keys_or_has_another_version_fails
     stamp("website")
-    edit("lib/dot_popper/continuity/pins.rb", "PINNED = SETDEF_PINS", "PINNED = TEST_PINS")
+    test_pins = DotPopper::Continuity::TEST_PINS
+    hexes = ->(keys) { "%w[#{keys.map { it.unpack1("H*") }.join(" ")}]" }
+    edit("lib/dot_popper/continuity/pins.rb", "PINNED = SETDEF_PINS",
+         "PINNED = Pins.of(roots: #{hexes.(test_pins.roots)}, license_keys: #{hexes.(test_pins.license_keys)})")
     ok, out = check("website", "0.0.1")
 
     refute ok, out
@@ -81,8 +92,9 @@ class CheckBuildTest < Minitest::Test
   # carries no test keys is still shown refusing what they sign.
   def test_an_app_without_the_test_keys_is_checked_with_the_repositorys
     stamp("website")
-    File.write(File.join(@game, "lib/dot_popper/continuity/test_keys.rb"), "# frozen_string_literal: true\n")
     ok, out = check("website")
+
+    refute_path_exists File.join(@game, "lib/dot_popper/test_build")
 
     assert ok, out
     assert_match(/^ok   a key signed by the test key unlocks a test build$/, out)

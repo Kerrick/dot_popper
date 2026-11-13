@@ -47,5 +47,6 @@ require_relative "dot_popper/refresh"
 require_relative "dot_popper/network"
 require_relative "dot_popper/groups"
 require_relative "dot_popper/continuity"
+DotPopper::Build::PARTS.each { require_relative "dot_popper/#{it}/core" }
 require_relative "dot_popper/theme_releases"
 require_relative "dot_popper/server_choice"

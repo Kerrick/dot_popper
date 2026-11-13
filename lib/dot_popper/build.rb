@@ -15,6 +15,12 @@ module DotPopper
     # checks that the app it built did (script/check_build.rb).
     CHANNEL = nil
 
+    # The folders of code only some builds carry (lib/dot_popper/PART), each
+    # loaded by lib/dot_popper.rb: in the repository every one, a test
+    # build's; in a build for sale only its own channel's, set with CHANNEL
+    # by script/set_build_channel.rb, so it holds none of another's.
+    PARTS = %w[test_build].freeze
+
     # Every channel a build can be sold through: the app stores', and
     # setdef's website, for copies no store controls. This is the one list
     # of their names, which the scripts take from here.

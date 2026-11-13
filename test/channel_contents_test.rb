@@ -14,6 +14,7 @@ class ChannelContentsTest < Minitest::Test
   ROOT = File.expand_path("..", __dir__)
   SCRIPT = File.join(ROOT, "script", "channel_contents.rb")
   require SCRIPT
+  require_relative "../script/set_build_channel"
 
   def setup
     @app = Dir.mktmpdir("dot_popper_app")
@@ -38,7 +39,7 @@ class ChannelContentsTest < Minitest::Test
 
     assert ok, out
     assert_match %r{^the fake store .*\n  file lib/dot_popper/presentation/fake_store\.rb$}, out
-    assert_match %r{^the test keys .*\n  file lib/dot_popper/continuity/test_keys\.rb$}, out
+    assert_match %r{^the test keys .*\n  file lib/dot_popper/test_build$}, out
     assert_match %r{  text lib/dot_popper/receipt/pins\.rb: BEGIN PRIVATE KEY x1}, out
     assert_match %r{^the website checkout .*\n  file lib/dot_popper/presentation/website_store\.rb$}, out
     assert_match(/^the Microsoft Store's license /, out)
@@ -80,8 +81,8 @@ class ChannelContentsTest < Minitest::Test
       FileUtils.rm_rf(File.join(@game, "lib"))
       FileUtils.cp_r(File.join(ROOT, "lib"), @game)
       build = File.join(@game, "lib/dot_popper/build.rb")
-      File.write(build, File.read(build).sub("    CHANNEL = nil\n", "    CHANNEL = #{channel.inspect}\n"))
-      ChannelContents.left_out(channel).each { FileUtils.rm(File.join(@game, it)) }
+      File.write(build, BuildChannel.stamp(File.read(build), channel))
+      ChannelContents.left_out(channel).each { FileUtils.rm_rf(File.join(@game, it)) }
       load = 'require "lota"; require "dot_popper"; require "dot_popper/shell"; puts DotPopper::Build::CHANNEL'
       out, status = Open3.capture2e(RbConfig.ruby, "-I", File.join(@game, "lib"), "-e", load)
       skip "Lota isn't installed here (#{out.lines.first})" if !status.success? && out.include?("lota (LoadError)")
@@ -92,7 +93,7 @@ class ChannelContentsTest < Minitest::Test
   end
 
   def test_every_left_out_file_is_in_the_repository
-    ChannelContents::PIECES.select(&:separate).flat_map(&:files).each { assert_path_exists File.join(ROOT, it) }
+    ChannelContents::PIECES.select(&:apart).flat_map(&:files).each { assert_path_exists File.join(ROOT, it) }
   end
 
   def test_check_fails_when_a_left_out_file_comes_back
@@ -101,7 +102,7 @@ class ChannelContentsTest < Minitest::Test
     refute ok, out
     assert_match %r{FAIL .* holds lib/dot_popper/privacy/declared\.rb \(privacy declarations the game never loads\), which a mac-app-store build leaves out}, out
 
-    ChannelContents.left_out("mac-app-store").each { FileUtils.rm(File.join(@game, it)) }
+    ChannelContents.left_out("mac-app-store").each { FileUtils.rm_rf(File.join(@game, it)) }
     ok, out = run_script("check", "mac-app-store", @app)
 
     assert ok, out

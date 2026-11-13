@@ -1,6 +1,7 @@
 module DotPopper
   module Build
     CHANNEL: String?
+    PARTS: Array[String]
     APP_STORE: String
     MAC_APP_STORE: String
     GOOGLE_PLAY: String

@@ -37,11 +37,11 @@ module ChannelContents
   # +needed_by+ the channels that use it; +files+ its own files, relative
   # to the game's folder; +marks+ the text that names it, wherever it is;
   # +everywhere+ whether to look in the whole package, not only the game;
-  # +separate+ whether the game's code keeps it apart already, so a build
-  # for sale that doesn't need it leaves its files out and holds none of
-  # its marks (LEFT_OUT).
-  Piece = Data.define(:name, :needed_by, :files, :marks, :everywhere, :separate) do
-    def initialize(name:, needed_by:, marks:, files: [], everywhere: false, separate: false) = super
+  # +apart+ how far the game's code keeps it apart already: :files, so a
+  # build for sale that doesn't need it leaves its files out (LEFT_OUT);
+  # :all, so such a build holds none of its marks either; nil, not yet.
+  Piece = Data.define(:name, :needed_by, :files, :marks, :everywhere, :apart) do
+    def initialize(name:, needed_by:, marks:, files: [], everywhere: false, apart: nil) = super
   end
 
   PIECES = [
@@ -50,8 +50,8 @@ module ChannelContents
               marks: [/FakeStore/, /DOT_POPPER_FAKE_STORE_FAILS/, /fake_store\.txt/]),
     Piece.new(name: "the fake website checkout", needed_by: [TEST], marks: [/FakeCheckout/]),
     Piece.new(name: "the fake setdef server", needed_by: [TEST], marks: [/FakeSetdef/, /DOT_POPPER_FAKE_SETDEF/, /fake_setdef\.txt/]),
-    Piece.new(name: "the test keys", needed_by: [TEST],
-              files: %w[lib/dot_popper/continuity/test_keys.rb],
+    Piece.new(name: "the test keys", needed_by: [TEST], apart: :files,
+              files: %w[lib/dot_popper/test_build],
               marks: [/BEGIN PRIVATE KEY/, /\bTestKeys?\b/, /TEST_PINS/, /Receipt::TEST\b/]),
     Piece.new(name: "the test build's settings that grant Pro or skip the free-game limit", needed_by: [TEST],
               marks: [/DOT_POPPER_PRO\b/, /DOT_POPPER_FREE_GAMES/, /DOT_POPPER_TODAY/, /DOT_POPPER_THEME_UNLOCKS/]),
@@ -79,7 +79,7 @@ module ChannelContents
     # them; the game loads only privacy/save_files.rb (Shell::SaveFile).
     Piece.new(name: "privacy declarations the game never loads", needed_by: [],
               files: %w[lib/dot_popper/privacy/declared.rb lib/dot_popper/privacy/document.rb lib/dot_popper/privacy/requests.rb],
-              marks: [], separate: true)
+              marks: [], apart: :all)
   ].freeze
 
   # A build for sale carries only what its channel needs: each separate
@@ -89,7 +89,7 @@ module ChannelContents
   # still require is not separate yet: leaving it out would stop the app
   # starting. A test build (every playtest kit) keeps everything.
   LEFT_OUT = Build::CHANNEL_NAMES.to_h do |channel|
-    [channel, PIECES.select { it.separate && !it.needed_by.include?(channel) }.freeze]
+    [channel, PIECES.select { it.apart && !it.needed_by.include?(channel) }.freeze]
   end.freeze
 
   module_function
@@ -117,7 +117,7 @@ module ChannelContents
     label = ->(path) { game && path.start_with?("#{game}/") ? path.delete_prefix("#{game}/") : path.delete_prefix("#{folder}/") }
     texts = {}
     unneeded(channel).filter_map do |piece|
-      present = game ? piece.files.select { File.file?(File.join(game, it)) } : []
+      present = game ? piece.files.select { File.exist?(File.join(game, it)) } : []
       named = (piece.everywhere ? every : ours).each_with_object({}) do |path, hits|
         text = texts[path] ||= File.binread(path)
         counts = piece.marks.to_h { [shown(it), text.scan(it).size] }.reject { _2.zero? }
@@ -149,6 +149,7 @@ module ChannelContents
     game_in(folder) or abort("#{folder} holds no game to check")
     pieces = left_out_pieces(channel)
     found(channel, folder).select { |piece, _, _| pieces.include?(piece) }.flat_map do |piece, present, named|
+      named = {} unless piece.apart == :all
       present.map { "#{it} (#{piece.name})" } + named.map { |path, counts| "#{path}, which names #{piece.name} (#{counts.keys.join(", ")})" }
     end
   end
