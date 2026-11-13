@@ -138,7 +138,8 @@ module DotPopper
     # Pro over this panel, where it was. Leaving and deleting never need it.
     # A Pro player's first Join or Create asks first (+notice+, a
     # GroupNotice): it says who keeps the scores, once ever, before any
-    # score is sent (#asking).
+    # score is sent (#asking). +shown+ hears true as the screens open and
+    # false as they close.
     class GroupPanel
       BANNER_SECONDS = 4.0
       HOLD = 2.0
@@ -146,8 +147,9 @@ module DotPopper
 
       attr_reader :groups, :code, :banner, :hold, :note, :page, :group_id
 
-      def initialize(groups:, joining:, sounds:, pro_offer: ->(_feature) {}, notice: GroupNotice.read)
+      def initialize(groups:, joining:, sounds:, pro_offer: ->(_feature) {}, notice: GroupNotice.read, shown: ->(_open) {})
         @pro_offer = pro_offer
+        @shown = shown
         @notice = notice
         @asking = nil
         @groups = groups
@@ -180,6 +182,7 @@ module DotPopper
       # none, which is what they came for.
       def open
         @open = true
+        @shown.call(true)
         @note = nil
         show(:list)
         groups.refresh
@@ -188,6 +191,7 @@ module DotPopper
 
       def close
         @open = false
+        @shown.call(false)
         @asking = nil
         @hold = hold.cancel
         @sounds.play(:tick, pitch: 0.8)

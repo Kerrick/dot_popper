@@ -56,7 +56,8 @@ module DotPopper
         @theme_keeper = theme_keeper
         @achievements = achievements
         @achievement_watch = AchievementWatch.new
-        @groups = GroupPanel.new(groups:, joining: UseCases::JoinFriendGroup.new(groups:, entitlement:), sounds:, pro_offer: ->(feature) { open_offer_for(feature) }, notice: group_notice)
+        @groups = GroupPanel.new(groups:, joining: UseCases::JoinFriendGroup.new(groups:, entitlement:), sounds:, pro_offer: ->(feature) { open_offer_for(feature) }, notice: group_notice,
+                                shown: ->(open) { open ? open_layer(:friend_groups) : close_layer(:friend_groups) })
         @groups.copy = ->(text) { clipboard.copy(text) }
         @offer_focus = nil
         @storefront = storefront
@@ -120,7 +121,6 @@ module DotPopper
         if arrival? then @screens[:new_theme]
         elsif tutorial? then @screens[:tutorial]
         elsif @layers.any? then @layers.last
-        elsif group_open? then @screens[:friend_groups]
         elsif home? then @screens[:home]
         elsif sharing? then @screens[:share_preview]
         elsif game_over? then @screens[:game_over]
@@ -210,7 +210,7 @@ module DotPopper
       def stats? = page == :stats
 
       # Home itself, with no other screen open over it.
-      def on_home? = home? && @layers.empty? && !group_open?
+      def on_home? = home? && @layers.empty?
 
       # The screen open over Home (Screens::Page), by the name
       # Screens.made_for gives it, or nil: the topmost, as Credits, Privacy
