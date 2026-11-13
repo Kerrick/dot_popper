@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopper
-  module Groups
+  module Network
     # A server's answer: its status and parsed body, or status 0 when it
     # could not be reached at all. +retry_after+ is the seconds a 429
     # asks the player to wait, or nil.
@@ -14,11 +14,12 @@ module DotPopper
       def offline? = status.zero?
     end
 
-    # One HTTPS request at a time, by Net::HTTP. net/http, openssl and
-    # json are required here, on the worker's thread, on first use, so
-    # the game starts as fast as ever and a player who never joins a
-    # group never loads them. Whatever goes wrong, the answer is
-    # Reply.offline: no network, no certificates, a missing library.
+    # One HTTPS request at a time, by Net::HTTP: the one place the game
+    # reaches the network. net/http, openssl and json are required here,
+    # on the worker's thread, on first use, so the game starts as fast as
+    # ever and a player who never asks for anything never loads them.
+    # Whatever goes wrong, the answer is Reply.offline: no network, no
+    # certificates, a missing library.
     class Link
       OPEN_SECONDS = 5
       READ_SECONDS = 8
@@ -41,7 +42,7 @@ module DotPopper
         http.read_timeout = READ_SECONDS
         parse(http.start { it.request(request(verb, uri, body, token)) })
       rescue StandardError, ScriptError => e
-        warn "Dot Popper: could not reach the group server: #{e.class}"
+        warn "Dot Popper: could not reach #{@url}: #{e.class}"
         Reply.offline
       end
 

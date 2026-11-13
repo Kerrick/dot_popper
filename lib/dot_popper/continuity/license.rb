@@ -69,7 +69,7 @@ module DotPopper
         Due.new(kind: :license_check, body: { key_id: Continuity.hex(current.id), secret: @lines["secret"], next: @lines["next"], nonce: hex })
       end
 
-      # The server's +reply+ (Groups::Reply) to +due+, asked with +nonce+.
+      # The server's +reply+ (Network::Reply) to +due+, asked with +nonce+.
       # Answers the verdict it acted on, or nil when it was no answer.
       def heard(due, nonce, reply)
         current = key or return nil

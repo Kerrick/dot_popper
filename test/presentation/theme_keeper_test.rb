@@ -63,7 +63,7 @@ class ThemeFeedTest < Minitest::Test
   include PresentationTest
 
   Memory = DotPopper::ScoreRecord::Memory
-  Reply = DotPopper::Groups::Reply
+  Reply = DotPopper::Network::Reply
 
   class FakeWorker
     attr_accessor :finished_list

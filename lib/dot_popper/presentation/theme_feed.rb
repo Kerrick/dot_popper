@@ -3,7 +3,7 @@
 module DotPopper
   module Presentation
     # Asks the game's server which themes are unlocked, and tells the
-    # ThemeKeeper. One read, on its own thread (Groups::Worker), so a frame
+    # ThemeKeeper. One read, on its own thread (Network::Worker), so a frame
     # never waits; offline, it simply does nothing, and what was saved
     # stays. The server asks only for the date the player first played,
     # with no account and no group, so one date is kept for every player,

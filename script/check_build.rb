@@ -74,7 +74,7 @@ check.call("the fake store's receipt proves nothing in it") do
 end
 check.call("no setting grants Pro or changes the server in it") do
   env = build.settings({ "DOT_POPPER_PRO" => "1", "DOT_POPPER_SERVER" => "http://localhost:1" })
-  !DotPopper::Entitlement.forced?(env) && DotPopper::Groups::Settings.server_url(env) == DotPopper::Groups::Settings::SERVER_URL
+  !DotPopper::Entitlement.forced?(env) && DotPopper::Network::Settings.server_url(env) == DotPopper::Network::Settings::SERVER_URL
 end
 
 shipped = YAML.load_file(File.join(game, "fledge.yml")).fetch("version").to_s

@@ -55,7 +55,7 @@ module DotPopper
       # wait when a 429 names no time.
       LONGEST_RETRY_WAIT = 3_600
       USUAL_WAIT = 60
-      # A Worker that is never asked to do anything.
+      # A Network::Worker that is never asked to do anything.
       NO_WORKER = Struct.new(:none) do
         def start(*) = nil
         def finished = []
@@ -65,7 +65,7 @@ module DotPopper
       def self.off = new(store: ScoreRecord::Memory.new, worker: NO_WORKER, available: false)
 
       # The Session for a game whose server is at +url+, or Session.off.
-      def self.at(url, store:) = url ? new(store:, worker: Worker.new(Link.new(url))) : off
+      def self.at(url, store:) = url ? new(store:, worker: Network::Worker.new(Network::Link.new(url))) : off
 
       attr_reader :groups, :error, :token, :game_result
 

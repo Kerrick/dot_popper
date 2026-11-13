@@ -10,6 +10,7 @@ require "uri"
 # Link, against a local server, and reads what actually arrived.
 class PrivacyRequestsTest < Minitest::Test
   Groups = DotPopper::Groups
+  Network = DotPopper::Network
   ROOT = File.expand_path("../..", __dir__)
 
   GROUP = { "id" => 1, "join_code" => "2345678", "you" => 1, "champion_number" => 1, "top_score" => 0,
@@ -28,7 +29,7 @@ class PrivacyRequestsTest < Minitest::Test
     @server = TCPServer.new("127.0.0.1", 0)
     @thread = Thread.new { serve }
     store = DotPopper::ScoreRecord::Memory.new
-    @session = Groups::Session.new(store:, worker: Instant.new(Groups::Link.new("http://127.0.0.1:#{@server.addr[1]}")))
+    @session = Groups::Session.new(store:, worker: Instant.new(Network::Link.new("http://127.0.0.1:#{@server.addr[1]}")))
   end
 
   def teardown
@@ -79,7 +80,7 @@ class PrivacyRequestsTest < Minitest::Test
     pump
     @session.leave(1)
     pump
-    DotPopper::Presentation::ThemeFeed.new(worker: Instant.new(Groups::Link.new("http://127.0.0.1:#{@server.addr[1]}")),
+    DotPopper::Presentation::ThemeFeed.new(worker: Instant.new(Network::Link.new("http://127.0.0.1:#{@server.addr[1]}")),
                                            theme_keeper: DotPopper::Presentation::ThemeKeeper.plain([]), store: DotPopper::ScoreRecord::Memory.new,
                                            clock: -> { Time.utc(2026, 11, 8, 12) }).ask
     @session.delete_everything
@@ -103,7 +104,7 @@ class PrivacyRequestsTest < Minitest::Test
   # group.txt's +sent+: its token and unsent score really go out.
   def test_the_saved_token_and_unsent_score_leave_the_device
     store = DotPopper::ScoreRecord::Memory.new("tok\n7\n1\n")
-    @session = Groups::Session.new(store:, worker: Instant.new(Groups::Link.new("http://127.0.0.1:#{@server.addr[1]}")))
+    @session = Groups::Session.new(store:, worker: Instant.new(Network::Link.new("http://127.0.0.1:#{@server.addr[1]}")))
     @session.refresh
     pump
 
@@ -138,7 +139,7 @@ class PrivacyRequestsTest < Minitest::Test
     # and nothing that connects.
     receipts = ruby_files.select { it.end_with?("dot_popper/receipt.rb") || it.include?("dot_popper/receipt/") }
 
-    assert_empty ruby_files.reject { it.end_with?("groups/link.rb", "dot_popper/automation.rb") || it == signatures || receipts.include?(it) }.select { uncommented(it).match?(banned) }
+    assert_empty ruby_files.reject { it.end_with?("network/link.rb", "dot_popper/automation.rb") || it == signatures || receipts.include?(it) }.select { uncommented(it).match?(banned) }
     assert_empty uncommented(signatures).gsub(/OpenSSL::PKey\b|require "openssl"/, "").scan(banned)
     receipts.each { assert_empty uncommented(it).gsub(/OpenSSL::(?:PKey|X509|ASN1|BN)\b|require "openssl"/, "").scan(banned), it }
     assert_empty native_files.select { File.read(it).match?(/URLSession|NSURLConnection|HttpURLConnection|OkHttp|Volley/) }
@@ -152,7 +153,7 @@ class PrivacyRequestsTest < Minitest::Test
   def play_continuity
     c = DotPopper::Continuity
     local = "http://127.0.0.1:#{@server.addr[1]}"
-    server = c::SetdefServer.new(Groups::Link.new(local))
+    server = c::SetdefServer.new(Network::Link.new(local))
     license = c::License.new(DotPopper::ScoreRecord::Memory.new, pins: c::TEST_PINS)
     license.enter(c::LicenseKey.issue(c::TestKeys::LICENSE).text)
     server.proof(c::SignedAnswers.fresh)

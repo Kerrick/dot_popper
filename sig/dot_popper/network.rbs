@@ -1,0 +1,4 @@
+module DotPopper
+  module Network
+  end
+end

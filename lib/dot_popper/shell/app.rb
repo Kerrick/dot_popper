@@ -434,7 +434,7 @@ module DotPopper
       # is gone, a replacement the player chose (Presentation::ServerChoice),
       # or none in an automated run.
       def server_url
-        own = Groups::Settings.server_url(@env) or return
+        own = Network::Settings.server_url(@env) or return
         @server_choice.server_url(own)
       end
 
@@ -443,7 +443,7 @@ module DotPopper
       def groups_session
         require "uri"
         url = server_url
-        own = url.nil? || url == Groups::Settings.server_url(@env)
+        own = url.nil? || url == Network::Settings.server_url(@env)
         Groups::Session.at(url, store: own ? SaveFile.new(name: "group.txt") : SaveFile.new(name: "group-#{URI(url).host.to_s.downcase}.txt"))
       end
 
@@ -490,7 +490,7 @@ module DotPopper
           fake = Continuity::FakeSetdef.new(SaveFile.new(name: "fake_setdef.txt"), mode: Continuity::FakeSetdef.mode(@env))
           Continuity::Watch.new(server: fake, connectivity: fake, gone: @gone, license:, today:, pins:)
         elsif Continuity.live? && !Automation.on?(@env)
-          Continuity::Watch.new(server: Continuity::SetdefServer.new(Groups::Link.new(Groups::Settings::SERVER_URL)),
+          Continuity::Watch.new(server: Continuity::SetdefServer.new(Network::Link.new(Network::Settings::SERVER_URL)),
                                 connectivity: Continuity::Connectivity.new, gone: @gone, license:, today:, pins:)
         else
           Continuity::NoWatch.new(gone: @gone, license:)
@@ -515,7 +515,7 @@ module DotPopper
       # The feed that reads the server's unlocks, if the game has a server.
       def theme_feed(theme_keeper)
         url = server_url or return
-        Presentation::ThemeFeed.new(worker: Groups::Worker.new(Groups::Link.new(url)), theme_keeper:,
+        Presentation::ThemeFeed.new(worker: Network::Worker.new(Network::Link.new(url)), theme_keeper:,
                                     store: SaveFile.new(name: "started_on.txt"), clock: utc_clock)
       end
 

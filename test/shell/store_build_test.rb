@@ -84,10 +84,10 @@ class StoreBuildTest < Minitest::Test
     store = app("website")
 
     assert_equal Date.today, store.send(:today).call
-    assert_equal "", DotPopper::Groups::Settings.server_url(store.instance_variable_get(:@env)).to_s, "the bot's run is offline, not on DOT_POPPER_SERVER"
+    assert_equal "", DotPopper::Network::Settings.server_url(store.instance_variable_get(:@env)).to_s, "the bot's run is offline, not on DOT_POPPER_SERVER"
     plain = DotPopper::Shell::App.new({ "DOT_POPPER_SERVER" => "http://localhost:1" }, channel: "website").instance_variable_get(:@env)
 
-    assert_equal DotPopper::Groups::Settings::SERVER_URL, DotPopper::Groups::Settings.server_url(plain)
+    assert_equal DotPopper::Network::Settings::SERVER_URL, DotPopper::Network::Settings.server_url(plain)
     assert_equal Date.new(2031, 1, 1), app(nil).send(:today).call
   end
 

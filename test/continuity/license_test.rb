@@ -8,7 +8,7 @@ require "uri"
 class LicenseTest < Minitest::Test
   C = DotPopper::Continuity
   Memory = DotPopper::ScoreRecord::Memory
-  Reply = DotPopper::Groups::Reply
+  Reply = DotPopper::Network::Reply
   TODAY = Date.new(2026, 11, 9)
 
   def setup

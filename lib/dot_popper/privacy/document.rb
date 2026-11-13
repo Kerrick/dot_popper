@@ -51,12 +51,12 @@ module DotPopper
       end
 
       def network
-        { server: Groups::Settings::SERVER_URL, every_request: "Sent over HTTPS to this server, except the connectivity checks, which go to the address each names, as plain HTTP that carries nothing about the player.",
+        { server: Network::Settings::SERVER_URL, every_request: "Sent over HTTPS to this server, except the connectivity checks, which go to the address each names, as plain HTTP that carries nothing about the player.",
           outside_services: NO_OUTSIDE_SERVICES, requests: Groups::REQUESTS.values.map { request(it) } }
       end
 
       def request(req)
-        { kind: req.kind, to: req.to || Groups::Settings::SERVER_URL, method: req.verb.to_s.upcase, path: req.path, query: fields(req.query), body: fields(req.body),
+        { kind: req.kind, to: req.to || Network::Settings::SERVER_URL, method: req.verb.to_s.upcase, path: req.path, query: fields(req.query), body: fields(req.body),
           sends_token: req.token, when: req.happens, in_this_build: !Groups::UNBUILT_REQUESTS.include?(req.kind) }
       end
 

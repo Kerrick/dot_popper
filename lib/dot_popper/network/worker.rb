@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 module DotPopper
-  module Groups
+  module Network
     # Runs a Link's requests in order on a thread of its own, so a frame
     # never waits on the network. The thread starts with its first job,
-    # so no group means no thread, and it runs at low priority, so what
-    # little Ruby it runs between its waits cannot hold up a frame.
+    # so nothing asked means no thread, and it runs at low priority, so
+    # what little Ruby it runs between its waits cannot hold up a frame.
     class Worker
       PRIORITY = -2
 
@@ -15,7 +15,7 @@ module DotPopper
         @done = Queue.new
       end
 
-      # Starts +job+ (Session's Job) with +token+.
+      # Starts +job+ with +token+.
       def start(job, token)
         @thread ||= Thread.new { work }
         @jobs << [job, token]

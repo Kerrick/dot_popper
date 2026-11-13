@@ -4,8 +4,8 @@ module DotPopper
   module Continuity
     # The port to setdef's own server, for what only it can answer: the
     # proof that it is itself (GET /proof) and where a license key is
-    # (POST /licenses, POST /license_checks). Each answers a Groups::Reply.
-    # SetdefServer is the adapter for the real one, by Groups::Link;
+    # (POST /licenses, POST /license_checks). Each answers a Network::Reply.
+    # SetdefServer is the adapter for the real one, by Network::Link;
     # FakeSetdef the test build's. A replacement server is never asked any
     # of this: it is setdef's, whatever server friend groups use.
     class SetdefServer
@@ -21,7 +21,7 @@ module DotPopper
     # Google and Microsoft for exactly this, each answering a fixed reply,
     # so that one answering as expected shows the internet works. #online?
     # asks them in turn and stops at the first that does. Connectivity is
-    # the real adapter, by Groups::Link; the test build's is FakeSetdef.
+    # the real adapter, by Network::Link; the test build's is FakeSetdef.
     class Connectivity
       Check = Data.define(:url, :status, :body)
 
@@ -31,8 +31,8 @@ module DotPopper
         Check.new(url: "http://www.msftconnecttest.com/connecttest.txt", status: 200, body: /\AMicrosoft Connect Test\z/)
       ].freeze
 
-      # +link+ makes a raw Groups::Link for a URL's host.
-      def initialize(checks: CHECKS, link: ->(url) { Groups::Link.new(url, raw: true) })
+      # +link+ makes a raw Network::Link for a URL's host.
+      def initialize(checks: CHECKS, link: ->(url) { Network::Link.new(url, raw: true) })
         @checks = checks
         @link = link
       end
@@ -68,15 +68,15 @@ module DotPopper
       end
 
       def proof(nonce)
-        return Groups::Reply.offline if %i[gone offline].include?(@mode)
+        return Network::Reply.offline if %i[gone offline].include?(@mode)
 
-        Groups::Reply.new(status: 200, body: SignedAnswers.signed_proof(nonce))
+        Network::Reply.new(status: 200, body: SignedAnswers.signed_proof(nonce))
       end
 
       def online? = @mode != :offline
 
       def ask(due)
-        return Groups::Reply.offline if %i[gone offline].include?(@mode)
+        return Network::Reply.offline if %i[gone offline].include?(@mode)
 
         due.kind == :license_entry ? enter(due.body) : check(due.body)
       end
@@ -85,7 +85,7 @@ module DotPopper
 
       def enter(body)
         key = LicenseKey.parse(body[:key])
-        return Groups::Reply.new(status: 422, body: {}) unless key&.valid?(TEST_PINS)
+        return Network::Reply.new(status: 422, body: {}) unless key&.valid?(TEST_PINS)
 
         remember(key.id, body[:secret])
         verdict("current", key.id, body[:nonce])
@@ -94,7 +94,7 @@ module DotPopper
       def check(body)
         id = Continuity.unhex(body[:key_id], 16)
         held = id && ledger[Continuity.hex(id)]
-        return Groups::Reply.new(status: 404, body: {}) unless held
+        return Network::Reply.new(status: 404, body: {}) unless held
         return verdict("moved", id, body[:nonce]) if @mode == :moved
 
         if held == digest(body[:secret]) then remember(id, body[:next])
@@ -103,7 +103,7 @@ module DotPopper
         verdict("current", id, body[:nonce])
       end
 
-      def verdict(word, id, nonce) = Groups::Reply.new(status: 200, body: SignedAnswers.signed_verdict(word, id, Continuity.unhex(nonce, 32).to_s))
+      def verdict(word, id, nonce) = Network::Reply.new(status: 200, body: SignedAnswers.signed_verdict(word, id, Continuity.unhex(nonce, 32).to_s))
 
       def digest(hex) = Continuity.hex(Ed25519.sha256(Continuity.unhex(hex, 32).to_s))
 

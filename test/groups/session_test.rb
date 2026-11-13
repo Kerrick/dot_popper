@@ -4,7 +4,7 @@ require "test_helper"
 
 class SessionTest < Minitest::Test
   Groups = DotPopper::Groups
-  Reply = Groups::Reply
+  Reply = DotPopper::Network::Reply
 
   # A worker that holds each job until the test answers it.
   class HandWorker
@@ -572,14 +572,7 @@ class SessionTest < Minitest::Test
     assert_equal [9, 2], @session.title_changes(1).map(&:id)
   end
 
-  def test_the_server_url_is_one_setting_for_every_build
-    assert_equal Groups::Settings::SERVER_URL, Groups::Settings.server_url({})
-    assert_nil Groups::Settings.server_url({ "DOT_POPPER_AUTOPLAY" => "1" }), "an automated run has no server"
-    assert_nil Groups::Settings.server_url({ "DOT_POPPER_SCENARIO" => "game" })
-    assert_nil Groups::Settings.server_url({ "DOT_POPPER_QUIT_AFTER" => "30" })
-    assert_match(%r{\Ahttps://}, Groups::Settings::SERVER_URL)
-    assert_equal "http://x:1", Groups::Settings.server_url({ "DOT_POPPER_SERVER" => "http://x:1" })
-    assert_nil Groups::Settings.server_url({ "DOT_POPPER_SERVER" => "" })
+  def test_no_server_means_no_groups
     refute_predicate Groups::Session.at(nil, store: @store), :available?
   end
 

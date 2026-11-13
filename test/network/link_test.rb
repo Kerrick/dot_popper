@@ -4,7 +4,7 @@ require "test_helper"
 require "socket"
 
 class LinkTest < Minitest::Test
-  Groups = DotPopper::Groups
+  Network = DotPopper::Network
 
   # Serves each canned response once, to one request apiece, on a port of
   # this machine's own, and keeps what it was asked.
@@ -37,7 +37,7 @@ class LinkTest < Minitest::Test
     serve(http("429 Too Many Requests", '{"error":"rate_limited"}', "Retry-After" => "90"),
           http("200 OK", '[{"id":7,"champion_number":3,"score":41}]'),
           http("204 No Content", "")) do |url|
-      link = Groups::Link.new(url)
+      link = Network::Link.new(url)
       limited = link.call(:post, "/group", { seat: 1 }, "t")
 
       assert_equal [429, { "error" => "rate_limited" }, 90], [limited.status, limited.body, limited.retry_after]
@@ -56,6 +56,6 @@ class LinkTest < Minitest::Test
     port = server.addr[1]
     server.close
 
-    assert_predicate Groups::Link.new("http://127.0.0.1:#{port}").call(:get, "/group", nil, "t"), :offline?
+    assert_predicate Network::Link.new("http://127.0.0.1:#{port}").call(:get, "/group", nil, "t"), :offline?
   end
 end

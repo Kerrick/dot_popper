@@ -20,8 +20,8 @@ class AutomationTest < Minitest::Test
     assert_raises(Automation::OutsideConnection) { Socket.tcp("example.com", 80) }
   end
 
-  def test_the_group_link_cannot_reach_the_real_server_from_a_test
-    link = DotPopper::Groups::Link.new(DotPopper::Groups::Settings::SERVER_URL)
+  def test_the_link_cannot_reach_the_real_server_from_a_test
+    link = DotPopper::Network::Link.new(DotPopper::Network::Settings::SERVER_URL)
     assert_raises(Automation::OutsideConnection) { link.call(:get, "/themes", nil, nil) }
   end
 
