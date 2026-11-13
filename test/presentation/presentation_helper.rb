@@ -51,8 +51,9 @@ module PresentationTest
 
   # A Show on +cabinet+, built as the composition root builds the game's:
   # its use cases made by Composition.use_cases from the areas' objects
-  # (memory stores and harmless stand-ins unless given), and the offer
-  # subscribed to Pro arriving after them. Every Show a test makes on one
+  # (memory stores and harmless stand-ins unless given), the Show
+  # subscribed to the rules' events and the offer to Pro arriving, each
+  # after them. Every Show a test makes on one
   # cabinet starts its games through the cabinet's one Starts. The rest
   # of +options+ go to the Show as they are.
   def self.show(cabinet:, entitlement: DotPopper::Entitlement.free, storefront: NoStorefront.new, games: DotPopper::FreeGames.unlimited,
@@ -63,6 +64,7 @@ module PresentationTest
     use_cases = DotPopper::Composition.use_cases(cabinet:, free_games: games, entitlement:, store: storefront, achievements:, stats_book:,
                                                  friend_groups: groups, use_theme:, starts: DotPopperTest.starts_of(cabinet))
     show = Show.new(cabinet:, stats_book:, achievements:, groups:, theme_keeper:, **use_cases, **options)
+    cabinet.subscribe(show)
     entitlement.subscribe(show.offer)
     show
   end

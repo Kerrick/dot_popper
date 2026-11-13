@@ -92,7 +92,6 @@ module DotPopper
         @screens = Screens.made_for(self, clipboard:, buy_pro:, start_game:, sharing:, view_achievements:, keeper:, stats_book:,
                                           achievements:, haptics:, notices:, sizing_store:, server_choice:, theme_keeper:, use_theme:,
                                           tutorial_flag:)
-        cabinet.subscribe(self)
       end
 
       # The screen on top, which every press, button, key and scroll asks

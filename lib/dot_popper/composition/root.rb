@@ -216,8 +216,11 @@ module DotPopper
           group_notice: Presentation::GroupNotice.new(file("group_notice.txt")),
           theme_keeper:, links: @engine.opener, server_choice: @server_choice, **use_cases
         )
-        # A store's purchase landing ticks on the offer, after BuyPro has
-        # told friend groups of what was earned while Free.
+        # The Show hears the rules' events after FinishGame, so a game is
+        # finished when Game Over shows it; a store's purchase landing
+        # ticks on the offer, after BuyPro has told friend groups of what
+        # was earned while Free.
+        @cabinet.subscribe(@show)
         entitlement.subscribe(@show.offer)
         @refresh = Refresh.new([-> { @theme_feed&.ask }, -> { groups.refresh }], cabinet: @cabinet, clock: @clock)
         @cabinet.subscribe(@refresh)

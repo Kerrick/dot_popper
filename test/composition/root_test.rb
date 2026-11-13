@@ -297,6 +297,30 @@ class RootTest < Minitest::Test
     assert_equal [:tick, 1.3], game.speaker.played.last
   end
 
+  # The root subscribes every listener to the rules' events itself, in the
+  # order they hear them: FinishGame finishes a game before the Show shows
+  # it. Making a Show subscribes nothing.
+  def test_the_root_subscribes_the_rules_listeners_and_a_show_subscribes_none
+    game = root
+    listeners = game.cabinet.instance_variable_get(:@listeners).map(&:class)
+
+    assert_equal [DotPopper::UseCases::FinishGame, Show, DotPopper::Refresh, DotPopper::PlaytestLog], listeners
+    cabinet = DotPopper::Cabinet.new(field)
+    entitlement = DotPopper::Entitlement.free
+    stats_book = DotPopper::StatsBook.new(DotPopper::ScoreRecord::Memory.new)
+    achievements = DotPopper::Achievements.new(DotPopper::ScoreRecord::Memory.new)
+    groups = DotPopper::Groups::Session.off
+    theme_keeper = ThemeKeeper.plain(Style::THEMES)
+    use_cases = DotPopper::Composition.use_cases(cabinet:, free_games: DotPopper::FreeGames.unlimited, entitlement:, store: NoStorefront.new,
+                                                 achievements:, stats_book:, friend_groups: groups,
+                                                 use_theme: DotPopper::UseCases::UseTheme.new(themes: theme_keeper, entitlement:))
+    heard = -> { [cabinet, entitlement].map { it.instance_variable_get(:@listeners).size } }
+    before = heard.call
+    Show.new(cabinet:, layout:, sounds: FakeSounds.new, radius: R, stats_book:, achievements:, theme_keeper:, groups:, **use_cases)
+
+    assert_equal before, heard.call
+  end
+
   def test_a_scenarios_theme_is_used_in_a_test_build_and_ignored_in_a_store_build
     env = { "DOT_POPPER_PRO" => "1", "DOT_POPPER_THEME" => "ghost", "DOT_POPPER_THEME_UNLOCKS" => "ghost" }
 
