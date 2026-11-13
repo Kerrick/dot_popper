@@ -2,8 +2,8 @@
 
 module DotPopper
   module Presentation
-    # Where the card that tells of a new theme puts its parts, on the
-    # title, in the safe area: a preview of the theme's two dots, its name,
+    # Where the card that tells of a new theme puts its parts, over
+    # Home, in the safe area: a preview of the theme's two dots, its name,
     # and two buttons, the switch as prominent as Play and "Not now"
     # beside it. A phone held upright stacks the buttons, and so does a card
     # too short for the switch's word (+word+, sized by +measure+) to fit

@@ -158,7 +158,7 @@ class ShowTest < Minitest::Test
   end
 
   def test_the_share_preview_closes_by_close_by_back_and_by_a_tap_beside_it
-    finish_game(back_to_title: false)
+    finish_game(back_home: false)
     @show.share
     @show.tap(*middle(@show.close_reach))
     refute @show.sharing?, "Close closes it"
@@ -180,7 +180,7 @@ class ShowTest < Minitest::Test
   # A controller's Y is Share my score at Game Over, and Copy in the
   # preview over it.
   def test_a_controllers_y_shares_at_game_over_and_copies_in_the_preview
-    finish_game(back_to_title: false)
+    finish_game(back_home: false)
     @show.pad(:y)
     assert @show.sharing?
     assert_nil @clipboard.text
@@ -193,7 +193,7 @@ class ShowTest < Minitest::Test
   # In the preview, the main button is Copy: Enter, Space, Start, a
   # gamepad's A aimed at nothing, and Y again all copy.
   def test_in_the_share_preview_the_main_button_and_y_copy
-    finish_game(back_to_title: false)
+    finish_game(back_home: false)
     @show.share
     @show.primary
     assert_match(/\ADot Popper: 1 point\n/, @clipboard.text)
@@ -210,7 +210,7 @@ class ShowTest < Minitest::Test
   # Over, its grace runs as ever, nothing under the preview takes a
   # press, and once it closes, Home goes on as before.
   def test_the_share_preview_leaves_game_over_and_home_as_they_were
-    finish_game(back_to_title: false)
+    finish_game(back_home: false)
     continue = middle(@show.home_reach)
     @show.share
     assert_equal %i[close copy], @show.controls.map(&:name).sort, "only the preview's buttons take a press"
@@ -327,7 +327,7 @@ class ShowTest < Minitest::Test
   end
 
   def test_share_my_score_takes_taps_where_its_plan_draws_it
-    finish_game(back_to_title: false)
+    finish_game(back_home: false)
     button = @show.game_over_plan.share_button
 
     reach = @show.share_reach
@@ -339,7 +339,7 @@ class ShowTest < Minitest::Test
   end
 
   def test_the_share_buttons_place_on_home_shares_nothing
-    finish_game(back_to_title: false)
+    finish_game(back_home: false)
     place = middle(@show.share_reach)
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
@@ -369,7 +369,7 @@ class ShowTest < Minitest::Test
   end
 
   def test_game_over_is_laid_out_again_only_when_it_changes
-    finish_game(back_to_title: false)
+    finish_game(back_home: false)
     plan = @show.game_over_plan
 
     assert_same plan, @show.game_over_plan
@@ -394,7 +394,7 @@ class ShowTest < Minitest::Test
   end
 
   def test_b_never_quits_from_a_game_or_the_stats
-    finish_game(back_to_title: false)
+    finish_game(back_home: false)
 
     assert_nil @show.ask_to_quit
   end
@@ -442,7 +442,7 @@ class ShowTest < Minitest::Test
   end
 
   def test_the_stats_screen_opens_only_from_home
-    finish_game(back_to_title: false)
+    finish_game(back_home: false)
     @show.open_stats
 
     refute @show.stats?
@@ -732,10 +732,10 @@ class ShowTest < Minitest::Test
     assert_equal 1, @show.effects.reveals.size
   end
 
-  def finish_game(back_to_title: true)
+  def finish_game(back_home: true)
     start_and_pop
     @cabinet.update(20)
-    return unless back_to_title
+    return unless back_home
 
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main

@@ -5,8 +5,8 @@ module DotPopper
     # A player for development runs (DOT_POPPER_AUTOPLAY): it goes from
     # Home to a game, taps bright dots where they show, sometimes taps
     # a popped one by mistake, slows as its score grows so the game ends,
-    # and goes from Game Over back to Home. Given the Show, it presses
-    # the buttons a player would: Play to start a game, Home to go
+    # and goes from Game Over back to Home. It presses the Show's
+    # buttons as a player would: Play to start a game, Home to go
     # back, "Share my score" on every other Game Over, then Copy in the
     # share preview, and Close, a moment apart (on a phone, the system's
     # share sheet opens instead, and the bot goes on), and on its second visit to
@@ -34,11 +34,11 @@ module DotPopper
       end
 
       # Where to press this frame, as [x, y], or nil.
-      def update(seconds, cabinet, show = nil)
+      def update(seconds, cabinet, show)
         notice(cabinet.state)
         @waited += seconds
         case cabinet.state
-        when Cabinet::Home then home(cabinet, show)
+        when Cabinet::Home then home(show)
         when Cabinet::GameOver then finish(cabinet, show)
         when Cabinet::Playing then play(seconds, cabinet.game)
         end
@@ -64,14 +64,12 @@ module DotPopper
         yield
       end
 
-      def center(field) = [field.width / 2.0, field.height * 0.62]
+      def home(show)
+        return later_on_arrival(show) if show.arrival?
+        return browse(show) if show.stats? || (@homes == 2 && !@browsed)
+        return choose_size(show) if show.settings? || (!@resized && @browsed && show.sizing_offered?)
 
-      def home(cabinet, show)
-        return later_on_arrival(show) if show&.arrival?
-        return browse(show) if show && (show.stats? || (@homes == 2 && !@browsed))
-        return choose_size(show) if show && (show.settings? || (!@resized && @browsed && show.sizing_offered?))
-
-        press_once(@style.home_wait) { start(cabinet, show) }
+        press_once(@style.home_wait) { middle(show.play_reach) }
       end
 
       # A new theme's card, as DOT_POPPER_THEME_UNLOCKS shows it: Play is out
@@ -119,21 +117,17 @@ module DotPopper
         middle(show.reach_of(:settings))
       end
 
-      # Play's middle; without the Show, the middle of the screen, which
-      # the game itself takes as a start.
-      def start(cabinet, show) = show ? middle(show.play_reach) : center(cabinet.field)
-
       # Shares and copies every other result first, then presses Home
       # once the game will hear.
       def finish(cabinet, show)
-        return in_preview(show) if show&.sharing?
+        return in_preview(show) if show.sharing?
 
-        if show && @game_overs.even? && !@shared && @waited >= @style.game_over_wait / 2 && show.share_reach
+        if @game_overs.even? && !@shared && @waited >= @style.game_over_wait / 2 && show.share_reach
           @shared = true
           @pressed_at = @waited
           return middle(show.share_reach)
         end
-        press_once(@style.game_over_wait) { show ? middle(show.home_reach) : center(cabinet.field) } if cabinet.state.ready?
+        press_once(@style.game_over_wait) { middle(show.home_reach) } if cabinet.state.ready?
       end
 
       # In the share preview, a moment after each press: Copy, then Close.

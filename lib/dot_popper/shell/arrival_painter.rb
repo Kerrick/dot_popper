@@ -2,8 +2,8 @@
 
 module DotPopper
   module Shell
-    # The card that tells of a new theme, once, at a calm moment on the
-    # title: the theme's own two dots for a preview, its name, and an
+    # The card that tells of a new theme, once, at a calm moment on
+    # Home: the theme's own two dots for a preview, its name, and an
     # immediate switch beside "Not now". Calm, and always answerable.
     # Presentation::ArrivalPlan decides where each part goes.
     class ArrivalPainter < Data.define(:pen, :dots)

@@ -7,15 +7,16 @@ class AutopilotTest < Minitest::Test
 
   def test_it_plays_a_game_and_comes_back_home
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
+    show = new_show(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R)
     pilot = Autopilot.new(Style::AUTOPILOT, random: Random.new(5))
     seen = []
     events = []
     cabinet.subscribe { events << it.class }
     3000.times do
-      x, y = pilot.update(1 / 60.0, cabinet)
-      # Without a Show, its press on Home stands for Play.
-      cabinet.state.is_a?(DotPopper::Cabinet::Home) ? start!(cabinet) : cabinet.press(x, y) if x
+      x, y = pilot.update(1 / 60.0, cabinet, show)
+      show.tap(x, y) if x
       cabinet.update(1 / 60.0)
+      show.update(1 / 60.0)
       seen << cabinet.state.class
       break if seen.include?(DotPopper::Cabinet::GameOver) && cabinet.state.is_a?(DotPopper::Cabinet::Home)
     end

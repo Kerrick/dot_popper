@@ -187,7 +187,7 @@ module DotPopper
       def tutorial? = !@tutorial.nil?
 
       # Whether the Stats screen is open over Home. It is the
-      # presentation's alone: the game stays on its title meanwhile, and
+      # presentation's alone: the game stays on Home meanwhile, and
       # no tap there reaches the game.
       def stats? = page == :stats
 
@@ -244,14 +244,14 @@ module DotPopper
       def stats_layout = @screens[:stats].plan
 
       # Whether Home offers "Your stats" and the choice of dot size:
-      # only once a game has finished, so a first-time player's title says
+      # only once a game has finished, so a first-time player's Home says
       # only how to play. A player who cleared their Stats has played, so
       # it still offers them, though it shows no score record or goal until their
       # next game (#played?).
       def stats_offered? = played? || @keeper.cleared?
 
       # Whether a game has finished since Stats were last cleared:
-      # the title shows today's goal only then.
+      # Home shows today's goal only then.
       def played? = stats_book.stats.games.positive?
 
       # What stands under Stats' heading where the two dot sizes differ:

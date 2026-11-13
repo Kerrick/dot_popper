@@ -87,7 +87,7 @@ module DotPopper
       # on a gamepad, naming +button+, the one held ("A" or "Y").
       def keep_holding(button) = super().for(input).sub("%s", button.to_s)
 
-      # What the title says of the games left, where games are counted: "23
+      # What Home says of the games left, where games are counted: "23
       # games left", or "No games left today".
       def games_left(left) = left.positive? ? "#{Words.count(left, "game")} left" : "No games left today"
 

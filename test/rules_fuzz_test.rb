@@ -19,7 +19,7 @@ class RulesFuzzTest < Minitest::Test
     ROUNDS.times { |number| play(random, "seed #{seed}, game #{number}") }
   end
 
-  # Title, Playing, Game Over, and back, in random order and timing, a
+  # Home, Playing, Game Over, and back, in random order and timing, a
   # game started now and then from Home as Play starts one.
   # Outside Playing, nothing changes the score or the clock.
   def test_random_presses_change_a_game_only_while_it_is_played

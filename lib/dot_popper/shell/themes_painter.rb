@@ -69,7 +69,7 @@ module DotPopper
       end
 
       # The theme's name in its own lettering and its bright dot's color,
-      # as its title on Home is set.
+      # as the game's name on Home is set.
       def name(text, rect, theme)
         art = theme.art
         face = art&.wordmark || pen.style::TYPE.bold
