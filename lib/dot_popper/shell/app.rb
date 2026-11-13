@@ -17,9 +17,9 @@ module DotPopper
 
       # +channel+ is the build's (Build::CHANNEL). It, and not the
       # environment, decides which keys and store this run trusts, and
-      # which developer settings it obeys (Composition::Settings).
+      # which developer settings it obeys (Composition::DeveloperSettings).
       def initialize(env = ENV, channel: Build::CHANNEL)
-        @settings = Composition::Settings.new(env, channel:)
+        @settings = Composition::DeveloperSettings.new(env, channel:)
         Automation.guard!(exit_on_attempt: true) if @settings.automated?
         @uptime = 0.0
         @chatter = Presentation::Chatter.quiet(Style::CHATTER)

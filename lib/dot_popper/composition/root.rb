@@ -2,7 +2,7 @@
 
 require "uri"
 require_relative "../presentation"
-require_relative "settings"
+require_relative "developer_settings"
 require_relative "use_cases"
 
 module DotPopper
@@ -31,7 +31,7 @@ module DotPopper
     # [say(line)] prints a line about the run
     # [path(name)] where the save file +name+ is, to print
     #
-    # +settings+ (Settings) are the developer settings this build obeys,
+    # +settings+ (DeveloperSettings) are the developer settings this build obeys,
     # and +clock+ the wall clock in seconds, which Refresh keeps its floor
     # by. Nothing here starts a thread or asks anything of the network
     # until #start.
@@ -43,7 +43,7 @@ module DotPopper
       attr_reader :settings, :platform, :dot_size, :window, :cabinet, :show, :pen, :speaker, :splash, :storefront,
                   :entitlement, :theme_feed, :watch, :cursor, :autopilot, :haptics, :sharing, :refresh
 
-      def initialize(engine:, settings: Settings.new, clock: -> { Time.now.to_f })
+      def initialize(engine:, settings: DeveloperSettings.new, clock: -> { Time.now.to_f })
         @engine = engine
         @settings = settings
         @clock = clock

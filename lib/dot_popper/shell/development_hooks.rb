@@ -8,7 +8,7 @@ module DotPopper
     # (DOT_POPPER_PERF), and the fake drag (DOT_POPPER_FAKE_DRAG). A run
     # with none of them set has none (DevelopmentHooks.for answers nil), so
     # its frames do nothing for them. What a build obeys is the build's
-    # (Composition::Settings): these are all Build::HARMLESS.
+    # (Composition::DeveloperSettings): these are all Build::HARMLESS.
     class DevelopmentHooks
       # The hooks +settings+ ask for, or nil for none. +show+, +pile+ and
       # +dragging+ are the game's; +pad+ is called with (action, x, y) for
