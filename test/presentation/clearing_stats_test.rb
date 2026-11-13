@@ -12,10 +12,10 @@ class ClearingStatsTest < Minitest::Test
 
   def setup
     @sounds = FakeSounds.new
-    @folder = DotPopper::StatsKeeper::Folder.new
+    @folder = DotPopper::StatsBackup::Folder.new
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), score_record: DotPopper::ScoreRecord.new(@folder.call("score_record")))
     @stats_book = DotPopper::StatsBook.new(@folder.call("stats"), today: -> { Date.new(2026, 11, 5) })
-    @keeper = DotPopper::StatsKeeper.new(score_record: @cabinet.score_record, stats_book: @stats_book, folder: @folder)
+    @keeper = DotPopper::StatsBackup.new(score_record: @cabinet.score_record, stats_book: @stats_book, folder: @folder)
     @show = new_show(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, stats_book: @stats_book, keeper: @keeper)
     finish_game
     @show.open_stats

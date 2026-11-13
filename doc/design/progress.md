@@ -17,8 +17,8 @@ Every file lives in Lota's save folder (paths per system are in [README.md](../.
 | `achievements.txt` | each achievement earned and the day, as `id=YYYY-MM-DD` lines | `Achievements` |
 | `games.csv` | one line per finished game | `GamesLog` |
 | `games-YYYYMMDD-HHMMSS.csv` | an older log, kept whole when its columns changed | `GamesLog` |
-| `score_record-…`, `stats-…`, `achievements-YYYYMMDD-HHMMSS.txt` | the backup made by the last clearing | `StatsKeeper` |
-| `cleared.txt` | when Stats were last cleared, and the backups' names | `StatsKeeper` |
+| `score_record-…`, `stats-…`, `achievements-YYYYMMDD-HHMMSS.txt` | the backup made by the last clearing | `StatsBackup` |
+| `cleared.txt` | when Stats were last cleared, and the backups' names | `StatsBackup` |
 
 The composition root (`Composition::Root`) makes each store, asking the engine for a save file by name (`Shell::Engine#file`, a `Shell::SaveFile`). Lota's save folder can neither rename nor append to a file, so every store is rewritten whole, and "keeping a file whole" means writing a copy.
 
@@ -186,14 +186,14 @@ The Stats screen has **Clear my stats…**, offered while there is something to 
 
 Forgiveness, from Lidwell's *Universal Principles of Design*: an Undo serves the player better than a confirmation they learn to dismiss, and a held press is hard to make by accident yet the same with a finger, a mouse or a gamepad. The control is quiet because records aren't the point of the game (Ferrara).
 
-**What clears.** `StatsKeeper` (`lib/dot_popper/stats_keeper.rb`) clears the three stores that are records: `ScoreRecord`, `StatsBook` and `Achievements`. That is every class's highest score and records, the totals, the chart, the goal streaks and today's goal met, and every achievement earned. Achievements are records of what the player did, as a highest score is. Nothing else is touched: the games log, the settings (`dot_size.txt`, `sound.txt`), what the game has taught, themes, friend groups, free games and Pro stay as they are.
+**What clears.** `StatsBackup` (`lib/dot_popper/stats_backup.rb`) clears the three stores that are records: `ScoreRecord`, `StatsBook` and `Achievements`. That is every class's highest score and records, the totals, the chart, the goal streaks and today's goal met, and every achievement earned. Achievements are records of what the player did, as a highest score is. Nothing else is touched: the games log, the settings (`dot_size.txt`, `sound.txt`), what the game has taught, themes, friend groups, free games and Pro stay as they are.
 
-**Backup.** Before emptying anything, `StatsKeeper#clear` copies each store's text exactly to `<name>-YYYYMMDD-HHMMSS.txt` (`score_record-…`, `stats-…`, `achievements-…`) and notes them in `cleared.txt` (`cleared=<time>`, then `score_record.txt=score_record-….txt` and so on). The next clearing first removes the backups the note names, and only names shaped like backups (`StatsKeeper::BACKUP`), so the folder keeps one backup. A store never written gets no backup. Since the save folder can't rename, the copy is written before anything is lost.
+**Backup.** Before emptying anything, `StatsBackup#clear` copies each store's text exactly to `<name>-YYYYMMDD-HHMMSS.txt` (`score_record-…`, `stats-…`, `achievements-…`) and notes them in `cleared.txt` (`cleared=<time>`, then `score_record.txt=score_record-….txt` and so on). The next clearing first removes the backups the note names, and only names shaped like backups (`StatsBackup::BACKUP`), so the folder keeps one backup. A store never written gets no backup. Since the save folder can't rename, the copy is written before anything is lost.
 
-**Undo** restores each store's exact text, kept in memory (`StatsKeeper#restore` with the `Cleared` value). The backup stays on disk for support.
+**Undo** restores each store's exact text, kept in memory (`StatsBackup#restore` with the `Cleared` value). The backup stays on disk for support.
 
-Tests: `test/stats_keeper_test.rb`, `test/presentation/clearing_stats_test.rb`, `test/presentation/hold_to_confirm_test.rb`.
+Tests: `test/stats_backup_test.rb`, `test/presentation/clearing_stats_test.rb`, `test/presentation/hold_to_confirm_test.rb`.
 
 ## Home after clearing
 
-`StatsKeeper#cleared?` is true once `cleared.txt` exists, so the game knows this player has played though their Stats say nothing. Home is laid out as for a player who has played (`Show#stats_offered?` is `played? || keeper.cleared?`): Play, the goal card, the four large buttons and How to play stay, and the first launch's legend does not come back. The Stats button's value reads "Your record: 0", and the goal card's streak 0, until the next game. The tutorial does not come back either (`TutorialFlag#due?` is asked with `played: stats_offered?`; see [tutorial.md](tutorial.md)). The player asked for their records to go, not for the game to forget them as a player.
+`StatsBackup#cleared?` is true once `cleared.txt` exists, so the game knows this player has played though their Stats say nothing. Home is laid out as for a player who has played (`Show#stats_offered?` is `played? || keeper.cleared?`): Play, the goal card, the four large buttons and How to play stay, and the first launch's legend does not come back. The Stats button's value reads "Your record: 0", and the goal card's streak 0, until the next game. The tutorial does not come back either (`TutorialFlag#due?` is asked with `played: stats_offered?`; see [tutorial.md](tutorial.md)). The player asked for their records to go, not for the game to forget them as a player.

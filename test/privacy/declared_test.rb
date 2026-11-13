@@ -63,7 +63,7 @@ class PrivacyDeclaredTest < Minitest::Test
   def test_every_save_file_in_the_code_is_declared_and_every_declared_one_is_in_the_code
     literals = saved_names.select { it.is_a?(String) }
     fixed = Privacy::SAVE_FILES.reject(&:pattern).map(&:name)
-    named_elsewhere = [DotPopper::StatsKeeper::NOTE, File.read(File.join(ROOT, "lib/dot_popper/shell/store_answers.rb"))[/NAME = "([^"]+)"/, 1]]
+    named_elsewhere = [DotPopper::StatsBackup::NOTE, File.read(File.join(ROOT, "lib/dot_popper/shell/store_answers.rb"))[/NAME = "([^"]+)"/, 1]]
 
     assert_equal fixed.sort, (literals + constants_named + named_elsewhere).uniq.sort
     assert_equal 3, saved_names.count(:dynamic), "a new SaveFile.new with a computed name: name it, or add it here and declare its pattern"
@@ -72,7 +72,7 @@ class PrivacyDeclaredTest < Minitest::Test
   def test_dated_names_match_their_patterns
     backups = []
     folder = ->(name) { backups << name; DotPopper::ScoreRecord::Memory.new }
-    keeper = DotPopper::StatsKeeper.new(score_record: memory("1"), stats_book: memory("2"), achievements: memory("3"), folder:)
+    keeper = DotPopper::StatsBackup.new(score_record: memory("1"), stats_book: memory("2"), achievements: memory("3"), folder:)
     keeper.clear
     made = backups.grep(/\d{8}/)
 

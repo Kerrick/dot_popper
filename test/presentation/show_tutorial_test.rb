@@ -217,7 +217,7 @@ class ShowTutorialTest < Minitest::Test
   def test_it_never_opens_again_not_even_after_the_stats_are_cleared
     play_through
     finish_game
-    keeper = DotPopper::StatsKeeper.new(score_record: @score_record, stats_book: @stats_book)
+    keeper = DotPopper::StatsBackup.new(score_record: @score_record, stats_book: @stats_book)
     keeper.clear
     @show = show(keeper:)
     press_main
@@ -287,7 +287,7 @@ class ShowTutorialTest < Minitest::Test
 
   private
 
-  def show(keeper: DotPopper::StatsKeeper.new(score_record: @score_record, stats_book: @stats_book))
+  def show(keeper: DotPopper::StatsBackup.new(score_record: @score_record, stats_book: @stats_book))
     new_show(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3), stats_book: @stats_book,
              keeper:, tutorial_flag: TutorialFlag.new(@store))
   end

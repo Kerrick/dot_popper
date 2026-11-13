@@ -2,7 +2,7 @@
 
 require "test_helper"
 
-class StatsKeeperTest < Minitest::Test
+class StatsBackupTest < Minitest::Test
   Memory = DotPopper::ScoreRecord::Memory
   MEDIUM = DotPopper::SizeClass::MEDIUM
   SCORE_RECORD = "medium=24\nsmall=6\n"
@@ -112,6 +112,6 @@ class StatsKeeperTest < Minitest::Test
   def keep
     @score_record = DotPopper::ScoreRecord.new(@folder.call("score_record.txt"))
     @stats_book = DotPopper::StatsBook.new(@folder.call("stats.txt"), today: -> { @today })
-    @keeper = DotPopper::StatsKeeper.new(score_record: @score_record, stats_book: @stats_book, folder: @folder, clock: -> { @time })
+    @keeper = DotPopper::StatsBackup.new(score_record: @score_record, stats_book: @stats_book, folder: @folder, clock: -> { @time })
   end
 end

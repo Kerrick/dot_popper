@@ -11,14 +11,14 @@ class AchievementsOnStatsTest < Minitest::Test
   MEDIUM = DotPopper::SizeClass::MEDIUM
 
   def setup
-    @folder = DotPopper::StatsKeeper::Folder.new
+    @folder = DotPopper::StatsBackup::Folder.new
     @achievements = DotPopper::Achievements.new(@folder.call("achievements"))
   end
 
   def show(pro:)
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), score_record: DotPopper::ScoreRecord.new(@folder.call("score_record")))
     stats_book = DotPopper::StatsBook.new(@folder.call("stats"), today: -> { Date.new(2026, 11, 8) })
-    keeper = DotPopper::StatsKeeper.new(score_record: @cabinet.score_record, stats_book:, achievements: @achievements, folder: @folder)
+    keeper = DotPopper::StatsBackup.new(score_record: @cabinet.score_record, stats_book:, achievements: @achievements, folder: @folder)
     entitlement = DotPopper::Entitlement.new(forced: pro)
     @show = new_show(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, stats_book:, keeper:,
                      achievements: @achievements, entitlement:)
