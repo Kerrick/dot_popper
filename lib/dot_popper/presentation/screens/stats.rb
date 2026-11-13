@@ -5,7 +5,7 @@ module DotPopper
     module Screens
       # Stats, over Home (StatsLayout): the sheet of every game's numbers
       # from +stats_book+ and the +achievements+, Back, and "Clear my
-      # stats…", held to clear them through +keeper+ (StatsKeeper), or
+      # stats…", held to clear them through +keeper+ (StatsBackup), or
       # Undo for a while after.
       class Stats < Page
         def initialize(show, keeper:, stats_book:, achievements:, haptics:)

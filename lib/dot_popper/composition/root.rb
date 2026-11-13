@@ -160,7 +160,7 @@ module DotPopper
         @engine.say("dots are standard, worked out from the screen as each game starts") if @cabinet.sizing.standard?
         stats_book = StatsBook.new(file("stats.txt"), today:, legacy:)
         achievements = Achievements.new(file("achievements.txt"))
-        keeper = StatsKeeper.new(score_record: @cabinet.score_record, stats_book:, achievements:, folder: ->(name) { file(name) })
+        keeper = StatsBackup.new(score_record: @cabinet.score_record, stats_book:, achievements:, folder: ->(name) { file(name) })
         @gone = Continuity::Gone.new(file("setdef.txt"))
         pins = trusted_pins
         license = Continuity::License.new(license_store, pins:)

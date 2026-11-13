@@ -52,7 +52,7 @@ module DotPopper
       KeptFile.new(name: "games.txt", label: "How many free games you have left", holds: "how many of your first games are used, and how many of today's games"),
       KeptFile.new(name: "games.csv", label: "A history of your games", holds: "a history of your games: when, score, and how each went"),
       KeptFile.new(name: "games-YYYYMMDD-HHMMSS.csv", label: "A history of your games", pattern: /\Agames-\d{8}-\d{6}\.csv\z/, holds: "an older game history, kept whole when its columns changed"),
-      KeptFile.new(name: "<record>-YYYYMMDD-HHMMSS.txt", label: "A copy of your Stats, if you clear them", pattern: StatsKeeper::BACKUP, holds: "a copy of your record, Stats and achievements from when you cleared them"),
+      KeptFile.new(name: "<record>-YYYYMMDD-HHMMSS.txt", label: "A copy of your Stats, if you clear them", pattern: StatsBackup::BACKUP, holds: "a copy of your record, Stats and achievements from when you cleared them"),
       KeptFile.new(name: "dot_size.txt", label: "Your settings", holds: "your choice of dot size"),
       KeptFile.new(name: "sound.txt", label: "Your settings", holds: "your sound setting"),
       KeptFile.new(name: "taught.txt", label: "What the game has shown you", holds: "what the game has already shown you"),

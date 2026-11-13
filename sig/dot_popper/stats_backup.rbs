@@ -1,5 +1,5 @@
 module DotPopper
-  class StatsKeeper
+  class StatsBackup
     interface _Kept
       def saved: () -> String?
 
@@ -48,4 +48,6 @@ module DotPopper
 
     def back_up: (Hash[String, String?] texts) -> void
   end
+
+  class StatsKeeper = StatsBackup
 end

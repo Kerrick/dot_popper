@@ -15,7 +15,7 @@ module DotPopper
   # the next clearing removes them, so the folder only ever keeps one.
   # Lota's save folder cannot rename a file, so nothing is moved: the
   # copies are written, then the stores are emptied.
-  class StatsKeeper
+  class StatsBackup
     NOTE = "cleared.txt"
     BACKUP = /\A(?:score_record|stats|achievements)-\d{8}-\d{6}\.txt\z/
 
@@ -71,4 +71,7 @@ module DotPopper
       note.write("cleared=#{time.iso8601}\n#{saved.join}")
     end
   end
+
+  # The old name, until no commit uses it.
+  StatsKeeper = StatsBackup
 end

@@ -15,7 +15,7 @@ module DotPopper
     # DotSizing, chosen on Home. +radius+ is the usual dot's, which
     # sizes the buttons' reach; a game's effects follow its own dots.
     # +input+ (InputKind) is what the player last pressed with, and the
-    # words follow it. +keeper+ (StatsKeeper) clears Stats, from
+    # words follow it. +keeper+ (StatsBackup) clears Stats, from
     # the Stats screen, and puts them back. +measure+ sizes the screens' words (RoughMeasure's
     # methods). +sharing+ (InGameSharing's methods) offers Game
     # Over's result to share, in a preview or a phone's own sheet, and
@@ -48,7 +48,7 @@ module DotPopper
                      themes: theme_keeper&.rules || DotPopper::Themes.new(ScoreRecord::Memory.new), style: Style, random: Random.new, calm: false,
                      tutor: Tutor.new(ScoreRecord::Memory.new, times: style::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
                      sizing_store: ScoreRecord::Memory.new, input: InputKind::MOUSE, measure: RoughMeasure.new,
-                     keeper: StatsKeeper.new(score_record: cabinet.score_record, stats_book:, achievements:), notices: Notices.none,
+                     keeper: StatsBackup.new(score_record: cabinet.score_record, stats_book:, achievements:), notices: Notices.none,
                      sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never, window: NoWindowControl.new,
                      links: NoLinks.new, group_notice: GroupNotice.read, server_choice: nil)
         @cabinet = cabinet

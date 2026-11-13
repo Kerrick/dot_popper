@@ -45,7 +45,7 @@ module DotPopper
     end
 
     # Stats just cleared, which Undo can put back from +at+ for +seconds+;
-    # +cleared+ is what StatsKeeper#restore puts back.
+    # +cleared+ is what StatsBackup#restore puts back.
     class UndoableClear < Data.define(:cleared, :at, :seconds)
       def open?(now) = now < at + seconds
 

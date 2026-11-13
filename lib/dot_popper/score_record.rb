@@ -38,7 +38,7 @@ module DotPopper
       !first
     end
 
-    # The store's whole text, as saved, for #restore (StatsKeeper).
+    # The store's whole text, as saved, for #restore (StatsBackup).
     def saved = @store.read
 
     # Forgets every class's score record, as on a new device.

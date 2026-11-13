@@ -6,7 +6,7 @@ module DotPopper
   module Shell
     # A small text file in the game's save folder, as a store for
     # ScoreRecord and for settings: it answers read, write(text), and
-    # remove, for StatsKeeper's backups. A save
+    # remove, for StatsBackup's backups. A save
     # folder that cannot be read or written loses the value, never the
     # game. A name not declared in Privacy::SAVE_FILES is refused: no file
     # exists that the privacy document does not list.
