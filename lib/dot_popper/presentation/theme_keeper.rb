@@ -8,9 +8,10 @@ module DotPopper
     # kept for good, on this device, offline too. Before that no screen may
     # show a trace of it, though its art ships with the game.
     #
-    # Using one is Pro's, so a free player always uses the ordinary
-    # theme. A new theme is told once, at a calm moment (#arrival); telling
-    # it never depends on buying anything.
+    # Which one is current, and that only Pro uses one other than the
+    # ordinary, is UseCases::UseTheme's to say: this keeps what the player
+    # chose (#chosen). A new theme is told once, at a calm moment
+    # (#arrival); telling it never depends on buying anything.
     #
     # The store keeps three lines: "unlocked: ghost eclipse", "told:
     # ghost", and "chosen: ghost".
@@ -22,23 +23,20 @@ module DotPopper
       TOLD = "told"
       CHOSEN = "chosen"
 
-      # A theme_keeper that keeps nothing and has bought nothing, for a Show
-      # made without one.
-      def self.plain(themes) = new(ScoreRecord::Memory.new, themes:, entitlement: Entitlement.free)
+      # A theme_keeper that keeps nothing, for a Show made without one.
+      def self.plain(themes) = new(ScoreRecord::Memory.new, themes:)
 
-      attr_reader :in_use
-
-      def initialize(store, themes:, entitlement:)
+      def initialize(store, themes:)
         @store = store
         @themes = themes
-        @entitlement = entitlement
         @unlocked, @told, @chosen = read
-        refresh
       end
 
       def ordinary = @themes.find(&:ordinary?)
 
-      def palette = in_use.palette
+      # The theme the player last chose and may still choose, or the
+      # ordinary one.
+      def chosen = choices.find { it.key == @chosen } || ordinary
 
       # The server's answer: every theme key unlocked so far. Unknown keys
       # are ignored, for a game older than the server. A key once saved
@@ -80,9 +78,6 @@ module DotPopper
       # and only using it asks for Pro.
       def open?(theme) = choices.include?(theme)
 
-      # Whether themes are shown but not to use, as for a free player.
-      def locked? = !@entitlement.pro?
-
       # Whether there is anything to choose among: not before the server
       # has unlocked a theme. Then the screen has something to offer.
       def offered? = choices.size > 1
@@ -99,16 +94,12 @@ module DotPopper
         save
       end
 
+      # Keeps +theme+ as the player's choice, if it is one they may choose.
       def use(theme)
-        return unless !locked? && choices.include?(theme)
+        return unless choices.include?(theme)
 
         @chosen = theme.key
         save
-        refresh
-      end
-
-      def refresh
-        @in_use = !@entitlement.pro? ? ordinary : (choices.find { it.key == @chosen } || ordinary)
       end
 
       private

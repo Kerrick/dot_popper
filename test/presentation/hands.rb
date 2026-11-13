@@ -88,7 +88,7 @@ module Hands
                                           website: ->(fake:) { website(fake:) }, channel:)
       @games = DotPopper::FreeGames.new(Memory.new, today: -> { @day }, entitlement:, metered: storefront.offered?, bank: [games_left - 3, 0].max)
       (3 - games_left.clamp(0, 3)).times { games.spend! }
-      themes = P::ThemeKeeper.new(Memory.new, themes: Style::THEMES, entitlement:)
+      themes = P::ThemeKeeper.new(Memory.new, themes: Style::THEMES)
       themes.receive(THEMES.map(&:to_s))
       (arrival ? themes.shown[0...-1] : themes.shown).each { themes.told(it) }
       book = DotPopper::StatsBook.new(Memory.new, today: -> { @day })

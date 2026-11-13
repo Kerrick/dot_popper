@@ -45,7 +45,8 @@ module DotPopper
                      sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never, window: NoWindowControl.new,
                      entitlement: Entitlement.free, theme_keeper: ThemeKeeper.plain(style::THEMES),
                      groups: Groups::Session.off, storefront: NoStorefront.new, games: FreeGames.unlimited, links: NoLinks.new,
-                     group_notice: GroupNotice.read, server_choice: nil)
+                     group_notice: GroupNotice.read, server_choice: nil,
+                     use_theme: UseCases::UseTheme.new(themes: theme_keeper, entitlement:))
         @cabinet = cabinet
         @server_choice = server_choice
         @window = window
@@ -64,6 +65,7 @@ module DotPopper
         @games = games
         @start_game = UseCases::StartGame.new(cabinet:, free_games: games)
         @finish_game = UseCases::FinishGame.new(stats_book:, achievements:, entitlement:, friend_groups: groups)
+        @use_theme = use_theme
         @buy_pro = UseCases::BuyPro.new(store: storefront, entitlement:, cabinet:, achievements:, friend_groups: groups)
         entitlement.subscribe(->(granted) { pro_arrived(granted) })
         @offer = false
@@ -117,7 +119,7 @@ module DotPopper
 
       # The colors of the theme in use (ThemeKeeper), which only changes
       # between games.
-      def palette = @theme_keeper.palette
+      def palette = in_use.palette
 
       # Whether the Themes screen is open over the Stats screen, and what
       # it shows: every theme the player can use, and the one in use.
@@ -132,12 +134,12 @@ module DotPopper
       # The switch's word: a Free player's is "Get Pro", since it opens the offer.
       def arrival_use_word = themes_locked? ? words.offer.fetch(:entry) : format(words.themes.fetch(:use), words.themes.fetch(arrival.key))
       def themes = @theme_keeper.shown
-      def in_use = @theme_keeper.in_use
+      def in_use = @use_theme.current
 
       # Whether tapping a theme leads to Pro, as it does for a Free player;
       # whether +theme+ is one this player has earned; and whether it is open
       # to use, earned or in season. They show the same to either player.
-      def themes_locked? = @theme_keeper.locked?
+      def themes_locked? = @use_theme.locked?
       def theme_earned?(theme) = @theme_keeper.earned?(theme)
       def theme_open?(theme) = @theme_keeper.open?(theme)
 
@@ -155,11 +157,12 @@ module DotPopper
       # once, so the choice is seen before it is left.
       def use(theme)
         return unless themes?
-        return open_offer_for(:themes) if themes_locked?
-        return sounds.play(:tick, pitch: 0.8) if theme == in_use || !theme_open?(theme)
 
-        @theme_keeper.use(theme)
-        sounds.play(:tick, pitch: 1.2)
+        case @use_theme.call(theme)
+        in :offer then open_offer_for(:themes)
+        in :same then sounds.play(:tick, pitch: 0.8)
+        in :used then sounds.play(:tick, pitch: 1.2)
+        end
       end
 
       # The player pressed with +kind+ (InputKind): from now on the words
@@ -1353,12 +1356,10 @@ module DotPopper
         return unless theme
 
         @theme_keeper.told(theme)
-        if !use then sounds.play(:tick, pitch: 0.8)
-        elsif themes_locked? then open_offer_for(:themes)
-        else
-          @theme_keeper.use(theme)
-          sounds.play(:tick, pitch: 1.2)
-        end
+        return sounds.play(:tick, pitch: 0.8) unless use
+        return open_offer_for(:themes) if @use_theme.call(theme) == :offer
+
+        sounds.play(:tick, pitch: 1.2)
       end
 
       def themes_controls
@@ -1622,7 +1623,7 @@ module DotPopper
       end
 
       def home_shown(event)
-        @theme_keeper.refresh
+        @use_theme.refresh
         @stats = nil
         @page = nil
         @dialog = nil

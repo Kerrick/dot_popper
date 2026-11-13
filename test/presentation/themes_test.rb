@@ -15,7 +15,7 @@ class ThemesTest < Minitest::Test
   def show(pro:, unlocked: [])
     @pro = true if pro
     entitlement = DotPopper::Entitlement.new(forced: @pro)
-    @theme_keeper = ThemeKeeper.new(DotPopper::ScoreRecord::Memory.new, themes: Style::THEMES, entitlement:)
+    @theme_keeper = ThemeKeeper.new(DotPopper::ScoreRecord::Memory.new, themes: Style::THEMES)
     @theme_keeper.receive(unlocked)
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), score_record: DotPopper::ScoreRecord.new(DotPopper::ScoreRecord::Memory.new))
     @show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, entitlement:, theme_keeper: @theme_keeper,

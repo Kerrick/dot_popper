@@ -10,13 +10,13 @@ class ThemeKeeperTest < Minitest::Test
 
   def setup
     @store = Memory.new
-    @pro = false
   end
 
-  def theme_keeper(pro: true)
-    @pro = true if pro
-    ThemeKeeper.new(@store, themes: THEMES, entitlement: DotPopper::Entitlement.new(forced: @pro))
-  end
+  def theme_keeper = ThemeKeeper.new(@store, themes: THEMES)
+
+  # The theme in use, as UseCases::UseTheme says, for a player with Pro
+  # or without.
+  def use_theme(keeper, pro:) = DotPopper::UseCases::UseTheme.new(themes: keeper, entitlement: DotPopper::Entitlement.new(forced: pro))
 
   def test_until_the_server_says_so_there_is_no_trace_of_a_theme
     w = theme_keeper
@@ -44,18 +44,38 @@ class ThemeKeeperTest < Minitest::Test
     assert_equal :ghost, w.arrival.key
     w.told(w.arrival)
     assert_nil w.arrival, "told, however it was answered"
-    w.use(w.choices.last)
-    assert_equal :ghost, theme_keeper.in_use.key
+    assert_equal :used, use_theme(w, pro: true).call(w.choices.last)
+    assert_equal :ghost, theme_keeper.chosen.key
+    assert_equal :ghost, use_theme(theme_keeper, pro: true).current.key, "still in use after a restart"
   end
 
   def test_a_free_player_may_know_of_a_theme_but_uses_the_ordinary_one
-    w = theme_keeper(pro: false)
+    w = theme_keeper
     w.receive(["ghost"])
     assert_predicate w, :offered?
-    assert_predicate w, :locked?
     assert_equal :ghost, w.arrival.key
-    w.use(w.choices.last)
-    assert_predicate w.in_use, :ordinary?
+    free = use_theme(w, pro: false)
+    assert_predicate free, :locked?
+    assert_equal :offer, free.call(w.choices.last)
+    assert_predicate free.current, :ordinary?
+    assert_predicate w.chosen, :ordinary?, "nothing is chosen for them"
+  end
+
+  def test_a_theme_chosen_with_pro_is_not_in_use_without_it
+    w = theme_keeper
+    w.receive(["ghost"])
+    use_theme(w, pro: true).call(w.choices.last)
+
+    assert_predicate use_theme(w, pro: false).current, :ordinary?
+  end
+
+  def test_choosing_the_current_theme_or_one_not_open_changes_nothing
+    w = theme_keeper
+    pro = use_theme(w, pro: true)
+
+    assert_equal :same, pro.call(w.ordinary)
+    assert_equal :same, pro.call(THEMES.last)
+    assert_predicate pro.current, :ordinary?
   end
 end
 
@@ -78,8 +98,7 @@ class ThemeFeedTest < Minitest::Test
     @store = Memory.new
     @dated = Memory.new
     @worker = FakeWorker.new
-    @pro = false
-    @theme_keeper = ThemeKeeper.new(@store, themes: Style::THEMES, entitlement: DotPopper::Entitlement.new(forced: @pro))
+    @theme_keeper = ThemeKeeper.new(@store, themes: Style::THEMES)
     @feed = ThemeFeed.new(worker: @worker, theme_keeper: @theme_keeper, store: @dated, clock: -> { Time.utc(2026, 11, 8, 12) })
   end
 

@@ -72,16 +72,17 @@ module DotPopper
         entitlement = Entitlement.new(forced: Entitlement.forced?(@env, os:), license:, trust: trusted_receipts)
         clipboard = Clipboard.new
         @server_choice = Presentation::ServerChoice.new(SaveFile.new(name: "server.txt"), gone: @gone, clipboard:)
-        theme_keeper = Presentation::ThemeKeeper.new(SaveFile.new(name: "themes.txt"), themes: Style::THEMES, entitlement:)
-        use_fixture(theme_keeper)
+        theme_keeper = Presentation::ThemeKeeper.new(SaveFile.new(name: "themes.txt"), themes: Style::THEMES)
+        use_theme = UseCases::UseTheme.new(themes: theme_keeper, entitlement:)
+        use_fixture(theme_keeper, use_theme)
         theme_keeper.open_by_date(today.call, @gone.days(today.call))
         @gone.subscribe(@server_choice).subscribe(theme_keeper)
         @theme_feed = theme_feed(theme_keeper)
         @theme_feed&.ask
         @pen = Pen.new(Style, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
-        @pen.use(theme_keeper.in_use)
+        @pen.use(use_theme.current)
         @speaker = Speaker.new(Style::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Style::SOUND.volume)
-        @speaker.use(theme_keeper.in_use)
+        @speaker.use(use_theme.current)
         @splash = @splash.with(sounding: !@speaker.muted?) if @splash
         storefront = Presentation::Storefront.for(
           os, entitlement:, channel: @channel,
@@ -104,7 +105,7 @@ module DotPopper
                                        ),
                                        group_notice: Presentation::GroupNotice.new(SaveFile.new(name: "group_notice.txt")),
                                        entitlement:, theme_keeper:, storefront:, games:, links: UrlOpener.new,
-                                       server_choice: @server_choice)
+                                       server_choice: @server_choice, use_theme:)
         storefront.connect
         @watch.start
         @cabinet.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
@@ -422,12 +423,12 @@ module DotPopper
       end
 
       # A scenario's unlocks and theme, in place of the server's.
-      def use_fixture(theme_keeper)
+      def use_fixture(theme_keeper, use_theme)
         keys = @env["DOT_POPPER_THEME_UNLOCKS"]
         theme_keeper.receive(keys.split(",")) if keys
         key = @env["DOT_POPPER_THEME"]&.to_sym or return
 
-        Style::THEMES.find { it.key == key }&.then { theme_keeper.use(it) }
+        Style::THEMES.find { it.key == key }&.then { use_theme.call(it) }
       end
 
       # The server friend groups and themes use: setdef's, or while setdef

@@ -93,7 +93,7 @@ class AutopilotTest < Minitest::Test
   # there.
   def test_it_answers_a_new_themes_card_before_playing
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
-    keeper = ThemeKeeper.new(DotPopper::ScoreRecord::Memory.new, themes: Style::THEMES, entitlement: DotPopper::Entitlement.free)
+    keeper = ThemeKeeper.new(DotPopper::ScoreRecord::Memory.new, themes: Style::THEMES)
     keeper.receive(%w[ghost])
     show = Show.new(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R, theme_keeper: keeper)
     pilot = Autopilot.new(Style::AUTOPILOT, random: Random.new(5))

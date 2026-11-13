@@ -266,7 +266,7 @@ class WebsiteStoreTest < Minitest::Test
   end
 
   def test_themes_open_by_their_dates_only_once_setdef_has_been_gone_180_days
-    keeper = ThemeKeeper.new(Memory.new, themes: Style::THEMES, entitlement: DotPopper::Entitlement.free)
+    keeper = ThemeKeeper.new(Memory.new, themes: Style::THEMES)
     today = Date.new(2027, 6, 1)
 
     refute keeper.open_by_date(today, 179)
@@ -278,7 +278,7 @@ class WebsiteStoreTest < Minitest::Test
   end
 
   def test_a_check_that_leaves_setdef_gone_long_enough_opens_themes_by_their_dates
-    keeper = ThemeKeeper.new(Memory.new, themes: Style::THEMES, entitlement: DotPopper::Entitlement.free)
+    keeper = ThemeKeeper.new(Memory.new, themes: Style::THEMES)
     @gone.subscribe(keeper)
     @gone.heard(:gone, Date.new(2027, 1, 1))
     assert_equal [:classic], keeper.choices.map(&:key)

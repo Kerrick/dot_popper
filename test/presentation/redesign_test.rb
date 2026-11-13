@@ -138,7 +138,7 @@ class RedesignTest < Minitest::Test
     entitlement = DotPopper::Entitlement.test
     cabinet = DotPopper::Cabinet.new(field(1200, 800), random: Random.new(2))
     s = Show.new(cabinet:, layout: layout(1200, 800), sounds: FakeSounds.new, radius: R, entitlement:, storefront: store,
-                 theme_keeper: ThemeKeeper.new(DotPopper::ScoreRecord::Memory.new, themes: Style::THEMES, entitlement:))
+                 theme_keeper: ThemeKeeper.new(DotPopper::ScoreRecord::Memory.new, themes: Style::THEMES))
     s.open_themes
     s.use(s.themes.last)
     assert s.offer?
