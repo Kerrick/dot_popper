@@ -7,8 +7,14 @@ module DotPopper
       # Delete my friend group data for a player the group server knows,
       # and Back.
       class Privacy < Page
+        # Where its lines and buttons go (PrivacyScreen).
+        def plan
+          lines = [[:bars, words.button(:privacy_stats)], [:crown, words.button(:privacy_groups)]]
+          PrivacyScreen.new(layout:, measure:, lines:, note: words.button(:privacy_delete_note), deletable: show.group_panel.known?).plan
+        end
+
         def controls
-          plan = show.privacy_plan
+          plan = self.plan
           [button(:policy, plan.policy), (button(:privacy_delete, plan.delete) if plan.delete), back_button].compact
         end
 

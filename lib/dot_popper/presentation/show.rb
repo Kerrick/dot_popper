@@ -29,9 +29,9 @@ module DotPopper
     # +games+ (FreeGames) counts the games a free player may start: Play
     # spends one, and with none left leads to the offer of Pro.
     class Show
-      # The dot-size choices in the order Home draws their segments:
-      # the default, dots sized to the screen, first.
-      SIZINGS = [DotSizing::SIZED_TO_SCREEN, DotSizing::STANDARD].freeze
+      # The dot-size choices in the order Settings draws them
+      # (Screens::Settings::SIZINGS).
+      SIZINGS = Screens::Settings::SIZINGS
 
       attr_reader :cabinet, :effects, :animations, :hud, :attract, :layout, :marquee, :game_over, :sounds, :now, :style,
                   :stats_book, :input, :words, :tutorial, :lead_in, :window, :games
@@ -48,7 +48,6 @@ module DotPopper
                      group_notice: GroupNotice.read, server_choice: nil,
                      use_theme: UseCases::UseTheme.new(themes: theme_keeper, entitlement:))
         @cabinet = cabinet
-        @server_choice = server_choice
         @window = window
         @links = links
         @tutorial_flag = tutorial_flag
@@ -79,7 +78,6 @@ module DotPopper
         @haptics = haptics
         @radius = radius
         @scale = radius
-        @sizing_store = sizing_store
         @style = style
         @input = input
         @words = style::WORDS.for(input)
@@ -101,7 +99,8 @@ module DotPopper
         @pointer = nil
         @hover = Hover.none
         @screens = Screens.made_for(self, clipboard:, buy_pro: @buy_pro, storefront:, entitlement:, start_game: @start_game, sharing:,
-                                          view_achievements: @view_achievements, keeper:, stats_book:, achievements:, haptics:, notices:)
+                                          view_achievements: @view_achievements, keeper:, stats_book:, achievements:, haptics:, notices:,
+                                          sizing_store:, server_choice:)
         cabinet.subscribe(@recorder)
         cabinet.subscribe(self)
       end
@@ -462,18 +461,15 @@ module DotPopper
       # back from, so that elsewhere the key can do its usual job.
       def back = screen.back
 
-      # Sizes dots as +sizing+ (DotSizing) says, on Home while it
-      # offers the choice, and remembers it. Home's dots and score record
-      # change with it, so the choice shows at once.
-      def choose_sizing(sizing)
-        return unless settings? && sizing_offered?
-        return sounds.play(:tick, pitch: 0.8) if sizing == cabinet.sizing
+      # Sizes dots as +sizing+ (DotSizing) says, from Settings
+      # (Screens::Settings#choose_sizing).
+      def choose_sizing(sizing) = @screens[:settings].choose_sizing(sizing)
 
-        cabinet.sizing = sizing
-        @sizing_store.write(cabinet.sizing.to_text)
+      # The player chose another size of dots: Home's dots are spawned
+      # afresh at it, and its score record is the size's.
+      def sizing_changed
         @attract = Attract.spawn(cabinet.field, style::HOME)
-        @marquee = marquee.with(score_record: cabinet.score_record.of(cabinet.size_class))
-        sounds.play(:tick, pitch: cabinet.sizing.sized_to_screen? ? 1.2 : 0.9)
+        score_record_changed
       end
 
       # Opens the screen +name+ over Home, with its list at the top.
@@ -799,35 +795,15 @@ module DotPopper
 
       # Change Server, from Settings, only while setdef is gone
       # (ServerChoice).
-      def open_server
-        open_page(:server) if settings? && server_offered?
-      end
+      def open_server = @screens[:server].open
 
       def server? = page == :server
-      def server_offered? = @server_choice&.offered? || false
+      def server_offered? = @screens[:server].offered?
 
       # The words and buttons of Change Server (ServerScreen).
-      def server_plan
-        choice = @server_choice
-        now = format(words.button(:server_now), choice&.address || words.button(:server_setdef))
-        status = choice&.status && words.button(:"server_#{choice.status}")
-        ServerScreen.new(layout:, measure: @measure, lines: [[:crown, words.button(:server_warning)], [:copy, words.button(:server_how)]],
-                         now:, status:, resettable: !choice&.address.nil?).plan
-      end
-
-      def paste_server
-        return unless server?
-
-        @server_choice.paste
-        sounds.play(:tick)
-      end
-
-      def reset_server
-        return unless server?
-
-        @server_choice.reset
-        sounds.play(:tick, pitch: 0.8)
-      end
+      def server_plan = @screens[:server].plan
+      def paste_server = @screens[:server].paste_address
+      def reset_server = @screens[:server].reset
 
       # The system's paste shortcut (Ctrl+V, or Cmd+V on a Mac) on a
       # computer: Paste license key on the offer, or Paste server address on
@@ -864,30 +840,9 @@ module DotPopper
       # What the dialog says of +id+'s state (Screens::AchievementDialog#status).
       def dialog_status(id) = @screens[:achievement_dialog].status(id)
 
-      def settings_plan
-        rows = [[:sound, words.button(:sound), :speaker, [[words.button(:on), !sounds.muted?, [:sound, true]], [words.button(:off), sounds.muted?, [:sound, false]]]]]
-        if sizing_offered?
-          rows << [:dot_size, words.button(:dot_size), :dot, SIZINGS.map { [words.sizing(it, sizing_preview), it == cabinet.sizing, it] }]
-        end
-        rows << [:display, words.button(:display), :corners, display_choices] if window.offered?
-        plan = SettingsScreen.new(layout:, rows:, offset: settings? && @scroll ? @scroll.offset : 0.0, server: server_offered?).plan
-        list_fit(plan.height, layout.page.height) if settings?
-        plan
-      end
-
-      def display_choices
-        { window: :windowed, borderless: :full_screen_borderless, exclusive: :full_screen }.map { |mode, word| [words.button(word), window.display == mode, [:display, mode]] }
-      end
-
-      def set_sound(on)
-        sounds.toggle_mute if sounds.muted? == on
-        sounds.play(:tick)
-      end
-
-      def privacy_plan
-        lines = [[:bars, words.button(:privacy_stats)], [:crown, words.button(:privacy_groups)]]
-        PrivacyScreen.new(layout:, measure: @measure, lines:, note: words.button(:privacy_delete_note), deletable: @groups.known?).plan
-      end
+      def settings_plan = @screens[:settings].plan
+      def set_sound(on) = @screens[:settings].set_sound(on)
+      def privacy_plan = @screens[:privacy].plan
 
       # A gamepad's button (+name+, a GamepadButtons intent) on the screen
       # on top.
@@ -970,12 +925,7 @@ module DotPopper
         use(list[(list.index(in_use).to_i + by) % list.size])
       end
 
-      def next_display
-        return unless window.offered?
-
-        order = %i[window borderless exclusive]
-        window.display = order[(order.index(window.display).to_i + 1) % order.size]
-      end
+      def next_display = @screens[:settings].next_display
 
       # A tap in the Tutorial: its skip button, or the scene's.
       def tutorial_tap(x, y)

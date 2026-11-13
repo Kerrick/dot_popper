@@ -7,8 +7,63 @@ module DotPopper
       # and licenses, Privacy, Change Server while setdef is gone, and
       # Back. Only the buttons in view take presses.
       class Settings < Page
+        # The dot-size choices in the order its row draws them: the
+        # default, dots sized to the screen, first.
+        SIZINGS = [DotSizing::SIZED_TO_SCREEN, DotSizing::STANDARD].freeze
+
+        # +sizing_store+ keeps the player's DotSizing.
+        def initialize(show, sizing_store:)
+          super(show)
+          @sizing_store = sizing_store
+        end
+
+        # Where its rows and buttons go (SettingsPlan), with its list fitted
+        # to the page while it is open.
+        def plan
+          sounds = self.sounds
+          rows = [[:sound, words.button(:sound), :speaker, [[words.button(:on), !sounds.muted?, [:sound, true]], [words.button(:off), sounds.muted?, [:sound, false]]]]]
+          if show.sizing_offered?
+            cabinet = show.cabinet
+            rows << [:dot_size, words.button(:dot_size), :dot, SIZINGS.map { [words.sizing(it, show.sizing_preview), it == cabinet.sizing, it] }]
+          end
+          rows << [:display, words.button(:display), :corners, display_choices] if show.window.offered?
+          open = show.settings?
+          plan = SettingsScreen.new(layout:, rows:, offset: open && show.scroll ? show.scroll.offset : 0.0, server: show.server_offered?).plan
+          show.list_fit(plan.height, layout.page.height) if open
+          plan
+        end
+
+        # Sizes dots as +sizing+ (DotSizing) says, while it offers the
+        # choice, and remembers it. Home's dots and score record change
+        # with it, so the choice shows at once.
+        def choose_sizing(sizing)
+          cabinet = show.cabinet
+          return unless show.settings? && show.sizing_offered?
+          return sounds.play(:tick, pitch: 0.8) if sizing == cabinet.sizing
+
+          cabinet.sizing = sizing
+          @sizing_store.write(cabinet.sizing.to_text)
+          show.sizing_changed
+          sounds.play(:tick, pitch: cabinet.sizing.sized_to_screen? ? 1.2 : 0.9)
+        end
+
+        # Sound on or off, as +on+ says.
+        def set_sound(on)
+          sounds.toggle_mute if sounds.muted? == on
+          sounds.play(:tick)
+        end
+
+        # The next of the window's displays, round the end, on a computer.
+        def next_display
+          window = show.window
+          return unless window.offered?
+
+          order = %i[window borderless exclusive]
+          window.display = order[(order.index(window.display).to_i + 1) % order.size]
+        end
+
         def controls
-          plan = show.settings_plan
+          plan = self.plan
           rows = plan.rows.flat_map { |row| row.choices.zip(row.rects).map { |(_, _, name), rect| button(name, rect) } }
           page = layout.page
           seen = (rows + [button(:credits, plan.credits), button(:privacy, plan.privacy), *(button(:server, plan.server) if plan.server)])
@@ -29,11 +84,11 @@ module DotPopper
         # X Credits and licenses, Y Privacy.
         def pad(button)
           case button
-          in :lb then show.choose_sizing(show.cabinet.sizing.toggled) if show.sizing_offered?
-          in :rb then show.next_display
+          in :lb then choose_sizing(show.cabinet.sizing.toggled) if show.sizing_offered?
+          in :rb then next_display
           in :x then show.open_credits
           in :y then show.open_privacy
-          in :select then show.set_sound(show.sounds.muted?)
+          in :select then set_sound(sounds.muted?)
           else nil
           end
         end
@@ -42,17 +97,24 @@ module DotPopper
 
         def pressed(name, by)
           case name
-          in [:sound, on] then show.set_sound(on)
-          in DotSizing => sizing then show.choose_sizing(sizing)
+          in [:sound, on] then set_sound(on)
+          in DotSizing => sizing then choose_sizing(sizing)
           in [:display, mode] then show.window.display = mode
           in :credits then show.open_credits
           in :privacy then show.open_privacy
-          in :server then show.open_server
+          in :server then show.screens.fetch(:server).open
           else super
           end
         end
 
         def empty(_x, y, by) = show.start_scroll(by, y)
+
+        private
+
+        def display_choices
+          window = show.window
+          { window: :windowed, borderless: :full_screen_borderless, exclusive: :full_screen }.map { |mode, word| [words.button(word), window.display == mode, [:display, mode]] }
+        end
       end
     end
   end
