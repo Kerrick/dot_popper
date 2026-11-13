@@ -62,8 +62,6 @@ module DotPopper
     end
 
     class GameStarted < ::Data
-      attr_reader game: Game
-
       attr_reader seed: Integer
 
       attr_reader field: Field
@@ -74,12 +72,10 @@ module DotPopper
 
       attr_reader dots_in_a_row: Integer
 
-      def self.new: (game: Game, seed: Integer, field: Field, dots: Stack, score: Integer, dots_in_a_row: Integer) -> instance
+      def self.new: (seed: Integer, field: Field, dots: Stack, score: Integer, dots_in_a_row: Integer) -> instance
     end
 
     class GameEnded < ::Data
-      attr_reader game: Game
-
       attr_reader score_record: Integer
 
       attr_reader new_score_record: bool
@@ -98,9 +94,9 @@ module DotPopper
 
       attr_reader elapsed: Float
 
-      def self.new: (game: Game, score_record: Integer, new_score_record: bool, seed: Integer, size_class: SizeClass, field: Field, dots: Stack, score: Integer, elapsed: Float, ?first: bool) -> instance
+      def self.new: (score_record: Integer, new_score_record: bool, seed: Integer, size_class: SizeClass, field: Field, dots: Stack, score: Integer, elapsed: Float, ?first: bool) -> instance
 
-      def initialize: (game: Game, score_record: Integer, new_score_record: bool, seed: Integer, size_class: SizeClass, field: Field, dots: Stack, score: Integer, elapsed: Float, ?first: bool) -> void
+      def initialize: (score_record: Integer, new_score_record: bool, seed: Integer, size_class: SizeClass, field: Field, dots: Stack, score: Integer, elapsed: Float, ?first: bool) -> void
     end
 
     class HomeShown < ::Data

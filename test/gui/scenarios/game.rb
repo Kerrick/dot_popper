@@ -82,10 +82,10 @@ module DotPopperGui
       ended = events.grep(DotPopper::Events::GameEnded).last
       score = expected_score(DOTS_POPPED, 1)
       check_equal(score, ended.score, "Game Over's score")
-      check_close(R::STARTING_SECONDS + DOTS_POPPED - (R::PENALTY_SECONDS * 1), ended.game.elapsed,
+      check_close(R::STARTING_SECONDS + DOTS_POPPED - (R::PENALTY_SECONDS * 1), ended.elapsed,
                   "the game lasted the time it was given")
       lesson = show.game_over.lesson
-      bright = ended.game.dots.find(&:bright?)
+      bright = ended.dots.find(&:bright?)
       check(lesson && lesson.bright == bright.id, "Game Over teaches the stacking rule from the mistake")
       wait_for("the mistake replayed on the pile", within: 300) { show.game_over.replayed.positive? }
       check_equal([bright.id], show.effects.reveals.map(&:follow), "the bright dot it hid is outlined on the pile")

@@ -253,7 +253,7 @@ class CabinetTest < Minitest::Test
     assert_same game, @cabinet.game
     started = @heard.last
     assert_instance_of Events::GameStarted, started
-    assert_same game, started.game
+    assert_equal [game.dots, 1], [started.dots, started.score]
     assert_equal [1, 11.0], [game.score, game.countdown.remaining]
     @cabinet.update(0.5)
     assert_in_delta 10.5, game.countdown.remaining, 1e-9, "its clock runs from there"

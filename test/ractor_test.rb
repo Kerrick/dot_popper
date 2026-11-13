@@ -21,6 +21,22 @@ class RactorTest < Minitest::Test
     values.each { assert Ractor.shareable?(it), "#{it.class} is not shareable" }
   end
 
+  # An event records what happened, and nothing changes it afterwards: a
+  # listener that keeps one never sees the game as it is later. So every
+  # event, the ones a Cabinet tells and the ones a paused game's presses
+  # return to the tutorial, is deeply frozen, with no game in it.
+  def test_every_event_is_a_value_with_no_game_in_it
+    cabinet = DotPopper::Cabinet.new(field, random: Random.new(3))
+    heard = []
+    cabinet.subscribe { heard << it }
+    heard.concat(play_paused_then_on(cabinet))
+
+    assert_equal [DotPopper::Events::GameEnded, DotPopper::Events::GameStarted, DotPopper::Events::HomeShown,
+                  DotPopper::Events::Missed, DotPopper::Events::Penalized, DotPopper::Events::Popped],
+                 heard.map(&:class).uniq.sort_by(&:name)
+    heard.each { assert Ractor.shareable?(it), "#{it.class} is not a value" }
+  end
+
   def test_the_rule_numbers_can_be_read_from_any_ractor
     DotPopper::Rules.constants.each { assert Ractor.shareable?(DotPopper::Rules.const_get(it)), it }
     assert Ractor.shareable?(DotPopper::DotSize::TOUCH_SYSTEMS)
@@ -56,6 +72,26 @@ class RactorTest < Minitest::Test
   end
 
   private
+
+  # A paused game the tutorial pops a dot in, then play on it to Game
+  # Over and Home, with a mistake and a miss on the way. Answers the
+  # events the paused game's presses returned.
+  def play_paused_then_on(cabinet)
+    cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
+    returned = [cabinet.press_paused(300, 300)]
+    cabinet.unpause
+    game = cabinet.game
+    bright = game.dots.find(&:bright?)
+    clear_around!(game, bright)
+    cabinet.press(bright.x, bright.y)
+    popped = game.dots.find(&:popped?)
+    cabinet.press(popped.x, popped.y)
+    cabinet.press(-1, -1)
+    cabinet.update(20)
+    cabinet.update(1)
+    cabinet.press(0, 0)
+    returned
+  end
 
   def played_in_a_ractor(field)
     experimental = Warning[:experimental]

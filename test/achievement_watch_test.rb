@@ -14,7 +14,7 @@ class AchievementWatchTest < Minitest::Test
   # Starts watching +game+, as the game announces it.
   def watch(game)
     @game = game
-    @watch.call(Events::GameStarted.new(game:, seed: 1, field: game.field, dots: game.dots, score: game.score,
+    @watch.call(Events::GameStarted.new(seed: 1, field: game.field, dots: game.dots, score: game.score,
                                          dots_in_a_row: game.dots_in_a_row))
     game
   end
@@ -43,7 +43,7 @@ class AchievementWatchTest < Minitest::Test
   end
 
   def end_game
-    @watch.call(Events::GameEnded.new(game: @game, score_record: @game.score, new_score_record: false, seed: 1,
+    @watch.call(Events::GameEnded.new(score_record: @game.score, new_score_record: false, seed: 1,
                                        size_class: DotPopper::SizeClass::MEDIUM, field: @game.field, dots: @game.dots,
                                        score: @game.score, elapsed: @game.elapsed))
   end

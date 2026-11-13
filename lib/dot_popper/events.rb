@@ -28,15 +28,15 @@ module DotPopper
     # skipped (Cabinet#unpause). +dots_in_a_row+ is the row it begins
     # with: none from Play, and from the tutorial, the dots popped there
     # since its last mistake.
-    class GameStarted < Data.define(:game, :seed, :field, :dots, :score, :dots_in_a_row); end
+    class GameStarted < Data.define(:seed, :field, :dots, :score, :dots_in_a_row); end
 
     # A game's clock reached zero; +score_record+ is the device's score record on
     # screens of +size_class+ (SizeClass) after this game, +new_score_record+
     # whether this game set it, +first+ whether it was the first game on
     # such screens, which sets a record but is never a new one, and +seed+
     # the one its dots were drawn from. +elapsed+ is how long it played.
-    class GameEnded < Data.define(:game, :score_record, :new_score_record, :seed, :size_class, :first, :field, :dots, :score, :elapsed)
-      def initialize(game:, score_record:, new_score_record:, seed:, size_class:, field:, dots:, score:, elapsed:, first: false) = super
+    class GameEnded < Data.define(:score_record, :new_score_record, :seed, :size_class, :first, :field, :dots, :score, :elapsed)
+      def initialize(score_record:, new_score_record:, seed:, size_class:, field:, dots:, score:, elapsed:, first: false) = super
     end
 
     # Home came up; +score_record+ is the score record on screens like
