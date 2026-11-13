@@ -38,4 +38,34 @@ class SceneryTest < Minitest::Test
       end
     end
   end
+
+  # A theme whose night is a pattern rather than a scene keeps it behind
+  # play: faint, and with no circle that could look like a dot.
+  SIZES = [[400, 850], [850, 400], [1200, 800]].freeze
+
+  def test_a_pattern_is_drawn_for_every_size
+    Scenery::PATTERNS.each do |kind|
+      SIZES.each { |w, h| refute_empty Scenery.for(kind, w, h), "#{kind} at #{w}x#{h}" }
+    end
+  end
+
+  def test_a_pattern_has_no_circles
+    Scenery::PATTERNS.each do |kind|
+      SIZES.each { |w, h| assert(Scenery.for(kind, w, h).all?(Scenery::Fan), "#{kind} at #{w}x#{h}") }
+    end
+  end
+
+  def test_a_pattern_is_under_a_tenth_opaque
+    Scenery::PATTERNS.each do |kind|
+      SIZES.each do |w, h|
+        Scenery.for(kind, w, h).each { assert_operator it.color.a, :<, 0.1, "#{kind} at #{w}x#{h}" }
+      end
+    end
+  end
+
+  def test_a_theme_with_a_pattern_draws_it
+    patterned = Style::THEMES.filter_map { it.art&.scenery }.select { Scenery::PATTERNS.include?(it) }
+
+    assert_equal Scenery::PATTERNS.sort, patterned.sort
+  end
 end

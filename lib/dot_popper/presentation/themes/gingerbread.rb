@@ -3,27 +3,27 @@
 module DotPopper
   module Presentation
     module Themes
-      # Iced gingerbread cookies in a kitchen on a snowy night; in shadow,
+      # Iced gingerbread cookies over icing and candy glass; in shadow,
       # the gingerbread man run away, when popped.
       module Gingerbread
         def self.theme(base, hex)
           Theme.new(
             key: :gingerbread, opens_on: Date.new(2026, 12, 1),
             palette: base.with(
-              ink_top: hex["#0e1422"], ink_bottom: hex["#0a0e18"], ink_glow: hex["#24304a"], ink_edge: hex["#05070e"],
+              ink_top: hex["#170c12"], ink_bottom: hex["#12090e"], ink_glow: hex["#3a1a24"], ink_edge: hex["#080406"],
               bright_light: hex["#fff4e0"], bright_body: hex["#e8b070"], bright_deep: hex["#c88848"],
               bright_bounce: hex["#f4c890"], bright_rim: hex["#fff2dc"], halo: hex["#ffd9a0"],
               popped_top: hex["#3a2418"], popped_bottom: hex["#24140c"], popped_rim: hex["#8a6e5e"],
               popped_crater: hex["#0a0604"], popped_lip: hex["#6a5040"],
               shadow: hex["#030406"], alarm: hex["#ff6a7a"],
               cream: hex["#fff4e6"], soft: hex["#c4c0cc"], gain: hex["#a9e6c8"], urgent: hex["#ff8a8a"],
-              pill: hex["#080b14", 0.85], pill_edge: hex["#c88848", 0.8],
+              pill: hex["#12080c", 0.85], pill_edge: hex["#c88848", 0.8],
               confetti: [hex["#fff4e0"], hex["#e2283a"], hex["#e8b070"], hex["#3f8f6a"], hex["#c9d2f0"]].freeze
             ),
             art: ThemeArt.new(
-              dot: "gingerbread", scenery: :kitchen,
-              sky: ThemeSky.new(top: hex["#0e1422"], mid: hex["#162034"], bottom: hex["#2a2a3a"], glow: hex["#b0703a"], glow_at: [0.5, 1.0],
-                                glow_amount: 0.35, edge: hex["#05070e"], stars: 0.0),
+              dot: "gingerbread", scenery: :icing,
+              sky: ThemeSky.new(top: hex["#170c12"], mid: hex["#22101a"], bottom: hex["#2e161a"], glow: hex["#c0602a"], glow_at: [0.5, 1.05],
+                                glow_amount: 0.22, edge: hex["#080406"], stars: 0.0),
               wordmark: "assets/fonts/Fredoka-Bold.ttf", dotted_name: true,
               sounds: {
                 # A gumdrop's soft "boop": a light tap, one short note that
