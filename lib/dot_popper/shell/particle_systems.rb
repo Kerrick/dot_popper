@@ -90,8 +90,5 @@ module DotPopper
         G::Image.new(data, dpiscale: density)
       end
     end
-
-    # Its old name, until no caller says it.
-    Sparks = ParticleSystems
   end
 end

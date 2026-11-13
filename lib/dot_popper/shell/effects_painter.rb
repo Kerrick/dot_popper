@@ -5,7 +5,7 @@ module DotPopper
     # Draws what follows a tap: rings (each around its dot, if it follows
     # one), the droplets that ParticleSystems flies, and floating numbers, outlined
     # so they read over any dot.
-    class EffectsPainter < Data.define(:pen, :sparks)
+    class EffectsPainter < Data.define(:pen, :particle_systems)
       G = ::Lota::Graphics
       EDGE_BANDS = 8 # strips of the edge glow, without its shader
 
@@ -20,7 +20,7 @@ module DotPopper
       def words(effects, layout) = floating_texts(effects.floating_texts, effects.now, layout)
 
       # Additive, so droplets only ever brighten.
-      def droplets = pen.adding { sparks.draw }
+      def droplets = pen.adding { particle_systems.draw }
 
       # The glow at the screen's edges, over everything in the field.
       def flash(effects, width, height)

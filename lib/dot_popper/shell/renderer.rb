@@ -19,14 +19,14 @@ module DotPopper
       # With +diagnostic+ (DOT_POPPER_DIAGNOSTIC_COLORS), each frame clears
       # to pure blue and draws no night, so any pixel the game's drawing
       # reaches but nothing paints shows blue (doc/ios.md).
-      def initialize(show, pen, pile:, sparks:, bloom:, diagnostic: false)
+      def initialize(show, pen, pile:, particle_systems:, bloom:, diagnostic: false)
         @show = show
         @diagnostic = diagnostic
         @pen = pen
         @pile = pile
         @bloom = bloom
         @dots = DotPainter.new(pen:, clock: -> { @show.now })
-        @effects = EffectsPainter.new(pen:, sparks:)
+        @effects = EffectsPainter.new(pen:, particle_systems:)
         @hud = HudPainter.new(pen:, dots: @dots)
         @home = HomePainter.new(pen:, dots: @dots)
         @stats = StatsPainter.new(pen:)

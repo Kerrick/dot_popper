@@ -51,9 +51,9 @@ module DotPopper
         @cabinet.subscribe(@tilting)
         @dragging = Dragging.new(pile: @pile, show: @show, style: @game.grab_style)
         @cabinet.subscribe(@dragging)
-        @sparks = ParticleSystems.new(Style)
+        @particle_systems = ParticleSystems.new(Style)
         @bloom = Bloom.new(@pen, Style::BLOOM)
-        @renderer = Renderer.new(@show, @pen, pile: @pile, sparks: @sparks, bloom: @bloom,
+        @renderer = Renderer.new(@show, @pen, pile: @pile, particle_systems: @particle_systems, bloom: @bloom,
                                              diagnostic: flag?("DOT_POPPER_DIAGNOSTIC_COLORS"))
         @renderer.prepare
         @input = LotaInput.new
@@ -96,7 +96,7 @@ module DotPopper
         @inputs.follow_cursor
         @dragging.update(seconds)
         @pile.update(seconds)
-        @sparks.update(seconds, @show.effects)
+        @particle_systems.update(seconds, @show.effects)
         @hooks&.frame_ended(seconds)
       end
 
@@ -175,7 +175,7 @@ module DotPopper
         @hooks&.happened("a resize")
         @engine.report_screen
         @pen.refresh
-        @sparks.refresh
+        @particle_systems.refresh
         @bloom.refresh
         @cabinet.screen = screen
         @show.resize(@engine.layout, @cabinet.field)
