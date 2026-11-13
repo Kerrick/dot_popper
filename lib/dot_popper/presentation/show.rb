@@ -111,9 +111,29 @@ module DotPopper
         @undo = nil
         @pointer = nil
         @hover = Hover.none
+        @screens = Screens.made_for(self)
         cabinet.subscribe(@recorder)
         cabinet.subscribe(self)
       end
+
+      # The screen on top, which every press, button, key and scroll asks
+      # (Screens): the one place that decides it.
+      def screen
+        if arrival? then @screens[:new_theme]
+        elsif tutorial? then @screens[:tutorial]
+        elsif offer? then @screens[:offer]
+        elsif dialog then @screens[:achievement_dialog]
+        elsif page then @screens.fetch(page)
+        elsif group_open? then @screens[:friend_groups]
+        elsif home? then @screens[:home]
+        elsif sharing? then @screens[:share_preview]
+        elsif game_over? then @screens[:game_over]
+        else @screens[:game]
+        end
+      end
+
+      # The usual dot's radius, which sizes the buttons' reach.
+      attr_reader :radius
 
       # The numbers of the game in play, or of the one just finished.
       def game_stats = @recorder.stats
@@ -382,21 +402,7 @@ module DotPopper
       # and where a press reaches it, no two reaching the same point, so a
       # press reaches one button. Taps and the mouse's hover both go by
       # these.
-      def controls
-        Control.apart(
-          if arrival? then arrival_controls
-          elsif tutorial? then [button(:skip, layout.skip_button)]
-          elsif offer? then offer_controls
-          elsif dialog then dialog_controls
-          elsif page then page_controls
-          elsif group_open? then group_controls
-          elsif home? then home_controls
-          elsif sharing? then share_controls
-          elsif game_over? then game_over_controls
-          else []
-          end
-        )
-      end
+      def controls = Control.apart(screen.controls)
 
       # The button a press at +x+, +y+ reaches (Control), or nil; on an
       # edge two reaches share, the one drawn nearer.
@@ -1307,26 +1313,6 @@ module DotPopper
         sounds.play(:tick)
       end
 
-      def group_controls = (group_notice_plan || group_plan).controls.map { |name, frame| button(name, frame) }
-
-      def home_controls
-        plan = home_plan
-        buttons = plan.tiles.map { |name, rect| button(name, rect) }
-        plan.pills.each { |name, rect| buttons << button(name, rect) }
-        buttons << primary_button(:play, plan.play_button)
-      end
-
-      def share_controls
-        plan = share_plan
-        [button(:close, plan.close), button(:copy, plan.copy)]
-      end
-
-      def game_over_controls
-        plan = game_over_plan or return []
-        chips = game_over_chips.each_with_index.filter_map { |chip, i| button(chip.name, plan[[:chip, i]]) if chip.opens && plan[[:chip, i]] }
-        [*chips, (button(:home, plan.home_button) if plan.home_button), (button(:share, plan.share_button) if plan.share_button),
-         (primary_button(:play_again, plan.play_button) if plan.play_button)].compact
-      end
 
       # The Credits text broken into lines for this screen, and the scroll
       # kept at the same place on it.
@@ -1338,13 +1324,6 @@ module DotPopper
                                                   measure: @measure)]
         end
         @credits = @credits.fitted(content: credits_lines.height, window: page.window.height)
-      end
-
-      def arrival_controls
-        return [] unless arrival_settled?
-
-        plan = arrival_plan
-        [button(:arrival_later, plan.later_button), button(:arrival_use, plan.use_button)]
       end
 
       # The player has answered the notice of a new theme. A Pro player's
@@ -1363,73 +1342,11 @@ module DotPopper
         sounds.play(:tick, pitch: 1.2)
       end
 
-      def themes_controls
-        plan = themes_layout
-        steps = input == InputKind::GAMEPAD ? plan.steps.map { |name, rect| button(name, rect) } : []
-        plan.cards.map { button(it.theme, it.rect) } + steps << button(:back, layout.back_button)
-      end
-
-      def offer_controls
-        plan = offer_plan
-        [(button(:buy, plan[:buy]) if plan.key?(:buy)),
-         (button(:restore, plan[:restore]) if plan.key?(:restore)),
-         (button(:paste, plan[:paste]) if plan.key?(:paste)),
-         button(:back, layout.back_button)].compact
-      end
-
       # Pro arrived (Entitlement::ProGranted): a tick marks a store's
       # purchase landing while the offer is open. A license key entered has
       # had its own tick as it was pressed.
       def pro_arrived(granted)
         sounds.play(:tick, pitch: 1.3) if offer? && granted.by == :receipt
-      end
-
-      def stats_controls
-        [(button(:undo, layout.undo_button) if undo_offer),
-         (button(:clear, layout.clear_stats_button) if clear_offered?),
-         button(:back, layout.back_button)].compact
-      end
-
-      def page_controls
-        case @page
-        when :stats then stats_controls
-        when :themes then themes_controls
-        when :achievements then achievement_controls
-        when :settings then settings_controls
-        when :privacy then privacy_controls
-        when :server then server_controls
-        when :credits then [button(:back, layout.back_button)]
-        end
-      end
-
-      def achievement_controls
-        window = achievements_layout.window
-        cells = achievement_cells.select { it.rect.y < window.bottom && it.rect.bottom > window.y }.map do
-          control = button([:achievement, it.id], it.rect.cut(top: window.y, bottom: window.bottom))
-          control.with(reach: control.reach.cut(top: window.y, bottom: window.bottom))
-        end
-        cells << button(:back, layout.back_button)
-      end
-
-      def dialog_controls = dialog_plan.buttons.map { |name, rect| button(name, rect) }
-
-      def settings_controls
-        plan = settings_plan
-        rows = plan.rows.flat_map { |row| row.choices.zip(row.rects).map { |(_, _, name), rect| button(name, rect) } }
-        page = layout.page
-        seen = (rows + [button(:credits, plan.credits), button(:privacy, plan.privacy), *(button(:server, plan.server) if plan.server)]).select { it.frame.center_y.between?(page.y, page.bottom) }
-        seen.map { it.with(frame: it.frame.cut(top: page.y, bottom: page.bottom), reach: it.reach.cut(top: page.y, bottom: page.bottom)) } <<
-          button(:back, layout.back_button)
-      end
-
-      def server_controls
-        plan = server_plan
-        [button(:server_paste, plan.paste), (button(:server_reset, plan.reset) if plan.reset), button(:back, layout.back_button)].compact
-      end
-
-      def privacy_controls
-        plan = privacy_plan
-        [button(:policy, plan.policy), (button(:privacy_delete, plan.delete) if plan.delete), button(:back, layout.back_button)].compact
       end
 
       # LB opens the new achievement, and RB the friend group, as their
@@ -1473,13 +1390,6 @@ module DotPopper
         window.display = order[(order.index(window.display).to_i + 1) % order.size]
       end
 
-      # A button drawn at +frame+, which a press reaches within a dot's
-      # width, short of the safe area's bottom.
-      def button(name, frame) = Control.new(name:, frame:, reach: within_safe(frame.reach(2 * @radius)))
-
-      # A screen's main button, which a press reaches more generously.
-      def primary_button(name, frame) = Control.new(name:, frame:, reach: layout.primary_reach(frame, cabinet.field.radius))
-
       def hold_clear(by)
         @clearing = clearing.press(by, now)
         sounds.play(:tick, pitch: 0.7)
@@ -1515,8 +1425,6 @@ module DotPopper
                            size_class:, field: cabinet.field, sizing: cabinet.sizing, achievements: @achievements,
 )
       end
-
-      def within_safe(reach) = reach.with(height: [reach.height, layout.safe.bottom - reach.y].min)
 
       # Play begins: afresh, its dot growing in, or, under the Tutorial,
       # with the dots as it drew them, their animations, its effects still
