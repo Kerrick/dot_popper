@@ -11,13 +11,13 @@ How a press reaches Dot Popper, from a mouse, a finger, a gamepad or a keyboard:
 Every press goes through one path, so every rule about presses holds for every kind of input without extra code.
 
 1. `main.rb` hands each of Lota's callbacks to `Shell::App` (`mouse_pressed`, `touch_pressed`, `gamepad_pressed`, `gamepad_axis`, and their moves and releases).
-2. `Shell::LotaInput` leaves out what Lota reports that is no press of the player's own, and `Presentation::InputRouter` decides which of the rest are presses, and turns each into a `Tap` (`x`, `y`, and the `InputKind` that made it).
+2. `Shell::LotaInput` leaves out what Lota reports that is no press of the player's own, and a mouse's side buttons, and `Presentation::InputRouter` turns each of the rest into a `Tap` (`x`, `y`, and the `InputKind` that made it).
 3. `App#press` hands the `Tap` to `Show#tap` on the frame it happens, unless the Show waits for its release (Game Over, below).
 4. `Show#tap` hands it to the screen on top (`Show#screen`; [screens.md](screens.md#screens-as-objects)): a game's sends it to the game (`Cabinet#press`), the Tutorial's to the Tutorial, and every other screen's to the button under it (`Show#controls`, `Show#control_at`), or to its empty space.
 
 The rules:
 
-- A mouse press counts for buttons 1, 2 and 3, when the button goes down.
+- A mouse press counts for the left, right and middle buttons (LÖVE's 1, 2 and 3, `Shell::LotaInput::MOUSE_BUTTONS`), when the button goes down.
 - A finger counts when it goes down, and each finger is a press of its own. Only a `touchscreen` device counts: a trackpad's touches (0 to 1 coordinates) do not (`LotaInput`).
 - SDL makes up a mouse press, marked `istouch`, for each finger. It is ignored, so one finger is one press (`LotaInput`).
 - A gamepad's press is a click at the gamepad cursor (`InputRouter#gamepad_pressed`). Its release is at the cursor too, wherever it has moved.

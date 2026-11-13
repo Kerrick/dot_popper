@@ -15,15 +15,9 @@ module DotPopper
     # mouse press SDL makes up for a finger, a trackpad's touches) the
     # shell leaves out before it asks (Shell::LotaInput).
     class InputRouter < Data.define
-      MOUSE_BUTTONS = [1, 2, 3].freeze
-
-      # The tap for mouse button +button+ (1 to 3 count) going down at
-      # +x+, +y+, or nil.
-      def mouse_pressed(x, y, button)
-        return unless MOUSE_BUTTONS.include?(button)
-
-        Tap.new(x: x.to_f, y: y.to_f, kind: InputKind::MOUSE)
-      end
+      # The tap for a mouse button that counts going down at +x+, +y+
+      # (which buttons count is the shell's: Shell::LotaInput).
+      def mouse_pressed(x, y) = Tap.new(x: x.to_f, y: y.to_f, kind: InputKind::MOUSE)
 
       # The tap for finger +id+ going down at +x+, +y+, or nil where it has
       # no position.
@@ -33,10 +27,9 @@ module DotPopper
         Tap.new(x: x.to_f, y: y.to_f, kind: InputKind::TOUCH)
       end
 
-      # Where the mouse moved or let go, as a Tap, or nil for a button
-      # that is no tap's.
+      # Where the mouse moved or let go, as a Tap.
       def mouse_moved(x, y) = Tap.new(x: x.to_f, y: y.to_f, kind: InputKind::MOUSE)
-      def mouse_released(x, y, button) = mouse_pressed(x, y, button)
+      def mouse_released(x, y) = mouse_pressed(x, y)
 
       # Where a finger moved or lifted, as a Tap, or nil, as for its press.
       def touch_moved(id, x, y) = touch_pressed(id, x, y)

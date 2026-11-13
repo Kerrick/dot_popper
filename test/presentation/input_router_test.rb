@@ -7,9 +7,8 @@ class InputRouterTest < Minitest::Test
 
   def setup = @router = InputRouter.new
 
-  def test_a_click_with_any_main_button_is_a_tap
-    [1, 2, 3].each { assert_equal Tap.new(x: 10.0, y: 20.0, kind: InputKind::MOUSE), @router.mouse_pressed(10, 20, it) }
-    assert_nil @router.mouse_pressed(10, 20, 4)
+  def test_a_click_is_a_tap
+    assert_equal Tap.new(x: 10.0, y: 20.0, kind: InputKind::MOUSE), @router.mouse_pressed(10, 20)
   end
 
   def test_a_finger_is_a_tap
@@ -29,8 +28,7 @@ class InputRouterTest < Minitest::Test
 
   def test_moves_and_releases_are_sorted_as_presses_are
     assert_equal Tap.new(x: 3.0, y: 4.0, kind: InputKind::MOUSE), @router.mouse_moved(3, 4)
-    assert_equal Tap.new(x: 3.0, y: 4.0, kind: InputKind::MOUSE), @router.mouse_released(3, 4, 1)
-    assert_nil @router.mouse_released(3, 4, 5)
+    assert_equal Tap.new(x: 3.0, y: 4.0, kind: InputKind::MOUSE), @router.mouse_released(3, 4)
     assert_equal Tap.new(x: 5.0, y: 6.0, kind: InputKind::TOUCH), @router.touch_moved(1, 5, 6)
     assert_equal Tap.new(x: 5.0, y: 6.0, kind: InputKind::TOUCH), @router.touch_released(1, 5, 6)
   end

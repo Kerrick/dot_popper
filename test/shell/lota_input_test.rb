@@ -10,9 +10,10 @@ class LotaInputTest < Minitest::Test
 
   def setup = @input = DotPopper::Shell::LotaInput.new
 
-  def test_a_click_is_a_tap
-    assert_equal Tap.new(x: 10.0, y: 20.0, kind: InputKind::MOUSE), @input.mouse_pressed(10, 20, 1, false)
-    assert_nil @input.mouse_pressed(10, 20, 4, false)
+  def test_a_click_with_any_main_button_is_a_tap
+    [1, 2, 3].each { assert_equal Tap.new(x: 10.0, y: 20.0, kind: InputKind::MOUSE), @input.mouse_pressed(10, 20, it, false) }
+    assert_nil @input.mouse_pressed(10, 20, 4, false), "a side button"
+    assert_nil @input.mouse_released(3, 4, 5, false)
   end
 
   def test_the_mouse_press_sdl_makes_up_for_a_touch_is_ignored

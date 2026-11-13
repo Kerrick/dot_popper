@@ -17,6 +17,9 @@ module DotPopper
       BUTTONS = { a: :a, b: :b, x: :x, y: :y, start: :start, back: :select, leftshoulder: :lb, rightshoulder: :rb }.freeze
       # LÖVE's names for the trigger axes.
       TRIGGERS = { "triggerleft" => :left, "triggerright" => :right }.freeze
+      # LÖVE's numbers for the mouse buttons that count as a press: the
+      # left, the right and the middle. A mouse's side buttons do not.
+      MOUSE_BUTTONS = [1, 2, 3].freeze
 
       # LÖVE's names for the keys the game names, the keypad's as the
       # main keys': the letters and digits, and the keys that edit, move,
@@ -31,9 +34,9 @@ module DotPopper
 
       def initialize(router: Presentation::InputRouter.new) = super
 
-      def mouse_pressed(x, y, button, istouch) = (router.mouse_pressed(x, y, button) unless istouch)
+      def mouse_pressed(x, y, button, istouch) = (router.mouse_pressed(x, y) if mouse?(button, istouch))
       def mouse_moved(x, y, istouch) = (router.mouse_moved(x, y) unless istouch)
-      def mouse_released(x, y, button, istouch) = (router.mouse_released(x, y, button) unless istouch)
+      def mouse_released(x, y, button, istouch) = (router.mouse_released(x, y) if mouse?(button, istouch))
 
       def touch_pressed(id, x, y, devicetype, mouse) = (router.touch_pressed(id, x, y) if finger?(devicetype, mouse))
       def touch_moved(id, x, y, devicetype, mouse) = (router.touch_moved(id, x, y) if finger?(devicetype, mouse))
@@ -55,6 +58,7 @@ module DotPopper
       private
 
       def finger?(devicetype, mouse) = devicetype.to_s == "touchscreen" && mouse != true
+      def mouse?(button, istouch) = !istouch && MOUSE_BUTTONS.include?(button)
     end
   end
 end
