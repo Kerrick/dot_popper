@@ -91,6 +91,35 @@ class GamesTest < Minitest::Test
     assert_predicate @show, :game_over?
   end
 
+  # Buy says "(Y)" with a controller wherever the offer is open, and Y
+  # buys there. Shell::App once sent Y over Game Over to Share my score,
+  # which does nothing under the offer, before asking the screen on top.
+  def test_over_game_over_a_controllers_y_buys_as_its_words_say
+    store = Buying.new
+    @show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, games: @games, entitlement: @entitlement,
+                     storefront: store, input: InputKind::GAMEPAD)
+    2.times { @games.spend! }
+    press_main
+    @cabinet.update(20)
+    @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
+    @show.update(0.016)
+    @show.primary
+
+    assert_predicate @show, :offer?
+    assert_equal "Buy for $1.99 (Y)", @show.buy_label
+    @show.pad(:y)
+
+    assert_equal 1, store.bought
+    refute_predicate @show, :sharing?
+  end
+
+  # A store that counts the times Buy was pressed.
+  class Buying < Store
+    attr_reader :bought
+
+    def buy = @bought = bought.to_i + 1
+  end
+
   def test_tomorrow_the_games_come_back
     3.times { @games.spend! }
     @day += 1

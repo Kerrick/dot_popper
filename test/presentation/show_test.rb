@@ -160,6 +160,19 @@ class ShowTest < Minitest::Test
     assert_nil @clipboard.text
   end
 
+  # A controller's Y is Share my score at Game Over, and Copy in the
+  # preview over it.
+  def test_a_controllers_y_shares_at_game_over_and_copies_in_the_preview
+    finish_game(back_to_title: false)
+    @show.pad(:y)
+    assert @show.sharing?
+    assert_nil @clipboard.text
+
+    @show.pad(:y)
+    assert_match(/\ADot Popper: 1 point\n/, @clipboard.text)
+    assert @show.sharing?
+  end
+
   # In the preview, the main button is Copy: Enter, Space, Start, a
   # gamepad's A aimed at nothing, and Y again all copy.
   def test_in_the_share_preview_the_main_button_and_y_copy

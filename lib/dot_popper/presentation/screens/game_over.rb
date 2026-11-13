@@ -15,9 +15,11 @@ module DotPopper
 
         def primary = show.play_again
 
-        # LB opens the new achievement, and RB the friend group, as their
-        # lines say.
+        # Y Share my score; LB opens the new achievement, and RB the friend
+        # group, as their lines say.
         def pad(button)
+          return show.share if button == :y
+
           chip = { lb: :over_achievement, rb: :over_group }[button] or return
           show.open_from_game_over(chip == :over_achievement ? :achievement : :group) if show.game_over_chips.any? { it.name == chip && it.opens }
         end

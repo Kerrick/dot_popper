@@ -17,6 +17,9 @@ module DotPopper
           show.close_share
           true
         end
+
+        # Y again copies, as Copy does.
+        def pad(button) = (show.copy_result if button == :y)
       end
     end
   end

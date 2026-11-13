@@ -202,17 +202,10 @@ module DotPopper
         case @buttons.intent(@input.button(button))
         in :press then gamepad_down(:a)
         in :start then @show.start
-        in :y then y_pressed
         in :leave then @show.back || leave_home
-        in :x | :lb | :rb | :select => name then @show.pad(name)
+        in :x | :y | :lb | :rb | :select => name then @show.pad(name)
         in nil then nil
         end
-      end
-
-      # Y: on Home and Settings a button of its own, and Game Over's
-      # Share my score.
-      def y_pressed
-        @show.game_over? || @show.sharing? ? @show.share : @show.pad(:y)
       end
 
       # A gamepad button came up. Letting go of A ends its press, which on
