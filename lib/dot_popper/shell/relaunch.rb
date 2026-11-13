@@ -17,9 +17,9 @@ module DotPopper
     # - on a phone, not at all: the player starts it again (#command is
     #   nil).
     #
-    # +ruby_platform+ is RUBY_PLATFORM, +program+ $PROGRAM_NAME, +arguments+ ARGV, +ruby+ RbConfig.ruby,
-    # +title+ the window's title (the app's name), and +exists+ answers
-    # whether a file is there.
+    # +ruby_platform+ is RUBY_PLATFORM, +program+ $PROGRAM_NAME,
+    # +arguments+ ARGV, +ruby+ RbConfig.ruby, +title+ the window's title
+    # (the app's name), and +exists+ answers whether a file is there.
     class Relaunch < Data.define(:ruby_platform, :fused, :program, :arguments, :ruby, :title, :exists)
       # The command, as a program and its arguments, or nil when there is
       # none.
