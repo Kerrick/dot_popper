@@ -38,7 +38,7 @@ class ThemesTest < Minitest::Test
     show(pro: true)
     @themes.release(["ghost"])
     @show.update(0.016)
-    use_key = @show.arrival_plan.use_button
+    use_key = @show.screens.fetch(:new_theme).plan.use_button
     @show.tap(use_key.center_x, use_key.center_y)
     @show.primary
 
@@ -61,7 +61,7 @@ class ThemesTest < Minitest::Test
   def test_a_new_theme_is_told_with_an_immediate_switch
     show(pro: true, unlocked: ["ghost"])
     assert_equal :ghost, @show.arrival.key
-    use_key = @show.arrival_plan.use_button
+    use_key = @show.screens.fetch(:new_theme).plan.use_button
     @show.tap(use_key.center_x, use_key.center_y)
     assert_equal :ghost, @show.in_use.key
     assert_nil @show.arrival, "told once"
@@ -69,7 +69,7 @@ class ThemesTest < Minitest::Test
 
   def test_not_now_keeps_the_ordinary_theme_and_does_not_ask_again
     show(pro: true, unlocked: ["ghost"])
-    later = @show.arrival_plan.later_button
+    later = @show.screens.fetch(:new_theme).plan.later_button
     @show.tap(later.center_x, later.center_y)
     assert_predicate @show.in_use, :ordinary?
     assert_nil @show.arrival
@@ -123,13 +123,13 @@ class ThemesTest < Minitest::Test
   def test_a_free_player_can_be_told_and_is_led_to_pro
     show(pro: false, unlocked: ["ghost"])
     assert_equal :ghost, @show.arrival.key
-    assert_equal "Get Pro", @show.arrival_use_word
+    assert_equal "Get Pro", @show.screens.fetch(:new_theme).use_word
     assert_predicate @show.in_use, :ordinary?
   end
 
   def test_the_switch_names_the_theme_it_uses
     show(pro: true, unlocked: ["ghost"])
-    assert_equal "Use Ghost", @show.arrival_use_word
+    assert_equal "Use Ghost", @show.screens.fetch(:new_theme).use_word
   end
 
   def test_the_longest_switch_and_not_now_both_fit_on_a_phone_either_way_up

@@ -137,10 +137,7 @@ module DotPopper
       # Whether the card for this theme has been up ARRIVAL_GRACE since it
       # first appeared, so a press meant for Home as it came answers nothing.
       def arrival_settled? = @screens[:new_theme].settled?
-      def arrival_plan = @screens[:new_theme].plan
 
-      # The switch's word: a Free player's is "Get Pro", since it opens the offer.
-      def arrival_use_word = @screens[:new_theme].use_word
       def themes = @themes.choices.map { theme_of(it) }
       # The art of the theme in use (UseCases::UseTheme answers its key).
       def in_use = theme_of(@use_theme.current)
