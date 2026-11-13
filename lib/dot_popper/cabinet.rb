@@ -153,7 +153,7 @@ module DotPopper
     class Home < Data.define
       def game = nil
       def press(cabinet, _x, _y) = cabinet.start_game
-      def update(_game, _seconds) = self
+      def update(_cabinet, _seconds) = self
     end
 
     # A game in progress. It ends the moment the clock reaches zero,
@@ -193,7 +193,7 @@ module DotPopper
       def ready? = shown >= Rules::GAME_OVER_GRACE
 
       def press(cabinet, _x, _y) = ready? ? cabinet.show_home : self
-      def update(_game, seconds) = with(shown: shown + seconds)
+      def update(_cabinet, seconds) = with(shown: shown + seconds)
     end
   end
 end
