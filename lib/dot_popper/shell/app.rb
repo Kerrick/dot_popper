@@ -21,7 +21,6 @@ module DotPopper
       def initialize(env = ENV, channel: Build::CHANNEL)
         @settings = Composition::Settings.new(env, channel:)
         Automation.guard!(exit_on_attempt: true) if @settings.automated?
-        @elapsed = 0.0
         @uptime = 0.0
         @chatter = Presentation::Chatter.quiet(Style::CHATTER)
         @clock = Presentation::FrameClock.start
@@ -35,7 +34,6 @@ module DotPopper
         @game = Composition::Root.new(engine: @engine, settings: @settings)
         @platform = @game.platform
         @touch = @platform.touch?
-        @dot_size = @game.dot_size
         @window = @game.window
         @cabinet = @game.cabinet
         @show = @game.show
@@ -55,7 +53,6 @@ module DotPopper
         @cabinet.subscribe(@tilting)
         @dragging = Dragging.new(pile: @pile, show: @show, style: @game.grab_style)
         @cabinet.subscribe(@dragging)
-        @fake_drag = Presentation::FakeDrag.parse(@settings["DOT_POPPER_FAKE_DRAG"])
         @sparks = Sparks.new(Style)
         @bloom = Bloom.new(@pen, Style::BLOOM)
         @renderer = Renderer.new(@show, @pen, pile: @pile, sparks: @sparks, bloom: @bloom,
@@ -67,10 +64,8 @@ module DotPopper
         @cursor = @game.cursor
         @pad_held = []
         @autopilot = @game.autopilot
-        @shots = Presentation::ShotSchedule.parse(@settings["DOT_POPPER_SHOTS"])
-        @quit_after = Float(@settings.fetch("DOT_POPPER_QUIT_AFTER"), exception: false)
-        @frames = Presentation::FrameMeter.start(5) if flag?("DOT_POPPER_PERF")
-        @cabinet.subscribe { happened(it.class.name.split("::").last) } if @frames
+        @hooks = DevelopmentHooks.for(@settings, cabinet: @cabinet, show: @show, pile: @pile, dragging: @dragging,
+                                                 pad: ->(action, x, y) { fake_pad(action, x, y) })
       end
 
       # Lota's frame, which Lota measured as +measured+ seconds: the game
@@ -81,7 +76,7 @@ module DotPopper
       end
 
       def update(seconds)
-        measure(seconds)
+        @hooks&.frame_started(seconds)
         @uptime += seconds
         seconds = seconds.clamp(0.0, Rules::LONGEST_FRAME)
         if @splash
@@ -104,12 +99,12 @@ module DotPopper
         point_the_mouse
         repeat_keys
         @tilting.update(seconds)
-        fake_drag
+        @hooks&.drag
         @dragging.move(:gamepad, @cursor.x, @cursor.y) if @pad_held.any?
         @dragging.update(seconds)
         @pile.update(seconds)
         @sparks.update(seconds, @show.effects)
-        development(seconds)
+        @hooks&.frame_ended(seconds)
       end
 
       def draw
@@ -315,7 +310,7 @@ module DotPopper
         @settled_at = @uptime.to_f + SETTLE
         return unless @show
 
-        happened("a resize")
+        @hooks&.happened("a resize")
         @engine.report_screen
         @pen.refresh
         @sparks.refresh
@@ -434,23 +429,8 @@ module DotPopper
         @dragging.press(key, tap.x, tap.y)
       end
 
-      # DOT_POPPER_FAKE_DRAG's drag, a step each frame once Game Over has
-      # been shown long enough. With DOT_POPPER_FAKE_GAMEPAD, the gamepad
-      # makes it: the cursor goes where the drag is, and A holds the dot.
-      def fake_drag
-        return unless @fake_drag && @show.game_over?
-
-        width, height = ::Lota::Graphics.dimensions
-        @fake_drag.step(@show.game_over.at, @show.now, width, height) do |action, x, y|
-          x, y = nearest_ball(x, y) if action == :press
-          unless action == :move
-            puts "Dot Popper: the fake drag #{action == :press ? "takes" : "throws"} a dot at #{x.round}, #{y.round}, " \
-                 "#{@elapsed.round(1)} seconds in"
-          end
-          fake_gamepad? ? fake_pad(action, x, y) : @dragging.public_send(action, :fake, x, y)
-        end
-      end
-
+      # The fake drag's press, move or release, made with the gamepad
+      # (DevelopmentHooks#drag): the cursor goes there, and A holds the dot.
       def fake_pad(action, x, y)
         @cursor = @cursor.at(x, y).show
         case action
@@ -495,69 +475,13 @@ module DotPopper
 
       # F11 or Alt+Enter, as Home's "Full screen" (DesktopWindow).
       def toggle_fullscreen
-        happened("a fullscreen switch")
+        @hooks&.happened("a fullscreen switch")
         @window.toggle_fullscreen
       end
 
       def screen = @game.screen
 
-      # The middle of the pile's ball nearest +x+, +y+, or that point with
-      # no pile.
-      def nearest_ball(x, y)
-        dot = @pile.stack&.dots&.min_by { Math.hypot(it.x - x, it.y - y) }
-        dot ? [dot.x, dot.y] : [x, y]
-      end
-
       def flag?(name) = @settings.flag?(name)
-
-      # The development hooks main.rb describes.
-      def development(seconds)
-        before = @elapsed
-        @elapsed += seconds
-        @shots.due(before, @elapsed).each { screenshot(it) }
-        ::Lota::Event.quit if @quit_after && @elapsed >= @quit_after
-      end
-
-      # With DOT_POPPER_PERF=1, prints how smoothly the game ran every five
-      # seconds, and every frame slow enough to notice with what was going
-      # on, from each frame's real time.
-      def measure(seconds)
-        return unless @frames
-
-        gcs = [GC.stat(:major_gc_count), GC.stat(:minor_gc_count)]
-        if @gcs && Presentation::SlowFrame.slow?(seconds)
-          puts "Dot Popper: #{slow_frame(seconds, gcs).report}"
-        end
-        @gcs = gcs
-        @frames, report = @frames.record(seconds)
-        puts "Dot Popper: #{report}" if report
-      end
-
-      def slow_frame(seconds, gcs)
-        recent, at = @recent
-        Presentation::SlowFrame.new(seconds:, screen: screen_name, recent:, since: at && (@elapsed - at),
-                                    major_gcs: gcs[0] - @gcs[0], minor_gcs: gcs[1] - @gcs[1])
-      end
-
-      def screen_name
-        if @show.stats? then "Stats"
-        elsif @show.tutorial? then "the tutorial"
-        elsif @show.playing? then "a game"
-        elsif @show.game_over? then "Game Over"
-        else "Home"
-        end
-      end
-
-      # Notes the latest thing to happen, for a slow frame's report.
-      def happened(what)
-        @recent = [what, @elapsed] if @frames
-      end
-
-      def screenshot(number)
-        name = "shot-#{number}.png"
-        ::Lota::Graphics.capture_screenshot(name)
-        puts "Dot Popper: screenshot #{File.join(::Lota::Filesystem.save_directory, name)}"
-      end
     end
   end
 end

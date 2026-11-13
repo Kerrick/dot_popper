@@ -84,12 +84,12 @@ class PrivacyDeclaredTest < Minitest::Test
 
     refute_empty archived
     archived.each { DotPopper::Shell::SaveFile.new(name: it) }
-    shot = File.read(File.join(ROOT, "lib/dot_popper/shell/app.rb"))[/name = "(shot-[^"]+)"/, 1].sub('#{number}', "3")
+    shot = File.read(File.join(ROOT, "lib/dot_popper/shell/development_hooks.rb"))[/name = "(shot-[^"]+)"/, 1].sub('#{number}', "3")
     DotPopper::Shell::SaveFile.new(name: shot)
   end
 
   def test_only_save_file_writes_to_the_save_folder
-    allowed = { "lib/dot_popper/shell/store_answers.rb" => "File.delete", "lib/dot_popper/shell/app.rb" => "capture_screenshot" }
+    allowed = { "lib/dot_popper/shell/store_answers.rb" => "File.delete", "lib/dot_popper/shell/development_hooks.rb" => "capture_screenshot" }
     ban = /\bFile\.(?:write|binwrite|open|delete|rename)\b|\bIO\.(?:write|binwrite)\b|\bFileUtils\b|Filesystem\.(?:write|append|remove|mkdir|create_directory|new_file)\b|capture_screenshot/
     hits = Dir[File.join(ROOT, "lib/**/*.rb")].reject { it.end_with?("shell/save_file.rb") }.filter_map do |path|
       found = source_of(path).scan(ban)

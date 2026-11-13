@@ -177,6 +177,10 @@ It prints `gui: screenshot PATH` for each file it saves in the save folder. `DOT
 
 `test/automation_test.rb` checks which settings make a run automated, that the suite cannot reach an outside host by either socket call or through `Network::Link`, and that a local server is reachable. `test/build_test.rb` checks that `DOT_POPPER_AUTOMATED` and `DOT_POPPER_SCENARIO` don't make a store build automated.
 
+## Development hooks
+
+`Shell::DevelopmentHooks` holds the settings that drive a run from outside it, so they stay out of `Shell::App`'s own path: screenshots at set seconds (`DOT_POPPER_SHOTS`, saved as `shot-N.png`), quitting after a while (`DOT_POPPER_QUIT_AFTER`), the frame meter and slow-frame reports (`DOT_POPPER_PERF`), and the fake drag on Game Over (`DOT_POPPER_FAKE_DRAG`, made with the gamepad under `DOT_POPPER_FAKE_GAMEPAD`). `DevelopmentHooks.for` answers nil when none is set, and then a frame does nothing for them. All four are in `Build::HARMLESS`, so a store build obeys them as a test build does, which the packaged-app playthroughs need. `test/shell/development_hooks_test.rb` checks both. The other development settings choose what the game is built with, and are the composition root's ([architecture](../architecture.md#composition)).
+
 ## The simulator
 
 `script/simulate.rb` plays the real rules with a model player, without a window, to see how the field's size in radii changes a game. It is a design tool, not a test.
