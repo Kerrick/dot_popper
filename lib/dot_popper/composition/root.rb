@@ -125,7 +125,7 @@ module DotPopper
       # is gone, a replacement the player chose (Presentation::ServerChoice),
       # or none in an automated run.
       def server_url
-        own = Network::Settings.server_url(settings.env) or return
+        own = Network::Server.server_url(settings.env) or return
         @server_choice.server_url(own)
       end
 
@@ -240,7 +240,7 @@ module DotPopper
       # so setdef's is never sent to a replacement.
       def groups_session
         url = server_url
-        own = url.nil? || url == Network::Settings.server_url(settings.env)
+        own = url.nil? || url == Network::Server.server_url(settings.env)
         Groups::Session.at(url, store: own ? file("group.txt") : file("group-#{URI(url).host.to_s.downcase}.txt"))
       end
 
@@ -255,7 +255,7 @@ module DotPopper
           return Continuity::Watch.new(server: fake, connectivity: fake, gone: @gone, license:, today: settings.today, pins:)
         end
         if Continuity.live? && !settings.automated?
-          return Continuity::Watch.new(server: Continuity::SetdefServer.new(Network::Link.new(Network::Settings::SERVER_URL)),
+          return Continuity::Watch.new(server: Continuity::SetdefServer.new(Network::Link.new(Network::Server::SERVER_URL)),
                                        connectivity: Continuity::Connectivity.new, gone: @gone, license:, today: settings.today, pins:)
         end
 

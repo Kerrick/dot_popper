@@ -9,7 +9,7 @@ module DotPopper
     # none: the game then offers no groups and asks for no themes); the
     # proof and license keys always go to SERVER_URL. doc/privacy.json
     # says what is sent, and when.
-    module Settings
+    module Server
       SERVER_URL = "https://server.dot-popper.setdef.com"
       OVERRIDE = "DOT_POPPER_SERVER"
 
@@ -21,5 +21,8 @@ module DotPopper
         env.fetch(OVERRIDE, fallback).then { it.empty? ? nil : it }
       end
     end
+
+    # The old name, until no commit uses it.
+    Settings = Server
   end
 end
