@@ -37,7 +37,7 @@ Dot Popper's Ubiquitous Language. Code, screens, docs and the server use the sam
 | **top score** | The highest score in a friend group since its members joined. | score to beat |
 | **title change** | The title passing to another member, seen by the whole group and never acknowledged. | news, theft |
 | **Standard** | The dot size a game has unless the player chooses the other: worked out from the screen, so every screen is about equally crowded. | sized to the screen, fitted |
-| **Bigger / Smaller** | The other dot size, the same on every screen, named by what it does on this device next to Standard: Bigger on a phone, Smaller on a big monitor. Where the two differ by under a tenth, Settings shows neither. Code says `fixed`. | |
+| **Bigger / Smaller** | The other dot size, the same on every screen, named by what it does on this device next to Standard: Bigger on a phone, Smaller on a big monitor. Where the two differ by under a tenth, Settings shows neither. Code that doesn't know the device says `bigger_or_smaller`. | fixed size |
 | **Home** | The main screen, with Play on it, and the button that returns there. | the title screen, main menu |
 
 ## Not yet decided

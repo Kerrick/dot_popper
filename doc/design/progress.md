@@ -77,13 +77,13 @@ A game's records count only among games of its size class (`SizeClass`, `lib/dot
 | Class | Which games | Rule |
 | --- | --- | --- |
 | `SizeClass::STANDARD` | every game with standard dots | `DotSizing#size_class` |
-| `SizeClass::SMALL` | the fixed size, field under 250 R² | `Rules::SMALL_FIELD_BELOW` |
-| `SizeClass::MEDIUM` | the fixed size, 250 to under 700 R² | |
-| `SizeClass::LARGE` | the fixed size, 700 R² or more | `Rules::LARGE_FIELD_FROM` |
+| `SizeClass::SMALL` | the bigger or smaller size, field under 250 R² | `Rules::SMALL_FIELD_BELOW` |
+| `SizeClass::MEDIUM` | the bigger or smaller size, 250 to under 700 R² | |
+| `SizeClass::LARGE` | the bigger or smaller size, 700 R² or more | `Rules::LARGE_FIELD_FROM` |
 
-With the fixed size an upright phone is 134 R² (small), an 11-inch iPad, a 13-inch iPad Pro and the 24 × 16 R desktop window are 384 to 566 (medium), and a big monitor full screen is 1,475 to 2,035 (large). The cut-offs sit in the wide gaps between those devices, so a window resized a little stays in its class. Games with standard dots are one class, since their field is about as crowded on any screen ([rules.md](rules.md#dot-size-standard-and-bigger-or-smaller)). The class names saved in `score_record.txt` and `stats.txt` (`fitted`, `small`, `medium`, `large`) never change, since builds in players' hands wrote them.
+With the bigger or smaller size an upright phone is 134 R² (small), an 11-inch iPad, a 13-inch iPad Pro and the 24 × 16 R desktop window are 384 to 566 (medium), and a big monitor full screen is 1,475 to 2,035 (large). The cut-offs sit in the wide gaps between those devices, so a window resized a little stays in its class. Games with standard dots are one class, since their field is about as crowded on any screen ([rules.md](rules.md#dot-size-standard-and-bigger-or-smaller)). The class names saved in `score_record.txt` and `stats.txt` (`fitted`, `small`, `medium`, `large`) never change, since builds in players' hands wrote them.
 
-**Why.** The same model player scores about 6 on a phone, 21 to 24 on a tablet or the desktop window, and 77 on a 6K monitor with the fixed size ([rules.md](rules.md#how-crowded-the-field-gets)). Comparing those would tell a phone player they are bad at the game when the screen is the cause; Juul (*The Art of Failure*) holds that a failure should feel like the player's own, which is only fair when the comparison is. The totals, the chart and the streak stay across every class because they describe how much and how often someone plays, which isn't a contest.
+**Why.** The same model player scores about 6 on a phone, 21 to 24 on a tablet or the desktop window, and 77 on a 6K monitor with the bigger or smaller size ([rules.md](rules.md#how-crowded-the-field-gets)). Comparing those would tell a phone player they are bad at the game when the screen is the cause; Juul (*The Art of Failure*) holds that a failure should feel like the player's own, which is only fair when the comparison is. The totals, the chart and the streak stay across every class because they describe how much and how often someone plays, which isn't a contest.
 
 The Stats screen shows the records of the class a game started now would count in (`Cabinet#size_class`): the current dot size on the current screen.
 

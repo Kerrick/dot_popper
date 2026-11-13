@@ -73,7 +73,8 @@ class GlossaryTest < Minitest::Test
     "fitted" => [[/\.fitted\(|def fitted\(|\? fitted\(|\bfitted (to|beside|its)\b|\b(one|list) fitted$/,
                   "a list, a line of text or a window fitted to the room it has"],
                  [/"fitted"|`fitted`|\bfitted[=.,]|,fitted\b|%[wW]\[[^\]]*\bfitted\b|\\"fitted\\"/,
-                  "the word dot_size.txt, score_record.txt and stats.txt save Standard as, which builds in players' hands wrote"]]
+                  "the word dot_size.txt, score_record.txt and stats.txt save Standard as, which builds in players' hands wrote"]],
+    "fixed size" => [[/\bof a fixed size\b/, "a thing whose size never changes, as a test's window, not the dot size"]]
   }.freeze
 
   # A row of the glossary's table: its term, and the words it replaces.

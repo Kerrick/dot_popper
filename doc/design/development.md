@@ -202,7 +202,7 @@ $ bundle exec ruby script/simulate.rb bonus [games [rows [points [seconds]]]]
 
 ### What it plays
 
-`DEVICES` holds six screens, in radii: an upright iPhone (7.9 × 17), an 11-inch iPad (16.4 × 23.6), a 13-inch iPad Pro (20.6 × 27.5), the reference window (24 × 16), a 27-inch 1440p monitor (51.2 × 28.8) and a 32-inch 6K monitor (60.2 × 33.8). `JOBS` plays each device with each `DotSizing` (the fixed size, and Standard), with the spawn rule (`Rules::SPAWN_TRIES`) and without it (0): 24 jobs. It prints a table for each dot size: each device's radius and area in square radii, mean and 90th-percentile score, game length, share of endless games, mistakes, the share of spawns redrawn and moved, and, without the rule, the share of spawns with no touch target for a second and the mean score.
+`DEVICES` holds six screens, in radii: an upright iPhone (7.9 × 17), an 11-inch iPad (16.4 × 23.6), a 13-inch iPad Pro (20.6 × 27.5), the reference window (24 × 16), a 27-inch 1440p monitor (51.2 × 28.8) and a 32-inch 6K monitor (60.2 × 33.8). `JOBS` plays each device with each `DotSizing` (the bigger or smaller size, and Standard), with the spawn rule (`Rules::SPAWN_TRIES`) and without it (0): 24 jobs. It prints a table for each dot size: each device's radius and area in square radii, mean and 90th-percentile score, game length, share of endless games, mistakes, the share of spawns redrawn and moved, and, without the rule, the share of spawns with no touch target for a second and the mean score.
 
 ### Ractors, and the larger heap
 
@@ -218,7 +218,7 @@ Measured, not enforced: with the default heap, 10 games per device caused about 
 
 ## The spawn benchmark
 
-`script/benchmark_spawn.rb` times the spawn rule (`Spawner#spawn`) with 100 popped dots on the field (`SpawnBenchmark::DOTS`), about as many as a long game on a big monitor ends with, on five fields: the 27-inch monitor, the 6K monitor with standard dots, the reference window, and an upright iPhone at the fixed size and with standard dots. It counts this thread's CPU time, so a busy machine skews it less, and prints the mean, 99th-percentile and longest time in milliseconds, and the share of spawns redrawn and that used every try.
+`script/benchmark_spawn.rb` times the spawn rule (`Spawner#spawn`) with 100 popped dots on the field (`SpawnBenchmark::DOTS`), about as many as a long game on a big monitor ends with, on five fields: the 27-inch monitor, the 6K monitor with standard dots, the reference window, and an upright iPhone at the bigger or smaller size and with standard dots. It counts this thread's CPU time, so a busy machine skews it less, and prints the mean, 99th-percentile and longest time in milliseconds, and the share of spawns redrawn and that used every try.
 
 ```console
 $ bundle exec ruby script/benchmark_spawn.rb [spawns]   # 500 by default

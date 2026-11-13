@@ -53,3 +53,5 @@ The formula and its limits (`Rules::FITTED_AREA`, `SMALLEST_FITTED_RADIUS`, `LAR
 **Note, 2026-11-13: friend groups count every dot size.** The Confirmation section's "Friend groups count only fitted games" no longer holds. The maintainer: "Somebody's gonna choose a dot size they like and stick with it, usually. Nobody who does that should be excluded from enjoying friend groups." Every game but the tutorial's now counts in a friend group, whatever its dot size ([friend groups](../design/friend-groups.md)). Stats still keeps each size's records apart.
 
 **Note, 2026-11-13: where the sizes are alike.** The Neutral consequence above, that Settings hides the choice where the two sizes are within a tenth of each other, now holds only while Standard is saved. Where the fixed size is saved, Settings shows the choice there too, so no player is left with a setting no control shows or leaves ([screens](../design/screens.md)).
+
+**Note, 2026-11-13: the code's word for the other size.** The first note's `DotSizing::FIXED` is now `DotSizing::BIGGER_OR_SMALLER`, made of the screen's own words, by the maintainer's decision.

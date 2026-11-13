@@ -29,14 +29,14 @@ A dot is a value, `Dot` (`lib/dot_popper/dot.rb`): an `id`, a place, a velocity 
 
 ## Dot size: Standard, and Bigger or Smaller
 
-The default size, Standard, is worked out from the screen, so every screen is about equally crowded; the other, the fixed size, is the same on every screen, and Settings names it "Bigger" or "Smaller", by what it does on this device next to Standard. Why Standard is worked out from the screen: [ADR-0001](../adr/0001-dots-fit-the-screen-by-default.md).
+The default size, Standard, is worked out from the screen, so every screen is about equally crowded; the other, the bigger or smaller size, is the same on every screen, and Settings names it "Bigger" or "Smaller", by what it does on this device next to Standard. Why Standard is worked out from the screen: [ADR-0001](../adr/0001-dots-fit-the-screen-by-default.md).
 
 `DotSizing` (`lib/dot_popper/dot_sizing.rb`) holds the player's choice:
 
 | Choice | Constant | Radius | Saved as |
 | --- | --- | --- | --- |
 | Standard (the default) | `DotSizing::STANDARD`, `DotSizing::DEFAULT` | `DotSize.standard(width, height)` | `fitted` |
-| Bigger or Smaller (the fixed size) | `DotSizing::FIXED` | `Rules::RADIUS`, 50 units | `standard` |
+| Bigger or Smaller | `DotSizing::BIGGER_OR_SMALLER` | `Rules::RADIUS`, 50 units | `standard` |
 
 **The formula** (`DotSize.standard`): R = √(width × height ÷ 384), the radius that makes the field `Rules::STANDARD_AREA`, 24 × 16 = 384 square radii, the desktop window's area. It is clamped:
 
@@ -45,11 +45,11 @@ The default size, Standard, is worked out from the screen, so every screen is ab
 
 On an upright phone the floor applies: the exact fit would be about 29.6, so the field is 373 R² rather than 384.
 
-**Saving.** The choice is kept in `dot_size.txt`. It is written only when the player picks a size. `DotSizing.parse` reads `fitted` (Standard) or `standard` (the fixed size), and `same`, the fixed size's name in saves from before that (`DotSizing::EARLIER_NAMES`). These are the words builds in players' hands wrote, so they never change, whatever the screens and the code call the sizes (`test/saved_dot_size_words_test.rb`); a missing, empty or unreadable file means the player never chose, and gets `DEFAULT`.
+**Saving.** The choice is kept in `dot_size.txt`. It is written only when the player picks a size. `DotSizing.parse` reads `fitted` (Standard) or `standard` (the bigger or smaller size), and `same`, the bigger or smaller size's name in saves from before that (`DotSizing::EARLIER_NAMES`). These are the words builds in players' hands wrote, so they never change, whatever the screens and the code call the sizes (`test/saved_dot_size_words_test.rb`); a missing, empty or unreadable file means the player never chose, and gets `DEFAULT`.
 
 **When it applies.** `Cabinet#field` gives a new game `sizing.fit(screen)`. A game keeps its radius until it ends. `Cabinet#sizing=` changes the choice only on Home, so a game in play is never resized by it. Speeds are in radii per second, so they scale with R. Buttons and their reaches do not, since they are sized for a finger, not for the field.
 
-**When the choice is offered.** Settings shows a "Dot size" row where the two radii differ by more than a tenth (`SizingPreview#offered?`, `SizingStyle#alike` of 0.1 in `Style::SIZING`), and wherever the fixed size is saved. In a 1200 × 800 window the two are alike, so for a player with Standard the row is hidden there; resizing the window brings it back. The first segment is "Standard", the default, and the second is named for what it does on this screen next to it ("Bigger" or "Smaller", `Words#sizing`; "About the same" where the two are alike), never easy or hard (`Show::SIZINGS`). Where the row is hidden, the saved choice stands and games follow it. The screen itself is described in [screens.md](screens.md).
+**When the choice is offered.** Settings shows a "Dot size" row where the two radii differ by more than a tenth (`SizingPreview#offered?`, `SizingStyle#alike` of 0.1 in `Style::SIZING`), and wherever the bigger or smaller size is saved. In a 1200 × 800 window the two are alike, so for a player with Standard the row is hidden there; resizing the window brings it back. The first segment is "Standard", the default, and the second is named for what it does on this screen next to it ("Bigger" or "Smaller", `Words#sizing`; "About the same" where the two are alike), never easy or hard (`Show::SIZINGS`). Where the row is hidden, the saved choice stands and games follow it. The screen itself is described in [screens.md](screens.md).
 
 **What Standard does not do.** Working the size out from the screen narrows the difference that screen size makes to how crowded the field gets. It does not make scores comparable across devices: the same player still scores differently on different screens, and differently again with a mouse, a finger or a controller. Friend groups count every game, whatever its dot size ([friend-groups.md](friend-groups.md)).
 
@@ -102,8 +102,8 @@ A dot too small to hold a target (under 44 units across, smaller than the rules 
 
 **Cost** (measured, not enforced). `script/benchmark_spawn.rb` times a spawn with 100 popped dots on the field, in CPU time, on five fields. On one Mac:
 
-- On a 27-inch 1440p monitor's field with fixed-size dots, where long games really do reach 100 dots, a spawn took 0.08 ms on average and 0.6 ms at the 99th percentile.
-- On an upright phone's field with fixed-size dots, packed with 100 dots, it took 1.7 ms on average and 6 ms at the 99th percentile. There 70% of spawns were redrawn, and 10% used every try and kept their last draw.
+- On a 27-inch 1440p monitor's field with smaller dots (the bigger or smaller size), where long games really do reach 100 dots, a spawn took 0.08 ms on average and 0.6 ms at the 99th percentile.
+- On an upright phone's field with bigger dots (the bigger or smaller size), packed with 100 dots, it took 1.7 ms on average and 6 ms at the 99th percentile. There 70% of spawns were redrawn, and 10% used every try and kept their last draw.
 
 A spawn happens once per pop. On a packed phone screen the rule does real work: it finds the gaps that are left and puts the new dot in one when it can. Where no gap exists, the dot spawns as it would have.
 
@@ -176,7 +176,7 @@ The model player is crude: its mistakes mostly reflect how impatient it was told
 
 Measured 2026-11-05, before the bonus dot existed (the same as `bonus: nil`), 60 games per row (`bundle exec ruby script/simulate.rb 60`). "Area" is the field in square radii; "Mistakes" is per game.
 
-The fixed size:
+The bigger or smaller size, `Rules::RADIUS` (Bigger on the iPhone, Smaller on the iPad Pro and the monitors, about the same on the 11-inch iPad and the desktop window):
 
 | Device | R | Area (R²) | Mean score | 90th percentile | Mean game (s) | Mistakes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -198,7 +198,7 @@ Standard, worked out from the screen:
 | 27-inch 1440p monitor, full screen | 98.0 | 384 | 23.6 | 35 | 34.2 | 7.3 |
 | 32-inch 6K monitor, full screen | 115.1 | 384 | 20.3 | 31 | 31.1 | 7.2 |
 
-With the fixed size the mean scores run from 6.0 to 76.8, nearly thirteen times apart; an upright phone holds about 15 times fewer square radii than a 6K monitor. With Standard, they fall between 20.3 and 23.6, within 8% of their average. The rest of the spread follows the screens' shapes and the model player's luck.
+With the bigger or smaller size the mean scores run from 6.0 to 76.8, nearly thirteen times apart; an upright phone holds about 15 times fewer square radii than a 6K monitor. With Standard, they fall between 20.3 and 23.6, within 8% of their average. The rest of the spread follows the screens' shapes and the model player's luck.
 
 ### How often the spawn check acts
 
@@ -206,12 +206,12 @@ Measured before the bonus dot existed, 200 games per row. "Redrawn" and "Moved" 
 
 | Device | Dot size | Redrawn | Moved | No target | Mean score | Mean score without the rule |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| iPhone, portrait | Fixed | 1.39% | 0.00% | 1.22% | 6.1 | 5.8 |
-| 11-inch iPad | Fixed | 0.41% | 0.00% | 0.48% | 24.0 | 23.0 |
-| 13-inch iPad Pro | Fixed | 0.34% | 0.00% | 0.32% | 33.4 | 33.9 |
-| Desktop window, 24 × 16 R | Fixed | 0.50% | 0.00% | 0.39% | 23.6 | 21.4 |
-| 27-inch 1440p monitor | Fixed | 0.20% | 0.00% | 0.19% | 60.9 | 60.0 |
-| 32-inch 6K monitor | Fixed | 0.13% | 0.00% | 0.10% | 74.9 | 75.9 |
+| iPhone, portrait | Bigger | 1.39% | 0.00% | 1.22% | 6.1 | 5.8 |
+| 11-inch iPad | About the same | 0.41% | 0.00% | 0.48% | 24.0 | 23.0 |
+| 13-inch iPad Pro | Smaller | 0.34% | 0.00% | 0.32% | 33.4 | 33.9 |
+| Desktop window, 24 × 16 R | About the same | 0.50% | 0.00% | 0.39% | 23.6 | 21.4 |
+| 27-inch 1440p monitor | Smaller | 0.20% | 0.00% | 0.19% | 60.9 | 60.0 |
+| 32-inch 6K monitor | Smaller | 0.13% | 0.00% | 0.10% | 74.9 | 75.9 |
 | iPhone, portrait | Standard, R 30 | 4.97% | 0.05% | 4.72% | 24.1 | 22.0 |
 | 11-inch iPad | Standard, R 50.2 | 0.56% | 0.00% | 0.53% | 24.0 | 23.4 |
 | 13-inch iPad Pro | Standard, R 60.7 | 0.22% | 0.00% | 0.14% | 24.0 | 23.7 |
