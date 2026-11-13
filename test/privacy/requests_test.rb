@@ -129,12 +129,21 @@ class PrivacyRequestsTest < Minitest::Test
     assert_raises(NoMethodError) { Network::Job[:themes, :get, "/x", nil] }
   end
 
+  # A request counts as built once a query field it declares appears in
+  # the game's code outside privacy/requests.rb. The scan is shown to find
+  # every built request that has one, so it is not blind while
+  # UNBUILT_REQUESTS is empty, and an unbuilt request must have a query
+  # field for it to find.
   def test_unbuilt_requests_are_only_those_not_yet_in_the_code
-    Privacy::UNBUILT_REQUESTS.each_value do |request|
-      kind = request.kind
-      fields = request.query.keys.join("|")
+    source = game_source
+    in_code = ->(request) { request.query.keys.any? { source.match?(/\b#{it}\b/) } }
+    built = Privacy::REQUESTS.values.reject { Privacy::UNBUILT_REQUESTS.key?(it.kind) }.reject { it.query.empty? }
 
-      refute game_source.match?(/#{fields}/), "#{kind} has been built: remove it from UNBUILT_REQUESTS and play it in this test"
+    refute_empty built
+    built.each { assert in_code.call(it), "the scan does not find #{it.kind}'s query fields, though it is built" }
+    Privacy::UNBUILT_REQUESTS.each_value do |request|
+      refute_empty request.query, "#{request.kind} has no query field, so this test cannot tell when it is built"
+      refute in_code.call(request), "#{request.kind} has been built: remove it from UNBUILT_REQUESTS and play it in this test"
     end
   end
 
