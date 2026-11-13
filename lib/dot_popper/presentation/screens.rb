@@ -8,12 +8,14 @@ module DotPopper
     # every press, button, key and scroll asks that screen.
     module Screens
       # One of each screen for +show+, by name: a screen over Home by the
-      # name Show#page gives it, the rest by their own.
-      def self.made_for(show)
-        { home: Home, new_theme: NewTheme, tutorial: Tutorial, game: Game, game_over: GameOver, share_preview: SharePreview,
-          offer: Offer, stats: Stats, achievements: Achievements, achievement_dialog: AchievementDialog, themes: Themes,
-          settings: Settings, credits: Credits, privacy: Privacy, server: ChangeServer, friend_groups: FriendGroups }
-          .transform_values { it.new(show) }.freeze
+      # name Show#page gives it, the rest by their own. +clipboard+ takes
+      # what the share preview copies.
+      def self.made_for(show, clipboard:)
+        { home: Home.new(show), new_theme: NewTheme.new(show), tutorial: Tutorial.new(show), game: Game.new(show),
+          game_over: GameOver.new(show), share_preview: SharePreview.new(show, clipboard:), offer: Offer.new(show),
+          stats: Stats.new(show), achievements: Achievements.new(show), achievement_dialog: AchievementDialog.new(show),
+          themes: Themes.new(show), settings: Settings.new(show), credits: Credits.new(show), privacy: Privacy.new(show),
+          server: ChangeServer.new(show), friend_groups: FriendGroups.new(show) }.freeze
       end
 
       # What every screen answers, and what a screen answers where it has
@@ -107,9 +109,18 @@ module DotPopper
         # Whether a title change's announcement shows over it (GroupBanner).
         def announces? = false
 
+        # Whether this screen is open over the screen for the game's state
+        # (Show#layers).
+        def opened? = show.layer?(self)
+
         private
 
         def layout = show.layout
+        def words = show.words
+        def style = show.style
+        def sounds = show.sounds
+        def now = show.now
+        def measure = show.measure
 
         # A button drawn at +frame+, which a press reaches within a dot's
         # width, short of the safe area's bottom.

@@ -109,7 +109,7 @@ module DotPopper
         @undo = nil
         @pointer = nil
         @hover = Hover.none
-        @screens = Screens.made_for(self)
+        @screens = Screens.made_for(self, clipboard:)
         cabinet.subscribe(@recorder)
         cabinet.subscribe(self)
       end
@@ -856,8 +856,7 @@ module DotPopper
         return unless game_over? && game_over && !offer?
 
         preview = @sharing.offer(share_text, now) or return sounds.play(:tick)
-        open_layer(:share_preview)
-        @screens[:share_preview].preview = preview
+        @screens[:share_preview].open_with(preview)
         sounds.play(:tick)
       end
 
@@ -871,29 +870,14 @@ module DotPopper
 
       # Where the share preview's card, words and buttons go (SharePlan),
       # or nil while it is closed.
-      def share_plan
-        return unless sharing?
-
-        ShareScreen.new(layout:, type: style::TYPE, words:, measure: @measure, style: style::SHARE_PREVIEW,
-                        lines: share_preview.lines).plan
-      end
+      def share_plan = (@screens[:share_preview].plan if sharing?)
 
       # The share preview's Copy, the one press that writes the clipboard:
       # it copies exactly the text the preview shows.
-      def copy_result
-        return unless sharing?
-
-        preview = share_preview
-        @clipboard.copy(preview.text)
-        @screens[:share_preview].preview = preview.copy(now)
-        sounds.play(:tick, pitch: 1.3)
-      end
+      def copy_result = (@screens[:share_preview].copy if sharing?)
 
       # Closes the share preview, back to Game Over as it was.
-      def close_share
-        close_layer(:share_preview)
-        sounds.play(:tick, pitch: 0.8)
-      end
+      def close_share = @screens[:share_preview].close
 
       # Where a tap reaches "Share my score", where it is drawn: never
       # less than a dot's width, short of where Play again's reach begins.
@@ -1212,18 +1196,23 @@ module DotPopper
         sounds.play(:tick, pitch: 0.7)
       end
 
-      private
-
-      # Opens the screen +name+ (as Screens.made_for names it) over the
-      # screens open now, unless it is open already.
-      def open_layer(name)
-        layer = @screens.fetch(name)
+      # Opens +screen+ (a Screens::Screen, or its name in Screens.made_for)
+      # over the screens open now, unless it is open already.
+      def open_layer(screen)
+        layer = screen.is_a?(Symbol) ? @screens.fetch(screen) : screen
         @layers << layer unless @layers.include?(layer)
       end
 
-      def close_layer(name) = @layers.delete(@screens.fetch(name))
+      # Closes +screen+, wherever it is on the stack.
+      def close_layer(screen) = @layers.delete(screen.is_a?(Symbol) ? @screens.fetch(screen) : screen)
 
-      def layer?(name) = @layers.include?(@screens.fetch(name))
+      # Whether +screen+ is open over the others.
+      def layer?(screen) = @layers.include?(screen.is_a?(Symbol) ? @screens.fetch(screen) : screen)
+
+      # What sizes the screens' words (RoughMeasure's methods).
+      attr_reader :measure
+
+      private
 
       # Opens the offer straight from Home, as Play does when no play
       # is left; Back from it returns to Home.
