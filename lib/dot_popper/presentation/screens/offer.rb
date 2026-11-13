@@ -196,16 +196,22 @@ module DotPopper
         # of a typed license key, buys. Then, on a copy that takes license
         # keys, a letter, digit or hyphen is typed into one, and Backspace,
         # Delete or Enter edits or enters it, with Ctrl or Cmd held or not,
-        # so a key's letters are never shortcuts.
+        # so a key's letters are never shortcuts. While a key is being
+        # typed, Space does nothing: a key's text ignores spaces, so one
+        # typed as it is printed, in groups, never closes the offer.
         def key_bindings = KEY_BINDINGS
         KEY_BINDINGS = [
           KeyBinding.new(keys: :v, with: KeyBinding::COMMAND, does: :paste),
           KeyBinding.new(keys: :b, with: KeyBinding::COMMAND, does: :buy),
-          KeyBinding.new(keys: [*("a".."z"), *("0".."9"), :minus, :backspace, :delete, :enter].map(&:to_sym), does: :type)
+          KeyBinding.new(keys: [*("a".."z"), *("0".."9"), :minus, :backspace, :delete, :enter].map(&:to_sym), does: :type),
+          KeyBinding.new(keys: :space, does: :typing?)
         ].freeze
 
         # A license key typed, on a copy that takes one.
         def type(key) = keys? && type_license_key(key)
+
+        # Whether a license key is being typed, on a copy that takes one.
+        def typing? = keys? && !@buy_pro.typed.empty?
 
         # Paste license key, on a copy that takes one.
         def paste

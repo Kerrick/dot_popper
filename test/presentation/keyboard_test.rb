@@ -131,15 +131,23 @@ class KeyboardTest < Minitest::Test
     refute_equal :ready, fixture.storefront.status, "entered, and found to be no key"
   end
 
-  def test_space_and_escape_close_the_offer_while_a_key_is_typed
-    %i[space escape].each do |key|
-      given(at: :offer)
-      press(:a)
-      press(key)
+  # A license key's text ignores spaces, so one typed as it is printed,
+  # in groups, keeps the offer open; with nothing typed, Space is the
+  # offer's main button, Back. Escape closes it either way.
+  def test_space_does_nothing_while_a_key_is_typed
+    given(at: :offer)
+    %i[a b space c].each { press(it) }
 
-      refute show.offer?, key
-      assert_equal 0, @shell.quits
-    end
+    assert show.offer?, "Space between a key's groups"
+    assert_equal "ABC", fixture.storefront.typed
+    press(:escape)
+
+    refute show.offer?, "Escape closes it"
+    assert_equal 0, @shell.quits
+    given(at: :offer)
+    press(:space)
+
+    refute show.offer?, "nothing typed: Space is Back"
   end
 
   def test_the_join_keypad_takes_digits_and_backspace

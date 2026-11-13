@@ -189,6 +189,7 @@ The table below is the keys' order. `test/presentation/input_doc_test.rb` fails 
 | Ctrl+V or Cmd+V | Pro offer, Change Server | Pastes a license key, where the copy takes one, or a server's address (`Screens::Offer#paste`, `Screens::ChangeServer#paste`) |
 | Ctrl+B or Cmd+B | Pro offer | Buy (`Screens::Offer#buy`) |
 | Letters, digits, hyphen, Backspace, Delete, Enter | Pro offer | On a copy that takes license keys: the key being typed, Ctrl or Cmd held or not (`WebsiteStore#type`) |
+| Space | Pro offer | Nothing, while a license key is being typed (`Screens::Offer#typing?`): a key's text ignores spaces, so one typed as it is printed, in groups, never closes the offer. *Designing for People* (Lee, Wickens, Liu and Boyle): most "human error" is a design problem, so the right action is made easy and the wrong one hard. With nothing typed, Space goes on to the main button, Back |
 | Digits, Backspace, Delete | Friend groups | On the keypad that joins a friend group: a digit, or the last one away (`GroupPanel#type`) |
 | H | Home | How to play (`Screens::Home#type`) |
 | C | Settings | Credits and licenses (`Screens::Settings#type`) |
