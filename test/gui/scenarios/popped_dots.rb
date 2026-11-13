@@ -59,7 +59,7 @@ module DotPopperGui
     # Themes whose popped dots are known to come too near their bright
     # dot, until each is redrawn. Each must still fail, so the list cannot
     # go stale.
-    TOO_NEAR = %i[awake jingle_bell].freeze
+    TOO_NEAR = %i[jingle_bell].freeze
 
     def play
       keeper = show.instance_variable_get(:@theme_keeper)

@@ -2,7 +2,7 @@
 //
 // One dot as an eye, in the wood. A bright dot is an open cat's eye that
 // fills the circle and looks toward the player; a popped dot is a shut lid
-// with a bone lash line, a flat two-tone shape. Open or shut is a shape,
+// with a dim bone lash line, a flat two-tone shape. Open or shut is a shape,
 // so it reads without color. The vertex color says what kind of dot it
 // is, as in dot.glsl.
 
@@ -50,12 +50,16 @@ vec3 open_eye(vec2 p, float d, float aa, float bonus) {
   float ring = clamp((d - (1.0 - max(0.045, 1.5 * aa))) / aa + 0.5, 0.0, 1.0);
   return mix(c, vec3(1.0, 0.992, 0.886), ring);
 }
+// The shut lid's lash line and edge: a dim bone, lighter than the lid but
+// far from every color of the open eye, so no piece of a shut eye passes
+// for a sliver of the open one.
+const vec3 LASH = vec3(0.45, 0.47, 0.41);
 vec3 shut_lid(vec2 p, float d, float aa) {
   float sag = 0.24 - 0.34 * p.x * p.x;
   vec3 upper = mix(vec3(0.216, 0.275, 0.227), vec3(0.165, 0.216, 0.173), smoothstep(-0.6, 0.3, p.y));
   vec3 c = p.y < sag ? upper : vec3(0.106, 0.149, 0.118);
   float near = abs(p.y - sag) / sqrt(1.0 + pow(0.68 * p.x, 2.0));
-  c = mix(c, vec3(0.78, 0.8, 0.706), clamp((0.036 - near) / aa + 0.5, 0.0, 1.0) * (1.0 - smoothstep(0.74, 0.84, d)));
+  c = mix(c, LASH, clamp((0.036 - near) / aa + 0.5, 0.0, 1.0) * (1.0 - smoothstep(0.74, 0.84, d)));
   for (int i = 0; i < 5; i++) {
     float lx = -0.42 + float(i) * 0.21;
     float ang = lx * 0.9;
@@ -64,10 +68,10 @@ vec3 shut_lid(vec2 p, float d, float aa) {
     float along = r.x * sin(ang) + r.y * cos(ang);
     float across = abs(r.x * cos(ang) - r.y * sin(ang));
     float tick = clamp(((0.04 * (1.0 - along / 0.17)) - across) / aa + 0.5, 0.0, 1.0) * step(0.0, along) * step(along, 0.17);
-    c = mix(c, vec3(0.78, 0.8, 0.706), tick);
+    c = mix(c, LASH, tick);
   }
   float ring = clamp((d - (1.0 - max(0.05, 1.5 * aa))) / aa + 0.5, 0.0, 1.0);
-  return mix(c, mix(vec3(0.522, 0.561, 0.49), vec3(0.78, 0.8, 0.706), clamp(0.4 + 0.4 * dot(p, vec2(-0.53, -0.848)), 0.0, 1.0)), ring);
+  return mix(c, mix(vec3(0.36, 0.385, 0.335), LASH, clamp(0.4 + 0.4 * dot(p, vec2(-0.53, -0.848)), 0.0, 1.0)), ring);
 }
 vec4 effect(vec4 params, Image tex, vec2 uv, vec2 screen) {
   float bright_look = params.r;
