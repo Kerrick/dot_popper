@@ -195,7 +195,7 @@ module DotPopper
         return skip_splash if @splash
 
         gamepad_used
-        case @buttons.intent(button)
+        case @buttons.intent(@input.button(button))
         in :press then gamepad_down(:a)
         in :start then @show.start
         in :y then y_pressed
@@ -215,7 +215,7 @@ module DotPopper
       # Game Over throws a dragged dot, or goes on, as a click does; letting
       # go of Y ends a hold of "Clear my stats…".
       def gamepad_released(button)
-        case @buttons.intent(button)
+        case @buttons.intent(@input.button(button))
         in :press then gamepad_up(:a)
         in :y then @show.let_go(:y)
         in :start then @show.let_go(:start)
@@ -226,8 +226,9 @@ module DotPopper
       # A gamepad's axis moved. The right trigger presses and lets go as A
       # does; the sticks are read each frame instead (Gamepads).
       def gamepad_axis(axis, value)
-        return left_trigger(value) if axis.to_s == "triggerleft"
-        return unless axis.to_s == "triggerright"
+        trigger = @input.trigger(axis)
+        return left_trigger(value) if trigger == :left
+        return unless trigger == :right
         return skip_splash if @splash && value.to_f > 0.5
 
         was_held = @trigger.held

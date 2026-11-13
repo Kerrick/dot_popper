@@ -2,9 +2,12 @@
 
 module DotPopper
   module Presentation
-    # What each gamepad button asks for, by the names LÖVE gives an Xbox
-    # pad's buttons; SDL maps every other gamepad to them, so a
-    # PlayStation pad's cross is +:a+ and its triangle +:y+.
+    # What each gamepad button asks for, by the names the game gives an
+    # Xbox pad's buttons, as its words name them: +:a+, +:b+, +:x+, +:y+,
+    # +:start+, +:select+ (View, Back, Select or Share), +:lb+ and +:rb+.
+    # Every other gamepad is mapped to them, so a PlayStation pad's cross
+    # is +:a+ and its triangle +:y+; the shell turns the engine's names
+    # into these (Shell::LotaInput#button).
     #
     # [:press] a press at the cursor, as a click there (A, and the right
     #   trigger through Trigger)
@@ -21,15 +24,15 @@ module DotPopper
     class GamepadButtons < Data.define(:intents)
       # The button that opens Settings from Home, as a console's View or
       # Select button opens a game's options.
-      SETTINGS = :back
+      SETTINGS = :select
 
-      STANDARD = { a: :press, start: :start, y: :y, x: :x, b: :leave, SETTINGS => :select, leftshoulder: :lb,
-                   rightshoulder: :rb }.freeze
+      STANDARD = { a: :press, start: :start, y: :y, x: :x, b: :leave, SETTINGS => :select, lb: :lb, rb: :rb }.freeze
 
       def initialize(intents: STANDARD) = super
 
-      # The intent of a press of +button+, or nil for a button that has none.
-      def intent(button) = intents[button.to_s.to_sym]
+      # The intent of a press of +button+, or nil for none, as for a button
+      # the game doesn't name.
+      def intent(button) = intents[button]
     end
 
     # The right trigger, as a button: it presses once when pulled past

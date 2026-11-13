@@ -8,8 +8,8 @@ class GamepadButtonsTest < Minitest::Test
   def setup = @buttons = GamepadButtons.new
 
   def test_each_button_asks_for_its_intent
-    assert_equal({ a: :press, start: :start, b: :leave, back: :select, x: :x, y: :y, leftshoulder: :lb, rightshoulder: :rb },
-                 %i[a start b back x y leftshoulder rightshoulder].to_h { [it, @buttons.intent(it)] })
+    assert_equal({ a: :press, start: :start, b: :leave, select: :select, x: :x, y: :y, lb: :lb, rb: :rb },
+                 %i[a start b select x y lb rb].to_h { [it, @buttons.intent(it)] })
   end
 
   # Settings opens from Home on View or Select, as a console game's
@@ -20,12 +20,12 @@ class GamepadButtonsTest < Minitest::Test
     show = Show.new(cabinet:, layout: layout(1200, 800), sounds:, radius: R)
     show.input = InputKind::GAMEPAD
 
-    show.pad(@buttons.intent(:back))
+    show.pad(@buttons.intent(:select))
     assert show.settings?
     assert_equal "Settings (Select)", show.words.settings
-    show.pad(@buttons.intent(:back))
+    show.pad(@buttons.intent(:select))
     assert sounds.muted?
-    show.pad(@buttons.intent(:back))
+    show.pad(@buttons.intent(:select))
     refute sounds.muted?
   end
 
@@ -54,7 +54,7 @@ class GamepadButtonsTest < Minitest::Test
   end
 
   def test_other_buttons_ask_for_nothing
-    %i[guide dpup dpleft leftstick rightstick].each { assert_nil @buttons.intent(it) }
+    [:lt, :guide, nil].each { assert_nil @buttons.intent(it) }
   end
 
   def test_the_trigger_presses_once_per_pull

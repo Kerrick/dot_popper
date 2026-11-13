@@ -92,14 +92,14 @@ The left trigger, with the same thresholds, opens Friend groups from Home (LT).
 
 ### The buttons on each screen
 
-`Presentation::GamepadButtons` maps LÖVE's names for an Xbox pad's buttons to intents. SDL maps every other gamepad to those names, so a PlayStation pad's cross is `:a`.
+Lota names a gamepad's buttons as LÖVE names an Xbox pad's (SDL maps every other gamepad to those names, so a PlayStation pad's cross is `a`), and `Shell::LotaInput#button` turns each into the game's own name, as its words name the button: `:a`, `:b`, `:x`, `:y`, `:start`, `:select` (LÖVE's `back`), `:lb` and `:rb` (`leftshoulder`, `rightshoulder`). `Presentation::GamepadButtons` maps those to intents; a button the game doesn't name (the d-pad, the sticks' clicks, the guide button) has none. The trigger axes arrive as `triggerleft` and `triggerright`, which `LotaInput#trigger` names `:left` and `:right`.
 
 | Button | Intent | What it does |
 | --- | --- | --- |
 | A | `:press` | A press at the cursor. Aimed at no button, it presses the screen's main button (`Show#primary`) |
 | Start | `:start` | The screen's main button (`Show#start`), except on a friend group, where holding it leaves the group |
 | B | `:leave` | Back, Close or Home (`Show#back`); on Home, Quit, asked twice |
-| View, Back, Select or Share (`GamepadButtons::SETTINGS`, LÖVE's `:back`) | `:select` | Settings on Home; Sound in Settings |
+| View, Back, Select or Share (`GamepadButtons::SETTINGS`, `:select`) | `:select` | Settings on Home; Sound in Settings |
 | X, Y, LB, RB | `:x`, `:y`, `:lb`, `:rb` | Each screen's own buttons, labeled on it (`Show#pad`) |
 
 The d-pad has no intent of its own: it moves the cursor. The right stick scrolls a list (`Show#stick_scroll`, `Style::CREDITS.stick` lines a second at full tilt) and, on Game Over, rolls the pile ([look-and-sound.md](look-and-sound.md)).
@@ -203,7 +203,7 @@ Android's Back arrives as Escape ([platforms.md](platforms.md)). A phone's or ta
 | --- | --- |
 | `test/presentation/input_router_test.rb`, `test/shell/lota_input_test.rb` | Which callbacks are presses, and their `InputKind`; that SDL's made-up mouse and a trackpad's touches are not |
 | `test/presentation/gamepad_cursor_test.rb` | The dead zone, curve, speed, ramp, d-pad and showing |
-| `test/presentation/gamepad_buttons_test.rb` | The button map, Select on Home and in Settings, Start and B on Home, the trigger's thresholds |
+| `test/presentation/gamepad_buttons_test.rb`, `test/shell/lota_input_test.rb` | LÖVE's names as the game's, the button map, Select on Home and in Settings, Start and B on Home, the trigger's thresholds |
 | `test/shell/gamepads_test.rb` | Which joysticks are kept, and their pushes added |
 | `test/presentation/pile_grab_test.rb` | Drags, clicks, throws and drops |
 | `test/presentation/chatter_test.rb` | Which presses and releases are dropped |

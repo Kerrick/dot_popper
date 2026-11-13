@@ -41,4 +41,15 @@ class LotaInputTest < Minitest::Test
     assert_equal Tap.new(x: 5.0, y: 6.0, kind: InputKind::TOUCH), @input.touch_moved(1, 5, 6, :touchscreen, false)
     assert_equal Tap.new(x: 5.0, y: 6.0, kind: InputKind::TOUCH), @input.touch_released(1, 5, 6, :touchscreen, false)
   end
+
+  def test_lotas_gamepad_buttons_are_named_as_the_game_names_them
+    assert_equal({ a: :a, b: :b, x: :x, y: :y, start: :start, back: :select, leftshoulder: :lb, rightshoulder: :rb },
+                 %i[a b x y start back leftshoulder rightshoulder].to_h { [it, @input.button(it)] })
+    assert_equal :lb, @input.button("leftshoulder")
+    %i[guide dpup dpleft leftstick rightstick misc1].each { assert_nil @input.button(it) }
+  end
+
+  def test_only_the_trigger_axes_are_triggers
+    assert_equal [:left, :right, nil, nil], [:triggerleft, "triggerright", :leftx, :righty].map { @input.trigger(it) }
+  end
 end
