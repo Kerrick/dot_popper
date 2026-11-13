@@ -65,7 +65,7 @@ class ShowTutorialTest < Minitest::Test
 
   def test_its_end_starts_the_game_with_the_clock_lit_and_its_first_second_ticking
     play_through
-    lead_in = @show.lead_in
+    lead_in = @show.clock_highlight
 
     assert lead_in
     assert_operator lead_in.strength(@show.now), :>, 0.9
@@ -73,7 +73,7 @@ class ShowTutorialTest < Minitest::Test
     update_for(1.05)
     assert_includes @sounds.names, :tick, "the clock's first second down ticks"
     update_for(2.0)
-    assert_nil @show.lead_in
+    assert_nil @show.clock_highlight
   end
 
   # Kerrick: "Skip should skip all the tutorial-y bits being added to the
@@ -88,7 +88,7 @@ class ShowTutorialTest < Minitest::Test
 
     refute @show.tutorial?
     assert @show.playing?
-    assert_nil @show.lead_in
+    assert_nil @show.clock_highlight
     assert_same paused, @cabinet.game
     assert_equal [1, 2], [@cabinet.game.score, @cabinet.game.dots.size], "the pop the player made is the game's"
     assert_in_delta 11.0, @cabinet.game.countdown.remaining
@@ -251,7 +251,7 @@ class ShowTutorialTest < Minitest::Test
     assert_equal [true, true, false], @cabinet.game.dots.map(&:popped?)
     assert_equal 1, @cabinet.game.score
     assert_operator @cabinet.game.countdown.remaining, :>, 9.8, "from what it left, the clock only now running"
-    assert @show.lead_in
+    assert @show.clock_highlight
   end
 
   def test_how_to_play_does_nothing_off_home

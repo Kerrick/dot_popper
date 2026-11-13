@@ -186,7 +186,7 @@ module DotPopperGui
       check(game.countdown.remaining <= 10.0 && game.countdown.remaining > 9.8,
             "and its 10 seconds, the clock only now starting (#{game.countdown.remaining})")
       check_equal([1, 10], [show.hud.score, show.hud.seconds], "the HUD shows the same numbers")
-      check(show.lead_in, "the clock is lit as it starts to run")
+      check(show.clock_highlight, "the clock is lit as it starts to run")
       wait(0.3)
       keep_screenshot(name("4-runs"))
       check_equal(%i[GameStarted], story.uniq - %i[HomeShown], "no one heard of the game until play began")

@@ -116,7 +116,7 @@ module DotPopper
         veil(width, height, @show.game_over&.dim(@show.now).to_f) unless @show.playing?
         @effects.words(@show.effects, layout)
         @game_over.draw(@show, layout) unless @show.playing?
-        lead_in = @show.lead_in
+        lead_in = @show.clock_highlight
         if lead_in
           pill = @hud.bounds(@show.hud, layout)
           @tutorial.lead_in_under(lead_in, @show.now, pill, @hud.spots(@show.hud, layout),

@@ -4,9 +4,9 @@ module DotPopper
   module Shell
     # What the Tutorial draws over its dots and the HUD, with no word: the
     # dim around its spotlight, the numbers flying to and from the HUD, the
-    # guide (GhostPainter), and the skip button; and,
-    # in the game's first moments, its LeadIn's light on the clock. The
-    # HUD itself is never dimmed, and the number the spotlight is on is
+    # guide (GhostPainter), and the skip button; and, in the game's first
+    # moments, its ClockHighlight, the light on the clock. The HUD itself
+    # is never dimmed, and the number the spotlight is on is
     # haloed. Text and lines sit on whole device pixels.
     #
     # The dim is drawn without a stencil (the window has none): rings of
@@ -45,7 +45,7 @@ module DotPopper
       end
 
       # The clock lit as the game's first second runs (Presentation::
-      # LeadIn): the dim, under the HUD at +pill+...
+      # ClockHighlight): the dim, under the HUD at +pill+...
       def lead_in_under(lead_in, now, pill, spots, radius)
         x, y = spots.fetch(:time)
         strength = lead_in.strength(now)

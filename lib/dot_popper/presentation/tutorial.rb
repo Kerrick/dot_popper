@@ -89,7 +89,7 @@ module DotPopper
     #    spotlight moves to the clock and time flows again, it takes its
     #    popped look, and the bright dot the rules spawned under them all
     #    at the pop is shown born (#over?). The Show then unpauses the
-    #    game, whose LeadIn lets the clock run.
+    #    game, whose ClockHighlight lets the clock run.
     #
     # The guide's mistake is a press on the game, so it costs what it
     # does in play, by the rules. A player's tap on a popped dot never
