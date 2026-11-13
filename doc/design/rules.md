@@ -111,7 +111,7 @@ Tests: `test/spawner_test.rb`, `test/touch_target_test.rb`.
 
 ## Score and clock
 
-`Game` (`lib/dot_popper/game.rb`) holds the dots, the score and the clock, and changes them by swapping in new values. Each tap returns an event (`Events::Popped`, `Events::Penalized`, `Events::Missed`).
+`Game` (`lib/dot_popper/game.rb`) holds the dots, the score and the clock, and changes them in place by swapping in new values. Each tap returns an event (`Events::Popped`, `Events::Penalized`, `Events::Missed`); a pop's and a mistake's carry the dots, the score, the countdown and the time played as the tap left them, so no listener reads the game itself.
 
 | | Points | Seconds | Constants |
 | --- | ---: | ---: | --- |
