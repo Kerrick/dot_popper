@@ -13,7 +13,7 @@ Every press goes through one path, so every rule about presses holds for every k
 1. `main.rb` hands each of Lota's callbacks to `Shell::App` (`mouse_pressed`, `touch_pressed`, `gamepad_pressed`, `gamepad_axis`, and their moves and releases).
 2. `Shell::LotaInput` leaves out what Lota reports that is no press of the player's own, and `Presentation::InputRouter` decides which of the rest are presses, and turns each into a `Tap` (`x`, `y`, and the `InputKind` that made it).
 3. `App#press` hands the `Tap` to `Show#tap` on the frame it happens, unless the Show waits for its release (Game Over, below).
-4. `Show#tap` sends it to the game (`Cabinet#press`) during a game, or to the button under it (`Show#controls`, `Show#control_at`) anywhere else.
+4. `Show#tap` hands it to the screen on top (`Show#screen`; [screens.md](screens.md#screens-as-objects)): a game's sends it to the game (`Cabinet#press`), the Tutorial's to the Tutorial, and every other screen's to the button under it (`Show#controls`, `Show#control_at`), or to its empty space.
 
 The rules:
 
@@ -188,8 +188,8 @@ The words that say what to do follow the input the player used last. `Show#input
 | Digits, Backspace, Delete | On the keypad that joins a friend group: a digit, or the last one away (`GroupPanel#type`) |
 | Letters, digits, hyphen, Backspace, Enter | On a computer's Pro offer that takes license keys: the key being typed (`WebsiteStore#type`) |
 | M | Sound off or on (`Speaker#toggle_mute`) |
-| H | How to play, from Home |
-| C | Credits and licenses, from Settings |
+| H | How to play, from Home: Home's own key (`Screens::Home#type`) |
+| C | Credits and licenses, from Settings (`Screens::Settings#type`) |
 | Up, Down, Page Up, Page Down, Home, End | Scroll a list (`Show#scroll_key`). Only while a list scrolls do held keys repeat (`App#repeat_keys`) |
 | Enter, Space | The screen's main button (`Show#primary`), on any device. Nothing during a game |
 | Escape | Back, Close or Home where there is one (`Show#back`). Otherwise, on a computer it quits, during a game too; on Android's Home it leaves the app; on iOS it does nothing |

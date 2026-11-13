@@ -28,9 +28,44 @@ Where the parts go is worked out without Lota in `lib/dot_popper/presentation/` 
 | share preview | Game Over's Share my score, on a computer | Game Over | `ShareScreen`, `Shell::SharePreviewPainter` |
 | the offer of Pro | a Free player's tap on a Pro feature; Play or Play again with no game left | the screen it opened over | [store-and-pro.md](store-and-pro.md) |
 
-`Show#page` names the screen open over Home (`:stats`, `:achievements`, `:themes`, `:settings`, `:credits`, `:privacy`, `:server`), or nil for Home itself. `Show#close_page` sends Credits, Privacy and Change Server back to Settings, and the rest to Home. Every screen over Home is the presentation's alone: `Cabinet` stays on Home meanwhile, so no press there can start a game or touch a score. Each is drawn over Home's drifting dots, veiled at 90% (`Style::STATS.veil`, `GROUPS.veil`); Home itself veils them at 76% (`Style::HOME.dim`).
+`Show#page` names the topmost screen open over Home (`:stats`, `:achievements`, `:themes`, `:settings`, `:credits`, `:privacy`, `:server`), or nil for Home itself. Settings opens Credits, Privacy and Change Server over itself, so Back returns to it; the rest go back to Home. Every screen over Home is the presentation's alone: `Cabinet` stays on Home meanwhile, so no press there can start a game or touch a score. Each is drawn over Home's drifting dots, veiled at 90% (`Style::STATS.veil`, `GROUPS.veil`); Home itself veils them at 76% (`Style::HOME.dim`).
 
 The experience goal behind the map (Fullerton): a player is popping dots within two seconds of launch, and can start another game with one press after Game Over. Every other feature is on its own screen, opened on purpose.
+
+## Screens as objects
+
+Each screen is an object in `Presentation::Screens` (`lib/dot_popper/presentation/screens/`; [ADR-0018](../adr/0018-screens-are-objects-on-a-stack.md)), named for the screen: `Home`, `NewTheme` (the card telling of a new theme), `Tutorial`, `Game`, `GameOver`, `SharePreview`, `Offer`, `Stats`, `Achievements`, `AchievementDialog`, `Themes`, `Settings`, `Credits`, `Privacy`, `ChangeServer` and `FriendGroups` (the friend groups' pages, which `GroupPanel` keeps). The classes named `HomeScreen`, `GameOverScreen`, `ShareScreen`, `OfferScreen` and the like are their layouts: values whose `#plan` places the parts (see "Layout plans").
+
+**Which screen is on top.** `Screens.made_for` makes one of each as the `Show` is made, given what each uses (the use cases, the stores, the clipboard), and none is made again, so a frame makes nothing to ask. Under everything is the screen for `Cabinet`'s state (`Show#state_screen`): `Home`, or `NewTheme` while a new theme waits to be told; the `Tutorial` over its paused game; a `Game`; or `GameOver`. A screen opened over another is pushed on the stack over it (`Show#layers`, `Show#open_layer`), and closing it takes it off (`Show#close_layer`), so Back returns to the screen under it as it was. `Show#screen` is the top of the stack, or with nothing open the screen for the state: the one place that says which screen is on top. As Home shows after a game, the stack is emptied.
+
+| Opened over | Screens |
+| --- | --- |
+| Home | Stats, Achievements, Themes, Settings, Friend groups, the offer of Pro |
+| Settings | Credits, Privacy, Change Server |
+| Achievements | an achievement's dialog, the offer (from its Get Pro) |
+| Themes, the new-theme card, Friend groups | the offer of Pro, leading with what was tapped |
+| Game Over | the share preview, the offer (from Play again with no game left) |
+
+**What each answers** (`Screens::Screen`, whose answers are a screen's when it has none of its own):
+
+| Method | Answers | Asked by |
+| --- | --- | --- |
+| `controls` | its buttons (`Control`), where drawn and where a press reaches them | `Show#controls`, so taps and hover |
+| `tap`, `press`, `pressed`, `empty` | what a tap does: the button under it (`pressed`), or empty space (`empty`; a gamepad's A there is `primary`); a list's rows wait for their release (`list_row?`) | `Show#tap`, `Show#press` |
+| `primary`, `back` | the main button (Enter, Space, A at nothing), and Back, Close or Home (Escape, B), saying whether it had one | `Show#primary`, `Show#back` |
+| `pad`, `start` | a gamepad's X, Y, LB, RB, LT and View/Select, and Start | `Show#pad`, `Show#start` |
+| `type`, `paste`, `buy` | a typed key it takes (H on Home, C on Settings, the keypad's digits, a license key), Ctrl+V and Ctrl+B | `Show#type_key`, `#paste_shortcut`, `#buy_shortcut` |
+| `scrolls?`, `stick_scrolls?` | whether its list scrolls, and whether the left stick scrolls it too | the wheel, keys, drags and sticks; `App#read_with_stick` and `#repeat_keys` |
+| `waits_for_release?` | whether a press waits to be let go, as Game Over's pile does | `App#press` |
+| `covers?`, `announces?` | whether it covers what is under it, and whether a title change's announcement shows over it | the renderer, and the friend groups' announcements |
+
+A screen keeps its own state: the dialog its achievement, the share preview its text, the offer what it leads with, Stats its hold and Undo, Credits its scroll, Home its plan and the controller's ask to quit. The `Show` keeps what is not a screen, the game's feedback, the stack and the use cases, and a method of the same name for each value a painter or a test reads from a screen.
+
+**Drawing.** `Shell::Renderer#draw` draws the screen for the state's ground (Home's drifting dots, the Tutorial over its game, or the game and Game Over over its pile), then the screens over it from the last that covers the rest (`covers?`: the screens over Home, Friend groups, the offer) up to the top one, each with its veil and painter, and a title change's announcement where the top screen shows one.
+
+**Adding a screen** is a class in `screens/` with what it answers, a line in `Screens.made_for`, its painter in the renderer, and opening it over the screen it comes from (`Show#open_layer`, or `Show#open_page` for a screen over Home). `test/presentation/inputs_test.rb` fails until some input reaches it, and until each control its `pressed` answers is reached.
+
+**Where the chains once disagreed.** Before the screens were objects, the `Show`, `App` and the renderer each chose the screen on top in their own order. Where they disagreed, the screens now agree by what a player would expect: a controller's Y buys on the offer over Game Over as its "(Y)" says (it did nothing); the new-theme card takes no controller button and no H meant for Home under it (they opened Home's screens and How to play under the card); nothing scrolls hidden under the offer (the wheel, keys, sticks and a drag moved the list under it); empty space pops one of Home's dots only on Home (Themes, Privacy, Change Server, the offer and the card played a pop for a dot under their veil); and a title change's announcement starts only where it is drawn, and is drawn once (it could pass unseen on a screen over Home or under the offer, and was drawn twice on Game Over). One disagreement is kept: an achievement's dialog lets the grid under it scroll by the wheel, the keys and the right stick, while a finger's tap beside it closes it.
 
 ## The setdef splash
 
@@ -109,7 +144,7 @@ The margin is `Layout#page_margin`, 16 on a phone (a safe area under 600 on its 
 
 ### Play, the dots and the keys
 
-- A tap on one of Home's bright dots pops it for fun, with its droplets, ring and sound, and scores nothing (`Show#toy_tap`). Empty space does nothing.
+- A tap on one of Home's bright dots pops it for fun, with its droplets, ring and sound, and scores nothing (`Screens::Home#empty`). Empty space does nothing, and on every other screen a tap on a dot showing through does nothing.
 - Enter, Space, a gamepad's Start, and its A aimed at no button press Play (`Show#primary`). Only "(A)" is shown.
 - H, or the gamepad's Y, opens How to play. M mutes, on any screen. On a gamepad X opens Stats, LB Achievements, RB Themes, LT Friend groups, and View/Select opens Settings (`Show#pad`, `GamepadButtons::SETTINGS`), as a console game's options button does.
 - **Quitting.** On a computer, Escape quits from Home, and Quit quits at once: a press on a labeled button is deliberate, so it asks nothing. On Android, Back leaves the app from Home. iOS leaves quitting to the system. A controller's B asks first: the first press plays a tick and shows "Press B again to quit", and a second B within two seconds quits (`Show#ask_to_quit`, `QUIT_ASK`), so a stray press never closes the game. The line fades out over its last 0.3 s (`#quit_prompt`). It stands at `HomePlan#quit_line`, midway between Play's bottom and the part below it, and `HomeScreen#fits?` keeps a 200 × 18 box there clear of everything, so Play never moves for it.
@@ -177,11 +212,11 @@ The plan also gives `backing`: the bounds of everything above Play again, cut to
 
 ### Get Pro opens the offer over Game Over
 
-With no game left, the main button says "Get Pro". Its press opens the offer over Game Over, leading with games and noting "No games left today." (`Show#offer_over_game_over`), as every Pro feature's offer opens over the screen it was pressed on. Back closes it to Game Over as it was. While the offer is open, nothing under it takes a press, drags the pile (`Show#waits_for_release?`), or opens Share my score. The offer is drawn over the finished game veiled at 90% (`Renderer#offer_over`).
+With no game left, the main button says "Get Pro". Its press opens the offer over Game Over, leading with games and noting "No games left today." (`Screens::Offer#open_for_play`), as every Pro feature's offer opens over the screen it was pressed on. Back closes it to Game Over as it was. While the offer is open, nothing under it takes a press, drags the pile (`Show#waits_for_release?`), or opens Share my score. The offer is drawn over the finished game veiled at 90%, as over Home's dots (`Renderer#draw_screen`).
 
 ## Sharing a score
 
-Share my score (Y on a controller) offers the game's result as text, through the Show's `sharing:`. The text is `Words#share_text`:
+Share my score (Y on a controller) offers the game's result as text, through the `sharing:` the Show is given (`Screens::GameOver#share`). The text is `Words#share_text`:
 
 ```
 Dot Popper: 25 points, a new record!
@@ -266,7 +301,7 @@ Home and Game Over, and the share preview, never put a line at a fixed fraction 
 
 **Home** is laid out by `HomeScreen` itself rather than a `Column`, since its parts sit in rows and a grid: it tries the mocks' spacing, then tighter spacing, then without the goal's card, and takes the first that fits (see "How it is laid out" under Home).
 
-**Laid out again only on change.** `Show#planned` keeps the last plan of each kind of screen and lays out again only when the screen value differs from the last one (`Show#home_plan`, `#game_over_plan`). Laying out Home measures every line at every size it tries, about 0.7 to 1 ms on the maintainer's OnePlus Nord (measured, not enforced), and a frame asks for the plan more than once: to draw it, and for the buttons a tap or the mouse can reach. It changes only when the window, the words or the records do.
+**Laid out again only on change.** Home and Game Over each keep their last plan and lay out again only when the screen value differs from the last one (`Screens::Home#plan`, `Screens::GameOver#plan`). Laying out Home measures every line at every size it tries, about 0.7 to 1 ms on the maintainer's OnePlus Nord (measured, not enforced), and a frame asks for the plan more than once: to draw it, and for the buttons a tap or the mouse can reach. It changes only when the window, the words or the records do.
 
 ## The GUI scenarios and galleries
 
