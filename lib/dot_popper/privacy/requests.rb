@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../presentation"
+require_relative "../../dot_popper"
 
 module DotPopper
   module Privacy
@@ -12,7 +12,7 @@ module DotPopper
 
     # The parts of the game that make requests, each declaring its own as
     # REQUESTS where it lives, in the order doc/privacy.json lists them.
-    PARTS = [Groups, Presentation::ThemeFeed, Continuity::SetdefServer, Continuity::Connectivity].freeze
+    PARTS = [Groups, ThemeReleases, Continuity::SetdefServer, Continuity::Connectivity].freeze
 
     # Every request the game makes: each part's, then those not yet built.
     # A kind declared twice is refused.

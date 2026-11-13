@@ -94,7 +94,7 @@ class RefreshTest < Minitest::Test
   def test_the_requests_say_when_they_happen_again
     minutes = "#{Integer(Refresh::FLOOR / 60)} minutes"
 
-    [DotPopper::Presentation::ThemeFeed::REQUESTS.fetch(:themes), DotPopper::Groups::REQUESTS.fetch(:groups)].each do |request|
+    [DotPopper::ThemeReleases::REQUESTS.fetch(:themes), DotPopper::Groups::REQUESTS.fetch(:groups)].each do |request|
       assert_includes request.happens, minutes, request.kind
       assert_includes request.happens, "returns to the game", request.kind
     end

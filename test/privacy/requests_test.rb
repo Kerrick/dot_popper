@@ -85,9 +85,9 @@ class PrivacyRequestsTest < Minitest::Test
     pump
     @session.leave(1)
     pump
-    DotPopper::Presentation::ThemeFeed.new(worker: InlineWorker.new(Network::Link.new("http://127.0.0.1:#{@server.addr[1]}")),
-                                           theme_keeper: DotPopper::Presentation::ThemeKeeper.plain([]), store: DotPopper::ScoreRecord::Memory.new,
-                                           clock: -> { Time.utc(2026, 11, 8, 12) }).ask
+    DotPopper::ThemeReleases.new(worker: InlineWorker.new(Network::Link.new("http://127.0.0.1:#{@server.addr[1]}")),
+                                 themes: DotPopper::Themes.new(DotPopper::ScoreRecord::Memory.new), store: DotPopper::ScoreRecord::Memory.new,
+                                 clock: -> { Time.utc(2026, 11, 8, 12) }).ask
     @session.delete_everything
     pump
     play_continuity
@@ -120,7 +120,7 @@ class PrivacyRequestsTest < Minitest::Test
   end
 
   def test_a_job_can_only_be_made_from_a_declaration
-    themes = DotPopper::Presentation::ThemeFeed::REQUESTS.fetch(:themes)
+    themes = DotPopper::ThemeReleases::REQUESTS.fetch(:themes)
 
     assert_raises(KeyError) { Groups::Session::Job.of(:brand_new) }
     assert_raises(ArgumentError) { Groups::Session::Job.of(:join, body: { other: 1 }) }

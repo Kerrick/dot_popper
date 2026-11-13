@@ -1,4 +1,67 @@
 module DotPopper
   module Network
+    # What the typed core uses of the network's declarations and replies;
+    # network/ itself is not checked.
+    class Field < ::Data
+      attr_reader what: String
+
+      attr_reader label: Symbol
+
+      def self.new: (what: String, label: Symbol) -> instance
+    end
+
+    class Request < ::Data
+      attr_reader kind: Symbol
+
+      attr_reader verb: Symbol
+
+      attr_reader path: String
+
+      attr_reader query: Hash[Symbol, Field]
+
+      attr_reader body: Hash[Symbol, Field]
+
+      attr_reader token: bool
+
+      attr_reader happens: String
+
+      attr_reader feature: String
+
+      attr_reader to: String?
+
+      def self.new: (kind: Symbol, verb: Symbol, path: String, happens: String, feature: String, ?query: Hash[Symbol, Field], ?body: Hash[Symbol, Field], ?token: bool, ?to: String?) -> instance
+    end
+
+    class Job < ::Data
+      attr_reader kind: Symbol
+
+      attr_reader verb: Symbol
+
+      attr_reader path: String
+
+      attr_reader body: Hash[Symbol, untyped]?
+
+      def self.of: (Request request, ?body: Hash[Symbol, untyped]?, ?query: Hash[Symbol, untyped]?, ?id: Integer?) -> Job
+    end
+
+    class Reply < ::Data
+      attr_reader status: Integer
+
+      attr_reader body: untyped
+
+      attr_reader retry_after: Integer?
+
+      def ok?: () -> bool
+
+      def offline?: () -> bool
+    end
+
+    # What runs a request off the game's thread (Worker), or a test's
+    # stand-in.
+    interface _Worker
+      def start: (Job job, String? token) -> void
+
+      def finished: () -> Array[[Job, Reply]]
+    end
   end
 end

@@ -1,0 +1,27 @@
+module DotPopper
+  class ThemeReleases
+    REQUESTS: Hash[Symbol, Network::Request]
+
+    @worker: Network::_Worker
+
+    @themes: Themes
+
+    @store: ScoreRecord::_Store
+
+    @clock: ^() -> Time
+
+    def self.keys: (untyped body) -> Array[String]?
+
+    def initialize: (worker: Network::_Worker, themes: Themes, store: ScoreRecord::_Store, ?clock: ^() -> Time) -> void
+
+    def started_on: () -> String
+
+    def ask: () -> void
+
+    def update: () -> bool
+
+    private
+
+    def receive: (Network::Reply reply) -> bool
+  end
+end
