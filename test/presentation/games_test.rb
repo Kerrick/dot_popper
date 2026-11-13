@@ -199,9 +199,9 @@ class GamesTest < Minitest::Test
     end
   end
 
-  # A door into a game that never opens: it answers that no game is left,
-  # starts nothing, and counts how often it was asked.
-  class ShutDoor
+  # A StartGame that never starts a game: it answers that no game is
+  # left, starts nothing, and counts how often it was asked.
+  class NoGameLeft
     attr_reader :asked
 
     def initialize = @asked = 0
@@ -213,16 +213,16 @@ class GamesTest < Minitest::Test
 
   # Every way into a game goes through the StartGame the Show is given
   # (UseCases::StartGame, whose own test checks that nothing else starts
-  # one), once, and through nothing else: given a door that never opens,
-  # no way in starts a game, however the screens reach it.
+  # one), once, and through nothing else: given one that never starts a
+  # game, no way in starts one, however the screens reach it.
   WAYS_IN.each do |name, way_in|
-    define_method(test_name(name, "goes only through the door the show is given")) do
-      door = ShutDoor.new
-      show = tutorial_show(seen: name.match?(/\APlay\z|Start|How to Play/), start_game: door)
+    define_method(test_name(name, "goes only through the StartGame the show is given")) do
+      start_game = NoGameLeft.new
+      show = tutorial_show(seen: name.match?(/\APlay\z|Start|How to Play/), start_game:)
       started = started_games
       way_in.call(self, show)
 
-      assert_equal 1, door.asked, name
+      assert_equal 1, start_game.asked, name
       assert_empty started, name
       refute_predicate show, :tutorial?, name
       assert_instance_of DotPopper::Cabinet::Home, @cabinet.state, name
