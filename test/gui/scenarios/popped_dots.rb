@@ -13,6 +13,9 @@ module DotPopperGui
   #   popped dot's own details are the ones it had.
   # - No piece of a popped dot looks like the bright dot at a glance, or
   #   a player takes it for a piece of the bright dot (Glance).
+  # - A dot drawn twice at the same moment of the game, with real time
+  #   between, looks the same, so no screenshot here depends on how fast
+  #   the machine draws.
   #
   # Needs DOT_POPPER_PRO=1.
   class PoppedDotsScenario < Scenario
@@ -41,6 +44,8 @@ module DotPopperGui
     # Fewer differing points than this are a ghost's hem swaying with
     # time, not two dots that differ.
     SOME = 50
+    # Real seconds between two drawings of the same moment of the game.
+    PAUSE = 0.25
 
     # Themes whose dots are each subtly their own, and keep it through
     # their pop: Jack-o'-lantern's carved faces and Ghost's hems. Their
@@ -66,6 +71,7 @@ module DotPopperGui
       say "ok - popped dots differ in no color, lightness or size"
       drawn.each { follows(it) }
       say "ok - each dot is the same dot before and after its pop"
+      say "ok - no dot moves with the time on the wall"
       near = drawn.select { nearest(it) < NEAREST }.map(&:key)
       fail!("popped dots too near the bright one: #{near.join(", ")}") unless near.empty?
       say "ok - no popped dot comes near the bright one"
@@ -92,11 +98,24 @@ module DotPopperGui
       dot = ->(id, popped) { D::Dot.new(id:, x:, y:, velocity_x: 0, velocity_y: 0, radius:, popped:, bonus: false) }
       night = shoot.([])
       bright = IDS.map { shoot.([dot.(it, false)]) }
+      still(theme, x, y, radius)
       popped = IDS.map { shoot.([dot.(it, true)]) }
       game.instance_variable_set(:@countdown, D::Countdown.new(remaining: 0.01))
       run_out_the_clock
       continue_to_home
       Drawn.new(key: theme.key, night:, bright:, popped:)
+    end
+
+    # The bright dot drawn twice at the same moment of the game, PAUSE
+    # seconds of real time apart, looks the same: nothing a dot draws
+    # moves with the time on the wall, so how fast a machine draws changes
+    # no screenshot (a theme's shader once took its time from Lota::Timer,
+    # and Ghost's hem swayed between these checks' screenshots).
+    def still(theme, x, y, radius)
+      first = Patch.new(screenshot(step: 0.0), x, y, radius)
+      sleep(PAUSE)
+      changed = first.differences(Patch.new(screenshot(step: 0.0), x, y, radius), DIFFERS).size
+      fail!("#{theme.key}'s dot changes with the time on the wall (#{changed} points)") unless changed.zero?
     end
 
     def alike(drawn)

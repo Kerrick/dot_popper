@@ -145,11 +145,13 @@ module DotPopperGui
 
     # Looking at the screen
 
-    # What the window showed on the last frame drawn.
-    def screenshot
+    # What the window shows on the next frame drawn. The game moves on by
+    # +step+ for each frame it waits; with 0.0, a second screenshot shows
+    # the same moment of the game as the first.
+    def screenshot(step: STEP)
       shot = nil
       L::Graphics.capture_screenshot { shot = Shot.new(it, L::Graphics.width, L::Graphics.height) }
-      wait_for("a screenshot", within: 10) { shot }
+      wait_for("a screenshot", within: 10, step:) { shot }
     end
 
     # Saves what the window shows now as +name+.png in the save folder,

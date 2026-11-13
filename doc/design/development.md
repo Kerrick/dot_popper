@@ -121,6 +121,7 @@ It catches a missing method, not a wrong argument to Lota or a callback never wi
 - Resizes go through `Lota::Window.update_mode`, fullscreen through F11 or `Lota::Window.set_fullscreen(on, :desktop)`. While the system changes the window (`settled_window`, up to `WINDOW_FRAMES`, 5,000), frames pass no game time, so the game plays the same however long the system takes.
 - Pixel checks read the drawn frame back with `Lota::Graphics.capture_screenshot` into a `DotPopperGui::Shot`, read in graphics units.
 - Every wait counts frames, never seconds on the clock (`wait_for(what, within:)`), so a slow machine only makes a run take longer.
+- Nothing the game draws may move with the time on the wall, or two screenshots of the same moment of the game differ with the machine's speed. A theme's dot shader moves with the game's own seconds (`Shell::DotPainter`'s `clock`, `Show#now`), which the director drives.
 
 ### What every run fixes
 

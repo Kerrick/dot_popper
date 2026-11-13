@@ -25,7 +25,7 @@ module DotPopper
         @pen = pen
         @pile = pile
         @bloom = bloom
-        @dots = DotPainter.new(pen:)
+        @dots = DotPainter.new(pen:, clock: -> { @show.now })
         @effects = EffectsPainter.new(pen:, sparks:)
         @hud = HudPainter.new(pen:, dots: @dots)
         @home = HomePainter.new(pen:, dots: @dots)
