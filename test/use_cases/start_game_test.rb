@@ -67,27 +67,27 @@ class StartGameTest < Minitest::Test
     assert_predicate cabinet, :playing?
   end
 
-  # A cabinet hands out its one Starts once, and the use case takes it as
+  # A cabinet hands out its one Starter once, and the use case takes it as
   # it is made, so nothing else can start a game on that cabinet.
   def test_a_cabinet_hands_out_its_starts_once_and_the_use_case_holds_them
-    assert_raises(Cabinet::StartsTaken) { @cabinet.starts }
-    assert_raises(Cabinet::StartsTaken) { DotPopper::UseCases::StartGame.new(cabinet: @cabinet, free_games: @games) }
+    assert_raises(Cabinet::StarterTaken) { @cabinet.starter }
+    assert_raises(Cabinet::StarterTaken) { DotPopper::UseCases::StartGame.new(cabinet: @cabinet, free_games: @games) }
   end
 
-  # A Cabinet's Starts taken (".starts"), or StartGame's read by
-  # reflection (instance_variable_get(:@starts)): the second line behind
-  # the Starts handed out once.
-  STARTS = /\.starts\b|@starts\b/
+  # A Cabinet's Starter taken (".starter"), or StartGame's read by
+  # reflection (instance_variable_get(:@starter)): the second line behind
+  # the Starter handed out once.
+  STARTERS = /\.starter\b|@starter\b/
 
   # Nothing but this use case, and the composition root that hands it
-  # the cabinet's Starts, takes them or reads them: no screen, no shell,
+  # the cabinet's Starter, takes it or reads it: no screen, no shell,
   # no script, and no file outside lib/ that the phones load. It reads
   # the source, so it cannot see a name built at run time.
   def test_nothing_else_starts_a_game
     root = File.expand_path("../..", __dir__)
     files = Dir["#{root}/{lib,script}/**/*.rb"] + Dir["#{root}/bin/*"] + ["#{root}/main.rb", "#{root}/conf.rb", "#{root}/android/android_kit"]
     callers = files.select { File.file?(it) }.flat_map do |path|
-      File.readlines(path).filter_map { |line| path.delete_prefix("#{root}/") if line.match?(STARTS) && !line.strip.start_with?("#") }
+      File.readlines(path).filter_map { |line| path.delete_prefix("#{root}/") if line.match?(STARTERS) && !line.strip.start_with?("#") }
     end
 
     assert_equal ["lib/dot_popper/composition/use_cases.rb", "lib/dot_popper/use_cases/start_game.rb"], callers.uniq.sort

@@ -10,16 +10,16 @@ module DotPopper
     # it, and BuyPro hears Pro arrive (Entitlement::ProGranted). Answers
     # them by the names Presentation::Show takes. +use_theme+ is made
     # before the rest, since the pen and the sound player take the current
-    # theme from it before anything is drawn. +starts+ are the cabinet's
-    # one Starts, which StartGame holds.
+    # theme from it before anything is drawn. +starter+ is the cabinet's
+    # one Starter, which StartGame holds.
     def self.use_cases(cabinet:, free_games:, entitlement:, store:, achievements:, stats_book:, friend_groups:, use_theme:,
-                       starts: cabinet.starts)
+                       starter: cabinet.starter)
       buy_pro = UseCases::BuyPro.new(store:, entitlement:, cabinet:, achievements:, friend_groups:)
       entitlement.subscribe(buy_pro)
       finish_game = UseCases::FinishGame.new(stats_book:, achievements:, entitlement:, friend_groups:)
       cabinet.subscribe(finish_game)
       {
-        start_game: UseCases::StartGame.new(cabinet:, free_games:, starts:),
+        start_game: UseCases::StartGame.new(cabinet:, free_games:, starter:),
         finish_game:,
         buy_pro:,
         use_theme:,

@@ -4,10 +4,10 @@ module DotPopper
       type result = :started | :none_left | :not_home
 
       @cabinet: Cabinet
-      @starts: Cabinet::Starts
+      @starter: Cabinet::Starter
       @free_games: FreeGames
 
-      def initialize: (cabinet: Cabinet, free_games: FreeGames, ?starts: Cabinet::Starts) -> void
+      def initialize: (cabinet: Cabinet, free_games: FreeGames, ?starter: Cabinet::Starter) -> void
 
       def none_left?: () -> bool
 

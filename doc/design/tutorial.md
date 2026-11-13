@@ -21,13 +21,13 @@ While it plays, `Cabinet` holds the game in its `Paused` state ([ADR-0016](../ad
 | The spotlight | `Presentation::Spotlight`, `SpotlightStyle` (`spotlight.rb`) |
 | Numbers in flight | `Presentation::TravelingNumber` (`traveling_number.rb`), drawn as a `Presentation::Tally` (`tally.rb`) |
 | Whether pressing Play opens it | `Presentation::TutorialFlag` (`tutorial_flag.rb`), `tutorial.txt` |
-| The paused game | `Cabinet::Paused`, `Cabinet::Starts#paused`, `Cabinet#press_paused`, `#move_paused`, `#arrange`, `#unpause`; `Game#move_dots`, `#arrange` |
+| The paused game | `Cabinet::Paused`, `Cabinet::Starter#paused`, `Cabinet#press_paused`, `#move_paused`, `#arrange`, `#unpause`; `Game#move_dots`, `#arrange` |
 | Opening, skipping and playing on | `Show#play`, `#how_to_play`, `#skip_tutorial`, `#follow_tutorial`; `Screens::Tutorial` (its scene while it plays, `#skip`, `#follow`); `Screens::Home#open_tutorial`; `Tutorial.opening`; `UseCases::StartGame` |
 | Drawing | `Shell::TutorialPainter`, `Shell::GuidePainter`, `Shell::HandSprites`, `Shell::TallyPainter`, and `Shell::Renderer#tutorial` |
 
 ## When it opens
 
-- **A first Play.** `Show#play` opens it, over a new game started paused (`UseCases::StartGame`, `Cabinet::Starts#paused`), when `TutorialFlag#due?(played: Show#stats_offered?)` is true. It is due once on a device, and never for a player who has played: a finished game in `stats.txt` (`StatsBook`), or Stats ever cleared (`StatsBackup#cleared?`).
+- **A first Play.** `Show#play` opens it, over a new game started paused (`UseCases::StartGame`, `Cabinet::Starter#paused`), when `TutorialFlag#due?(played: Show#stats_offered?)` is true. It is due once on a device, and never for a player who has played: a finished game in `stats.txt` (`StatsBook`), or Stats ever cleared (`StatsBackup#cleared?`).
 - **How to play.** Home's How to play button, the H key, and a gamepad's Y on Home open it at once, seen or not (`Show#how_to_play`). Home shows the button only after a game has been played (`HomeScreen#pill_names`), since before that Play opens the tutorial. H works on any Home. How to play opens over a new game exactly as a first Play's tutorial does.
 - **`tutorial.txt`** says `seen` from the moment the tutorial opens, by either road, so a skipped tutorial counts as seen (`TutorialFlag#seen!`). Anything else in the file counts as unseen. The file is kept apart from Stats, so clearing Stats leaves it: clearing starts the scores over, not the player.
 - **Development.** `DOT_POPPER_TUTORIAL=1` opens it on every Play. `DOT_POPPER_AUTOPLAY`, `DOT_POPPER_SCENARIO` (the GUI scenario runner) and `DOT_POPPER_NO_TUTORIAL` leave it out (`TutorialFlag.mode`); `DOT_POPPER_TUTORIAL=1` wins over them, which is how the GUI tutorial scenarios open it.

@@ -114,7 +114,7 @@ module DotPopper
 
       # The dots the tutorial's game begins with on +field+: its first
       # bright dot, placed from +center+, the screen's middle, as +style+
-      # says. The game is started paused with them (Cabinet::Starts#paused).
+      # says. The game is started paused with them (Cabinet::Starter#paused).
       def self.opening(field, center, style: Style)
         across, down = style::TUTORIAL.start
         center_x, center_y = center

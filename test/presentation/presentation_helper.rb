@@ -54,7 +54,7 @@ module PresentationTest
   # (memory stores and harmless stand-ins unless given), the Show
   # subscribed to the rules' events and to each game FinishGame finishes,
   # and the offer to Pro arriving, each after them. Every Show a test makes on one
-  # cabinet starts its games through the cabinet's one Starts. The rest
+  # cabinet starts its games through the cabinet's one Starter. The rest
   # of +options+ go to the Show as they are.
   def self.show(cabinet:, entitlement: DotPopper::Entitlement.free, storefront: DotPopper::NoStore.new, games: DotPopper::FreeGames.unlimited,
                 stats_book: DotPopper::StatsBook.new(DotPopper::ScoreRecord::Memory.new),
@@ -62,7 +62,7 @@ module PresentationTest
                 themes: DotPopper::Themes.new(DotPopper::ScoreRecord::Memory.new), use_theme: DotPopper::UseCases::UseTheme.new(themes:, entitlement:),
                 **options)
     use_cases = DotPopper::Composition.use_cases(cabinet:, free_games: games, entitlement:, store: storefront, achievements:, stats_book:,
-                                                 friend_groups: groups, use_theme:, starts: DotPopperTest.starts_of(cabinet))
+                                                 friend_groups: groups, use_theme:, starter: DotPopperTest.starter_of(cabinet))
     show = Show.new(cabinet:, stats_book:, achievements:, groups:, themes:, **use_cases, **options)
     cabinet.subscribe(show)
     use_cases[:finish_game].subscribe(show)

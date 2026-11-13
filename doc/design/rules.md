@@ -146,7 +146,7 @@ Tests: `test/bonus_test.rb`.
 
 ## Seeds
 
-Every game has a seed of its own. A game started without one (`Cabinet::Starts#game`, `#paused`) draws one below 2³¹ (`Cabinet::LARGEST_SEED`) from the app's main generator and gives the game a `Random` of its own from it. The game draws from that `Random` only when a dot spawns, so the same seed and the same taps give the same dots, whatever else uses randomness meanwhile; a burst of droplets can't change which dots come next. `DOT_POPPER_SEED` seeds the main generator, which makes a whole session repeatable (developer settings: [doc/README.md](../README.md)). `Events::GameStarted` and `Events::GameEnded` carry the seed, and `games.csv` records it ([progress.md](progress.md#the-games-log)), so any game in a playtest can be replayed.
+Every game has a seed of its own. A game started without one (`Cabinet::Starter#game`, `#paused`) draws one below 2³¹ (`Cabinet::LARGEST_SEED`) from the app's main generator and gives the game a `Random` of its own from it. The game draws from that `Random` only when a dot spawns, so the same seed and the same taps give the same dots, whatever else uses randomness meanwhile; a burst of droplets can't change which dots come next. `DOT_POPPER_SEED` seeds the main generator, which makes a whole session repeatable (developer settings: [doc/README.md](../README.md)). `Events::GameStarted` and `Events::GameEnded` carry the seed, and `games.csv` records it ([progress.md](progress.md#the-games-log)), so any game in a playtest can be replayed.
 
 ## Time
 

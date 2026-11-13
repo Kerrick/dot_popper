@@ -283,10 +283,10 @@ class RootTest < Minitest::Test
     assert_empty engine.file("server.txt").read.to_s
   end
 
-  # The cabinet's Starts are UseCases::StartGame's, which the root makes,
+  # The cabinet's Starter is UseCases::StartGame's, which the root makes,
   # so nothing else in the game can start one.
   def test_only_the_use_case_can_start_a_game
-    SYSTEMS.each { |system| assert_raises(DotPopper::Cabinet::StartsTaken, system) { root(system).cabinet.starts } }
+    SYSTEMS.each { |system| assert_raises(DotPopper::Cabinet::StarterTaken, system) { root(system).cabinet.starter } }
   end
 
   # The root makes the use cases and subscribes them, and the offer, to
