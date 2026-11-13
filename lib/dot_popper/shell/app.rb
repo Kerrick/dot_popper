@@ -64,7 +64,7 @@ module DotPopper
         @trigger = Presentation::Trigger.released
         @cursor = @game.cursor
         @pad_held = []
-        @autopilot = @game.autopilot
+        @bot = @game.bot
         @hooks = DevelopmentHooks.for(@settings, cabinet: @cabinet, show: @show, pile: @pile, dragging: @dragging,
                                                  pad: ->(action, x, y) { fake_pad(action, x, y) })
       end
@@ -88,8 +88,8 @@ module DotPopper
         moved = @cursor.update(seconds, read_with_stick(seconds))
         @show.input = Presentation::InputKind::GAMEPAD unless moved == @cursor
         @cursor = moved
-        if @autopilot
-          x, y = @autopilot.update(seconds, @cabinet, @show)
+        if @bot
+          x, y = @bot.update(seconds, @cabinet, @show)
           tap(x, y) if x
         end
         @cabinet.update(seconds)
@@ -338,8 +338,8 @@ module DotPopper
       end
 
       # A press at +x+, +y+, by +by+ (a finger's id, :mouse, :gamepad, or
-      # the autopilot), which its release names too.
-      def tap(x, y, by = :autopilot) = @show.tap(x, y, by:)
+      # the bot), which its release names too.
+      def tap(x, y, by = :bot) = @show.tap(x, y, by:)
 
       # Whether a mouse press is its switch chattering (Presentation::
       # Chatter), to be dropped, wherever it lands, as its release will

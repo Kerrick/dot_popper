@@ -371,7 +371,7 @@ jobs:
           Write-Host "ran $([int]$watch.Elapsed.TotalSeconds) s more; still running: $([bool]$left)"
           if ($left) { $left | Stop-Process -Force; Write-Host '::error::it did not quit by itself, so DOT_POPPER_QUIT_AFTER did not reach it' }
 
-          # The game saves only when a game ends, and the autopilot's first
+          # The game saves only when a game ends, and the bot's first
           # game runs past half a minute, hence 90 s of game time. Inside
           # the package, Windows redirects roaming AppData to the package's
           # LocalCache; the saves must land there or in the real one.

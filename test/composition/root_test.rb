@@ -392,8 +392,8 @@ class RootTest < Minitest::Test
 
   def test_the_bot_plays_when_asked_in_any_build
     BUILDS.each do |channel|
-      refute_nil root(channel:, env: { "DOT_POPPER_AUTOPLAY" => "1" }).autopilot, channel.inspect
-      assert_nil root(channel:).autopilot
+      refute_nil root(channel:, env: { "DOT_POPPER_AUTOPLAY" => "1" }).bot, channel.inspect
+      assert_nil root(channel:).bot
     end
   end
 

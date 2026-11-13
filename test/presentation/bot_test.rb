@@ -2,18 +2,18 @@
 
 require_relative "presentation_helper"
 
-class AutopilotTest < Minitest::Test
+class BotTest < Minitest::Test
   include PresentationTest
 
   def test_it_plays_a_game_and_comes_back_home
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
     show = new_show(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R)
-    pilot = Autopilot.new(Style::AUTOPILOT, random: Random.new(5))
+    bot = Bot.new(Style::BOT, random: Random.new(5))
     seen = []
     events = []
     cabinet.subscribe { events << it.class }
     3000.times do
-      x, y = pilot.update(1 / 60.0, cabinet, show)
+      x, y = bot.update(1 / 60.0, cabinet, show)
       show.tap(x, y) if x
       cabinet.update(1 / 60.0)
       show.update(1 / 60.0)
@@ -30,12 +30,12 @@ class AutopilotTest < Minitest::Test
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
     clipboard = MemoryClipboard.new
     show = new_show(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R, clipboard:)
-    pilot = Autopilot.new(Style::AUTOPILOT, random: Random.new(5))
+    bot = Bot.new(Style::BOT, random: Random.new(5))
     copies = []
     games = 0
     cabinet.subscribe { games += 1 if it.is_a?(DotPopper::Events::GameStarted) }
     12_000.times do
-      x, y = pilot.update(1 / 60.0, cabinet, show)
+      x, y = bot.update(1 / 60.0, cabinet, show)
       show.tap(x, y) if x
       cabinet.update(1 / 60.0)
       show.update(1 / 60.0)
@@ -51,12 +51,12 @@ class AutopilotTest < Minitest::Test
   def test_on_its_second_visit_home_it_opens_the_stats_and_goes_back
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
     show = new_show(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R)
-    pilot = Autopilot.new(Style::AUTOPILOT, random: Random.new(5))
+    bot = Bot.new(Style::BOT, random: Random.new(5))
     opened = false
     games = 0
     cabinet.subscribe { games += 1 if it.is_a?(DotPopper::Events::GameStarted) }
     12_000.times do
-      x, y = pilot.update(1 / 60.0, cabinet, show)
+      x, y = bot.update(1 / 60.0, cabinet, show)
       show.tap(x, y) if x
       opened ||= show.stats?
       cabinet.update(1 / 60.0)
@@ -70,15 +70,15 @@ class AutopilotTest < Minitest::Test
   end
 
   # 800 by 600 fits smaller dots, so once a game has finished Settings
-  # offers the choice, and the pilot switches it once there.
+  # offers the choice, and the bot switches it once there.
   def test_it_switches_the_dot_size_once_home_offers_it
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
     show = new_show(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R)
-    pilot = Autopilot.new(Style::AUTOPILOT, random: Random.new(5))
+    bot = Bot.new(Style::BOT, random: Random.new(5))
     games = 0
     cabinet.subscribe { games += 1 if it.is_a?(DotPopper::Events::GameStarted) }
     12_000.times do
-      x, y = pilot.update(1 / 60.0, cabinet, show)
+      x, y = bot.update(1 / 60.0, cabinet, show)
       show.tap(x, y) if x
       cabinet.update(1 / 60.0)
       show.update(1 / 60.0)
@@ -97,10 +97,10 @@ class AutopilotTest < Minitest::Test
     keeper = ThemeKeeper.new(DotPopper::ScoreRecord::Memory.new, themes: Style::THEMES)
     keeper.receive(%w[ghost])
     show = new_show(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R, theme_keeper: keeper)
-    pilot = Autopilot.new(Style::AUTOPILOT, random: Random.new(5))
+    bot = Bot.new(Style::BOT, random: Random.new(5))
     assert show.arrival?
     600.times do
-      x, y = pilot.update(1 / 60.0, cabinet, show)
+      x, y = bot.update(1 / 60.0, cabinet, show)
       show.tap(x, y) if x
       cabinet.update(1 / 60.0)
       show.update(1 / 60.0)
@@ -112,16 +112,16 @@ class AutopilotTest < Minitest::Test
   def test_it_taps_only_a_bright_dot_it_can_see
     covered = dot(400, 300)
     game = game_with(dot(400, 300, popped: true), covered)
-    pilot = Autopilot.new(Style::AUTOPILOT.with(mistakes: 0.0))
+    bot = Bot.new(Style::BOT.with(mistakes: 0.0))
 
-    assert_nil pilot.send(:exposed_bright, game)
+    assert_nil bot.send(:exposed_bright, game)
   end
 
   def test_its_mistake_is_impatience_with_the_covered_bright_dot
     cover = dot(400, 300, popped: true)
     game = game_with(cover, dot(900, 900, popped: true), dot(430, 300))
-    pilot = Autopilot.new(Style::AUTOPILOT.with(mistakes: 1.0))
+    bot = Bot.new(Style::BOT.with(mistakes: 1.0))
 
-    assert_equal cover, game.dots.top_at(*pilot.send(:mistake, game))
+    assert_equal cover, game.dots.top_at(*bot.send(:mistake, game))
   end
 end

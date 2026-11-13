@@ -121,7 +121,7 @@ The pile is a toy. Schell's lens of the toy (*The Art of Game Design*) asks whet
 
 **Game Over's lesson** replays a mistake on the pile at the pile's depth; see [tutorial.md](tutorial.md), "Game Over replays the mistake on the pile".
 
-`test/presentation/pile_test.rb`, `tilt_test.rb` and `pile_grab_test.rb` test all of this without a window; `test/gui/scenarios/pile.rb` and `pile_gamepad.rb` play it. The autoplay bot waits 3.2 s at Game Over (`AUTOPILOT.game_over_wait`) so its screenshots show the pile settled.
+`test/presentation/pile_test.rb`, `tilt_test.rb` and `pile_grab_test.rb` test all of this without a window; `test/gui/scenarios/pile.rb` and `pile_gamepad.rb` play it. The autoplay bot waits 3.2 s at Game Over (`Style::BOT.game_over_wait`) so its screenshots show the pile settled.
 
 ## Sound
 
