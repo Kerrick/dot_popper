@@ -77,6 +77,68 @@ module DotPopper
 
       def normal(random, sigma) = (Array.new(6) { random.rand }.sum - 3.0) * sigma / 0.707
 
+      # Any simple polygon, cut into triangles by ear clipping, so an
+      # outline need not be convex or a fan about one point.
+      def poly(out, color, points)
+        ring = points.dup
+        ring.reverse! if area(ring).negative?
+        guard = ring.size * ring.size
+        while ring.size > 3 && guard.positive?
+          guard -= 1
+          ear = ring.each_index.find { |i| ear?(ring, i) }
+          break unless ear
+
+          out << Fan.new(color:, points: [ring[ear - 1], ring[ear], ring[(ear + 1) % ring.size]])
+          ring.delete_at(ear)
+        end
+        out << Fan.new(color:, points: ring) if ring.size == 3
+      end
+
+      def area(ring)
+        ring.each_with_index.sum do |(x1, y1), i|
+          x2, y2 = ring[(i + 1) % ring.size]
+          (x1 * y2) - (x2 * y1)
+        end / 2.0
+      end
+
+      def ear?(ring, i)
+        a = ring[i - 1]
+        b = ring[i]
+        c = ring[(i + 1) % ring.size]
+        return false if cross(a, b, c) <= 0
+
+        ring.none? { |q| !q.equal?(a) && !q.equal?(b) && !q.equal?(c) && inside?(q, a, b, c) }
+      end
+
+      def cross(a, b, c) = ((b[0] - a[0]) * (c[1] - a[1])) - ((b[1] - a[1]) * (c[0] - a[0]))
+
+      def inside?(q, a, b, c) = cross(a, b, q) >= 0 && cross(b, c, q) >= 0 && cross(c, a, q) >= 0
+
+      # An ellipse about +x+, +y+, turned by +angle+.
+      def oval(out, color, x, y, rx, ry, angle = 0.0, steps = 20)
+        c = Math.cos(angle)
+        s = Math.sin(angle)
+        ring = (0...steps).map do |i|
+          t = Math::PI * 2 * i / steps
+          px = Math.cos(t) * rx
+          py = Math.sin(t) * ry
+          [x + (c * px) - (s * py), y + (s * px) + (c * py)]
+        end
+        out << Fan.new(color:, points: [[x, y], *ring, ring.first])
+      end
+
+      # A limb through +points+, +w1+ wide at its root and +w2+ at its tip,
+      # with round joints.
+      def limb(out, color, points, w1, w2)
+        n = points.size - 1
+        points.each_cons(2).with_index do |(a, b), i|
+          wa = w1 + ((w2 - w1) * i / n)
+          wb = w1 + ((w2 - w1) * (i + 1) / n)
+          out << segment(a, b, wa, wb, color)
+          out << Dot.new(x: b[0], y: b[1], radius: wb / 2.0, color:) if i < n - 1
+        end
+      end
+
       def hill_strip(out, color, width, height, steps = 48, &ridge)
         (0...steps).each do |i|
           x1 = width * i / steps.to_f
@@ -318,40 +380,115 @@ module DotPopper
         end
       end
 
-      # Snowy rooftops on Christmas Eve: a far row of houses, near roofs
-      # with chimneys, dim lit windows, and a sleigh with its reindeer
-      # going over.
+      # Snowy rooftops on Christmas Eve: a far street of houses, near
+      # houses with snow on their roofs, chimneys and lit windows, two
+      # snowy firs, and Santa's sleigh going over.
       def rooftops(width, height)
         out = []
         land = width > height
         far = Color.hex("#101a3a")
         near = Color.hex("#03050e")
-        snow_far = Color.hex("#34457a")
+        snow_far = Color.hex("#2e3d70")
         snow_near = Color.hex("#28345e")
         lamp = Color.hex("#8a6a34", 0.55)
         base = height * (land ? 0.8 : 0.84)
+        ground = height * (land ? 0.9 : 0.92)
+        firs = [[width * (land ? 0.07 : 0.1), land ? 170 : 110], [width * (land ? 0.95 : 0.93), land ? 110 : 74]]
         x = -10.0
         r = Random.new(23)
         while x < width
           w = r.rand(0.8..1.3) * (land ? 70 : 46)
-          h = r.rand(0.5..0.9) * w
-          house(out, far, snow_far, lamp, x, base + r.rand(0.0..8.0), w, h, r.rand < 0.5, r)
+          townhouse(out, far, snow_far, lamp, x, base + r.rand(0.0..8.0), w, r.rand(0.5..0.9) * w, r, 0.35)
           x += w + r.rand(-6.0..4.0)
         end
-        ground = height * (land ? 0.9 : 0.92)
+        out << Fan.new(color: far, points: [[0, base], [width, base], [width, ground], [0, ground]])
         x = -20.0
         r = Random.new(41)
         while x < width
           w = r.rand(0.9..1.4) * (land ? 130 : 90)
-          h = r.rand(0.35..0.6) * w
-          house(out, near, snow_near, lamp, x, ground, w, h, true, r)
+          townhouse(out, near, snow_near, lamp, x, ground, w, r.rand(0.35..0.6) * w, r, 0.8, firs)
           x += w + r.rand(4.0..20.0)
         end
-        out << Fan.new(color: near, points: [[0, ground], [width, ground], [width, height], [0, height]])
-        snowy_fir(out, near, snow_near, width * (land ? 0.07 : 0.1), ground + 6, height * (land ? 0.55 : 0.42), land ? 120 : 82)
-        snowy_fir(out, near, snow_near, width * (land ? 0.95 : 0.93), ground + 6, height * (land ? 0.36 : 0.27), land ? 80 : 56)
-        sleigh(out, Color.hex("#060a1c"), width * (land ? 0.72 : 0.8), height * (land ? 0.3 : 0.36), land ? 1.7 : 1.35)
+        out << Fan.new(color: Color.hex("#10183a"), points: [[0, ground], [width, ground], [width, height], [0, height]])
+        out << Fan.new(color: Color.hex("#1a2650"), points: [[0, ground], [width, ground], [width, ground + 3], [0, ground + 3]])
+        snow_fir(out, near, Color.hex("#34457a"), firs[0][0], ground + 6, height * (land ? 0.55 : 0.42), firs[0][1], Random.new(3))
+        snow_fir(out, near, Color.hex("#34457a"), firs[1][0], ground + 6, height * (land ? 0.36 : 0.27), firs[1][1], Random.new(8))
+        sleigh(out, Color.hex("#060a1c"), width * 0.88, height * (land ? 0.11 : 0.125), land ? 1.9 : 1.15)
         out
+      end
+
+      # A house seen from the street, its gable end toward us: walls, a
+      # roof under a layer of snow, a chimney, and windows lit or dark,
+      # each with its cross of glazing bars, on one sill line. No window is
+      # put where one of +firs+ would cover it.
+      def townhouse(out, color, snow, lamp, x, ground, w, h, random, lit, firs = [])
+        roof = h * 0.55
+        eave = ground - h
+        out << Fan.new(color:, points: [[x, ground + 4], [x + w, ground + 4], [x + w, eave], [x, eave]])
+        cx = x + (w * random.rand(0.62..0.76))
+        top = eave - (roof * 0.95)
+        out << Fan.new(color:, points: [[cx, eave - (roof * 0.2)], [cx + (w * 0.11), eave - (roof * 0.2)], [cx + (w * 0.11), top], [cx, top]])
+        out << Fan.new(color: snow, points: [[cx - 1.5, top], [cx + (w * 0.11) + 1.5, top], [cx + (w * 0.11) + 1, top - 3], [cx - 1, top - 3]])
+        out << Fan.new(color:, points: [[x + (w / 2), eave - roof], [x + w + (w * 0.06), eave + 2], [x - (w * 0.06), eave + 2]])
+        t = [w * 0.05, 3.0].max
+        peak = [x + (w / 2), eave - roof - (t * 0.6)]
+        [[x - (w * 0.07), eave + 2], [x + w + (w * 0.07), eave + 2]].each do |foot|
+          out << Fan.new(color: snow, points: [peak, foot, [foot[0], foot[1] - t], [peak[0], peak[1] - t]])
+        end
+        sill = ground - (h * 0.42)
+        pane = w * 0.13
+        spots = w > 70 ? [0.27, 0.73] : [0.5]
+        spots.each do |f|
+          wx = x + (w * f)
+          next if firs.any? { |fx, fw| (wx - fx).abs < (fw * 0.55) + pane }
+
+          glass = random.rand < lit ? lamp : Color.hex("#0b1124")
+          out << Fan.new(color: glass, points: [[wx - (pane / 2), sill], [wx + (pane / 2), sill], [wx + (pane / 2), sill - (pane * 1.25)], [wx - (pane / 2), sill - (pane * 1.25)]])
+          out << segment([wx, sill], [wx, sill - (pane * 1.25)], 1.2, 1.2, color)
+          out << segment([wx - (pane / 2), sill - (pane * 0.62)], [wx + (pane / 2), sill - (pane * 0.62)], 1.2, 1.2, color)
+        end
+      end
+
+      # A fir under snow: a trunk, then tiers of boughs, wide at the foot
+      # and narrowing to the top, each tier's edge a row of drooping
+      # bough tips, and snow lying on most of them.
+      def snow_fir(out, color, snow, x, ground, h, w, random)
+        out << Fan.new(color:, points: [[x - (w * 0.05), ground], [x + (w * 0.05), ground], [x + (w * 0.05), ground - (h * 0.12)], [x - (w * 0.05), ground - (h * 0.12)]])
+        tiers = 8
+        tiers.times do |i|
+          f = i.to_f / tiers
+          bottom = ground - (h * 0.08) - (h * 0.8 * f)
+          half = w * 0.6 * (1 - (f * 0.92)) * random.rand(0.92..1.05)
+          apex = [x, bottom - (h * (0.2 - (f * 0.06)))]
+          count = [5 - (i / 2), 2].max
+          cuts = (0..count).map { |k| -1.0 + (2.0 * k / count) + (k.zero? || k == count ? 0 : random.rand(-0.12..0.12)) }
+          sag = h * 0.016
+          edge = []
+          cuts.each_cons(2) do |c1, c2|
+            6.times do |j|
+              t = j / 6.0
+              q = c1 + ((c2 - c1) * t)
+              edge << [x + (q * half), bottom + (q.abs * sag) + (Math.sin(Math::PI * t) * sag * 0.9) - ((1 - Math.sin(Math::PI * t)) * sag * 0.3)]
+            end
+          end
+          edge << [x + half, bottom + sag]
+          poly(out, color, [apex, *edge])
+          cuts.each_cons(2) do |c1, c2|
+            next if random.rand < 0.2
+
+            lift = sag * random.rand(0.6..0.9)
+            depth = [sag * random.rand(0.8..1.2), 1.8].max
+            arc = (0..8).map do |j|
+              t = 0.08 + (j / 8.0 * 0.84)
+              q = c1 + ((c2 - c1) * t)
+              dome = Math.sin(Math::PI * (j / 8.0))
+              [x + (q * half), bottom + (q.abs * sag) + (sag * 0.5) - lift, dome]
+            end
+            under = arc.map { |px, py, _| [px, py] }
+            over = arc.reverse.map { |px, py, dome| [px, py - (depth * Math.sqrt(dome))] }
+            poly(out, snow, [*under, *over])
+          end
+        end
       end
 
       # A house seen from the street: walls, a gable roof with snow along
@@ -403,30 +540,58 @@ module DotPopper
         end
       end
 
-      REINDEER = [[-1.0, 0.0], [-0.7, -0.25], [-0.2, -0.3], [0.35, -0.28], [0.62, -0.5], [0.8, -0.62], [0.95, -0.55], [0.82, -0.4],
-                  [0.7, -0.15], [0.55, 0.05], [0.7, 0.42], [0.58, 0.45], [0.38, 0.1], [-0.3, 0.12], [-0.62, 0.45], [-0.75, 0.42],
-                  [-0.68, 0.1]].freeze
+      # Santa's sleigh and his team, flying up and away to the left: the
+      # sleigh's runners curl up at its front, toward the team; Santa sits
+      # in it with his sack behind him and the reins in his hands; four
+      # reindeer ahead in single file, rising, each in a flying gallop,
+      # forelegs tucked and hind legs stretched back.
+      def sleigh(out, color, x, y, s)
+        tilt = 0.08
+        at = ->(px, py) { [x + (s * ((Math.cos(tilt) * px) - (Math.sin(tilt) * py))), y + (s * ((Math.sin(tilt) * px) + (Math.cos(tilt) * py)))] }
+        # The team in single file along a rising curve, the harness
+        # running beneath them from the sleigh to the leader.
+        team = [[-50, 0, 0.9], [-95, -4, 0.2], [-140, -10, 0.65], [-185, -18, 0.0]]
+        harness = [at.call(-7, -14), *team.map { |hx, hy, _| at.call(hx - 8, hy - 2) }]
+        harness.each_cons(2) { |a, b| out << segment(a, b, 0.9, 0.9, color) }
+        team.each { |hx, hy, gait| reindeer(out, color, ->(px, py) { at.call(hx + px, hy + py) }, gait, s) }
+        # Runners on two struts, curling up at the front.
+        runner = [[18, 7], [-14, 7], [-19, 5], [-22, 1], [-22, -3], [-19, -5], [-17, -3]]
+        limb(out, color, runner.map { at.call(*it) }, 1.6 * s, 1.3 * s)
+        [[-8, 7, -7, 2], [10, 7, 9, 2]].each { |a, b, c, d| out << segment(at.call(a, b), at.call(c, d), 1.3 * s, 1.3 * s, color) }
+        # The sleigh's body: a high back, a low middle, and a front that
+        # sweeps up and over into a scroll.
+        body = [[16, 2], [-10, 2], [-14, -1], [-17, -6], [-18, -11], [-16, -15], [-12, -16], [-10, -13], [-12, -10],
+                [-9, -8], [2, -8], [8, -10], [13, -16], [17, -17], [18, -12], [18, -4]]
+        poly(out, color, body.map { at.call(*it) })
+        # Santa: a round body, an arm out to the reins, his head and a hat
+        # flopped back with its bobble.
+        oval(out, color, *at.call(3, -14), 6 * s, 7 * s, tilt)
+        limb(out, color, [at.call(0, -15), at.call(-4, -13), at.call(-7, -14)], 2.6 * s, 2.0 * s)
+        oval(out, color, *at.call(4, -22.5), 3.4 * s, 3.4 * s)
+        poly(out, color, [at.call(0.5, -23.5), at.call(2, -27), at.call(6, -29), at.call(11, -27.5), at.call(7.5, -25.5), at.call(7.5, -23.5)])
+        oval(out, color, *at.call(11.5, -27), 1.5 * s, 1.5 * s)
+        # His sack, its neck tied, behind him.
+        oval(out, color, *at.call(12.5, -17), 5 * s, 6 * s, tilt)
+        poly(out, color, [at.call(10.5, -22), at.call(11, -25), at.call(10, -27), at.call(14, -27), at.call(13.5, -24), at.call(14, -22)])
+      end
 
-      # Santa's sleigh and four reindeer, flying up to the left.
-      def sleigh(out, color, x, y, scale)
-        tilt = -0.18
-        place = lambda do |px, py|
-          [x + (scale * ((Math.cos(tilt) * px) - (Math.sin(tilt) * py))), y + (scale * ((Math.sin(tilt) * px) + (Math.cos(tilt) * py)))]
-        end
-        body = [[0, -2], [14, -2], [18, -9], [22, -10], [21, -4], [17, 4], [2, 5], [-3, 8], [24, 8], [27, 5], [28, 7], [24, 11], [-4, 11], [-6, 6]]
-        out << Fan.new(color:, points: [place.call(10, 3), *body.map { |a, b| place.call(a, b) }, place.call(*body.first)])
-        out << Fan.new(color:, points: [place.call(5, -2), place.call(4, -11), place.call(9, -14), place.call(13, -9), place.call(12, -2)])
-        lead = [0, 0]
-        4.times do |i|
-          hx = -24 - (i * 19)
-          hy = -6 - (i * 1.5)
-          deer = REINDEER.map { |a, b| place.call(hx + (a * 8), hy + (b * 8)) }
-          out << Fan.new(color:, points: [place.call(hx, hy), *deer, deer.first])
-          out << segment(place.call(hx + 6, hy - 4), place.call(hx + 4, hy - 9), 1.2, 0.8, color)
-          out << segment(place.call(hx + 7, hy - 4), place.call(hx + 9, hy - 9), 1.2, 0.8, color)
-          lead = [hx, hy]
-        end
-        out << segment(place.call(-2, 0), place.call(lead[0] + 6, lead[1] - 1), 0.9, 0.9, color)
+      # A reindeer facing left in a flying gallop, placed by +at+; +gait+
+      # from 0 to 1 moves its legs a little, so no two are the same.
+      def reindeer(out, color, at, gait, s)
+        oval(out, color, *at.call(0, 0), 11 * s, 4.6 * s, -0.08)
+        oval(out, color, *at.call(-8, -0.5), 4.6 * s, 4.6 * s)
+        poly(out, color, [at.call(-10, -2), at.call(-12, -5), at.call(-17, -8.5), at.call(-20, -9.5), at.call(-18.5, -5), at.call(-13, 1)])
+        poly(out, color, [at.call(-18, -10.5), at.call(-21.5, -11), at.call(-26, -8.8), at.call(-26.3, -7.2), at.call(-22.5, -6.8), at.call(-18.5, -6.5)])
+        poly(out, color, [at.call(-18.5, -10), at.call(-15.5, -12.5), at.call(-17.3, -8.8)])
+        limb(out, color, [at.call(-19.5, -10.5), at.call(-18.5, -14.5), at.call(-16, -18), at.call(-13, -20)], 1.3 * s, 0.8 * s)
+        limb(out, color, [at.call(-18.5, -14.5), at.call(-21.5, -17)], 0.9 * s, 0.7 * s)
+        limb(out, color, [at.call(-16, -18), at.call(-17.5, -21.5)], 0.9 * s, 0.7 * s)
+        f = gait * 2.0
+        limb(out, color, [at.call(-9, 3), at.call(-13 + f, 8), at.call(-17 + f, 6.5)], 2.4 * s, 1.4 * s)
+        limb(out, color, [at.call(-6, 3), at.call(-8 - f, 9), at.call(-12 - f, 9.5)], 2.4 * s, 1.4 * s)
+        limb(out, color, [at.call(7, 2), at.call(12, 6 + f), at.call(19, 7.5 + f)], 3.0 * s, 1.4 * s)
+        limb(out, color, [at.call(9, 2.5), at.call(13, 7.5 - f), at.call(18 - f, 11)], 3.0 * s, 1.4 * s)
+        poly(out, color, [at.call(10, -3), at.call(13.5, -5.5), at.call(12.5, -2)])
       end
 
       # A snowy yard on a winter night: drifts in two depths, a cottage
