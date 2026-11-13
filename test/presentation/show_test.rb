@@ -399,8 +399,10 @@ class ShowTest < Minitest::Test
     assert_nil @show.ask_to_quit
   end
 
-  # Resizing the window brings the choice back, or takes it away.
+  # Resizing the window brings the choice back, or takes it away, for a
+  # player with Standard saved (with the other size saved, it always shows).
   def test_the_choice_comes_and_goes_as_the_window_is_resized
+    @cabinet.sizing = DotPopper::DotSizing::STANDARD
     finish_game
     assert @show.sizing_offered?
 
