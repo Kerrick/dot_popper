@@ -71,7 +71,7 @@ module DotPopperGui
       copy = show.copy_reach
       touch(copy.center_x, copy.center_y)
       check_equal(show.share_preview.text, clipboard, "a tap on Copy copies")
-      card = show.share_plan.card
+      card = show.screens.fetch(:share_preview).plan.card
       touch(card.center_x, card.y + 4)
       check(show.sharing?, "a tap on the card does nothing")
       touch(layout.safe.x + 6, layout.safe.bottom - 6)

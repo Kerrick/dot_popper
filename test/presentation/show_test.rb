@@ -169,7 +169,7 @@ class ShowTest < Minitest::Test
     assert @show.game_over?, "and go no further than Game Over"
 
     tap_share
-    card = @show.share_plan.card
+    card = @show.screens.fetch(:share_preview).plan.card
     @show.tap(card.x + 2, card.y + 2)
     assert @show.sharing?, "a tap on the card, away from its buttons, does nothing"
     @show.tap(card.x - 5, card.y - 5)

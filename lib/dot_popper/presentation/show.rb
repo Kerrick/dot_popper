@@ -568,10 +568,6 @@ module DotPopper
       # What the share preview shows (SharePreview), while it is open.
       def share_preview = (@screens[:share_preview].preview if sharing?)
 
-      # Where the share preview's card, words and buttons go (SharePlan),
-      # or nil while it is closed.
-      def share_plan = (@screens[:share_preview].plan if sharing?)
-
       # Closes the share preview, back to Game Over as it was.
       def close_share = @screens[:share_preview].close
 
