@@ -5,13 +5,6 @@ require_relative "presentation_helper"
 class PileTest < Minitest::Test
   include PresentationTest
 
-  def test_box2d_sees_a_dot_as_a_ball_about_a_meter_across
-    meters = R / Style::PILE.meter_for(R)
-
-    assert_operator meters, :>=, 0.1
-    assert_operator meters, :<=, 1.0
-  end
-
   def test_gravity_scales_with_the_dot
     assert_in_delta 2 * Style::PILE.gravity_for(R), Style::PILE.gravity_for(2 * R)
   end

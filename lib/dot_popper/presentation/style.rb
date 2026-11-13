@@ -426,7 +426,7 @@ module DotPopper
       # After time's up, the game's dots tumble into a pile behind the
       # score, dimmed (Shell::Pile, with Box2D). A calm pile
       # (DOT_POPPER_CALM) falls slowly and settles without a bounce.
-      PILE = PileStyle.new(meter: 2.0, gravity: 20.0, restitution: 0.35, friction: 0.4, density: 1.0, damping: 0.05,
+      PILE = PileStyle.new(gravity: 20.0, restitution: 0.35, friction: 0.4, density: 1.0, damping: 0.05,
                           fling: 1.0, longest_step: 1 / 30.0)
       CALM_PILE = PILE.with(gravity: 8.0, restitution: 0.0, friction: 0.8, damping: 2.5, fling: 0.25)
 

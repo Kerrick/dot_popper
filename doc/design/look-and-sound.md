@@ -98,7 +98,7 @@ When a game ends its rules are frozen and its dots are only scenery. `Shell::Pil
 
 The pile is a toy. Schell's lens of the toy (*The Art of Game Design*) asks whether something is fun to play with even with no goal, and a toy is found by playing with it (Sicart, *Play Matters*), so Game Over says nothing about it.
 
-**Scale.** Box2D works well with objects about a meter across, so a Box2D meter is `PILE.meter`, 2 R, which makes a dot a ball one meter across. Gravity is 20 R a second squared. Each physics step covers at most 1/30 s (`longest_step`), so a slow frame cannot tunnel a dot through a wall. A resized window moves the walls and brings back inside any ball the new walls would leave out (`Pile#refit`).
+**Scale.** Box2D works well with objects about a meter across, so a Box2D meter is `Shell::Pile::METER`, 2 R, which makes a dot a ball one meter across; the presentation's `PileStyle` is in radii and seconds only. Gravity is 20 R a second squared. Each physics step covers at most 1/30 s (`longest_step`), so a slow frame cannot tunnel a dot through a wall. A resized window moves the walls and brings back inside any ball the new walls would leave out (`Pile#refit`).
 
 | Setting | `PILE` | `CALM_PILE` (`DOT_POPPER_CALM=1`) |
 | --- | --- | --- |

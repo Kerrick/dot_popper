@@ -17,7 +17,12 @@ module DotPopper
     # ball under a pointer; once either does, a lid closes the window's
     # top.
     class Pile
-      P = ::Lota::Physics
+      # How many radii make one of Box2D's meters: Box2D is tuned for
+      # objects of about a meter, so a dot is a ball one meter across.
+      METER = 2.0
+
+      # One of Box2D's meters, in graphics units, for a dot of +radius+.
+      def self.meter_for(radius) = METER * radius
 
       def initialize(style)
         @style = style
@@ -116,6 +121,8 @@ module DotPopper
 
       private
 
+      def physics = ::Lota::Physics
+
       # The finished game's dots (Events::GameEnded), where they were as
       # its clock reached zero, begin to fall.
       def fill(ended)
@@ -123,8 +130,8 @@ module DotPopper
         radius = @radius = ended.field.radius
         @field = ended.field
         @lid = false
-        P.meter = @style.meter_for(radius)
-        @world = P::World.new(0, @style.gravity_for(radius), true)
+        physics.meter = self.class.meter_for(radius)
+        @world = physics::World.new(0, @style.gravity_for(radius), true)
         @walls = walls(ended.field)
         @stack = ended.dots
         @balls = @stack.to_h { [it.id, ball(it)] }
@@ -139,8 +146,8 @@ module DotPopper
       end
 
       def ball(dot)
-        body = P::Body.new(@world, dot.x, dot.y, :dynamic)
-        shape = P::CircleShape.new(body, dot.radius)
+        body = physics::Body.new(@world, dot.x, dot.y, :dynamic)
+        shape = physics::CircleShape.new(body, dot.radius)
         shape.restitution = @style.restitution
         shape.friction = @style.friction
         shape.density = @style.density
@@ -178,9 +185,9 @@ module DotPopper
       end
 
       def walls(field)
-        body = P::Body.new(@world, 0, 0, :static)
+        body = physics::Body.new(@world, 0, 0, :static)
         Presentation::PileWalls.new(width: field.width, height: field.height, lid: @lid).segments.each do |segment|
-          P::EdgeShape.new(body, *segment).friction = @style.friction
+          physics::EdgeShape.new(body, *segment).friction = @style.friction
         end
         body
       end
