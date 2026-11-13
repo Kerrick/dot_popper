@@ -50,3 +50,10 @@ Notes (2026-11-12):
 
 * Option 1 named the three use cases weighed when this was decided. Three more follow the same pattern: `UseTheme`, `JoinFriendGroup` and `ViewAchievements`. The architecture lists all six.
 * Not every existing presentation test passed unchanged in what it checks, as the outcome says. `test/presentation/games_test.rb`'s one-door test was narrowed in the same change: it no longer scans `shell/` or `tutorial.rb`, or how the `Show` opens the tutorial, and now counts the `Show`'s calls to `StartGame`. `test/use_cases/start_game_test.rb` scans `shell/` and `tutorial.rb` instead.
+
+Notes (2026-11-13):
+
+* The composition root makes the use cases and subscribes them (`Composition.use_cases`); the `Show` no longer makes them. The `Show` and its screens are no longer given `Entitlement`, the store or the free games: the offer of Pro asks `BuyPro` for everything it shows, so the Consequence that the `Show` still asks `Entitlement#pro?` for the offer no longer holds. `test/use_cases/pro_knowledge_test.rb` no longer exempts the `Show` or any screen: it walks the game as the root builds it and fails if the presentation holds what decides Pro, and its scan of the names is a second line.
+* `JoinFriendGroup` is `JoinOrCreateFriendGroup`, since it creates groups too, and the friend groups' panel acts on its answers rather than asking whether it is locked.
+* `FinishGame` hears the rules' events itself, and `GameEnded` says whether the tutorial opened the game, so nothing it finishes with comes from the screens.
+* The small use cases were kept rather than folded into one Monetization question of what Pro unlocks: each still owns an answer the screens act on (what Join, Create and a chosen theme lead to, which theme is current, what an achievement shows), where one question would leave each screen to decide what a locked answer means.
