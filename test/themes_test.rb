@@ -5,7 +5,7 @@ require "test_helper"
 # Which themes a player has, by key: a theme other than the ordinary one
 # exists for them only once the server has released it, or, once setdef
 # has been gone long enough, once its date has passed.
-class ThemesTest < Minitest::Test
+class ThemeRulesTest < Minitest::Test
   Memory = DotPopper::ScoreRecord::Memory
   Theme = DotPopper::Theme
   Continuity = DotPopper::Continuity
