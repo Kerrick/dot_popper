@@ -127,9 +127,6 @@ module DotPopper
       def alpha(now) = (((seconds - (now - at)) / FADE)).clamp(0.0, 1.0) * ((now - at) / FADE).clamp(0.0, 1.0)
     end
 
-    # Its old name, until no caller says it.
-    GroupBanner = ShownAnnouncement
-
     # The friend groups' screens' state, over Home, and the
     # announcements a title change makes: which screen is showing, the code
     # tapped so far, what a long press would do, and what to tell the
