@@ -60,7 +60,7 @@ module DotPopper
         # Methods, not blocks, so that what the panel keeps holds the Show
         # and the clipboard alone, and none of what the Show was given.
         @groups = GroupPanel.new(groups:, joining: join_or_create_friend_group, sounds:, pro_offer: method(:open_offer_for), notice: group_notice,
-                                 shown: method(:friend_groups_shown))
+                                 shown: method(:friend_groups_shown), open: method(:friend_groups_open?))
         @groups.copy = clipboard.method(:copy)
         @finish_game = finish_game
         @use_theme = use_theme
@@ -445,6 +445,9 @@ module DotPopper
 
       # The friend groups' screens opened (+open+) or closed, on the stack.
       def friend_groups_shown(open) = open ? open_layer(:friend_groups) : close_layer(:friend_groups)
+
+      # Whether the friend groups' screens are open, on the stack.
+      def friend_groups_open? = layer?(:friend_groups)
 
       # Friend groups, opened from Home.
       def open_groups = (@groups.open if on_home?)

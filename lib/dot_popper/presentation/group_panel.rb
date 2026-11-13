@@ -143,7 +143,9 @@ module DotPopper
     # A Pro player's first Join or Create asks first (+notice+, a
     # GroupNotice): it says who keeps the scores, once ever, before any
     # score is sent (#asking). +shown+ hears true as the screens open and
-    # false as they close.
+    # false as they close, and +open+ answers whether they are open: the
+    # Show's stack of screens says so, and the panel keeps no flag of its
+    # own beside it.
     class GroupPanel
       BANNER_SECONDS = 4.0
       HOLD = 2.0
@@ -151,15 +153,16 @@ module DotPopper
 
       attr_reader :groups, :code, :banner, :hold, :note, :page, :group_id
 
-      def initialize(groups:, joining:, sounds:, pro_offer: ->(_feature) {}, notice: GroupNotice.read, shown: ->(_open) {})
+      def initialize(groups:, joining:, sounds:, pro_offer: ->(_feature) {}, notice: GroupNotice.read, shown: ->(_open) {},
+                     open: -> { false })
         @pro_offer = pro_offer
         @shown = shown
+        @open = open
         @notice = notice
         @asking = nil
         @groups = groups
         @joining = joining
         @sounds = sounds
-        @open = false
         @page = :list
         @group_id = nil
         @code = ""
@@ -170,7 +173,7 @@ module DotPopper
         groups.refresh
       end
 
-      def open? = @open
+      def open? = @open.call
       def available? = groups.available?
       def member? = groups.member?
       def known? = groups.known?
@@ -182,7 +185,6 @@ module DotPopper
       # Opens on the list of groups, or at the code pad for someone with
       # none, which is what they came for.
       def open
-        @open = true
         @shown.call(true)
         @note = nil
         show(:list)
@@ -191,7 +193,6 @@ module DotPopper
       end
 
       def close
-        @open = false
         @shown.call(false)
         @asking = nil
         @hold = hold.cancel

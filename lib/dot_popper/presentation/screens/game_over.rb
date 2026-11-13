@@ -44,7 +44,7 @@ module DotPopper
           case what
           when :achievement
             show.open_achievements
-            show.open_achievement(achievement) if achievement
+            show.screens.fetch(:achievement_dialog).open_at(achievement) if achievement
           when :group then group ? show.group_panel.open_at(group) : show.group_panel.open
           end
         end
