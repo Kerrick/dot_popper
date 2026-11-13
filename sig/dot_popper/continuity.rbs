@@ -22,5 +22,17 @@ module DotPopper
     class SetdefHere < ::Data
       def self.new: () -> instance
     end
+
+    # The throwaway keys whose private seeds ship for the test build's
+    # fakes (the rest of Continuity is not typed yet).
+    module TestKeys
+      LICENSE: String
+    end
+
+    class LicenseKey
+      def self.issue: (String seed) -> LicenseKey
+
+      def text: () -> String
+    end
   end
 end

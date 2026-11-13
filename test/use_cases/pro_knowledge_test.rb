@@ -56,16 +56,16 @@ class ProKnowledgeTest < Minitest::Test
     lib/dot_popper/composition/use_cases.rb
     lib/dot_popper/continuity/license.rb
     lib/dot_popper/entitlement.rb
+    lib/dot_popper/fake_store.rb
     lib/dot_popper/free_games.rb
-    lib/dot_popper/presentation/fake_store.rb
-    lib/dot_popper/presentation/storefront.rb
-    lib/dot_popper/presentation/website_store.rb
+    lib/dot_popper/store.rb
     lib/dot_popper/use_cases/buy_pro.rb
     lib/dot_popper/use_cases/finish_game.rb
     lib/dot_popper/use_cases/join_or_create_friend_group.rb
     lib/dot_popper/use_cases/start_game.rb
     lib/dot_popper/use_cases/use_theme.rb
     lib/dot_popper/use_cases/view_achievements.rb
+    lib/dot_popper/website_store.rb
   ].freeze
 
   # "pro?" with anything before it (has_pro?), or the Entitlement or the

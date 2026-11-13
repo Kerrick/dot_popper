@@ -1,0 +1,284 @@
+module DotPopper
+  # Any store, as the offer of Pro reaches it through UseCases::BuyPro:
+  # Store, WebsiteStore, NoStore, or a channel's own.
+  interface _Store
+    def offered?: () -> bool
+
+    def keys?: () -> bool
+
+    def sold?: () -> bool
+
+    def price: () -> String?
+
+    def status: () -> Symbol
+
+    def typed: () -> String
+
+    def connect: () -> void
+
+    def buy: () -> void
+
+    def restore: () -> void
+
+    def paste: () -> Symbol?
+
+    def type: (Symbol key) -> bool
+
+    def update: (Float seconds) -> void
+  end
+
+  class Store
+    # The port to a store's host: a URL asks, and an answer file answers.
+    interface _Port
+      def open: (String url) -> bool
+
+      def read: () -> String?
+
+      def remove: () -> void
+
+      def path: () -> String
+    end
+
+    SCHEME: String
+    PRODUCT_ID: String
+    EVERY: Float
+    UNRESERVED: Regexp
+    STATES: Hash[String, Symbol]
+    CHANNELS: Hash[String, ^(entitlement: Entitlement) -> _Store]
+    BUILD_CHANNEL: String?
+    MAC_APP_STORE: String
+    MICROSOFT_STORE: String
+    HELPER_CHANNELS: Array[String]
+    WEBSITE: String
+
+    @port: _Port
+    @entitlement: Entitlement
+    @status: Symbol
+    @price: String?
+    @number: Integer
+    @since: Float
+
+    attr_reader status: Symbol
+
+    attr_reader price: String?
+
+    def self.test_build?: () -> bool
+
+    def self.for: (Platform platform, native: _Port, fake: _Port, entitlement: Entitlement,
+                   ?website: (^(fake: bool) -> _Store)?, ?channel: String?,
+                   ?channels: Hash[String, ^(entitlement: Entitlement) -> _Store]) -> _Store
+
+    def self.url: (Symbol | String action, Integer number, String path) -> String
+
+    def self.encode: (Object value) -> String
+
+    def initialize: (port: _Port, entitlement: Entitlement) -> void
+
+    def offered?: () -> bool
+
+    def keys?: () -> bool
+
+    def sold?: () -> bool
+
+    def paste: () -> nil
+
+    def type: (Symbol _key) -> bool
+
+    def typed: () -> String
+
+    def connect: () -> void
+
+    def buy: () -> void
+
+    def restore: () -> void
+
+    def update: (Float seconds) -> void
+
+    private
+
+    def request: (Symbol action, Symbol status) -> void
+
+    def heard: (String? text) -> void
+  end
+
+  class NativeStore < ::Data
+    # The system's URL opener.
+    interface _Opener
+      def open: (String url) -> bool
+    end
+
+    # The file the host writes the store's answers to.
+    interface _Answers
+      def read: () -> String?
+
+      def remove: () -> void
+
+      def path: () -> String
+    end
+
+    attr_reader opener: _Opener
+
+    attr_reader answers: _Answers
+
+    def self.new: (opener: _Opener, answers: _Answers) -> instance
+
+    def open: (String url) -> bool
+
+    def read: () -> String?
+
+    def remove: () -> void
+
+    def path: () -> String
+  end
+
+  class NoStore
+    def offered?: () -> bool
+
+    def keys?: () -> bool
+
+    def sold?: () -> bool
+
+    def paste: () -> nil
+
+    def type: (Symbol _key) -> bool
+
+    def typed: () -> String
+
+    def status: () -> Symbol
+
+    def price: () -> nil
+
+    def connect: () -> nil
+
+    def buy: () -> nil
+
+    def restore: () -> nil
+
+    def update: (Float _seconds) -> nil
+  end
+
+  class FakeStore
+    FAILS_BY: String
+    FAILURES: Array[String]
+    PRICE: String
+    READS: Integer
+    EARLIER: Receipt::Trust
+
+    @ledger: ScoreRecord::_Store
+    @fails: String?
+    @reads: Integer
+    @text: String?
+    @asked: [String?, Integer]?
+    @waiting: Integer
+    @price: String
+
+    def self.failure: (untyped env) -> String?
+
+    def initialize: (ScoreRecord::_Store ledger, ?fails: String?, ?reads: Integer) -> void
+
+    def path: () -> String
+
+    def open: (String url) -> bool
+
+    def read: () -> String?
+
+    def remove: () -> nil
+
+    private
+
+    def settle: () -> void
+
+    def outcome: (String? action) -> String
+
+    def opened: () -> String
+
+    def bought: () -> String
+
+    def restored: () -> String
+
+    def receipt: () -> String
+
+    def owned?: () -> bool
+
+    def write: (String state, Integer number) -> void
+  end
+
+  class WebsiteStore
+    # The seller's checkout: Buy answers the state to show.
+    interface _Checkout
+      def buy: () -> Symbol
+    end
+
+    # Whether setdef is gone (Continuity::Gone).
+    interface _Gone
+      def gone?: () -> bool
+    end
+
+    # The system's clipboard.
+    interface _Clipboard
+      def paste: () -> String?
+
+      def copy: (String text) -> void
+    end
+
+    PRICE: String
+
+    @checkout: _Checkout
+    @entitlement: Entitlement
+    @gone: _Gone
+    @clipboard: _Clipboard
+    @entered: ^() -> void
+    @status: Symbol
+    @typed: String
+
+    attr_reader status: Symbol
+
+    attr_reader typed: String
+
+    def initialize: (checkout: _Checkout, entitlement: Entitlement, gone: _Gone, clipboard: _Clipboard, ?entered: ^() -> void) -> void
+
+    def offered?: () -> bool
+
+    def keys?: () -> bool
+
+    def sold?: () -> bool
+
+    def price: () -> String?
+
+    def connect: () -> Symbol
+
+    def buy: () -> Symbol?
+
+    def restore: () -> nil
+
+    def update: (Float _seconds) -> nil
+
+    def paste: () -> Symbol
+
+    def type: (Symbol key) -> bool
+
+    def add: (String char) -> Symbol
+
+    def erase: () -> String
+
+    def enter: (String text) -> Symbol
+  end
+
+  class BrowserCheckout < ::Data
+    URL: String
+
+    attr_reader opener: NativeStore::_Opener
+
+    def self.new: (opener: NativeStore::_Opener) -> instance
+
+    def buy: () -> Symbol
+  end
+
+  class FakeCheckout < ::Data
+    attr_reader clipboard: WebsiteStore::_Clipboard
+
+    def self.new: (clipboard: WebsiteStore::_Clipboard) -> instance
+
+    def buy: () -> Symbol
+  end
+end

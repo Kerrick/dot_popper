@@ -8,6 +8,8 @@ module DotPopper
       attr_reader windows_license: bool
 
       def initialize: (apple_roots: Array[String], play_keys: Array[String], app_id: String, product_id: String, windows_license: bool) -> void
+
+      def with: (?apple_roots: Array[String], ?play_keys: Array[String], ?app_id: String, ?product_id: String, ?windows_license: bool) -> Trust
     end
 
     APP_ID: String
