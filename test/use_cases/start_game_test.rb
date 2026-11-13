@@ -66,13 +66,19 @@ class StartGameTest < Minitest::Test
     assert_predicate @cabinet, :playing?
   end
 
+  # A call of Cabinet#start_game or #start_paused (".start_game"), or the
+  # name as a Symbol (send(:start_game), method(:start_paused),
+  # &:start_game).
+  STARTS = /[.:]start_(?:game|paused)\b/
+
   # Nothing but this use case starts a game: no screen, no shell, no
-  # script, and no file outside lib/ that the phones load.
+  # script, and no file outside lib/ that the phones load. It reads the
+  # source, so it cannot see a name built at run time.
   def test_nothing_else_starts_a_game
     root = File.expand_path("../..", __dir__)
     files = Dir["#{root}/{lib,script}/**/*.rb"] + Dir["#{root}/bin/*"] + ["#{root}/main.rb", "#{root}/conf.rb", "#{root}/android/android_kit"]
     callers = files.select { File.file?(it) }.flat_map do |path|
-      File.readlines(path).filter_map { |line| path.delete_prefix("#{root}/") if line.match?(/\.start_(game|paused)\b/) && !line.strip.start_with?("#") }
+      File.readlines(path).filter_map { |line| path.delete_prefix("#{root}/") if line.match?(STARTS) && !line.strip.start_with?("#") }
     end
 
     assert_equal ["lib/dot_popper/use_cases/start_game.rb"], callers.uniq

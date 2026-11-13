@@ -40,7 +40,7 @@ Chosen: option 1, because it alone keeps both areas ignorant of each other while
 
 ### Confirmation
 
-`test/use_cases/` tests each use case without a window. `test/use_cases/start_game_test.rb` fails if anything but `UseCases::StartGame` starts a game, in `lib/`, `script/`, `bin/`, `main.rb`, `conf.rb` or the Android kit. `test/use_cases/pro_knowledge_test.rb` fails if any file in `lib/` names Pro (`pro?` or `Entitlement`) beyond Monetization's own code, the use cases, the `Show`'s offer and the composition root. The `Steepfile` checks `lib/dot_popper/use_cases/*.rb`.
+`test/use_cases/` tests each use case without a window. `test/use_cases/start_game_test.rb` fails if any line outside `UseCases::StartGame`, in `lib/`, `script/`, `bin/`, `main.rb`, `conf.rb` or the Android kit, calls `Cabinet#start_game` or `#start_paused` or names either as a Symbol; it reads the source, so a name built at run time would pass it. `test/use_cases/pro_knowledge_test.rb` fails if any file in `lib/` names Pro (`pro?` or `Entitlement`) beyond Monetization's own code, the use cases, the `Show`'s offer and the composition root. The `Steepfile` checks `lib/dot_popper/use_cases/*.rb`.
 
 ## More Information
 
