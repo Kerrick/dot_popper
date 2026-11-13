@@ -7,7 +7,7 @@ module DotPopper
     # it happened. Each sound has a few voices, so quick taps overlap rather
     # than cut each other off. With no audio device, or muted, it plays
     # nothing and the game goes on. Muting is remembered in +store+.
-    class Speaker
+    class SoundPlayer
       VOICES = 4
 
       def initialize(patches, store:, volume: 1.0)
@@ -80,5 +80,8 @@ module DotPopper
         sound
       end
     end
+
+    # Its old name, until no caller says it.
+    Speaker = SoundPlayer
   end
 end

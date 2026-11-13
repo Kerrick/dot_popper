@@ -12,6 +12,6 @@ module DotPopper
   end
 end
 
-%w[platforms save_file store_answers store_helper clipboard desktop_window url_opener speaker haptics font_cache font_measure pen glyphs dot_painter effects_painter hud_painter mute_button
+%w[platforms save_file store_answers store_helper clipboard desktop_window url_opener sound_player haptics font_cache font_measure pen glyphs dot_painter effects_painter hud_painter mute_button
    tally_painter pill_button window_buttons_painter primary_button segmented_painter scrim_painter check_mark lettering code_box member_icon_painter group_painter settings_painter achievements_painter privacy_painter server_painter home_painter stats_painter offer_painter themes_painter credits_painter notice_files share_button share_preview_painter game_over_painter cursor_painter splash_painter hand_sprites ghost_painter tutorial_painter lota_input gamepads pile
    accelerometer tilting dragging particle_systems bloom scene arrival_painter themed_name renderer vulkan_rescue engine development_hooks app].each { require_relative "shell/#{it}" }
