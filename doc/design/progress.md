@@ -38,7 +38,7 @@ The log is rewritten whole each time, which is fine for the few hundred lines a 
 
 `GameStats` (`lib/dot_popper/game_stats.rb`) is built from the rules' events by `GameStats::Recorder`, and decides nothing. It counts dots popped, mistakes, softened mistakes, each pop's time to pop (from the bright dot appearing to its pop), the game's duration (`Game#elapsed`, clock time only, as `Events::GameEnded#elapsed` carries it), the score, `dots_in_a_row` and `most_dots_in_a_row`, and `bonuses`. From these it gives `longest_time_to_pop`, `shortest_time_to_pop`, `mean_time_to_pop` and `dots_popped_within(seconds)`.
 
-A game the tutorial played over (`GameStats.opening`) begins play with a pop for each of its popped dots, its score, and its dots in a row (1 at the tutorial's end); those dots have no time to pop, and the guide's mistake is not counted. `AchievementWatch` starts the game's row at the same count. It is the same whether the tutorial ended or was skipped.
+A game the tutorial played over (`GameStats.opening`) begins play with a pop for each of its popped dots, its score, and its dots in a row (1 at the tutorial's end); those dots have no time to pop, and the guide's mistake is not counted. `AchievementRecorder` starts the game's row at the same count. It is the same whether the tutorial ended or was skipped.
 
 ## Stats
 
@@ -166,13 +166,13 @@ Names, figures and sentences are in `Presentation::AchievementWords`. Each has a
 
 **Sharpshooter's 10%** was measured with `Visibility`, the share of a dot's disc no dot above it covers (400 sample points in a sunflower spiral, within about half a percent). With the real rules, a model player that taps the moment a fingertip-sized (44-unit) target fits pops with 31% to 50% showing, never under 10%; one that taps any sliver, which no person can aim, does so on over half the dots it pops. Under a tenth is a crescent a few units wide: a deliberate tap. The other thresholds were set against a model player of about 0.5 s a pop that never loses, and are constants in `Achievement`.
 
-**Detection** is Lota-free. `AchievementWatch` (`lib/dot_popper/achievement_watch.rb`), which `UseCases::FinishGame` keeps, listens to the `Cabinet`'s events and reads the dots, the clock and the time played from each event, which carries them as they stood when it was told; it keeps no game, and decides nothing. A "covered" spawn for Patience is one where `TouchTarget#clear_on?` finds no room among the dots above, and any tap, a miss included, spoils the wait.
+**Detection** is Lota-free. `AchievementRecorder` (`lib/dot_popper/achievement_recorder.rb`), which `UseCases::FinishGame` keeps, listens to the `Cabinet`'s events and reads the dots, the clock and the time played from each event, which carries them as they stood when it was told; it keeps no game, and decides nothing. A "covered" spawn for Patience is one where `TouchTarget#clear_on?` finds no room among the dots above, and any tap, a miss included, spoils the wait.
 
-**Saving.** At each Game Over, `UseCases::FinishGame` gives the watch's finds to `Achievements#award`, which keeps the ones not earned before with today's date and writes `achievements.txt`. Achievements are earned and saved whether or not the player has Pro. An id a newer version saved and this one doesn't know is dropped on reading.
+**Saving.** At each Game Over, `UseCases::FinishGame` gives the recorder's finds to `Achievements#award`, which keeps the ones not earned before with today's date and writes `achievements.txt`. Achievements are earned and saved whether or not the player has Pro. An id a newer version saved and this one doesn't know is dropped on reading.
 
 **Showing.** Nothing shows during a game. For a Pro player, Game Over adds "New achievement: Sharpshooter" (or "New achievements: …") for the ones first earned that game, and friend groups hear of them. A Free player sees how each is earned on the Achievements screen but no earned marks, dates, count or progress; what they earned is kept, shown once Pro is bought, and then reported to their friend groups. What the screen may show is `UseCases::ViewAchievements`'s to say (`#earned?`, `#day`, `#count`, `#progress`, all held back while `#locked?`), so the `Show` and the painters only draw it. See [store-and-pro.md](store-and-pro.md) and [screens.md](screens.md).
 
-Tests: `test/achievement_watch_test.rb`, `test/achievements_test.rb`, `test/visibility_test.rb`, `test/presentation/achievements_test.rb`.
+Tests: `test/achievement_recorder_test.rb`, `test/achievements_test.rb`, `test/visibility_test.rb`, `test/presentation/achievements_test.rb`.
 
 ## Clearing Stats
 

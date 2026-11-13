@@ -2,19 +2,19 @@
 
 require "test_helper"
 
-class AchievementWatchTest < Minitest::Test
+class AchievementRecorderTest < Minitest::Test
   include DotPopperTest
 
   Events = DotPopper::Events
 
   def setup
-    @watch = DotPopper::AchievementWatch.new
+    @recorder = DotPopper::AchievementRecorder.new
   end
 
-  # Starts watching +game+, as the game announces it.
-  def watch(game)
+  # Starts recording +game+, as the game announces it.
+  def record(game)
     @game = game
-    @watch.call(Events::GameStarted.new(seed: 1, field: game.field, dots: game.dots, score: game.score,
+    @recorder.call(Events::GameStarted.new(seed: 1, field: game.field, dots: game.dots, score: game.score,
                                          dots_in_a_row: game.dots_in_a_row))
     game
   end
@@ -22,10 +22,10 @@ class AchievementWatchTest < Minitest::Test
   # What an event of the rules says of +game+ as it stands.
   def as_it_stands(game) = { dots: game.dots, score: game.score, countdown: game.countdown, elapsed: game.elapsed }
 
-  # Taps (x, y) in the game and tells the watch what the rules reported.
+  # Taps (x, y) in the game and tells the recorder what the rules reported.
   def tap_at(x, y)
     event = @game.tap_at(x, y)
-    @watch.call(event) if event
+    @recorder.call(event) if event
     event
   end
 
@@ -43,14 +43,14 @@ class AchievementWatchTest < Minitest::Test
   end
 
   def end_game
-    @watch.call(Events::GameEnded.new(score_record: @game.score, new_score_record: false, seed: 1,
+    @recorder.call(Events::GameEnded.new(score_record: @game.score, new_score_record: false, seed: 1,
                                        size_class: DotPopper::SizeClass::MEDIUM, field: @game.field, dots: @game.dots,
                                        score: @game.score, elapsed: @game.elapsed))
   end
 
   # A game with a popped dot to mistake on and a bright one to pop.
   def open_game
-    watch(game_with(dot(100, 100, popped: true), dot(600, 400)))
+    record(game_with(dot(100, 100, popped: true), dot(600, 400)))
   end
 
   # A game whose dot has just been popped, as the rules reported, with
@@ -59,52 +59,52 @@ class AchievementWatchTest < Minitest::Test
   def covered_spawn(covered: true)
     spawned = dot(covered ? 400 : 700, 300, id: 7)
     gone = dot(100, 100, popped: true, id: 8)
-    watch(game_with(dot(400, 300, popped: true), gone, spawned))
-    @watch.call(Events::Popped.new(dot: gone, x: 100, y: 100, points: 1, seconds: 1.0, spawned:, **as_it_stands(@game)))
+    record(game_with(dot(400, 300, popped: true), gone, spawned))
+    @recorder.call(Events::Popped.new(dot: gone, x: 100, y: 100, points: 1, seconds: 1.0, spawned:, **as_it_stands(@game)))
   end
 
   def test_a_game_with_nothing_done_earns_nothing
     open_game
 
-    assert_empty @watch.earned
+    assert_empty @recorder.earned
   end
 
   def test_popping_a_dot_with_under_a_tenth_showing_earns_sharpshooter
     covered = dot(400, 300, popped: true)
-    watch(game_with(covered, dot(395, 300, id: 7)))
+    record(game_with(covered, dot(395, 300, id: 7)))
 
     assert_operator DotPopper::Visibility.of(@game.dots.find(&:bright?), [covered]), :<, DotPopper::Achievement::SHARP
     assert_instance_of Events::Popped, tap_at(346, 300)
-    assert_equal %i[sharpshooter], @watch.earned
+    assert_equal %i[sharpshooter], @recorder.earned
   end
 
   def test_popping_a_dot_with_more_showing_does_not
-    watch(game_with(dot(400, 300, popped: true), dot(340, 300, id: 7)))
+    record(game_with(dot(400, 300, popped: true), dot(340, 300, id: 7)))
     tap_at(290, 300)
 
-    assert_empty @watch.earned
+    assert_empty @recorder.earned
   end
 
   def test_a_dot_just_over_a_tenth_showing_is_not_sharp
     covered = dot(400, 300, popped: true)
     bright = dot(400 - 9, 300, id: 7)
-    watch(game_with(covered, bright))
+    record(game_with(covered, bright))
 
     assert_operator DotPopper::Visibility.of(bright, [covered]), :>=, DotPopper::Achievement::SHARP
     tap_at(bright.x - 45, 300)
-    refute_includes @watch.earned, :sharpshooter
+    refute_includes @recorder.earned, :sharpshooter
   end
 
   def test_three_dots_popped_with_under_a_quarter_showing_in_a_game_earn_a_sharp_trio
     stack = [dot(400, 300, popped: true), dot(400, 100, popped: true), dot(400, 500, popped: true),
              dot(390, 300, id: 7), dot(390, 100, id: 8), dot(390, 500, id: 9)]
-    watch(game_with(*stack))
+    record(game_with(*stack))
     tap_at(341, 300)
     tap_at(341, 100)
-    refute_includes @watch.earned, :sharp_trio
+    refute_includes @recorder.earned, :sharp_trio
     tap_at(341, 500)
 
-    assert_includes @watch.earned, :sharp_trio
+    assert_includes @recorder.earned, :sharp_trio
   end
 
   def test_a_dot_waited_for_three_seconds_while_it_was_covered_earns_patience
@@ -112,7 +112,7 @@ class AchievementWatchTest < Minitest::Test
     @game.update(3.5)
     pop_bright
 
-    assert_equal %i[patience], @watch.earned
+    assert_equal %i[patience], @recorder.earned
   end
 
   def test_two_seconds_is_not_patience
@@ -120,17 +120,17 @@ class AchievementWatchTest < Minitest::Test
     @game.update(2.5)
     pop_bright
 
-    assert_empty @watch.earned
+    assert_empty @recorder.earned
   end
 
   def test_tapping_in_the_meantime_is_not_patience
     covered_spawn
     @game.update(1.0)
-    @watch.call(Events::Missed.new(x: 5, y: 5))
+    @recorder.call(Events::Missed.new(x: 5, y: 5))
     @game.update(2.5)
     pop_bright
 
-    assert_empty @watch.earned
+    assert_empty @recorder.earned
   end
 
   def test_a_dot_that_was_never_covered_is_not_patience
@@ -138,7 +138,7 @@ class AchievementWatchTest < Minitest::Test
     @game.update(3.5)
     pop_bright
 
-    assert_empty @watch.earned
+    assert_empty @recorder.earned
   end
 
   def test_a_dot_popped_within_four_tenths_of_the_last_earns_blink
@@ -146,14 +146,14 @@ class AchievementWatchTest < Minitest::Test
     pop_bright
     pop_bright(after: 0.3)
 
-    assert_equal %i[blink], @watch.earned
+    assert_equal %i[blink], @recorder.earned
   end
 
   def test_the_first_pop_of_a_game_is_never_a_blink
     open_game
     pop_bright
 
-    assert_empty @watch.earned
+    assert_empty @recorder.earned
   end
 
   def test_a_slower_pop_is_not_a_blink
@@ -161,52 +161,52 @@ class AchievementWatchTest < Minitest::Test
     pop_bright
     pop_bright(after: 0.5)
 
-    assert_empty @watch.earned
+    assert_empty @recorder.earned
   end
 
   def test_twenty_dots_in_a_row_earn_steady_and_forty_unshaken
     open_game
     19.times { pop_bright(after: 0.7) }
-    assert_empty @watch.earned
+    assert_empty @recorder.earned
     pop_bright(after: 0.7)
-    assert_equal %i[steady], @watch.earned
+    assert_equal %i[steady], @recorder.earned
     19.times { pop_bright(after: 0.7) }
-    assert_equal %i[steady], @watch.earned
+    assert_equal %i[steady], @recorder.earned
     pop_bright(after: 0.7)
 
-    assert_equal %i[steady unshaken], @watch.earned
+    assert_equal %i[steady unshaken], @recorder.earned
   end
 
   # A game the tutorial began already has a dot in its row as play
-  # begins. The watch counts the row from there, as the game, its HUD and
+  # begins. The recorder counts the row from there, as the game, its HUD and
   # its Stats do, so twenty in a row on screen earn Steady hand.
   def test_a_game_that_begins_with_a_dot_in_its_row_counts_on_from_it
     begun = game_with(dot(100, 100, popped: true), dot(600, 400))
     begun.tap_at(600, 400)
     assert_equal 1, begun.dots_in_a_row
-    watch(begun)
+    record(begun)
     18.times { pop_bright(after: 0.7) }
-    assert_empty @watch.earned
+    assert_empty @recorder.earned
     pop_bright(after: 0.7)
 
-    assert_equal %i[steady], @watch.earned
+    assert_equal %i[steady], @recorder.earned
   end
 
   def test_a_mistake_starts_the_run_again
     open_game
     10.times { pop_bright(after: 0.5) }
     mistake
-    refute_includes @watch.earned, :shake_off
+    refute_includes @recorder.earned, :shake_off
     10.times { pop_bright(after: 0.5) }
-    assert_includes @watch.earned, :shake_off
-    refute_includes @watch.earned, :steady, "ten and ten are not twenty in a row"
+    assert_includes @recorder.earned, :shake_off
+    refute_includes @recorder.earned, :steady, "ten and ten are not twenty in a row"
   end
 
   def test_ten_dots_popped_without_a_mistake_are_not_shaking_one_off
     open_game
     10.times { pop_bright(after: 0.5) }
 
-    refute_includes @watch.earned, :shake_off
+    refute_includes @recorder.earned, :shake_off
   end
 
   def test_getting_the_clock_from_two_seconds_back_to_ten_earns_comeback
@@ -214,42 +214,42 @@ class AchievementWatchTest < Minitest::Test
     @game.update(9.2)
     pop_bright
     3.times { pop_bright }
-    refute_includes @watch.earned, :comeback
+    refute_includes @recorder.earned, :comeback
     8.times { pop_bright }
 
-    assert_includes @watch.earned, :comeback
+    assert_includes @recorder.earned, :comeback
   end
 
   def test_a_long_clock_that_was_never_short_is_not_a_comeback
     open_game
     12.times { pop_bright }
 
-    refute_includes @watch.earned, :comeback
+    refute_includes @recorder.earned, :comeback
   end
 
   def test_fifteen_dots_popped_in_the_first_ten_seconds_earn_a_fast_start
     open_game
     14.times { pop_bright(after: 0.4) }
-    refute_includes @watch.earned, :fast_start
+    refute_includes @recorder.earned, :fast_start
     pop_bright(after: 0.4)
 
-    assert_includes @watch.earned, :fast_start
+    assert_includes @recorder.earned, :fast_start
   end
 
   def test_popping_slower_is_not_a_fast_start
     open_game
     16.times { pop_bright(after: 0.8) }
 
-    refute_includes @watch.earned, :fast_start
+    refute_includes @recorder.earned, :fast_start
   end
 
   def test_a_score_of_seventy_five_earns_a_big_score_when_the_game_ends
     open_game
     score!(@game, 75)
-    refute_includes @watch.earned, :big_score
+    refute_includes @recorder.earned, :big_score
     end_game
 
-    assert_includes @watch.earned, :big_score
+    assert_includes @recorder.earned, :big_score
   end
 
   def test_a_lower_score_does_not
@@ -257,7 +257,7 @@ class AchievementWatchTest < Minitest::Test
     score!(@game, 74)
     end_game
 
-    refute_includes @watch.earned, :big_score
+    refute_includes @recorder.earned, :big_score
   end
 
   def test_a_game_that_lasts_ninety_seconds_earns_a_long_haul
@@ -265,26 +265,26 @@ class AchievementWatchTest < Minitest::Test
     @game.instance_variable_set(:@elapsed, 90.5)
     end_game
 
-    assert_equal %i[long_haul], @watch.earned
+    assert_equal %i[long_haul], @recorder.earned
   end
 
   def test_a_new_game_starts_from_nothing
-    watch(game_with(dot(400, 300, popped: true), dot(395, 300, id: 7)))
+    record(game_with(dot(400, 300, popped: true), dot(395, 300, id: 7)))
     tap_at(346, 300)
-    assert_equal %i[sharpshooter], @watch.earned
+    assert_equal %i[sharpshooter], @recorder.earned
 
     open_game
 
-    assert_empty @watch.earned
+    assert_empty @recorder.earned
   end
 
   def test_events_before_any_game_are_ignored
     gone = dot(100, 100, popped: true)
     stands = as_it_stands(game_with(gone, dot(5, 5)))
-    @watch.call(Events::Popped.new(dot: gone, x: 1, y: 1, points: 1, seconds: 1.0, spawned: dot(5, 5), **stands))
-    @watch.call(Events::Penalized.new(dot: gone, x: 1, y: 1, points: -2, seconds: -2.0, **stands))
+    @recorder.call(Events::Popped.new(dot: gone, x: 1, y: 1, points: 1, seconds: 1.0, spawned: dot(5, 5), **stands))
+    @recorder.call(Events::Penalized.new(dot: gone, x: 1, y: 1, points: -2, seconds: -2.0, **stands))
 
-    assert_empty @watch.earned
+    assert_empty @recorder.earned
   end
 
   def test_achievements_are_listed_in_the_order_the_stats_screen_lists_them
@@ -293,6 +293,6 @@ class AchievementWatchTest < Minitest::Test
     score!(@game, 80)
     end_game
 
-    assert_equal %i[big_score long_haul], @watch.earned
+    assert_equal %i[big_score long_haul], @recorder.earned
   end
 end
