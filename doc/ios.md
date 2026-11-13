@@ -51,7 +51,7 @@ The rules never change with the window: the radius, the speeds, and the clock st
 
 The standard dot's radius is 50 points, about 8 mm (see `DotSize`), and the game prints that when it starts. Unless the player chooses **Standard**, a game's dots are sized to the screen instead (README, "How big the dots are"): about 30 points on an iPhone 13 mini, 51 on an 11-inch iPad, and 61 on a 13-inch iPad Pro. An iPad Pro 13-inch is 1032 × 1376 points, so a portrait field there is about 21 × 28 radii. An 11-inch iPad's is about 17 × 24.
 
-Once a game has been played, the title's **Dot size** control appears only where sizing the dots to the screen would change them by more than a tenth. On an iPad Pro 13-inch the fitted radius is about 61 points, so its first segment, **Fit the screen**, says "Bigger, less room" and its second, **Standard**, "Smaller, more room"; on an 11-inch iPad the fitted radius is about 51 points, so the two sizes look alike and the control is left out.
+Once a game has been played, Home's **Dot size** control appears only where sizing the dots to the screen would change them by more than a tenth. On an iPad Pro 13-inch the fitted radius is about 61 points, so its first segment, **Fit the screen**, says "Bigger, less room" and its second, **Standard**, "Smaller, more room"; on an 11-inch iPad the fitted radius is about 51 points, so the two sizes look alike and the control is left out.
 
 ### Input
 
@@ -97,7 +97,7 @@ As a fused app, the game saves into `Library/Application Support/dot_popper` ins
 
 | File | What it holds |
 | --- | --- |
-| `best_score.txt` | The best score |
+| `score_record.txt` | The score record for each dot size |
 | `sound.txt` | `muted` or `on` |
 | `taught.txt` | Present once the first-mistake hint has been shown |
 | `games.csv` | The playtest log, one line per finished game (see "The playtest log" in the README) |

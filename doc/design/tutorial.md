@@ -20,7 +20,7 @@ While it plays, `Cabinet` holds the game in its `Paused` state ([ADR-0016](../ad
 | The pointing hand's geometry and PNG sizes | `Presentation::PointingHand` (`pointing_hand.rb`) |
 | The spotlight | `Presentation::Spotlight`, `SpotlightStyle` (`spotlight.rb`) |
 | Numbers in flight | `Presentation::Flight` (`flight.rb`), drawn as a `Presentation::Tally` (`tally.rb`) |
-| Whether a Play opens it | `Presentation::TutorialFlag` (`tutorial_flag.rb`), `tutorial.txt` |
+| Whether pressing Play opens it | `Presentation::TutorialFlag` (`tutorial_flag.rb`), `tutorial.txt` |
 | The paused game | `Cabinet::Paused`, `Cabinet#start_paused`, `#press_paused`, `#move_paused`, `#arrange`, `#unpause`; `Game#move_dots`, `#arrange` |
 | Opening, skipping and playing on | `Show#play`, `#how_to_play`, `#skip_tutorial`, `#open_tutorial`, `#follow_tutorial`, `#play_on` |
 | Drawing | `Shell::TutorialPainter`, `Shell::GhostPainter`, `Shell::HandSprites`, `Shell::TallyPainter`, and `Shell::Renderer#tutorial` |
@@ -82,7 +82,7 @@ Every change to the HUD is carried by an object flying from the dot that caused 
 
 In turn means each lands before the next leaves: `gap`, 0.12 s, then `flight`, 0.42 s, for each. A flight into the HUD eases in and out and melts into its number at the end (`Flight#progress`, `#alpha`). Each number changes the HUD the moment it lands: a point gained chimes (`:tick` at pitch 1.5), a second gained ticks (`:tick` at 1.0), and a dot joining the row ticks at 1.25. On the first pop the spotlight goes with each number (`light: true`); on the mistake it stays on the dot and the guide. The object carries the cause to the effect (Johnson's common fate; Swink's feedback from the thing acted on), and one thing lands at a time (Hodent, *The Gamer's Brain*).
 
-The mistake's cost is what the game took for the guide's press (the `Penalized` event, `Tutorial#losses`), and a number already at nothing is left out; a pop's numbers are what its `Popped` event paid (`Tutorial#gains`). The HUD shows each number as it lands, so it runs behind the game until the last lands. At that moment the score is 1, so it shows "−1"; the clock is at 11, so "−2"; the row holds one, so "−1".
+The mistake's cost is what the game took for the guide's press (the `Penalized` event, `Tutorial#losses`), and a number already at nothing is left out; a pop's numbers are what its `Popped` event earned (`Tutorial#gains`). The HUD shows each number as it lands, so it runs behind the game until the last lands. At that moment the score is 1, so it shows "−1"; the clock is at 11, so "−2"; the row holds one, so "−1".
 
 ### Time and the row
 
@@ -92,7 +92,7 @@ The HUD starts at score 0 and 10 seconds, with the game's own row of `Rules::BON
 - The guide's mistake empties it, and it rings in the alarm's color (`Tutorial#empty_the_row`).
 - The last pop lights its first dot again, with no ring.
 
-The rings run under the beat and add no time. What a full row brings is left for the game to surprise the player with: nothing in the tutorial shows or says it (`test_nothing_shows_what_a_full_row_brings`). Fun is finding the pattern (Koster, *A Theory of Fun*), and the row visibly answers each right and wrong tap (Salen and Zimmerman's meaningful play, *Rules of Play*).
+The rings run under the beat and add no time. What a full row brings is left for the game to surprise the player with: nothing in the tutorial shows or says it (`test_nothing_shows_what_a_full_row_brings`). Fun is finding the pattern (Koster, *A Theory of Fun*), and the row visibly answers each right and mistake (Salen and Zimmerman's meaningful play, *Rules of Play*).
 
 ## The guide
 
@@ -117,7 +117,7 @@ The guide is the player's own hand on the input they last used (`Presentation::I
 
 ## The guide's mistake and its wag
 
-As the new bright dot peeks out from under the popped one, the guide taps the popped dot once (`Tutorial#show_the_cost`). As its press lands (`GhostHand::PRESSED` of the loop, about 0.54 s in), the game's own penalty plays (`Tutorial#guide_slips`): the dot's shudder and alarm ring, the dashed outline of the bright dot under it (`Stack#bright_beneath`, `Style::REVEAL`), the edge's glow (`PENALTY_FLASH`), and the bonk, panned to where it happened. Then its cost flies out, in turn. The screen does not shake and no phone buzzes, so it can't be mistaken for the player's own tap. There is no ✕ or other sign forbidding it: symbols and colors are not read alike everywhere (Westland and Maggio, *Universal Principles of Color*), and showing a consequence teaches better than a sign (Hodent).
+As the new bright dot peeks out from under the popped one, the guide taps the popped dot once (`Tutorial#show_the_cost`). As its press lands (`GhostHand::PRESSED` of the loop, about 0.54 s in), the game's own penalty plays (`Tutorial#guide_makes_a_mistake`): the dot's shudder and alarm ring, the dashed outline of the bright dot under it (`Stack#bright_beneath`, `Style::REVEAL`), the edge's glow (`PENALTY_FLASH`), and the bonk, panned to where it happened. Then its cost flies out, in turn. The screen does not shake and no phone buzzes, so it can't be mistaken for the player's own tap. There is no ✕ or other sign forbidding it: symbols and colors are not read alike everywhere (Westland and Maggio, *Universal Principles of Color*), and showing a consequence teaches better than a sign (Hodent).
 
 As the last of the cost leaves, the guide lifts and glides to wait above the popped dot (`Tutorial#waiting_place`): `hover`, 0.2 radii left of it and 4.6 above, so the whole hand hangs clear of both dots, and kept half a radius inside the field's sides so its thumb stays on screen as it wags. There it wags its finger, "no" (`WagStyle#turn`): twice side to side in 0.8 s, turning 0.21 radians (12°) each way about its wrist, the bottom middle of the emoji (`PointingHand::WRIST_AT`), easing in and out. It then holds still for `settle`, 0.25 s. A mouse pointer or a reticle, with no wrist, slides side to side as far instead (`GhostPainter::WAG`). With `DOT_POPPER_CALM=1` the wag is gentler, 0.1 radians (about 6°) over 1.0 s (`Style::CALM_WAG`).
 
@@ -147,7 +147,7 @@ When the beat is `:over`, `Show#follow_tutorial` takes the tutorial away and unp
 
 Only the clock starts. Nothing fades, nothing resets and no dot is added. The light on the clock (`LeadIn`, `Style::TUTORIAL.lead`) fades out in 0.6 s, so the game's dots are never hidden for more than a moment, and a halo stays on the clock for 1.3 s, then fades in 0.4 s. While it shows, the clock's first second down ticks. A skip has no lead-in.
 
-`GameStarted` is announced as play begins, at the end or at a skip, so the game's listeners hear nothing of the tutorial's presses while it plays. From there the game plays by the usual rules, and its score, records, Stats, achievements and daily goal count as any game's. `GameStats.opening` counts each popped dot as a pop with no wait, so the score and the pops agree; the guide's mistake is not the player's, so it is not counted, and `AchievementWatch` starts its row at the game's. A game the tutorial played over is never reported to a friend group, whether the tutorial ended or was skipped (`Show#game_ended` passes `sized_to_screen: false` for it; see [friend-groups.md](friend-groups.md)).
+`GameStarted` is announced as play begins, at the end or at a skip, so the game's listeners hear nothing of the tutorial's presses while it plays. From there the game plays by the usual rules, and its score, records, Stats, achievements and daily goal count as any game's. `GameStats.opening` counts each popped dot as a pop with no wait, so the score and the dots popped agree; the guide's mistake is not the player's, so it is not counted, and `AchievementWatch` starts its row at the game's. A game the tutorial played over is never reported to a friend group, whether the tutorial ended or was skipped (`Show#game_ended` passes `sized_to_screen: false` for it; see [friend-groups.md](friend-groups.md)).
 
 A demonstration should show what really happens (Hodent), and an ending that carries straight on asks the player to unlearn nothing. The game also keeps the row the tutorial lit, so the last pop's dot does not go out as the game begins, a loss with no mistake (Juul). The maintainer's words: "Keeping a second copy of the game is an implementation detail I didn't pay attention to, and a likely source of many bugs I've reported. I'd rather it simply... be a game. That gets paused to show tutorial-style animations etc."
 

@@ -61,7 +61,7 @@ This way gives no log unless you also connect adb as in Way 1.
 What to expect
 --------------
 
-The title screen, with dots drifting; tap Play, and tap the
+Home, with dots drifting; tap Play, and tap the
 bright dots. A healthy start writes "Dot Popper: a dot's radius is 50 dp,
 about 8 mm" to the log. The phone buzzes briefly on a pop. Sound comes
 through the media volume, and should not stop music another app plays.

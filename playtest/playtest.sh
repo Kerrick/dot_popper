@@ -321,7 +321,7 @@ else
   fi
 
   say ""
-  say "That was the last question. Now please quit Dot Popper (Escape on the title screen, or close its window)."
+  say "That was the last question. Now please quit Dot Popper (Escape on Home, or close its window)."
   wait_game_exit "after the checks"
   say "Collecting what the game printed and saved..."
   game_output

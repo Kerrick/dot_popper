@@ -56,7 +56,7 @@ A 429 starts a wait (`Session#wait_out`): the `Retry-After` header's seconds, 60
 
 ### Waiting games
 
-If a counting game cannot be sent at once, the best such score waits and goes with the next contact (`@pending`, saved in `group.txt`). Only the best is kept, and it does not expire. Leaving the last group drops it. Unsent achievement keys wait the same way.
+If a counting game cannot be sent at once, the highest such score waits and goes with the next contact (`@pending`, saved in `group.txt`). Only the highest is kept, and it does not expire. Leaving the last group drops it. Unsent achievement keys wait the same way.
 
 ### What `group.txt` holds
 
@@ -70,7 +70,7 @@ A member of a group is a number the server gives, in join order, never reused (`
 
 **A group's crest** is the same drawing at number -1 (`MemberIcon.crest`). It shows beside the group's name in the list, over the group's screen, and on an announcement.
 
-**Names** (`Presentation::Names`, `lib/dot_popper/presentation/names.rb`): a group reads plural and a member singular, from separate lists, so one is never mistaken for the other: "Brave Puffins", "Purple Kiwi". Group names pair a character adjective with a bird; member names pair a color with a fruit, and numbers fewer than `Names::COMBINATIONS` apart never share one within a group. The words are a hand-picked subset of Ivan Malopinsky's wordlists (MIT; `assets/wordlists-LICENSE.txt`, credited on the Credits screen), leaving out unkind words, words with a second meaning, and colors that also name skin; `test/presentation/names_test.rb` tries every pair against a list of bad words.
+**Names** (`Presentation::Names`, `lib/dot_popper/presentation/names.rb`): a group reads plural and a member singular, from separate lists, so one is never mistaken for the other: "Brave Puffins", "Purple Kiwi". Group names pair a character adjective with a bird; member names pair a color with a fruit, and numbers fewer than `Names::COMBINATIONS` apart never share one within a group. The words are a hand-picked subset of Ivan Malopinsky's wordlists (MIT; `assets/wordlists-LICENSE.txt`, credited on the Credits screen), leaving out unkind words, words with a second meaning, and colors that also name skin tones; `test/presentation/names_test.rb` tries every pair against a list of bad words.
 
 ## The screens
 
@@ -78,8 +78,8 @@ A member of a group is a number the server gives, in join order, never reused (`
 
 | Screen | What it shows |
 | --- | --- |
-| The list ("Friend groups") | The player's groups, each a row with its crest and name and a crown where the player holds its title, sorted by name; with none, "Beat your friends and take the title."; Join and Create. A row opens the group. |
-| A group (its name as heading) | Its crest, its title line ("Score any points to take the title.", "You hold the title with 31.", "Beat 31 to take the title."), the standings (rank, icon, name, and "Champion" with a crown or "You"), the join code hidden as "●●●-●●●●" with Show, then Copy, and History and Leave. |
+| The list ("Friend groups") | The player's groups, each a row with its crest and name and the crown glyph where the player holds its title, sorted by name; with none, "Beat your friends and take the title."; Join and Create. A row opens the group. |
+| A group (its name as heading) | Its crest, its title line ("Score any points to take the title.", "You hold the title with 31.", "Beat 31 to take the title."), the standings (rank, icon, name, and "Champion" with the crown glyph or "You"), the join code hidden as "●●●-●●●●" with Show, then Copy, and History and Leave. |
 | History | Every title change and every member's achievement, newest first: the member's icon, "Purple Kiwi took the title from Gold Fig with 31.", "The title passed to Purple Kiwi with 31." when the champion left and the server says (`passed_on`), or "Purple Kiwi earned Blink.", and when, in the player's own time zone ("November 8, 8:14 PM"). An achievement this game does not know is left out. With none, "Nothing has happened here yet." |
 | Join with a code | The code box and the keypad. |
 
@@ -121,7 +121,7 @@ Only the newest change in each group is announced; the rest is in History (Saffe
 
 ### Game Over's line
 
-After a game that counts, the server's answer to `POST /games` gives each group's result, and Game Over shows one line in a pill with a crown (`GroupPanel#game_line`, `GroupWords.game_line`):
+After a game that counts, the server's answer to `POST /games` gives each group's result, and Game Over shows one line in a pill with the crown glyph (`GroupPanel#game_line`, `GroupWords.game_line`):
 
 - "You took the Brave Puffins title!" for one group, "You took 2 titles!" for more;
 - "You raised the bar!" when a champion beat their own score, which is no title change;

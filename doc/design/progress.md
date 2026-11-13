@@ -36,9 +36,9 @@ The log is rewritten whole each time, which is fine for the few hundred lines a 
 
 ## One game's numbers: `GameStats`
 
-`GameStats` (`lib/dot_popper/game_stats.rb`) is built from the rules' events by `GameStats::Recorder`, and decides nothing. It counts pops, mistakes, softened mistakes, each pop's time to pop (from the bright dot appearing to its pop), the game's duration (`Game#elapsed`, clock time only), the score, `dots_in_a_row` and `most_dots_in_a_row`, and `bonuses`. From these it gives `longest_time_to_pop`, `shortest_time_to_pop`, `mean_time_to_pop` and `pops_within(seconds)`.
+`GameStats` (`lib/dot_popper/game_stats.rb`) is built from the rules' events by `GameStats::Recorder`, and decides nothing. It counts dots popped, mistakes, softened mistakes, each pop's time to pop (from the bright dot appearing to its pop), the game's duration (`Game#elapsed`, clock time only), the score, `dots_in_a_row` and `most_dots_in_a_row`, and `bonuses`. From these it gives `longest_time_to_pop`, `shortest_time_to_pop`, `mean_time_to_pop` and `dots_popped_within(seconds)`.
 
-A game the tutorial played over (`GameStats.opening`) begins play with a pop for each of its popped dots, its score, and its dots in a row (1 at the tutorial's end); those pops have no time to pop, and the guide's mistake is not counted. `AchievementWatch` starts the game's row at the same count. It is the same whether the tutorial ended or was skipped.
+A game the tutorial played over (`GameStats.opening`) begins play with a pop for each of its popped dots, its score, and its dots in a row (1 at the tutorial's end); those dots have no time to pop, and the guide's mistake is not counted. `AchievementWatch` starts the game's row at the same count. It is the same whether the tutorial ended or was skipped.
 
 ## Stats
 
@@ -46,11 +46,11 @@ A game the tutorial played over (`GameStats.opening`) begins play with a pop for
 
 Across every screen:
 
-- **Totals:** games, pops, mistakes, seconds played, and days played (distinct local dates, counted by `last_day`).
+- **Totals:** games, dots popped, mistakes, seconds played, and days played (distinct local dates, counted by `last_day`).
 - **The last 20 scores** (`Stats::RECENT`), oldest first, each with the size class it was played in (`recent_classes`, saved as `recent_classes=?,medium,fitted`; `?` is a class not known).
 - **The daily goal's streak** (`GoalStreak`), below.
 
-For each size class, `Stats::Records`:
+For each size class, `Stats::RecordSet`:
 
 | Record | Key | On screen |
 | --- | --- | --- |
@@ -87,7 +87,7 @@ With standard dots an upright phone is 134 R² (small), an 11-inch iPad, a 13-in
 
 The Stats screen shows the records of the class a game started now would count in (`Cabinet#size_class`): the current dot size on the current screen.
 
-## Records and Game Over
+## Game Over and records
 
 **The highest score.** `ScoreRecord#record(score, size_class)` keeps the score if it is higher than the class's, and says whether it beat it. A class's first game sets the class's highest score, even at 0, but is never a new record, since there was nothing to beat (`ScoreRecord#first?`; `Events::GameEnded#first`). Its Game Over says only "Your record: 18", with no "New record!", celebration or fanfare, and the shared result claims neither a new record nor a tie. Praising a first game praises what the player didn't earn and cheapens the next real "New record!" (Juul, *The Art of Failure*; Hodent, *The Gamer's Brain*; Podmajersky, *Strategic Writing for UX*); the maintainer chose the plain line, since it is true and sets the target for next time.
 
@@ -122,7 +122,7 @@ A goal is met within one game, judged from that game's `GameStats` when it ends 
 | --- | ---: | --- | --- |
 | `clean_run` | 15 | `most_dots_in_a_row` ≥ 15 | Pop 15 bright dots in a row without a mistake. |
 | `patient_pop` | 3 | `longest_time_to_pop` ≥ 3 s | Pop a bright dot that has been on screen for at least 3 seconds. |
-| `quick_start` | 10 | 10 pops within the first 10 s (`QUICK_START_SECONDS`) | Pop 10 bright dots in the first 10 seconds of a game. |
+| `quick_start` | 10 | 10 dots popped within the first 10 s (`QUICK_START_SECONDS`) | Pop 10 bright dots in the first 10 seconds of a game. |
 | `long_game` | 50 | duration ≥ 50 s | Keep one game going for 50 seconds. |
 | `comeback` | 30 | at least one mistake, and score ≥ 30 | Finish a game with 30 points even after a mistake. |
 | `score` | 30 | score ≥ 30 | Score 30 points in one game. |
@@ -151,20 +151,20 @@ Eleven goals, each earned once, each for skill and none for time spent (Ferrara,
 | Id | Name | Earned by | Constants |
 | --- | --- | --- | --- |
 | `sharpshooter` | Sharpshooter | a pop with under 10% of the dot showing | `SHARP` 0.10 |
-| `sharp_trio` | Sharp trio | three pops in one game each under 25% showing | `SHARP_TRIO` 3, `SHARP_TRIO_BELOW` 0.25 |
+| `sharp_trio` | Sharp trio | three dots popped in one game, each with under 25% showing | `SHARP_TRIO` 3, `SHARP_TRIO_BELOW` 0.25 |
 | `patience` | Patience | a dot that spawned with no room for a touch target, waited for at least 3 s with no tap at all, then popped | `PATIENCE` 3.0 |
 | `blink` | Blink | a pop within 0.4 s of the pop before (never a game's first) | `BLINK` 0.4 |
 | `steady` | Steady hand | 20 dots in a row without a mistake | `STEADY` 20 |
 | `unshaken` | Unshaken | 40 dots in a row without a mistake | `UNSHAKEN` 40 |
 | `shake_off` | Shake it off | 10 dots in a row after a mistake | `SHAKE_OFF` 10 |
 | `comeback` | Back from the brink | the clock at 2 s or less, then back to 10 s or more | `BRINK` 2.0, `BACK` 10.0 |
-| `fast_start` | Fast start | 15 pops within a game's first 10 s | `FAST_START` 15, `FAST_START_SECONDS` 10.0 |
+| `fast_start` | Fast start | 15 dots popped within a game's first 10 s | `FAST_START` 15, `FAST_START_SECONDS` 10.0 |
 | `big_score` | Big score | a score of 75 | `BIG_SCORE` 75 |
 | `long_haul` | Long haul | a game of 90 s | `LONG_HAUL` 90.0 |
 
 Names, figures and sentences are in `Presentation::AchievementWords`. Each has a short figure ("<10%", "3 × <25%", "20") so none needs its sentence read.
 
-**Sharpshooter's 10%** was measured with `Visibility`, the share of a dot's disc no dot above it covers (400 sample points in a sunflower spiral, within about half a percent). With the real rules, a model player that taps the moment a fingertip-sized (44-unit) target fits pops with 31% to 50% showing, never under 10%; one that taps any sliver, which no person can aim, does so on over half its pops. Under a tenth is a crescent a few units wide: a deliberate tap. The other thresholds were set against a model player of about 0.5 s a pop that never loses, and are constants in `Achievement`.
+**Sharpshooter's 10%** was measured with `Visibility`, the share of a dot's disc no dot above it covers (400 sample points in a sunflower spiral, within about half a percent). With the real rules, a model player that taps the moment a fingertip-sized (44-unit) target fits pops with 31% to 50% showing, never under 10%; one that taps any sliver, which no person can aim, does so on over half the dots it pops. Under a tenth is a crescent a few units wide: a deliberate tap. The other thresholds were set against a model player of about 0.5 s a pop that never loses, and are constants in `Achievement`.
 
 **Detection** is Lota-free. `AchievementWatch` (`lib/dot_popper/achievement_watch.rb`) listens to the `Cabinet`'s events and reads the game they happened in for the dots, the clock and the elapsed time; it decides nothing. A "covered" spawn for Patience is one where `TouchTarget#clear_on?` finds no room among the dots above, and any tap, a miss included, spoils the wait.
 

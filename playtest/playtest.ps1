@@ -460,7 +460,7 @@ if (-not $GameExe) {
   }
 
   Say ''
-  Say 'That was the last question. Now please quit Dot Popper (Escape on the title screen, or close its window).'
+  Say 'That was the last question. Now please quit Dot Popper (Escape on Home, or close its window).'
   Wait-GameExit 'after the checks'
   Say 'Collecting what the game printed and saved...'
   Add-GameOutput

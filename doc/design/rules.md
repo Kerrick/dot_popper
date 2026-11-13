@@ -134,7 +134,7 @@ Tests: `test/spawner_test.rb`, `test/touch_target_test.rb`.
 - Popping it pays 3 points and 3 seconds on top of a pop's own: "+4" and "+4s".
 - A mistake starts the count over. A bonus dot already earned stays until it is popped. Popping it starts the count over, without counting itself.
 - Nothing is random. No draw is made for it, so a seed gives the same dots with the rule on or off.
-- `Game#dots_in_a_row` is the count toward the next bonus dot. A game the tutorial played over begins play with the row its pops made there (`Cabinet#unpause`), so the dot lit there stays lit, whether the tutorial ended or was skipped. See [tutorial.md](tutorial.md).
+- `Game#dots_in_a_row` is the count toward the next bonus dot. A game the tutorial played over begins play with the row its popped dots made there (`Cabinet#unpause`), so the dot lit there stays lit, whether the tutorial ended or was skipped. See [tutorial.md](tutorial.md).
 - `Game.new(..., bonus: nil)` turns the rule off, as the simulator does to compare.
 - `GameStats#bonuses` counts the bonus dots popped.
 
@@ -225,7 +225,7 @@ On every device but one, fewer than 1 spawn in 70 is redrawn, and a new place is
 | What | Where |
 | --- | --- |
 | Every rule, over thousands of random games with random resizes | `test/rules_fuzz_test.rb` |
-| A game: pops, mistakes, the floor, the clock, resuming from the tutorial | `test/game_test.rb`, `test/cabinet_test.rb`, `test/countdown_test.rb` |
+| A game: popping, mistakes, the floor, the clock, resuming from the tutorial | `test/game_test.rb`, `test/cabinet_test.rb`, `test/countdown_test.rb` |
 | Dots, bounces, refitting | `test/dot_test.rb`, `test/field_test.rb`, `test/stack_test.rb` |
 | Dot size and the choice | `test/dot_size_test.rb`, `test/dot_sizing_test.rb`, `test/presentation/sizing_preview_test.rb` |
 | The spawn check | `test/spawner_test.rb`, `test/touch_target_test.rb` |

@@ -34,7 +34,7 @@ Say in the last note which of these you needed.
 
 Open macos-results.txt in TextEdit, play, and write each answer after its
 arrow. Skip anything you can't try. Check 2 asks you to quit the game
-(Escape on the title screen) and open it again.
+(Escape on Home) and open it again.
 
 3. Optional: how smoothly it runs
 ---------------------------------

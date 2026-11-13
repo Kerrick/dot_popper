@@ -4,7 +4,7 @@
 -->
 # Input
 
-How a press reaches Dot Popper, from a mouse, a finger, a gamepad or a keyboard: the one path every press takes, the gamepad cursor, each screen's gamepad buttons, dragging the Game Over pile, the worn-mouse filter, the words that follow the player's hand, and the keys. It is for anyone changing how the game hears the player. The player-facing table of controls is in [README.md](../../README.md), "How to play".
+How a press reaches Dot Popper, from a mouse, a finger, a gamepad or a keyboard: the one path every press takes, the gamepad cursor, each screen's gamepad buttons, dragging the Game Over pile, the failing-mouse filter, the words that follow the player's hand, and the keys. It is for anyone changing how the game hears the player. The player-facing table of controls is in [README.md](../../README.md), "How to play".
 
 ## One path for every press
 
@@ -23,7 +23,7 @@ Every press goes through one path, so every rule about presses holds for every k
 - A gamepad's press is a click at the gamepad cursor (`InputRouter#gamepad_pressed`). Its release is at the cursor too, wherever it has moved.
 - Moves and releases are sorted the same way, for dragging the pile and scrolling lists.
 
-**Only a press at a place touches the score.** During a game, `Show#primary` does nothing, and Start, B, X, Y, the shoulders and Select do nothing. A button that scored without aiming would bypass the game. The one exception to "every press is heard on its frame" is the worn-mouse filter, which drops a press rather than delaying it.
+**Only a press at a place touches the score.** During a game, `Show#primary` does nothing, and Start, B, X, Y, the shoulders and Select do nothing. A button that scored without aiming would bypass the game. The one exception to "every press is heard on its frame" is the failing-mouse filter, which drops a press rather than delaying it.
 
 A press during setdef's splash only skips the splash (`App#skip_splash`), and the game never hears it.
 
@@ -57,7 +57,7 @@ A gamepad aims a free cursor (`Presentation::GamepadCursor`) and A presses where
 
 | Setting | Value | What it does |
 | --- | --- | --- |
-| `dead_zone` | 0.2 | A push inside this circle is a stick at rest, so a worn stick does not drift |
+| `dead_zone` | 0.2 | A push inside this circle is a stick at rest, so an old stick does not drift |
 | `curve` | 2.0 | Past the dead zone, the cursor's speed is the push to this power: half a tilt moves at a quarter of the top speed, for fine aiming |
 | `crossing` | 1.0 s | At full tilt, the cursor crosses the window's diagonal in this time, whatever the window's size, ramp included |
 | `speed` | 16 R/s | The least top speed, in dot radii a second, so a small window keeps its feel |
@@ -156,9 +156,9 @@ On Game Over, the pile of the game's dots can be picked up, dragged and thrown. 
 
 A, or the right trigger, is a pointer at the cursor, under the key `:gamepad`. Each frame while it is held, `App#update` moves that pointer to the cursor (`Dragging#move(:gamepad, ...)`). Holding A on a dot for 0.15 seconds, or moving the cursor past the slop, picks the dot up. It follows the cursor at the same pace as a mouse, and letting go throws it at the cursor's speed. Start still goes on at once. `Lota.gamepadreleased` in `main.rb` reports the release (`App#gamepad_released`, `#gamepad_up`).
 
-## A worn mouse's double click is dropped
+## A failing mouse's double click is dropped
 
-A worn mouse's switch can send one click as two, a few hundredths of a second apart. The second lands on the popped dot the first left behind, a mistake that costs 2 points and 2 seconds. A loss has to feel like the player's own (Juul, *The Art of Failure*), and a switch's chatter is not. So `Presentation::Chatter` drops a press of a mouse button that comes less than 0.06 seconds after that button's last press and within 8 units of it, and drops its release too, so a drag on the pile never sees a stray one. Its numbers are `Style::CHATTER` (`ChatterStyle`: `seconds: 0.06`, `reach: 8.0`).
+A failing mouse's switch can send one click as two, a few hundredths of a second apart. The second lands on the popped dot the first left behind, a mistake that costs 2 points and 2 seconds. A loss has to feel like the player's own (Juul, *The Art of Failure*), and a switch's chatter is not. So `Presentation::Chatter` drops a press of a mouse button that comes less than 0.06 seconds after that button's last press and within 8 units of it, and drops its release too, so a drag on the pile never sees a stray one. Its numbers are `Style::CHATTER` (`ChatterStyle`: `seconds: 0.06`, `reach: 8.0`).
 
 - A switch's bounce is under 0.02 seconds, and a failing switch chatters at 0.05 to 0.08. A hand clicking twice as fast as it can takes 0.1 seconds or more. 8 units is `MouseTravel`'s line between a jitter and a nudge.
 - Each press is timed from its button's last press, dropped or not, so a run of chatter is dropped whole.

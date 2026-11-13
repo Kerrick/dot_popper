@@ -154,7 +154,7 @@ The player unzips the kit, right-clicks `playtest.ps1`, and chooses **Run with P
 1. records this computer's Windows build, graphics card and driver, each display's size, refresh rate, and scale, sound devices, and controllers (XInput slots and Plug and Play devices);
 2. asks whether a controller is connected, then starts the game with `DOT_POPPER_PERF=1`, its standard output and standard error captured;
 3. asks the checks one at a time while the game runs, each with what to try, an answer (y / n / skip, a rating, or pasted text), and an optional note, and for check 2 waits for the player to quit and starts the game again;
-4. asks the player to quit, then adds each session's output and the text files of `%APPDATA%\dot_popper` (`games.csv`, `lifetime.txt`, `best_score.txt`, and the rest);
+4. asks the player to quit, then adds each session's output and the text files of `%APPDATA%\dot_popper` (`games.csv`, `stats.txt`, `score_record.txt`, and the rest);
 5. tells the player, in plain words, where `dot-popper-results.txt` is and to send it back, and opens File Explorer on it.
 
 The results file is written again after every answer, so a crash leaves what was recorded so far. A second run keeps the first one's file under another name. The script removes the download mark from the kit's files, so the game starts without a warning, changes no setting, and needs no administrator. It runs in Windows PowerShell 5.1 and PowerShell 7, and is kept in ASCII, since 5.1 reads a file without a byte order mark as ANSI. If the game freezes, Enter in the script's window closes it.

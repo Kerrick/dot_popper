@@ -39,7 +39,7 @@ A new file in `lib/dot_popper/` needs its signature in `sig/dot_popper/`, or `bu
 
 Steep 2.1 does not check `case`/`in`. It reports it as unsupported syntax, a diagnostic that is silent by default, and treats everything inside as untyped, so a type error inside such a branch passes. So the `Steepfile` raises `Steep::Diagnostic::Ruby::UnsupportedSyntax` to `:error`, and the rules branch only in forms Steep can narrow:
 
-- `if`/`elsif` on a predicate or `nil?`, as `Game#tap_at` does with `dots.top_at(x, y)`: `nil` is `Events::Missed`, `bright?` pops, and anything else is a mistake.
+- `if`/`elsif` on a predicate or `nil?`, as `Game#tap_at` does with `dots.top_at(x, y)`: `nil` is `Events::Missed`, a `bright?` dot is popped, and anything else is a mistake.
 - `is_a?` on a state, after which Steep knows its members: after `state.is_a?(Playing)` in `Cabinet`, `state.game` exists.
 
 Pattern matching is fine wherever Steep does not look: the tests (the fuzz test matches each tap's event), `script/simulate.rb`, `script/playtest_kit.rb` and `playtest/kit.rb`. When Steep checks pattern matching, the branches can be rewritten and the `UnsupportedSyntax` line removed.
@@ -157,10 +157,10 @@ On Windows, the resizing scenario needs a display at least 1,200 × 800 units (s
 
 ### Galleries
 
-Eight scenarios are galleries, which save screenshots to look at by eye and check little: `title_gallery`, `redesign_gallery`, `screens_gallery`, `themes_gallery`, `holiday_gallery`, `offer_gallery`, `games_gallery` and `website_gallery`. No test in `scenarios_test.rb` names them, so `rake test:gui` never runs them. Each file's header says what it shows and which settings it reads (`DOT_POPPER_GALLERY` names the shots; `themes_gallery` and `holiday_gallery` read `DOT_POPPER_THEME` and `DOT_POPPER_THEME_UNLOCKS`, and `holiday_gallery` plays the same game for every theme given the same `DOT_POPPER_SEED`; `games_gallery` needs `DOT_POPPER_FREE_GAMES=0`; `screens_gallery` runs once with `DOT_POPPER_PRO=1` and once with `0`, and its friend-group screens need a local fake such as `script/group_stub.rb`). Run one as the suite runs a scenario, with a hard timeout:
+Eight scenarios are galleries, which save screenshots to look at by eye and check little: `home_gallery`, `redesign_gallery`, `screens_gallery`, `themes_gallery`, `holiday_gallery`, `offer_gallery`, `games_gallery` and `website_gallery`. No test in `scenarios_test.rb` names them, so `rake test:gui` never runs them. Each file's header says what it shows and which settings it reads (`DOT_POPPER_GALLERY` names the shots; `themes_gallery` and `holiday_gallery` read `DOT_POPPER_THEME` and `DOT_POPPER_THEME_UNLOCKS`, and `holiday_gallery` plays the same game for every theme given the same `DOT_POPPER_SEED`; `games_gallery` needs `DOT_POPPER_FREE_GAMES=0`; `screens_gallery` runs once with `DOT_POPPER_PRO=1` and once with `0`, and its friend-group screens need a local fake such as `script/group_stub.rb`). Run one as the suite runs a scenario, with a hard timeout:
 
 ```console
-$ timeout 300 env DOT_POPPER_SCENARIO=title_gallery DOT_POPPER_GALLERY=before DOT_POPPER_SAVE_AS=gallery_title \
+$ timeout 300 env DOT_POPPER_SCENARIO=home_gallery DOT_POPPER_GALLERY=before DOT_POPPER_SAVE_AS=gallery_home \
     DOT_POPPER_SEED=7 DOT_POPPER_TODAY=2026-11-07 ALSOFT_DRIVERS=null bundle exec lota run .
 ```
 

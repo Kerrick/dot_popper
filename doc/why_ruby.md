@@ -55,7 +55,7 @@ in DotPopper::Events::Popped(dot:, spawned:)
   assert_equal top&.id, dot.id, "#{where}: a pop reached past the top dot"
   # ...and that the stack gained exactly +spawned+, at the bottom
 in DotPopper::Events::Penalized(dot:)
-  assert top.popped?, "#{where}: a fresh dot cost a penalty"
+  assert top.popped?, "#{where}: a bright dot cost a penalty"
 end
 ```
 
@@ -159,7 +159,7 @@ end
 The fuzz test goes further. It plays 2,000 random games on random fields,
 from a sliver narrower than a dot to a large monitor. After every tap and
 tick it checks the invariants: dots stay on the field, the score never
-drops below zero, exactly one dot is fresh, and a tap reaches only the top
+drops below zero, exactly one dot is bright, and a tap reaches only the top
 dot. That is over half a million assertions in under a second. Reverse the
 order `top_at` searches in, and it fails on the tenth game.
 
