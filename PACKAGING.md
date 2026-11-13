@@ -103,7 +103,7 @@ The repository is copied into the app's `game/dot_popper` folder, except `.git`,
 $ ruby script/channel_contents.rb list mac-app-store "unpacked/Dot Popper.app"
 ```
 
-Today every package holds every channel's Ruby, the fakes and the test keys, because the game's loaders (`lib/dot_popper.rb`, `continuity.rb`, `receipt.rb`, `presentation.rb`, `shell.rb`) require every file, and the composition root names every adapter. Leaving one of those files out would stop the app starting. So a channel's build can leave out only what no build loads: the privacy document's sources other than `privacy/save_files.rb`.
+Today every package holds every channel's Ruby, the fakes and the test keys, because the game's loaders (`lib/dot_popper.rb`, `continuity.rb`, `receipt.rb`, `presentation.rb`, `shell.rb`) require every file, and the composition root names every adapter. Leaving one of those files out would stop the app starting. So a channel's build can leave out only what no build loads: the privacy document's sources other than `privacy/save_files.rb`. The app stores' builds (the MSIX and the Mac App Store's) leave those out: the fuse action asks the script which paths the build's channel leaves out (`excludes`), and their jobs run `ruby script/channel_contents.rb check CHANNEL FOLDER` on the app they built, which fails if one comes back. A test build and a website build leave nothing out.
 
 ## Building on your own computer
 

@@ -43,13 +43,20 @@ runs:
         ruby -S lota --version
 
     # lota fuse leaves out of the app what only the repository needs (a
-    # fused LÖVE game ships the whole folder it's given).
+    # fused LÖVE game ships the whole folder it's given), and what the
+    # build's channel, as script/set_build_channel.rb set it, leaves out
+    # (script/channel_contents.rb; nothing in a test build).
     - name: lota fuse
       shell: bash
       run: |
         exclude=()
         for path in test doc sig script playtest android ios macos windows .github Rakefile Steepfile mise.toml \
           AGENTS.md GLOSSARY.md INSIPIRATION.md PACKAGING.md README.md .gitignore; do
+          exclude+=(--exclude "$path")
+        done
+        channel_excludes=$(ruby script/channel_contents.rb excludes | tr -d '\r')
+        for path in $channel_excludes; do
+          echo "left out for the build's channel: $path"
           exclude+=(--exclude "$path")
         done
         ruby -S lota fuse . "${exclude[@]}" --identifier "$IDENTIFIER" --app-version "$APP_VERSION" --icon icons/icon --out "$RUNNER_TEMP/fuse"

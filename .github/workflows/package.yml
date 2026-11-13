@@ -320,6 +320,11 @@ jobs:
       - name: Check the app that was built
         run: ruby script/check_build.rb microsoft-store "${{ needs.plan.outputs.version }}" "$RUNNER_TEMP/unzipped"
 
+      # Lists what the package holds that the Microsoft Store's build does
+      # not need, and fails if a file the channel leaves out came back.
+      - name: Check what the package holds for its channel
+        run: ruby script/channel_contents.rb check microsoft-store "$RUNNER_TEMP/unzipped"
+
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dot-popper-msix
@@ -462,6 +467,11 @@ jobs:
 
       - name: Check the app that was built
         run: ruby script/check_build.rb mac-app-store "${{ needs.plan.outputs.version }}" "$RUNNER_TEMP/mas"
+
+      # Lists what the app holds that the Mac App Store's build does not
+      # need, and fails if a file the channel leaves out came back.
+      - name: Check what the app holds for its channel
+        run: ruby script/channel_contents.rb check mac-app-store "$RUNNER_TEMP/mas"
 
       - name: Play the sandboxed app
         run: |
