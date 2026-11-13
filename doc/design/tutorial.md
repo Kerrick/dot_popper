@@ -21,7 +21,7 @@ While it plays, `Cabinet` holds the game in its `Paused` state ([ADR-0016](../ad
 | The spotlight | `Presentation::Spotlight`, `SpotlightStyle` (`spotlight.rb`) |
 | Numbers in flight | `Presentation::Flight` (`flight.rb`), drawn as a `Presentation::Tally` (`tally.rb`) |
 | Whether pressing Play opens it | `Presentation::TutorialFlag` (`tutorial_flag.rb`), `tutorial.txt` |
-| The paused game | `Cabinet::Paused`, `Cabinet#start_paused`, `#press_paused`, `#move_paused`, `#arrange`, `#unpause`; `Game#move_dots`, `#arrange` |
+| The paused game | `Cabinet::Paused`, `Cabinet::Starts#paused`, `Cabinet#press_paused`, `#move_paused`, `#arrange`, `#unpause`; `Game#move_dots`, `#arrange` |
 | Opening, skipping and playing on | `Show#play`, `#how_to_play`, `#skip_tutorial`, `#open_tutorial`, `#follow_tutorial`, `#play_on`; `Tutorial.opening`; `UseCases::StartGame` |
 | Drawing | `Shell::TutorialPainter`, `Shell::GhostPainter`, `Shell::HandSprites`, `Shell::TallyPainter`, and `Shell::Renderer#tutorial` |
 
