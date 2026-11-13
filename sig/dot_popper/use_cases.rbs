@@ -151,6 +151,8 @@ module DotPopper
 
       def locked?: () -> bool
 
+      def start: () -> (:offer | :go)
+
       def choose: () -> (:offer | :go)
 
       def create: () -> (:sent | :offer)

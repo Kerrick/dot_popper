@@ -18,10 +18,15 @@ module DotPopper
       # Whether Join and Create lead to Pro, as for a Free player.
       def locked? = !@entitlement.pro?
 
-      # The player chose Join or Create: :offer for a Free player, who is
-      # offered Pro instead and goes no further; :go otherwise, on to what
-      # comes before a request (the friend groups' notice, the code pad).
-      def choose = locked? ? :offer : :go
+      # The player started to join or create a group, pressing Join or
+      # Create, before anything is asked of them: :offer for a Free
+      # player, who is offered Pro instead and goes no further; :go
+      # otherwise, on to what comes before a request (the friend groups'
+      # notice, the code pad).
+      def start = locked? ? :offer : :go
+
+      # The old name of #start, until the friend groups' panel asks #start.
+      def choose = start
 
       # Creates a group: :sent, or :offer for a Free player.
       def create
