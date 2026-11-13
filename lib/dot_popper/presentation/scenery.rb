@@ -737,8 +737,8 @@ module DotPopper
       end
 
       # A parlor on Christmas Eve, by firelight: striped paper on the far
-      # wall and a wreath, the mantel with a garland, a jar of candy canes
-      # and candles on it, stockings hung from it with candy canes in them,
+      # wall and a wreath, the mantel with a garland, a nutcracker and
+      # candles on it, stockings hung from it, each a little different,
       # and the fire's opening below, its logs and low flames.
       def mantel(width, height)
         out = []
@@ -754,7 +754,7 @@ module DotPopper
         end
         shelf = height * (land ? 0.5 : 0.52)
         floor = height * (land ? 0.93 : 0.94)
-        wreath(out, far, width * 0.5, shelf - (height * (land ? 0.2 : 0.17)), [width, height].min * (land ? 0.13 : 0.15))
+        wreath(out, width * 0.5, shelf - (height * (land ? 0.24 : 0.2)), [width, height].min * (land ? 0.13 : 0.15))
         # The chimney breast, its opening, and the hearth.
         left = width * (land ? 0.2 : 0.06)
         right = width - left
@@ -788,28 +788,85 @@ module DotPopper
         candle(out, ink, left + ((right - left) * 0.3), shelf - 12, land ? 1.3 : 1.0, 0.6)
         candle(out, ink, left + ((right - left) * 0.7), shelf - 12, land ? 1.3 : 1.0, 0.9)
         candle(out, ink, left + ((right - left) * 0.78), shelf - 12, land ? 1.3 : 1.0, 0.65)
-        garland(out, ink, left - 18, right + 18, shelf - 4, land ? 5 : 3)
+        garland(out, left - 18, right + 18, shelf - 4, land ? 5 : 3, land ? 1.3 : 1.0)
         count = land ? 5 : 4
+        hang = [[0.0, 1.0, -0.03], [0.04, 0.92, 0.02], [-0.03, 1.06, 0.0], [0.02, 0.88, 0.035], [-0.02, 0.97, -0.015]]
         count.times do |i|
-          f = (i + 0.5) / count
-          stocking(out, ink, left + (post * 0.4) + ((right - left - (post * 0.8)) * f), shelf + 6, land ? 1.35 : 1.15, i)
+          dx, size, tilt = hang[i]
+          f = (i + 0.5 + dx) / count
+          stocking(out, left + (post * 0.4) + ((right - left - (post * 0.8)) * f), shelf + 14, (land ? 1.35 : 1.15) * size, tilt)
         end
         out
       end
 
-      # A wreath on the wall: a ring of fir and a bow at its foot.
-      def wreath(out, color, x, y, radius)
+      # A wreath on the wall: a full ring of fir sprigs wired on all one
+      # way round, in deep greens darker than the paper and lit along
+      # their upper side, a few berries, and a red bow at its foot with
+      # two short tails cut in a V.
+      def wreath(out, x, y, radius)
         r = Random.new(31)
-        36.times do |i|
-          a = Math::PI * 2 * i / 36
-          at = [x + (Math.cos(a) * radius), y + (Math.sin(a) * radius)]
-          to = [x + (Math.cos(a + 0.2) * radius), y + (Math.sin(a + 0.2) * radius)]
-          out << segment(at, to, radius * 0.18, radius * 0.18, color)
-          needles(out, color, at, to, radius * 0.16, r)
+        thick = radius * 0.55
+        ring = ->(rad, a) { [x + (Math.cos(a) * rad), y + (Math.sin(a) * rad)] }
+        steps = 48
+        inner = (0...steps).map { |i| ring.call(radius - (thick * 0.36), Math::PI * 2 * i / steps) }
+        outer = (0...steps).map { |i| ring.call(radius + (thick * 0.36), Math::PI * 2 * i / steps) }
+        steps.times do |i|
+          j = (i + 1) % steps
+          out << Fan.new(color: Color.hex("#04100b"), points: [inner[i], outer[i], outer[j], inner[j]])
         end
-        bow(out, color, x, y + radius + 4, radius * 0.32)
-        out << segment([x - 3, y + radius + 6], [x - (radius * 0.18), y + (radius * 1.45)], 4, 2.5, color)
-        out << segment([x + 3, y + radius + 6], [x + (radius * 0.2), y + (radius * 1.42)], 4, 2.5, color)
+        [[Color.hex("#071a12"), 70, 1.0], [Color.hex("#0c2619"), 56, 0.85], [Color.hex("#163a26"), 34, 0.7]].each do |color, count, reach|
+          count.times do |i|
+            a = (Math::PI * 2 * (i + r.rand(0.0..0.8)) / count)
+            lit = Math.cos(a + 2.2)
+            next if color == Color.hex("#163a26") && lit < 0.1
+
+            band = r.rand(-0.4..0.4) * thick
+            root = ring.call(radius + band, a)
+            dir = a + (Math::PI / 2) + r.rand(-0.35..0.35) + (band / radius)
+            sprig(out, color, root, dir, thick * reach * r.rand(0.6..0.8), thick * 0.2 * reach, r)
+          end
+        end
+        9.times do |i|
+          a = (Math::PI * 2 * (i + 0.3 + r.rand(0.0..0.4)) / 9) + 0.2
+          next if Math.sin(a) > 0.8
+
+          at = ring.call(radius + (r.rand(-0.2..0.2) * thick), a)
+          [[0, -1], [0.9, 0.5], [-0.9, 0.5]].each { |dx, dy| out << Dot.new(x: at[0] + (dx * thick * 0.08), y: at[1] + (dy * thick * 0.08), radius: thick * 0.06, color: Color.hex("#4a1418")) }
+        end
+        ribbon_bow(out, Color.hex("#4a1218"), Color.hex("#2c080c"), x, y + radius + (thick * 0.1), radius * 0.36)
+      end
+
+      # A twig of fir from +root+ toward +dir+, thick with short needles
+      # swept forward along it.
+      def sprig(out, color, root, dir, length, needle, random)
+        tip = [root[0] + (Math.cos(dir) * length), root[1] + (Math.sin(dir) * length)]
+        out << segment(root, tip, needle * 0.5, needle * 0.25, color)
+        n = 7
+        n.times do |k|
+          t = (k + 0.6) / n
+          at = [root[0] + ((tip[0] - root[0]) * t), root[1] + ((tip[1] - root[1]) * t)]
+          size = needle * (1.15 - (t * 0.5))
+          [-1, 1].each do |side|
+            angle = dir + (side * 0.62) + random.rand(-0.1..0.1)
+            out << segment(at, [at[0] + (Math.cos(angle) * size), at[1] + (Math.sin(angle) * size)], needle * 0.32, needle * 0.12, color)
+          end
+        end
+      end
+
+      # A ribbon bow seen from the front: two loops, a knot and two tails
+      # cut in a V, the folds in a darker red.
+      def ribbon_bow(out, color, fold, x, y, size)
+        [-1, 1].each do |side|
+          loop_ = [[x, y], [x + (side * size * 0.5), y - (size * 0.55)], [x + (side * size * 1.05), y - (size * 0.6)], [x + (side * size * 1.2), y - (size * 0.25)],
+                   [x + (side * size * 1.0), y + (size * 0.12)], [x + (side * size * 0.5), y + (size * 0.18)]]
+          poly(out, color, loop_)
+          poly(out, fold, [[x + (side * size * 0.2), y - (size * 0.05)], [x + (side * size * 0.75), y - (size * 0.3)], [x + (side * size * 0.85), y - (size * 0.12)], [x + (side * size * 0.3), y + (size * 0.08)]])
+          tail = [[x + (side * size * 0.08), y + (size * 0.1)], [x + (side * size * 0.3), y + (size * 0.1)], [x + (side * size * 0.62), y + (size * 1.05)],
+                  [x + (side * size * 0.5), y + (size * 0.92)], [x + (side * size * 0.38), y + (size * 1.12)]]
+          poly(out, color, tail)
+        end
+        oval(out, fold, x, y, size * 0.2, size * 0.2)
+        oval(out, color, x, y - (size * 0.02), size * 0.16, size * 0.17)
       end
 
       FLAME = [Color.hex("#ff9a3a", 0.3), Color.hex("#ffc060", 0.26)].freeze
@@ -817,7 +874,7 @@ module DotPopper
       # Logs on a grate, and low flames over them, kept dim.
       def fire(out, x, floor, half, land)
         s = land ? 1.4 : 1.0
-        14.times { |i| out << Dot.new(x:, y: floor - (half * 0.12), radius: half * (1.0 - (i * 0.065)), color: Color.hex("#c0581c", 0.028)) }
+        28.times { |i| out << Dot.new(x:, y: floor - (half * 0.12), radius: half * (1.0 - (i * 0.033)), color: Color.hex("#c0581c", 0.014)) }
         [[-0.9, 0.6], [0.95, 0.5], [-0.25, 0.78], [0.4, 0.64], [0.0, 0.5]].each_with_index do |(dx, h), i|
           fx = x + (dx * half * 0.3)
           fh = half * h * (land ? 0.55 : 0.75)
@@ -825,9 +882,15 @@ module DotPopper
           flame(out, FLAME[1], fx + (fh * 0.02), floor - (8 * s), fh * 0.6, fh * 0.2, (i.even? ? 1 : -1) * 0.1)
         end
         ink = Color.hex("#030806")
-        out << segment([x - (half * 0.62), floor - (12 * s)], [x + (half * 0.5), floor - (17 * s)], 13 * s, 13 * s, ink)
-        out << segment([x - (half * 0.4), floor - (19 * s)], [x + (half * 0.62), floor - (10 * s)], 12 * s, 12 * s, ink)
-        out << Fan.new(color: ink, points: [[x - (half * 0.7), floor - (4 * s)], [x + (half * 0.7), floor - (4 * s)], [x + (half * 0.7), floor], [x - (half * 0.7), floor]])
+        # Embers under the grate, its legs, then two round logs across it.
+        out << segment([x - (half * 0.5), floor - (3 * s)], [x + (half * 0.5), floor - (3 * s)], 4 * s, 4 * s, Color.hex("#ff7a2a", 0.22))
+        [-0.5, 0.5].each { |dx| out << segment([x + (dx * half), floor], [x + (dx * half * 0.92), floor - (14 * s)], 3 * s, 3 * s, ink) }
+        out << segment([x - (half * 0.62), floor - (5 * s)], [x + (half * 0.62), floor - (5 * s)], 3 * s, 3 * s, ink)
+        [[[x - (half * 0.6), floor - (10 * s)], [x + (half * 0.42), floor - (16 * s)], 12 * s], [[x - (half * 0.34), floor - (20 * s)], [x + (half * 0.6), floor - (12 * s)], 11 * s]].each do |a, b, thick|
+          out << segment(a, b, thick, thick, ink)
+          out << Dot.new(x: b[0], y: b[1], radius: thick / 2, color: ink)
+          out << Dot.new(x: a[0], y: a[1], radius: thick / 2, color: ink)
+        end
       end
 
       # One flame, a teardrop from its base at +x+, +y+, its tip bent by
@@ -843,71 +906,69 @@ module DotPopper
         out << Fan.new(color:, points: [[x, y - (h * 0.3)], *left, *right, left.first])
       end
 
-      # A nutcracker standing guard on the shelf at +x+, +y+: boots, legs,
-      # a belted coat, arms at his sides, his head and tall hat.
+      # A nutcracker standing guard on the shelf at +x+, +y+: a plinth,
+      # boots, a coat flared at the hem with epaulettes and arms at his
+      # sides, his head with its jaw, and a tall hat with a plume.
       def nutcracker(out, color, x, y, s)
-        out << Fan.new(color:, points: [[x - (8 * s), y], [x + (8 * s), y], [x + (8 * s), y - (4 * s)], [x - (8 * s), y - (4 * s)]])
-        out << Fan.new(color:, points: [[x - (5.5 * s), y - (4 * s)], [x + (5.5 * s), y - (4 * s)], [x + (5 * s), y - (20 * s)], [x - (5 * s), y - (20 * s)]])
-        out << Fan.new(color:, points: [[x - (6.5 * s), y - (19 * s)], [x + (6.5 * s), y - (19 * s)], [x + (6 * s), y - (36 * s)], [x - (6 * s), y - (36 * s)]])
-        out << Fan.new(color:, points: [[x - (10 * s), y - (35 * s)], [x + (10 * s), y - (35 * s)], [x + (9 * s), y - (38 * s)], [x - (9 * s), y - (38 * s)]])
-        out << segment([x - (8 * s), y - (35 * s)], [x - (9 * s), y - (22 * s)], 3.2 * s, 3.2 * s, color)
-        out << segment([x + (8 * s), y - (35 * s)], [x + (9 * s), y - (22 * s)], 3.2 * s, 3.2 * s, color)
-        out << Fan.new(color:, points: [[x - (5 * s), y - (37 * s)], [x + (5 * s), y - (37 * s)], [x + (5 * s), y - (46 * s)], [x - (5 * s), y - (46 * s)]])
-        out << Fan.new(color:, points: [[x - (5.5 * s), y - (46 * s)], [x + (5.5 * s), y - (46 * s)], [x + (4.5 * s), y - (60 * s)], [x - (4.5 * s), y - (60 * s)]])
-        out << Dot.new(x:, y: y - (61 * s), radius: 2 * s, color:)
-      end
-
-      # A candy cane's hook, from +top+, curling to +side+.
-      def hook(out, color, top, radius, side, thick)
-        cx = top[0] + (side * radius)
-        6.times do |i|
-          a1 = Math::PI * i / 6
-          a2 = Math::PI * (i + 1) / 6
-          p1 = [cx - (side * Math.cos(a1) * radius), top[1] - (Math.sin(a1) * radius)]
-          p2 = [cx - (side * Math.cos(a2) * radius), top[1] - (Math.sin(a2) * radius)]
-          out << segment(p1, p2, thick, thick, color)
-          out << Dot.new(x: p2[0], y: p2[1], radius: thick / 2, color:)
+        at = ->(px, py) { [x + (px * s), y + (py * s)] }
+        poly(out, color, [[-9, 0], [9, 0], [9, -4], [-9, -4]].map { at.call(*it) })
+        [-1, 1].each do |side|
+          poly(out, color, [[side * 0.6, -4], [side * 6, -4], [side * 5.5, -9], [side * 4.5, -19], [side * 1, -19], [side * 0.6, -9]].map { at.call(*it) })
+          limb(out, color, [at.call(side * 7, -33), at.call(side * 8.4, -27), at.call(side * 8.2, -21)], 3.2 * s, 2.6 * s)
+          oval(out, color, *at.call(side * 7.4, -33.5), 3.2 * s, 1.8 * s)
         end
+        poly(out, color, [[-8, -18], [8, -18], [6.5, -23], [5.5, -34], [-5.5, -34], [-6.5, -23]].map { at.call(*it) })
+        poly(out, color, [[-3, -34], [3, -34], [3, -36], [-3, -36]].map { at.call(*it) })
+        poly(out, color, [[-5, -36], [5, -36], [5.2, -40], [4.5, -46], [-4.5, -46], [-5.2, -40]].map { at.call(*it) })
+        poly(out, color, [[-6, -46], [6, -46], [6, -48], [-6, -48]].map { at.call(*it) })
+        poly(out, color, [[-4.8, -48], [4.8, -48], [5.6, -61], [-5.6, -61]].map { at.call(*it) })
+        oval(out, color, *at.call(1, -64), 2.2 * s, 3.4 * s, 0.3)
       end
 
-      # A candle in a candlestick, its flame a dim glow.
+      # A candle in a holder, its flame and a soft glow about it.
       def candle(out, color, x, y, s, tall)
         h = 40 * s * tall
         out << Fan.new(color:, points: [[x - (9 * s), y], [x + (9 * s), y], [x + (5 * s), y - (6 * s)], [x - (5 * s), y - (6 * s)]])
         out << Fan.new(color:, points: [[x - (4.5 * s), y - (6 * s)], [x + (4.5 * s), y - (6 * s)], [x + (4.5 * s), y - (6 * s) - h], [x - (4.5 * s), y - (6 * s) - h]])
         tip = y - (6 * s) - h
-        out << Dot.new(x:, y: tip - (7 * s), radius: 9 * s, color: Color.hex("#ffb050", 0.08))
+        7.times { |i| out << Dot.new(x:, y: tip - (6 * s), radius: (4 + (i * 2)) * s, color: Color.hex("#ffb050", 0.016)) }
         out << Fan.new(color: Color.hex("#ffc870", 0.3), points: [[x, tip - (11 * s)], [x + (2.6 * s), tip - (4 * s)], [x, tip - (1 * s)], [x - (2.6 * s), tip - (4 * s)]])
       end
 
-      # A garland along the shelf's edge: swags of fir with dim lights.
-      def garland(out, color, from, to, y, swags)
+      # A garland along the shelf's edge: swags of fir, like the wreath's,
+      # with small lights along them.
+      def garland(out, from, to, y, swags, scale)
         r = Random.new(17)
         span = (to - from) / swags
         swags.times do |k|
-          points = (0..10).map { |i| [from + (span * (k + (i / 10.0))), y + (Math.sin(Math::PI * i / 10.0) * span * 0.12)] }
-          points.each_cons(2).with_index do |(a, b), i|
-            out << segment(a, b, 7, 7, color)
-            needles(out, color, a, b, 7, r)
-            out << Dot.new(x: b[0], y: b[1] + 4, radius: 2.2, color: LIGHTS[(i + k) % LIGHTS.size]) if i.odd?
+          points = (0..12).map { |i| [from + (span * (k + (i / 12.0))), y + (Math.sin(Math::PI * i / 12.0) * span * 0.12)] }
+          [[Color.hex("#061610"), 1.0], [Color.hex("#0c2619"), 0.8]].each do |color, reach|
+            points.each_cons(2) do |a, b|
+              dir = Math.atan2(b[1] - a[1], b[0] - a[0])
+              2.times { sprig(out, color, [a[0] + r.rand(-3.0..3.0), a[1] + r.rand(-3.0..3.0)], dir + r.rand(-0.5..0.5), 16 * scale * reach, 5 * scale * reach, r) }
+            end
+          end
+          points.each_with_index do |(px, py), i|
+            out << Dot.new(x: px, y: py + (3 * scale), radius: 2.0 * scale, color: LIGHTS[(i + k) % LIGHTS.size]) if i.odd?
           end
         end
       end
 
-      # A stocking hung from the shelf: its loop, a cuff, the leg and a foot
-      # with its toe to the right, and the hook of a candy cane in its top.
-      def stocking(out, color, x, top, s, index)
-        out << segment([x, top - 2], [x, top + (6 * s)], 2, 2, color)
-        out << Fan.new(color:, points: [[x - (15 * s), top + (6 * s)], [x + (15 * s), top + (6 * s)], [x + (15 * s), top + (19 * s)], [x - (15 * s), top + (19 * s)]])
-        out << Fan.new(color:, points: [[x - (12 * s), top + (19 * s)], [x + (12 * s), top + (19 * s)], [x + (12 * s), top + (54 * s)], [x - (12 * s), top + (54 * s)]])
-        out << Dot.new(x: x - (1 * s), y: top + (56 * s), radius: 12 * s, color:)
-        out << Fan.new(color:, points: [[x, top + (44 * s)], [x + (20 * s), top + (50 * s)], [x + (26 * s), top + (58 * s)], [x + (20 * s), top + (67 * s)], [x - (2 * s), top + (68 * s)]])
-        return if index.odd?
-
-        base = [x + (5 * s), top + (6 * s)]
-        tip = [x + (7 * s), top - (10 * s)]
-        out << segment(base, tip, 3.6 * s, 3.6 * s, color)
-        hook(out, color, tip, 5 * s, -1, 3.6 * s)
+      # A stocking hung by its loop from a hook on the shelf: a cuff, the
+      # leg, a rounded heel and a foot with its toe to the right, the heel
+      # and toe patched in the cuff's color. +tilt+ hangs it a little
+      # askew.
+      def stocking(out, x, top, s, tilt)
+        body = Color.hex("#2c0c10")
+        trim = Color.hex("#34342e")
+        at = ->(px, py) { [x + (s * ((Math.cos(tilt) * px) - (Math.sin(tilt) * py))), top + (s * ((Math.sin(tilt) * px) + (Math.cos(tilt) * py)))] }
+        out << segment([x - (8 * s), top - (5 * s)], at.call(-9, 1), 1.6, 1.6, Color.hex("#030806"))
+        out << segment([x - (8 * s), top - (5 * s)], [x - (8 * s), top - (9 * s)], 2.2, 2.2, Color.hex("#030806"))
+        leg = [[-11, 11], [-11.5, 40], [-10.5, 47], [-7.5, 52], [-3, 55], [4, 56.5], [12, 57], [18, 56], [22.5, 53], [23.5, 49], [21.5, 45.5], [17, 44], [11, 42.5], [11, 11]]
+        poly(out, body, leg.map { at.call(*it) })
+        poly(out, trim, [[-11.4, 42], [-10.5, 47], [-7.5, 52], [-3, 55], [-1.5, 50], [-4.5, 45.5], [-8, 42]].map { at.call(*it) })
+        poly(out, trim, [[17, 44], [21.5, 45.5], [23.5, 49], [22.5, 53], [18, 56], [15.5, 50.5]].map { at.call(*it) })
+        poly(out, trim, [[-14, 1], [-13, 0], [13, 0], [14, 1], [14, 12], [13, 13.5], [-13, 13.5], [-14, 12]].map { at.call(*it) })
       end
 
       # A sleigh ride through the snow at night: snowy hills at three
