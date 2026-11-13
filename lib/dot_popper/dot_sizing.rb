@@ -22,8 +22,6 @@ module DotPopper
     # before that, is read too (EARLIER_NAMES).
     BIGGER_OR_SMALLER = new(name: "standard")
     STANDARD = new(name: "fitted")
-    # BIGGER_OR_SMALLER's old name, until no commit uses it.
-    FIXED = BIGGER_OR_SMALLER
     # Names a save file once held, and the choice each is.
     EARLIER_NAMES = { "same" => BIGGER_OR_SMALLER }.freeze
 
