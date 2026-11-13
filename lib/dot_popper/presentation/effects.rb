@@ -6,7 +6,7 @@ module DotPopper
     # rings, reveals, floating numbers, the shake, and the edge flash. It
     # keeps its own clock, +now+; rings, floating texts, the shake, and the flash are
     # values that say how they look at a moment. Droplets are LÖVE's
-    # particles, so a burst waits here as a Spray until the shell takes
+    # particles, so a burst waits here as a PendingBurst until the shell takes
     # it; +cleared+ counts the clears, so the shell knows to drop the
     # droplets already flying. Sizes and speeds come in radii and leave in
     # graphics units, scaled by +radius+, the game's dots' (#scale_to).
@@ -15,7 +15,8 @@ module DotPopper
       MOST_FLOATING_TEXTS = 24
       MOST_FLOATERS = MOST_FLOATING_TEXTS # its old name, until no caller says it
 
-      MOST_SPRAYS = 16
+      MOST_PENDING_BURSTS = 16
+      MOST_SPRAYS = MOST_PENDING_BURSTS # its old name, until no caller says it
 
       attr_reader :rings, :reveals, :floating_texts, :shake, :flash, :now, :cleared
 
@@ -27,7 +28,7 @@ module DotPopper
         @random = random
         @now = 0.0
         @cleared = 0
-        @sprays = []
+        @bursts = []
         @rings = []
         @reveals = []
         @floating_texts = []
@@ -39,19 +40,22 @@ module DotPopper
       # +colors+. No droplet outlives +longest+, which only a screen with
       # no game in play may raise.
       def burst(x, y, style, colors, longest: Burst::LONGEST_LIFE)
-        spray = Spray.new(x:, y:, style:, colors:, longest: [longest, style.life.end].min, radius: @radius)
-        keep(@sprays, spray, MOST_SPRAYS)
+        burst = PendingBurst.new(x:, y:, style:, colors:, longest: [longest, style.life.end].min, radius: @radius)
+        keep(@bursts, burst, MOST_PENDING_BURSTS)
       end
 
       # The bursts asked for since the last call, which the shell throws.
-      def take_sprays
-        sprays = @sprays
-        @sprays = []
-        sprays
+      def take_bursts
+        bursts = @bursts
+        @bursts = []
+        bursts
       end
 
-      # How many droplets of +spray+ each of its colors gets.
-      def shares(spray) = spray.style.shares(spray.colors, @random)
+      # Its old name, until no caller says it.
+      alias take_sprays take_bursts
+
+      # How many droplets of +burst+ each of its colors gets.
+      def shares(burst) = burst.style.shares(burst.colors, @random)
 
       def ring(x, y, style, follow: nil)
         keep(@rings, Ring.new(x:, y:, style:, scale: @radius, born: now, follow:), MOST_RINGS)
@@ -90,7 +94,7 @@ module DotPopper
 
       def clear
         @cleared += 1
-        @sprays.clear
+        @bursts.clear
         @rings.clear
         @reveals.clear
         @floating_texts.clear
