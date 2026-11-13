@@ -115,12 +115,17 @@ module DotPopper
       end
 
       # The screen on top, which every press, button, key and scroll asks
-      # (Screens): the one place that decides it.
-      def screen
-        if arrival? then @screens[:new_theme]
-        elsif tutorial? then @screens[:tutorial]
-        elsif @layers.any? then @layers.last
-        elsif home? then @screens[:home]
+      # (Screens), and the renderer draws: the one place that decides it.
+      # It is the last screen opened over the others, or with none open,
+      # the screen for the game's state.
+      def screen = @layers.last || state_screen
+
+      # The screen for Cabinet's state, under any opened over it: Home,
+      # or the card telling of a new theme over it; the Tutorial over the
+      # paused game; a game; or Game Over.
+      def state_screen
+        if tutorial? then @screens[:tutorial]
+        elsif home? then arrival? ? @screens[:new_theme] : @screens[:home]
         elsif game_over? then @screens[:game_over]
         else @screens[:game]
         end
@@ -1422,16 +1427,13 @@ module DotPopper
       def home_shown(event)
         @use_theme.refresh
         @stats = nil
-        @layers.reject! { it.is_a?(Screens::Page) }
-        close_layer(:achievement_dialog)
         @offer_for_play = false
-        close_layer(:offer)
         @groups.close if group_open?
+        @layers.clear
         @credits = nil
         @clearing = clearing.cancel
         effects.clear
         @game_over = nil
-        close_layer(:share_preview)
         @marquee = Marquee.new(style: style::HOME, score_record: event.score_record, at: now)
       end
 
