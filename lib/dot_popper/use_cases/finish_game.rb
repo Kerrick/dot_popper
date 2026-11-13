@@ -52,7 +52,7 @@ module DotPopper
       # +ended+ is the game's Events::GameEnded, +stats+ its numbers
       # (GameStats), and +earned+ the achievements its play earned. A game
       # the tutorial opened never counts in a friend group; nor does one
-      # with standard dots.
+      # with the fixed size.
       def finish(ended, stats:, earned: [])
         recorded = @stats_book.record(stats, ended.size_class)
         @friend_groups.game_finished(score: ended.score, sized_to_screen: ended.size_class == SizeClass::FITTED && !ended.tutorial)
