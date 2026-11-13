@@ -40,11 +40,17 @@ module DotPopper
         pen.text(row.label, font, x + 32 + (font.width(row.label) / 2.0), y, pen.palette.cream)
       end
 
-      # A bright dot at the size a Dot size choice gives.
+      # A bright dot at the size a Dot size choice gives, its right edge a
+      # set gap before the choice's name (ChoiceRow keeps 0.3 of the row's
+      # height from the icon's middle to the name), so a dot drawn bigger
+      # than the usual 0.16 grows away from the name, never over it.
       def icon(show, row, name)
         return unless row.key == :dot_size
 
-        ->(x, y, height, _chosen) { dots.icon(x, y, show.sizing_preview.icon(name, height), bright: true) }
+        lambda do |x, y, height, _chosen|
+          radius = show.sizing_preview.icon(name, height)
+          dots.icon(x + (height * 0.16) - radius, y, radius, bright: true)
+        end
       end
 
       def pill(show, name, rect, glyph, text)
