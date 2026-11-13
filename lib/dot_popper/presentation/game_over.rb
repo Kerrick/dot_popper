@@ -64,16 +64,17 @@ module DotPopper
     # +ring_reach+ units at most and +ring_alpha+ bright. On a new record it
     # waits +score_record_delay+ more, for the celebration, rises further, and
     # rings brighter and wider.
-    class ShareCueStyle < Data.define(:arrive, :lift, :score_record_lift, :score_record_delay, :ring, :ring_reach, :ring_alpha,
-                                     :score_record_ring_reach, :score_record_ring_alpha); end
+    class ShareButtonEntranceStyle < Data.define(:arrive, :lift, :score_record_lift, :score_record_delay, :ring, :ring_reach,
+                                                 :ring_alpha, :score_record_ring_reach, :score_record_ring_alpha); end
 
     # Where "Share my score" is in its arrival: how much of it shows
     # (+alpha+), how far below its place it is (+drop+, in units), and its
     # ring's distance out from the button's edge (+ring+, in units) and
     # opacity (+ring_alpha+, 0 for no ring).
-    class ShareCue < Data.define(:alpha, :drop, :ring, :ring_alpha)
-      # The cue +elapsed+ seconds after the score landed, negative before
-      # then, by +style+ (ShareCueStyle); +score_record+ for a new record.
+    class ShareButtonEntrance < Data.define(:alpha, :drop, :ring, :ring_alpha)
+      # The entrance +elapsed+ seconds after the score landed, negative
+      # before then, by +style+ (ShareButtonEntranceStyle); +score_record+
+      # for a new record.
       def self.at(elapsed, style, score_record: false)
         elapsed -= style.score_record_delay if score_record
         return new(alpha: 0.0, drop: 0.0, ring: 0.0, ring_alpha: 0.0) unless elapsed.positive?
@@ -86,5 +87,9 @@ module DotPopper
             ring_alpha: ringing.positive? ? (1 - spread) * (score_record ? style.score_record_ring_alpha : style.ring_alpha) : 0.0)
       end
     end
+
+    # Their old names, until no caller says them.
+    ShareCueStyle = ShareButtonEntranceStyle
+    ShareCue = ShareButtonEntrance
   end
 end
