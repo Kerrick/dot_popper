@@ -192,7 +192,7 @@ module DotPopper
       alias ghost guide
       alias ghost_pose guide_pose
 
-      # The numbers in the air (Flight).
+      # The numbers in the air (TravelingNumber).
       def flights = @flights.select { it.flying?(now) }
 
       # How fast its time flows now: 1 as in the game, 0 when it stands
@@ -526,7 +526,7 @@ module DotPopper
       # A number flying from where the dot was tapped into the HUD's score,
       # time or row (+to+), as +amount+, with what it counts drawn after it.
       def fly_in(x, y, to, amount, color, born, duration)
-        @flights << Flight.new(text: Words.points(amount), icon: { time: :stopwatch, dots_in_a_row: :dot }[to], color:,
+        @flights << TravelingNumber.new(text: Words.points(amount), icon: { time: :stopwatch, dots_in_a_row: :dot }[to], color:,
                                from: Anchor.at(x, y), to: Anchor.hud(to), born:, duration:)
       end
 
