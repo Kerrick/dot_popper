@@ -12,6 +12,15 @@ module DotPopper
       def initialize(rows:, credits:, privacy:, height:, server: nil) = super
     end
 
+    # Everything Shell::SettingsPainter draws for Settings: its +header+
+    # (HeaderDrawing), its +plan+ (SettingsPlan), the part of the window
+    # its list shows in (+clip+), each row's choices as [text, chosen?,
+    # how lit, name] (+choices+, one list for each of the plan's rows),
+    # the Dot size choice's bright dots (+sizing_preview+), and the words
+    # of Credits and licenses, Privacy and Change Server, and how lit each
+    # is (+lit+, by name).
+    class SettingsDrawing < Data.define(:header, :plan, :clip, :choices, :sizing_preview, :credits, :privacy, :server, :lit); end
+
     # Settings: each row's name beside its choices, or above them on a
     # narrow screen, then Credits and licenses and Privacy, and under them,
     # while setdef is gone, Change Server (+server+). Where the page is too

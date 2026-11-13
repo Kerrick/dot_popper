@@ -42,6 +42,24 @@ module DotPopper
         # sizes look alike) never pulls it from under the player.
         def sizing_shown? = show.sizing_offered? || @chosen_here == true
 
+        # Everything its painter draws (SettingsDrawing), made again only
+        # when the plan, the words or a button's light changes.
+        def drawing
+          plan = self.plan
+          words = self.words
+          hover = show.hover
+          preview = show.sizing_preview
+          (@drawing ||= Memo.new).fetch([plan, words, hover, preview]) do
+            page = layout.page
+            safe = layout.safe
+            SettingsDrawing.new(header: HeaderDrawing.for(words.button(:settings_heading), layout:, measure:, words:, hover:), plan:,
+                                clip: Rect.new(x: safe.x, y: page.y, width: safe.width, height: page.height),
+                                choices: plan.rows.map { |row| row.choices.map { |text, chosen, name| [text, chosen, hover.level(name), name] } },
+                                sizing_preview: preview, credits: words.button(:credits_licenses), privacy: words.button(:privacy),
+                                server: words.button(:server), lit: %i[credits privacy server].to_h { [it, hover.level(it)] })
+          end
+        end
+
         # Sizes dots as +sizing+ (DotSizing) says, while it offers the
         # choice, and remembers it. Home's dots and score record change
         # with it, so the choice shows at once.

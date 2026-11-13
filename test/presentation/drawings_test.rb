@@ -77,6 +77,27 @@ class DrawingsTest < Minitest::Test
     assert_empty drawing.hold_rows
   end
 
+  # Settings: each row's choices, which is chosen and how lit each is
+  # under the mouse, and the part of the window its list shows in.
+  def test_settings_says_each_choice_and_how_lit_it_is
+    fixture = self.fixture
+    show = fixture.show
+    show.open_settings
+    screen = show.screen
+    drawing = screen.drawing
+    assert_equal show.words.button(:settings_heading), drawing.header.text
+    assert_equal(drawing.plan.rows.map { |row| row.choices.map { it.first(2) } }, drawing.choices.map { |row| row.map { it.first(2) } })
+    page = show.layout.page
+    assert_equal [page.y, page.height, show.layout.safe.width], [drawing.clip.y, drawing.clip.height, drawing.clip.width]
+    assert_equal({ credits: 0.0, privacy: 0.0, server: 0.0 }, drawing.lit)
+
+    off = screen.controls.find { it.name == [:sound, false] }.frame
+    show.pointer_at(off.center_x, off.center_y)
+    fixture.tick(1.0)
+    lit = show.screen.drawing.choices.flatten(1).find { it.last == [:sound, false] }
+    assert_in_delta 1.0, lit[2]
+  end
+
   # Nothing changed, nothing made: the same drawing, frame after frame.
   def test_change_server_is_not_made_again_while_nothing_changes
     fixture = fixture(gone: true)
