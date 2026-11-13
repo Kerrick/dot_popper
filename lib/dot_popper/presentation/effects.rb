@@ -63,7 +63,7 @@ module DotPopper
 
       # Outlines +dot+, wherever it goes, over every other dot.
       def reveal(dot, style)
-        keep(@reveals, Reveal.new(follow: dot.id, x: dot.x, y: dot.y, style:, scale: @radius, born: now), MOST_RINGS)
+        keep(@reveals, MistakeOutline.new(follow: dot.id, x: dot.x, y: dot.y, style:, scale: @radius, born: now), MOST_RINGS)
       end
 
       def float(text, x, y, color, style)

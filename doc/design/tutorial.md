@@ -163,7 +163,7 @@ On Home before the first game, under the name and above Play, a legend reminds t
 
 ### The mistake's dashed outline in a game
 
-When a player taps a popped dot lying over a bright dot, because the bright dot is under the tap or its edge touches the tapped dot (`Stack#bright_beneath`), the hidden bright dot's outline is drawn over every dot as a dashed line, the usual drawing convention for an edge out of sight (`Presentation::Reveal`, `Style::REVEAL`): 12 dashes, turning slowly, closing from 1.35 radii onto the dot's rim in 0.22 s and fading over 0.6 s. It follows the dot by id. It is never filled in, so it can't be mistaken for an uncovered bright dot and invite a second mistake. A failure feels fair when the player can see its cause, and this one teaches the stacking rule at the moment it matters. The rest of the penalty's effects are in [look-and-sound.md](look-and-sound.md).
+When a player taps a popped dot lying over a bright dot, because the bright dot is under the tap or its edge touches the tapped dot (`Stack#bright_beneath`), the hidden bright dot's outline is drawn over every dot as a dashed line, the usual drawing convention for an edge out of sight (`Presentation::MistakeOutline`, `Style::REVEAL`): 12 dashes, turning slowly, closing from 1.35 radii onto the dot's rim in 0.22 s and fading over 0.6 s. It follows the dot by id. It is never filled in, so it can't be mistaken for an uncovered bright dot and invite a second mistake. A failure feels fair when the player can see its cause, and this one teaches the stacking rule at the moment it matters. The rest of the penalty's effects are in [look-and-sound.md](look-and-sound.md).
 
 ### Game Over replays the mistake on the pile
 
