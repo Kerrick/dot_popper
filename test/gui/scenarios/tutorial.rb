@@ -16,7 +16,7 @@ module DotPopperGui
   class TutorialScenario < Scenario
     scenario :tutorial
 
-    T = DotPopper::Presentation::Tutorial
+    T = DotPopper::Presentation::TutorialScene
     R = DotPopper::Rules
 
     def play

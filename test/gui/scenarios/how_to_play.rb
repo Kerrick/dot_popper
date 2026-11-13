@@ -13,7 +13,7 @@ module DotPopperGui
   class HowToPlayScenario < Scenario
     scenario :how_to_play
 
-    T = DotPopper::Presentation::Tutorial
+    T = DotPopper::Presentation::TutorialScene
 
     def play
       check(show.home?, "the game opens on Home")

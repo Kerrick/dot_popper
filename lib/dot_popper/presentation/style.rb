@@ -211,7 +211,7 @@ module DotPopper
       # enough to watch, and then the pile is left in peace.
       LESSON = LessonStyle.new(times: 2, every: 2.4, replays: 3)
 
-      # The tutorial on a first Play (Presentation::Tutorial), which says
+      # The tutorial on a first Play (Presentation::TutorialScene), which says
       # nothing in words. Its dots move at the game's slowest speed, and
       # time eases to a stop in 0.15 s, never in a snap. The dim around its
       # spotlight leaves what it lights clear by half a dot; the guide taps

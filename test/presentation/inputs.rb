@@ -237,7 +237,7 @@ module Inputs
     # Tutorial waits for, or a bright dot on top of the stack.
     def target(popped)
       if show.tutorial?
-        id = P::Tutorial::TURNS[show.tutorial.beat]
+        id = P::TutorialScene::TURNS[show.tutorial.beat]
         return id && show.tutorial.dots.find { it.id == id && !it.popped? }
       end
       return if popped >= fixture.to_pop

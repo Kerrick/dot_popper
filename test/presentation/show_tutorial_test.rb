@@ -101,7 +101,7 @@ class ShowTutorialTest < Minitest::Test
   def test_a_skip_keeps_the_row
     press_main
     update_for(0.1) until @show.tutorial.beat == :aim
-    tap_dot(@show.tutorial.dots.find { it.id == Tutorial::BRIGHT })
+    tap_dot(@show.tutorial.dots.find { it.id == TutorialScene::BRIGHT })
     update_for(0.05) until @show.tutorial.hud.dots_in_a_row == 1
     @show.back
 
@@ -127,7 +127,7 @@ class ShowTutorialTest < Minitest::Test
   def test_a_skip_after_the_guides_mistake_keeps_its_cost_and_counts_no_mistake
     press_main
     update_for(0.1) until @show.tutorial.beat == :aim
-    tap_dot(@show.tutorial.dots.find { it.id == Tutorial::BRIGHT })
+    tap_dot(@show.tutorial.dots.find { it.id == TutorialScene::BRIGHT })
     update_for(0.05) until @show.tutorial.flights.any? { it.to.name == :score && it.text.start_with?("−") }
     @show.back
 
@@ -141,7 +141,7 @@ class ShowTutorialTest < Minitest::Test
   def test_a_skip_shows_what_the_tutorial_had_yet_to_show
     press_main
     update_for(0.1) until @show.tutorial.beat == :aim
-    tap_dot(@show.tutorial.dots.find { it.id == Tutorial::BRIGHT })
+    tap_dot(@show.tutorial.dots.find { it.id == TutorialScene::BRIGHT })
     assert_equal 1, @show.tutorial.dots.size
     @show.back
 
@@ -156,10 +156,10 @@ class ShowTutorialTest < Minitest::Test
   def test_no_kind_of_tap_is_heard_while_the_guide_demonstrates
     press_main
     update_for(0.1) until @show.tutorial.beat == :aim
-    dot = @show.tutorial.dots.find { it.id == Tutorial::BRIGHT }
+    dot = @show.tutorial.dots.find { it.id == TutorialScene::BRIGHT }
     @show.tap(dot.x, dot.y)
     update_for(0.05) until @show.tutorial.beat == :warn
-    popped = @show.tutorial.dots.find { it.id == Tutorial::BRIGHT }
+    popped = @show.tutorial.dots.find { it.id == TutorialScene::BRIGHT }
     kept = @show.tutorial.hud.then { [it.score, it.seconds] }
     @sounds.played.clear
 
@@ -178,9 +178,9 @@ class ShowTutorialTest < Minitest::Test
   def test_a_click_on_the_bad_dot_on_the_players_turn_costs_nothing
     press_main
     update_for(0.1) until @show.tutorial.beat == :aim
-    tap_dot(@show.tutorial.dots.find { it.id == Tutorial::BRIGHT })
+    tap_dot(@show.tutorial.dots.find { it.id == TutorialScene::BRIGHT })
     update_for(0.05) until @show.tutorial.beat == :aim_next
-    popped = @show.tutorial.dots.find { it.id == Tutorial::BRIGHT }
+    popped = @show.tutorial.dots.find { it.id == TutorialScene::BRIGHT }
     kept = @show.tutorial.hud.then { [it.score, it.seconds] }
     game = @cabinet.game.then { [it.score, it.countdown.remaining, it.dots_in_a_row] }
     @sounds.played.clear
@@ -304,7 +304,7 @@ class ShowTutorialTest < Minitest::Test
   # Plays the whole tutorial, tapping each bright dot as it is shown.
   def play_through(hand_over: true, opened: false)
     press_main unless opened
-    [Tutorial::BRIGHT, Tutorial::NEXT].each do |id|
+    [TutorialScene::BRIGHT, TutorialScene::NEXT].each do |id|
       update_for(0.1) until %i[aim aim_next].include?(@show.tutorial.beat) && !tapped?(id)
       dot = @show.tutorial.dots.find { it.id == id }
       @show.tap(dot.x, dot.y)

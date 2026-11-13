@@ -4,7 +4,7 @@ module DotPopper
   module Presentation
     module Screens
       # The Tutorial over the first game, paused (ADR-0016): its scene
-      # (Presentation::Tutorial), while it plays, and Skip, its only button.
+      # (Presentation::TutorialScene), while it plays, and Skip, its only button.
       class Tutorial < Screen
         # The scene playing, or nil.
         attr_reader :scene
@@ -54,7 +54,7 @@ module DotPopper
         def pressed(name, _by) = (skip if name == :skip)
 
         # A tap on Skip presses it; any other is the Tutorial's own, which
-        # it passes on to its scene (Presentation::Tutorial#tap).
+        # it passes on to its scene (Presentation::TutorialScene#tap).
         def tap(x, y, by)
           return super if show.control_at(x, y)
 

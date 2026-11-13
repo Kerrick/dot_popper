@@ -270,7 +270,7 @@ class GamesTest < Minitest::Test
   def play_out(show)
     while show.tutorial?
       scene = show.tutorial
-      id = Tutorial::TURNS[scene.beat]
+      id = TutorialScene::TURNS[scene.beat]
       dot = id && scene.dots.find { it.id == id && !it.popped? }
       show.tap(dot.x, dot.y) if dot
       @cabinet.update(1 / 60.0)

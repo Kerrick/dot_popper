@@ -21,7 +21,7 @@ class TutorialTest < Minitest::Test
 
   def test_it_plays_over_a_paused_game_with_its_first_dot
     assert_instance_of DotPopper::Cabinet::Paused, @cabinet.state
-    assert_equal [Tutorial::BRIGHT], @cabinet.game.dots.map(&:id)
+    assert_equal [TutorialScene::BRIGHT], @cabinet.game.dots.map(&:id)
     assert_equal @cabinet.game.dots.to_a, @tutorial.dots.to_a, "it draws the game's own dot"
     assert_same @cabinet.game.field, @tutorial.field
     assert_equal [0, 10, 0], [*shown, @tutorial.hud.dots_in_a_row], "and the HUD shows the game's numbers"
@@ -54,7 +54,7 @@ class TutorialTest < Minitest::Test
       tutorial = tutorial_on(DotPopper::Cabinet.new(field), [screen.center_x, screen.center_y],
                              effects: Effects.new(radius:), sounds: @sounds, haptics: @haptics, style: Style)
       (((SCRIPT.drift + SCRIPT.stop + 0.2) / STEP).ceil).times { tutorial.update(STEP) }
-      dot = tutorial.dots.find { it.id == Tutorial::BRIGHT }
+      dot = tutorial.dots.find { it.id == TutorialScene::BRIGHT }
       name = "#{width}x#{height}"
 
       assert_equal :aim, tutorial.beat, name
@@ -70,7 +70,7 @@ class TutorialTest < Minitest::Test
 
   def test_the_spotlight_finds_the_bright_dot_and_the_guide_hand_taps_it
     play_for(SCRIPT.drift + 0.5)
-    assert_equal Anchor.dot(Tutorial::BRIGHT), @tutorial.spotlight.to
+    assert_equal Anchor.dot(TutorialScene::BRIGHT), @tutorial.spotlight.to
     assert_operator @tutorial.spotlight.darkness(@tutorial.now), :>, 0.5
     poses = (0..100).map do
       play_for(STEP * 2)
@@ -125,7 +125,7 @@ class TutorialTest < Minitest::Test
   def test_as_the_bright_dot_peeks_out_the_guide_taps_the_popped_one_and_its_cost_games
     to_the_peek
     assert_equal :warn, @tutorial.beat
-    assert_equal Anchor.dot(Tutorial::BRIGHT), @tutorial.spotlight.to
+    assert_equal Anchor.dot(TutorialScene::BRIGHT), @tutorial.spotlight.to
     play_for(SCRIPT.stop)
     assert_in_delta 0.0, @tutorial.rate
     assert_operator Math.hypot(bright.x - next_dot.x, bright.y - next_dot.y), :<, 2 * R, "it has only peeked out"
@@ -284,7 +284,7 @@ class TutorialTest < Minitest::Test
     play_until { @tutorial.beat == :aim_next }
 
     assert_predicate @tutorial, :players_turn?
-    assert_equal Anchor.dot(Tutorial::NEXT), @tutorial.spotlight.to
+    assert_equal Anchor.dot(TutorialScene::NEXT), @tutorial.spotlight.to
     assert_equal [Style::SPAWN_RIPPLE], @effects.rings.drop(before).map(&:style), "a ripple opens from the dot that now answers"
     tap_on(next_dot)
     assert_equal :runs, @tutorial.beat
@@ -299,10 +299,10 @@ class TutorialTest < Minitest::Test
     assert next_dot.bright?, "it bursts still bright"
     play_for(SCRIPT.gap + SCRIPT.quick + STEP)
     assert_equal [1, 10], shown, "two dots popped, less what the guide's tap cost"
-    assert_equal [Tutorial::BRIGHT, Tutorial::NEXT], @tutorial.dots.map(&:id), "nothing is born while time stands"
+    assert_equal [TutorialScene::BRIGHT, TutorialScene::NEXT], @tutorial.dots.map(&:id), "nothing is born while time stands"
     play_for(SCRIPT.linger)
     assert_equal :ending, @tutorial.beat
-    assert_equal [Tutorial::BRIGHT, Tutorial::NEXT, Tutorial::LAST], @tutorial.dots.map(&:id)
+    assert_equal [TutorialScene::BRIGHT, TutorialScene::NEXT, TutorialScene::LAST], @tutorial.dots.map(&:id)
     assert_equal [true, true, false], @tutorial.dots.map(&:popped?), "as it flows, a bright dot goes in under them all"
     last = @tutorial.dots.to_a.last
     assert_includes DotPopper::Rules::SPEEDS.map { it * R }, last.velocity_x.abs, "at one of the game's speeds"
@@ -421,10 +421,10 @@ class TutorialTest < Minitest::Test
 
     assert_equal [true, false], game.dots.map(&:popped?)
     assert_equal [1, 11.0, 1], [game.score, game.countdown.remaining, game.dots_in_a_row]
-    assert_equal [[Tutorial::BRIGHT, false]], @tutorial.dots.map { [it.id, it.popped?] }
+    assert_equal [[TutorialScene::BRIGHT, false]], @tutorial.dots.map { [it.id, it.popped?] }
     assert_equal [0, 10], shown
     play_until { @tutorial.beat == :peek }
-    assert_equal [[Tutorial::BRIGHT, true], [Tutorial::NEXT, false]], @tutorial.dots.map { [it.id, it.popped?] }
+    assert_equal [[TutorialScene::BRIGHT, true], [TutorialScene::NEXT, false]], @tutorial.dots.map { [it.id, it.popped?] }
     assert_equal game.dots.to_a, @tutorial.dots.to_a
     assert_equal [1, 11], shown
   end
@@ -488,8 +488,8 @@ class TutorialTest < Minitest::Test
     assert_equal rings, @effects.rings.size, "#{note}: no ripple"
   end
 
-  def bright = @tutorial.dots.find { it.id == Tutorial::BRIGHT }
-  def next_dot = @tutorial.dots.find { it.id == Tutorial::NEXT }
+  def bright = @tutorial.dots.find { it.id == TutorialScene::BRIGHT }
+  def next_dot = @tutorial.dots.find { it.id == TutorialScene::NEXT }
   def shown = [@tutorial.hud.score, @tutorial.hud.seconds]
   def tap_on(dot) = @tutorial.tap(dot.x, dot.y)
   def near?(pose, dot) = Math.hypot(pose.x - dot.x, pose.y - dot.y) < R
@@ -518,7 +518,7 @@ class TutorialTest < Minitest::Test
   # The Tutorial over +cabinet+'s game, started paused with its opening
   # dots from +center+, as the one way into a game starts it.
   def tutorial_on(cabinet, center, **)
-    start_paused!(cabinet, Tutorial.opening(cabinet.field, center))
-    Tutorial.new(cabinet:, **)
+    start_paused!(cabinet, TutorialScene.opening(cabinet.field, center))
+    TutorialScene.new(cabinet:, **)
   end
 end

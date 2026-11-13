@@ -177,7 +177,7 @@ module DotPopper
       # ends, or is skipped, the game plays on from the state it is in.
       def tutorial? = @screens[:tutorial].playing?
 
-      # The Tutorial's scene (Presentation::Tutorial), while it plays.
+      # The Tutorial's scene (Presentation::TutorialScene), while it plays.
       def tutorial = @screens[:tutorial].scene
 
       # Whether the Stats screen is on top. It is the presentation's alone:
@@ -747,7 +747,7 @@ module DotPopper
       def tutorial_began
         effects.clear
         effects.scale_to(cabinet.field.radius)
-        @screens[:tutorial].play(Tutorial.new(cabinet:, effects:, sounds:, haptics: @haptics, style:, now:, calm: @calm, palette:))
+        @screens[:tutorial].play(TutorialScene.new(cabinet:, effects:, sounds:, haptics: @haptics, style:, now:, calm: @calm, palette:))
       end
 
       # One of Home's dots, popped by a tap: its droplets, its ring,

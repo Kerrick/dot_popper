@@ -166,7 +166,7 @@ module DotPopper
         # offer of Pro instead, and the Tutorial stays due.
         def open_tutorial
           cabinet = show.cabinet
-          opening = Presentation::Tutorial.opening(cabinet.field, [layout.center_x, layout.center_y], style:)
+          opening = TutorialScene.opening(cabinet.field, [layout.center_x, layout.center_y], style:)
           started = @start_game.call(opening)
           return offer_play if started == :none_left
           return unless started == :started
