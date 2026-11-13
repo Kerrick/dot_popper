@@ -22,12 +22,12 @@ While it plays, `Cabinet` holds the game in its `Paused` state ([ADR-0016](../ad
 | Numbers in flight | `Presentation::Flight` (`flight.rb`), drawn as a `Presentation::Tally` (`tally.rb`) |
 | Whether pressing Play opens it | `Presentation::TutorialFlag` (`tutorial_flag.rb`), `tutorial.txt` |
 | The paused game | `Cabinet::Paused`, `Cabinet#start_paused`, `#press_paused`, `#move_paused`, `#arrange`, `#unpause`; `Game#move_dots`, `#arrange` |
-| Opening, skipping and playing on | `Show#play`, `#how_to_play`, `#skip_tutorial`, `#open_tutorial`, `#follow_tutorial`, `#play_on` |
+| Opening, skipping and playing on | `Show#play`, `#how_to_play`, `#skip_tutorial`, `#open_tutorial`, `#follow_tutorial`, `#play_on`; `Tutorial.opening`; `UseCases::StartGame` |
 | Drawing | `Shell::TutorialPainter`, `Shell::GhostPainter`, `Shell::HandSprites`, `Shell::TallyPainter`, and `Shell::Renderer#tutorial` |
 
 ## When it opens
 
-- **A first Play.** `Show#play` opens it, over a new game (`Cabinet#start_paused`), when `TutorialFlag#due?(played: Show#stats_offered?)` is true. It is due once on a device, and never for a player who has played: a finished game in `stats.txt` (`StatsBook`), or Stats ever cleared (`StatsKeeper#cleared?`).
+- **A first Play.** `Show#play` opens it, over a new game started paused (`UseCases::StartGame`, `Cabinet#start_paused`), when `TutorialFlag#due?(played: Show#stats_offered?)` is true. It is due once on a device, and never for a player who has played: a finished game in `stats.txt` (`StatsBook`), or Stats ever cleared (`StatsKeeper#cleared?`).
 - **How to play.** Home's How to play button, the H key, and a gamepad's Y on Home open it at once, seen or not (`Show#how_to_play`). Home shows the button only after a game has been played (`HomeScreen#pill_names`), since before that Play opens the tutorial. H works on any Home. How to play opens over a new game exactly as a first Play's tutorial does.
 - **`tutorial.txt`** says `seen` from the moment the tutorial opens, by either road, so a skipped tutorial counts as seen (`TutorialFlag#seen!`). Anything else in the file counts as unseen. The file is kept apart from Stats, so clearing Stats leaves it: clearing starts the scores over, not the player.
 - **Development.** `DOT_POPPER_TUTORIAL=1` opens it on every Play. `DOT_POPPER_AUTOPLAY`, `DOT_POPPER_SCENARIO` (the GUI director) and `DOT_POPPER_NO_TUTORIAL` leave it out (`TutorialFlag.mode`); `DOT_POPPER_TUTORIAL=1` wins over them, which is how the GUI tutorial scenarios open it.
@@ -58,7 +58,7 @@ Worked out from `Style::TUTORIAL` (not measured): `:points` takes 1.92 s; in `:w
 
 ### The first dot's start
 
-The first bright dot (`Tutorial::BRIGHT`), which the game is made with (`Game.new`'s `dots`), starts at `start`, an offset of −0.27 of the field's width and −0.12 of its height from the screen's middle, so a little above it and to its left, and drifts left and down at the slowest speed (`Tutorial#first_dot`). It freezes well away from the middle on every window size. A gamepad's cursor starts hidden in the middle of the screen, so a dot there would sit under the guide and the player's cursor alike, and nobody would have to aim. `test_the_bright_dot_freezes_well_away_from_the_middle_where_a_gamepad_cursor_starts` holds it at least 3 radii from the middle, inside the safe area below the margin, and clear of Skip, at every size in `ScreenPlansTest::SIZES`.
+The first bright dot (`Tutorial::BRIGHT`), which the game is made with (`Game.new`'s `dots`), starts at `start`, an offset of −0.27 of the field's width and −0.12 of its height from the screen's middle, so a little above it and to its left, and drifts left and down at the slowest speed (`Tutorial.opening`). It freezes well away from the middle on every window size. A gamepad's cursor starts hidden in the middle of the screen, so a dot there would sit under the guide and the player's cursor alike, and nobody would have to aim. `test_the_bright_dot_freezes_well_away_from_the_middle_where_a_gamepad_cursor_starts` holds it at least 3 radii from the middle, inside the safe area below the margin, and clear of Skip, at every size in `ScreenPlansTest::SIZES`.
 
 ### How the second dot parts from the first
 
@@ -153,7 +153,7 @@ A demonstration should show what really happens (Hodent), and an ending that car
 
 ## What spends a free game
 
-The tutorial's game is a game, and it is spent as it begins, when the tutorial opens, from a first Play or How to play. Its end and Skip start nothing, so they spend nothing. `Show#with_a_game` is the only way into a game: Play, and the opening of the tutorial, go through it. It spends a game (`FreeGames#spend!`) or, with none left, opens the offer of Pro as Play does, so with none left a first Play and How to play open the offer instead of the tutorial, and a first Play's tutorial stays due. See [store-and-pro.md](store-and-pro.md) for the free games themselves.
+The tutorial's game is a game, and it is spent as it begins, when the tutorial opens, from a first Play or How to play. Its end and Skip start nothing, so they spend nothing. `UseCases::StartGame` is the only way into a game: Play, and the opening of the tutorial, go through it. It spends a game (`FreeGames#spend!`) and starts the tutorial's game paused with its first dot (`Tutorial.opening`), or, with none left, starts nothing, and the `Show` opens the offer of Pro as Play does, so with none left a first Play and How to play open the offer instead of the tutorial, and a first Play's tutorial stays due. See [store-and-pro.md](store-and-pro.md) for the free games themselves.
 
 ## Signs that teach elsewhere
 

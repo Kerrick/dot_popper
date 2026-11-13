@@ -44,7 +44,9 @@ module DotPopper
 
     def show_home: () -> Home
 
-    def start_game: (?Integer seed) -> Playing
+    def start_game: (?Integer seed) -> self
+
+    def playing?: () -> bool
 
     def start_paused: (Stack dots, ?Integer seed) -> self
 
@@ -69,7 +71,7 @@ module DotPopper
 
       def game: () -> nil
 
-      def press: (Cabinet cabinet, number x, number y) -> Playing
+      def press: (Cabinet cabinet, number x, number y) -> Home
 
       def update: (Cabinet cabinet, number seconds) -> Home
     end

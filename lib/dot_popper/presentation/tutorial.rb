@@ -94,9 +94,9 @@ module DotPopper
     # game to surprise the player with: nothing here shows it or says so.
     #
     # It plays the sounds of its popping, cost, and chimes through the Show's +effects+,
-    # +sounds+, and +haptics+, on the +cabinet+'s game, made now with its
-    # first dot (Cabinet#start_paused), from +center+, the screen's
-    # middle, as +style+ (Style) says, on the Show's clock from +now+.
+    # +sounds+, and +haptics+, on the +cabinet+'s game, already paused with
+    # its first dot (Tutorial.opening, started by UseCases::StartGame), as
+    # +style+ (Style) says, on the Show's clock from +now+.
     class Tutorial
       BRIGHT = 0 # the first bright dot's id
       NEXT = 1 # the one the game spawns under it
@@ -108,7 +108,19 @@ module DotPopper
 
       attr_reader :animations, :hud, :spotlight, :ghost, :beat, :now, :row_notice
 
-      def initialize(cabinet:, center:, effects:, sounds:, haptics:, style:, palette: style::PALETTE, now: 0.0, calm: false)
+      # The dots the tutorial's game begins with on +field+: its first
+      # bright dot, placed from +center+, the screen's middle, as +style+
+      # says. The game is started paused with them (Cabinet#start_paused).
+      def self.opening(field, center, style: Style)
+        across, down = style::TUTORIAL.start
+        center_x, center_y = center
+        speed = Rules::SPEEDS.min * field.radius
+        # It drifts away from the middle, so the next dot slides out toward it.
+        Stack.new.slide_under(Dot.new(id: BRIGHT, x: center_x + (across * field.width), y: center_y + (down * field.height),
+                                      velocity_x: -speed, velocity_y: speed, radius: field.radius).confine(field))
+      end
+
+      def initialize(cabinet:, effects:, sounds:, haptics:, style:, palette: style::PALETTE, now: 0.0, calm: false)
         @cabinet = cabinet
         @effects = effects
         @sounds = sounds
@@ -129,7 +141,6 @@ module DotPopper
         @animations = DotAnimations.new(style::MOTION)
         @shown = [] # the ids of the game's dots it has shown born
         @bright = [] # the ids of dots the rules popped that it still draws bright
-        cabinet.start_paused(Stack.new.slide_under(first_dot(cabinet.field, *center)))
         @hud = Hud.blank(style::HUD, style::WORDS).showing(game.score, game.countdown.whole_seconds, now)
                   .counting(game.dots_in_a_row, game.bonus.dots_in_a_row, now)
         spawned(game.dots.first)
@@ -212,14 +223,6 @@ module DotPopper
       def game = @cabinet.game
 
       def dot(id) = game.dots.find { it.id == id }
-
-      def first_dot(field, center_x, center_y)
-        across, down = @script.start
-        speed = Rules::SPEEDS.min * field.radius
-        # It drifts away from the middle, so the next dot slides out toward it.
-        Dot.new(id: BRIGHT, x: center_x + (across * field.width), y: center_y + (down * field.height),
-                velocity_x: -speed, velocity_y: speed, radius: field.radius).confine(field)
-      end
 
       # The game's +dot+ is shown born, growing in with a ripple.
       def spawned(dot)

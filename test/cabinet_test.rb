@@ -19,10 +19,18 @@ class CabinetTest < Minitest::Test
     assert_nil @cabinet.game
   end
 
-  def test_a_press_on_home_starts_a_fresh_game_without_tapping_anything
+  def test_a_press_on_home_starts_nothing
     @cabinet.press(400, 300)
 
+    assert_instance_of Cabinet::Home, @cabinet.state
+    assert_empty @heard.grep(Events::GameStarted)
+  end
+
+  def test_starting_a_game_from_home_starts_a_fresh_one_in_play
+    @cabinet.start_game
+
     assert_instance_of Cabinet::Playing, @cabinet.state
+    assert_predicate @cabinet, :playing?
     assert_equal 0, @cabinet.game.score
     assert_equal 10.0, @cabinet.game.countdown.remaining
     assert_equal 1, @cabinet.game.dots.size
@@ -30,7 +38,7 @@ class CabinetTest < Minitest::Test
   end
 
   def test_presses_in_play_reach_the_game_and_are_announced
-    @cabinet.press(0, 0)
+    @cabinet.start_game
     target = @cabinet.game.dots.first
 
     @cabinet.press(target.x, target.y)
@@ -42,7 +50,7 @@ class CabinetTest < Minitest::Test
   # Each event carries the game as it stood when the event was told, so
   # a listener needs nothing but the event.
   def test_every_event_carries_the_game_as_it_stood_when_it_was_told
-    @cabinet.press(0, 0)
+    @cabinet.start_game
     game = @cabinet.game
     assert_stood game, @heard.last, :field, :dots, :score, :dots_in_a_row
     @cabinet.update(1.25)
@@ -70,7 +78,7 @@ class CabinetTest < Minitest::Test
   end
 
   def test_a_penalty_that_empties_the_clock_ends_the_game_at_once
-    @cabinet.press(0, 0)
+    @cabinet.start_game
     target = @cabinet.game.dots.first
     @cabinet.press(target.x, target.y)
     @cabinet.update(10.5) # 0.5 s left, and the popped dot is still on top where it went
@@ -82,7 +90,7 @@ class CabinetTest < Minitest::Test
   end
 
   def test_game_over_ignores_presses_for_a_moment_then_returns_to_home
-    @cabinet.press(0, 0)
+    @cabinet.start_game
     @cabinet.update(11)
 
     @cabinet.press(400, 300)
@@ -111,7 +119,7 @@ class CabinetTest < Minitest::Test
     @cabinet.update(20)
     @cabinet.update(1)
     @cabinet.press(0, 0) # to Home
-    @cabinet.press(0, 0) # and a new game
+    @cabinet.start_game # and a new game
 
     assert_equal 0, @cabinet.game.score
     assert_equal 1, @cabinet.game.dots.size
@@ -145,7 +153,7 @@ class CabinetTest < Minitest::Test
 
     @cabinet.update(1)
     @cabinet.press(0, 0)
-    @cabinet.press(0, 0)
+    @cabinet.start_game
     @cabinet.update(20)
     refute @heard.last.first
     refute @heard.last.new_score_record
@@ -161,7 +169,7 @@ class CabinetTest < Minitest::Test
 
   def test_a_new_game_uses_the_field_as_it_is_when_the_game_starts
     @cabinet.screen = field(300, 200)
-    @cabinet.press(0, 0)
+    @cabinet.start_game
 
     assert_equal 300, @cabinet.game.field.width
   end
@@ -171,7 +179,7 @@ class CabinetTest < Minitest::Test
   def test_sized_to_the_screen_sets_each_games_radius_when_it_starts_and_keeps_it
     @cabinet.screen = field(600, 400)
     @cabinet.sizing = DotPopper::DotSizing::SIZED_TO_SCREEN
-    @cabinet.press(0, 0)
+    @cabinet.start_game
     assert_in_delta 30.0, @cabinet.game.field.radius
     assert_equal DotPopper::SizeClass::FITTED, @cabinet.state.size_class
 
@@ -188,7 +196,7 @@ class CabinetTest < Minitest::Test
   end
 
   def test_each_game_has_a_seed_of_its_own_that_replays_its_dots
-    @cabinet.press(0, 0)
+    @cabinet.start_game
     first = @heard.last.seed
     seeded = DotPopper::Game.new(field, random: Random.new(first))
 
@@ -288,10 +296,22 @@ class CabinetTest < Minitest::Test
     assert @cabinet.game.dots.first.x.between?(R, 400 - R)
   end
 
+  def test_only_home_starts_a_game
+    @cabinet.start_game
+    game = @cabinet.game
+    @cabinet.start_game
+    @cabinet.update(11)
+    @cabinet.start_game
+
+    assert_same game, @cabinet.game
+    assert_instance_of Cabinet::GameOver, @cabinet.state
+    assert_equal 1, @heard.grep(Events::GameStarted).size
+  end
+
   def test_only_home_makes_a_paused_game_and_only_a_paused_game_unpauses
     @cabinet.unpause
     assert_instance_of Cabinet::Home, @cabinet.state
-    @cabinet.press(0, 0)
+    @cabinet.start_game
     game = @cabinet.game
     @cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
     @cabinet.unpause
@@ -307,11 +327,11 @@ class CabinetTest < Minitest::Test
     @cabinet.update(20)
     @cabinet.update(1)
     @cabinet.press(0, 0)
-    @cabinet.press(0, 0)
+    @cabinet.start_game
   end
 
   def play_to_score(points)
-    @cabinet.press(0, 0)
+    @cabinet.start_game
     points.times do
       bright = @cabinet.game.dots.find(&:bright?)
       clear_around!(@cabinet.game, bright)

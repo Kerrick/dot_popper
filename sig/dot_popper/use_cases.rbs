@@ -1,0 +1,14 @@
+module DotPopper
+  module UseCases
+    class StartGame
+      type result = :started | :none_left | :not_home
+
+      @cabinet: Cabinet
+      @free_games: FreeGames
+
+      def initialize: (cabinet: Cabinet, free_games: FreeGames) -> void
+
+      def call: (?Stack? opening) -> result
+    end
+  end
+end

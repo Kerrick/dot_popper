@@ -15,7 +15,7 @@ class TutorialTest < Minitest::Test
     @effects = Effects.new(radius: R)
     @field = DotPopper::Field.new(1200, 800, R)
     @cabinet = DotPopper::Cabinet.new(@field)
-    @tutorial = Tutorial.new(cabinet: @cabinet, center: [600.0, 400.0], effects: @effects, sounds: @sounds,
+    @tutorial = tutorial_on(@cabinet, [600.0, 400.0], effects: @effects, sounds: @sounds,
                              haptics: @haptics, style: Style)
   end
 
@@ -51,8 +51,8 @@ class TutorialTest < Minitest::Test
       field = DotPopper::Field.new(width, height, radius)
       inset = Rect.new(x: 0.0, y: 44.0, width: width.to_f, height: height - 78.0)
       screen = Layout.new(width:, height:, safe: inset, style: Style::LAYOUT)
-      tutorial = Tutorial.new(cabinet: DotPopper::Cabinet.new(field), center: [screen.center_x, screen.center_y],
-                              effects: Effects.new(radius:), sounds: @sounds, haptics: @haptics, style: Style)
+      tutorial = tutorial_on(DotPopper::Cabinet.new(field), [screen.center_x, screen.center_y],
+                             effects: Effects.new(radius:), sounds: @sounds, haptics: @haptics, style: Style)
       (((SCRIPT.drift + SCRIPT.stop + 0.2) / STEP).ceil).times { tutorial.update(STEP) }
       dot = tutorial.dots.find { it.id == Tutorial::BRIGHT }
       name = "#{width}x#{height}"
@@ -208,7 +208,7 @@ class TutorialTest < Minitest::Test
   end
 
   def test_a_calm_guide_wags_gentler
-    calm = Tutorial.new(cabinet: DotPopper::Cabinet.new(@field), center: [600.0, 400.0], effects: @effects,
+    calm = tutorial_on(DotPopper::Cabinet.new(@field), [600.0, 400.0], effects: @effects,
                         sounds: @sounds, haptics: @haptics, style: Style, calm: true)
     assert_equal Style::CALM_WAG, calm.ghost.style.wag
     assert_operator Style::CALM_WAG.angle, :<, SCRIPT.ghost.wag.angle
@@ -220,7 +220,7 @@ class TutorialTest < Minitest::Test
   # new one going down, away from where the guide waits.
   def test_near_a_side_wall_the_dots_part_up_and_down
     @cabinet = DotPopper::Cabinet.new(DotPopper::Field.new(400, 850, R))
-    @tutorial = Tutorial.new(cabinet: @cabinet, center: [200.0, 425.0], effects: Effects.new(radius: R), sounds: @sounds,
+    @tutorial = tutorial_on(@cabinet, [200.0, 425.0], effects: Effects.new(radius: R), sounds: @sounds,
                              haptics: @haptics, style: Style)
     to_the_peek
     play_until(within: 900) { @tutorial.beat == :aim_next }
@@ -513,5 +513,12 @@ class TutorialTest < Minitest::Test
     play_for(SCRIPT.drift + 0.5)
     tap_on(bright)
     play_until { @tutorial.beat == :warn }
+  end
+
+  # The Tutorial over +cabinet+'s game, started paused with its opening
+  # dots from +center+, as the one way into a game starts it.
+  def tutorial_on(cabinet, center, **)
+    cabinet.start_paused(Tutorial.opening(cabinet.field, center))
+    Tutorial.new(cabinet:, **)
   end
 end

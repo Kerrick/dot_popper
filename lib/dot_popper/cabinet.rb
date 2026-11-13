@@ -3,7 +3,8 @@
 module DotPopper
   # The game as a whole: Home, then Playing, then Game Over, then Home
   # again; or from Home, a game Paused before its clock first runs while
-  # the tutorial plays over it, and then Playing. Each state is a value that answers +press+ and +update+ with
+  # the tutorial plays over it, and then Playing. A game is started only
+  # by being asked to (#start_game, #start_paused), never by a press. Each state is a value that answers +press+ and +update+ with
   # the state that follows it, so each transition reads in one place.
   # The Cabinet is the shell around them: it holds the current state, makes
   # games, keeps the score records, and tells its listeners every event, in
@@ -76,14 +77,19 @@ module DotPopper
       Home.new
     end
 
-    # A game drawn from +seed+, by default one of its own from the
-    # game's randomness. The game gets a Random of its own from its seed,
-    # and draws from it only when a dot spawns, so the same seed and the
-    # same taps give the same dots, whatever else uses randomness
-    # meanwhile.
+    # From Home, a game drawn from +seed+, by default one of its own from
+    # the game's randomness, in play at once. The game gets a Random of its
+    # own from its seed, and draws from it only when a dot spawns, so the
+    # same seed and the same taps give the same dots, whatever else uses
+    # randomness meanwhile. Elsewhere it does nothing.
     def start_game(seed = @random.rand(LARGEST_SEED))
-      begin_game(Game.new(field, random: Random.new(seed)), seed)
+      return self unless state.is_a?(Home)
+
+      advance(begin_game(Game.new(field, random: Random.new(seed)), seed))
     end
+
+    # Whether a game is in play (Playing).
+    def playing? = state.is_a?(Playing)
 
     # From Home, a game made as #start_game makes one, with +dots+ (a
     # Stack) as its first, paused before its clock first runs, for the
@@ -149,10 +155,11 @@ module DotPopper
       self
     end
 
-    # Waiting to start. Any press begins a game.
+    # Waiting to start. A press here reaches no rule: a game begins only
+    # when it is started (#start_game, #start_paused).
     class Home < Data.define
       def game = nil
-      def press(cabinet, _x, _y) = cabinet.start_game
+      def press(_cabinet, _x, _y) = self
       def update(_cabinet, _seconds) = self
     end
 

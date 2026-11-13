@@ -11,7 +11,7 @@ class GameStatsTest < Minitest::Test
     @cabinet = Cabinet.new(field, random: Random.new(9))
     @recorder = GameStats::Recorder.new
     @cabinet.subscribe(@recorder)
-    @cabinet.press(0, 0)
+    @cabinet.start_game
   end
 
   def test_it_counts_dots_popped_and_times_each_wait_from_the_dot_appearing
@@ -51,7 +51,7 @@ class GameStatsTest < Minitest::Test
     @cabinet.update(20)
     @cabinet.update(1)
     @cabinet.press(0, 0)
-    @cabinet.press(0, 0)
+    @cabinet.start_game
 
     assert_equal GameStats.start, @recorder.stats
   end

@@ -19,7 +19,8 @@ class RulesFuzzTest < Minitest::Test
     ROUNDS.times { |number| play(random, "seed #{seed}, game #{number}") }
   end
 
-  # Title, Playing, Game Over, and back, in random order and timing.
+  # Title, Playing, Game Over, and back, in random order and timing, a
+  # game started now and then from Home as Play starts one.
   # Outside Playing, nothing changes the score or the clock.
   def test_random_presses_change_a_game_only_while_it_is_played
     seed = Integer(ENV.fetch("RULES_FUZZ_SEED", 20_261_105))
@@ -30,7 +31,10 @@ class RulesFuzzTest < Minitest::Test
       before = cabinet.state
       seen << before.class
       kept = [cabinet.game&.score, cabinet.game&.countdown]
-      random.rand < 0.5 ? cabinet.press(*aim_anywhere(cabinet, random)) : cabinet.update(random.rand(1.5))
+      if before.is_a?(DotPopper::Cabinet::Home) && random.rand < 0.1 then cabinet.start_game
+      elsif random.rand < 0.5 then cabinet.press(*aim_anywhere(cabinet, random))
+      else cabinet.update(random.rand(1.5))
+      end
       next if before.is_a?(DotPopper::Cabinet::Playing)
 
       assert_equal kept, [before.game&.score, before.game&.countdown], "seed #{seed}, step #{step}"

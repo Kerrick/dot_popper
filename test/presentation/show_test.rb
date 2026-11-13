@@ -230,8 +230,8 @@ class ShowTest < Minitest::Test
 
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     @cabinet.press(10, 10)
-    @cabinet.press(10, 10)
-    2.times { start_and_pop(started: true) }
+    start_and_pop
+    start_and_pop(started: true)
     @cabinet.update(30)
 
     assert_equal :most_dots_in_a_row, @show.game_over.record.kind

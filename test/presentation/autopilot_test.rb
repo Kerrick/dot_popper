@@ -13,7 +13,8 @@ class AutopilotTest < Minitest::Test
     cabinet.subscribe { events << it.class }
     3000.times do
       x, y = pilot.update(1 / 60.0, cabinet)
-      cabinet.press(x, y) if x
+      # Without a Show, its press on Home stands for Play.
+      cabinet.state.is_a?(DotPopper::Cabinet::Home) ? cabinet.start_game : cabinet.press(x, y) if x
       cabinet.update(1 / 60.0)
       seen << cabinet.state.class
       break if seen.include?(DotPopper::Cabinet::GameOver) && cabinet.state.is_a?(DotPopper::Cabinet::Home)

@@ -31,7 +31,7 @@ Chosen: option 1, the maintainer's decision, replacing the brief. The record cal
 * Good, because Home's Play shows how many games are left, and with none left Play opens the Pro offer instead.
 * Good, because the count is a save of its own (`games.txt`), outside what clearing Stats touches, so clearing can't refill it.
 * Bad, because it trusts the player's clock and files, as the other saves do: a changed date or a deleted `games.txt` gives more games.
-* Bad, because every way into a real game must spend one in one place (`Show#with_a_game`), including the game that follows the tutorial or How to play; a gap there gives unlimited games.
+* Bad, because every way into a real game must spend one in one place (`UseCases::StartGame`), including the game that follows the tutorial or How to play; a gap there gives unlimited games.
 * Neutral, because only a copy that offers a store is metered, and the bot and GUI scenarios are not, unless a scenario asks to be (`DOT_POPPER_FREE_GAMES`).
 
 ### Confirmation

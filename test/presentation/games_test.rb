@@ -173,16 +173,15 @@ class GamesTest < Minitest::Test
     end
   end
 
-  def test_nothing_starts_a_game_except_through_the_one_door
-    lines = Dir[File.expand_path("../../lib/dot_popper/{presentation,shell}/**/*.rb", __dir__)].flat_map do |path|
-      File.readlines(path).filter_map { |line| [File.basename(path), line.strip] if line.match?(/cabinet\.start_|Tutorial\.new|open_tutorial\b/) }
-    end
-    show = lines.select { it.first == "show.rb" }.map(&:last).reject { it.start_with?("def ", "#") }
+  # Play and the Tutorial's opening are the Show's only ways into a game,
+  # and both go through the one door (UseCases::StartGame, whose own test
+  # checks that nothing else starts one).
+  def test_the_show_starts_a_game_only_through_the_one_door
+    lines = File.readlines(File.expand_path("../../lib/dot_popper/presentation/show.rb", __dir__)).map(&:strip).reject { it.start_with?("#") }
 
-    assert_equal %w[show.rb tutorial.rb], lines.map(&:first).uniq.sort
-    assert_equal ["cabinet.start_paused"], lines.select { it.first == "tutorial.rb" }.map { it.last[/cabinet\.start_\w+/] }
-    assert(show.grep(/open_tutorial/).all? { it.include?("with_a_game { open_tutorial }") }, show.inspect)
-    assert_equal 1, show.grep(/Tutorial\.new/).size
+    assert_equal 1, lines.grep(/StartGame\.new/).size
+    assert_equal 2, lines.grep(/@start_game\.call/).size
+    assert_equal 1, lines.grep(/Tutorial\.new/).size
   end
 
   def test_with_none_left_how_to_play_opens_the_offer_as_play_does

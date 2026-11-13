@@ -62,6 +62,7 @@ module DotPopper
         @offer_focus = nil
         @storefront = storefront
         @games = games
+        @start_game = UseCases::StartGame.new(cabinet:, free_games: games)
         @offer = false
         @offer_for_play = false
         @tutorial = nil
@@ -275,7 +276,7 @@ module DotPopper
       # finished, and only where the two sizes look different. Where they
       # look alike, the saved choice stays as it was, and games follow it.
       def sizing_offered? = sizing_preview.offered?
-      def playing? = cabinet.state.is_a?(Cabinet::Playing)
+      def playing? = cabinet.playing?
       def game_over? = cabinet.state.is_a?(Cabinet::GameOver)
 
       # A tap at +x+, +y+, by +by+ (a finger's id, :mouse, or :gamepad),
@@ -421,16 +422,16 @@ module DotPopper
       # the Tutorial over it (TutorialFlag), which is seen from then on.
       def play
         return unless on_home?
-        return with_a_game { open_tutorial } if @tutorial_flag.due?(played: stats_offered?)
+        return open_tutorial if @tutorial_flag.due?(played: stats_offered?)
 
-        start_game
+        offer_for_play if @start_game.call == :none_left
       end
 
       # Home's "How to play", H, or a gamepad's Y there: a game with
       # the Tutorial over it, at once, whether it was seen or not, as on a
       # first Play.
       def how_to_play
-        with_a_game { open_tutorial } if on_home?
+        open_tutorial if on_home?
       end
 
       # The Tutorial's skip button, Escape, or a gamepad's B: the Tutorial
@@ -1253,18 +1254,6 @@ module DotPopper
 
       private
 
-      # The one way into a game: Play, and the Tutorial, whose game begins
-      # as it opens, both come through here. It spends a game (FreeGames)
-      # and starts it with the block; with none left, the offer of Pro
-      # opens instead.
-      def with_a_game
-        return offer_for_play unless games.spend!
-
-        yield
-      end
-
-      def start_game = with_a_game { cabinet.press(layout.center_x, layout.center_y) }
-
       # Opens the offer straight from Home, as Play does when no play
       # is left; Back from it returns to Home.
       def offer_for_play
@@ -1276,15 +1265,20 @@ module DotPopper
         @offer_focus = :games
       end
 
-      # Plays the Tutorial over a game made paused on the field a game
-      # would start on (Cabinet#start_paused), and sizes the effects to
-      # its dots.
+      # Plays the Tutorial over a game started paused on the field a game
+      # would start on, through the one way into a game (UseCases::StartGame),
+      # and sizes the effects to its dots. With no game left, the offer of
+      # Pro opens instead, and the Tutorial stays due.
       def open_tutorial
+        opening = Tutorial.opening(cabinet.field, [layout.center_x, layout.center_y], style:)
+        started = @start_game.call(opening)
+        return offer_for_play if started == :none_left
+        return unless started == :started
+
         @tutorial_flag.seen!
         effects.clear
         effects.scale_to(cabinet.field.radius)
-        @tutorial = Tutorial.new(cabinet:, center: [layout.center_x, layout.center_y], effects:, sounds:,
-                                 haptics: @haptics, style:, now:, calm: @calm, palette:)
+        @tutorial = Tutorial.new(cabinet:, effects:, sounds:, haptics: @haptics, style:, now:, calm: @calm, palette:)
       end
 
       # A tap in the Tutorial: its skip button, or the scene's.
