@@ -12,8 +12,6 @@ module DotPopper
 
     def self.standard: (number width, number height) -> DotSize
 
-    def self.fitted: (number width, number height) -> DotSize
-
     def field: (number width, number height) -> Field
   end
 end

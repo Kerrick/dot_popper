@@ -48,11 +48,5 @@ module DotPopper
     SMALLEST_STANDARD_RADIUS: Integer
 
     LARGEST_STANDARD_SHARE: Float
-
-    FITTED_AREA: Integer
-
-    SMALLEST_FITTED_RADIUS: Integer
-
-    LARGEST_FITTED_SHARE: Float
   end
 end

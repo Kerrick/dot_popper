@@ -34,9 +34,6 @@ module DotPopper
       new(radius:, reason: format("%.1f units, standard for the screen", radius))
     end
 
-    # .standard's old name, until no commit uses it.
-    def self.fitted(width, height) = standard(width, height)
-
     def field(width, height) = Field.new(width, height, radius)
   end
 end

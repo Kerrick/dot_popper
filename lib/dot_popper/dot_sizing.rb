@@ -21,8 +21,6 @@ module DotPopper
     # is read too (EARLIER_NAMES).
     FIXED = new(name: "standard")
     STANDARD = new(name: "fitted")
-    # Standard's old name, until no commit uses it.
-    SIZED_TO_SCREEN = STANDARD
     # Names a save file once held, and the choice each is.
     EARLIER_NAMES = { "same" => FIXED }.freeze
 
@@ -39,8 +37,6 @@ module DotPopper
     end
 
     def standard? = self == STANDARD
-    # #standard?'s old name, until no commit uses it.
-    def sized_to_screen? = standard?
 
     # The other choice.
     def toggled = standard? ? FIXED : STANDARD

@@ -17,8 +17,6 @@ module DotPopper
     # Every game with standard dots (DotSizing::STANDARD): its field is
     # about as crowded on any screen, so they are one class.
     STANDARD = new(name: "fitted")
-    # STANDARD's old name, until no commit uses it.
-    FITTED = STANDARD
     ALL = [SMALL, MEDIUM, LARGE, STANDARD].freeze
 
     # The class of a field, by its area in square radii.
