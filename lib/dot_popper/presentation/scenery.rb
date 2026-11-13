@@ -496,31 +496,6 @@ module DotPopper
         end
       end
 
-      # A house seen from the street: walls, a gable roof with snow along
-      # its edges, a chimney, and perhaps a lit window.
-      def house(out, color, snow, lamp, x, ground, w, h, chimney, random)
-        roof = h * 0.55
-        out << Fan.new(color:, points: [[x, ground + 4], [x + w, ground + 4], [x + w, ground - h], [x, ground - h]])
-        if chimney
-          cx = x + (w * random.rand(0.6..0.78))
-          out << Fan.new(color:, points: [[cx, ground - h - (roof * 0.2)], [cx + (w * 0.11), ground - h - (roof * 0.2)],
-                                          [cx + (w * 0.11), ground - h - (roof * 0.95)], [cx, ground - h - (roof * 0.95)]])
-          out << Fan.new(color: snow, points: [[cx - 1.5, ground - h - (roof * 0.95)], [cx + (w * 0.11) + 1.5, ground - h - (roof * 0.95)],
-                                               [cx + (w * 0.11) + 1, ground - h - (roof * 0.95) - 3.5], [cx - 1, ground - h - (roof * 0.95) - 3.5]])
-          smoke(out, cx + (w * 0.055), ground - h - (roof * 0.95) - 6, w * 0.22) if random.rand < 0.5
-        end
-        out << Fan.new(color:, points: [[x + (w / 2), ground - h - roof], [x + w + (w * 0.06), ground - h + 2], [x - (w * 0.06), ground - h + 2]])
-        t = [w * 0.035, 2.5].max
-        out << segment([x - (w * 0.06), ground - h + 1], [x + (w / 2), ground - h - roof], t, t, snow)
-        out << segment([x + (w / 2), ground - h - roof], [x + w + (w * 0.06), ground - h + 1], t, t, snow)
-        return unless random.rand < 0.45
-
-        wx = x + (w * random.rand(0.2..0.6))
-        wy = ground - (h * random.rand(0.45..0.7))
-        s = w * 0.12
-        out << Fan.new(color: lamp, points: [[wx, wy], [wx + s, wy], [wx + s, wy + (s * 1.2)], [wx, wy + (s * 1.2)]])
-      end
-
       # A tall fir in snow: tiers, each with snow along its lower edge.
       def snowy_fir(out, color, snow, x, ground, h, w)
         out << Fan.new(color:, points: [[x - (w * 0.06), ground], [x + (w * 0.06), ground], [x + (w * 0.06), ground - (h * 0.12)], [x - (w * 0.06), ground - (h * 0.12)]])
@@ -599,44 +574,167 @@ module DotPopper
         poly(out, color, [at.call(10, -3), at.call(13.5, -5.5), at.call(12.5, -2)])
       end
 
-      # A snowy yard on a winter night: drifts in two depths, a cottage
-      # with lit windows behind a picket fence, snowy firs, and a lamp
-      # post. The snow is lighter than the sky, as snow is at night.
+      # A snowy yard on a winter night. Behind, the edge of a wood on a
+      # far rise, its firs in clumps and smaller with distance, and a
+      # cottage before it with snow on its roof, its windows lit; a path
+      # from its door down to a gate in a picket fence that follows the
+      # ground, half buried in drifts; a street lamp by the gate; and near
+      # firs at the side. The snow is lighter than the sky, as snow is at
+      # night.
       def snowfield(width, height)
         out = []
         land = width > height
         far = Color.hex("#1c2a50")
         near = Color.hex("#2a3a66")
         ink = Color.hex("#070c1e")
+        wood = Color.hex("#0d1534")
         snow = Color.hex("#3a4c80")
         lamp = Color.hex("#8a6a34", 0.6)
-        back = ->(f) { height * ((land ? 0.8 : 0.84) + (0.025 * Math.sin((f * 3.2) + 0.8))) }
+        k = land ? 1.0 : 0.72
+        back = ->(f) { height * ((land ? 0.8 : 0.84) + (0.02 * Math.sin((f * 3.2) + 0.8))) }
         hill_strip(out, far, width, height, &back)
+        # The wood's edge: clumps of firs on the far rise, smaller and
+        # paler than the near firs, as farther things are.
+        clumps = land ? [[0.12, 3], [0.3, 2], [0.55, 4], [0.84, 5]] : [[0.1, 2], [0.5, 3], [0.86, 3]]
         r = Random.new(91)
-        (land ? 9 : 6).times do |i|
-          f = (i + r.rand(0.1..0.9)) / (land ? 9 : 6)
-          snowy_fir(out, ink, Color.hex("#24345e"), width * f, back.call(f) + 4, height * r.rand(0.1..0.17), (land ? 46 : 34) * r.rand(0.8..1.2))
+        clumps.each do |center, count|
+          count.times.map { |i| [center + ((i - ((count - 1) / 2.0)) * 0.035 / k) + r.rand(-0.012..0.012), r.rand(0.75..1.15)] }
+                .sort_by { |_, size| -size }.each do |f, size|
+            h = height * 0.13 * size * (land ? 1.0 : 0.85)
+            snow_fir(out, wood, Color.hex("#2a3a6a"), width * f, back.call(f) + 3, h, h * 0.42, r)
+          end
         end
-        cx = width * (land ? 0.7 : 0.66)
-        house(out, ink, snow, lamp, cx, back.call(0.68) + 10, land ? 120 : 84, land ? 70 : 50, true, Random.new(4))
-        front = ->(f) { height * ((land ? 0.9 : 0.92) + (0.02 * Math.sin((f * 2.4) + 2.0))) }
-        f = 0.0
-        while f < 1.0
-          gx = width * f
-          gy = front.call(f) - 2
-          out << Fan.new(color: ink, points: [[gx - 3, gy + 8], [gx - 3, gy - 16], [gx, gy - 20], [gx + 3, gy - 16], [gx + 3, gy + 8]])
-          out << segment([gx - 3, gy - 17], [gx + 3, gy - 17], 2.5, 2.5, snow)
-          f += land ? 0.022 : 0.045
-        end
-        out << segment([0, front.call(0) - 10], [width, front.call(1) - 10], 2.5, 2.5, ink)
+        cx = width * (land ? 0.68 : 0.64)
+        door = cottage(out, ink, snow, lamp, cx, back.call(cx / width) + 8, 1.15 * (land ? 1.0 : 0.8))
+        front = ->(f) { height * ((land ? 0.9 : 0.92) + (0.018 * Math.sin((f * 2.4) + 2.0))) }
         hill_strip(out, near, width, height, &front)
-        snowy_fir(out, ink, snow, width * (land ? 0.06 : 0.08), front.call(0.06) + 8, height * (land ? 0.5 : 0.38), land ? 110 : 76)
-        lx = width * (land ? 0.36 : 0.84)
-        ly = front.call(lx / width) + 4
-        out << segment([lx, ly], [lx, ly - (height * 0.2)], 4, 3, ink)
-        out << Fan.new(color: ink, points: [[lx - 8, ly - (height * 0.2)], [lx + 8, ly - (height * 0.2)], [lx + 5, ly - (height * 0.2) - 16], [lx - 5, ly - (height * 0.2) - 16]])
-        out << Fan.new(color: lamp, points: [[lx - 5, ly - (height * 0.2) - 2], [lx + 5, ly - (height * 0.2) - 2], [lx + 3.5, ly - (height * 0.2) - 13], [lx - 3.5, ly - (height * 0.2) - 13]])
+        gate = width * (land ? 0.6 : 0.56)
+        path(out, Color.hex("#22305a"), door, gate, front, width, height, 20 * k)
+        picket_fence(out, ink, snow, near, width, front, gate, 30 * k, Random.new(12), land ? 1.6 : 1.15)
+        lx = gate - (84 * k)
+        street_lamp(out, ink, lx, front.call(lx / width) + (34 * k), height * (land ? 0.32 : 0.22))
+        snow_fir(out, ink, snow, width * (land ? 0.05 : 0.06), front.call(0.05) + 14, height * (land ? 0.56 : 0.4), land ? 190 : 130, Random.new(5))
+        snow_fir(out, ink, snow, width * (land ? 0.16 : 0.24), front.call(0.17) + 10, height * (land ? 0.3 : 0.2), land ? 100 : 66, Random.new(6))
+        snow_fir(out, ink, snow, width * (land ? 0.95 : 0.97), front.call(0.95) + 12, height * (land ? 0.42 : 0.3), land ? 140 : 90, Random.new(7)) if land
         out
+      end
+
+      # A cottage facing us: walls, a long roof under snow, a chimney, a
+      # door in the middle and a lit window either side. Returns the foot
+      # of its door.
+      def cottage(out, color, snow, lamp, x, ground, s)
+        w = 54 * s
+        h = 26 * s
+        eave = ground - h
+        out << Fan.new(color:, points: [[x - w, ground + 4], [x + w, ground + 4], [x + w, eave], [x - w, eave]])
+        out << Fan.new(color:, points: [[x + (24 * s), eave - (14 * s)], [x + (33 * s), eave - (14 * s)], [x + (33 * s), eave - (36 * s)], [x + (24 * s), eave - (36 * s)]])
+        out << Fan.new(color: snow, points: [[x + (23 * s), eave - (36 * s)], [x + (34 * s), eave - (36 * s)], [x + (33 * s), eave - (39 * s)], [x + (24 * s), eave - (39 * s)]])
+        roof = [[x - w - (7 * s), eave + (1 * s)], [x + w + (7 * s), eave + (1 * s)], [x + w - (14 * s), eave - (26 * s)], [x - w + (14 * s), eave - (26 * s)]]
+        out << Fan.new(color:, points: roof)
+        out << Fan.new(color: snow, points: [[x - w - (6 * s), eave - (2 * s)], [x + w + (6 * s), eave - (2 * s)], [x + w - (14 * s), eave - (28 * s)], [x - w + (14 * s), eave - (28 * s)]])
+        out << Fan.new(color:, points: [[x - w - (7 * s), eave + (1 * s)], [x + w + (7 * s), eave + (1 * s)], [x + w + (7 * s), eave - (1.5 * s)], [x - w - (7 * s), eave - (1.5 * s)]])
+        out << Fan.new(color: lamp.fade(0.5), points: [[x - (6 * s), ground], [x + (6 * s), ground], [x + (6 * s), ground - (18 * s)], [x - (6 * s), ground - (18 * s)]])
+        [-1, 1].each do |side|
+          wx = x + (side * 30 * s)
+          a = [wx - (8 * s), ground - (20 * s)]
+          b = [wx + (8 * s), ground - (8 * s)]
+          out << Fan.new(color: lamp, points: [a, [b[0], a[1]], b, [a[0], b[1]]])
+          out << segment([wx, a[1]], [wx, b[1]], 1.2 * s, 1.2 * s, color)
+          out << segment([a[0], (a[1] + b[1]) / 2], [b[0], (a[1] + b[1]) / 2], 1.2 * s, 1.2 * s, color)
+          out << Fan.new(color: snow, points: [[a[0] - (1.5 * s), b[1]], [b[0] + (1.5 * s), b[1]], [b[0] + (1.5 * s), b[1] + (1.6 * s)], [a[0] - (1.5 * s), b[1] + (1.6 * s)]])
+        end
+        [x, ground]
+      end
+
+      # A trodden path from +door+ down to the gate at +gate+ and on to
+      # the foot of the screen, wider as it comes nearer.
+      def path(out, color, door, gate, front, width, height, half)
+        gy = front.call(gate / width)
+        line = [[door[0], door[1] + 2, half * 0.25], [gate, gy, half], [gate - (half * 0.6), height + 4, half * 2.4]]
+        left = line.map { |px, py, w| [px - w, py] }
+        right = line.reverse.map { |px, py, w| [px + w, py] }
+        poly(out, color, [*left, *right])
+      end
+
+      # A picket fence along the ground, broken by a gate's posts at
+      # +gate+: posts every few pickets, two rails between them, each
+      # picket a little different, snow on the posts and the top rail and
+      # in drifts at its foot.
+      def picket_fence(out, color, snow, drift, width, ground, gate, gap, random, k)
+        rail = lambda do |x1, x2, rise|
+          a = [x1, ground.call(x1 / width) - (rise * k)]
+          b = [x2, ground.call(x2 / width) - (rise * k)]
+          out << segment(a, b, 3.2 * k, 3.2 * k, color)
+          out << segment([a[0], a[1] - (2.2 * k)], [b[0], b[1] - (2.2 * k)], 1.6 * k, 1.6 * k, snow) if rise > 15
+        end
+        step = 9.5 * k
+        bay = 5
+        # Counted outward from the gate, so the gate's posts are posts.
+        [[gate - gap, -1], [gate + gap, 1]].each do |start, way|
+          posts = []
+          i = 0
+          x = start
+          while x.between?(-step * bay, width + (step * bay))
+            g = ground.call(x / width)
+            if (i % bay).zero?
+              posts << x
+              out << Fan.new(color:, points: [[x - (2.6 * k), g + 8], [x + (2.6 * k), g + 8], [x + (2.6 * k), g - (30 * k)], [x - (2.6 * k), g - (30 * k)]])
+              out << Fan.new(color:, points: [[x - (3.6 * k), g - (30 * k)], [x + (3.6 * k), g - (30 * k)], [x + (3.6 * k), g - (32.5 * k)], [x - (3.6 * k), g - (32.5 * k)]])
+              out << Fan.new(color: snow, points: [[x - (3.8 * k), g - (32.5 * k)], [x + (3.8 * k), g - (32.5 * k)], [x + (2.8 * k), g - (35 * k)], [x - (2.8 * k), g - (35 * k)]])
+            else
+              tall = (25 + random.rand(-1.2..1.0)) * k
+              lean = random.rand(-0.6..0.6) * k
+              out << Fan.new(color:, points: [[x - (1.9 * k), g + 8], [x + (1.9 * k), g + 8], [x + (1.9 * k) + lean, g - tall], [x + lean, g - tall - (2.6 * k)], [x - (1.9 * k) + lean, g - tall]])
+            end
+            x += way * step
+            i += 1
+          end
+          posts.each_cons(2) do |x1, x2|
+            rail.call(x1, x2, 21)
+            rail.call(x1, x2, 9)
+          end
+        end
+        # Drifts against its foot, uneven, but none in the gateway.
+        x = -10.0
+        while x < width + 10
+          span = random.rand(30.0..70.0) * k
+          rise = random.rand(3.0..9.0) * k
+          span = [span, gate - gap - x].min if x < gate - gap
+          if span > 6 && (x + span < gate - gap || x > gate + gap)
+            hump = (0..8).map { |j| [x + (span * j / 8.0), ground.call((x + (span * j / 8.0)) / width) - (Math.sin(Math::PI * j / 8.0) * rise)] }
+            poly(out, drift, [*hump, [x + span, ground.call((x + span) / width) + 10], [x, ground.call(x / width) + 10]])
+          end
+          x = x < gate - gap && x + span >= gate - gap - 1 ? gate + gap : x + (span * random.rand(0.6..0.9))
+        end
+      end
+
+      # A street lamp of the old kind, standing at +x+, +ground+, +tall+
+      # high: a plinth, a fluted post narrowing upward with a collar, the
+      # ladder bar under the lantern, the lantern itself wider at its top
+      # with its glass lit, a roof and a finial; and its light, soft on
+      # the air and on the snow at its foot.
+      def street_lamp(out, color, x, ground, tall)
+        u = tall / 100.0
+        glass = ground - (88 * u)
+        9.times do |i|
+          out << Dot.new(x:, y: glass, radius: (6 + (i * 2.6)) * u, color: Color.hex("#ffc070", 0.018))
+        end
+        8.times do |i|
+          f = 1 - (i / 8.0)
+          oval(out, Color.hex("#ffd090", 0.014), x, ground + (2 * u), 34 * u * f, 6 * u * f)
+        end
+        out << Fan.new(color:, points: [[x - (6 * u), ground + 2], [x + (6 * u), ground + 2], [x + (6 * u), ground - (5 * u)], [x - (6 * u), ground - (5 * u)]])
+        out << Fan.new(color:, points: [[x - (4.5 * u), ground - (5 * u)], [x + (4.5 * u), ground - (5 * u)], [x + (3.4 * u), ground - (14 * u)], [x - (3.4 * u), ground - (14 * u)]])
+        out << Fan.new(color:, points: [[x - (2.2 * u), ground - (14 * u)], [x + (2.2 * u), ground - (14 * u)], [x + (1.4 * u), ground - (79 * u)], [x - (1.4 * u), ground - (79 * u)]])
+        out << Fan.new(color:, points: [[x - (2.8 * u), ground - (30 * u)], [x + (2.8 * u), ground - (30 * u)], [x + (2.8 * u), ground - (33 * u)], [x - (2.8 * u), ground - (33 * u)]])
+        out << Fan.new(color:, points: [[x - (8 * u), ground - (77 * u)], [x + (8 * u), ground - (77 * u)], [x + (8 * u), ground - (79 * u)], [x - (8 * u), ground - (79 * u)]])
+        out << Fan.new(color:, points: [[x - (3.5 * u), ground - (79 * u)], [x + (3.5 * u), ground - (79 * u)], [x + (4.5 * u), ground - (81 * u)], [x - (4.5 * u), ground - (81 * u)]])
+        lantern = [[x - (4.5 * u), ground - (81 * u)], [x + (4.5 * u), ground - (81 * u)], [x + (7 * u), ground - (95 * u)], [x - (7 * u), ground - (95 * u)]]
+        out << Fan.new(color:, points: lantern)
+        out << Fan.new(color: Color.hex("#c89a50", 0.6), points: [[x - (3.4 * u), ground - (82.5 * u)], [x + (3.4 * u), ground - (82.5 * u)], [x + (5.6 * u), ground - (93.5 * u)], [x - (5.6 * u), ground - (93.5 * u)]])
+        out << segment([x, ground - (82 * u)], [x, ground - (94 * u)], 0.9 * u, 0.9 * u, color)
+        out << Fan.new(color:, points: [[x - (9 * u), ground - (95 * u)], [x + (9 * u), ground - (95 * u)], [x + (4 * u), ground - (100 * u)], [x - (4 * u), ground - (100 * u)]])
+        out << Fan.new(color:, points: [[x - (1.2 * u), ground - (100 * u)], [x + (1.2 * u), ground - (100 * u)], [x, ground - (105 * u)]])
       end
 
       # A parlor on Christmas Eve, by firelight: striped paper on the far
