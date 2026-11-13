@@ -56,11 +56,6 @@ module DotPopperGui
     # white beard.
     NEAREST = 45
 
-    # Themes whose popped dots are known to come too near their bright
-    # dot, until each is redrawn. Each must still fail, so the list cannot
-    # go stale.
-    TOO_NEAR = %i[jingle_bell].freeze
-
     def play
       keeper = show.instance_variable_get(:@theme_keeper)
       wait(0.5)
@@ -72,10 +67,8 @@ module DotPopperGui
       drawn.each { follows(it) }
       say "ok - each dot is the same dot before and after its pop"
       near = drawn.select { nearest(it) < NEAREST }.map(&:key)
-      fail!("popped dots too near the bright one: #{(near - TOO_NEAR).join(", ")}") unless (near - TOO_NEAR).empty?
+      fail!("popped dots too near the bright one: #{near.join(", ")}") unless near.empty?
       say "ok - no popped dot comes near the bright one"
-      fail!("far enough from the bright dot now, so off the list: #{(TOO_NEAR - near).join(", ")}") unless (TOO_NEAR - near).empty?
-      say "ok - every theme listed as too near still is"
     end
 
     private

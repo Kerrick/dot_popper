@@ -285,6 +285,26 @@ class RootTest < Minitest::Test
     refute_equal :ghost, root(channel: B::WEBSITE, env:).pen.theme.key
   end
 
+  # A device that saved Jingle bell, a theme since removed, as its choice
+  # or among its unlocks starts with the ordinary theme in its place and
+  # keeps every other theme it saved.
+  def test_a_device_that_saved_a_removed_theme_starts_and_keeps_the_rest
+    pro = AUTOMATED.merge("DOT_POPPER_PRO" => "1")
+    {
+      "unlocked: ghost jingle_bell\ntold: ghost jingle_bell\nchosen: jingle_bell\n" => :classic,
+      "unlocked: jingle_bell ghost\ntold: jingle_bell ghost\nchosen: ghost\n" => :ghost
+    }.each do |saved, in_use|
+      engine = FakeEngine.new("Linux")
+      engine.file("themes.txt").write(saved)
+      game = root(engine:, env: pro)
+
+      assert_instance_of DotPopper::Cabinet::Home, game.cabinet.state, saved
+      assert_equal in_use, game.pen.theme.key, saved
+      assert_equal in_use, game.speaker.theme.key, saved
+      assert_equal %i[classic ghost], ThemeKeeper.new(engine.file("themes.txt"), themes: Style::THEMES).choices.map(&:key), saved
+    end
+  end
+
   def test_the_pen_draws_without_shaders_when_asked_in_any_build
     BUILDS.each do |channel|
       assert root(channel:).pen.shaders

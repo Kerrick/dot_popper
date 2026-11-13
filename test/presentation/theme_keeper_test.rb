@@ -38,6 +38,25 @@ class ThemeKeeperTest < Minitest::Test
     assert_equal [THEMES.first], theme_keeper.choices
   end
 
+  # Jingle bell was a theme in playtest builds and is gone from the game,
+  # but the server still lists it and devices still have it saved.
+  def test_a_removed_theme_saved_on_a_device_gives_way_to_the_ordinary_one_and_the_rest_are_kept
+    @store.write("unlocked: ghost jingle_bell turkey\ntold: ghost jingle_bell\nchosen: jingle_bell\n")
+    w = theme_keeper
+    assert_equal %i[classic ghost turkey], w.choices.map(&:key)
+    assert_predicate w.chosen, :ordinary?
+    assert_predicate use_theme(w, pro: true).current, :ordinary?
+    assert_equal :turkey, w.arrival.key, "only a theme the game has is told"
+  end
+
+  def test_a_removed_theme_the_server_still_sends_is_ignored
+    w = theme_keeper
+    refute w.receive(%w[jingle_bell]), "nothing new"
+    assert_equal [THEMES.first], w.choices
+    assert w.receive(%w[jingle_bell ghost])
+    assert_equal %i[classic ghost], theme_keeper.choices.map(&:key)
+  end
+
   def test_each_new_theme_is_told_once_and_a_pro_player_can_use_it
     w = theme_keeper
     w.receive(["ghost"])

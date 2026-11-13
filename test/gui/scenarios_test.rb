@@ -144,8 +144,7 @@ class GuiScenariosTest < Minitest::Test
   def test_popped_dots_are_alike_their_own_and_far_from_the_bright_one
     play("popped_dots", "popped dots differ in no color, lightness or size",
          "each dot is the same dot before and after its pop",
-         "no popped dot comes near the bright one",
-         "every theme listed as too near still is", DOT_POPPER_PRO: "1")
+         "no popped dot comes near the bright one", DOT_POPPER_PRO: "1")
   end
 
   def test_a_game_without_shaders
