@@ -125,11 +125,12 @@ class WebsiteStoreTest < Minitest::Test
 
     assert_equal s.words.offer[:copied], s.offer_status
     refute s.pro?
+    before = s.sounds.played.size
     click(s, :paste)
 
     assert s.pro?
     assert_equal 1, @entered
-    assert_equal [[:tick, 1.0]], s.sounds.played.last(1), "the paste's own tick, and no other"
+    assert_equal [[:tick, 1.0]], s.sounds.played.drop(before), "the paste's own tick once, and no purchase tick: that is a receipt's"
     assert_equal s.words.offer[:thanks], s.offer_status
     assert_equal %i[back], names(s)
   end
