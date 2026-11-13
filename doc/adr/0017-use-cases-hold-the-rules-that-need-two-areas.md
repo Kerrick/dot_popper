@@ -45,3 +45,8 @@ Chosen: option 1, because it alone keeps both areas ignorant of each other while
 ## More Information
 
 Which use cases there are, what each takes and answers, and which events the areas announce are in [the architecture](../architecture.md#use-cases). The folders are not divided by area yet.
+
+Notes (2026-11-12):
+
+* Option 1 named the three use cases weighed when this was decided. Three more follow the same pattern: `UseTheme`, `JoinFriendGroup` and `ViewAchievements`. The architecture lists all six.
+* Not every existing presentation test passed unchanged in what it checks, as the outcome says. `test/presentation/games_test.rb`'s one-door test was narrowed in the same change: it no longer scans `shell/` or `tutorial.rb`, or how the `Show` opens the tutorial, and now counts the `Show`'s calls to `StartGame`. `test/use_cases/start_game_test.rb` scans `shell/` and `tutorial.rb` instead.

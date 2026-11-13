@@ -41,3 +41,5 @@ Chosen: option 1. When first run it found two real faults, an integer radius tha
 ## More Information
 
 How to run and extend the check is in [development](../design/development.md). Revisit pattern matching once Steep checks `case`/`in`.
+
+Note (2026-11-12): the `Steepfile` also checks the use cases, `lib/dot_popper/use_cases/*.rb`, in the same strict mode, since [ADR-0017](0017-use-cases-hold-the-rules-that-need-two-areas.md). The Neutral consequence above describes the scope when this was decided.

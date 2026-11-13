@@ -19,7 +19,7 @@ The public privacy policy, Apple's privacy labels and manifest, and Google Play'
 
 ## Considered Options
 
-1. Declarations in code (`lib/dot_popper/privacy`, and the requests each part declares, merged in `Privacy::REQUESTS`) that are the only way to save a file or make a request, compared exactly with reality by tests, with `doc/privacy.json` generated from them (`bundle exec rake privacy`).
+1. Declarations in code (`lib/dot_popper/privacy`, `Groups::REQUESTS`) that are the only way to save a file or make a request, compared exactly with reality by tests, with `doc/privacy.json` generated from them (`bundle exec rake privacy`).
 2. A hand-written list of facts and store answers in `doc/publishing.md`.
 
 ## Decision Outcome
@@ -40,3 +40,5 @@ Chosen: option 1, because a declaration that the code can't bypass, and a test t
 ## More Information
 
 How the declarations, the document and its tests work is in [privacy](../design/privacy.md).
+
+Note (2026-11-12): the requests are no longer declared in `Groups::REQUESTS` alone. Each part that makes requests declares its own as `REQUESTS` where it lives (`Privacy::PARTS`), and `Privacy::REQUESTS` merges them; `Network::Job.of` makes every request from its declaration, and `Network::Link` is the one place that reaches the network. The decision is unchanged.
