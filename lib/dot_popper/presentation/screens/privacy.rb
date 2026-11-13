@@ -54,6 +54,8 @@ module DotPopper
           end
         end
 
+        def answers = [*super, :policy, :privacy_delete]
+
         def pressed(name, by)
           case name
           in :policy then show.open_policy

@@ -222,6 +222,8 @@ module DotPopper
           true
         end
 
+        def answers = %i[buy restore paste back]
+
         def pressed(name, by)
           case name
           in :buy then buy

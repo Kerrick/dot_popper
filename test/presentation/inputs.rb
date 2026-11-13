@@ -174,6 +174,21 @@ module Inputs
       :pressed
     end
 
+    # What this input presses besides a place on the screen, by name
+    # (#act): none for a finger, but where the system has a Back of its own.
+    def presses = fixture.os == "Android" ? ["Back"] : []
+
+    # Presses +name+, one of #presses, as Shell::App hands it to the Show.
+    def act(name)
+      fixture.tick(LOOK)
+      show.input = kind
+      case name
+      in "Back" then press_key(:escape)
+      end
+      fixture.tick(CLICK)
+      :pressed
+    end
+
     # Plays the game in view, or the Tutorial over it: pops the dot the
     # Tutorial waits for, or the game's bright dots, Fixture#to_pop of them,
     # then lets the clock run out. Says :pressed once it is over, and
@@ -262,6 +277,19 @@ module Inputs
       [show.clearing, show.group_panel.hold].find(&:held?)
     end
 
+    # A key, in App#key_pressed's order: a key the screen types, one that
+    # scrolls its list, Enter or Space for its main button, and Escape
+    # (which Android's Back arrives as) for its Back. What the Show does
+    # not take, App does with as the system would (Escape quits a
+    # computer's game; Android's Back leaves the app from Home).
+    def press_key(name)
+      return if show.type_key(name)
+      return if show.scroll_key(name)
+      return show.primary if %i[enter space].include?(name)
+
+      show.back if name == :escape
+    end
+
     # The control named +name+, scrolled into view.
     def reveal(name)
       find = -> { show.controls.find { it.name == name } }
@@ -328,8 +356,27 @@ module Inputs
   # A mouse, and the keyboard beside it: a click where the pointer is,
   # and the wheel, three lines a notch.
   class Mouse < Finger
+    # The keyboard's keys: Enter, Escape, the letters H and C, a digit,
+    # Backspace, and the system's paste and Buy chords.
+    KEYS = { "Enter" => :enter, "Escape" => :escape, "H" => :h, "C" => :c, "7" => :"7", "Backspace" => :backspace }.freeze
+
     def kind = P::InputKind::MOUSE
     def key = :mouse
+
+    def presses = [*KEYS.keys, "Ctrl+V", "Ctrl+B"]
+
+    def act(name)
+      fixture.tick(LOOK)
+      show.input = kind
+      show.keyboard_used("Ctrl+B")
+      case name
+      in "Ctrl+V" then show.paste_shortcut
+      in "Ctrl+B" then show.buy_shortcut
+      else press_key(KEYS.fetch(name))
+      end
+      fixture.tick(CLICK)
+      :pressed
+    end
 
     def scroll_by(by) = show.wheel_scroll(-3 * by)
   end
@@ -347,8 +394,34 @@ module Inputs
       @cursor = P::GamepadCursor.centered(show.layout.whole, style: P::Style::GAMEPAD, radius: DotPopperTest::R)
     end
 
+    # The buttons besides A at a place (GamepadButtons): A with the cursor
+    # on no button, B, X, Y, the bumpers, the left trigger, View and Start.
+    BUTTONS = { "B" => :leave, "X" => :x, "Y" => :y, "LB" => :lb, "RB" => :rb, "LT" => :lt, "View" => :select, "Start" => :start }.freeze
+
     def kind = P::InputKind::GAMEPAD
     def key = :gamepad
+
+    def presses = BUTTONS.keys
+
+    # A button pressed as Shell::App hands it on (App#gamepad_pressed), and
+    # let go; a press that starts a hold (Y's Clear my stats…, Start's
+    # Leave) is held until it is done.
+    def act(name)
+      fixture.tick(LOOK)
+      show.input = kind
+      return a_at_nothing if name == "A at nothing"
+
+      button = BUTTONS.fetch(name)
+      case button
+      in :leave then show.back || (fixture.platform.quits_itself? && show.ask_to_quit)
+      in :start then show.start
+      else show.pad(button)
+      end
+      fixture.tick(holding ? holding.seconds + 0.2 : CLICK)
+      show.let_go(button)
+      fixture.tick(CLICK)
+      :pressed
+    end
 
     def scroll_by(by)
       stick = P::Stick.new(x: 0.0, y: by.positive? ? 1.0 : -1.0)
@@ -377,6 +450,24 @@ module Inputs
     end
 
     private
+
+    # A with the cursor steered to a place no button reaches, nearest the
+    # middle of the screen.
+    def a_at_nothing
+      safe = show.layout.safe
+      points = (1..9).to_a.product((1..9).to_a).map { |i, j| [safe.x + (safe.width * i / 10.0), safe.y + (safe.height * j / 10.0)] }
+      x, y = points.select { |px, py| show.control_at(px, py).nil? }.min_by { |px, py| Math.hypot(px - safe.center_x, py - safe.center_y) }
+      return :no_place unless x
+
+      point = aim_at(x, y) or return :out_of_reach
+      return :out_of_reach if show.control_at(*point)
+
+      down(*point)
+      fixture.tick(CLICK)
+      up
+      fixture.tick(CLICK)
+      :pressed
+    end
 
     # Steers the cursor to +x+, +y+ with the left stick, a full tilt when
     # far and gentler as it nears, and lets go there.
@@ -425,17 +516,6 @@ module Inputs
      (:share_preview if sharing), (:tutorial if tutorial), (:new_theme if arrival)].compact.join(", ")
   end
 
-  # A control's kind: a list's rows, a row of choices, and the themes
-  # each count as one.
-  def self.kind(name)
-    case name
-    when Array then name.first
-    when P::Theme then :theme
-    when DotPopper::DotSizing then :dot_size
-    else name
-    end
-  end
-
   # Everything one input can find from the Fixture +build+ makes, starting
   # at Home and pressing every control of every screen it comes to, each
   # from a fresh Fixture: the screens (with the controls each offers this
@@ -450,7 +530,7 @@ module Inputs
 
     # +pressed+ is each step's outcome: :pressed, :no_effect, or why it
     # was not pressed; +leads+ the other screens the steps led to.
-    Node = Struct.new(:screen, :names, :path, :pressed, :leads, keyword_init: true)
+    Node = Struct.new(:screen, :names, :path, :pressed, :leads, :went, keyword_init: true)
 
     attr_reader :nodes
 
@@ -482,15 +562,20 @@ module Inputs
 
     private
 
+    # From Home, every control of every screen it comes to, each leading
+    # on to the screen it opens; and on each screen the input's own presses
+    # (Input#presses), whose outcome and screen are noted but not explored
+    # from, since the controls already reach every screen.
     def explore
       queue = [[[], nil]]
       until queue.empty?
         path, from = queue.shift
         fixture, input, outcome = replay(path)
-        node = fixture && visit(fixture, input, path, queue)
+        node = fixture && (path.last.is_a?(String) ? nil : visit(fixture, input, path, queue))
         next unless from
 
         from.pressed[path.last] = outcome
+        from.went[path.last] = fixture && Inputs.screen(fixture.show)
         from.leads << node.screen if node && node.screen != from.screen
       end
     end
@@ -503,17 +588,24 @@ module Inputs
       # finger's drag beside an achievement's dialog closes it) sees only
       # what is in view.
       names = swept if Inputs.screen(fixture.show) == screen
-      key = [screen, names.map { Inputs.kind(it) }.uniq.sort_by(&:to_s)]
+      key = [screen, names.map { P::Control.kind(it) }.uniq.sort_by(&:to_s)]
       return @nodes[key] if @nodes[key]
 
-      node = @nodes[key] = Node.new(screen:, names:, path:, pressed: {}, leads: [])
-      names.each { queue << [path + [it], node] }
+      node = @nodes[key] = Node.new(screen:, names:, path:, pressed: {}, leads: [], went: {})
+      presses = input.presses if (@pressed_on ||= []).none?(screen)
+      @pressed_on << screen
+      (names + presses.to_a).each { queue << [path + [it], node] }
       queue << [path + [PLAY], node] if fixture.show.playing? || fixture.show.tutorial?
       node
     end
 
+    # A step: playing the game in view, one of the input's own presses
+    # (Input#presses, named by a String), or a control pressed at its place.
     def take(step, fixture, input)
-      step == PLAY ? input.play : input.press(step)
+      return input.play if step == PLAY
+      return input.act(step) if step.is_a?(String)
+
+      input.press(step)
     end
 
     # What a press can be seen to do.

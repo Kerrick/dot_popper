@@ -14,8 +14,17 @@ module DotPopper
           true
         end
 
-        # A tap is Skip's, or the Tutorial's own (Show#tutorial_tap).
-        def tap(x, y, _by) = show.tutorial_tap(x, y)
+        def answers = [:skip]
+
+        def pressed(name, _by) = (show.skip_tutorial if name == :skip)
+
+        # A tap on Skip presses it; any other is the Tutorial's own, which
+        # it passes on to its scene (Presentation::Tutorial#tap).
+        def tap(x, y, by)
+          return super if show.control_at(x, y)
+
+          show.tutorial.tap(x, y)
+        end
       end
     end
   end

@@ -127,6 +127,8 @@ module DotPopper
 
         def scrolls? = true
 
+        def answers = [*super, :sound, :dot_size, :display, :credits, :privacy, :server]
+
         def pressed(name, by)
           case name
           in [:sound, on] then set_sound(on)

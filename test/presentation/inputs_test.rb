@@ -16,16 +16,18 @@ require_relative "inputs"
 # reach every screen the others reach, and press every control it is
 # offered there, to some effect. A screen or control added later is
 # found the same way, and fails here if an input cannot reach it. What
-# keeps that honest is that the code is read too: every control a screen
-# answers (each Screens file's #pressed, and GroupPanel#press), and every
-# screen Show#open_page and GroupPanel::PAGES name, must be found by the
-# exploring, or be listed in NOT_FOUND with the reason no screen offers it.
+# keeps that honest is that the screens are asked too: every kind of
+# control a screen answers (Screens::Screen#answers, which is all a press
+# of a control reaches), every screen object, and every friend-group page
+# (GroupPanel::PAGES), must be found by the exploring, or be listed in
+# NOT_FOUND with the reason no screen offers it.
 #
-# What this cannot see is Shell::App's own part, which needs Lota: which
-# key or button calls which of the Show's methods (App#key_pressed,
-# App#gamepad_pressed), the splash, and the system's rules there (iOS
-# leaves quitting to the system; a phone's keyboard never quits). The
-# inputs here press as App#press does, at a place, which every input can.
+# Each input also presses what it has besides a place (Input#presses):
+# a controller's buttons, a keyboard's keys, Android's Back, handed to the
+# Show as App#gamepad_pressed and App#key_pressed hand them. What this
+# cannot see is the rest of Shell::App's part, which needs Lota: the
+# splash, and the system's rules (iOS leaves quitting to the system; a
+# phone's keyboard never quits; Escape on a computer's Home quits).
 class InputsTest < Minitest::Test
   include Inputs
 
@@ -64,9 +66,7 @@ class InputsTest < Minitest::Test
   }.freeze
 
   # Controls the Show answers that no screen offers, and why.
-  NOT_FOUND = {
-    group_delete: "no friend-group screen offers it; Delete my friend group data is Privacy's (:privacy_delete)"
-  }.freeze
+  NOT_FOUND = {}.freeze
 
   # Where an input cannot reach a screen or work a control today, as
   # "Input, screen: control outcome" (#gaps). None, today.
@@ -111,33 +111,23 @@ class InputsTest < Minitest::Test
     end
   end
 
-  # The controls each screen answers (Screens::Screen#pressed in each
-  # screen's file, and GroupPanel#press for the friend groups'), by kind
-  # (Inputs.kind). A screen that answers controls has a pressed method, or
-  # takes its taps itself (the Tutorial's and a game's #tap).
-  def answered
-    folder = File.expand_path("../../lib/dot_popper/presentation", __dir__)
-    texts = Dir["#{folder}/screens/*.rb"].map { File.read(it) }
-    refute_empty texts, "no screens"
-    texts.each { |text| assert_match(/def (pressed|tap)\(/, text) unless text.include?("< Page") }
-    bodies = texts.filter_map { it[/^ +def pressed\(name.*?\n {8}end\n/m] }
-    bodies << (File.read("#{folder}/group_panel.rb")[/^      def press\(name.*?\n      end\n/m] or flunk "no GroupPanel#press")
-    kinds = { "Theme" => :theme, "DotSizing" => :dot_size }
-    bodies.flat_map { it.scan(/^\s+in \[?:(\w+)/).flatten.map(&:to_sym) + it.scan(/^\s+in (\w+) =>/).flatten.filter_map { kinds[it] } }
-  end
+  # Every screen object of a Show (Show#screens), as each Fixture makes it.
+  def screen_objects = Fixture.new(**FIXTURES.values.first).show.screens
+
+  # The kinds of control the screens answer (Screens::Screen#answers).
+  def answered = screen_objects.values.flat_map(&:answers).uniq
 
   def found = FIXTURES.each_key.flat_map { |fixture| InputsTest.explorations(fixture).values.flat_map { |exploration| exploration.nodes.values.flat_map(&:names) } }
 
   def test_every_control_the_show_answers_is_found_or_is_offered_by_no_screen
-    kinds = found.map { Inputs.kind(it) }.uniq
+    kinds = found.map { P::Control.kind(it) }.uniq
     assert_empty answered - kinds - NOT_FOUND.keys, "found by no input in any Fixture: add a Fixture that shows it, or to NOT_FOUND why none does"
     assert_empty NOT_FOUND.keys & kinds, "found after all: take it out of NOT_FOUND"
-    assert_includes kinds, :skip, "the Tutorial's Skip, which Show#tap answers itself"
+    assert_includes kinds, :skip, "the Tutorial's Skip"
   end
 
   def test_every_screen_the_show_opens_is_found
-    show = File.read(File.expand_path("../../lib/dot_popper/presentation/show.rb", __dir__))
-    pages = show.scan(/open_page\(:(\w+)\)/).flatten.map(&:to_sym).uniq
+    pages = screen_objects.filter_map { |name, screen| name if screen.is_a?(P::Screens::Page) }
     seen = FIXTURES.each_key.flat_map { |fixture| InputsTest.explorations(fixture).values.flat_map(&:screens) }
 
     refute_empty pages
@@ -147,6 +137,44 @@ class InputsTest < Minitest::Test
     %w[notice offer dialog share_preview tutorial new_theme].each.with_index(3) do |layer, at|
       assert seen.any? { it[at] }, "a Fixture shows the #{layer}"
     end
+  end
+
+  # What each input presses besides a place (Input#presses: a
+  # controller's B, X, Y, bumpers, left trigger, View and Start; a
+  # keyboard's Enter, Escape, letters, a digit, Backspace and the paste and
+  # Buy chords; Android's Back) does something on some screen of some
+  # Fixture, so none of them is pressed for nothing everywhere.
+  def test_each_press_of_each_input_does_something_somewhere
+    explorations = FIXTURES.each_key.flat_map { |fixture| InputsTest.explorations(fixture).to_a }
+    idle = explorations.group_by(&:first).flat_map do |input, pairs|
+      nodes = pairs.flat_map { |_, exploration| exploration.nodes.values }
+      presses = nodes.flat_map { it.pressed.keys.grep(String) }.uniq
+      (presses - nodes.flat_map { |node| node.pressed.select { |name, outcome| name.is_a?(String) && outcome == :pressed }.keys }).map do
+        "#{input.name.split("::").last}: #{it}"
+      end
+    end
+    assert_empty idle, "pressed on every screen to no effect"
+  end
+
+  # B on a controller, Escape on a keyboard and Android's Back go where
+  # the screen's own Back, Close or Home button goes, on every screen that
+  # has one.
+  def test_b_escape_and_androids_back_go_where_the_screens_back_button_goes
+    backs = { Pad => "B", Mouse => "Escape", Finger => "Back" }
+    wrong = FIXTURES.each_key.flat_map do |fixture|
+      InputsTest.explorations(fixture).flat_map do |input, exploration|
+        press = backs.fetch(input)
+        exploration.nodes.values.filter_map do |node|
+          button = (%i[back close home] & node.went.keys).first or next
+          next unless node.went.key?(press)
+          next if node.went[press] == node.went[button]
+
+          "#{fixture}, #{input.name.split("::").last}, #{Inputs.say(node.screen)}: #{press} went to #{Inputs.say(node.went[press])}, " \
+            "#{button.inspect} to #{Inputs.say(node.went[button])}"
+        end
+      end
+    end
+    assert_empty wrong
   end
 
   # Every screen is an object (Screens), and every one of them is on top
@@ -256,14 +284,15 @@ class InputsTest < Minitest::Test
     end
   end
 
-  # Known gap: a copy no store controls (the website channel) sells Pro
-  # in the player's browser, and the license key comes by email. Inside
-  # the game, Buy only opens the browser, and the key comes in only by
-  # Paste license key, from the clipboard, or typed on a keyboard. A
-  # controller alone can do neither: it cannot copy the key from an email
-  # onto the clipboard. Today's behavior, stated so that a way in for a
-  # controller changes this test.
-  def test_known_gap_a_controller_alone_cannot_bring_in_a_license_key_bought_on_the_website
+  # A controller does everything a website copy's purchase needs inside
+  # the game, and the rest is the browser's and the email's. Pro is sold
+  # in the player's browser, and the license key comes by email: Buy (Y)
+  # opens the browser, and back in the game, Paste license key (X) enters
+  # the key the player copied. A controller cannot copy from an email, and
+  # typing a key of over a hundred letters with one is not practical, so
+  # it is offered no keyboard for it (doc/design/input.md, "A controller
+  # alone").
+  def test_a_controller_alone_opens_the_website_to_buy_and_pastes_the_key_it_is_sent
     fixture = Fixture.new(os: "Windows", width: 1200, height: 800, games_left: 0, channel: "website")
     player = Pad.new(fixture)
     player.press(:play)
@@ -274,12 +303,17 @@ class InputsTest < Minitest::Test
     assert_equal :pressed, player.press(:paste)
     assert_equal fixture.show.words.offer[:empty], fixture.show.offer_status, "Copy your license key first."
     refute_predicate fixture.entitlement, :pro?
+
+    fixture.clipboard.copy(DotPopper::Continuity::LicenseKey.issue(DotPopper::Continuity::TestKeys::LICENSE).text) # copied from the email
+    assert_equal :pressed, player.press(:paste)
+    fixture.tick(1.0)
+    assert_predicate fixture.entitlement, :pro?
   end
 
-  # Known gap: Change Server, offered while setdef is gone, takes a
-  # server's address only from the clipboard (Paste server address),
-  # which a controller alone cannot fill. Today's behavior.
-  def test_known_gap_a_controller_alone_cannot_choose_another_server
+  # Change Server, offered while setdef is gone, takes a server's address
+  # from the clipboard (Paste server address), which a controller reaches
+  # and presses; the address is copied elsewhere, as a license key is.
+  def test_a_controller_alone_pastes_the_server_address_it_was_given
     fixture = Fixture.new(os: "Linux", width: 1200, height: 800, gone: true)
     player = Pad.new(fixture)
     %i[settings server server_paste].each { assert_equal :pressed, player.press(it) }
@@ -287,5 +321,9 @@ class InputsTest < Minitest::Test
     assert_equal :empty, fixture.server_choice.status
     assert_nil fixture.server_choice.address
     refute_includes fixture.show.controls.map(&:name), :server_reset, "nothing was chosen"
+
+    fixture.clipboard.copy(SERVER)
+    assert_equal :pressed, player.press(:server_paste)
+    assert_equal SERVER, fixture.server_choice.address
   end
 end

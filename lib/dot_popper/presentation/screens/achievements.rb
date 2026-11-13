@@ -31,6 +31,8 @@ module DotPopper
 
         def scrolls? = true
 
+        def answers = [*super, :achievement]
+
         def pressed(name, by)
           case name
           in [:achievement, id] then show.screens.fetch(:achievement_dialog).open_at(id)

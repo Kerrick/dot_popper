@@ -53,6 +53,8 @@ module DotPopper
           true
         end
 
+        def answers = %i[arrival_use arrival_later]
+
         def pressed(name, by)
           case name
           in :arrival_use then answer(use: true)

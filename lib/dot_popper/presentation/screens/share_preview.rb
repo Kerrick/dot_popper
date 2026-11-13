@@ -53,6 +53,8 @@ module DotPopper
         # Y again copies, as Copy does.
         def pad(button) = (copy if button == :y)
 
+        def answers = %i[copy close]
+
         def pressed(name, by)
           case name
           in :copy then copy

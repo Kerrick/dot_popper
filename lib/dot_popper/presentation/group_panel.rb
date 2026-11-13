@@ -256,6 +256,10 @@ module DotPopper
 
       # A control this screen offers was pressed; +by+ is what pressed it
       # and +now+ the time, for the long presses.
+      # The kinds of control (Control.kind) #press answers.
+      ANSWERS = %i[code_digit code_erase code_submit group_show group_join_open group_create group_history group_code group_leave
+                   group_prev group_next group_open_first notice_go notice_later].freeze
+
       def press(name, by, now)
         @note = nil
         case name
@@ -268,7 +272,6 @@ module DotPopper
         in :group_history then open_history
         in :group_code then reveal_code
         in :group_leave then start_hold(:leave, by, now)
-        in :group_delete then start_hold(:delete, by, now)
         in :group_prev then step_group(-1)
         in :group_next then step_group(1)
         in :group_open_first then pad(:rb)

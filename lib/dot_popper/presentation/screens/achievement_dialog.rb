@@ -80,6 +80,8 @@ module DotPopper
           end
         end
 
+        def answers = %i[achievement_close achievement_prev achievement_next achievement_pro]
+
         def pressed(name, by)
           case name
           in :achievement_close then close

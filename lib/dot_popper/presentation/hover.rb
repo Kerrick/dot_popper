@@ -14,6 +14,18 @@ module DotPopper
     class Control < Data.define(:name, :frame, :reach)
       def initialize(name:, reach:, frame: reach) = super
 
+      # The kind of control +name+ is, which a screen answers
+      # (Screens::Screen#answers): a row of a list, a row of choices and a
+      # theme each count as one, by their first name, :dot_size or :theme.
+      def self.kind(name)
+        case name
+        when Array then name.first
+        when Theme then :theme
+        when DotSizing then :dot_size
+        else name
+        end
+      end
+
       # +controls+ with their reaches cut back so that no two share a
       # point: where two reaches overlap, the overlap is split halfway
       # across the gap between the two buttons as drawn, along the way

@@ -656,6 +656,14 @@ class ScreenAnswersTest < Minitest::Test
     WAYS.each_key { assert ScreenAnswersTest.const_defined?(it.upcase), it }
   end
 
+  # A screen added later fails here until a way reaches it and a table
+  # says what each press does on it.
+  def test_every_screen_object_has_a_table
+    screens = P::Screens.constants.map { P::Screens.const_get(it) }.select { it.is_a?(Class) && it < P::Screens::Screen } - [P::Screens::Page]
+    tabled = WAYS.values.map { arrive(it).show.screen.class }.uniq
+    assert_empty screens - tabled
+  end
+
   private
 
   # Runs every press on the screen +way+ leads to, each from a fresh

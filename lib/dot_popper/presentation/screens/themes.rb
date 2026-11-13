@@ -49,6 +49,8 @@ module DotPopper
           end
         end
 
+        def answers = [*super, :theme, :theme_prev, :theme_next]
+
         def pressed(name, by)
           case name
           in Theme => theme then use(theme)

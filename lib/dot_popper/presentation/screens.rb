@@ -54,15 +54,19 @@ module DotPopper
           press(name, x, y, by)
         end
 
-        # What a press does: the control +name+ pressed, or with none, a
-        # gamepad's A presses the main button, and anything else presses
-        # empty space at +x+, +y+.
+        # What a press does: the control +name+ pressed, if it is of a kind
+        # the screen answers (#answers), or with none, a gamepad's A presses
+        # the main button, and anything else presses empty space at +x+, +y+.
         def press(name, x, y, by)
-          return pressed(name, by) if name
+          return (pressed(name, by) if answers.include?(Control.kind(name))) if name
           return primary if by == :gamepad
 
           empty(x, y, by)
         end
+
+        # The kinds of control (Control.kind) this screen answers when one is
+        # pressed (#pressed): no other press of a control reaches it.
+        def answers = []
 
         # The control +name+ this screen offers was pressed, by +by+.
         def pressed(name, by) = nil
@@ -155,6 +159,8 @@ module DotPopper
       # Back, and its main button, close it.
       class Page < Screen
         def covers? = true
+
+        def answers = [:back]
 
         def primary = show.close_page
 

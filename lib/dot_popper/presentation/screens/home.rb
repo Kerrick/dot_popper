@@ -139,6 +139,8 @@ module DotPopper
           end
         end
 
+        def answers = %i[play stats achievements themes groups how_to_play settings quit]
+
         def pressed(name, by)
           case name
           in :play then play

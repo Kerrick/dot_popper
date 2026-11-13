@@ -107,6 +107,8 @@ module DotPopper
 
         def scrolls? = true
 
+        def answers = [*super, :undo, :clear]
+
         def pressed(name, by)
           case name
           in :undo then undo

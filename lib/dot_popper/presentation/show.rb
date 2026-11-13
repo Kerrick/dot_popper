@@ -776,13 +776,6 @@ module DotPopper
         end
       end
 
-      # A tap in the Tutorial: its skip button, or the scene's.
-      def tutorial_tap(x, y)
-        return skip_tutorial if control_at(x, y)&.name == :skip
-
-        @tutorial.tap(x, y)
-      end
-
       # Opens +screen+ (a Screens::Screen, or its name in Screens.made_for)
       # over the screens open now, unless it is open already.
       def open_layer(screen)

@@ -187,7 +187,7 @@ module DotPopper
         G.line(left, under, left + font.width(text) + 26, under)
       end
 
-      def quiet?(name) = %i[group_delete group_leave].include?(name)
+      def quiet?(name) = name == :group_leave
 
       def row(show, plan, row)
         case row

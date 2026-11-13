@@ -78,6 +78,8 @@ module DotPopper
           true
         end
 
+        def answers = [*super, :server_paste, :server_reset]
+
         def pressed(name, by)
           case name
           in :server_paste then paste_address

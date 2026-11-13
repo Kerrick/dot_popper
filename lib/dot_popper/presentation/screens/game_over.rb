@@ -114,6 +114,8 @@ module DotPopper
           true
         end
 
+        def answers = %i[play_again home share over_achievement over_group]
+
         def pressed(name, by)
           case name
           in :play_again then play_again

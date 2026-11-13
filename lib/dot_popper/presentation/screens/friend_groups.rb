@@ -67,6 +67,8 @@ module DotPopper
 
         def scrolls? = true
 
+        def answers = [:back, :policy, *GroupPanel::ANSWERS]
+
         # Back, the notice's privacy policy, and every other button the
         # panel's (GroupPanel#press).
         def pressed(name, by)

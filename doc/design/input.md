@@ -203,6 +203,14 @@ Android's Back arrives as Escape ([platforms.md](platforms.md)). A phone's or ta
 
 Escape and B do the same, so one rule holds for every input, and no single key ends a game in play: Juul's *The Art of Failure* asks that a loss feel like the player's own, and a game thrown away by a stray key does not; *Designing for People* (Lee, Wickens, Liu and Boyle) makes the wrong action hard. The Quit button on Home still quits at once, since a press on a labeled button is deliberate.
 
+## A controller alone
+
+Touch alone, a controller alone, and a mouse with its keyboard are each enough to play and to buy Pro. The maintainer's rule for a controller: "A controller should be able to do everything you need up to the point of the game being defocused when the link opens, and then obviously it can't do much unless the user's OS lets them drive a web browser with a controller. But then when they get back into the game, the controller should continue letting them drive everything that is practical to do, like how a controller lets people type a Friend Group's join code."
+
+- **Buying Pro on a website copy.** Buy (Y) opens the player's browser, where Pro is sold, and the license key comes by email. Back in the game, Paste license key (X) enters the key the player copied. Typing a key of over a hundred letters with a controller is not practical, so the offer has no controller keyboard for it.
+- **Change Server.** Paste server address is a button a controller's cursor reaches; the address is copied elsewhere, as a key is.
+- **A friend group's join code** is digits, typed on the keypad with the cursor and A.
+
 ## Where it is tested
 
 | Test | What it checks |
@@ -221,7 +229,8 @@ Escape and B do the same, so one rule holds for every input, and no single key e
 | `test/presentation/controller_test.rb` | Each controller button, both triggers and both sticks on the screens that answer them, A and the right trigger as one press, unplugging |
 | `test/presentation/pointer_test.rb` | The mouse's buttons, a finger, the wheel, drags on a list and on the pile, the chatter filter, the settling window, the hover, losing focus |
 | `test/presentation/keyboard_test.rb` | Each key on the screens that answer it, the modifier keys, the order when a screen answers a key more than one way, and each system's rules for Escape and fullscreen |
-| `test/presentation/inputs_test.rb` (with `inputs.rb`) | Touch, a controller, and a mouse with its keyboard, each alone: every screen entered and left, every control pressed to some effect, found by exploring the Show from Home rather than from a list; a Free player with no games left buying Pro in a test build and playing to Game Over; How to play played to its end; and what a controller alone cannot do today (a license key from the website, Change Server's address) |
+| `test/presentation/inputs_test.rb` (with `inputs.rb`) | Touch, a controller, and a mouse with its keyboard, each alone: every screen entered and left, every control pressed to some effect, found by exploring the Show from Home rather than from a list, and every kind of control the screens answer (`Screens::Screen#answers`) found so; each input's own presses (B, X, Y, the bumpers, LT, View and Start; Enter, Escape, letters, a digit, Backspace, Ctrl+V and Ctrl+B; Android's Back) tried on every screen, each doing something somewhere, and B, Escape and Back going where the screen's own Back goes; a Free player with no games left buying Pro in a test build and playing to Game Over; How to play played to its end; and "A controller alone" above |
+| `test/presentation/screen_answers_test.rb` | A table for each screen: what each press does there (A at no button, B, X, Y, the bumpers, LT, View, Start, held or not; Enter, Space, Escape, H, C, a digit, Backspace, End, Ctrl+V, Ctrl+B; the wheel, the sticks, a drag, a drag from a list's row, a tap on nothing, on a dot or beside a card), every press it leaves out doing nothing; and whether the screen veils what is under it, shows a title change's announcement, or makes a press wait for its release |
 | GUI scenarios `pile`, `pile_gamepad`, `words`, `hover` (`test/gui/scenarios/`) | The real game: a mouse drag and throw, a gamepad drag and A's click, the words and the hand following the input, the hover |
 
 [development.md](development.md) has how the GUI scenarios run.
