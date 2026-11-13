@@ -367,7 +367,7 @@ module DotPopper
         dir = Math.atan2(b[1] - a[1], b[0] - a[0])
         long = Math.hypot(b[0] - a[0], b[1] - a[1])
         out << segment(a, b, needle * 1.1, needle * 0.5, color)
-        count = [(long / (needle * 0.5)).round, 3].max
+        count = [(long / (needle * 0.6)).round, 2].max
         count.times do |n|
           t = (n + 0.5) / count
           at = [a[0] + ((b[0] - a[0]) * t), a[1] + ((b[1] - a[1]) * t)]
