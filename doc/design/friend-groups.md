@@ -32,7 +32,7 @@ The composition root (`Composition::Root`) builds the session with `Groups::Sess
 - **Nothing is sent until a Pro player creates or joins a group.** A session with no saved token makes no connection. The first Create or Join first sends `POST /player`, which answers an anonymous token, and then the Create or Join. A player is only a token: no name, nothing they supply.
 - **Every job comes from a declaration.** `Session::Job.of(kind, body:)` is the only way to make one; it takes the verb and path from `Groups::REQUESTS`, friend groups' own declarations, by `Network::Job.of`, which refuses a body whose fields differ from the declared ones ([privacy.md](privacy.md)).
 - **What it asks for, and when**: the player's groups (`GET /groups`) at launch, when the screen opens, and again as [Asking again](#asking-again) says, once there is a token (`#refresh`); a group (`GET /groups/:id`) and its history (`GET /groups/:id/history`) when the player opens one (`#look_at`); `POST /groups` to create, `POST /memberships` with `join_code` to join, `DELETE /groups/:id/membership` to leave, `DELETE /player` to delete everything; `POST /games` with a score that counts; and `POST /achievements` with each achievement key a Pro player earns, once each, and those already earned on buying Pro (`UseCases::BuyPro`, told by `Entitlement::ProGranted`).
-- **Scores are clamped** to 0 to 100,000 (`Session::HIGHEST_SCORE`).
+- **Scores are clamped** to 0 to 100,000 (`Outbox::HIGHEST_SCORE`).
 
 ### The low-priority thread
 
@@ -64,7 +64,7 @@ A 429 starts a wait (`Session#wait_out`): the `Retry-After` header's seconds, 60
 
 ### Waiting games
 
-If a counting game cannot be sent at once, the highest such score waits and goes with the next contact (`@pending`, saved in `group.txt`). Only the highest is kept, and it does not expire. Leaving the last group drops it. Unsent achievement keys wait the same way.
+What the game owes the server is `Groups::Outbox` (`lib/dot_popper/groups/outbox.rb`), saved in `group.txt`. If a counting game cannot be sent at once, the highest such score waits and goes with the next contact. Only the highest is kept: a lower game never replaces it, and it does not expire. It is owed until the server answers that very score, so a higher one that arrives meanwhile still waits. Leaving the last group drops it. Unsent achievement keys wait the same way. Nothing owed goes to a player in no group, and each score or key is in flight once at a time. `test/groups/outbox_test.rb` holds these rules.
 
 ### What `group.txt` holds
 

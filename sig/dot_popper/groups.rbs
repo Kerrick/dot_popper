@@ -1,4 +1,71 @@
 module DotPopper
   module Groups
+    type group_id = Integer | String
+
+    class Seen < ::Data
+      attr_reader last: Integer
+
+      attr_reader fingerprint: String?
+
+      def self.new: (last: Integer, fingerprint: String?) -> instance
+    end
+
+    class GroupFile < ::Data
+      attr_reader token: String?
+
+      attr_reader unsent_score: Integer?
+
+      attr_reader member: bool
+
+      attr_reader seen: Hash[group_id, Seen]
+
+      attr_reader unsent_achievements: Array[String]
+
+      def self.new: (token: String?, unsent_score: Integer?, member: bool, seen: Hash[group_id, Seen], unsent_achievements: Array[String]) -> instance
+
+      def self.parse: (String? text) -> GroupFile
+
+      def self.parse_seen: (String line) -> Hash[group_id, Seen]
+
+      def to_s: () -> String
+    end
+
+    class Outbox
+      HIGHEST_SCORE: Integer
+
+      @score: Integer?
+
+      @achievements: Array[String]
+
+      @score_in_flight: bool
+
+      @achievements_in_flight: Array[String]
+
+      attr_reader score: Integer?
+
+      attr_reader achievements: Array[String]
+
+      def initialize: (?score: Integer?, ?achievements: Array[String]) -> void
+
+      def owe_game: (score: Integer, counts: bool, member: bool) -> Integer?
+
+      def owe_achievements: (Array[String | Symbol] keys) -> bool
+
+      def take_score: (member: bool) -> Integer?
+
+      def take_achievements: (member: bool) -> Array[String]
+
+      def score_settled: () -> void
+
+      def score_taken: (Integer score) -> void
+
+      def drop_score: () -> void
+
+      def achievement_settled: (String key) -> void
+
+      def drop_achievement: (String key) -> void
+
+      def forget: () -> void
+    end
   end
 end

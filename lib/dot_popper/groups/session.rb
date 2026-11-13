@@ -39,8 +39,8 @@ module DotPopper
         def body = sent.body
       end
 
-      # The highest score the server takes.
-      HIGHEST_SCORE = 100_000
+      # The highest score the server takes (the Outbox's).
+      HIGHEST_SCORE = Outbox::HIGHEST_SCORE
       # What a status means, by the kind of job it answers.
       REFUSALS = {
         player: { 429 => :too_many_tries },
@@ -79,12 +79,9 @@ module DotPopper
         @groups = []
         @changes = {}
         @history = {}
-        @unsent_achievements = []
-        @sending_achievements = []
         @fetching = []
         @announcements = []
         @error = nil
-        @sending = false
         @arrival = nil
         @game_result = nil
         @result_due = false
@@ -130,10 +127,8 @@ module DotPopper
       # the groups they are in (retries are harmless, and a key that
       # could not be sent waits for the next contact).
       def report_achievements(keys)
-        new_keys = keys.map(&:to_s) - @unsent_achievements
-        return if new_keys.empty?
+        return unless @outbox.owe_achievements(keys)
 
-        @unsent_achievements |= new_keys
         save
         send_achievements
       end
@@ -148,11 +143,11 @@ module DotPopper
       def game_finished(score:, counts:)
         @game_result = nil
         @result_due = false
-        return unless member? && counts == true && score.positive?
+        score = @outbox.owe_game(score:, counts:, member: member?)
+        return unless score
 
-        @last_score = score.clamp(0, HIGHEST_SCORE)
-        @pending = [@last_score, @pending.to_i].max
-        @result_due = @pending == @last_score
+        @last_score = score
+        @result_due = @outbox.score == score
         save
         send_pending
       end
@@ -201,31 +196,28 @@ module DotPopper
       end
 
       def send_achievements
-        return unless known? && member? && !waiting_out?
+        return unless known? && !waiting_out?
 
-        (@unsent_achievements - @sending_achievements).each do |key|
-          @sending_achievements << key
-          ask(Job.of(:achievement, body: { key: }))
-        end
+        @outbox.take_achievements(member: member?).each { ask(Job.of(:achievement, body: { key: it })) }
       end
 
       def finish_achievement(key, body)
-        @unsent_achievements.delete(key)
+        @outbox.drop_achievement(key)
         (body.is_a?(Hash) && body["groups"].is_a?(Array) ? body["groups"] : []).filter_map { Group.parse(it) }.each { upsert(it) }
         save
       end
 
       def drop_achievement(key)
-        @unsent_achievements.delete(key)
+        @outbox.drop_achievement(key)
         save
       end
 
       def send_pending
         send_achievements
-        return unless @pending && member? && !@sending && !waiting_out?
+        return if waiting_out?
 
-        @sending = true
-        ask(Job.of(:game, body: { score: @pending }))
+        score = @outbox.take_score(member: member?)
+        ask(Job.of(:game, body: { score: })) if score
       end
 
       def fetch_changes(id)
@@ -243,9 +235,9 @@ module DotPopper
 
       def settle(job, reply)
         @running -= 1
-        @sending = false if job.kind == :game
+        @outbox.score_settled if job.kind == :game
         @fetching.delete(job.group_id) if job.kind == :history
-        @sending_achievements.delete(job.body[:key]) if job.kind == :achievement
+        @outbox.achievement_settled(job.body[:key]) if job.kind == :achievement
         return @error = :offline if reply.offline? && job.loud
         return if reply.offline?
         return forget_identity if reply.status == 401
@@ -364,7 +356,7 @@ module DotPopper
       end
 
       def finish_game(score, body)
-        @pending = nil if @pending == score
+        @outbox.score_taken(score)
         results = body.is_a?(Hash) && body["groups"].is_a?(Array) ? body["groups"] : []
         outcomes = results.filter_map { outcome(it) }
         save
@@ -396,17 +388,17 @@ module DotPopper
       end
 
       def give_up_pending
-        @pending = nil
+        @outbox.drop_score
         @result_due = false
         save
       end
 
       def remember_membership
         member = !@groups.empty?
-        return if @was_member == member && (member || @pending.nil?)
+        return if @was_member == member && (member || @outbox.score.nil?)
 
         @was_member = member
-        @pending = nil unless member
+        @outbox.drop_score unless member
         save
       end
 
@@ -415,13 +407,11 @@ module DotPopper
         @groups = []
         @changes = {}
         @history = {}
-        @unsent_achievements = []
-        @sending_achievements = []
+        @outbox.forget
         @seen = {}
         @announcements.clear
         @was_member = false
         @wait_until = nil
-        @pending = nil
         @result_due = false
         @game_result = nil
         save
@@ -431,15 +421,14 @@ module DotPopper
       def load_saved
         saved = GroupFile.parse(@store.read)
         @token = saved.token
-        @pending = saved.unsent_score
+        @outbox = Outbox.new(score: saved.unsent_score, achievements: saved.unsent_achievements)
         @was_member = saved.member
         @seen = saved.seen
-        @unsent_achievements = saved.unsent_achievements
       end
 
       def save
-        @store.write(GroupFile.new(token: @token, unsent_score: @pending, member: @was_member, seen: @seen,
-                                   unsent_achievements: @unsent_achievements).to_s)
+        @store.write(GroupFile.new(token: @token, unsent_score: @outbox.score, member: @was_member, seen: @seen,
+                                   unsent_achievements: @outbox.achievements).to_s)
       end
     end
   end
