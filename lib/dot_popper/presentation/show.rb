@@ -725,7 +725,6 @@ module DotPopper
       def dialog_status(id) = @screens[:achievement_dialog].status(id)
 
       def settings_plan = @screens[:settings].plan
-      def privacy_plan = @screens[:privacy].plan
 
       # A gamepad's button (+name+, a GamepadButtons intent) on the screen
       # on top.
