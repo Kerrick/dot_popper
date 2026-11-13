@@ -124,6 +124,27 @@ class DrawingsTest < Minitest::Test
     assert_same down, screen.drawing
   end
 
+  # The card telling of a new theme: the theme, its name, and the
+  # switch's word, which for a Free player is Get Pro, as it opens the
+  # offer.
+  def test_the_new_theme_card_names_the_theme_and_what_its_switch_does
+    { true => :use, false => :get_pro }.each do |pro, switch|
+      show = fixture(arrival: true, pro:).show
+      screen = show.screen
+      assert_instance_of Screens::NewTheme, screen
+      drawing = screen.drawing
+      themes = show.words.themes
+      assert_equal show.arrival, drawing.theme
+      assert_equal [themes.fetch(:new), themes.fetch(drawing.theme.key), themes.fetch(:later)], [drawing.heading, drawing.name, drawing.later]
+      use = switch == :use ? format(themes.fetch(:use), drawing.name) : show.words.offer.fetch(:entry)
+      assert_equal use, drawing.use
+      assert_equal screen.plan, drawing.plan
+      safe = show.layout.safe
+      assert_operator drawing.veil.x, :<, safe.x
+      assert_operator drawing.veil.right, :>, safe.right
+    end
+  end
+
   # Nothing changed, nothing made: the same drawing, frame after frame.
   def test_change_server_is_not_made_again_while_nothing_changes
     fixture = fixture(gone: true)

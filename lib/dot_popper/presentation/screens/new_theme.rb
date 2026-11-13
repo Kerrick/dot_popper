@@ -33,6 +33,22 @@ module DotPopper
         # Where its parts go (ArrivalPlan).
         def plan = ArrivalPlan.new(layout:, word: (use_word if show.arrival?), measure:)
 
+        # Everything its painter draws (ArrivalDrawing), made again only
+        # when the theme, the plan, the words or a button's light changes.
+        def drawing
+          theme = show.arrival
+          plan = self.plan
+          words = self.words
+          hover = show.hover
+          (@drawing ||= Memo.new).fetch([theme, plan, words, hover]) do
+            safe = layout.safe
+            themes = words.themes
+            ArrivalDrawing.new(theme:, plan:, veil: Rect.new(x: safe.x - 400, y: safe.y - 400, width: safe.width + 800, height: safe.height + 800),
+                               heading: themes.fetch(:new), name: themes.fetch(theme.key), use: use_word, later: themes.fetch(:later),
+                               use_hover: hover.level(:arrival_use), later_hover: hover.level(:arrival_later))
+          end
+        end
+
         # The player answered: it is told once. A Pro player's switch uses
         # the theme at once; a Free player's opens the offer, the same as
         # tapping Themes. For its first moments (Style::ARRIVAL_GRACE) it

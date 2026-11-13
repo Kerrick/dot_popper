@@ -8,6 +8,12 @@ module DotPopper
     # beside it. A phone held upright stacks the buttons, and so does a card
     # too short for the switch's word (+word+, sized by +measure+) to fit
     # beside "Not now", as "Use Jack-o'-lantern" is on a phone held sideways.
+    # Everything Shell::ArrivalPainter draws for the card telling of a new
+    # theme: the +theme+, its +plan+ (ArrivalPlan), the ink over Home
+    # (+veil+, past the safe area on every side), the heading, the theme's
+    # name, the switch's and Not now's words, and how lit each button is.
+    class ArrivalDrawing < Data.define(:theme, :plan, :veil, :heading, :name, :use, :later, :use_hover, :later_hover); end
+
     class ArrivalPlan < Data.define(:layout, :word, :measure)
       def initialize(layout:, word: nil, measure: RoughMeasure.new) = super
       def card
