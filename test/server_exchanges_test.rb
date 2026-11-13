@@ -153,7 +153,7 @@ class ServerExchangesTest < Minitest::Test
     pump(founder)
     group = founder.groups.first
     assert_equal group.id, founder.take_arrival
-    founder.game_finished(score: score_of("the founder's first game wins the vacant title"), sized_to_screen: true)
+    founder.game_finished(score: score_of("the founder's first game wins the vacant title"), counts: true)
     pump(founder)
     assert_equal 1, founder.game_result.won
     assert_equal :you_won, founder.next_announcement.kind
@@ -167,10 +167,10 @@ class ServerExchangesTest < Minitest::Test
     newcomer.join(group.join_code)
     pump(newcomer)
     assert_equal [1, 2], newcomer.groups.first.members.map(&:number)
-    newcomer.game_finished(score: score_of("a game short of the title"), sized_to_screen: true)
+    newcomer.game_finished(score: score_of("a game short of the title"), counts: true)
     pump(newcomer)
     assert_equal 3, newcomer.game_result.short
-    newcomer.game_finished(score: score_of("a game that takes the title"), sized_to_screen: true)
+    newcomer.game_finished(score: score_of("a game that takes the title"), counts: true)
     pump(newcomer)
     assert_equal :you_won, newcomer.next_announcement.kind
     founder.refresh

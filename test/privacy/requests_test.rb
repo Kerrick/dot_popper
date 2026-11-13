@@ -81,7 +81,7 @@ class PrivacyRequestsTest < Minitest::Test
     pump
     @session.report_achievements(["steady"])
     pump
-    @session.game_finished(score: 7, sized_to_screen: true)
+    @session.game_finished(score: 7, counts: true)
     pump
     @session.leave(1)
     pump

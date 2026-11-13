@@ -645,7 +645,7 @@ class GroupPanelTest < Minitest::Test
     join!
     tap_control(:back)
     tap_control(:back)
-    @session.game_finished(score: 30, sized_to_screen: true)
+    @session.game_finished(score: 30, counts: true)
 
     assert_equal " ", panel.game_line
     tick
@@ -658,7 +658,7 @@ class GroupPanelTest < Minitest::Test
 
   def test_no_line_is_held_for_a_game_that_does_not_count
     join!
-    @session.game_finished(score: 30, sized_to_screen: false)
+    @session.game_finished(score: 30, counts: false)
 
     assert_nil panel.game_line
   end

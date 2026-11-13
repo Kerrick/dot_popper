@@ -144,12 +144,10 @@ module DotPopper
       # only a game that counts is sent: one played by a member, not the
       # tutorial's (+counts+ is false for that one), with a score above 0,
       # whatever its dot size. If it cannot be sent now, the highest-scoring such game
-      # waits and is sent with the next contact. +sized_to_screen+ is
-      # +counts+'s old name, until no commit uses it.
-      def game_finished(score:, counts: nil, sized_to_screen: nil)
+      # waits and is sent with the next contact.
+      def game_finished(score:, counts:)
         @game_result = nil
         @result_due = false
-        counts = sized_to_screen if counts.nil?
         return unless member? && counts == true && score.positive?
 
         @last_score = score.clamp(0, HIGHEST_SCORE)
