@@ -5,7 +5,7 @@ require_relative "presentation_helper"
 class SizingPreviewTest < Minitest::Test
   include PresentationTest
 
-  FIXED = DotPopper::DotSizing::FIXED
+  BIGGER_OR_SMALLER = DotPopper::DotSizing::BIGGER_OR_SMALLER
   STANDARD = DotPopper::DotSizing::STANDARD
 
   def preview(standard, fixed: 50) = SizingPreview.new(fixed:, standard:, style: Style::SIZING)
@@ -17,10 +17,10 @@ class SizingPreviewTest < Minitest::Test
   # bigger option." So on a phone the other reads "Bigger", and on a big
   # monitor "Smaller".
   def test_the_default_is_standard_and_the_other_is_named_for_what_it_does_here
-    assert_equal ["Standard", "Bigger"], [named(STANDARD, 30), named(FIXED, 30)]
-    assert_equal ["Standard", "Bigger"], [named(STANDARD, 44.9), named(FIXED, 44.9)]
-    assert_equal ["Standard", "Smaller"], [named(STANDARD, 55.1), named(FIXED, 55.1)]
-    assert_equal ["Standard", "Smaller"], [named(STANDARD, 97), named(FIXED, 97)]
+    assert_equal ["Standard", "Bigger"], [named(STANDARD, 30), named(BIGGER_OR_SMALLER, 30)]
+    assert_equal ["Standard", "Bigger"], [named(STANDARD, 44.9), named(BIGGER_OR_SMALLER, 44.9)]
+    assert_equal ["Standard", "Smaller"], [named(STANDARD, 55.1), named(BIGGER_OR_SMALLER, 55.1)]
+    assert_equal ["Standard", "Smaller"], [named(STANDARD, 97), named(BIGGER_OR_SMALLER, 97)]
   end
 
   # Within a tenth either way the two look alike, and Home leaves
@@ -34,14 +34,14 @@ class SizingPreviewTest < Minitest::Test
     assert preview(55.1).offered?
   end
 
-  # A player whose saved size is the fixed one is always offered the
+  # A player whose saved size is the bigger or smaller one is always offered the
   # choice, so they are never left in a state no control shows or leaves;
-  # where the two look alike, the fixed size is named "About the same".
-  def test_the_fixed_size_is_always_offered_and_named_about_the_same_where_alike
+  # where the two look alike, the bigger or smaller size is named "About the same".
+  def test_the_bigger_or_smaller_size_is_always_offered_and_named_about_the_same_where_alike
     [45.1, 50, 54.9].each do
-      assert preview(it).offered?(FIXED)
+      assert preview(it).offered?(BIGGER_OR_SMALLER)
       refute preview(it).offered?(STANDARD)
-      assert_equal ["Standard", "About the same"], [named(STANDARD, it), named(FIXED, it)]
+      assert_equal ["Standard", "About the same"], [named(STANDARD, it), named(BIGGER_OR_SMALLER, it)]
     end
   end
 
@@ -54,12 +54,12 @@ class SizingPreviewTest < Minitest::Test
   # The icons stand in true proportion to the two sizes, as far as they
   # stay legible in a segment.
   def test_the_icons_are_in_proportion
-    fixed = preview(30).icon(FIXED, 50)
+    other = preview(30).icon(BIGGER_OR_SMALLER, 50)
 
-    assert_in_delta 50 * Style::SIZING.icon, fixed
-    assert_in_delta fixed * 0.6, preview(30).icon(STANDARD, 50)
-    assert_in_delta fixed * 1.5, preview(75).icon(STANDARD, 50)
-    assert_equal fixed, preview(97).icon(FIXED, 50), "the fixed size's icon never changes"
+    assert_in_delta 50 * Style::SIZING.icon, other
+    assert_in_delta other * 0.6, preview(30).icon(STANDARD, 50)
+    assert_in_delta other * 1.5, preview(75).icon(STANDARD, 50)
+    assert_equal other, preview(97).icon(BIGGER_OR_SMALLER, 50), "the bigger or smaller size's icon never changes"
   end
 
   def test_the_icons_stay_legible_and_inside_their_segment

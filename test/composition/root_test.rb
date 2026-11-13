@@ -80,7 +80,7 @@ class RootTest < Minitest::Test
       assert_equal [line, "dots are standard, worked out from the screen as each game starts", "each game is logged in /save/games.csv"], engine.said, system
     end
     engine = FakeEngine.new("Linux")
-    engine.file("dot_size.txt").write(DotPopper::DotSizing::FIXED.name)
+    engine.file("dot_size.txt").write(DotPopper::DotSizing::BIGGER_OR_SMALLER.name)
     root(engine:, env: { "DOT_POPPER_PERF" => "1" })
 
     refute_includes engine.said, "dots are standard, worked out from the screen as each game starts"

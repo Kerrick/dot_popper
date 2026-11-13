@@ -7,11 +7,11 @@ class DotSizingTest < Minitest::Test
   DotSizing = DotPopper::DotSizing
   SizeClass = DotPopper::SizeClass
 
-  def test_the_same_size_everywhere_is_the_specs_fixed_radius
+  def test_the_same_size_everywhere_is_the_specs_radius
     phone = field(395, 850)
 
-    assert_same phone, DotSizing::FIXED.fit(phone)
-    assert_equal SizeClass::SMALL, DotSizing::FIXED.size_class(phone)
+    assert_same phone, DotSizing::BIGGER_OR_SMALLER.fit(phone)
+    assert_equal SizeClass::SMALL, DotSizing::BIGGER_OR_SMALLER.size_class(phone)
   end
 
   def test_standard_fits_each_screens_radius_and_is_a_class_of_its_own
@@ -24,28 +24,28 @@ class DotSizingTest < Minitest::Test
   end
 
   def test_it_toggles_and_saves_and_reads_leniently
-    assert_equal DotSizing::STANDARD, DotSizing::FIXED.toggled
-    assert_equal DotSizing::FIXED, DotSizing::STANDARD.toggled
+    assert_equal DotSizing::STANDARD, DotSizing::BIGGER_OR_SMALLER.toggled
+    assert_equal DotSizing::BIGGER_OR_SMALLER, DotSizing::STANDARD.toggled
     assert_equal DotSizing::STANDARD, DotSizing.parse("#{DotSizing::STANDARD.to_text}\n")
-    assert_equal DotSizing::FIXED, DotSizing.parse("#{DotSizing::FIXED.to_text}\n")
+    assert_equal DotSizing::BIGGER_OR_SMALLER, DotSizing.parse("#{DotSizing::BIGGER_OR_SMALLER.to_text}\n")
   end
 
-  # The save says "standard", the screens' word for the fixed size when
-  # it was written. Before, it said "same", which a player who chose the
-  # fixed size keeps.
-  def test_the_fixed_size_is_saved_as_standard_and_read_by_its_earlier_name_too
-    assert_equal "standard", DotSizing::FIXED.to_text
-    assert_equal DotSizing::FIXED, DotSizing.parse("standard\n")
-    assert_equal DotSizing::FIXED, DotSizing.parse("same\n")
+  # The save says "standard", the screens' word for the bigger or smaller
+  # size when it was written. Before, it said "same", which a player who
+  # chose that size keeps.
+  def test_the_bigger_or_smaller_size_is_saved_as_standard_and_read_by_its_earlier_name_too
+    assert_equal "standard", DotSizing::BIGGER_OR_SMALLER.to_text
+    assert_equal DotSizing::BIGGER_OR_SMALLER, DotSizing.parse("standard\n")
+    assert_equal DotSizing::BIGGER_OR_SMALLER, DotSizing.parse("same\n")
   end
 
   # A player who never chose gets standard dots; one who chose
-  # the fixed size (written only by a choice) keeps it.
+  # the bigger or smaller size (written only by a choice) keeps it.
   def test_a_player_who_never_chose_gets_standard_dots
     assert_equal DotSizing::STANDARD, DotSizing::DEFAULT
     assert_equal DotSizing::DEFAULT, DotSizing.parse(nil)
     assert_equal DotSizing::DEFAULT, DotSizing.parse("")
     assert_equal DotSizing::DEFAULT, DotSizing.parse("huge")
-    assert_equal DotSizing::FIXED, DotSizing.parse("same")
+    assert_equal DotSizing::BIGGER_OR_SMALLER, DotSizing.parse("same")
   end
 end

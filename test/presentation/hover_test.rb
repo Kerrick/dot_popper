@@ -8,7 +8,7 @@ class HoverTest < Minitest::Test
   include PresentationTest
 
   LOOK = Style::HOVER
-  FIXED = DotPopper::DotSizing::FIXED
+  BIGGER_OR_SMALLER = DotPopper::DotSizing::BIGGER_OR_SMALLER
 
   def setup
     @sounds = FakeSounds.new

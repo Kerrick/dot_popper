@@ -184,7 +184,7 @@ class CabinetTest < Minitest::Test
     assert_equal DotPopper::SizeClass::STANDARD, @cabinet.state.size_class
 
     @cabinet.screen = field(1200, 800)
-    @cabinet.sizing = DotPopper::DotSizing::FIXED
+    @cabinet.sizing = DotPopper::DotSizing::BIGGER_OR_SMALLER
     assert_in_delta 30.0, @cabinet.game.field.radius, 0.001, "a game keeps its radius through a resize"
     assert_equal 1200, @cabinet.game.field.width
     assert_equal DotPopper::DotSizing::STANDARD, @cabinet.sizing, "only the title changes the choice"
