@@ -108,7 +108,7 @@ module DotPopper
       def free_games(entitlement, metered:, store: file("games.txt"))
         start = FreeGames.starting(settings.env)
         FreeGames.new(store, today: settings.today, entitlement:, metered:,
-                             **(start ? { bank: start, daily: start } : {}))
+                             **(start ? { first_games: start, daily: start } : {}))
       end
 
       # The native port: on a phone the app's host, by URL and answer file;
