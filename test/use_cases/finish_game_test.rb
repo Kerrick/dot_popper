@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "dot_popper/use_cases"
 
 # Finishing a game: Stats and achievements are kept for anyone, and what
 # Game Over shows and friend groups hear of an achievement is Pro's.

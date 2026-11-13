@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "dot_popper/use_cases"
 
 # Starting a game, the one way into one: it spends exactly one free game
 # on each game it starts, and starts none without one (ADR-0012).

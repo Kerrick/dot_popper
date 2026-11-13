@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "dot_popper/use_cases"
 
 # Buying Pro: the offer's actions reach the store only while they mean
 # something, the store is heard only outside a game, and friend groups

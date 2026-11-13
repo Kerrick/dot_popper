@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../dot_popper"
+
 module DotPopper
   # What a player does with the game, each as an object the screens call
   # and that calls the game's areas: Gameplay and Metagame (the rules,

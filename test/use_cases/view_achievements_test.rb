@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "dot_popper/use_cases"
 
 # Looking at achievements: anyone earns and keeps them, and seeing what
 # was earned, when, how many and how far along is Pro's.

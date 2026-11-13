@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "dot_popper/use_cases"
 
 # Joining or creating a friend group is Pro's: a Free player is offered
 # Pro, and nothing is sent.

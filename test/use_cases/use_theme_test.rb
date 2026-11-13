@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "dot_popper/use_cases"
 
 # Using a theme: only Pro uses one other than the ordinary, and a Free
 # player's choice leads to the offer instead.

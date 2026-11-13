@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../dot_popper"
+require_relative "use_cases"
 
 module DotPopper
   # How Dot Popper looks, sounds, and answers a tap, apart from Lota: the
