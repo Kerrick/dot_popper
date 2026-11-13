@@ -79,7 +79,7 @@ class PrivacyDeclaredTest < Minitest::Test
     refute_empty made
     made.each { DotPopper::Shell::SaveFile.new(name: it) }
     archived = []
-    log = DotPopper::PlaytestLog.new(DotPopper::ScoreRecord::Memory.new("old,columns\n1,2\n"), archive: ->(name) { archived << name; DotPopper::ScoreRecord::Memory.new })
+    log = DotPopper::GamesLog.new(DotPopper::ScoreRecord::Memory.new("old,columns\n1,2\n"), archive: ->(name) { archived << name; DotPopper::ScoreRecord::Memory.new })
     log.send(:current)
 
     refute_empty archived

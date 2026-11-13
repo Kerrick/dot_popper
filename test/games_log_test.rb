@@ -2,13 +2,13 @@
 
 require "test_helper"
 
-class PlaytestLogTest < Minitest::Test
+class GamesLogTest < Minitest::Test
   include DotPopperTest
 
   def setup
     @store = DotPopper::ScoreRecord::Memory.new
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(9))
-    @cabinet.subscribe(DotPopper::PlaytestLog.new(@store, clock: -> { Time.utc(2026, 11, 5, 9, 30) },
+    @cabinet.subscribe(DotPopper::GamesLog.new(@store, clock: -> { Time.utc(2026, 11, 5, 9, 30) },
                                                today: -> { Date.new(2026, 11, 5) }))
   end
 
@@ -32,7 +32,7 @@ class PlaytestLogTest < Minitest::Test
     store = DotPopper::ScoreRecord::Memory.new(old)
     archives = {}
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(9))
-    cabinet.subscribe(DotPopper::PlaytestLog.new(store, clock: -> { Time.utc(2026, 11, 5, 9, 30, 15) },
+    cabinet.subscribe(DotPopper::GamesLog.new(store, clock: -> { Time.utc(2026, 11, 5, 9, 30, 15) },
                                               archive: ->(name) { archives[name] = DotPopper::ScoreRecord::Memory.new }))
     @cabinet = cabinet
     play_game(dots_popped: 1)
@@ -41,12 +41,12 @@ class PlaytestLogTest < Minitest::Test
     assert_equal ["games-20261105-093015.csv"], archives.keys
     assert_equal old, archives.values.first.read
     lines = store.read.lines(chomp: true)
-    assert_equal DotPopper::PlaytestLog::HEADER, lines.first
+    assert_equal DotPopper::GamesLog::HEADER, lines.first
     assert_equal 3, lines.size, "the new log keeps its own games"
   end
 
   def test_a_log_under_the_current_header_is_only_added_to
-    @store.write("#{DotPopper::PlaytestLog::HEADER}\nan,earlier,game\n")
+    @store.write("#{DotPopper::GamesLog::HEADER}\nan,earlier,game\n")
     play_game(dots_popped: 0)
 
     assert_equal "an,earlier,game", @store.read.lines(chomp: true)[1]

@@ -43,7 +43,7 @@ class StatsKeeperTest < Minitest::Test
     assert_equal 0, @stats_book.stats.games
   end
 
-  def test_clearing_keeps_the_playtest_log_settings_and_lessons
+  def test_clearing_keeps_the_games_log_settings_and_lessons
     before = %w[games.csv sound.txt dot_size.txt taught.txt tilt_hint.txt].to_h { [it, @folder[it]] }
     @keeper.clear
     @keeper.restore(@keeper.clear)

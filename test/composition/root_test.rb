@@ -318,7 +318,7 @@ class RootTest < Minitest::Test
     game = root
     listeners = game.cabinet.instance_variable_get(:@listeners).map(&:class)
 
-    assert_equal [DotPopper::UseCases::FinishGame, Show, DotPopper::Refresh, DotPopper::PlaytestLog], listeners
+    assert_equal [DotPopper::UseCases::FinishGame, Show, DotPopper::Refresh, DotPopper::GamesLog], listeners
     cabinet = DotPopper::Cabinet.new(field)
     entitlement = DotPopper::Entitlement.free
     stats_book = DotPopper::StatsBook.new(DotPopper::ScoreRecord::Memory.new)

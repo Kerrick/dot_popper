@@ -100,7 +100,7 @@ As a fused app, the game saves into `Library/Application Support/dot_popper` ins
 | `score_record.txt` | The score record for each dot size |
 | `sound.txt` | `muted` or `on` |
 | `taught.txt` | Present once the first-mistake hint has been shown |
-| `games.csv` | The playtest log, one line per finished game (see "The playtest log" in the README) |
+| `games.csv` | The games log, one line per finished game |
 | `shot-N.png` | Screenshots, only when `DOT_POPPER_SHOTS` asks for them |
 
 In the Simulator, this command prints the container's path:

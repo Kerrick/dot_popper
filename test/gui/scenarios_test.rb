@@ -72,7 +72,7 @@ class GuiScenariosTest < Minitest::Test
 
   def test_clearing_the_stats_and_undoing_it
     play("clearing", "letting go too soon clears nothing", "Undo restores every file exactly",
-         "the playtest log is untouched", "a press of Y undoes")
+         "the games log is untouched", "a press of Y undoes")
   end
 
   def test_choosing_the_dot_size_on_a_narrow_window

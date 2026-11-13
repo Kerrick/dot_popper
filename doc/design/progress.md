@@ -15,8 +15,8 @@ Every file lives in Lota's save folder (paths per system are in [README.md](../.
 | `score_record.txt` | the highest score of each size class, as `class=score` lines | `ScoreRecord` |
 | `stats.txt` | totals, the last 20 scores, the goal streak, each class's records, as `key=value` lines | `StatsBook`, `Stats` |
 | `achievements.txt` | each achievement earned and the day, as `id=YYYY-MM-DD` lines | `Achievements` |
-| `games.csv` | one line per finished game | `PlaytestLog` |
-| `games-YYYYMMDD-HHMMSS.csv` | an older log, kept whole when its columns changed | `PlaytestLog` |
+| `games.csv` | one line per finished game | `GamesLog` |
+| `games-YYYYMMDD-HHMMSS.csv` | an older log, kept whole when its columns changed | `GamesLog` |
 | `score_record-…`, `stats-…`, `achievements-YYYYMMDD-HHMMSS.txt` | the backup made by the last clearing | `StatsKeeper` |
 | `cleared.txt` | when Stats were last cleared, and the backups' names | `StatsKeeper` |
 
@@ -24,7 +24,7 @@ The composition root (`Composition::Root`) makes each store, asking the engine f
 
 ## The games log
 
-`PlaytestLog` (`lib/dot_popper/playtest_log.rb`) listens to the `Cabinet` and adds one line to `games.csv` for each finished game (`Events::GameEnded`). Its columns, `PlaytestLog::COLUMNS`:
+`GamesLog` (`lib/dot_popper/games_log.rb`) listens to the `Cabinet` and adds one line to `games.csv` for each finished game (`Events::GameEnded`). Its columns, `GamesLog::COLUMNS`:
 
 `time seed score duration pops mistakes softened mean_time_to_pop longest_time_to_pop goal goal_met`
 
@@ -32,7 +32,7 @@ The composition root (`Composition::Root`) makes each store, asking the engine f
 
 **A header change.** When the log's first line is not the current header, because an older version wrote it, the old log is copied whole to `games-YYYYMMDD-HHMMSS.csv` and a new `games.csv` starts under the current header. A CSV whose rows disagree with its header would mislead anyone comparing playtests, and keeping the old file loses nothing.
 
-The log is rewritten whole each time, which is fine for the few hundred lines a playtest makes. The game prints the log's path at launch. Clearing Stats never touches it. Tests: `test/playtest_log_test.rb`.
+The log is rewritten whole each time, which is fine for the few hundred lines a playtest makes. The game prints the log's path at launch. Clearing Stats never touches it. Tests: `test/games_log_test.rb`.
 
 ## One game's numbers: `GameStats`
 
