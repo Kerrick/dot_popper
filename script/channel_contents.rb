@@ -163,6 +163,9 @@ module ChannelContents
     when "list", "check"
       channel, folder = rest
       usage unless CHANNELS.include?(channel) && folder && File.directory?(folder)
+      # One spelling of the path, with forward slashes, which Dir.glob
+      # needs on Windows (D:\a\_temp/unzipped finds nothing).
+      folder = File.expand_path(folder)
       report(channel, folder)
       back = command == "check" ? returned(channel, folder) : []
       back.each { warn "FAIL #{folder} holds #{it}, which a #{channel} build leaves out" }
