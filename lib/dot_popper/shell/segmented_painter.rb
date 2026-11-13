@@ -2,7 +2,7 @@
 
 module DotPopper
   module Shell
-    # A labeled segmented control, on whole device pixels: the title's
+    # A labeled segmented control, on whole device pixels: Home's
     # "Dot size". Its segments share one pill, each with a bright dot drawn
     # at the size its option gives, then its option's name with what it
     # does here in smaller type under it, and the chosen one is filled, so

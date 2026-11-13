@@ -2,13 +2,13 @@
 
 module DotPopper
   module Presentation
-    # The title's "Dot size" choice: the share of a radius by which the
+    # Home's "Dot size" choice: the share of a radius by which the
     # two sizes may differ and still look alike, the standard icon's
     # radius as a share of its segment's height, and how far the fitted
     # icon may shrink or grow from it.
     class SizingStyle < Data.define(:alike, :icon, :icons); end
 
-    # How the title's "Dot size" choice looks from where the player sits:
+    # How Home's "Dot size" choice looks from where the player sits:
     # what dots sized to this screen (DotSizing::SIZED_TO_SCREEN) would do
     # here, next to the standard size. +standard+ and +fitted+ are the two
     # radii on this screen; +style+ (SizingStyle) says how far apart they

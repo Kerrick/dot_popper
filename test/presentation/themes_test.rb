@@ -51,7 +51,7 @@ class ThemesTest < Minitest::Test
     assert_nil @show.arrival
   end
 
-  def test_the_card_comes_only_on_the_title
+  def test_the_card_comes_only_on_home
     show(paid: true, unlocked: ["ghost"])
     @show.open_stats rescue nil
     assert_nil @show.arrival

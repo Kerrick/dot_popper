@@ -5,7 +5,7 @@ require_relative "presentation_helper"
 class AutopilotTest < Minitest::Test
   include PresentationTest
 
-  def test_it_games_a_game_and_comes_back_to_the_title
+  def test_it_plays_a_game_and_comes_back_home
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
     pilot = Autopilot.new(Style::AUTOPILOT, random: Random.new(5))
     seen = []
@@ -46,7 +46,7 @@ class AutopilotTest < Minitest::Test
     assert_match(/\ADot Popper: \d+ points?/, copies[1])
   end
 
-  def test_on_its_second_title_it_themes_at_the_stats_and_goes_back
+  def test_on_its_second_visit_home_it_opens_the_stats_and_goes_back
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
     show = Show.new(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R)
     pilot = Autopilot.new(Style::AUTOPILOT, random: Random.new(5))
@@ -69,7 +69,7 @@ class AutopilotTest < Minitest::Test
 
   # 800 by 600 fits smaller dots, so once a game has finished Settings
   # offers the choice, and the pilot switches it once there.
-  def test_it_switches_the_dot_size_once_the_title_offers_it
+  def test_it_switches_the_dot_size_once_home_offers_it
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
     show = Show.new(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R)
     pilot = Autopilot.new(Style::AUTOPILOT, random: Random.new(5))

@@ -269,13 +269,13 @@ module DotPopper
         in :press then gamepad_down(:a)
         in :start then @show.start
         in :y then y_pressed
-        in :leave then @show.back || leave_title
+        in :leave then @show.back || leave_home
         in :x | :lb | :rb | :select => name then @show.pad(name)
         in nil then nil
         end
       end
 
-      # Y: on the title and Settings a button of its own, and Game Over's
+      # Y: on Home and Settings a button of its own, and Game Over's
       # Share my score.
       def y_pressed
         @show.game_over? || @show.sharing? ? @show.share : @show.pad(:y)
@@ -350,7 +350,7 @@ module DotPopper
         # Escape, which Android's Back arrives as, goes back from the
         # Stats screen or Game Over first, on any device.
         return if key == :escape && @show.back
-        # On the title Android's Back leaves the app, as Back on an app's
+        # On Home Android's Back leaves the app, as Back on an app's
         # first screen does; in a game it does nothing, so a stray edge
         # swipe never throws a game away.
         return ::Lota::Event.quit if key == :escape && @android && @show.home?
@@ -667,9 +667,9 @@ module DotPopper
       # controller), so a tap near the edge stays a tap.
       def fill_screen = ::Lota::Window.set_fullscreen(true, :desktop)
 
-      # B on the title: asks, then quits on a second press, as Escape quits
+      # B on Home: asks, then quits on a second press, as Escape quits
       # from the keyboard. iOS apps are left by the system, never by the app.
-      def leave_title
+      def leave_home
         ::Lota::Event.quit if !@ios && @show.ask_to_quit == :quit
       end
 
@@ -679,7 +679,7 @@ module DotPopper
       # Whether Alt or Cmd is held, which makes Enter switch fullscreen.
       def fullscreen_chord? = ::Lota::Keyboard.down?(:lalt, :ralt, :lgui, :rgui)
 
-      # F11 or Alt+Enter, as the title's "Full screen" (DesktopWindow).
+      # F11 or Alt+Enter, as Home's "Full screen" (DesktopWindow).
       def toggle_fullscreen
         happened("a fullscreen switch")
         @window.toggle_fullscreen

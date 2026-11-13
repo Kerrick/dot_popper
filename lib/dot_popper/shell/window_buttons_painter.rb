@@ -2,7 +2,7 @@
 
 module DotPopper
   module Shell
-    # The title's window buttons on a desktop, quiet pills as "How to
+    # Home's window buttons on a desktop, quiet pills as "How to
     # play" is, each with its icon drawn in shapes: "Full screen", four
     # corners pointing out, which in fullscreen point in and say
     # "Window"; and Quit, the power sign (IEC 5009), a ring broken at the

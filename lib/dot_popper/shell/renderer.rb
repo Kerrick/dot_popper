@@ -57,10 +57,10 @@ module DotPopper
         elsif @show.home?
           @dots.draw(@show.attract.dots, @at_rest, @show.now, radius)
           if @show.offer?
-            veil(width, height, @pen.style::RECORDS.veil)
+            veil(width, height, @pen.style::STATS.veil)
             @offer.draw(@show, layout)
           elsif @show.page
-            veil(width, height, @pen.style::RECORDS.veil)
+            veil(width, height, @pen.style::STATS.veil)
             page_screen.draw(@show, layout)
             @achievements.dialog(@show, layout) if @show.dialog
           elsif @show.group_open?
@@ -100,7 +100,7 @@ module DotPopper
       # The offer of Pro over Game Over, opened by its Get Pro, over the
       # finished game veiled as Home's dots are under it.
       def offer_over(width, height, layout)
-        veil(width, height, @pen.style::RECORDS.veil)
+        veil(width, height, @pen.style::STATS.veil)
         @offer.draw(@show, layout)
       end
 

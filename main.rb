@@ -6,18 +6,18 @@
 # the game.
 #
 # Controls: tap or click a dot. F11, or Alt+Enter (Cmd+Enter on a Mac),
-# toggles fullscreen; M toggles sound, as the speaker on the title does;
+# toggles fullscreen; M toggles sound, as the speaker on Home does;
 # Escape quits. On a gamepad (Lota 0.1.3 and newer), the left stick or
 # d-pad aims, A or the right trigger presses, Start starts and continues,
 # Y copies the result on Game Over (and, held on the Stats screen,
 # clears the records, which a press of Y then undoes), X opens the
-# Stats screen from the title, B (or Start) leaves it, either
-# shoulder button switches the dot size on the title, and Back toggles
+# Stats screen from Home, B (or Start) leaves it, either
+# shoulder button switches the dot size on Home, and Back toggles
 # sound. On Game Over the right
 # stick, or tilting a tablet, rolls the pile of dots about, and a shake
 # throws them; a mouse, a finger, or A held on a dot drags it about and
 # throws it, and a click, tap, or press of A that drags nothing goes back
-# to the title as it is let go. The words on screen say "tap", "click",
+# to Home as it is let go. The words on screen say "tap", "click",
 # or name the button, after whatever the player last pressed with.
 #
 # Development settings, read from the environment:
@@ -25,7 +25,7 @@
 #   DOT_POPPER_AUTOPLAY=1       a bot plays: title, a game, game over, and
 #                               game again. It mostly taps bright dots and
 #                               sometimes a popped one, so penalties show.
-#   DOT_POPPER_NO_SPLASH=1      leaves out setdef's splash before the title
+#   DOT_POPPER_NO_SPLASH=1      leaves out setdef's splash before Home
 #   DOT_POPPER_PRO=1           plays as if Pro were bought
 #   DOT_POPPER_SERVER=http://localhost:9292
 #                               talks to this friend-group server instead

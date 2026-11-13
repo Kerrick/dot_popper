@@ -24,7 +24,7 @@ module DotPopper
               dot: "turkey", scenery: :roost,
               sky: ThemeSky.new(top: hex["#121028"], mid: hex["#2c1e3e"], bottom: hex["#5a3036"], glow: hex["#e8843e"], glow_at: [0.5, 1.02],
                                 glow_amount: 0.4, edge: hex["#08060e"], stars: 0.7),
-              wordmark: "assets/fonts/Fredoka-Bold.ttf", title_dots: true,
+              wordmark: "assets/fonts/Fredoka-Bold.ttf", dotted_name: true,
               sounds: {
                 # A gobble: a quick warble of falling notes, pitched low.
                 pop: Patch.new(notes: [Note.new(wave: :triangle, from: 521, to: 437, length: 0.04, attack: 0.003, volume: 0.6),

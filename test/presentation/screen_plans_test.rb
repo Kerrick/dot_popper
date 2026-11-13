@@ -285,7 +285,7 @@ class ScreenPlansTest < Minitest::Test
       page = show.credits_layout
       window = page.window
       name = "#{width}x#{height}"
-      title = show.words.button(:credits_title)
+      title = show.words.button(:credits_heading)
       size, middle = show.heading_place(title)
       wide = RoughMeasure.new.width(:bold, size, title)
       heading = Rect.new(x: middle - (wide / 2.0), y: page.heading_y - (size / 2.0), width: wide, height: size)
@@ -345,7 +345,7 @@ class ScreenPlansTest < Minitest::Test
     show.open_stats
     yield "the Stats screen", show
     show.tap(*middle(show.clear_reach))
-    show.update(Style::RECORDS_CLEAR.hold)
+    show.update(Style::STATS_CLEAR.hold)
     yield "the Stats screen with Undo", show
     show.back
     show.open_achievements

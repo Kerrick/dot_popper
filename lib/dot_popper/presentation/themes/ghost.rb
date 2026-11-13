@@ -23,7 +23,7 @@ module DotPopper
               dot: "ghost", scenery: :graveyard,
               sky: ThemeSky.new(top: hex["#0c1933"], mid: hex["#13294a"], bottom: hex["#1b3a52"], glow: hex["#1b3a52"], glow_at: [0.5, 1.0],
                                 glow_amount: 0.0, edge: hex["#070d20"], stars: 0.75, fog: hex["#5d7c97"], fog_amount: 0.55),
-              title_dots: true,
+              dotted_name: true,
               sounds: {
                 pop: Patch.new(notes: [Note.new(wave: :sine, from: 520, to: 190, length: 0.34, attack: 0.02, volume: 0.9),
                                        Note.new(wave: :triangle, from: 780, to: 280, length: 0.22, attack: 0.03, volume: 0.3)]),

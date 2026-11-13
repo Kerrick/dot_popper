@@ -31,7 +31,7 @@ class GamesTest < Minitest::Test
                      storefront: Store.new)
   end
 
-  def test_each_started_game_costs_one_play_and_the_title_says_how_many_are_left
+  def test_each_started_game_costs_one_play_and_home_says_how_many_are_left
     assert_equal "3 games left", @show.games_line
     press_main
 
@@ -52,7 +52,7 @@ class GamesTest < Minitest::Test
     assert_includes @show.controls.map(&:name), :restore
   end
 
-  def test_back_from_that_offer_returns_to_the_title
+  def test_back_from_that_offer_returns_to_home
     3.times { @games.spend! }
     press_main
     @show.back

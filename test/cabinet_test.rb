@@ -14,12 +14,12 @@ class CabinetTest < Minitest::Test
     @cabinet.subscribe { @heard << it }
   end
 
-  def test_the_game_starts_on_the_title
+  def test_the_game_starts_on_home
     assert_instance_of Cabinet::Home, @cabinet.state
     assert_nil @cabinet.game
   end
 
-  def test_a_press_on_the_title_starts_a_fresh_game_without_tapping_anything
+  def test_a_press_on_home_starts_a_fresh_game_without_tapping_anything
     @cabinet.press(400, 300)
 
     assert_instance_of Cabinet::Playing, @cabinet.state
@@ -60,7 +60,7 @@ class CabinetTest < Minitest::Test
     assert_instance_of Cabinet::GameOver, @cabinet.state
   end
 
-  def test_game_over_ignores_presses_for_a_moment_then_returns_to_the_title
+  def test_game_over_ignores_presses_for_a_moment_then_returns_to_home
     @cabinet.press(0, 0)
     @cabinet.update(11)
 
@@ -176,7 +176,7 @@ class CabinetTest < Minitest::Test
     refute_equal first, @heard.last.seed
   end
 
-  def test_a_paused_game_is_made_on_the_title_and_announced_only_when_unpaused
+  def test_a_paused_game_is_made_on_home_and_announced_only_when_unpaused
     first = DotPopper::Stack.new(dots: [dot(300, 300, id: 0)])
     @cabinet.start_paused(first)
 
@@ -267,7 +267,7 @@ class CabinetTest < Minitest::Test
     assert @cabinet.game.dots.first.x.between?(R, 400 - R)
   end
 
-  def test_only_the_title_makes_a_paused_game_and_only_a_paused_game_unpauses
+  def test_only_home_makes_a_paused_game_and_only_a_paused_game_unpauses
     @cabinet.unpause
     assert_instance_of Cabinet::Home, @cabinet.state
     @cabinet.press(0, 0)

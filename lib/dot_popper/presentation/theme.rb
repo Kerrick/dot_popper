@@ -9,11 +9,11 @@ module DotPopper
 
     # What a theme draws and plays beyond its colors, as one unit: +dot+
     # names its shader in assets/shaders/themes/, +sky+ and +scenery+ its
-    # night (Presentation::Scenery), +wordmark+ the title's font, if it has
-    # its own, and whether the O's are dots (+title_dots+), and
+    # night (Presentation::Scenery), +wordmark+ the font of the game's name, if it has
+    # its own, and whether the O's are dots (+dotted_name+), and
     # +sounds+ the patches it plays instead of the ordinary ones.
-    class ThemeArt < Data.define(:dot, :sky, :scenery, :wordmark, :title_dots, :sounds)
-      def initialize(dot:, sky:, scenery:, wordmark: nil, title_dots: false, sounds: {}) = super
+    class ThemeArt < Data.define(:dot, :sky, :scenery, :wordmark, :dotted_name, :sounds)
+      def initialize(dot:, sky:, scenery:, wordmark: nil, dotted_name: false, sounds: {}) = super
     end
 
     # A theme for the whole game: its +key+ (what is saved of it, and what

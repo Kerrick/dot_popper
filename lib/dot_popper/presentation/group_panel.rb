@@ -127,7 +127,7 @@ module DotPopper
       def alpha(now) = (((seconds - (now - at)) / FADE)).clamp(0.0, 1.0) * ((now - at) / FADE).clamp(0.0, 1.0)
     end
 
-    # The friend groups' screens' state, over the title, and the
+    # The friend groups' screens' state, over Home, and the
     # announcements a title change makes: which screen is showing, the code
     # tapped so far, what a long press would do, and what to tell the
     # player next. Nothing here is typed, so a controller can do all of it.
@@ -207,7 +207,7 @@ module DotPopper
       # The moving parts of each frame: the Session's replies, a long
       # press finished, and the next announcement at a moment for one.
       # +quiet+ is false during a game, when the network waits; +showing+
-      # says the screen can show a message now, on the title or at Game
+      # says the screen can show a message now, on Home or at Game
       # Over.
       def update(now, quiet:, showing: quiet)
         groups.update(quiet:)

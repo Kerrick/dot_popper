@@ -12,7 +12,7 @@ module DotPopper
     # +sounds+ answers play(name, pitch:, pan:), muted?, and toggle_mute;
     # +haptics+ answers buzz(seconds). +lifetime+ (StatsBook) adds up every
     # game the device has played. +sizing_store+ keeps the player's
-    # DotSizing, chosen on the title. +radius+ is the usual dot's, which
+    # DotSizing, chosen on Home. +radius+ is the usual dot's, which
     # sizes the buttons' reach; a game's effects follow its own dots.
     # +input+ (InputKind) is what the player last pressed with, and the
     # words follow it. +keeper+ (RecordKeeper) clears the records, from
@@ -24,12 +24,12 @@ module DotPopper
     # Stats screen lists them once the +entitlement+ says the pro
     # version was bought. +tutorial_flag+
     # (TutorialFlag) says whether Play opens the Tutorial first. +window+
-    # (NoWindowControl's methods) is the desktop's window, which the
-    # title's "Full screen" and Quit switch and close where it offers them.
+    # (NoWindowControl's methods) is the desktop's window, which
+    # Home's "Full screen" and Quit switch and close where it offers them.
     # +games+ (FreeGames) counts the games a free player may start: Play
     # spends one, and with none left leads to the offer of Pro.
     class Show
-      # The dot-size choices in the order the title draws their segments:
+      # The dot-size choices in the order Home draws their segments:
       # the default, dots sized to the screen, first.
       SIZINGS = [DotSizing::SIZED_TO_SCREEN, DotSizing::STANDARD].freeze
 
@@ -100,7 +100,7 @@ module DotPopper
         @credits = nil
         @credits_drag = nil
         @keeper = keeper
-        @clearing = HoldToConfirm.idle(style::RECORDS_CLEAR.hold)
+        @clearing = HoldToConfirm.idle(style::STATS_CLEAR.hold)
         @undo = nil
         @pointer = nil
         @hover = Hover.none
@@ -119,7 +119,7 @@ module DotPopper
       # it shows: every theme the player can use, and the one in use.
       def themes? = @page == :themes
 
-      # The new theme to tell the player of, once, at the title, when nothing
+      # The new theme to tell the player of, once, at Home, when nothing
       # else is asked of them; nil the rest of the time.
       def arrival = (@theme_keeper.arrival if on_home?)
       def arrival? = !arrival.nil?
@@ -168,7 +168,7 @@ module DotPopper
         @words = style::WORDS.for(kind)
       end
 
-      # Whether the title is showing.
+      # Whether Home is showing.
       def home? = cabinet.state.is_a?(Cabinet::Home)
 
       # Whether the Tutorial is playing (#tutorial) over the game, which is
@@ -177,7 +177,7 @@ module DotPopper
       # ends, or is skipped, the game plays on from the state it is in.
       def tutorial? = !@tutorial.nil?
 
-      # Whether the Stats screen is open over the title. It is the
+      # Whether the Stats screen is open over Home. It is the
       # presentation's alone: the game stays on its title meanwhile, and
       # no tap there reaches the game.
       def stats? = @page == :stats
@@ -198,7 +198,7 @@ module DotPopper
       # The friend groups' screens' state and their announcements (GroupPanel).
       def group_panel = @groups
 
-      # Whether the Friend group screen is open over the title.
+      # Whether the Friend group screen is open over Home.
       def group_open? = @groups.open?
 
       # Where the Friend group screen's parts go, while it is open.
@@ -225,12 +225,12 @@ module DotPopper
       # press it.
       def group_word(word) = word.for(input)
 
-      # Whether the title offers the way in to groups: where there is a
+      # Whether Home offers the way in to groups: where there is a
       # server, once a game has finished, or for someone in a group.
       def group_offered? = @groups.available?
 
       # Where an announcement goes: under the HUD at Game Over, and at
-      # the top of the title, clear of the Group button's row.
+      # the top of Home, clear of the Group button's row.
       def banner_y = layout.top
 
       # What the Stats screen shows, while it is open.
@@ -238,10 +238,10 @@ module DotPopper
 
       # The Stats screen laid out for the fonts this screen is measured with.
       def stats_layout
-        StatsLayout.measured(layout:, sheet: stats, style: style::RECORDS, measure: @measure)
+        StatsLayout.measured(layout:, sheet: stats, style: style::STATS, measure: @measure)
       end
 
-      # Whether the title offers "Your stats" and the choice of dot size:
+      # Whether Home offers "Your stats" and the choice of dot size:
       # only once a game has finished, so a first-time player's title says
       # only how to play. A player who cleared their records has played, so
       # it still offers them, though it shows no best or goal until their
@@ -271,7 +271,7 @@ module DotPopper
       # afresh each time, so a resized window is always seen as it is now.
       def sizing_preview = SizingPreview.of(cabinet.screen, style::SIZING)
 
-      # Whether the title offers the choice of dot size: once a game has
+      # Whether Home offers the choice of dot size: once a game has
       # finished, and only where the two sizes look different. Where they
       # look alike, the saved choice stays as it was, and games follow it.
       def sizing_offered? = sizing_preview.offered?
@@ -281,14 +281,14 @@ module DotPopper
       # A tap at +x+, +y+, by +by+ (a finger's id, :mouse, or :gamepad),
       # which #let_go names when it lets go. In a game, every tap goes to
       # the game at once. Elsewhere a tap presses the screen's button under
-      # it (#controls): on the title, Play, the mute button, "How to play",
+      # it (#controls): on Home, Play, the mute button, "How to play",
       # "Your stats", the dot-size choice, and on a desktop "Full screen"
       # and Quit; on Game Over, Continue and
       # "Share my score", and over it, the share preview's Copy and Close;
       # and on the
       # Stats screen, Back, Undo, or "Clear my stats…", which a press
-      # starts holding. Empty space does nothing, but a tap on one of the
-      # title's bright dots pops it, for fun, and a tap away from the share
+      # starts holding. Empty space does nothing, but a tap on one of
+      # Home's bright dots pops it, for fun, and a tap away from the share
       # preview's card closes it. A gamepad's A, which aims at no button,
       # presses the screen's main one (#primary).
       def tap(x, y, by: :tap)
@@ -400,7 +400,7 @@ module DotPopper
       def reach_of(name) = controls.find { it.name == name }&.reach
 
       # Presses this screen's main button, as Enter, Space, a gamepad's
-      # Start, or its A aimed at no button do: Play on the title, Back on
+      # Start, or its A aimed at no button do: Play on Home, Back on
       # the Stats screen and the Pro offer (Buy has only its own button),
       # Continue on Game Over, once its grace is over, and Copy in the
       # share preview. In a game it does nothing, since
@@ -417,7 +417,7 @@ module DotPopper
         end
       end
 
-      # The title's Play: a game starts, or on a first Play, a game with
+      # Home's Play: a game starts, or on a first Play, a game with
       # the Tutorial over it (TutorialFlag), which is seen from then on.
       def play
         return unless on_home?
@@ -426,7 +426,7 @@ module DotPopper
         start_game
       end
 
-      # The title's "How to play", H, or a gamepad's Y there: a game with
+      # Home's "How to play", H, or a gamepad's Y there: a game with
       # the Tutorial over it, at once, whether it was seen or not, as on a
       # first Play.
       def how_to_play
@@ -531,7 +531,7 @@ module DotPopper
 
       QUIT_ASK = 2.0 # seconds a second B has to quit from the title
 
-      # B on the title, where a controller has no other way to quit: the
+      # B on Home, where a controller has no other way to quit: the
       # first press asks, and :quit if a second comes within QUIT_ASK
       # seconds, so a stray press never closes the game.
       def ask_to_quit
@@ -555,7 +555,7 @@ module DotPopper
 
       # Escape, Android's Back, or a gamepad's B: closes the share
       # preview, leaves the Stats screen, and goes on from Game Over to
-      # the title, as Continue does. Says whether there was somewhere to go
+      # Home, as Continue does. Says whether there was somewhere to go
       # back from, so that elsewhere the key can do its usual job.
       def back
         if arrival? then answer_arrival(use: false)
@@ -569,8 +569,8 @@ module DotPopper
         true
       end
 
-      # Sizes dots as +sizing+ (DotSizing) says, on the title while it
-      # offers the choice, and remembers it. The title's dots and best
+      # Sizes dots as +sizing+ (DotSizing) says, on Home while it
+      # offers the choice, and remembers it. Home's dots and best
       # change with it, so the choice shows at once.
       def choose_sizing(sizing)
         return unless settings? && sizing_offered?
@@ -618,7 +618,7 @@ module DotPopper
       end
 
       # Back, from the Credits screen to the Stats screen, or from the
-      # Stats screen to the title.
+      # Stats screen to Home.
       def leave
         return close_offer if offer?
         return @groups.back if group_open?
@@ -897,7 +897,7 @@ module DotPopper
       end
 
       # Where a press reaches "Clear my stats…" and Undo on the Records
-      # screen, as the title's buttons do.
+      # screen, as Home's buttons do.
       def clear_reach = reach_of(:clear)
       def undo_reach = reach_of(:undo)
 
@@ -972,7 +972,7 @@ module DotPopper
       def back_reach = reach_of(:back)
 
       # Where a tap reaches each segment of the dot-size choice, as a
-      # DotSizing and its Rect, while the title offers it.
+      # DotSizing and its Rect, while Home offers it.
       def sizing_reaches = SIZINGS.map { [it, reach_of(it)] }
 
       # Where Home's parts go (HomePlan).
@@ -1105,8 +1105,8 @@ module DotPopper
         return unless pro? && !@achievements.earned?(id)
 
         case id
-        when :steady then [best_dots_in_a_row, Achievement::STEADY]
-        when :unshaken then [best_dots_in_a_row, Achievement::UNSHAKEN]
+        when :steady then [most_dots_in_a_row, Achievement::STEADY]
+        when :unshaken then [most_dots_in_a_row, Achievement::UNSHAKEN]
         when :big_score then [SizeClass::ALL.map { cabinet.score_record.of(it) }.max || 0, Achievement::BIG_SCORE]
         when :long_haul then [stats_book.stats.records.values.map(&:longest_game).max.to_f.round, Achievement::LONG_HAUL.to_i]
         end
@@ -1216,7 +1216,7 @@ module DotPopper
                            play_word: games.can_play? ? words.play_again : words.button(:get_pro), play_note:)
       end
 
-      # The window changed size. The title's dots are respawned if their
+      # The window changed size. Home's dots are respawned if their
       # size changes with it, as dots sized to the screen do.
       def resize(layout, field)
         @layout = layout
@@ -1265,8 +1265,8 @@ module DotPopper
 
       def start_game = with_a_game { cabinet.press(layout.center_x, layout.center_y) }
 
-      # Opens the offer straight from the title, as Play does when no play
-      # is left; Back from it returns to the title.
+      # Opens the offer straight from Home, as Play does when no play
+      # is left; Back from it returns to Home.
       def offer_for_play
         return unless home? && offer_offered?
 
@@ -1491,7 +1491,7 @@ module DotPopper
         window.display = order[(order.index(window.display).to_i + 1) % order.size]
       end
 
-      def best_dots_in_a_row = stats_book.stats.records.values.map(&:most_dots_in_a_row).max.to_i
+      def most_dots_in_a_row = stats_book.stats.records.values.map(&:most_dots_in_a_row).max.to_i
 
       # A button drawn at +frame+, which a press reaches within a dot's
       # width, short of the safe area's bottom.
@@ -1509,7 +1509,7 @@ module DotPopper
       # is offered.
       def clear_stats
         @clearing = clearing.cancel
-        @undo = UndoOffer.new(cleared: @keeper.clear, at: now, seconds: style::RECORDS_CLEAR.undo)
+        @undo = UndoOffer.new(cleared: @keeper.clear, at: now, seconds: style::STATS_CLEAR.undo)
         stats_changed
         sounds.play(:bonk, pitch: 0.7)
         @haptics.buzz(style::HAPTICS.penalty)
@@ -1522,7 +1522,7 @@ module DotPopper
         sounds.play(:tick, pitch: 1.2)
       end
 
-      # The records changed under the Stats screen: it, and the title's
+      # The records changed under the Stats screen: it, and Home's
       # best, show them as they are now.
       def stats_changed
         @stats = stats_sheet if stats?
@@ -1659,7 +1659,7 @@ module DotPopper
         @marquee = Marquee.new(style: style::HOME, score_record: event.score_record, at: now)
       end
 
-      # A tap on the title away from its buttons: a bright dot there pops
+      # A tap on Home away from its buttons: a bright dot there pops
       # for fun, with no score; anywhere else, nothing happens.
       def toy_tap(x, y)
         return unless home? && !stats? && !group_open?
@@ -1668,7 +1668,7 @@ module DotPopper
         toy_pop(dot, x, y) if dot&.bright?
       end
 
-      # One of the title's dots, popped by a tap: its droplets, its ring,
+      # One of Home's dots, popped by a tap: its droplets, its ring,
       # and its bloop, but no score.
       def toy_pop(dot, x, y)
         effects.burst(x, y, style::POP_BURST, palette.confetti)

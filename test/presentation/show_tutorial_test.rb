@@ -254,7 +254,7 @@ class ShowTutorialTest < Minitest::Test
     assert @show.lead_in
   end
 
-  def test_how_to_play_does_nothing_off_the_title
+  def test_how_to_play_does_nothing_off_home
     @show.how_to_play
     @show.back
     assert @show.playing?

@@ -4,7 +4,7 @@ module DotPopper
   module Presentation
     # Sizes for the friend groups' screens, in graphics units at a scale
     # of 1: its heading's and its text's type, the widest its column gets,
-    # and how dark the title's dots go behind it.
+    # and how dark Home's dots go behind it.
     class GroupStyle < Data.define(:heading, :text, :column, :veil); end
 
     # A line of words where the screen puts it: +kind+ is :text, :note or

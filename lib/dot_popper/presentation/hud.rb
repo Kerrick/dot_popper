@@ -49,12 +49,12 @@ module DotPopper
         if self.seconds && seconds < self.seconds && seconds.positive? && seconds <= style.urgent_below && block_given?
           yield seconds
         end
-        showing(score, seconds, now).streaking(game, now)
+        showing(score, seconds, now).tracking_row(game, now)
       end
 
       # The HUD showing +game+'s row at time +now+; a row that grew
       # bumps its newest dot.
-      def streaking(game, now)
+      def tracking_row(game, now)
         return with(dots_in_a_row: nil, size: nil, ready: false) unless game.bonus && !game.over?
 
         dots_in_a_row = game.dots_in_a_row

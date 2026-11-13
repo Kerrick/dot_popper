@@ -2,7 +2,7 @@
 
 module DotPopper
   module Shell
-    # The Themes screen, over the title's dimmed dots, which already use the
+    # The Themes screen, over Home's dimmed dots, which already use the
     # theme the player last chose: the heading, one card for each theme, and
     # Back in the bottom left corner. A card is its theme in small: its own
     # night, with a bright dot partly under a popped one, as in the game,
@@ -15,7 +15,7 @@ module DotPopper
 
       def draw(show, layout)
         plan = show.themes_layout
-        Header.new(pen:).draw(show, layout, show.words.themes.fetch(:title))
+        Header.new(pen:).draw(show, layout, show.words.themes.fetch(:heading))
         plan.cards.each { card(it, show) }
         steps(show, plan) if show.input == Presentation::InputKind::GAMEPAD
       end
@@ -73,7 +73,7 @@ module DotPopper
       def name(text, rect, theme)
         art = theme.art
         face = art&.wordmark || pen.style::TYPE.bold
-        text = text.upcase if art&.wordmark && art.title_dots
+        text = text.upcase if art&.wordmark && art.dotted_name
         size = [(rect.height * 0.13).round, 24].min
         size -= 1 while size > 10 && pen.fonts.face(face, size).width(text) > rect.width * 0.9
         pen.text(text, pen.fonts.face(face, size), rect.center_x, rect.bottom - (rect.height * 0.2), theme.palette.bright_body)

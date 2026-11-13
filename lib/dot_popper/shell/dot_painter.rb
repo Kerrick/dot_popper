@@ -32,7 +32,7 @@ module DotPopper
         end
       end
 
-      # One dot that is not in play, such as the title's examples.
+      # One dot that is not in play, such as Home's examples.
       def icon(x, y, radius, bright:, opacity: 1.0, bonus: false)
         paint { |shader| one(x, y, radius, bright ? Presentation::Pose::BRIGHT : Presentation::Pose::STILL, opacity, bonus, shader, pen.style::DOT.seed(9, bright:)) }
       end

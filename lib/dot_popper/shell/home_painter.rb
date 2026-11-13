@@ -28,7 +28,7 @@ module DotPopper
       def name(show, plan, layout, alpha)
         rect = plan.name
         words = show.words
-        if pen.art then ThemedTitle.new(pen:, dots:).draw(words.game_name, rect.center_x, rect.center_y, plan.name_size, alpha, room: rect.width)
+        if pen.art then ThemedName.new(pen:, dots:).draw(words.game_name, rect.center_x, rect.center_y, plan.name_size, alpha, room: rect.width)
         else Lettering.new(pen:).candy(words.game_name, pen.fonts.bold(plan.name_size), rect.center_x, rect.center_y, alpha)
         end
       end
@@ -60,9 +60,9 @@ module DotPopper
         text = pen.fonts.bold(card.text_size)
         done = show.stats_book.goal_done?
         tone = done ? palette.gain : palette.soft
-        title = show.words.goal_card_label
-        pen.text(title, label, rect.x + pad + (label.width(title) / 2.0), rect.y + pad + (label.height / 2.0), tone, alpha)
-        Glyphs.new(pen:).draw(:check, rect.x + pad + label.width(title) + (label.height * 0.9), rect.y + pad + (label.height / 2.0), label.height * 0.9, color: palette.gain, alpha:) if done
+        heading = show.words.goal_card_label
+        pen.text(heading, label, rect.x + pad + (label.width(heading) / 2.0), rect.y + pad + (label.height / 2.0), tone, alpha)
+        Glyphs.new(pen:).draw(:check, rect.x + pad + label.width(heading) + (label.height * 0.9), rect.y + pad + (label.height / 2.0), label.height * 0.9, color: palette.gain, alpha:) if done
         card.lines.each_with_index do |line, i|
           pen.text(line, text, rect.x + pad + (text.width(line) / 2.0), card.top + (text.height * (i + 0.5)), done ? palette.gain : palette.cream, alpha)
         end

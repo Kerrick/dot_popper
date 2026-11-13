@@ -176,7 +176,7 @@ Tests: `test/achievement_watch_test.rb`, `test/achievements_test.rb`, `test/visi
 
 ## Clearing Stats
 
-The Stats screen has **Clear my stats…**, offered while there is something to clear and no Undo is offered (`Show#clear_offered?`). It clears only once held for 2 s (`Style::RECORDS_CLEAR`, a `ClearStyle` of hold 2.0, undo 10.0, hint 2.5; `HoldToConfirm`).
+The Stats screen has **Clear my stats…**, offered while there is something to clear and no Undo is offered (`Show#clear_offered?`). It clears only once held for 2 s (`Style::STATS_CLEAR`, a `ClearStyle` of hold 2.0, undo 10.0, hint 2.5; `HoldToConfirm`).
 
 - While it is held, a bar fills and the prompt reads "Keep holding to clear your records, totals, chart, achievements, and streak."
 - Let go sooner, and nothing happens; "Press and hold to clear…" stays for 2.5 s.

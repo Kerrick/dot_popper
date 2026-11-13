@@ -23,7 +23,7 @@ module DotPopper
               dot: "santa", scenery: :rooftops,
               sky: ThemeSky.new(top: hex["#0a1230"], mid: hex["#14204a"], bottom: hex["#2a3a6a"], glow: hex["#3a4c80"], glow_at: [0.7, 1.0],
                                 glow_amount: 0.35, edge: hex["#050818"], stars: 0.9),
-              wordmark: "assets/fonts/Fredoka-Bold.ttf", title_dots: true,
+              wordmark: "assets/fonts/Fredoka-Bold.ttf", dotted_name: true,
               sounds: {
                 pop: Patch.new(notes: [Note.new(wave: :sine, from: 523, length: 0.12, attack: 0.001, volume: 0.45),
                                        Note.new(wave: :sine, from: 698, start: 0.03, length: 0.1, attack: 0.001, volume: 0.35),

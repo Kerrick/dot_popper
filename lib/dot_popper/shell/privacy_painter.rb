@@ -10,7 +10,7 @@ module DotPopper
       def draw(show, layout)
         plan = show.privacy_plan
         words = show.words
-        Header.new(pen:).draw(show, layout, words.button(:privacy_title))
+        Header.new(pen:).draw(show, layout, words.button(:privacy_heading))
         lines(plan)
         policy(show, plan)
         delete(show, plan) if plan.delete

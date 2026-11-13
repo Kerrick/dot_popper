@@ -66,12 +66,12 @@ module DotPopper
       end
 
       def records(_show, sheet, rect) = rows("Records", sheet.records.rows.drop(1), rect, Presentation::StatsLayout::RECORD_ROW, 18)
-      def totals(_show, sheet, rect) = rows(sheet.totals.title, sheet.totals.rows, rect, Presentation::StatsLayout::TOTAL_ROW, 16)
+      def totals(_show, sheet, rect) = rows(sheet.totals.heading, sheet.totals.rows, rect, Presentation::StatsLayout::TOTAL_ROW, 16)
 
-      def rows(title, rows, rect, height, size)
+      def rows(heading, rows, rect, height, size)
         palette = pen.palette
         pad = 16.0
-        left(title, pen.fonts.semibold(14), rect.x + pad, rect.y + 16, palette.soft)
+        left(heading, pen.fonts.semibold(14), rect.x + pad, rect.y + 16, palette.soft)
         # One size for every row of the card: the largest at which each
         # row's label fits beside its value.
         # a label that still does not fit breaks onto two lines.
@@ -95,7 +95,7 @@ module DotPopper
 
       def goal(show, sheet, rect)
         palette = pen.palette
-        left(sheet.goal.title, pen.fonts.semibold(14), rect.x + 14, rect.y + 16, palette.soft)
+        left(sheet.goal.heading, pen.fonts.semibold(14), rect.x + 14, rect.y + 16, palette.soft)
         rows = sheet.goal.rows
         [rows[0], rows[1]].each_with_index do |row, i|
           x = rect.x + (rect.width * (i.zero? ? 0.27 : 0.73))
@@ -114,7 +114,7 @@ module DotPopper
       def prompt(show, layout)
         words = show.words
         clearing = show.clearing
-        hint = pen.style::RECORDS_CLEAR.hint
+        hint = pen.style::STATS_CLEAR.hint
         ago = clearing.let_go_ago(show.now)
         if clearing.held? then say(words.keep_holding(show.holding_button), layout, 1.0)
         elsif ago && ago < hint then say(words.hold_to_clear, layout, ((hint - ago) / 0.5).clamp(0.0, 1.0))

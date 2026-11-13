@@ -170,7 +170,7 @@ module DotPopper
       def credits_button = Rect.new(x: back_button.right + page_margin, y: back_button.y, width: control_height * 3.0, height: control_height)
       def stats_floor(**) = [back_button.y, clear_stats_button.y].min
 
-      # The size of a screen's main button, the title's Play and Game
+      # The size of a screen's main button, Home's Play and Game
       # Over's Continue, for dots of +radius+: at least a dot across, and
       # a button's height, so it is the biggest thing to press; nearly the
       # whole width of a phone, and wide enough for its word elsewhere.

@@ -21,7 +21,7 @@ module DotPopper
     class Fling < Data.define(:ball, :velocity); end
 
     # A press and release that was a click, heard as a press: on Game
-    # Over, the tap that goes back to the title.
+    # Over, the tap that goes back to Home.
     class Click < Data.define(:x, :y); end
 
     # One pointer's press on Game Over, from the moment it goes down. It

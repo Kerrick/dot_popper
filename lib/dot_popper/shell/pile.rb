@@ -6,7 +6,7 @@ module DotPopper
     # dots are only scenery, so they are handed to a Box2D world: each dot
     # becomes a ball where it was, going as it went, and falls under
     # gravity between the window's sides onto its floor. A new game or
-    # the title throws the world away.
+    # Home throws the world away.
     #
     # It hears the rules' events (Cabinet#subscribe). While a pile is falling,
     # +stack+ is the game's stack with each dot where its ball is, in the

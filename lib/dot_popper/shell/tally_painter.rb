@@ -5,7 +5,7 @@ module DotPopper
     # A Presentation::Tally drawn: its number, outlined so it reads over a
     # light dot or a dark one, and for the clock, the small stopwatch after
     # it, in the same color. The Tutorial flies these into the HUD, and
-    # the title's legend shows the same ones, so they read as one language.
+    # Home's legend shows the same ones, so they read as one language.
     class TallyPainter < Data.define(:pen)
       G = ::Lota::Graphics
 

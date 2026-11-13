@@ -24,7 +24,7 @@ module DotPopper
               dot: "jingle_bell", scenery: :sleigh_ride,
               sky: ThemeSky.new(top: hex["#120d2e"], mid: hex["#2a1c4c"], bottom: hex["#6a3a62"], glow: hex["#b0607a"], glow_at: [0.65, 0.78],
                                 glow_amount: 0.4, edge: hex["#070514"], stars: 0.8),
-              wordmark: "assets/fonts/Fredoka-Bold.ttf", title_dots: true,
+              wordmark: "assets/fonts/Fredoka-Bold.ttf", dotted_name: true,
               sounds: {
                 pop: Patch.new(notes: [Note.new(wave: :sine, from: 494, length: 0.16, attack: 0.001, volume: 0.4),
                                        Note.new(wave: :sine, from: 659, length: 0.12, attack: 0.001, volume: 0.25),

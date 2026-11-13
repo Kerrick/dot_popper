@@ -68,7 +68,7 @@ module DotPopper
         quit_again: "Press B again to quit",
         quit: ByInput.new(touch: "Quit", mouse: "Quit", gamepad: "Quit (B)"),
         # The Themes screen: its button's word and heading, and each theme's name.
-        themes: { title: "Themes", new: "A new theme", later: "Not now", use: "Use %s", classic: "Classic", ghost: "Ghost", jack_o_lantern: "Jack-o'-lantern", awake: "Awake", eclipse: "Eclipse",
+        themes: { heading: "Themes", new: "A new theme", later: "Not now", use: "Use %s", classic: "Classic", ghost: "Ghost", jack_o_lantern: "Jack-o'-lantern", awake: "Awake", eclipse: "Eclipse",
                   ornament: "Ornament", santa: "Santa", snowman: "Snowman", peppermint: "Peppermint", jingle_bell: "Jingle bell", gingerbread: "Gingerbread", pumpkin_pie: "Pumpkin pie", turkey: "Turkey" }.freeze,
         offer: {
           entry: "Get Pro", heading: "Dot Popper Pro", no_games: "No games left today.",
@@ -87,7 +87,7 @@ module DotPopper
           gamepad: "Hold Y to clear your records, totals, chart, achievements, and streak."
         ),
         credits: ByInput.new(touch: "Credits", mouse: "Credits", gamepad: "Credits (X)"),
-        credits_title: "Credits",
+        credits_heading: "Credits",
         # The Credits screen's own words. A later line of thanks goes in
         # as +thanks:+, which the screen leaves out while there is none.
         notice: {
@@ -158,7 +158,7 @@ module DotPopper
           privacy_delete: "Delete my friend group data",
           privacy_hold: ByInput.new(touch: "Hold to leave every friend group and delete your scores online.", mouse: "Hold to leave every friend group and delete your scores online.", gamepad: "Hold Y to leave every friend group and delete your scores online."),
           privacy_delete_note: "Your Stats stay.",
-          server: "Change Server", server_title: "Change Server",
+          server: "Change Server", server_heading: "Change Server",
           server_warning: "The server you choose receives your friend group scores. It can't give you Pro.",
           server_how: "Copy the address of a server for Dot Popper, starting https://, and paste it here.",
           server_now: "Now: %s", server_setdef: "setdef's server",
@@ -167,27 +167,27 @@ module DotPopper
           server_empty: "Copy the server's address first.",
           privacy_stats: "Your Stats stay on this device.",
           privacy_groups: "In a friend group, Dot Popper keeps your scores online so the group can see them.",
-          not_earned: "Not earned yet", your_record: "Your record", settings_title: "Settings", privacy_title: "Privacy",
-          achievements_title: "Achievements", credits_title: "Credits and licenses",
+          not_earned: "Not earned yet", your_record: "Your record", settings_heading: "Settings", privacy_heading: "Privacy",
+          achievements_heading: "Achievements", credits_heading: "Credits and licenses",
           achievement_close: ByInput.new(touch: "Close", mouse: "Close", gamepad: "Close (B)"),
           achievement_pro: ByInput.new(touch: "Get Pro", mouse: "Get Pro", gamepad: "Get Pro (A)"),
           how_to_earn: ByInput.new(touch: "How to earn", mouse: "How to earn", gamepad: "How to earn (X)")
         }.freeze
       )
 
-      # The Stats screen, opened from the title: the heading's and the
+      # The Stats screen, opened from Home: the heading's and the
       # rows' sizes, a row's height in its type size, the chart's height in
       # rows, the gap between columns and a column's widest, and how far
-      # the title's dots dim behind it. A column is only as wide as its
+      # Home's dots dim behind it. A column is only as wide as its
       # longest row needs, so each label stays near its number.
-      RECORDS = StatsStyle.new(heading: 48, text: 23, line: 1.6, chart: 4.2, gap: 56, column: 520, veil: 0.9)
+      STATS = StatsStyle.new(heading: 48, text: 23, line: 1.6, chart: 4.2, gap: 56, column: 520, veil: 0.9)
 
       # The Themes screen, over the Stats screen: its heading's size, the
       # gap between cards in margins, a card's height in its width, and the
       # widest a card grows (in units at a scale of 1).
       THEMES_LAYOUT = ThemesStyle.new(heading: 48, gap: 1.0, ratio: 0.78, widest: 260)
 
-      # The Friend group screen, opened from the title.
+      # The Friend group screen, opened from Home.
       GROUPS = GroupStyle.new(heading: 44, text: 20, column: 560, veil: 0.9)
 
       # The Credits screen, over the Stats screen: its type, the lines a
@@ -198,7 +198,7 @@ module DotPopper
       # is held for two seconds, never only tapped, and Undo is offered
       # for ten after. A press let go too soon leaves its hint, to hold
       # it, for a moment.
-      RECORDS_CLEAR = ClearStyle.new(hold: 2.0, undo: 10.0, hint: 2.5)
+      STATS_CLEAR = ClearStyle.new(hold: 2.0, undo: 10.0, hint: 2.5)
 
       # A button the mouse is over brightens, its backing to the night's
       # glow and its outline to cream, in an eighth of a second, quick
@@ -364,19 +364,19 @@ module DotPopper
         urgent_below: 3
       )
 
-      # The title: its drifting dots and how far they dim, the prompt's
+      # Home: its drifting dots and how far they dim, the prompt's
       # breath and its faintest point in it, which stays easy to read.
       class HomeStyle < Data.define(:dots, :drift, :dim, :breath, :faintest, :intro); end
       HOME = HomeStyle.new(dots: 7, drift: 0.35, dim: 0.76, breath: 2.4, faintest: 0.8,
                             intro: Tween.new(from: 0.0, to: 1.0, duration: 0.5, ease: :out_cubic))
-      # The title's "Dot size" choice is offered only where dots sized to
+      # Home's "Dot size" choice is offered only where dots sized to
       # the screen would be more than a tenth smaller or bigger than the
       # standard ones; nearer than that, as in the 24 × 16 R window, the
       # two look alike. Each segment shows a dot: the standard one about a
       # third of the segment's height across, the other in proportion to
       # it, from half as big to a little over twice.
       SIZING = SizingStyle.new(alike: 0.1, icon: 0.16, icons: 0.5..2.2)
-      # ...and the title's words, from its name to its prompt, sit on a
+      # ...and Home's words, from its name to its prompt, sit on a
       # faint backing, so a dot drifting behind them dims further.
       HOME_BACKING = ScrimStyle.new(alpha: 0.4, feather: 48, layers: 10, pad: 12)
 
@@ -554,8 +554,8 @@ module DotPopper
       # each screen, the Stats screen too, how long it thinks before each
       # tap (which grows with the score, so a game ends), and how often it
       # taps a popped dot.
-      class AutopilotStyle < Data.define(:title_wait, :game_over_wait, :stats_wait, :think, :tiring, :mistakes); end
-      AUTOPILOT = AutopilotStyle.new(title_wait: 1.6, game_over_wait: 3.2, stats_wait: 3.0, think: 0.22..0.45,
+      class AutopilotStyle < Data.define(:home_wait, :game_over_wait, :stats_wait, :think, :tiring, :mistakes); end
+      AUTOPILOT = AutopilotStyle.new(home_wait: 1.6, game_over_wait: 3.2, stats_wait: 3.0, think: 0.22..0.45,
                                     tiring: 0.07, mistakes: 0.2)
     end
   end

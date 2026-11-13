@@ -24,7 +24,7 @@ module DotPopper
               dot: "pumpkin_pie", scenery: :farm,
               sky: ThemeSky.new(top: hex["#17112a"], mid: hex["#33203a"], bottom: hex["#6e3530"], glow: hex["#ff9a4a"], glow_at: [0.45, 1.02],
                                 glow_amount: 0.45, edge: hex["#0a0610"], stars: 0.6),
-              wordmark: "assets/fonts/Fredoka-Bold.ttf", title_dots: true,
+              wordmark: "assets/fonts/Fredoka-Bold.ttf", dotted_name: true,
               sounds: {
                 # A soft plop, a forkful taken: one attack, its octave on
                 # the same fall, and a breath of noise inside it.

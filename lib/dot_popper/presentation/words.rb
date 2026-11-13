@@ -18,7 +18,7 @@ module DotPopper
     class Words < Data.define(:game_name, :play, :play_again, :time_up, :new_score_record, :score_record, :score, :time,
                               :share, :share_heading, :copied, :copy, :close, :stats, :how_to_play, :go_back,
                               :no_games, :clear, :keep_holding, :hold_to_clear, :cleared, :undo, :labels, :goals, :goal_done, :goal_met,
-                              :screen_size, :credits, :credits_title, :notice, :quit_again, :quit, :themes, :offer, :buttons,
+                              :screen_size, :credits, :credits_heading, :notice, :quit_again, :quit, :themes, :offer, :buttons,
                               :input)
       MINUS = "−" # a true minus sign, as wide as the plus
       # How near a game must come to the best for Game Over to say by how
@@ -178,7 +178,7 @@ module DotPopper
         sized ? screen_size.fetch(:fitted_played) : format(screen_size.fetch(:played), *Words.dots_across(field))
       end
 
-      # The name of one choice of dot size, on its segment of the title's
+      # The name of one choice of dot size, on its segment of Home's
       # "Dot size" control, by what it does on this screen next to the
       # other, as the +preview+ (SizingPreview) sees it: on a phone,
       # fitting the dots to the screen gives "Smaller dots" and the fixed
@@ -231,7 +231,7 @@ module DotPopper
         (minutes % 60).zero? ? hours : "#{hours} #{count(minutes % 60, "minute")}"
       end
 
-      # Today's goal on the title: "Today's goal: pop 15 bright dots in a
+      # Today's goal on Home: "Today's goal: pop 15 bright dots in a
       # row without a mistake."
       def goal(goal) = "Today's goal: #{format(goals.fetch(goal.kind), goal.target)}."
 
@@ -240,7 +240,7 @@ module DotPopper
       # game going for 40 seconds."
       def goal_done_line(goal) = "#{goal_done} #{format(goals.fetch(goal.kind), goal.target)}."
 
-      # The days in a row the goal has been met, for the title once there
+      # The days in a row the goal has been met, for Home once there
       # are two or more, under the goal it counts: "Met 3 days in a row."
       def streak(days) = "Met #{days} days in a row."
 

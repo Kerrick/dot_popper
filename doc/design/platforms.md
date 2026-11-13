@@ -29,7 +29,7 @@ On a computer, `App#open_window` sizes the window to the play area `Style::WINDO
 
 **A phone's or tablet's keyboard never quits or leaves fullscreen.** `App#key_pressed` returns before Escape's quit and the fullscreen keys when `@touch` is set, since an iOS app never quits itself. What works before that point works on every device: M mutes, H opens How to play, Enter and Space press the screen's main button, Escape goes back where there is somewhere to go, and the keypad and scroll keys work ([input.md](input.md), "Keyboard").
 
-**Leaving.** On Android, Escape (which Back arrives as) on Home quits (`Lota::Event.quit`). On iOS nothing quits: B on Home neither asks nor quits (`App#leave_title`).
+**Leaving.** On Android, Escape (which Back arrives as) on Home quits (`Lota::Event.quit`). On iOS nothing quits: B on Home neither asks nor quits (`App#leave_home`).
 
 ## What the game prints as it starts
 

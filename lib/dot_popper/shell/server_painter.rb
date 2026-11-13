@@ -10,7 +10,7 @@ module DotPopper
       def draw(show, layout)
         plan = show.server_plan
         words = show.words
-        Header.new(pen:).draw(show, layout, words.button(:server_title))
+        Header.new(pen:).draw(show, layout, words.button(:server_heading))
         lines(plan)
         line(plan.now, plan, plan.now_y, pen.palette.soft)
         PillButton.new(pen:).draw(plan.paste, words.button(:server_paste), hover: show.hover.level(:server_paste))

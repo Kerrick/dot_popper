@@ -23,7 +23,7 @@ module DotPopper
               dot: "snowman", scenery: :snowfield,
               sky: ThemeSky.new(top: hex["#0b1530"], mid: hex["#16264e"], bottom: hex["#34497a"], glow: hex["#5a6e9e"], glow_at: [0.3, 0.95],
                                 glow_amount: 0.3, edge: hex["#060b1c"], stars: 0.8),
-              wordmark: "assets/fonts/Fredoka-Bold.ttf", title_dots: true,
+              wordmark: "assets/fonts/Fredoka-Bold.ttf", dotted_name: true,
               sounds: {
                 pop: Patch.new(notes: [Note.new(wave: :triangle, from: 400, to: 210, length: 0.14, attack: 0.004, volume: 0.8),
                                        Note.new(wave: :sine, from: 200, to: 175, length: 0.16, attack: 0.006, volume: 0.5),

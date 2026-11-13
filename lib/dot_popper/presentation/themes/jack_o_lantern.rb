@@ -23,7 +23,7 @@ module DotPopper
               dot: "jack_o_lantern", scenery: :dusk,
               sky: ThemeSky.new(top: hex["#1c1442"], mid: hex["#3a1f5e"], bottom: hex["#6d2b4a"], glow: hex["#ffb060"], glow_at: [0.5, 1.02],
                                 glow_amount: 0.35, edge: hex["#0b0820"], stars: 0.85),
-              wordmark: "assets/fonts/Creepster.ttf", title_dots: true,
+              wordmark: "assets/fonts/Creepster.ttf", dotted_name: true,
               sounds: {
                 pop: Patch.new(notes: [Note.new(wave: :noise, from: 1, length: 0.09, attack: 0.002, volume: 0.45),
                                        Note.new(wave: :triangle, from: 240, to: 110, length: 0.16, volume: 0.9)]),

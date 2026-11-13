@@ -3,7 +3,7 @@
 module DotPopper
   module Presentation
     # A change to the score or the clock as the game shows it without a
-    # word, in the Tutorial's flights and the title's legend alike: a
+    # word, in the Tutorial's flights and Home's legend alike: a
     # signed number, "+1" or "−2", and for the clock a small drawn
     # stopwatch after it (+stopwatch+). The stopwatch is ICON of the
     # line's height across, GAP of its own size after the number.

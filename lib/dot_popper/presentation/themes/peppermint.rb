@@ -24,7 +24,7 @@ module DotPopper
               dot: "peppermint", scenery: :mantel,
               sky: ThemeSky.new(top: hex["#0c1f1a"], mid: hex["#123026"], bottom: hex["#2e2414"], glow: hex["#c0682c"], glow_at: [0.5, 0.86],
                                 glow_amount: 0.4, edge: hex["#040c09"], stars: 0.0),
-              wordmark: "assets/fonts/Fredoka-Bold.ttf", title_dots: true,
+              wordmark: "assets/fonts/Fredoka-Bold.ttf", dotted_name: true,
               sounds: {
                 # A hard candy bitten through: one sharp crack, the jaw's
                 # dull thud, a few crumbs breaking at uneven times, and a

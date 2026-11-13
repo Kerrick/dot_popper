@@ -10,7 +10,7 @@ module DotPopper
 
       def draw(show, layout)
         words = show.words
-        Header.new(pen:).draw(show, layout, words.button(:achievements_title))
+        Header.new(pen:).draw(show, layout, words.button(:achievements_heading))
         pen.text(Presentation::AchievementWords.count(show.achievement_count), pen.fonts.semibold(16), layout.center_x, layout.heading_y + (layout.heading_size * 0.72), pen.palette.soft) if show.pro?
         window = show.achievements_layout.window
         pixels = pen.pixels

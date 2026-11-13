@@ -16,7 +16,7 @@ require "fileutils"
 class GuiScenariosTest < Minitest::Test
   GAME = File.expand_path("../..", __dir__)
 
-  def test_a_game_from_title_to_title
+  def test_a_game_from_home_to_home
     play("game", "screens come in order", "hidden under it is outlined", "Game Over teaches the stacking rule",
          "a click on empty space at Game Over does nothing", "Play again starts the next game at once",
          "Home goes back Home", "games.csv logs the score")
@@ -27,7 +27,7 @@ class GuiScenariosTest < Minitest::Test
          "the pile's dots are all inside the shrunk window")
   end
 
-  def test_full_screen_and_quit_on_the_title_by_the_mouse_alone
+  def test_full_screen_and_quit_on_home_by_the_mouse_alone
     play("window_buttons", "Full screen is drawn as Borderless", "a click on Full screen fills the screen",
          "the button now says Window", "a click on Window puts the window back",
          "a click on Quit asks Lota to quit at once")
@@ -125,7 +125,7 @@ class GuiScenariosTest < Minitest::Test
                                                DOT_POPPER_FAKE_GAMEPAD: "1")
   end
 
-  def test_how_to_play_on_the_title_by_mouse_and_by_h
+  def test_how_to_play_on_home_by_mouse_and_by_h
     play("how_to_play", "a first Home offers no How to play", "How to play is drawn",
          "How to play opens the tutorial at once", "Escape skips it",
          "H opens it again from the title")

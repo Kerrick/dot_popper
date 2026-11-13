@@ -547,7 +547,7 @@ class GroupPanelTest < Minitest::Test
     assert_equal [2], @show.group_plan.rows.map { it.change.id }
   end
 
-  def test_an_announcement_waits_for_game_over_or_the_title_and_stays_quiet_during_a_game
+  def test_an_announcement_waits_for_game_over_or_home_and_stays_quiet_during_a_game
     join!
     tap_control(:back)
     tap_control(:back)

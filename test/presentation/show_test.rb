@@ -14,7 +14,7 @@ class ShowTest < Minitest::Test
                      clipboard: @clipboard, sizing_store: @sizing_store)
   end
 
-  def test_a_tap_on_a_title_dot_pops_it_for_fun_and_starts_nothing
+  def test_a_tap_on_a_home_dot_pops_it_for_fun_and_starts_nothing
     dots = @show.attract.dots
     bright = dots.find { it.bright? && dots.top_at(it.x, it.y) == it && @show.control_at(it.x, it.y).nil? }
     @show.tap(bright.x, bright.y)
@@ -308,7 +308,7 @@ class ShowTest < Minitest::Test
                     "the backing ends above Play again"
   end
 
-  def test_the_share_buttons_place_on_the_title_shares_nothing
+  def test_the_share_buttons_place_on_home_shares_nothing
     finish_game(back_to_title: false)
     place = middle(@show.share_reach)
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
@@ -324,7 +324,7 @@ class ShowTest < Minitest::Test
 
   # Laying the title out took a millisecond a frame on a phone, twice a
   # frame; it is laid out again only when something on it changes.
-  def test_the_title_is_laid_out_again_only_when_it_changes
+  def test_home_is_laid_out_again_only_when_it_changes
     plan = @show.home_plan
 
     assert_same plan, @show.home_plan
@@ -347,7 +347,7 @@ class ShowTest < Minitest::Test
 
   # The maintainer, on a controller alone, couldn't find how to quit. B
   # on the title asks, and a second B within two seconds quits.
-  def test_b_twice_on_the_title_quits_and_once_only_asks
+  def test_b_twice_on_home_quits_and_once_only_asks
     assert_equal :asked, @show.ask_to_quit
     assert_operator @show.quit_prompt, :>, 0.0
     @show.update(1.0)
@@ -384,7 +384,7 @@ class ShowTest < Minitest::Test
     assert_equal :smaller, @show.sizing_preview.effect
   end
 
-  def test_your_stats_opens_over_the_title_and_back_goes_back
+  def test_your_stats_opens_over_home_and_back_goes_back
     finish_game
     @show.tap(*middle(@show.stats_reach))
     assert @show.stats?
@@ -411,14 +411,14 @@ class ShowTest < Minitest::Test
     assert @show.home?
   end
 
-  def test_the_stats_screen_opens_only_from_the_title
+  def test_the_stats_screen_opens_only_from_home
     finish_game(back_to_title: false)
     @show.open_stats
 
     refute @show.stats?
   end
 
-  def test_a_gamepads_start_begins_the_usual_game_without_popping_a_title_dot
+  def test_a_gamepads_start_begins_the_usual_game_without_popping_a_home_dot
     @show.start
 
     assert @show.playing?
@@ -671,7 +671,7 @@ class ShowTest < Minitest::Test
     assert_equal :game_over, @sounds.names.last
   end
 
-  def test_back_on_the_title_the_effects_are_cleared
+  def test_back_on_home_the_effects_are_cleared
     start_and_pop
     @cabinet.update(20)
     @cabinet.update(1)

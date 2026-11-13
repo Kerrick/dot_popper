@@ -9,8 +9,8 @@ module DotPopper
       def initialize(label:, value:, mark: nil) = super
     end
 
-    # A titled group of RecordRows.
-    class StatsSection < Data.define(:title, :rows); end
+    # A headed group of RecordRows.
+    class StatsSection < Data.define(:heading, :rows); end
 
     # What the Stats screen says, worked out from Stats and the
     # best score: the player's records, their totals, the daily goal's
@@ -35,28 +35,28 @@ module DotPopper
           StatsRow.new(label: AchievementWords.name(id), value: AchievementWords.mark(id),
                        mark: achievements.earned?(id) ? :earned : :open)
         end
-        StatsSection.new(title: AchievementWords.heading(achievements.count), rows:)
+        StatsSection.new(heading: AchievementWords.heading(achievements.count), rows:)
       end
 
       def self.build(stats, score_record:, words:, streak: 0, size_class: SizeClass::MEDIUM, field: nil,
                      sizing: DotSizing::STANDARD, achievements: nil)
         labels = words.labels
         mine = stats.records_in(size_class)
-        records = StatsSection.new(title: words.records_heading(sizing), rows: [
+        records = StatsSection.new(heading: words.records_heading(sizing), rows: [
           StatsRow.new(label: labels[:score_record], value: score_record.to_s),
           StatsRow.new(label: labels[:longest_game], value: Words.count(mine.longest_game.round, "second")),
           StatsRow.new(label: labels[:most_dots_in_a_row], value: mine.most_dots_in_a_row.to_s),
           StatsRow.new(label: labels[:shortest_time_to_pop], value: words.seconds_or_none(mine.shortest_time_to_pop)),
           StatsRow.new(label: labels[:longest_time_to_pop], value: words.seconds_or_none(mine.longest_time_to_pop))
         ])
-        totals = StatsSection.new(title: labels[:totals], rows: [
+        totals = StatsSection.new(heading: labels[:totals], rows: [
           StatsRow.new(label: labels[:games], value: stats.games.to_s),
           StatsRow.new(label: labels[:dots_popped], value: stats.dots_popped.to_s),
           StatsRow.new(label: labels[:mistakes], value: stats.mistakes.to_s),
           StatsRow.new(label: labels[:seconds], value: Words.duration(stats.seconds)),
           StatsRow.new(label: labels[:days], value: stats.days.to_s)
         ])
-        goal = StatsSection.new(title: labels[:goal], rows: [
+        goal = StatsSection.new(heading: labels[:goal], rows: [
           StatsRow.new(label: labels[:streak], value: Words.count(streak, "day")),
           StatsRow.new(label: labels[:longest_streak], value: Words.count(stats.streak.longest, "day"))
         ])
@@ -103,7 +103,7 @@ module DotPopper
     # The line under the score chart that says what its dim bars are.
     class ChartNote < Data.define(:text); end
 
-    # Where a part of the Stats screen goes: +item+ is a section's title
+    # Where a part of the Stats screen goes: +item+ is a section's heading
     # or the chart's (a String), a RecordRow, :chart, or a ChartNote. A text line is
     # centered on +y+; the chart's box starts at +y+ and is +height+ tall.
     class Placed < Data.define(:item, :x, :y, :width, :height)

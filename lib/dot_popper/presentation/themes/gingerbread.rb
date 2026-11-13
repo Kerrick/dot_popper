@@ -24,7 +24,7 @@ module DotPopper
               dot: "gingerbread", scenery: :kitchen,
               sky: ThemeSky.new(top: hex["#0e1422"], mid: hex["#162034"], bottom: hex["#2a2a3a"], glow: hex["#b0703a"], glow_at: [0.5, 1.0],
                                 glow_amount: 0.35, edge: hex["#05070e"], stars: 0.0),
-              wordmark: "assets/fonts/Fredoka-Bold.ttf", title_dots: true,
+              wordmark: "assets/fonts/Fredoka-Bold.ttf", dotted_name: true,
               sounds: {
                 # A gumdrop's soft "boop": a light tap, one short note that
                 # lifts a little, and a single small bounce above it.

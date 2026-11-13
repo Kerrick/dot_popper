@@ -2,7 +2,7 @@
 
 module DotPopper
   module Shell
-    # The speaker in the title's corner: sound waves when sound is on, a
+    # The speaker in Home's corner: sound waves when sound is on, a
     # cross when it is off. A tap on it toggles sound (Show#tap). With the
     # mouse over it, +hover+ of the way (Presentation::Hover), its disc
     # brightens, an outline rings it, and the speaker lightens.

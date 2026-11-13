@@ -7,7 +7,7 @@ module DotPopper
     class SettingsPainter < Data.define(:pen, :dots)
       def draw(show, layout)
         plan = show.settings_plan
-        Header.new(pen:).draw(show, layout, show.words.button(:settings_title))
+        Header.new(pen:).draw(show, layout, show.words.button(:settings_heading))
         page = layout.page
         pixels = pen.pixels
         ::Lota::Graphics.scissor = pixels.snap(layout.safe.x), pixels.snap(page.y), pixels.snap(layout.safe.width), pixels.snap(page.height)
@@ -55,9 +55,9 @@ module DotPopper
 
     # A screen's heading and Back: top left beside the heading on a short window.
     class Header < Data.define(:pen)
-      def draw(show, layout, title)
-        size, x = show.heading_place(title)
-        pen.text(title, pen.fonts.bold(size), x, layout.heading_y, pen.palette.cream)
+      def draw(show, layout, heading)
+        size, x = show.heading_place(heading)
+        pen.text(heading, pen.fonts.bold(size), x, layout.heading_y, pen.palette.cream)
         PillButton.new(pen:).draw(layout.back_button, show.words.go_back, hover: show.hover.level(:back),
                                   icon: ->(x, y, size) { Glyphs.new(pen:).draw(:chevron_left, x, y, size * 0.38) })
       end

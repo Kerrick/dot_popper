@@ -23,7 +23,7 @@ module DotPopper
               dot: "awake", scenery: :wood,
               sky: ThemeSky.new(top: hex["#0e1a14"], mid: hex["#121f18"], bottom: hex["#16261d"], glow: hex["#26382a"], glow_at: [0.5, 1.0],
                                 glow_amount: 0.25, edge: hex["#040604"], stars: 0.0),
-              wordmark: "assets/fonts/Anton-Regular.ttf", title_dots: true,
+              wordmark: "assets/fonts/Anton-Regular.ttf", dotted_name: true,
               sounds: {
                 pop: Patch.new(notes: [Note.new(wave: :noise, from: 1, length: 0.03, attack: 0.001, volume: 0.5),
                                        Note.new(wave: :sine, from: 880, to: 300, length: 0.09, volume: 0.6)]),

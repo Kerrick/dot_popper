@@ -12,7 +12,7 @@ module DotPopper
     # +extent+ is the drawn square's half side, room for the halo, the
     # shadow and a wrong tap's glow; the shadow is a disc +shadow_reach+
     # across, dropped +shadow_offset+, so it shows which dot is on top;
-    # +legend+ is the size of the title's example dots.
+    # +legend+ is the size of Home's example dots.
     class DotStyle < Data.define(:extent, :rim, :shadow_offset, :shadow_reach, :shadow_alpha, :halo_width,
                                 :halo_alpha, :legend)
       # How strongly a bright dot's halo shows +distance+ from its center,

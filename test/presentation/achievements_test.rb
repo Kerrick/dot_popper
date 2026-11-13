@@ -69,14 +69,14 @@ class AchievementsOnStatsTest < Minitest::Test
 
     assert_equal DotPopper::Achievement::IDS.size, marks.size
     assert_equal [:open], marks.uniq
-    assert_equal "Achievements: 0 of 11", sheet.achievements.title
+    assert_equal "Achievements: 0 of 11", sheet.achievements.heading
   end
 
   def test_earned_achievements_are_marked_and_counted_for_a_pro_player
     @achievements.award(%i[sharpshooter blink], day: "2026-11-08")
     sheet = build_sheet
 
-    assert_equal "Achievements: 2 of 11", sheet.achievements.title
+    assert_equal "Achievements: 2 of 11", sheet.achievements.heading
     assert_equal %i[earned open open earned], sheet.achievements.rows.first(4).map(&:mark).values_at(0, 1, 2, 3)
     assert_equal ["Sharpshooter", "<10%"], sheet.achievements.rows.first.then { [it.label, it.value] }
   end
@@ -87,7 +87,7 @@ class AchievementsOnStatsTest < Minitest::Test
 
     assert_equal [:earned], sheet.achievements.rows.map(&:mark).first(1)
     assert_equal [:open], sheet.achievements.rows.map(&:mark).drop(1).uniq
-    assert_equal "Achievements: 1 of 11", sheet.achievements.title
+    assert_equal "Achievements: 1 of 11", sheet.achievements.heading
   end
 
   def test_a_pro_player_has_nothing_to_tap_among_the_achievements

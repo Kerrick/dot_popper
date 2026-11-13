@@ -2,7 +2,7 @@
 
 module DotPopper
   module Presentation
-    # setdef's logotype, the maker's mark, shown before the title: the
+    # setdef's logotype, the maker's mark, shown before Home: the
     # word "setdef" in Iosevka Bold, then a solid block like a text
     # cursor. All its measures are ems of +size+, the font's size. The
     # block's are the maintainer's decision (doc/design/screens.md): one
@@ -86,7 +86,7 @@ module DotPopper
     # and fading a little slower, as a phosphor does. Sounding, each note
     # flips it: lit from the first until the second, dark until the third,
     # and so on, so the last note leaves it dark, and it holds dark for a
-    # beat before the fade out, so that the fade to the title is not
+    # beat before the fade out, so that the fade to Home is not
     # mistaken for the cursor fading: the splash stays that long. Muted,
     # there is no music to flash to, so the block stays lit. So it does
     # when +calm+ (DOT_POPPER_CALM, the reduced-motion setting), as setdef's
@@ -125,7 +125,7 @@ module DotPopper
       def mark = at < FADE_IN ? at / FADE_IN : fade_out
 
       # How much of the black ground shows: all of it until the fade out,
-      # which shows the title under it.
+      # which shows Home under it.
       def ground = fade_out
 
       # How lit the block is, 0 to 1, before the mark's fade; always 1 when

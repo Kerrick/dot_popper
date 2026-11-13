@@ -71,7 +71,7 @@ module DotPopper
           end
           name = show.words.themes.fetch(theme.key)
           art = theme.art
-          name = name.upcase if art&.wordmark && art.title_dots
+          name = name.upcase if art&.wordmark && art.dotted_name
           size = [(box.height * 0.16).round, 18].min
           size -= 1 while size > 9 && pen.fonts.face(art&.wordmark || pen.style::TYPE.bold, size).width(name) > box.width * 0.9
           pen.text(name, pen.fonts.face(art&.wordmark || pen.style::TYPE.bold, size), box.center_x, box.bottom - (box.height * 0.18),

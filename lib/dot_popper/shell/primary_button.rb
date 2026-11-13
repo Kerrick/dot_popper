@@ -2,7 +2,7 @@
 
 module DotPopper
   module Shell
-    # A screen's main button, on whole device pixels: the title's Play and
+    # A screen's main button, on whole device pixels: Home's Play and
     # Game Over's Continue. It is the one warm, filled pill on its screen,
     # a bright dot's gold with its word in the night's ink, so it reads at
     # once as the thing to press (Tidwell's prominent "done" button). The

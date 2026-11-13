@@ -118,7 +118,7 @@ class PrivacyDeclaredTest < Minitest::Test
     words = DotPopper::Presentation::Style::WORDS
     deletion = Privacy::Document.new.to_h.fetch(:deletion)
 
-    assert_equal %i[privacy_title privacy_delete privacy_hold].map { words.button(it) }, deletion.values_at(:screen, :control, :prompt)
+    assert_equal %i[privacy_heading privacy_delete privacy_hold].map { words.button(it) }, deletion.values_at(:screen, :control, :prompt)
   end
 
   def test_every_file_is_labeled_for_players_or_set_aside_with_a_reason

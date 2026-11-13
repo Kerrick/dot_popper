@@ -3,16 +3,16 @@
 module DotPopper
   module Presentation
     # A player for development runs (DOT_POPPER_AUTOPLAY): it goes from
-    # the title to a game, taps bright dots where they show, sometimes taps
+    # Home to a game, taps bright dots where they show, sometimes taps
     # a popped one by mistake, slows as its score grows so the game ends,
-    # and goes from Game Over back to the title. Given the Show, it presses
+    # and goes from Game Over back to Home. Given the Show, it presses
     # the buttons a player would: Play to start a game, Home to go
     # back, "Share my score" on every other Game Over, then Copy in the
     # share preview, and Close, a moment apart (on a phone, the system's
     # share sheet opens instead, and the bot goes on), and on its second visit to
-    # the title, "Your stats", and Back after a while. The first time the title offers
-    # the choice of dot size, it taps the other one, so a run shows the
-    # title's dots change. It sees only what a player sees: the dots and
+    # Home, "Your stats", and Back after a while. The first time Home offers
+    # the choice of dot size, it taps the other one, so a run shows
+    # Home's dots change. It sees only what a player sees: the dots and
     # the screen.
     class Autopilot
       # Where it looks for an uncovered part of the bright dot: its center,
@@ -26,7 +26,7 @@ module DotPopper
         @waited = 0.0
         @cooldown = 0.0
         @game_overs = 0
-        @titles = 0
+        @homes = 0
         @browsed = false
         @resized = false
         @shared = false
@@ -38,7 +38,7 @@ module DotPopper
         notice(cabinet.state)
         @waited += seconds
         case cabinet.state
-        when Cabinet::Home then title(cabinet, show)
+        when Cabinet::Home then home(cabinet, show)
         when Cabinet::GameOver then finish(cabinet, show)
         when Cabinet::Playing then play(seconds, cabinet.game)
         end
@@ -50,7 +50,7 @@ module DotPopper
         return if state.class == @state
 
         @game_overs += 1 if state.is_a?(Cabinet::GameOver)
-        @titles += 1 if state.is_a?(Cabinet::Home)
+        @homes += 1 if state.is_a?(Cabinet::Home)
         @shared = false
         @state = state.class
         @waited = 0.0
@@ -66,25 +66,25 @@ module DotPopper
 
       def center(field) = [field.width / 2.0, field.height * 0.62]
 
-      def title(cabinet, show)
+      def home(cabinet, show)
         return later_on_arrival(show) if show&.arrival?
-        return browse(show) if show && (show.stats? || (@titles == 2 && !@browsed))
+        return browse(show) if show && (show.stats? || (@homes == 2 && !@browsed))
         return choose_size(show) if show && (show.settings? || (!@resized && @browsed && show.sizing_offered?))
 
-        press_once(@style.title_wait) { start(cabinet, show) }
+        press_once(@style.home_wait) { start(cabinet, show) }
       end
 
       # A new theme's card, as DOT_POPPER_THEME_UNLOCKS shows it: Play is out
       # of reach (Show#controls) until it is answered, so the bot says "Not now".
       def later_on_arrival(show)
-        return if @waited < @style.title_wait / 2
+        return if @waited < @style.home_wait / 2
 
         @waited = 0.0
         middle(show.reach_of(:arrival_later))
       end
 
       # Opens "Your stats" once it is offered, and presses Back after
-      # +records_wait+; the title's own wait then starts again.
+      # +records_wait+; Home's own wait then starts again.
       def browse(show)
         if show.stats?
           return if @waited < @style.stats_wait
@@ -92,7 +92,7 @@ module DotPopper
           @waited = 0.0
           return middle(show.back_reach)
         end
-        return unless show.stats_offered? && @waited >= @style.title_wait / 2
+        return unless show.stats_offered? && @waited >= @style.home_wait / 2
 
         @browsed = true
         @waited = 0.0
@@ -104,7 +104,7 @@ module DotPopper
       # own wait then starts again.
       def choose_size(show)
         if show.settings?
-          return if @waited < @style.title_wait / 2
+          return if @waited < @style.home_wait / 2
           return middle(show.back_reach) if @resized && @waited >= @style.stats_wait
 
           return if @resized
@@ -113,7 +113,7 @@ module DotPopper
           other = Show::SIZINGS.find { it != show.cabinet.sizing }
           return middle(show.reach_of(other) || show.back_reach)
         end
-        return if @waited < @style.title_wait / 2
+        return if @waited < @style.home_wait / 2
 
         @waited = 0.0
         middle(show.reach_of(:settings))

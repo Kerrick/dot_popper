@@ -2,7 +2,7 @@
 
 module DotPopper
   module Shell
-    # The Credits screen, over the title's dimmed dots: the heading as
+    # The Credits screen, over Home's dimmed dots: the heading as
     # the Stats screen has it, Back in the bottom left corner, and between
     # them the license texts, scrolled, in the same type and palette, each
     # line on whole device pixels and clipped to its window. A faint bar
@@ -13,7 +13,7 @@ module DotPopper
 
       def draw(show, layout)
         page = show.credits_layout
-        Header.new(pen:).draw(show, layout, show.words.button(:credits_title))
+        Header.new(pen:).draw(show, layout, show.words.button(:credits_heading))
         window = page.window
         text(show.credits_lines, show.credits.offset, window, page)
         bar(show.credits, window, layout)
