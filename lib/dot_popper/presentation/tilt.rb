@@ -33,7 +33,7 @@ module DotPopper
     # The way the dots are pulled, in g, on the screen: +x+ to the right,
     # +y+ down. A pull of 1 is the pile's own gravity (PileStyle), so a
     # tablet held upright, or a stick at rest, drops the dots as before.
-    class Pull < Data.define(:x, :y)
+    class Gravity < Data.define(:x, :y)
       STANDARD_GRAVITY = 9.80665 # m/s², a reading of 1 g
 
       def self.down = new(x: 0.0, y: 1.0)
@@ -81,9 +81,9 @@ module DotPopper
         new(x: stick.x / length, y: stick.y / length)
       end
 
-      def +(other) = Pull.new(x: x + other.x, y: y + other.y)
-      def -(other) = Pull.new(x: x - other.x, y: y - other.y)
-      def *(other) = Pull.new(x: x * other, y: y * other)
+      def +(other) = Gravity.new(x: x + other.x, y: y + other.y)
+      def -(other) = Gravity.new(x: x - other.x, y: y - other.y)
+      def *(other) = Gravity.new(x: x * other, y: y * other)
 
       def length = Math.hypot(x, y)
 
@@ -91,6 +91,9 @@ module DotPopper
       # squared, for World#gravity=.
       def gravity(strength) = [x * strength, y * strength]
     end
+
+    # Its old name, until no caller says it.
+    Pull = Gravity
 
     # A low-pass filter: a value that eases toward each new reading,
     # covering 63% of the way in +time_constant+ seconds, however long
