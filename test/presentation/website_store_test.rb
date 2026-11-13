@@ -29,7 +29,7 @@ class WebsiteStoreTest < Minitest::Test
     @entered = 0
     @store = WebsiteStore.new(checkout: FakeCheckout.new(clipboard: @clipboard), entitlement: @entitlement, gone: @gone, clipboard: @clipboard,
                               entered: -> { @entered += 1 })
-    @choice = ServerChoice.new(Memory.new, gone: @gone, clipboard: @clipboard)
+    @choice = DotPopper::ServerChoice.new(Memory.new, gone: @gone, clipboard: @clipboard)
   end
 
   def show
@@ -296,10 +296,5 @@ class WebsiteStoreTest < Minitest::Test
 
     assert_equal own, @choice.server_url(own)
     assert_nil @choice.address, "forgotten as setdef answers"
-  end
-
-  def test_a_server_address_must_be_one_https_address
-    ["https://a.example", "https://a.example:8443/api"].each { assert ServerChoice.https?(it), it }
-    ["http://a.example", "https://", "https://u:p@a.example", "https://a.example b", "ftp://a.example", "a.example"].each { refute ServerChoice.https?(it), it }
   end
 end

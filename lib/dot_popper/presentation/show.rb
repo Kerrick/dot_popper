@@ -637,7 +637,7 @@ module DotPopper
       def open_privacy = open_page(:privacy)
 
       # Change Server, from Settings, only while setdef is gone
-      # (ServerChoice).
+      # (DotPopper::ServerChoice).
       def open_server = @screens[:server].open
 
       def server? = on_top?(:server)

@@ -6,7 +6,7 @@ module DotPopper
       # Change Server, over Settings, only while setdef is gone
       # (ServerScreen; ADR-0011): Paste server address, the reset, and Back.
       class ChangeServer < Page
-        # +server_choice+ (ServerChoice) is the server chosen, if any, or
+        # +server_choice+ (DotPopper::ServerChoice) is the server chosen, if any, or
         # nil where there is no choice to make.
         def initialize(show, server_choice:)
           super(show)

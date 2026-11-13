@@ -109,7 +109,7 @@ module Inputs
       book = DotPopper::StatsBook.new(Memory.new, today: -> { @day })
       book.record(DotPopper::GameStats.start, @cabinet.size_class) if played
       session = DotPopper::Groups::Session.new(store: Memory.new, worker: Server.new(groups:))
-      @server_choice = P::ServerChoice.new(Memory.new, gone: @gone, clipboard:)
+      @server_choice = DotPopper::ServerChoice.new(Memory.new, gone: @gone, clipboard:)
       @show = new_show(cabinet:, layout: layout(width, height), sounds:, radius: R, random: Random.new(5), clipboard:, window:, stats_book: book,
                        sharing: P::SheetSharing.for(platform, opener:), links: opener, entitlement:, storefront:, games:,
                        themes:, groups: session, group_notice: P::GroupNotice.new(Memory.new),

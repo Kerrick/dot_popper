@@ -107,7 +107,7 @@ module DotPopper
       end
 
       # The server friend groups and themes use: setdef's, or while setdef
-      # is gone, a replacement the player chose (Presentation::ServerChoice),
+      # is gone, a replacement the player chose (ServerChoice),
       # or none in an automated run.
       def server_url
         own = Network::Server.server_url(settings.env) or return
@@ -155,7 +155,7 @@ module DotPopper
         @watch = watch_for(license, pins)
         @entitlement = Entitlement.new(forced: Entitlement.forced?(settings.env, platform:), license:, trust: Receipt.trusted(channel))
         clipboard = @engine.clipboard
-        @server_choice = Presentation::ServerChoice.new(file("server.txt"), gone: @gone, clipboard:)
+        @server_choice = ServerChoice.new(file("server.txt"), gone: @gone, clipboard:)
         themes = Themes.new(file("themes.txt"))
         use_theme = UseCases::UseTheme.new(themes:, entitlement:)
         use_fixture(themes, use_theme)
