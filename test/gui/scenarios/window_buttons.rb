@@ -5,7 +5,7 @@ module DotPopperGui
   # alone, on a first Home and after a game: a click on Borderless fills
   # the screen, where the window's own buttons are gone, and a click on
   # Window puts the window back; a click on Quit asks Lota to quit at
-  # once, with nothing asked first. The director holds that quit back and counts it, so the run
+  # once, with nothing asked first. The scenario runner holds that quit back and counts it, so the run
   # goes on to check it.
   #
   # The window manager switches the window, as the resizing scenario's
@@ -36,9 +36,9 @@ module DotPopperGui
       press_button([:display, :window])
       settled_window("a click on Window puts the window back") { !L::Window.fullscreen.first }
       key(:escape)
-      check_equal(0, Director.current.quits, "nothing has asked to quit")
+      check_equal(0, ScenarioRunner.current.quits, "nothing has asked to quit")
       press_button(:quit)
-      check_equal(1, Director.current.quits, "a click on Quit asks Lota to quit at once")
+      check_equal(1, ScenarioRunner.current.quits, "a click on Quit asks Lota to quit at once")
       check_equal(0.0, show.quit_prompt, "with nothing asked first")
     end
 

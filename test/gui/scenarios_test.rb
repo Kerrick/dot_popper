@@ -21,7 +21,7 @@ require "fileutils"
 
 # The game played end to end in real windows: each test starts the game
 # as `lota run` does, with DOT_POPPER_SCENARIO naming a scripted session
-# (test/gui/director.rb), and checks that it quit with status 0 after
+# (test/gui/scenario_runner.rb), and checks that it quit with status 0 after
 # printing what it checked. Only rake test:gui runs these: each opens a
 # window, and needs a display.
 #

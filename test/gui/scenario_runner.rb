@@ -9,7 +9,7 @@ module DotPopperGui
   # launch never does.
   #
   # The game boots as `lota run` boots it and draws every frame to its
-  # window. The director only takes over the clock: each frame's update
+  # window. The scenario runner only takes over the clock: each frame's update
   # gets the time the scenario asks for, a sixtieth of a second unless it
   # waits longer, instead of the time that really passed, so a run plays
   # the same on a busy runner as on an idle one, and as fast as the
@@ -24,7 +24,7 @@ module DotPopperGui
   # error screen, which would wait for a player. A quit the game asks for
   # while the scenario plays is counted (+quits+) and held back, so a
   # scenario can press Quit and check it asked, and play on.
-  class Director
+  class ScenarioRunner
     class << self
       attr_reader :current
 
@@ -75,7 +75,7 @@ module DotPopperGui
     end
 
     # The game asked Lota to quit: held back, and counted, while the
-    # scenario plays; the director's own quit, once it ends, goes through.
+    # scenario plays; the scenario runner's own quit, once it ends, goes through.
     def quit_asked
       return false unless @fiber
 
@@ -85,24 +85,27 @@ module DotPopperGui
 
     def say(line) = puts("gui: #{line}")
 
-    # What the director adds to Lota's callbacks, in front of main.rb's.
+    # What the scenario runner adds to Lota's callbacks, in front of main.rb's.
     module Hooks
       def load
         super
-        Director.current.start(@app)
+        ScenarioRunner.current.start(@app)
       end
 
       # Each frame moves on by the scenario's own step, straight to the
       # App, past its FrameClock, so a scenario plays alike on any machine.
-      def update(_dt) = Director.current.frame { @app.update(it) }
+      def update(_dt) = ScenarioRunner.current.frame { @app.update(it) }
 
-      def errorhandler(error) = Director.current.failed(error)
+      def errorhandler(error) = ScenarioRunner.current.failed(error)
 
       # A truthy answer keeps the game running (Lota::Callbacks.dispatch).
-      def quit(*) = Director.current.quit_asked
+      def quit(*) = ScenarioRunner.current.quit_asked
     end
   end
+
+  # The old name, until no commit uses it.
+  Director = ScenarioRunner
 end
 
 $stdout.sync = true
-DotPopperGui::Director.install(ENV.fetch("DOT_POPPER_SCENARIO"))
+DotPopperGui::ScenarioRunner.install(ENV.fetch("DOT_POPPER_SCENARIO"))

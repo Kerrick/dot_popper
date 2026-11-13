@@ -3,7 +3,7 @@
 module DotPopperGui
   # "How to play" on Home: hidden on a first launch, where Play teaches
   # the game, and offered once a game has been played; pressed, the
-  # tutorial at once, though the director never opens it when Play is pressed. It plays as
+  # tutorial at once, though the scenario runner never opens it when Play is pressed. It plays as
   # a first Play's does: the guide taps the bright dot, and the player's tap
   # pops it. Skipped, its game plays on; back on Home, H opens it
   # again.

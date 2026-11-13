@@ -3,7 +3,7 @@
 module DotPopperGui
   # The tutorial a first Play opens, played through as a new player would,
   # with one tap too soon on the popped dot, and each beat's freeze kept
-  # as a screenshot. The director leaves the tutorial out of every other
+  # as a screenshot. The scenario runner leaves the tutorial out of every other
   # session, so this one forces it (DOT_POPPER_TUTORIAL=1). It plays over
   # a game paused before its clock runs, and at its end that game plays
   # on as it is, with only the clock starting. The guide's mistake costs

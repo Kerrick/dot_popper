@@ -75,7 +75,7 @@
 #                               sessions, through the callbacks below,
 #                               checks it as it goes, and quits with 0
 #                               only if every check passed
-#                               (test/gui/director.rb).
+#                               (test/gui/scenario_runner.rb).
 
 require_relative "lib/dot_popper/shell"
 
@@ -117,4 +117,4 @@ def Lota.gamepadaxis(_joystick, axis, value) = @app&.gamepad_axis(axis, value)
 def Lota.joystickadded(joystick) = @app&.gamepad_added(joystick)
 def Lota.joystickremoved(joystick) = @app&.gamepad_removed(joystick)
 
-require_relative "test/gui/director" unless DotPopper::Build.settings(ENV).fetch("DOT_POPPER_SCENARIO", "").empty?
+require_relative "test/gui/scenario_runner" unless DotPopper::Build.settings(ENV).fetch("DOT_POPPER_SCENARIO", "").empty?

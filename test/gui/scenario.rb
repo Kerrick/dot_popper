@@ -7,7 +7,7 @@ module DotPopperGui
   class Failure < StandardError; end
 
   # A short scripted session of the game, played frame by frame inside
-  # the real game (Director). A subclass names itself with +scenario+ and
+  # the real game (ScenarioRunner). A subclass names itself with +scenario+ and
   # plays in #play, which reads top to bottom as the session does: every
   # verb pushes what a player would do onto Lota's event queue and
   # returns once the game has heard it, and every check prints a line, or
