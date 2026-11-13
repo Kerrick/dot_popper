@@ -134,6 +134,25 @@ class WebsiteStoreTest < Minitest::Test
     assert_equal %i[back], names(s)
   end
 
+  # Pro arriving by a key is Pro arriving: what was earned while Free
+  # counts in the player's friend groups, as after a store's purchase.
+  def test_a_key_entered_on_the_offer_reports_what_was_earned_while_free
+    reported = []
+    groups = DotPopper::Groups::Session.off
+    groups.define_singleton_method(:report_achievements) { |keys| reported << keys }
+    achievements = DotPopper::Achievements.new(Memory.new)
+    achievements.award(%i[blink], day: "2026-11-01")
+    cabinet = DotPopper::Cabinet.new(field(1200, 800), random: Random.new(2))
+    s = Show.new(cabinet:, layout: layout(1200, 800), sounds: FakeSounds.new, radius: R, clipboard: @clipboard, entitlement: @entitlement,
+                 storefront: @store, groups:, achievements:)
+    s.open_offer
+    click(s, :buy)
+    click(s, :paste)
+
+    assert s.pro?
+    assert_equal [%i[blink]], reported
+  end
+
   def test_the_keyboards_paste_takes_the_key_too
     s = show
     @clipboard.copy(C::LicenseKey.issue(C::TestKeys::LICENSE).text)
