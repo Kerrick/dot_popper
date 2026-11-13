@@ -7,8 +7,7 @@ module DotPopper
     # made, and Show#screen is the one place that says which is on top;
     # every press, button, key and scroll asks that screen.
     module Screens
-      # One of each screen for +show+, by name: a screen over Home by the
-      # name Show#page gives it, the rest by their own. +clipboard+ takes
+      # One of each screen for +show+, by name (Show#on_top? asks by it). +clipboard+ takes
       # what the share preview copies; the offer of Pro asks everything of
       # +buy_pro+; Game Over starts
       # the next game through +start_game+ and shares through +sharing+;
@@ -155,7 +154,7 @@ module DotPopper
         def within_safe(reach) = reach.with(height: [reach.height, layout.safe.bottom - reach.y].min)
       end
 
-      # A screen over Home, which Show#page names, with Back in its corner:
+      # A screen over Home (Show#open_page), with Back in its corner:
       # Back, and its main button, close it.
       class Page < Screen
         def covers? = true

@@ -504,10 +504,14 @@ module Inputs
   # What a screen is, as the player sees it: the state of the game under
   # it, and which screen the Show has open over it.
   def self.screen(show)
-    [show.cabinet.state.class.name.split("::").last, show.page, (show.group_panel.page if show.group_open?),
+    [show.cabinet.state.class.name.split("::").last, Inputs.page(show), (show.group_panel.page if show.group_open?),
      (show.group_panel.asking if show.group_open?), show.offer?, !show.dialog.nil?, show.sharing?, show.tutorial?, show.arrival?,
      show.screen.class]
   end
+
+  # The screen over Home that a player sees, the topmost one open
+  # (Screens::Page), by its name in Screens.made_for, or nil.
+  def self.page(show) = show.screens.key(show.layers.reverse.find { it.is_a?(P::Screens::Page) })
 
   # A screen as words, for a failure's message: "Home, settings".
   def self.say(screen)

@@ -134,9 +134,9 @@ module DotPopper
       # between games.
       def palette = in_use.palette
 
-      # Whether the Themes screen is open over the Stats screen, and what
-      # it shows: every theme the player can use, and the one in use.
-      def themes? = page == :themes
+      # Whether the Themes screen is on top, and what it shows: every
+      # theme the player can use, and the one in use.
+      def themes? = on_top?(:themes)
 
       # The new theme to tell the player of, once, at Home, when nothing
       # else is asked of them; nil the rest of the time.
@@ -185,28 +185,24 @@ module DotPopper
       # ends, or is skipped, the game plays on from the state it is in.
       def tutorial? = !@tutorial.nil?
 
-      # Whether the Stats screen is open over Home. It is the
-      # presentation's alone: the game stays on Home meanwhile, and
-      # no tap there reaches the game.
-      def stats? = page == :stats
+      # Whether the Stats screen is on top. It is the presentation's alone:
+      # the game stays on Home meanwhile, and no tap there reaches the
+      # game.
+      def stats? = on_top?(:stats)
 
       # Home itself, with no other screen open over it.
       def on_home? = home? && @layers.empty?
 
-      # The screen open over Home (Screens::Page), by the name
-      # Screens.made_for gives it, or nil: the topmost, as Credits, Privacy
-      # and Change Server open over Settings.
-      def page
-        at = @layers.rindex { it.is_a?(Screens::Page) } or return
-        @screens.key(@layers[at])
-      end
+      # Whether the screen named +name+ in Screens.made_for is the one on
+      # top (#screen): what the questions below ask.
+      def on_top?(name) = screen.equal?(@screens.fetch(name))
 
-      # The Achievements screen, the achievement open in its dialog (or
-      # nil), Settings, and Privacy.
-      def achievements_open? = page == :achievements
+      # Whether Achievements, Settings or Privacy is on top, and the
+      # achievement open in a dialog (or nil).
+      def achievements_open? = on_top?(:achievements)
       def dialog = (@screens[:achievement_dialog].achievement if layer?(:achievement_dialog))
-      def settings? = page == :settings
-      def privacy? = page == :privacy
+      def settings? = on_top?(:settings)
+      def privacy? = on_top?(:privacy)
 
       # The friend groups' screens' state and their announcements (GroupPanel).
       def group_panel = @groups
@@ -398,27 +394,25 @@ module DotPopper
         score_record_changed
       end
 
-      # Opens the screen +name+ over Home, with its list at the top.
+      # Opens the screen +name+ (a Screens::Page) over the one on top, at
+      # Home: over Home itself, or Credits, Privacy and Change Server over
+      # Settings. Its list starts at the top.
       def open_page(name)
-        return unless page || home?
+        return unless home?
 
-        close_layer(page) if page && !(page == :settings && SETTINGS_PAGES.include?(name))
         open_layer(name)
         @scroll = nil
         @list_press = nil
         sounds.play(:tick)
       end
 
-      # The screens Settings opens over itself, which Back returns to it.
-      SETTINGS_PAGES = %i[credits privacy server].freeze
-
-      # Leaves the open screen: Credits, Privacy and Change Server go back
-      # to Settings, the others to Home.
+      # Closes the screen on top, where it is one over Home (Screens::Page),
+      # back to the one it was opened over: Credits, Privacy and Change
+      # Server to Settings, the others to Home.
       def close_page
-        close_layer(page) if page
+        close_layer(screen) if screen.is_a?(Screens::Page)
         @screens[:stats].cancel_hold
         @scroll = nil
-        close_layer(:achievement_dialog)
         sounds.play(:tick, pitch: 0.8)
       end
 
@@ -501,7 +495,7 @@ module DotPopper
       # is sold and not yet bought. Says whether it took the press.
       def buy_shortcut = screen.buy
 
-      def credits? = page == :credits
+      def credits? = on_top?(:credits)
 
       # How far down the Credits screen is scrolled (CreditsScroll), while
       # it is open.
@@ -685,7 +679,7 @@ module DotPopper
       # (ServerChoice).
       def open_server = @screens[:server].open
 
-      def server? = page == :server
+      def server? = on_top?(:server)
       def server_offered? = @screens[:server].offered?
 
       # The words and buttons of Change Server (ServerScreen).
@@ -776,15 +770,19 @@ module DotPopper
         end
       end
 
-      # Opens +screen+ (a Screens::Screen, or its name in Screens.made_for)
-      # over the screens open now, unless it is open already.
+      # Pushes +screen+ (a Screens::Screen, or its name in Screens.made_for)
+      # on the stack, over the screens open now, unless it is open already.
       def open_layer(screen)
         layer = screen.is_a?(Symbol) ? @screens.fetch(screen) : screen
         @layers << layer unless @layers.include?(layer)
       end
 
-      # Closes +screen+, wherever it is on the stack.
-      def close_layer(screen) = @layers.delete(screen.is_a?(Symbol) ? @screens.fetch(screen) : screen)
+      # Takes +screen+ off the top of the stack, where it is on top; a screen
+      # under another stays open until the one over it closes.
+      def close_layer(screen)
+        layer = screen.is_a?(Symbol) ? @screens.fetch(screen) : screen
+        @layers.pop if @layers.last.equal?(layer)
+      end
 
       # Whether +screen+ is open over the others.
       def layer?(screen) = @layers.include?(screen.is_a?(Symbol) ? @screens.fetch(screen) : screen)

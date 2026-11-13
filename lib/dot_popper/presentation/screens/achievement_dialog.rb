@@ -40,9 +40,9 @@ module DotPopper
         # leading with this achievement, and the dialog closes.
         def get_pro
           id = achievement
+          show.close_layer(self)
           show.offer.open_led_by(:achievements)
           show.offer.led_by_achievement(id)
-          show.close_layer(self)
         end
 
         # Where its parts go (AchievementDialogPlan).

@@ -113,7 +113,7 @@ class RedesignTest < Minitest::Test
     s = show
     { x: :stats, lb: :achievements, rb: :themes, select: :settings }.each do |button, page|
       s.pad(button)
-      assert_equal page, s.page
+      assert s.on_top?(page), page
       s.back
     end
   end
@@ -161,7 +161,7 @@ class RedesignTest < Minitest::Test
       assert_equal %i[over_goal over_achievement], s.game_over_chips.map(&:name)
       refute_includes s.controls.map(&:name), :over_goal
       press.call(s)
-      assert s.achievements_open?
+      assert s.layer?(:achievements), "Achievements opens, under the dialog"
       assert_equal :blink, s.dialog
     end
   end
