@@ -26,6 +26,12 @@ const vec3 L = vec3(-0.4336, -0.6401, 0.6341);
 const vec3 HALF_V = vec3(-0.2288, -0.3378, 0.9130);
 const float STRIPES = 8.0;
 
+// How much lighter the popped dot is drawn than its colors below say:
+// light enough to see what it is at a phone's size, as the popped
+// Jack-o'-lantern and Ghost are, and still far from the bright dot's
+// lightest colors (test/gui/scenarios/popped_dots.rb).
+const float POPPED_LIFT = 1.6;
+
 vec4 over(vec4 top, vec4 bottom) { return top + bottom * (1.0 - top.a); }
 float cover_of(float sd, float aa) { return clamp(0.5 - sd / aa, 0.0, 1.0); }
 float hash1(vec2 q) { return fract(sin(dot(q, vec2(127.1, 311.7))) * 43758.5453); }
@@ -130,7 +136,7 @@ vec3 mint(vec2 p, float d, float aa, float bright_look, float bonus) {
   s = mix(s, vec3(0.025, 0.012, 0.02), cover_of(cr, aa));
   s *= 1.0 - 0.18 * smoothstep(0.82, 1.0, d) * clamp(dot(normalize(p + 1e-4), vec2(0.6, 0.8)) + 0.3, 0.0, 1.0);
 
-  vec3 col = mix(s, whole, bright_look);
+  vec3 col = mix(s * POPPED_LIFT, whole, bright_look);
   float w = mix(max(0.038, 1.5 * aa), max(0.022, 1.5 * aa), bright_look);
   float ring = clamp((d - (1.0 - w)) / aa + 0.5, 0.0, 1.0);
   vec3 rim_color = mix(mix(vec3(0.19, 0.15, 0.19), vec3(0.32, 0.26, 0.31), clamp(0.5 + 0.6 * dot(p, vec2(-0.53, -0.848)), 0.0, 1.0)),
