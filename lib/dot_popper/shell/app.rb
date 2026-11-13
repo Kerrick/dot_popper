@@ -87,7 +87,7 @@ module DotPopper
           os, entitlement:, channel: @channel,
               native: native_store(os),
               fake: Presentation::FakeStore.new(SaveFile.new(name: "fake_store.txt"), fails: Presentation::FakeStore.failure(@env)),
-              website: ->(fake:) { website_store(license, clipboard, fake:) }
+              website: ->(fake:) { website_store(entitlement, clipboard, fake:) }
         )
         games = free_games(entitlement, metered: storefront.offered? && player?)
         groups = groups_session
@@ -499,9 +499,9 @@ module DotPopper
 
       # The website's store: its real checkout in the browser, or the test
       # build's, which puts a signed test key on the clipboard.
-      def website_store(license, clipboard, fake:)
+      def website_store(entitlement, clipboard, fake:)
         checkout = fake ? Presentation::FakeCheckout.new(clipboard:) : Presentation::BrowserCheckout.new(opener: UrlOpener.new)
-        Presentation::WebsiteStore.new(checkout:, license:, gone: @gone, clipboard:, entered: -> { @watch.start })
+        Presentation::WebsiteStore.new(checkout:, entitlement:, gone: @gone, clipboard:, entered: -> { @watch.start })
       end
 
       # Takes up a finished check of setdef: back again, a chosen server is

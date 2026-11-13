@@ -85,7 +85,7 @@ module Hands
       license = DotPopper::Continuity::License.new(Memory.new, pins: DotPopper::Continuity::TEST_PINS)
       @entitlement = DotPopper::Entitlement.new(forced: pro, license:, trust: DotPopper::Receipt::TEST)
       @storefront = P::Storefront.for(os, entitlement:, native: P::FakeStore.new(Memory.new), fake: P::FakeStore.new(Memory.new),
-                                          website: ->(fake:) { website(license, fake:) }, channel:)
+                                          website: ->(fake:) { website(fake:) }, channel:)
       @games = DotPopper::FreeGames.new(Memory.new, today: -> { @day }, entitlement:, metered: storefront.offered?, bank: [games_left - 3, 0].max)
       (3 - games_left.clamp(0, 3)).times { games.spend! }
       themes = P::ThemeKeeper.new(Memory.new, themes: Style::THEMES, entitlement:)
@@ -120,9 +120,9 @@ module Hands
 
     private
 
-    def website(license, fake:)
+    def website(fake:)
       checkout = fake ? P::FakeCheckout.new(clipboard:) : P::BrowserCheckout.new(opener:)
-      P::WebsiteStore.new(checkout:, license:, gone: @gone, clipboard:)
+      P::WebsiteStore.new(checkout:, entitlement:, gone: @gone, clipboard:)
     end
 
     def join(session)

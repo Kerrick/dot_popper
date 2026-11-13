@@ -54,4 +54,39 @@ class EntitlementTest < Minitest::Test
     refute Entitlement.forced?({})
     assert_predicate Entitlement.new(forced: true), :pro?
   end
+
+  def test_pro_arriving_by_a_receipt_is_announced_once
+    entitlement = Entitlement.test
+    heard = []
+    entitlement.subscribe(->(event) { heard << event })
+    entitlement.prove("pro")
+    entitlement.prove(Receipt.issue)
+    entitlement.prove(Receipt.issue)
+
+    assert_equal [Entitlement::ProGranted.new(by: :receipt)], heard
+  end
+
+  def test_pro_arriving_by_a_license_key_is_announced_once
+    license = DotPopper::Continuity::License.new(DotPopper::ScoreRecord::Memory.new, pins: DotPopper::Continuity::TEST_PINS)
+    entitlement = Entitlement.new(license:)
+    heard = []
+    entitlement.subscribe(->(event) { heard << event })
+    key = DotPopper::Continuity::LicenseKey.issue(DotPopper::Continuity::TestKeys::LICENSE).text
+
+    assert_equal :invalid, entitlement.enter("DP-NOTAKEY")
+    assert_equal :entered, entitlement.enter(key)
+    assert_equal :same, entitlement.enter(key)
+    assert_equal [Entitlement::ProGranted.new(by: :license_key)], heard
+  end
+
+  def test_pro_the_game_starts_with_is_not_an_arrival
+    entitlement = Entitlement.new(forced: true, trust: Receipt::TEST)
+    heard = []
+    entitlement.subscribe(->(event) { heard << event })
+    entitlement.prove(Receipt.issue)
+
+    assert_empty heard
+    assert_equal :invalid, Entitlement.free.enter("DP-ANYTHING"), "a copy with no license takes no key"
+  end
+
 end

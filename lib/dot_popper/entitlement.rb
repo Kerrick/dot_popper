@@ -11,7 +11,16 @@ module DotPopper
   # stands in for a purchase in a test build, to try them out, and
   # DOT_POPPER_PRO=0 is a free player; a store build never reads it
   # (Build.settings).
+  #
+  # Pro arriving during a run, by a receipt that verifies or a license key
+  # entered through #enter, is announced to every listener (#subscribe)
+  # as a ProGranted, once. Pro the game starts with, from a key already
+  # entered or DOT_POPPER_PRO, is not an arrival.
   class Entitlement
+    # Pro arrived +by+ a store's receipt (:receipt) or a license key
+    # (:license_key).
+    class ProGranted < Data.define(:by); end
+
     FORCED_BY = "DOT_POPPER_PRO"
     # Whether a computer's copy has everything for nothing. It does not: a
     # desktop copy is free until a store, a channel's or a test build's fake,
@@ -47,6 +56,13 @@ module DotPopper
       @trust = trust
       @proven = false
       @refused = nil
+      @listeners = []
+    end
+
+    # Adds a listener: anything that answers +call(event)+.
+    def subscribe(listener)
+      @listeners << listener
+      self
     end
 
     def pro? = @forced || @proven || @license&.pro? || false
@@ -59,9 +75,30 @@ module DotPopper
     def prove(receipt)
       return @proven if @proven || receipt == @refused
 
+      before = pro?
       @proven = Receipt.valid?(receipt, @trust)
       @refused = receipt unless @proven
+      granted(:receipt) if @proven && !before
       @proven
+    end
+
+    # Enters +text+ as a website copy's license key (Continuity::License#enter),
+    # and answers what that answered: :entered (Pro from now on), :same, or
+    # :invalid, as with no license to enter it in.
+    def enter(text)
+      license = @license or return :invalid
+
+      before = pro?
+      result = license.enter(text)
+      granted(:license_key) if pro? && !before
+      result
+    end
+
+    private
+
+    def granted(by)
+      event = ProGranted.new(by:)
+      @listeners.each { it.call(event) }
     end
   end
 end

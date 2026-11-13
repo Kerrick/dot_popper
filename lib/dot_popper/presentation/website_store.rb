@@ -5,7 +5,8 @@ module DotPopper
     # The store for copies no store controls: those from setdef's website,
     # itch.io, Homebrew, winget, a Linux package or an APK. Buy opens a
     # checkout in a web browser, which sells a license key by email, and
-    # Paste license key enters it (Continuity::License), so it answers the
+    # Paste license key enters it (+entitlement+, Entitlement#enter, into
+    # its Continuity::License), so it answers the
     # Storefront's methods and two of its own: #keys?, that a key is how
     # Pro arrives here, and #paste. It has no Restore: the key is the
     # purchase, and it works on any device. While setdef is gone (+gone+,
@@ -24,9 +25,9 @@ module DotPopper
 
       attr_reader :status, :typed
 
-      def initialize(checkout:, license:, gone:, clipboard:, entered: -> {})
+      def initialize(checkout:, entitlement:, gone:, clipboard:, entered: -> {})
         @checkout = checkout
-        @license = license
+        @entitlement = entitlement
         @gone = gone
         @clipboard = clipboard
         @entered = entered
@@ -78,7 +79,7 @@ module DotPopper
       def erase = @typed = @typed.chop
 
       def enter(text)
-        result = text.strip.empty? ? :empty : @license.enter(text)
+        result = text.strip.empty? ? :empty : @entitlement.enter(text)
         @typed = +"" if %i[entered same].include?(result)
         @entered.call if result == :entered
         @status = result

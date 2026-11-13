@@ -9,9 +9,22 @@ module DotPopper
     @trust: Receipt::Trust
     @proven: bool
     @refused: String?
+    @listeners: Array[_Listener]
 
     interface _License
       def pro?: () -> bool
+
+      def enter: (String text) -> Symbol
+    end
+
+    interface _Listener
+      def call: (ProGranted event) -> void
+    end
+
+    class ProGranted < ::Data
+      attr_reader by: :receipt | :license_key
+
+      def self.new: (by: :receipt | :license_key) -> instance
     end
 
     def self.free: () -> Entitlement
@@ -19,6 +32,12 @@ module DotPopper
     def self.forced?: (untyped env, ?os: String?) -> bool
     def initialize: (?forced: bool, ?license: _License?, ?trust: Receipt::Trust) -> void
     def pro?: () -> bool
+    def subscribe: (_Listener listener) -> self
     def prove: (String? receipt) -> bool
+    def enter: (String text) -> Symbol
+
+    private
+
+    def granted: (:receipt | :license_key by) -> void
   end
 end

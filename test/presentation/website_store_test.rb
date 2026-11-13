@@ -19,7 +19,7 @@ class WebsiteStoreTest < Minitest::Test
     @license = C::License.new(Memory.new, pins: C::TEST_PINS)
     @entitlement = DotPopper::Entitlement.new(license: @license)
     @entered = 0
-    @store = WebsiteStore.new(checkout: FakeCheckout.new(clipboard: @clipboard), license: @license, gone: @gone, clipboard: @clipboard,
+    @store = WebsiteStore.new(checkout: FakeCheckout.new(clipboard: @clipboard), entitlement: @entitlement, gone: @gone, clipboard: @clipboard,
                               entered: -> { @entered += 1 })
     @choice = ServerChoice.new(Memory.new, gone: @gone, clipboard: @clipboard)
   end
@@ -129,6 +129,7 @@ class WebsiteStoreTest < Minitest::Test
 
     assert s.pro?
     assert_equal 1, @entered
+    assert_equal [[:tick, 1.0]], s.sounds.played.last(1), "the paste's own tick, and no other"
     assert_equal s.words.offer[:thanks], s.offer_status
     assert_equal %i[back], names(s)
   end
