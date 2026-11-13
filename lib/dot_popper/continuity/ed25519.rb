@@ -47,7 +47,7 @@ module DotPopper
         key = ["4b27a311e0ca69f749672766d988b3e673d347bfcd7f67aeff856ff743fe036d"].pack("H*")
         signature = ["4523c24b7b106e8207bea434ddb355d0898f0c60a0edf8bc8593fd4f17ac9373" \
                      "f548ce3f7f5e96fd9f90ce455cdb93c196c4f1f96b82d7374ef7698dd2942004"].pack("H*")
-        message = Continuity.label("dot-popper/server-proof/v1") + (0..31).to_a.pack("C*")
+        message = Certificate::PROOF + (0..31).to_a.pack("C*")
         verify(key, signature, message)
       end
 
