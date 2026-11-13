@@ -23,6 +23,11 @@ module DotPopper
     # to, and the note makes that start work.
     class VulkanRescue
       NOTE = "vulkan_failed.txt"
+      # What LÖVE says when the renderer it picked can't start the game:
+      # Vulkan finding no GPU it can use ("Vulkan: failed to find a
+      # suitable GPU."), or any other Vulkan error, none of the listed
+      # renderers creating at all, or the system refusing the window.
+      FAILED_START = Regexp.union("Vulkan", "suitable GPU", "no supported renderer", "Could not set window mode")
       NO_VULKAN = "DOT_POPPER_NO_VULKAN"
       START_AGAIN = "Dot Popper will use different graphics now. Please start it again."
 
@@ -66,10 +71,18 @@ module DotPopper
         graphics.excluderenderers = choice.excluded unless choice.excluded.empty?
       end
 
+      # Whether +error+, raised before or while the game started, is LÖVE
+      # failing to start a renderer (FAILED_START).
+      def self.failed_start?(error) = error.is_a?(RuntimeError) && FAILED_START.match?(error.message)
+
+      # Whether leaving Vulkan out may get past +error+: a failed start,
+      # while Vulkan may still be tried (RendererChoice#vulkan_allowed?).
+      def rescues?(error) = choice.vulkan_allowed? && self.class.failed_start?(error)
+
       # The frame Lota runs in place of the game's after +error+, or nil
       # when leaving Vulkan out can't help, for Lota's own error screen.
       def rescue(error)
-        return unless choice.rescues?(error)
+        return unless rescues?(error)
 
         warn "Dot Popper: Vulkan couldn't start the game (#{error.message.split("\n").map(&:strip).join(' ')}), " \
              "so it starts again without Vulkan"

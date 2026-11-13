@@ -16,12 +16,6 @@ module DotPopper
     # Windows, Metal on a Mac. Android's own "linux" gets LÖVE's order,
     # since it isn't the Linux of a desktop: Vulkan first, then OpenGL ES.
     class RendererChoice < Data.define(:renderers, :excluded, :platform)
-      # What a start says when the renderer LÖVE picked can't draw: Vulkan
-      # finding no GPU it can use ("Vulkan: failed to find a suitable
-      # GPU."), or any other Vulkan error, none of the listed renderers
-      # creating at all, or the system refusing the window.
-      FAILED_START = Regexp.union("Vulkan", "suitable GPU", "no supported renderer", "Could not set window mode")
-
       # The choice for +asked+, the renderers DOT_POPPER_RENDERERS names
       # (RendererChoice.asked), on +platform+, once Vulkan has failed here
       # or not.
@@ -40,17 +34,15 @@ module DotPopper
       # Only OpenGL on Linux; LÖVE's own order elsewhere, Android's too.
       def self.usual(platform) = platform.include?("linux") && !platform.include?("android") ? [:opengl] : nil
 
-      # Whether LÖVE may try Vulkan: Apple's systems have only Metal.
+      # Whether LÖVE may try Vulkan: Apple's systems have only Metal. Only
+      # while it may can leaving Vulkan out get past a failed start
+      # (Shell::VulkanRescue), so the game never starts again more than
+      # once.
       def vulkan_allowed?
         return false if excluded.include?(:vulkan)
 
         renderers ? renderers.include?(:vulkan) : !platform.match?(/darwin|ios/)
       end
-
-      # Whether +error+, raised before or while the game started, is one
-      # leaving Vulkan out may get past. Once Vulkan is out, none is, so
-      # the game never starts again more than once.
-      def rescues?(error) = vulkan_allowed? && error.is_a?(RuntimeError) && FAILED_START.match?(error.message)
     end
   end
 end

@@ -80,17 +80,17 @@ When Vulkan fails to start the game, the game notes the day and runs itself agai
 
 | Part | What it does |
 | --- | --- |
-| `Presentation::RendererChoice` | The renderers (`renderers` for `t.graphics.renderers`, `excluded` for `t.graphics.excluderenderers`), whether Vulkan may be tried (`#vulkan_allowed?`), and which errors the rescue takes (`#rescues?`) |
+| `Presentation::RendererChoice` | The renderers (`renderers` for `t.graphics.renderers`, `excluded` for `t.graphics.excluderenderers`), and whether Vulkan may be tried (`#vulkan_allowed?`) |
 | `Presentation::VulkanFailure` | The note: the day Vulkan failed, as an ISO date. It holds for 30 days (`LASTS`); `#retry_on` is the first day Vulkan is tried again. A clock set back keeps the note |
 | `Presentation::Relaunch` | The command that starts the game again as it first started, or nil where there is none |
-| `Shell::VulkanRescue` | Carries them out from `conf.rb` |
+| `Shell::VulkanRescue` | Carries them out from `conf.rb`, and tells LÖVE's failure to start a renderer from other errors by its words (`FAILED_START`, `.failed_start?`), so the presentation never reads an engine's error message |
 | `conf.rb`'s `Lota.errorhandler` | Hands every error to `VulkanRescue#rescue` first, and to Lota's own error screen (`super`) when it answers nil |
 
 The error handler lives in `conf.rb`, not `main.rb`, because the window opens before `main.rb` loads.
 
 **Choosing.** `VulkanRescue.choose` first makes `t.identity` the save folder, since until `Lota.conf` returns Lota's save folder is the one named after the game's folder. It reads `vulkan_failed.txt` there. If the note holds, it prints `Dot Popper: Vulkan failed here on DAY, so it is left out until DAY`. Vulkan is left out when the note holds or `DOT_POPPER_NO_VULKAN=1` is set: the list loses `:vulkan` (or becomes LÖVE's own, if nothing is left), and `excluded` is `[:vulkan]`. `VulkanRescue#apply` writes the choice into `t.graphics`.
 
-**Rescuing.** `#rescue` takes only a `RuntimeError` whose message matches `RendererChoice::FAILED_START` ("Vulkan", "suitable GPU", "no supported renderer", or "Could not set window mode"), and only while Vulkan was allowed. Anything else goes to Lota's error screen. Once Vulkan is out, nothing is rescued, so the game never starts a third time. When it rescues, it:
+**Rescuing.** `#rescue` takes only a `RuntimeError` whose message matches `VulkanRescue::FAILED_START` ("Vulkan", "suitable GPU", "no supported renderer", or "Could not set window mode"), and only while Vulkan was allowed. Anything else goes to Lota's error screen. Once Vulkan is out, nothing is rescued, so the game never starts a third time. When it rescues, it:
 
 1. warns `Dot Popper: Vulkan couldn't start the game (...), so it starts again without Vulkan`;
 2. writes today's date to `vulkan_failed.txt` (`SaveFile`);
@@ -112,7 +112,7 @@ On Windows, Ruby's `exec` runs the new process, waits for it, and exits with its
 
 **Where it applies.** On Windows, a PC with a Vulkan driver but no GPU it can use. On Android, a Vulkan failure asks the player to start the game again. Linux allows no Vulkan, and Apple's systems have only Metal, so `#vulkan_allowed?` is false there unless `DOT_POPPER_RENDERERS` names Vulkan.
 
-**Tests.** `test/presentation/renderer_choice_test.rb` covers each platform's list, `DOT_POPPER_RENDERERS`, which errors are rescued, the note's 30 days, and each `Relaunch` command. The Package workflow's Windows job (`.github/workflows/package.yml`, "Vulkan alone") plays the fused app with `DOT_POPPER_RENDERERS=vulkan` on a runner with no GPU, and requires that it starts again without Vulkan, draws with OpenGL, writes the note, and exits with 0.
+**Tests.** `test/presentation/renderer_choice_test.rb` covers each platform's list, `DOT_POPPER_RENDERERS`, the note's 30 days, and each `Relaunch` command; `test/shell/vulkan_rescue_test.rb` which errors are rescued. The Package workflow's Windows job (`.github/workflows/package.yml`, "Vulkan alone") plays the fused app with `DOT_POPPER_RENDERERS=vulkan` on a runner with no GPU, and requires that it starts again without Vulkan, draws with OpenGL, writes the note, and exits with 0.
 
 ## The iOS host
 

@@ -54,7 +54,7 @@ Chosen: renderer option 1, because no Windows combination gave both the TV's gam
 
 ### Confirmation
 
-`test/presentation/renderer_choice_test.rb` tests the choice and what the rescue takes. The Package workflow's Windows job plays the fused app allowed only Vulkan and fails unless it ran its own exe again, drew with OpenGL, wrote `vulkan_failed.txt` and exited 0.
+`test/presentation/renderer_choice_test.rb` tests the choice, and `test/shell/vulkan_rescue_test.rb` what the rescue takes. The Package workflow's Windows job plays the fused app allowed only Vulkan and fails unless it ran its own exe again, drew with OpenGL, wrote `vulkan_failed.txt` and exited 0.
 
 ## More Information
 

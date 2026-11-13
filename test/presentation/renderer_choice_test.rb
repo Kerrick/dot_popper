@@ -11,7 +11,6 @@ class RendererChoiceTest < Minitest::Test
   LINUX = "x86_64-linux"
   MAC = "arm64-darwin25"
   ANDROID = "aarch64-linux-android"
-  NO_GPU = RuntimeError.new("Vulkan: failed to find a suitable GPU.")
 
   def decide(asked: [], platform: WINDOWS, vulkan_failed: false) = RendererChoice.decide(asked:, platform:, vulkan_failed:)
 
@@ -31,8 +30,7 @@ class RendererChoiceTest < Minitest::Test
     choice = decide(platform: ANDROID)
 
     assert_nil choice.renderers
-    assert_predicate choice, :vulkan_allowed?
-    assert choice.rescues?(NO_GPU), "the note can still leave Vulkan out at the next start"
+    assert_predicate choice, :vulkan_allowed?, "the note can still leave Vulkan out at the next start"
     assert_equal [:opengl], decide(asked: [:opengl], platform: ANDROID).renderers
   end
 
@@ -58,25 +56,6 @@ class RendererChoiceTest < Minitest::Test
     assert_nil decide(asked: [:vulkan], platform: LINUX, vulkan_failed: true).renderers
     assert_equal [:opengl], decide(asked: %i[vulkan opengl], vulkan_failed: true).renderers
     assert_equal [:opengl], decide(platform: LINUX, vulkan_failed: true).renderers
-  end
-
-  def test_it_rescues_vulkan_finding_no_gpu_while_vulkan_may_be_tried
-    assert decide.rescues?(NO_GPU)
-    assert decide(asked: [:vulkan], platform: MAC).rescues?(
-      RuntimeError.new("Cannot create graphics: no supported renderer on this system.")
-    )
-    assert decide.rescues?(RuntimeError.new("Could not set window mode"))
-  end
-
-  def test_it_never_rescues_twice_or_where_vulkan_was_not_tried
-    refute decide(vulkan_failed: true).rescues?(NO_GPU), "the second start shows the error"
-    refute decide(platform: LINUX).rescues?(NO_GPU)
-    refute decide(platform: MAC).rescues?(NO_GPU)
-  end
-
-  def test_it_leaves_the_games_own_errors_to_the_error_screen
-    refute decide.rescues?(RuntimeError.new("score went below zero"))
-    refute decide.rescues?(NoMethodError.new("undefined method 'x' for an instance of Vulkan"))
   end
 
   def test_a_vulkan_failure_holds_for_a_month_then_vulkan_is_tried_again
