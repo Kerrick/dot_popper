@@ -273,115 +273,182 @@ module DotPopper
         end
       end
 
-      # Inside a Christmas tree: fir boughs reaching in from both sides at
-      # every height, in two depths, strung with dim lights and hung with
-      # far ornaments, and presents on the floor below.
+      # Inside a Christmas tree, looking out into the room: full fir boughs
+      # reaching in from both sides, a far layer strung with lights and
+      # hung with small ornaments and a near layer darker, over the room's
+      # warm light; and below, a wooden floor with a pile of presents,
+      # each wrapped, ribboned and bowed.
       def boughs(width, height)
         out = []
         land = width > height
-        presents(out, Color.hex("#040907"), width, height)
-        layers = [[Color.hex("#0a1d17"), land ? 4 : 5, 0.38..0.6, 0.85], [Color.hex("#020806"), 2, 0.5..0.75, 1.15]]
-        layers.each_with_index do |(ink, count, reach, scale), layer|
-          [[0, 1], [width, -1]].each_with_index do |(x0, side), k|
-            r = Random.new(70 + (layer * 10) + k)
-            count.times do |b|
-              span = layer == 1 ? 0.22 : 0.92
-              y0 = (((b + 0.5 + (side.positive? ? 0 : 0.5)) / count * span) - (layer == 1 ? 0.04 : 0.02)) * height + r.rand(-12.0..12.0)
-              length = [width, height].min * r.rand(reach) * (land ? 1.25 : 1.0)
-              angle = side.positive? ? r.rand(0.05..0.4) : Math::PI - r.rand(0.05..0.4)
-              stem = bough(out, ink, x0 - (side * 10), y0, angle, length, r, scale)
-              trim(out, stem, r) if layer.zero?
-            end
+        floor = height * (land ? 0.86 : 0.9)
+        out << Fan.new(color: Color.hex("#140d08"), points: [[0, floor], [width, floor], [width, height], [0, height]])
+        out << Fan.new(color: Color.hex("#2a1a0e"), points: [[0, floor], [width, floor], [width, floor + 2], [0, floor + 2]])
+        presents(out, width, floor, land)
+        reach = [width, height].min * (land ? 0.62 : 0.78)
+        needle = land ? 9.0 : 7.0
+        far = [Color.hex("#0b2118"), Color.hex("#133222")]
+        near = [Color.hex("#030f0a"), Color.hex("#0a2016")]
+        # Each side its own: height, slope and reach of each far bough.
+        sides = {
+          1 => land ? [[0.03, 0.42, 0.9], [0.24, 0.12, 0.7], [0.43, 0.3, 0.95], [0.6, 0.05, 0.62]] : [[0.02, 0.5, 0.8], [0.17, 0.15, 0.62], [0.33, 0.35, 0.85], [0.5, 0.08, 0.55], [0.64, 0.28, 0.7]],
+          -1 => land ? [[0.1, 0.2, 0.75], [0.3, 0.38, 0.92], [0.5, 0.1, 0.66]] : [[0.1, 0.25, 0.7], [0.26, 0.05, 0.58], [0.42, 0.4, 0.82], [0.58, 0.18, 0.6]]
+        }
+        [[0, 1], [width, -1]].each_with_index do |(x0, side), k|
+          r = Random.new(70 + k)
+          sides[side].each_with_index do |(row, slope, size), i|
+            angle = side.positive? ? slope : Math::PI - slope
+            stem = fir_spray(out, *far, [x0 - (side * 8), height * row], angle, reach * size, needle * 0.85, r)
+            string_lights(out, stem, r, needle)
+            hang_ornament(out, stem[-3 - (i % 3)], needle * (land ? 1.4 : 1.3), r) if (i + k).even?
           end
+        end
+        [[0, 1, -0.02, 0.55, 0.85], [width, -1, 0.0, 0.7, 0.7]].each_with_index do |(x0, side, row, slope, size), k|
+          r = Random.new(90 + k)
+          angle = side.positive? ? slope : Math::PI - slope
+          fir_spray(out, *near, [x0 - (side * 8), height * row], angle, reach * size, needle * 1.2, r)
         end
         out
       end
 
       LIGHTS = [Color.hex("#ffd27a", 0.4), Color.hex("#ff8a7a", 0.35), Color.hex("#9ad6ff", 0.35), Color.hex("#b4f0a0", 0.3)].freeze
 
-      # A far bough's trimmings, kept dim behind the play: a string of
-      # small lights along it, and an ornament hung near its tip.
-      def trim(out, stem, random)
-        stem.each_with_index do |(x, y), i|
-          next if i.zero? || i.odd?
-
-          out << Dot.new(x:, y: y + random.rand(2.0..7.0), radius: 2.2, color: LIGHTS[(i / 2) % LIGHTS.size])
-        end
-        tip = stem[-3]
-        drop = random.rand(10.0..22.0)
-        out << segment(tip, [tip[0], tip[1] + drop], 1.0, 1.0, Color.hex("#0a1d17"))
-        out << Dot.new(x: tip[0], y: tip[1] + drop + 8, radius: 8, color: Color.hex(%w[#2c1c1e #2a2a1c #1c2430].sample(random:)))
-        out << Fan.new(color: Color.hex("#0a1d17"), points: [[tip[0] - 2.5, tip[1] + drop - 1], [tip[0] + 2.5, tip[1] + drop - 1], [tip[0] + 2.5, tip[1] + drop + 2], [tip[0] - 2.5, tip[1] + drop + 2]])
-      end
-
-      # The floor under the tree, and presents on it, each with a bow.
-      def presents(out, color, width, height)
-        land = width > height
-        floor = height * (land ? 0.9 : 0.93)
-        out << Fan.new(color:, points: [[0, floor], [width, floor], [width, height], [0, height]])
-        r = Random.new(5)
-        x = width * (land ? 0.04 : -0.02)
-        while x < width
-          w = r.rand(0.7..1.3) * (land ? 96 : 66)
-          h = w * r.rand(0.55..1.15)
-          gap = r.rand(0.0..1.0) < 0.35 && x > width * 0.2 ? w * 1.4 : 0
-          x += gap
-          unless gap.positive? && x > width * 0.4 && x < width * 0.6
-            out << Fan.new(color:, points: [[x, floor + 2], [x + w, floor + 2], [x + w, floor - h], [x, floor - h]])
-            bow(out, color, x + (w / 2), floor - h, w * 0.22)
-          end
-          x += w + r.rand(2.0..10.0)
-        end
-      end
-
-      # A bow seen from the front: two loops and two tails.
-      def bow(out, color, x, y, size)
-        out << Fan.new(color:, points: [[x, y + 1], [x - size, y - (size * 0.75)], [x - (size * 1.15), y - (size * 0.35)], [x - (size * 0.9), y + (size * 0.05)]])
-        out << Fan.new(color:, points: [[x, y + 1], [x + (size * 0.9), y + (size * 0.05)], [x + (size * 1.15), y - (size * 0.35)], [x + size, y - (size * 0.75)]])
-        out << Dot.new(x:, y: y - (size * 0.1), radius: size * 0.22, color:)
-      end
-
-      # A fir bough: a drooping stem with twigs either side, all of them
-      # thick with short needles.
-      def bough(out, color, x, y, angle, length, random, scale = 1.0)
-        steps = 10
-        droop = Math.cos(angle).positive? ? 0.06 : -0.06
-        points = [[x, y]]
+      # A fir bough from +root+, its stem drooping and turning up at the
+      # tip, with branchlets either side in a flat spray, every part thick
+      # with short needles, and the upper side lit from the room. Returns
+      # the stem's points.
+      def fir_spray(out, dark, lit, root, angle, length, needle, random)
+        steps = 14
+        droop = Math.cos(angle).positive? ? 0.04 : -0.04
+        stem = [root]
         bent = angle
-        steps.times do
-          bent += droop
-          points << [points.last[0] + (Math.cos(bent) * length / steps), points.last[1] + (Math.sin(bent) * length / steps)]
+        steps.times do |i|
+          bent += i < steps - 3 ? droop : -droop * 1.2
+          stem << [stem.last[0] + (Math.cos(bent) * length / steps), stem.last[1] + (Math.sin(bent) * length / steps)]
         end
-        points.each_cons(2).with_index do |(a, b), i|
-          f = i.to_f / steps
-          out << segment(a, b, ((6 * (1 - f)) + 2) * scale, ((6 * (1 - f - (1.0 / steps))) + 2) * scale, color)
-          needles(out, color, a, b, 13 * scale * (1 - (f * 0.4)), random)
+        twigs = []
+        stem.each_cons(2).with_index do |(a, b), i|
           next if i.zero?
 
           dir = Math.atan2(b[1] - a[1], b[0] - a[0])
-          [-1, 1].each do |side|
-            twig = dir + (side * 0.75) + random.rand(-0.15..0.15)
-            reach = length * 0.22 * (1 - (f * 0.6)) * random.rand(0.7..1.0)
-            tip = [a[0] + (Math.cos(twig) * reach), a[1] + (Math.sin(twig) * reach) + (reach * 0.15)]
-            out << segment(a, tip, 2.4 * scale, 1.2 * scale, color)
-            needles(out, color, a, tip, 10 * scale * (1 - (f * 0.4)), random)
+          f = i.to_f / steps
+          [-1, 1].each do |turn|
+            [random.rand(0.0..0.3)].each do |at|
+              from = [a[0] + ((b[0] - a[0]) * at), a[1] + ((b[1] - a[1]) * at)]
+              twig = dir + (turn * random.rand(0.55..0.9))
+              span = length * 0.24 * (1 - (f * 0.8)) * random.rand(0.6..1.0)
+              tip = [from[0] + (Math.cos(twig) * span), from[1] + (Math.sin(twig) * span)]
+              up = Math.sin(twig) < Math.sin(dir)
+              twigs << [from, tip, up]
+              [0.35, 0.65].each do |t|
+                fork = [from[0] + ((tip[0] - from[0]) * t), from[1] + ((tip[1] - from[1]) * t)]
+                [-1, 1].each do |side|
+                  small = twig + (side * random.rand(0.5..0.8))
+                  reach = span * 0.3 * (1.1 - t)
+                  twigs << [fork, [fork[0] + (Math.cos(small) * reach), fork[1] + (Math.sin(small) * reach)], up]
+                end
+              end
+            end
           end
         end
-        points
+        twigs.each { |a, b, _| needled(out, dark, a, b, needle, random) }
+        stem.each_cons(2) { |a, b| needled(out, dark, a, b, needle * 1.1, random) }
+        twigs.each do |a, b, up|
+          next unless up
+
+          needled(out, lit, [a[0] + ((b[0] - a[0]) * 0.3), a[1] + ((b[1] - a[1]) * 0.3)], b, needle * 0.65, random)
+        end
+        stem
       end
 
-      # Short needles either side of the twig from +a+ to +b+, swept forward.
-      def needles(out, color, a, b, size, random)
+      # A twig from +a+ to +b+ as fir looks: a full band of short needles
+      # swept forward, its edge a fringe of needle tips.
+      def needled(out, color, a, b, needle, random)
         dir = Math.atan2(b[1] - a[1], b[0] - a[0])
-        8.times do |n|
-          t = (n + 0.5) / 8.0
+        long = Math.hypot(b[0] - a[0], b[1] - a[1])
+        out << segment(a, b, needle * 1.1, needle * 0.5, color)
+        count = [(long / (needle * 0.5)).round, 3].max
+        count.times do |n|
+          t = (n + 0.5) / count
           at = [a[0] + ((b[0] - a[0]) * t), a[1] + ((b[1] - a[1]) * t)]
-          [-1, 1].each do |side|
-            angle = dir + (side * 0.9) + random.rand(-0.12..0.12)
-            tip = [at[0] + (Math.cos(angle) * size), at[1] + (Math.sin(angle) * size) + (size * 0.2)]
-            out << segment(at, tip, 2.0, 0.8, color)
+          size = needle * (1.05 - (t * 0.35)) * random.rand(0.85..1.1)
+          [-1, 1].each do |turn|
+            spread = dir + (turn * random.rand(0.65..0.95))
+            out << segment(at, [at[0] + (Math.cos(spread) * size), at[1] + (Math.sin(spread) * size)], needle * 0.26, needle * 0.08, color)
           end
         end
+        out << segment(b, [b[0] + (Math.cos(dir) * needle * 0.6), b[1] + (Math.sin(dir) * needle * 0.6)], needle * 0.4, needle * 0.1, color)
+      end
+
+      WARM = [Color.hex("#ffd890"), Color.hex("#ffd890"), Color.hex("#ff9a7a"), Color.hex("#ffd890"), Color.hex("#a8d8ff")].freeze
+
+      # A string of small lights along a bough: its wire sagging between
+      # the stem's points, and a bulb at each low point with a soft glow,
+      # kept dim behind the play.
+      def string_lights(out, stem, random, needle)
+        wire = Color.hex("#040c08")
+        stem.each_cons(2).with_index do |(a, b), i|
+          next if i.zero?
+
+          sag = (0..6).map { |j| t = j / 6.0; [a[0] + ((b[0] - a[0]) * t), a[1] + ((b[1] - a[1]) * t) + (Math.sin(Math::PI * t) * needle * 0.9)] }
+          sag.each_cons(2) { |p, q| out << segment(p, q, 1.0, 1.0, wire) }
+          low = sag[3]
+          next if i.odd?
+
+          glow = WARM[random.rand(WARM.size)]
+          [[needle * 1.6, 0.05], [needle * 0.9, 0.08]].each { |rad, alpha| out << Dot.new(x: low[0], y: low[1] + 2, radius: rad, color: glow.with_alpha(alpha)) }
+          oval(out, glow.with_alpha(0.5), low[0], low[1] + 2, needle * 0.22, needle * 0.34, 0.0, 10)
+        end
+      end
+
+      # A small glass ornament hung close under the bough at +at+: its
+      # hook, a cap, a dim colored ball with a soft sheen.
+      def hang_ornament(out, at, size, random)
+        glass = [Color.hex("#4a161c"), Color.hex("#40361a"), Color.hex("#1a2c48")][random.rand(3)]
+        drop = size * 1.2
+        out << segment([at[0], at[1] + (size * 0.3)], [at[0], at[1] + drop], 1.0, 1.0, Color.hex("#0a1810"))
+        cy = at[1] + drop + (size * 0.2) + size
+        out << Dot.new(x: at[0], y: cy, radius: size, color: glass)
+        out << Dot.new(x: at[0] + (size * 0.15), y: cy + (size * 0.18), radius: size * 0.8, color: glass.mix(Color.hex("#000000"), 0.35))
+        oval(out, glass.mix(Color.hex("#ffffff"), 0.22), at[0] - (size * 0.38), cy - (size * 0.4), size * 0.28, size * 0.16, -0.7, 10)
+        out << Fan.new(color: Color.hex("#3a3a34"), points: [[at[0] - (size * 0.3), cy - size - (size * 0.25)], [at[0] + (size * 0.3), cy - size - (size * 0.25)], [at[0] + (size * 0.3), cy - size + (size * 0.08)], [at[0] - (size * 0.3), cy - size + (size * 0.08)]])
+      end
+
+      # The presents under the tree, in two piles: boxes of different
+      # sizes, the far ones smaller and darker, some stacked, each in its
+      # own paper with a ribbon round it, its lid seen a little from above,
+      # and a bow on top.
+      def presents(out, width, floor, land)
+        k = land ? 1.25 : 0.82
+        papers = [Color.hex("#3c1418"), Color.hex("#123024"), Color.hex("#3a2c14"), Color.hex("#1c2440"), Color.hex("#34121e")]
+        ribbons = [Color.hex("#5a4824"), Color.hex("#4a1418"), Color.hex("#4a4a40"), Color.hex("#5a4824"), Color.hex("#2a4a34")]
+        piles = land ? [[0.24, 0], [0.76, 3]] : [[0.26, 0], [0.78, 3]]
+        piles.each do |center, start|
+          layout = [[-62, 0, 70, 46, 0.5, 0], [36, -6, 54, 58, 0.5, 1], [-20, 8, 84, 54, 0.8, 2], [44, 12, 60, 40, 0.8, 3], [-24, 8, 46, 32, 0.8, 4, 54]]
+          layout.each do |dx, dy, w, h, light, n, on|
+            i = (n + start) % papers.size
+            x = (width * center) + (dx * k)
+            base = floor + (dy * k)
+            base -= on * k if on
+            gift(out, papers[i].mix(Color.hex("#000000"), 1 - light), ribbons[i].mix(Color.hex("#000000"), 1 - light), x, base, w * k, h * k)
+          end
+        end
+      end
+
+      # One present standing on the floor at +x+ (its middle), +base+: its
+      # front, its lid's top seen from a little above, a ribbon down the
+      # front and across the top, and a bow.
+      def gift(out, paper, ribbon, x, base, w, h)
+        top = w * 0.22
+        lid = h * 0.18
+        out << Fan.new(color: paper, points: [[x - (w / 2), base], [x + (w / 2), base], [x + (w / 2), base - h], [x - (w / 2), base - h]])
+        out << Fan.new(color: paper.mix(Color.hex("#ffffff"), 0.06), points: [[x - (w / 2) - 2, base - h + lid], [x + (w / 2) + 2, base - h + lid], [x + (w / 2) + 2, base - h], [x - (w / 2) - 2, base - h]])
+        out << Fan.new(color: paper.mix(Color.hex("#ffffff"), 0.12), points: [[x - (w / 2) - 2, base - h], [x + (w / 2) + 2, base - h], [x + (w / 2) - (w * 0.06), base - h - top], [x - (w / 2) + (w * 0.06), base - h - top]])
+        band = [w * 0.07, 3.0].max
+        out << Fan.new(color: ribbon, points: [[x - band, base], [x + band, base], [x + band, base - h], [x - band, base - h]])
+        out << Fan.new(color: ribbon, points: [[x - band, base - h], [x + band, base - h], [x + (band * 0.8), base - h - top], [x - (band * 0.8), base - h - top]])
+        out << Fan.new(color: ribbon, points: [[x - (w / 2) + (w * 0.03), base - h - (top * 0.42)], [x + (w / 2) - (w * 0.03), base - h - (top * 0.42)], [x + (w / 2) - (w * 0.035), base - h - (top * 0.62)], [x - (w / 2) + (w * 0.035), base - h - (top * 0.62)]])
+        ribbon_bow(out, ribbon, ribbon.mix(Color.hex("#000000"), 0.35), x, base - h - (top * 0.55), w * 0.2)
       end
 
       # Snowy rooftops on Christmas Eve: a far street of houses, near
@@ -507,15 +574,6 @@ module DotPopper
           edge = [[x - half, bottom], [x - (half * 0.5), bottom - (h * 0.025)], [x, bottom + (h * 0.01)], [x + (half * 0.5), bottom - (h * 0.025)], [x + half, bottom]]
           out << Fan.new(color:, points: [[x, top], *edge, [x, top]])
           edge.each_cons(2) { |a, b| out << segment(a, b, [h * 0.012, 2.0].max, [h * 0.012, 2.0].max, snow) }
-        end
-      end
-
-      # Smoke rising from a chimney at +x+, +y+, faint, drifting left.
-      def smoke(out, x, y, size)
-        8.times do |i|
-          f = i / 7.0
-          out << Dot.new(x: x - (f * size * 2.2) + (Math.sin(f * 5) * size * 0.3), y: y - (f * size * 4), radius: size * (0.25 + (f * 0.55)),
-                         color: Color.hex("#8a96c0", 0.07 * (1 - (f * 0.6))))
         end
       end
 

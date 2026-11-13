@@ -22,8 +22,8 @@ module DotPopper
             ),
             art: ThemeArt.new(
               dot: "ornament", scenery: :boughs,
-              sky: ThemeSky.new(top: hex["#0d2620"], mid: hex["#173a2f"], bottom: hex["#4a3418"], glow: hex["#b8742c"], glow_at: [0.5, 1.02],
-                                glow_amount: 0.55, edge: hex["#06100d"], stars: 0.0),
+              sky: ThemeSky.new(top: hex["#0d2620"], mid: hex["#173a2f"], bottom: hex["#2e2418"], glow: hex["#6a4a26"], glow_at: [0.5, 0.7],
+                                glow_amount: 0.45, edge: hex["#06100d"], stars: 0.0),
               wordmark: "assets/fonts/Fredoka-Bold.ttf", dotted_name: true,
               sounds: {
                 pop: Patch.new(notes: [Note.new(wave: :sine, from: 523, length: 0.26, attack: 0.001, volume: 0.55),
