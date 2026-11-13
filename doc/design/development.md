@@ -160,11 +160,12 @@ On Windows, the resizing scenario needs a display at least 1,200 × 800 units (s
 
 ### Galleries
 
-Eight scenarios are galleries, which save screenshots to look at by eye and check little: `home_gallery`, `redesign_gallery`, `screens_gallery`, `themes_gallery`, `holiday_gallery`, `offer_gallery`, `games_gallery` and `website_gallery`. No test in `scenarios_test.rb` names them, so `rake test:gui` never runs them. Each file's header says what it shows and which settings it reads (`DOT_POPPER_GALLERY` names the shots; `themes_gallery` and `holiday_gallery` read `DOT_POPPER_THEME` and `DOT_POPPER_THEME_UNLOCKS`, and `holiday_gallery` plays the same game for every theme given the same `DOT_POPPER_SEED`; `games_gallery` needs `DOT_POPPER_FREE_GAMES=0`; `screens_gallery` runs once with `DOT_POPPER_PRO=1` and once with `0`, and its friend-group screens need a local fake such as `script/group_stub.rb`). Run one as the suite runs a scenario, with a hard timeout:
+Eight scenarios are galleries, which save screenshots to look at by eye and check little: `home_gallery`, `redesign_gallery`, `screens_gallery`, `themes_gallery`, `holiday_gallery`, `offer_gallery`, `games_gallery` and `website_gallery`. No test in `scenarios_test.rb` names them, so `rake test:gui` never runs them. Each file's header says what it shows and which settings it reads (`DOT_POPPER_GALLERY` names the shots; `themes_gallery` and `holiday_gallery` read `DOT_POPPER_THEME` and `DOT_POPPER_THEME_UNLOCKS`, and `holiday_gallery` plays the same game for every theme given the same `DOT_POPPER_SEED`; `games_gallery` needs `DOT_POPPER_FREE_GAMES=0`; `screens_gallery` runs once with `DOT_POPPER_PRO=1` and once with `0`, and its friend-group screens need a local fake such as `script/group_stub.rb`). A gallery opens the game's window as `lota run` does, and no guard stops it, so run one as the suite runs a scenario, under a virtual display and with a hard timeout:
 
 ```console
 $ timeout 300 env DOT_POPPER_SCENARIO=home_gallery DOT_POPPER_GALLERY=before DOT_POPPER_SAVE_AS=gallery_home \
-    DOT_POPPER_SEED=7 DOT_POPPER_TODAY=2026-11-07 ALSOFT_DRIVERS=null bundle exec lota run .
+    DOT_POPPER_SEED=7 DOT_POPPER_TODAY=2026-11-07 ALSOFT_DRIVERS=null \
+    xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" bash script/with-openbox.sh bundle exec lota run .
 ```
 
 It prints `gui: screenshot PATH` for each file it saves in the save folder. `DOT_POPPER_QUIT_AFTER` won't end a scenario, since the director holds back the game's own quits while one plays; use `timeout`. Look at every screenshot at the size it will be seen.
