@@ -1,0 +1,37 @@
+module DotPopper
+  class ServerChoice
+    # What the address is pasted from (Presentation::Clipboard and the
+    # shell's).
+    interface _Clipboard
+      def paste: () -> String?
+    end
+
+    @store: ScoreRecord::_Store
+
+    @gone: Continuity::Gone
+
+    @clipboard: _Clipboard
+
+    @status: (:chosen | :not_https | :empty)?
+
+    attr_reader status: (:chosen | :not_https | :empty)?
+
+    def initialize: (ScoreRecord::_Store store, gone: Continuity::Gone, clipboard: _Clipboard) -> void
+
+    def offered?: () -> bool
+
+    def address: () -> String?
+
+    def server_url: (String own) -> String
+
+    def paste: () -> (:chosen | :not_https | :empty)
+
+    def reset: () -> void
+
+    def forget: () -> void
+
+    def call: (Continuity::SetdefGone | Continuity::SetdefHere event) -> void
+
+    def self.https?: (String text) -> bool
+  end
+end

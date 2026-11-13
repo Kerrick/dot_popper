@@ -11,6 +11,13 @@ module DotPopper
       def days: () -> Integer
     end
 
+    # Whether setdef is gone (watch.rb); what the typed core asks of it.
+    class Gone
+      def gone?: () -> bool
+
+      def days: (Date today) -> Integer
+    end
+
     # setdef's server answered (Gone#heard).
     class SetdefHere < ::Data
       def self.new: () -> instance
