@@ -275,7 +275,7 @@ class ShowTest < Minitest::Test
     press_main(show)
     10.times do
       bright = @cabinet.game.dots.find(&:bright?)
-      clear_around!(@cabinet.game, bright)
+      clear_around!(live(@cabinet), bright)
       show.tap(bright.x, bright.y)
     end
     @cabinet.update(30)
@@ -532,7 +532,7 @@ class ShowTest < Minitest::Test
     @show = new_show(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3), haptics:)
     start_and_pop
     popped = @cabinet.game.dots.find(&:popped?)
-    clear_around!(@cabinet.game, popped)
+    clear_around!(live(@cabinet), popped)
     @show.tap(popped.x, popped.y)
 
     assert_equal [Style::HAPTICS.pop, Style::HAPTICS.penalty], haptics.buzzes
@@ -548,7 +548,7 @@ class ShowTest < Minitest::Test
 
   def test_the_pop_climbs_with_the_score_up_to_a_cap
     press_main
-    score!(@cabinet.game, 1000)
+    score!(live(@cabinet), 1000)
     start_and_pop(started: true)
 
     assert_in_delta Style::SOUND.pop_highest, @sounds.played.last.last
@@ -557,7 +557,7 @@ class ShowTest < Minitest::Test
   def test_a_wrong_tap_shows_only_what_was_lost
     start_and_pop
     popped = @cabinet.game.dots.first
-    clear_around!(@cabinet.game, popped)
+    clear_around!(live(@cabinet), popped)
     @show.tap(popped.x, popped.y) # the score falls from 1 to 0: only 1 lost
 
     assert_equal ["−1", "−2s"], @show.effects.floaters.last(2).map(&:text)
@@ -567,9 +567,9 @@ class ShowTest < Minitest::Test
 
   def test_a_wrong_tap_at_zero_shows_only_the_seconds
     start_and_pop
-    score!(@cabinet.game, 0)
+    score!(live(@cabinet), 0)
     popped = @cabinet.game.dots.first
-    clear_around!(@cabinet.game, popped)
+    clear_around!(live(@cabinet), popped)
     @show.tap(popped.x, popped.y)
 
     assert_equal "−2s", @show.effects.floaters.last.text
@@ -579,7 +579,7 @@ class ShowTest < Minitest::Test
     start_and_pop
     popped = @cabinet.game.dots.first
     bright = @cabinet.game.dots.find(&:bright?)
-    clear_around!(@cabinet.game, popped)
+    clear_around!(live(@cabinet), popped)
     put!(bright.id, popped.x + 30, popped.y)
     @show.tap(popped.x - 20, popped.y)
 
@@ -596,7 +596,7 @@ class ShowTest < Minitest::Test
                      tutor: Tutor.new(store, times: 1))
     start_and_pop
     popped = @cabinet.game.dots.first
-    clear_around!(@cabinet.game, popped)
+    clear_around!(live(@cabinet), popped)
     @show.tap(popped.x, popped.y)
     @cabinet.update(20)
     assert_nil @show.game_over.lesson, "a mistake with nothing under it teaches nothing"
@@ -655,7 +655,7 @@ class ShowTest < Minitest::Test
                      tutor: Tutor.new(store, times: 2))
     hide_bright_under_a_popped_dot_and_tap_it
     bright = @cabinet.game.dots.find(&:bright?)
-    clear_around!(@cabinet.game, bright)
+    clear_around!(live(@cabinet), bright)
     @show.tap(bright.x, bright.y)
     @cabinet.update(20)
 
@@ -666,7 +666,7 @@ class ShowTest < Minitest::Test
   def test_a_wrong_tap_with_the_bright_dot_elsewhere_reveals_nothing
     start_and_pop
     popped = @cabinet.game.dots.first
-    clear_around!(@cabinet.game, popped)
+    clear_around!(live(@cabinet), popped)
     @show.tap(popped.x, popped.y)
 
     assert_empty @show.effects.reveals
@@ -716,7 +716,7 @@ class ShowTest < Minitest::Test
   def middle(rect) = [rect.center_x, rect.center_y]
 
   def put!(id, x, y)
-    game = @cabinet.game
+    game = live(@cabinet)
     game.instance_variable_set(:@dots, game.dots.map_dots { it.id == id ? it.with(x:, y:) : it })
   end
 
@@ -726,7 +726,7 @@ class ShowTest < Minitest::Test
     start_and_pop(started:)
     popped = @cabinet.game.dots.first
     bright = @cabinet.game.dots.find(&:bright?)
-    clear_around!(@cabinet.game, popped)
+    clear_around!(live(@cabinet), popped)
     put!(bright.id, popped.x + 30, popped.y)
     @show.tap(popped.x - 20, popped.y)
     assert_equal 1, @show.effects.reveals.size
@@ -744,7 +744,7 @@ class ShowTest < Minitest::Test
   def start_and_pop(started: false)
     press_main unless started
     bright = @cabinet.game.dots.find(&:bright?)
-    clear_around!(@cabinet.game, bright)
+    clear_around!(live(@cabinet), bright)
     @show.tap(bright.x, bright.y)
   end
 end

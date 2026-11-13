@@ -4,8 +4,31 @@ module DotPopper
   # One game: the dots, the score, and the clock. It is the one thing in
   # the rules that changes, and it changes by swapping in new values, so a
   # tap changes all three at once and says what it did with an event.
+  # Only Cabinet holds a game; everything else reads it through its #view,
+  # which cannot change it.
   class Game
     attr_reader :field, :dots, :score, :countdown, :elapsed, :spawns, :dots_in_a_row, :bonus
+
+    # The game as it stands, read-only (View), made once with the game, so
+    # reading it each frame makes nothing.
+    attr_reader :view
+
+    # A game as it stands, which answers what the game is now and nothing
+    # that changes it. What the screens, the renderer, the bot and the
+    # tutorial read each frame (Cabinet#game).
+    class View
+      def initialize(game) = @game = game
+
+      def field = @game.field
+      def dots = @game.dots
+      def score = @game.score
+      def countdown = @game.countdown
+      def elapsed = @game.elapsed
+      def spawns = @game.spawns
+      def dots_in_a_row = @game.dots_in_a_row
+      def bonus = @game.bonus
+      def over? = @game.over?
+    end
 
     # +dots+ (a Stack), when given, are its first dots, in place of the
     # one it would spawn, as the tutorial places its first. +spawn_tries+
@@ -27,6 +50,7 @@ module DotPopper
       @countdown = Countdown.new(remaining: Rules::STARTING_SECONDS)
       @dots = dots || Stack.new.slide_under(spawn(Stack.new))
       @next_id = @dots.map(&:id).max.to_i + 1
+      @view = View.new(self)
     end
 
     def over? = countdown.expired?

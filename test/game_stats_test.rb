@@ -30,7 +30,7 @@ class GameStatsTest < Minitest::Test
   def test_it_counts_mistakes_and_those_the_floor_softened
     pop!
     popped = @cabinet.game.dots.first
-    clear_around!(@cabinet.game, popped)
+    clear_around!(live(@cabinet), popped)
     @cabinet.press(popped.x, popped.y) # 1 point to lose: softened
     @cabinet.press(popped.x, popped.y) # 0 points to lose: softened
 
@@ -91,13 +91,13 @@ class GameStatsTest < Minitest::Test
 
   def mistake!
     popped = @cabinet.game.dots.find(&:popped?)
-    clear_around!(@cabinet.game, popped)
+    clear_around!(live(@cabinet), popped)
     @cabinet.press(popped.x, popped.y)
   end
 
   def pop!
     bright = @cabinet.game.dots.find(&:bright?)
-    clear_around!(@cabinet.game, bright)
+    clear_around!(live(@cabinet), bright)
     @cabinet.press(bright.x, bright.y)
   end
   # The tutorial's game: two dots popped and the guide's mistake while it is
@@ -110,7 +110,7 @@ class GameStatsTest < Minitest::Test
     cabinet.press_paused(300, 300)
     cabinet.press_paused(300, 300)
     spawned = cabinet.game.dots.to_a.last
-    clear_around!(cabinet.game, spawned)
+    clear_around!(live(cabinet), spawned)
     cabinet.press_paused(spawned.x, spawned.y)
     cabinet.unpause
 
@@ -121,7 +121,7 @@ class GameStatsTest < Minitest::Test
 
     cabinet.update(1.5)
     bright = cabinet.game.dots.to_a.last
-    clear_around!(cabinet.game, bright)
+    clear_around!(live(cabinet), bright)
     cabinet.press(bright.x, bright.y)
     assert_equal [3, 2, 2], [recorder.stats.dots_popped, recorder.stats.score, recorder.stats.most_dots_in_a_row], "the row is the game's own"
     assert_equal [1.5], recorder.stats.times_to_pop.map { it.round(6) }, "the first wait runs from the clock starting"

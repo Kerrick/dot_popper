@@ -46,6 +46,11 @@ module DotPopperGui
     def pile = app.pile
     def game = cabinet.game
 
+    # The game the cabinet holds itself, which nothing in the game can
+    # reach (Cabinet#game is its read-only Game::View): for a gallery that
+    # sets up a position by hand.
+    def live_game = cabinet.instance_variable_get(:@game)
+
     # Whether the player has Pro, which the screens are not told: a
     # scenario asks the game's Entitlement, as the composition root built
     # it.

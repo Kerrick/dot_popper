@@ -232,7 +232,7 @@ class CabinetTest < Minitest::Test
     start_paused!(@cabinet, DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
     popped = @cabinet.press_paused(300, 300)
     bright = @cabinet.game.dots.find(&:bright?)
-    clear_around!(@cabinet.game, @cabinet.game.dots.first)
+    clear_around!(live(@cabinet), @cabinet.game.dots.first)
     penalized = @cabinet.press_paused(300, 300)
 
     assert_instance_of Events::Popped, popped
@@ -321,6 +321,43 @@ class CabinetTest < Minitest::Test
     assert_equal 1, @heard.grep(Events::GameStarted).size
   end
 
+  # What changes a game: a press, time, the tutorial's moves, and a resize.
+  CHANGES = %i[tap_at update move_dots arrange field=].freeze
+
+  # What the cabinet answers without an argument, but what moves it on
+  # (to Home, from a pause, or taking its Starts): every reader there is,
+  # or will be.
+  def readers = Cabinet.public_instance_methods(false).select { Cabinet.instance_method(it).arity.zero? } - %i[show_home unpause starts]
+
+  # Only the cabinet holds its game. Nothing it answers, in any state,
+  # and nothing its state holds, is the game or can change it: what the
+  # screens, the renderer, the bot and the tutorial read is the game's
+  # read-only Game::View, the same one each frame.
+  def test_nothing_the_cabinet_answers_can_change_its_game
+    answers = lambda do
+      state = @cabinet.state
+      [state, *Data.instance_method(:to_h).bind_call(state).values, *readers.map { @cabinet.public_send(it) }]
+    end
+    seen = [answers.call]
+    start_paused!(@cabinet, DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
+    seen << answers.call
+    @cabinet.unpause
+    seen << answers.call
+    assert_same @cabinet.game, @cabinet.game, "made once, not each time it is asked"
+    @cabinet.update(30)
+    seen << answers.call
+
+    assert_equal %w[Home Paused Playing GameOver], seen.map { it[0].class.name.split("::").last }
+    held = seen.flatten.compact
+    view = DotPopper::Game::View
+    held += held.grep(view).flat_map { |game| view.public_instance_methods(false).map { game.public_send(it) } }
+    assert_empty held.grep(DotPopper::Game)
+    # A state's own #update takes the game as the cabinet hands it over.
+    values = held.reject { it.class.name.start_with?("DotPopper::Cabinet::") }
+    assert_empty values.select { |answer| CHANGES.any? { answer.respond_to?(it) } }.map(&:class)
+    assert_empty DotPopper::Game::View.public_instance_methods & CHANGES
+  end
+
   private
 
   def finish_and_restart
@@ -334,7 +371,7 @@ class CabinetTest < Minitest::Test
     start!(@cabinet)
     points.times do
       bright = @cabinet.game.dots.find(&:bright?)
-      clear_around!(@cabinet.game, bright)
+      clear_around!(live(@cabinet), bright)
       @cabinet.press(bright.x, bright.y)
     end
   end

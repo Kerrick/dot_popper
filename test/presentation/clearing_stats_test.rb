@@ -133,7 +133,7 @@ class ClearingStatsTest < Minitest::Test
   def finish_game
     press_main
     bright = @cabinet.game.dots.find(&:bright?)
-    clear_around!(@cabinet.game, bright)
+    clear_around!(live(@cabinet), bright)
     @show.tap(bright.x, bright.y)
     @cabinet.update(20)
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)

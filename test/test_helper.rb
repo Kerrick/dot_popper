@@ -33,6 +33,11 @@ module DotPopperTest
   def starts_of(cabinet) = DotPopperTest.starts_of(cabinet)
   def self.starts_of(cabinet) = (STARTS[cabinet] ||= cabinet.starts)
 
+  # The game +cabinet+ holds itself, which nothing in the game can reach
+  # (Cabinet#game is its read-only Game::View): for a test that sets up a
+  # position by hand.
+  def live(cabinet) = cabinet.instance_variable_get(:@game)
+
   # Sets a game's score as if earlier taps had earned it.
   def score!(game, points) = game.instance_variable_set(:@score, points)
 

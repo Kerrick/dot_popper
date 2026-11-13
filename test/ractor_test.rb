@@ -80,7 +80,7 @@ class RactorTest < Minitest::Test
     start_paused!(cabinet, DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
     returned = [cabinet.press_paused(300, 300)]
     cabinet.unpause
-    game = cabinet.game
+    game = live(cabinet)
     bright = game.dots.find(&:bright?)
     clear_around!(game, bright)
     cabinet.press(bright.x, bright.y)

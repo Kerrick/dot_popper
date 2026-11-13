@@ -10,7 +10,8 @@ module DotPopper
   # transition reads in one place.
   # The Cabinet is the shell around them: it holds the current state, makes
   # games, keeps the score records, and tells its listeners every event, in
-  # order. A game's records count among those of its SizeClass, the
+  # order. It alone holds the game (Game), and hands its states, and
+  # anyone who asks (#game), only the game's read-only Game::View. A game's records count among those of its SizeClass, the
   # class of the field it started on.
   #
   # +screen+ is the window as a Field at the usual dot size (DotSize);
@@ -27,6 +28,7 @@ module DotPopper
       @score_record = score_record
       @random = random
       @listeners = []
+      @game = nil # the game in play, paused or just finished, which only the cabinet holds
       @starts_taken = false
       @state = show_home
     end
@@ -66,10 +68,11 @@ module DotPopper
       self
     end
 
-    def press(x, y) = advance(state.press(self, x, y))
-    def update(seconds) = advance(state.update(self, seconds))
+    def press(x, y) = advance(state.press(self, @game, x, y))
+    def update(seconds) = advance(state.update(self, @game, seconds))
 
-    # The game in play or just finished, or nil on Home.
+    # The game in play or just finished, as it stands (Game::View, which
+    # cannot change it), or nil on Home.
     def game = state.game
 
     # The field a game started now would play on, and the class of
@@ -81,10 +84,10 @@ module DotPopper
     # and their radius, and the next game starts on the new screen.
     def screen=(screen)
       @screen = screen
-      state = self.state
-      return unless state.is_a?(Playing) || state.is_a?(Paused)
+      game = @game
+      return unless game && (state.is_a?(Playing) || state.is_a?(Paused))
 
-      state.game.field = Field.new(screen.width, screen.height, state.game.field.radius)
+      game.field = Field.new(screen.width, screen.height, game.field.radius)
     end
 
     # Whether the game is paused before its clock first runs (Paused).
@@ -105,6 +108,7 @@ module DotPopper
     # The transitions, each with the event that says it happened.
 
     def show_home
+      @game = nil
       announce(Events::HomeShown.new(score_record: score_record.of(size_class)))
       Home.new
     end
@@ -115,23 +119,18 @@ module DotPopper
     # A press on the paused game, which only the tutorial makes: the rules
     # hear it as in play, and the event comes back to the tutorial alone.
     # Nil when no game is paused.
-    def press_paused(x, y)
-      state = self.state
-      state.game.tap_at(x, y) if state.is_a?(Paused)
-    end
+    def press_paused(x, y) = (@game&.tap_at(x, y) if paused?)
 
     # Moves the paused game's dots +seconds+ on, at the tutorial's pace;
     # its clock stays as it is.
     def move_paused(seconds)
-      state = self.state
-      state.game.move_dots(seconds) if state.is_a?(Paused)
+      @game&.move_dots(seconds) if paused?
     end
 
     # Puts +dots+ in the paused game in place of the dots of their ids
     # (Game#arrange), as the tutorial shows them.
     def arrange(*dots)
-      state = self.state
-      state.game.arrange(*dots) if state.is_a?(Paused)
+      @game&.arrange(*dots) if paused?
     end
 
     # Play begins on the paused game, as it is: it is announced as begun,
@@ -139,9 +138,10 @@ module DotPopper
     # records of the class of screen it was made on.
     def unpause
       state = self.state
-      return self unless state.is_a?(Paused)
+      game = @game
+      return self unless state.is_a?(Paused) && game
 
-      advance(begin_game(state.game, state.seed, state.size_class, tutorial: true))
+      advance(begin_game(game, state.seed, state.size_class, tutorial: true))
     end
 
     # The game's score counts among the records of +size_class+, the class
@@ -152,7 +152,7 @@ module DotPopper
       new_score_record = score_record.record(game.score, size_class)
       announce(Events::GameEnded.new(score_record: score_record.of(size_class), new_score_record:, seed:, size_class:, first:,
                                      field: game.field, dots: game.dots, score: game.score, elapsed: game.elapsed, tutorial:))
-      GameOver.new(game:, new_score_record:)
+      GameOver.new(game: game.view, new_score_record:)
     end
 
     private
@@ -165,7 +165,7 @@ module DotPopper
     def start_game(seed)
       return self unless state.is_a?(Home)
 
-      advance(begin_game(Game.new(field, random: Random.new(seed)), seed))
+      advance(begin_game(@game = Game.new(field, random: Random.new(seed)), seed))
     end
 
     # From Home, a game made as #start_game makes one, with +dots+ (a
@@ -175,7 +175,8 @@ module DotPopper
     def start_paused(dots, seed)
       return self unless state.is_a?(Home)
 
-      advance(Paused.new(game: Game.new(field, random: Random.new(seed), dots:), seed:, size_class:))
+      game = @game = Game.new(field, random: Random.new(seed), dots:)
+      advance(Paused.new(game: game.view, seed:, size_class:))
     end
 
     # A seed of the game's own randomness, for a game started with none.
@@ -183,7 +184,7 @@ module DotPopper
 
     def begin_game(game, seed, size_class = self.size_class, tutorial: false)
       announce(Events::GameStarted.new(seed:, field: game.field, dots: game.dots, score: game.score, dots_in_a_row: game.dots_in_a_row))
-      Playing.new(game:, seed:, size_class:, tutorial:)
+      Playing.new(game: game.view, seed:, size_class:, tutorial:)
     end
 
     def advance(next_state)
@@ -191,31 +192,39 @@ module DotPopper
       self
     end
 
+    # Each state holds the game's Game::View (+game+), and is handed the
+    # game itself (+live+) only as the cabinet passes on a press or an
+    # update.
+
     # Waiting to start. A press here reaches no rule: a game begins only
-    # when it is started (#start_game, #start_paused).
+    # when it is started (Starts).
     class Home < Data.define
       def game = nil
-      def press(_cabinet, _x, _y) = self
-      def update(_cabinet, _seconds) = self
+      def press(_cabinet, _live, _x, _y) = self
+      def update(_cabinet, _live, _seconds) = self
     end
 
     # A game in progress. It ends the moment the clock reaches zero,
     # whether time ran out or a penalty took the last of it. +tutorial+
     # says the tutorial played over its opening, while it was Paused.
     class Playing < Data.define(:game, :seed, :size_class, :tutorial)
-      def press(cabinet, x, y)
-        cabinet.announce(game.tap_at(x, y))
-        settle(cabinet)
+      def press(cabinet, live, x, y)
+        return self unless live
+
+        cabinet.announce(live.tap_at(x, y))
+        settle(cabinet, live)
       end
 
-      def update(cabinet, seconds)
-        game.update(seconds)
-        settle(cabinet)
+      def update(cabinet, live, seconds)
+        return self unless live
+
+        live.update(seconds)
+        settle(cabinet, live)
       end
 
       private
 
-      def settle(cabinet) = game.over? ? cabinet.finish(game, seed, size_class, tutorial) : self
+      def settle(cabinet, live) = live.over? ? cabinet.finish(live, seed, size_class, tutorial) : self
     end
 
     # A game made but not yet begun: its clock has not run, and while the
@@ -223,8 +232,8 @@ module DotPopper
     # tutorial passes on (Cabinet#press_paused), and its dots move only
     # as the tutorial moves them (Cabinet#move_paused).
     class Paused < Data.define(:game, :seed, :size_class)
-      def press(_cabinet, _x, _y) = self
-      def update(_cabinet, _seconds) = self
+      def press(_cabinet, _live, _x, _y) = self
+      def update(_cabinet, _live, _seconds) = self
     end
 
     # The game is over and its score is shown. Presses are ignored for a
@@ -236,8 +245,8 @@ module DotPopper
       def score = game.score
       def ready? = shown >= Rules::GAME_OVER_GRACE
 
-      def press(cabinet, _x, _y) = ready? ? cabinet.show_home : self
-      def update(_cabinet, seconds) = with(shown: shown + seconds)
+      def press(cabinet, _live, _x, _y) = ready? ? cabinet.show_home : self
+      def update(_cabinet, _live, seconds) = with(shown: shown + seconds)
     end
   end
 end

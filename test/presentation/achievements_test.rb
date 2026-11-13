@@ -28,7 +28,7 @@ class AchievementsOnStatsTest < Minitest::Test
   # showing, and lets the clock run out.
   def play_a_sharp_game
     press_main
-    game = @cabinet.game
+    game = live(@cabinet)
     covered = dot(400, 300, popped: true)
     game.instance_variable_set(:@dots, DotPopper::Stack.new(dots: [covered, dot(395, 300, id: 900)]))
     @show.tap(346, 300)

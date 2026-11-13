@@ -20,6 +20,32 @@ module DotPopper
     # The dots_in_a_row's reward, or nil when the game has none.
     attr_reader bonus: Rules::Bonus?
 
+    attr_reader view: View
+
+    class View
+      @game: Game
+
+      def initialize: (Game game) -> void
+
+      def field: () -> Field
+
+      def dots: () -> Stack
+
+      def score: () -> Integer
+
+      def countdown: () -> Countdown
+
+      def elapsed: () -> Float
+
+      def spawns: () -> Array[Spawn]
+
+      def dots_in_a_row: () -> Integer
+
+      def bonus: () -> Rules::Bonus?
+
+      def over?: () -> bool
+    end
+
     @random: Random
 
     @spawner: Spawner

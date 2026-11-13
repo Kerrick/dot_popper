@@ -16,6 +16,8 @@ module DotPopper
 
     attr_reader sizing: DotSizing
 
+    @game: Game?
+
     @random: Random
 
     @listeners: Array[_Listener]
@@ -45,7 +47,7 @@ module DotPopper
 
     def update: (number seconds) -> self
 
-    def game: () -> Game?
+    def game: () -> Game::View?
 
     def field: () -> Field
 
@@ -90,13 +92,13 @@ module DotPopper
 
       def game: () -> nil
 
-      def press: (Cabinet cabinet, number x, number y) -> Home
+      def press: (Cabinet cabinet, Game? live, number x, number y) -> Home
 
-      def update: (Cabinet cabinet, number seconds) -> Home
+      def update: (Cabinet cabinet, Game? live, number seconds) -> Home
     end
 
     class Playing < ::Data
-      attr_reader game: Game
+      attr_reader game: Game::View
 
       attr_reader seed: Integer
 
@@ -104,49 +106,49 @@ module DotPopper
 
       attr_reader tutorial: bool
 
-      def self.new: (game: Game, seed: Integer, size_class: SizeClass, tutorial: bool) -> instance
+      def self.new: (game: Game::View, seed: Integer, size_class: SizeClass, tutorial: bool) -> instance
 
-      def press: (Cabinet cabinet, number x, number y) -> (Playing | GameOver)
+      def press: (Cabinet cabinet, Game? live, number x, number y) -> (Playing | GameOver)
 
-      def update: (Cabinet cabinet, number seconds) -> (Playing | GameOver)
+      def update: (Cabinet cabinet, Game? live, number seconds) -> (Playing | GameOver)
 
       private
 
-      def settle: (Cabinet cabinet) -> (Playing | GameOver)
+      def settle: (Cabinet cabinet, Game live) -> (Playing | GameOver)
     end
 
     class Paused < ::Data
-      attr_reader game: Game
+      attr_reader game: Game::View
 
       attr_reader seed: Integer
 
       attr_reader size_class: SizeClass
 
-      def self.new: (game: Game, seed: Integer, size_class: SizeClass) -> instance
+      def self.new: (game: Game::View, seed: Integer, size_class: SizeClass) -> instance
 
-      def press: (Cabinet cabinet, number x, number y) -> Paused
+      def press: (Cabinet cabinet, Game? live, number x, number y) -> Paused
 
-      def update: (Cabinet cabinet, number seconds) -> Paused
+      def update: (Cabinet cabinet, Game? live, number seconds) -> Paused
     end
 
     class GameOver < ::Data
-      attr_reader game: Game
+      attr_reader game: Game::View
 
       attr_reader new_score_record: bool
 
       attr_reader shown: Float
 
-      def self.new: (game: Game, new_score_record: bool, ?shown: Float) -> instance
+      def self.new: (game: Game::View, new_score_record: bool, ?shown: Float) -> instance
 
-      def initialize: (game: Game, new_score_record: bool, ?shown: Float) -> void
+      def initialize: (game: Game::View, new_score_record: bool, ?shown: Float) -> void
 
       def score: () -> Integer
 
       def ready?: () -> bool
 
-      def press: (Cabinet cabinet, number x, number y) -> (GameOver | Home)
+      def press: (Cabinet cabinet, Game? live, number x, number y) -> (GameOver | Home)
 
-      def update: (Cabinet cabinet, number seconds) -> GameOver
+      def update: (Cabinet cabinet, Game? live, number seconds) -> GameOver
     end
   end
 end
