@@ -37,7 +37,7 @@ class FinishGameTest < Minitest::Test
     assert_equal 3, @stats_book.stats.dots_popped
   end
 
-  def test_game_over_names_the_best_record_the_game_set
+  def test_game_over_names_the_most_impressive_record_the_game_set
     assert_nil @finish.call(ended, stats: stats(most_dots_in_a_row: 2)).record, "a first game has nothing to beat"
 
     result = @finish.call(ended, stats: stats(most_dots_in_a_row: 5))
