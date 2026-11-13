@@ -42,7 +42,7 @@ module DotPopper
       def delete = "Delete my data"
       def hold_to_leave = "Hold to leave this group."
       def hold_to_delete = "Hold to delete your scores from the server."
-      def standard_note = "Only games with standard dots count. Choose Standard in Settings."
+      def fixed_note = "Only games with standard dots count. Choose Standard in Settings."
       def no_history = "Nothing has happened here yet."
       def show = "Show"
       def copy = "Copy"

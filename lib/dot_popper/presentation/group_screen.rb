@@ -47,10 +47,10 @@ module DotPopper
     # button names the one that presses it, and the list and a group add
     # the buttons that have no place of their own: the list's first group
     # (RB), and the previous and next group (LB, RB).
-    class GroupScreen < Data.define(:layout, :style, :measure, :panel, :standard_dots, :back_text, :offset, :input)
+    class GroupScreen < Data.define(:layout, :style, :measure, :panel, :fixed_dots, :back_text, :offset, :input)
       TALL = 520.0 # the safe height, in points, a keypad column needs
 
-      def initialize(layout:, style:, measure:, panel:, standard_dots:, back_text:, offset: 0.0, input: InputKind::MOUSE) = super
+      def initialize(layout:, style:, measure:, panel:, fixed_dots:, back_text:, offset: 0.0, input: InputKind::MOUSE) = super
 
       def plan
         case panel.page
@@ -147,7 +147,7 @@ module DotPopper
         crest = layout.short? ? 0.0 : 44.0
         title_y = page.y + crest + (line_height / 2.0)
         lines = wrapped(GroupWords.title_line(group), title_y, :text)
-        lines += wrapped(alert_text || GroupWords.standard_note, lines.last.y + line_height, alert_text ? :alert : :note) if alert_text || standard_dots
+        lines += wrapped(alert_text || GroupWords.fixed_note, lines.last.y + line_height, alert_text ? :alert : :note) if alert_text || fixed_dots
         buttons_y = page.bottom - button
         code = Rect.new(x: left, y: buttons_y - gap - (button + 12), width: column_width, height: button + 12)
         top = lines.last.y + (line_height * 0.8)

@@ -98,7 +98,7 @@ class GroupPanelTest < Minitest::Test
   def test_with_the_other_dot_size_a_group_says_which_games_count
     @cabinet.sizing = DotPopper::DotSizing::DEFAULT
     join!
-    refute_includes lines, Words.standard_note
+    refute_includes lines, Words.fixed_note
 
     @cabinet.sizing = DotPopper::DotSizing::DEFAULT.toggled
 

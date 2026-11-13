@@ -17,7 +17,7 @@ module DotPopper
           show.list_scroll_from_top unless @scrolled_at == where
           @scrolled_at = where
           offset = show.scroll&.offset || 0.0
-          plan = GroupScreen.new(layout:, style: style::GROUPS, measure:, panel:, standard_dots: !show.cabinet.sizing.sized_to_screen?,
+          plan = GroupScreen.new(layout:, style: style::GROUPS, measure:, panel:, fixed_dots: !show.cabinet.sizing.sized_to_screen?,
                                  back_text: words.go_back, offset:, input: show.input).plan
           show.list_fit(plan.content, plan.window.height) if plan.window
           plan
