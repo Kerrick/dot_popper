@@ -35,12 +35,12 @@ Chosen: option 1, because it alone keeps both areas ignorant of each other while
 * Good, because each use case is tested alone, with memory stores and local fakes, and is checked by Steep with the core.
 * Good, because Gameplay and Monetization meet only in a use case, or through an event one of them announces, so either can change without the other.
 * Bad, because there is one more layer to follow from a press to a rule, and each use case needs an RBS signature, with interfaces for the collaborators the core does not type (the friend-group session, the store port).
-* Bad, because, until they move too, two rules that need both areas are still asked of `Entitlement#pro?` inside a Metagame object, that only Pro uses a theme (`ThemeKeeper`) and joins or creates a friend group (`GroupPanel`), and what a screen shows a Free player (an achievement's day and progress) is still decided in the `Show`.
+* Bad, because each such rule has a use case of its own, some only a few lines long (whether Join and Create lead to the offer is one test of `Entitlement#pro?`), and a screen must ask the use case rather than `Entitlement` even for that. The `Show` still asks `Entitlement#pro?` for the offer of Pro itself, which is Monetization's alone.
 * Neutral, because an area told of another's event acts when it is told, on the game's thread, as it did before: nothing waits, and nothing happens later than it did.
 
 ### Confirmation
 
-`test/use_cases/` tests each use case without a window. `test/use_cases/start_game_test.rb` fails if anything but `UseCases::StartGame` starts a game, in `lib/`, `script/`, `bin/`, `main.rb`, `conf.rb` or the Android kit. The `Steepfile` checks `lib/dot_popper/use_cases/*.rb`.
+`test/use_cases/` tests each use case without a window. `test/use_cases/start_game_test.rb` fails if anything but `UseCases::StartGame` starts a game, in `lib/`, `script/`, `bin/`, `main.rb`, `conf.rb` or the Android kit. `test/use_cases/pro_knowledge_test.rb` fails if any file in `lib/` names Pro (`pro?` or `Entitlement`) beyond Monetization's own code, the use cases, the `Show`'s offer and the composition root. The `Steepfile` checks `lib/dot_popper/use_cases/*.rb`.
 
 ## More Information
 
