@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # A whole game, as a first-time player has it: the title, a game
+  # A whole game, as a first-time player has it: Home, a game
   # with a few dots popped and one tap too soon on a popped dot over the bright
   # one, its reveal and Game Over's lesson, replayed on the pile with no
   # word, the clock running out, and
-  # back to the title. The score and the clock are worked out alongside,
+  # back to Home. The score and the clock are worked out alongside,
   # from the rules' numbers, and the save files checked once it is over.
   # With DOT_POPPER_NO_SHADERS=1, the same game draws without shaders.
   class GameScenario < Scenario
@@ -15,7 +15,7 @@ module DotPopperGui
     DOTS_POPPED = 4
 
     def play
-      check(show.home?, "the game opens on the title")
+      check(show.home?, "the game opens on Home")
       start_game
       wait(0.5)
       shot = screenshot
@@ -32,7 +32,7 @@ module DotPopperGui
       run_out_the_clock
       continue_to_home
       check_equal(%i[GameStarted GameEnded HomeShown], story & %i[GameStarted GameEnded HomeShown],
-                  "the screens come in order: title, game, Game Over, title")
+                  "the screens come in order: Home, game, Game Over, Home")
     end
 
     private
@@ -86,8 +86,8 @@ module DotPopperGui
                   "the game lasted the time it was given")
       lesson = show.game_over.lesson
       bright = ended.game.dots.find(&:bright?)
-      check(lesson && lesson.bright == bright.id, "Game Over teaches the stacking rule from the wrong tap")
-      wait_for("the wrong tap replayed on the pile", within: 300) { show.game_over.replayed.positive? }
+      check(lesson && lesson.bright == bright.id, "Game Over teaches the stacking rule from the mistake")
+      wait_for("the mistake replayed on the pile", within: 300) { show.game_over.replayed.positive? }
       check_equal([bright.id], show.effects.reveals.map(&:follow), "the bright dot it hid is outlined on the pile")
       wait(0.15)
       keep_screenshot("game-over-lesson")
@@ -99,7 +99,7 @@ module DotPopperGui
     end
 
     # A click on Game Over away from its buttons is the pile's alone: it
-    # never goes on to the title.
+    # never goes on to Home.
     def click_empty_space
       x = layout.safe.x + (layout.safe.width * 0.06)
       y = layout.safe.y + (layout.safe.height * 0.3)

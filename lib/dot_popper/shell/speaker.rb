@@ -3,7 +3,7 @@
 module DotPopper
   module Shell
     # Plays the game's sounds, which the synthesizer makes when the game
-    # starts, each in mono so a pop or a wrong tap can be panned to where
+    # starts, each in mono so a pop or a mistake can be panned to where
     # it happened. Each sound has a few voices, so quick taps overlap rather
     # than cut each other off. With no audio device, or muted, it plays
     # nothing and the game goes on. Muting is remembered in +store+.

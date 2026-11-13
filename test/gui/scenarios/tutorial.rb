@@ -6,7 +6,7 @@ module DotPopperGui
   # as a screenshot. The director leaves the tutorial out of every other
   # session, so this one forces it (DOT_POPPER_TUTORIAL=1). It plays over
   # a game paused before its clock runs, and at its end that game plays
-  # on as it is, with only the clock starting. The guide's wrong tap costs
+  # on as it is, with only the clock starting. The guide's mistake costs
   # what it does in play; the player's never reaches the game.
   #
   # It plays with the mouse, or with DOT_POPPER_GUI_INPUT=touch, a finger.
@@ -44,7 +44,7 @@ module DotPopperGui
     def name(beat) = "tutorial-#{hand}-#{layout.width.round}x#{layout.height.round}-#{beat}"
 
     def open_tutorial(how)
-      check(show.home?, "the game opens on the title")
+      check(show.home?, "the game opens on Home")
       wait(0.5)
       play = show.play_reach
       how.call(play.center_x, play.center_y)

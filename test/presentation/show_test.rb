@@ -322,7 +322,7 @@ class ShowTest < Minitest::Test
     assert_nil @clipboard.text
   end
 
-  # Laying the title out took a millisecond a frame on a phone, twice a
+  # Laying Home out took a millisecond a frame on a phone, twice a
   # frame; it is laid out again only when something on it changes.
   def test_home_is_laid_out_again_only_when_it_changes
     plan = @show.home_plan
@@ -346,7 +346,7 @@ class ShowTest < Minitest::Test
   end
 
   # The maintainer, on a controller alone, couldn't find how to quit. B
-  # on the title asks, and a second B within two seconds quits.
+  # on Home asks, and a second B within two seconds quits.
   def test_b_twice_on_home_quits_and_once_only_asks
     assert_equal :asked, @show.ask_to_quit
     assert_operator @show.quit_prompt, :>, 0.0
@@ -463,7 +463,7 @@ class ShowTest < Minitest::Test
 
   def test_a_gamepads_y_shares_the_result_on_game_over_and_nothing_else
     @show.share
-    assert @show.home?, "Y does nothing on the title"
+    assert @show.home?, "Y does nothing on Home"
     refute @show.sharing?
 
     @show.start
@@ -559,7 +559,7 @@ class ShowTest < Minitest::Test
   end
 
   # The stacking rule is taught on Game Over, never in play, and only
-  # after a game whose wrong tap had the bright dot hidden beneath.
+  # after a game whose mistake had the bright dot hidden beneath.
   def test_game_over_teaches_the_stack_after_a_wrong_tap_over_the_bright_dot
     store = DotPopper::ScoreRecord::Memory.new
     @show = Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3),
@@ -569,7 +569,7 @@ class ShowTest < Minitest::Test
     clear_around!(@cabinet.game, popped)
     @show.tap(popped.x, popped.y)
     @cabinet.update(20)
-    assert_nil @show.game_over.lesson, "a wrong tap with nothing under it teaches nothing"
+    assert_nil @show.game_over.lesson, "a mistake with nothing under it teaches nothing"
 
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
@@ -577,7 +577,7 @@ class ShowTest < Minitest::Test
     popped = @cabinet.game.dots.first
     bright = @cabinet.game.dots.find(&:bright?)
     @cabinet.update(20)
-    assert_equal Mistake.new(popped: popped.id, bright: bright.id), @show.game_over.lesson, "the wrong tap is the lesson"
+    assert_equal Mistake.new(popped: popped.id, bright: bright.id), @show.game_over.lesson, "the mistake is the lesson"
     assert_equal "1", store.read
     refute @show.game_over_plan.placed.key?(:lesson), "with no word"
 
@@ -589,7 +589,7 @@ class ShowTest < Minitest::Test
     assert_nil @show.game_over.lesson, "it has been taught as often as it is"
   end
 
-  # On the pile, the wrong tap's penalty replays as it played, after the
+  # On the pile, the mistake's penalty replays as it played, after the
   # score has counted, a few times: the popped dot's shudder and alarm
   # ring, and the dashed outline of the bright dot under it, which
   # pulses. The screen never shakes, and Continue works as ever.

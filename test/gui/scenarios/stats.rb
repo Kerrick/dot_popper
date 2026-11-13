@@ -2,16 +2,16 @@
 
 module DotPopperGui
   # The Stats screen, offered once a game has finished: opened from
-  # the title by a click and by a gamepad's X, and left by a click on
+  # Home by a click and by a gamepad's X, and left by a click on
   # Back, by Escape, which must not quit the game from there, and by B. A
   # click elsewhere on it does nothing.
   class StatsScenario < Scenario
     scenario :stats
 
     def play
-      check(!show.stats_offered?, "a first-time title offers no records")
+      check(!show.stats_offered?, "a first-time player's Home offers no Stats")
       quick_game
-      check(show.stats_offered?, "the title offers the records once a game has finished")
+      check(show.stats_offered?, "Home offers Stats once a game has finished")
       open_by_click
       lit = screenshot.lit_in(DotPopper::Presentation::Rect.new(x: layout.center_x - 200, y: layout.top,
                                                                 width: 400, height: layout.safe.height * 0.5))
@@ -39,7 +39,7 @@ module DotPopperGui
     end
 
     def closed(how)
-      check(!show.stats? && show.home?, "#{how} goes back to the title, and starts no game")
+      check(!show.stats? && show.home?, "#{how} goes back to Home, and starts no game")
     end
   end
 end

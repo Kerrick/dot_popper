@@ -30,7 +30,7 @@ class SizingPreviewTest < Minitest::Test
     assert_equal ["Less room", "More room"], [note(FITTED, 97), note(STANDARD, 97)]
   end
 
-  # Within a tenth either way the two look alike, and the title leaves
+  # Within a tenth either way the two look alike, and Home leaves
   # the choice out.
   def test_sizes_within_a_tenth_of_each_other_are_not_worth_a_choice
     [45.1, 50, 54.9].each do

@@ -25,7 +25,7 @@ module DotPopperGui
       check(reach, "after a game, Home offers How to play")
       lit = screenshot.lit_in(reach)
       check(lit >= 40, "How to play is drawn (#{lit} light pixels)")
-      keep_screenshot(name("title"))
+      keep_screenshot(name("home"))
       press_it(reach)
       check(show.tutorial?, "How to play opens the tutorial at once")
       check(cabinet.paused?, "over its game, paused meanwhile")
@@ -42,7 +42,7 @@ module DotPopperGui
       run_out_the_clock
       continue_to_home(how)
       key(:h)
-      check(show.tutorial?, "H opens it again from the title")
+      check(show.tutorial?, "H opens it again from Home")
     end
 
     private

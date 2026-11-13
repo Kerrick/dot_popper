@@ -2,7 +2,7 @@
 
 module DotPopper
   module Presentation
-    # How the hidden bright dot is shown after a wrong tap: a dashed
+    # How the hidden bright dot is shown after a mistake: a dashed
     # outline, the drawing convention for an edge out of sight, that
     # settles onto the dot's rim (+radius+, in radii) and fades (+alpha+).
     # +width+ is its line, in radii, and +dashes+ how many it has.
@@ -10,7 +10,7 @@ module DotPopper
       def duration = [radius.duration, alpha.duration].max
     end
 
-    # "It was under there": the outline of the bright dot that a wrong tap
+    # "It was under there": the outline of the bright dot that a mistake
     # was too soon for, drawn over every dot since +born+. It follows its
     # dot's id, so it moves with the dot. +scale+ is the radius in
     # graphics units.

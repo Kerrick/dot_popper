@@ -17,7 +17,7 @@ class StyleTest < Minitest::Test
     assert_operator Style::PENALTY_SHAKE.duration, :<=, 0.25
   end
 
-  # A wrong tap's edge glow tints a dot near an edge only for a moment.
+  # A mistake's edge glow tints a dot near an edge only for a moment.
   def test_the_penalty_glow_is_soft_narrow_and_quick
     flash = Style::PENALTY_FLASH
 

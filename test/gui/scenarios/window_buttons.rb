@@ -45,12 +45,12 @@ module DotPopperGui
     private
 
     def press_button(name)
-      reach = show.reach_of(name) or fail!("the title offers no #{name}")
+      reach = show.reach_of(name) or fail!("Home offers no #{name}")
       click(reach.center_x, reach.center_y)
     end
 
     def check_drawn(name, what)
-      reach = show.reach_of(name) or fail!("the title offers no #{name}")
+      reach = show.reach_of(name) or fail!("Home offers no #{name}")
       lit = screenshot.lit_in(reach)
       check(lit >= 40, "#{what} is drawn (#{lit} light pixels)")
     end

@@ -5,7 +5,7 @@ require "test_helper"
 
 # Ruby only warns at a mistake such as a key written twice in one hash,
 # where the second silently wins, so every file is compiled with warnings
-# on, and any warning fails. A duplicated key in the title's words once
+# on, and any warning fails. A duplicated key in Home's words once
 # reached a build this way.
 class NoWarningsTest < Minitest::Test
   ROOT = File.expand_path("..", __dir__)

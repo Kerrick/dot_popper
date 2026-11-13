@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # The limit on free games, kept as screenshots to look at: the title with
+  # The limit on free games, kept as screenshots to look at: Home with
   # none left, and the offer Play leads to then. It needs
   # DOT_POPPER_FREE_GAMES=0, since a scenario counts no games otherwise.
   # Not part of rake test:gui: it is for
@@ -12,8 +12,8 @@ module DotPopperGui
     SIZES = [[1200, 800], [400, 850], [850, 400]].freeze
 
     def play
-      check(show.home?, "the game opens on the title")
-      check(show.games_line == "No games left today", "the title says no games are left")
+      check(show.home?, "the game opens on Home")
+      check(show.games_line == "No games left today", "Home says no games are left")
       SIZES.each { |width, height| shots(width, height) }
     end
 
@@ -22,7 +22,7 @@ module DotPopperGui
     def shots(width, height)
       resize(width, height)
       wait(1.0)
-      keep_screenshot("games-title-#{width}x#{height}")
+      keep_screenshot("games-home-#{width}x#{height}")
       reach = show.play_reach
       click(reach.center_x, reach.center_y)
       check(show.offer?, "Play leads to the offer with no games left")
@@ -30,7 +30,7 @@ module DotPopperGui
       wait(1.0)
       keep_screenshot("games-offer-#{width}x#{height}")
       show.back
-      check(show.home?, "Back returns to the title")
+      check(show.home?, "Back returns to Home")
     end
   end
 end

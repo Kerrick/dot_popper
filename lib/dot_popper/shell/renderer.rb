@@ -175,7 +175,7 @@ module DotPopper
 
       # The score and clock, on top of everything, until Game Over has
       # arrived, so a game ended by a penalty is seen to reach 0; Game
-      # Over then shows the score itself. After a wrong tap
+      # Over then shows the score itself. After a mistake
       # the HUD shakes, by whole device pixels; the dots never do, since a
       # tap is judged where a dot really is.
       def hud(layout)

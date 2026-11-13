@@ -151,7 +151,7 @@ class ShowTutorialTest < Minitest::Test
     assert_in_delta 0.15, born.scale_x, 1e-9, "and the new one grows in from now"
   end
 
-  # The guide's wrong tap, whatever the hand: touch, a mouse, and a
+  # The guide's mistake, whatever the hand: touch, a mouse, and a
   # gamepad's A all reach it the same way, and none is heard.
   def test_no_kind_of_tap_is_heard_while_the_guide_demonstrates
     press_main
@@ -234,7 +234,7 @@ class ShowTutorialTest < Minitest::Test
     assert @show.playing?
   end
 
-  # "How to play" replays it on any title, seen or not, and it hands over
+  # "How to play" replays it from Home, seen or not, and it hands over
   # into a game as a first Play's does; the seen flag stays seen.
   def test_how_to_play_opens_it_again_and_it_hands_over_into_a_game
     play_through

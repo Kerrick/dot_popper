@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # One theme's pictures to judge it by, from the real game: the title on a
+  # One theme's pictures to judge it by, from the real game: Home on a
   # desktop window and an upright phone; a close-up of a bright, a popped
   # and a bonus dot, and a bright dot under a popped one; and a crowded
   # game on each, caught when the bright dot is mostly covered.
@@ -21,12 +21,12 @@ module DotPopperGui
       keeper.told(keeper.arrival) until keeper.arrival.nil?
       fit(1200, 800, false)
       wait(1.5)
-      keep_screenshot("#{@theme}-title-desktop")
+      keep_screenshot("#{@theme}-home-desktop")
       closeup
       crowd("desktop", 44)
       fit(400, 850, true)
       wait(1.5)
-      keep_screenshot("#{@theme}-title-phone")
+      keep_screenshot("#{@theme}-home-phone")
       crowd("phone", 34)
     end
 

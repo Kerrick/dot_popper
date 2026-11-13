@@ -4,7 +4,7 @@ module DotPopper
   module Presentation
     # A number flying in the Tutorial, from +from+ to +to+ (Anchors), for
     # +duration+ seconds from +born+: a pop's "+1" into the HUD's score, or
-    # a wrong tap's "−2" out of it. With +icon+ :stopwatch, a small drawn
+    # a mistake's "−2" out of it. With +icon+ :stopwatch, a small drawn
     # stopwatch goes beside the number, for the time.
     class Flight < Data.define(:text, :icon, :color, :from, :to, :born, :duration)
       def initialize(text:, color:, from:, to:, born:, duration:, icon: nil) = super

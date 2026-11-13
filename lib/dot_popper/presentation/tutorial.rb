@@ -87,7 +87,7 @@ module DotPopper
     #    at the pop is shown born (#over?). The Show then unpauses the
     #    game, whose LeadIn lets the clock run.
     #
-    # The guide's wrong tap is a press on the game, so it costs what it
+    # The guide's mistake is a press on the game, so it costs what it
     # does in play, by the rules. A player's tap on a popped dot never
     # reaches the game, even on their turn: the tutorial shows that cost
     # and never charges it to them. What a full row brings is left for the

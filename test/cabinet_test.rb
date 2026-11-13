@@ -89,7 +89,7 @@ class CabinetTest < Minitest::Test
     play_to_score(2)
     @cabinet.update(20)
     @cabinet.update(1)
-    @cabinet.press(0, 0) # to the title
+    @cabinet.press(0, 0) # to Home
     @cabinet.press(0, 0) # and a new game
 
     assert_equal 0, @cabinet.game.score

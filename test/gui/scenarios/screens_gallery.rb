@@ -45,7 +45,7 @@ module DotPopperGui
 
     def screens(width, height, phone)
       fit(width, height, phone)
-      shoot("title")
+      shoot("home")
       group_door
       show.open_stats
       shoot("records")

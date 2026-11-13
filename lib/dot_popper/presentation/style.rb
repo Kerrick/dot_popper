@@ -329,7 +329,7 @@ module DotPopper
         alpha: Tween.new(from: 0.8, to: 0.0, duration: 0.45, ease: :out_quad), color: PALETTE.bonus_body
       )
 
-      # A wrong tap: the dot shudders and its rim flashes, the screen
+      # A mistake: the dot shudders and its rim flashes, the screen
       # shakes a little, and the edges glow.
       ALARM_RING = RingStyle.new(
         radius: Tween.new(from: 1.0, to: 1.3, duration: 0.3, ease: :out_cubic),
@@ -469,7 +469,7 @@ module DotPopper
       CHATTER = ChatterStyle.new(seconds: 0.06, reach: 8.0)
 
       # Sound: the pop climbs a little with the score, up to a cap. A pop
-      # or a wrong tap is heard where it is across the screen, leaning at
+      # or a mistake is heard where it is across the screen, leaning at
       # most 60% to a side.
       class SoundStyle < Data.define(:pop_climb, :pop_highest, :tick_climb, :volume, :stereo); end
       SOUND = SoundStyle.new(pop_climb: 0.02, pop_highest: 1.4, tick_climb: 0.12, volume: 0.8,

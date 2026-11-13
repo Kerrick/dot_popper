@@ -190,10 +190,10 @@ module DotPopperGui
     def bright_dot = game.dots.find(&:bright?)
     def uncovered?(dot) = game.dots.top_at(dot.x, dot.y)&.id == dot.id
 
-    # Starts a game with a click in the middle of the title, away from
+    # Starts a game with a click in the middle of Home, away from
     # its buttons.
     def start_game(how = method(:click))
-      check(show.home?, "the title is showing")
+      check(show.home?, "Home is showing")
       play = show.play_reach
       how.call(play.center_x, play.center_y)
       check(show.playing?, "a press on Play starts a game")

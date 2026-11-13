@@ -35,7 +35,7 @@ class DailyGoalTest < Minitest::Test
     short = GameStats.start.with(most_dots_in_a_row: 14, times_to_pop: [2.99] + ([1.2] * 8), duration: 49.9, mistakes: 0, score: 29)
 
     DailyGoal::LIST.reject { it.kind == :clean_game }.each { refute it.met?(short), it.to_s }
-    refute goal(:comeback).met?(short.with(score: 40)), "a comeback needs a wrong tap"
+    refute goal(:comeback).met?(short.with(score: 40)), "a comeback needs a mistake"
   end
 
   def test_its_name_in_the_log

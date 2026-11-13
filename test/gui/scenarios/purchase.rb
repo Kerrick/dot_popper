@@ -14,8 +14,8 @@ module DotPopperGui
     def play
       keeper = show.instance_variable_get(:@theme_keeper)
       keeper.told(keeper.arrival) until keeper.arrival.nil?
-      check(show.home?, "the game opens on the title")
-      check_equal(words.games_left(2), show.games_line, "the title counts the games left")
+      check(show.home?, "the game opens on Home")
+      check_equal(words.games_left(2), show.games_line, "Home counts the games left")
       quick_game
       quick_game
       check_equal(words.games_left(0), show.games_line, "the games have run out")
@@ -42,7 +42,7 @@ module DotPopperGui
 
     def pro
       show.back
-      check(show.home?, "Back returns to the title")
+      check(show.home?, "Back returns to Home")
       check_nil_games
       start_game
       check(show.playing?, "Play starts a game with no games left")
@@ -58,7 +58,7 @@ module DotPopperGui
       keep_screenshot("purchase-pro-looks")
     end
 
-    def check_nil_games = check(show.games_line.nil?, "the title no longer counts plays")
+    def check_nil_games = check(show.games_line.nil?, "Home no longer counts games")
   end
 
   # The purchase kept: the same save, a new launch, and the license key
@@ -67,8 +67,8 @@ module DotPopperGui
     scenario :purchase_kept
 
     def play
-      check(show.home?, "the game opens on the title")
-      check(show.games_line.nil?, "still Pro after a relaunch: the title counts no games")
+      check(show.home?, "the game opens on Home")
+      check(show.games_line.nil?, "still Pro after a relaunch: Home counts no games")
       wait(0.5)
       keep_screenshot("purchase-relaunched")
       start_game

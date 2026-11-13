@@ -12,7 +12,7 @@ module DotPopperGui
     SIZES = [[1200, 800], [400, 850], [850, 400], [400, 320]].freeze
 
     def play
-      check(show.home?, "the game opens on the title")
+      check(show.home?, "the game opens on Home")
       gone = ENV["DOT_POPPER_FAKE_SETDEF"] == "gone"
       wait_for("setdef's answer") { !gone || show.server_offered? }
       quick_game

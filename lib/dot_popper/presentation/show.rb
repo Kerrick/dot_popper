@@ -1711,7 +1711,7 @@ module DotPopper
         celebrate
       end
 
-      # The stacking rule, taught with no word: the wrong tap the game
+      # The stacking rule, taught with no word: the mistake the game
       # ended up teaching (Mistake) replays on the pile as it played, the
       # popped dot's shudder and alarm ring and the dashed outline of the
       # bright dot under it, and the bright dot pulses gently. Its effects

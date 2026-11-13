@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # The mouse over the title's "Your stats": the button lights up and
+  # The mouse over Home's "Your stats": the button lights up and
   # the pointer becomes the system's pointing hand, and moving away puts
   # both back. A finger never hovers.
   class HoverScenario < Scenario
@@ -39,7 +39,7 @@ module DotPopperGui
     def empty_point
       safe = layout.safe
       points = (1..9).flat_map { |i| (1..9).map { |j| [safe.x + (safe.width * i / 10.0), safe.y + (safe.height * j / 10.0)] } }
-      points.find { |x, y| show.control_at(x, y).nil? } or raise "no empty point on the title"
+      points.find { |x, y| show.control_at(x, y).nil? } or raise "no empty point on Home"
     end
   end
 end

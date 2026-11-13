@@ -109,7 +109,7 @@ class SplashTest < Minitest::Test
     (0..splash.total).step(0.01).each { |t| assert_equal 1.0, splash.with(at: t).block, "at #{t}" }
   end
 
-  # The maintainer: the fade to the title hid the cursor's own fade, so the
+  # The maintainer: the fade to Home hid the cursor's own fade, so the
   # splash holds the block dark for a beat or so before the fade out starts.
   def test_with_sound_the_block_is_dark_for_at_least_four_tenths_of_a_second_before_the_fade_out
     splash = Splash.start(sounding: true)

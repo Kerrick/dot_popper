@@ -30,7 +30,7 @@ module DotPopper
     # How to draw one dot at one moment: its scale across and down, how
     # much of its bright look still shows (1 for a bright dot, 0 once a
     # popped dot has finished changing), and how strongly its rim glows
-    # from a wrong tap.
+    # from a mistake.
     class Pose < Data.define(:scale_x, :scale_y, :bright_look, :alarm)
       STILL = new(scale_x: 1.0, scale_y: 1.0, bright_look: 0.0, alarm: 0.0)
       BRIGHT = STILL.with(bright_look: 1.0)

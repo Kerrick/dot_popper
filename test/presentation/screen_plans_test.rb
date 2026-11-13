@@ -2,7 +2,7 @@
 
 require_relative "presentation_helper"
 
-# The title's and Game Over's words never collide, whatever lines a
+# Home's and Game Over's words never collide, whatever lines a
 # game leaves them to show and however small the window: each is
 # stacked in the room it has, shrinking its type and then leaving out
 # the least needed lines. And on every screen, a press reaches one
@@ -111,7 +111,7 @@ class ScreenPlansTest < Minitest::Test
     assert_operator [spare.abs, plan[:message].width - buttons].min, :<=, 1e-6, "#{name}: even side padding"
   end
 
-  # The title's legend says the scoring with no word, in the Tutorial's
+  # Home's legend says the scoring with no word, in the Tutorial's
   # numbers and stopwatch, in two columns that line up.
   def test_the_legend_shows_what_each_dot_does_in_the_tutorials_signs
     rows = Legend.rows.map { |bright, points, seconds| [bright, points.text, points.stopwatch, seconds.text, seconds.stopwatch] }

@@ -4,7 +4,7 @@ module DotPopperGui
   # Playing with the game-over pile by mouse, under a fake tilt
   # (DOT_POPPER_FAKE_TILT=0.6,0, which rolls it left): a dot dragged and
   # thrown, Game Over still showing after, then a plain click that goes
-  # on to the title.
+  # on to Home.
   class PileScenario < Scenario
     scenario :pile
 

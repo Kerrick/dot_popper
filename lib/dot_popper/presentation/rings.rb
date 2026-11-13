@@ -9,7 +9,7 @@ module DotPopper
     end
 
     # One ring spreading out since +born+: a pop's shockwave, the ripple
-    # that marks a new dot sliding in underneath, or a wrong tap's flash on
+    # that marks a new dot sliding in underneath, or a mistake's flash on
     # a dot's rim. A ring around a dot +follow+s that dot's id, so it moves
     # with the dot; one without stays at (+x+, +y+). +scale+ is the radius
     # in graphics units.

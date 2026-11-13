@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # Each theme's screens kept as screenshots to look at: the title, a
+  # Each theme's screens kept as screenshots to look at: Home, a
   # crowded round, Game Over, the notice of a new theme, and the Themes
   # screen. DOT_POPPER_THEME names the theme; DOT_POPPER_THEME_UNLOCKS
   # unlocks them; DOT_POPPER_GALLERY names the shots. Not part of rake
@@ -15,7 +15,7 @@ module DotPopperGui
       theme_keeper = show.instance_variable_get(:@theme_keeper)
       theme_keeper.told(theme_keeper.arrival) until theme_keeper.arrival.nil?
       wait(1.0)
-      keep_screenshot("#{tag}-#{theme}-title")
+      keep_screenshot("#{tag}-#{theme}-home")
       start_game
       14.times { pop_bright }
       wait(0.5)

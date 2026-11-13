@@ -167,7 +167,7 @@ class RulesFuzzTest < Minitest::Test
     end
   end
 
-  # A pop earns one point; a wrong tap loses two, or as many as are left.
+  # A pop earns one point; a mistake loses two, or as many as are left.
   def check_score_change(event, change, score, where)
     expected = case event
                in DotPopper::Events::Popped then DotPopper::Rules::POP_POINTS

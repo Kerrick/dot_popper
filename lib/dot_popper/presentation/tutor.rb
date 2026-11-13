@@ -3,7 +3,7 @@
 module DotPopper
   module Presentation
     # How the stacking rule is taught: on how many Game Overs, at most, and
-    # how its wrong tap replays there, once the score has counted up, then
+    # how its mistake replays there, once the score has counted up, then
     # every +every+ seconds, +replays+ times in all.
     class LessonStyle < Data.define(:times, :every, :replays)
       # Whether the replay numbered +replayed+ (from 0) is due +since+
@@ -11,7 +11,7 @@ module DotPopper
       def replay_due?(replayed, since) = replayed < replays && since >= replayed * every
     end
 
-    # The wrong tap Game Over teaches from: the popped dot it hit
+    # The mistake Game Over teaches from: the popped dot it hit
     # (+popped+, its id) and the bright dot hidden under it (+bright+).
     class Mistake < Data.define(:popped, :bright)
       # The mistake, if Game Over can still point at it among +dots+ (a

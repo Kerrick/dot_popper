@@ -128,7 +128,7 @@ class GuiScenariosTest < Minitest::Test
   def test_how_to_play_on_home_by_mouse_and_by_h
     play("how_to_play", "a first Home offers no How to play", "How to play is drawn",
          "How to play opens the tutorial at once", "Escape skips it",
-         "H opens it again from the title")
+         "H opens it again from Home")
   end
 
   def test_how_to_play_by_touch_on_an_upright_phone_sized_window
