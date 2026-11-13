@@ -6,6 +6,7 @@
 # opening a window (PackagedApp::START). test/packaged_app_test.rb runs
 # the check in `rake test`, so a file the app would not hold, or a library
 # it would not have, fails there rather than in a built app.
+require "fileutils"
 require "open3"
 require "rbconfig"
 require "tmpdir"
@@ -45,6 +46,26 @@ module PackagedApp
   # The paths +channel+'s app leaves out of the game: the repository's
   # own, and what the channel's build leaves out (ChannelContents).
   def excludes(channel) = REPOSITORY_ONLY + ChannelContents.left_out(channel)
+
+  # Copies to +to+ the files git tracks in +root+, as they are in the
+  # working copy: what a checkout of the commit holds, and so what CI
+  # fuses. Other files in a working copy (a build's output in tmp/, say)
+  # never reach an app CI builds, so they reach no copy here either.
+  # Paths that start with one of +except+ are not copied.
+  def copy_tracked(to, root: ROOT, except: [])
+    listed, status = Open3.capture2("git", "-C", root, "ls-files", "-z")
+    raise "git could not list the files of #{root}" unless status.success?
+
+    listed.split("\0").each do |path|
+      source = File.join(root, path)
+      next if !File.file?(source) || except.any? { path.start_with?(it) }
+
+      target = File.join(to, path)
+      FileUtils.mkdir_p(File.dirname(target))
+      FileUtils.cp(source, target, preserve: true)
+    end
+    to
+  end
 
   # Lays out in +to+ the game's folder as `lota fuse` copies +game+ into
   # the app, leaving out +excludes+, by Lota's own copy (Lota::Fuse), so

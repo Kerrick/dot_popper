@@ -24,12 +24,20 @@ class PackagedAppTest < Minitest::Test
 
   def self.laid_out = @laid_out ||= {}
 
+  # The files git tracks, which a checkout of the commit holds, copied once.
+  def self.tracked
+    @tracked ||= Dir.mktmpdir("dot_popper-tracked").tap do |folder|
+      Minitest.after_run { FileUtils.rm_rf(folder) }
+      PackagedApp.copy_tracked(folder, except: %w[vendor/cache/])
+    end
+  end
+
   # The game's folder in +channel+'s app, laid out once per channel.
   def game(channel = ChannelContents::TEST)
     self.class.laid_out[channel] ||= begin
       folder = File.join(Dir.mktmpdir("dot_popper-app"), "game", "dot_popper")
       Minitest.after_run { FileUtils.rm_rf(File.expand_path("../..", folder)) }
-      PackagedApp.lay_out(ROOT, folder, excludes: PackagedApp.excludes(channel))
+      PackagedApp.lay_out(self.class.tracked, folder, excludes: PackagedApp.excludes(channel))
       unless channel == ChannelContents::TEST
         build = File.join(folder, "lib/dot_popper/build.rb")
         File.write(build, BuildChannel.stamp(File.read(build), channel))
