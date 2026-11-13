@@ -52,7 +52,6 @@ module DotPopper
         @window = window
         @links = links
         @page = nil # which screen is open over Home, or nil for Home itself
-        @dialog = nil # the achievement open in its dialog, or nil
         @tutorial_flag = tutorial_flag
         @entitlement = entitlement
         @theme_keeper = theme_keeper
@@ -122,7 +121,6 @@ module DotPopper
         if arrival? then @screens[:new_theme]
         elsif tutorial? then @screens[:tutorial]
         elsif @layers.any? then @layers.last
-        elsif dialog then @screens[:achievement_dialog]
         elsif page then @screens.fetch(page)
         elsif group_open? then @screens[:friend_groups]
         elsif home? then @screens[:home]
@@ -222,7 +220,7 @@ module DotPopper
       # The Achievements screen, the achievement open in its dialog (or
       # nil), Settings, and Privacy.
       def achievements_open? = @page == :achievements
-      attr_reader :dialog
+      def dialog = (@screens[:achievement_dialog].achievement if layer?(:achievement_dialog))
       def settings? = @page == :settings
       def privacy? = @page == :privacy
 
@@ -528,7 +526,7 @@ module DotPopper
         @page = %i[credits privacy server].include?(@page) ? :settings : nil
         @clearing = clearing.cancel
         @scroll = nil
-        @dialog = nil
+        close_layer(:achievement_dialog)
         sounds.play(:tick, pitch: 0.8)
       end
 
@@ -1000,18 +998,19 @@ module DotPopper
       def achievement_earned?(id) = @view_achievements.earned?(id)
 
       def open_achievement(id)
-        @dialog = id
+        open_layer(:achievement_dialog)
+        @screens[:achievement_dialog].achievement = id
         sounds.play(:tick)
       end
 
       def close_dialog
-        @dialog = nil
+        close_layer(:achievement_dialog)
         sounds.play(:tick, pitch: 0.8)
       end
 
       def step_achievement(by)
         ids = Achievement::IDS
-        @dialog = ids[((ids.index(@dialog) || 0) + by) % ids.size]
+        @screens[:achievement_dialog].achievement = ids[((ids.index(dialog) || 0) + by) % ids.size]
         sounds.play(:tick)
       end
 
@@ -1020,7 +1019,7 @@ module DotPopper
         id = dialog
         open_offer_for(:achievements)
         @offer_achievement = id
-        @dialog = nil
+        close_layer(:achievement_dialog)
       end
 
       # What the dialog says of how far along the player is: [record, goal]
@@ -1416,7 +1415,7 @@ module DotPopper
         @use_theme.refresh
         @stats = nil
         @page = nil
-        @dialog = nil
+        close_layer(:achievement_dialog)
         @offer_for_play = false
         close_layer(:offer)
         @groups.close if group_open?

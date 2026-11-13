@@ -7,6 +7,9 @@ module DotPopper
       # Presentation::AchievementDialog): Close, Get Pro for a Free
       # player, and with a controller the previous and next achievement.
       class AchievementDialog < Screen
+        # The achievement it shows (Achievement::IDS).
+        attr_accessor :achievement
+
         def controls = show.dialog_plan.buttons.map { |name, rect| button(name, rect) }
 
         def primary = show.close_dialog
