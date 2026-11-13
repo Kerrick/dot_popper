@@ -34,7 +34,7 @@ module DotPopper
       SIZINGS = [DotSizing::SIZED_TO_SCREEN, DotSizing::STANDARD].freeze
 
       attr_reader :cabinet, :effects, :animations, :hud, :attract, :layout, :marquee, :game_over, :sounds, :now, :style,
-                  :stats_book, :input, :words, :clearing, :tutorial, :lead_in, :window, :games
+                  :stats_book, :input, :words, :tutorial, :lead_in, :window, :games
 
       def initialize(cabinet:, layout:, sounds:, radius:, style: Style, random: Random.new, calm: false,
                      tutor: Tutor.new(ScoreRecord::Memory.new, times: style::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
@@ -98,16 +98,13 @@ module DotPopper
         @penalized_at = -Float::INFINITY
         @beckoned_at = nil
         @recorder = GameStats::Recorder.new
-        @stats = nil
         @credits = nil
         @credits_drag = nil
         @keeper = keeper
-        @clearing = HoldToConfirm.idle(style::STATS_CLEAR.hold)
-        @undo = nil
         @pointer = nil
         @hover = Hover.none
         @screens = Screens.made_for(self, clipboard:, buy_pro: @buy_pro, storefront:, entitlement:, start_game: @start_game, sharing:,
-                                          view_achievements: @view_achievements)
+                                          view_achievements: @view_achievements, keeper:, stats_book:, achievements:, haptics:)
         cabinet.subscribe(@recorder)
         cabinet.subscribe(self)
       end
@@ -274,12 +271,13 @@ module DotPopper
       def banner_y = layout.top
 
       # What the Stats screen shows, while it is open.
-      def stats = @stats
+      def stats = @screens[:stats].sheet
+
+      # The hold of "Clear my stats…" (HoldToConfirm).
+      def clearing = @screens[:stats].clearing
 
       # The Stats screen laid out for the fonts this screen is measured with.
-      def stats_layout
-        StatsLayout.measured(layout:, sheet: stats, style: style::STATS, measure: @measure)
-      end
+      def stats_layout = @screens[:stats].plan
 
       # Whether Home offers "Your stats" and the choice of dot size:
       # only once a game has finished, so a first-time player's title says
@@ -302,10 +300,10 @@ module DotPopper
 
       # Whether the Stats screen offers "Clear my stats…": while it has
       # Stats to clear, and no Undo is offered.
-      def clear_offered? = stats? && !stats.empty && !undo_offer
+      def clear_offered? = @screens[:stats].clear_offered?
 
       # Undo, while it is offered on the Stats screen (UndoOffer), or nil.
-      def undo_offer = (@undo if stats?)
+      def undo_offer = @screens[:stats].undo_offer
 
       # What the choice of dot size would do on this screen, worked out
       # afresh each time, so a resized window is always seen as it is now.
@@ -499,18 +497,13 @@ module DotPopper
       # to Settings, the others to Home.
       def close_page
         close_layer(page) if page
-        @clearing = clearing.cancel
+        @screens[:stats].cancel_hold
         @scroll = nil
         close_layer(:achievement_dialog)
         sounds.play(:tick, pitch: 0.8)
       end
 
-      def open_stats
-        return unless on_home?
-
-        @stats = stats_sheet
-        open_page(:stats)
-      end
+      def open_stats = @screens[:stats].open
 
       def close_stats
         close_page
@@ -699,12 +692,7 @@ module DotPopper
 
       # A gamepad's Y on the Stats screen, held by +by+: Undo while it is
       # offered, or else the start of holding "Clear my stats…".
-      def clear_or_undo(by)
-        return if !stats? || offer?
-        return undo if undo_offer
-
-        hold_clear(by) if clear_offered?
-      end
+      def clear_or_undo(by) = @screens[:stats].clear_or_undo(by)
 
       # +by+ (as #tap names it) let go. A hold of "Clear my stats…" it
       # made ends, with nothing cleared, if it was let go too soon.
@@ -715,14 +703,14 @@ module DotPopper
           @list_press = nil
           press(name, x, y, by)
         end
-        @clearing = clearing.release(by, now)
+        @screens[:stats].release(by)
         @groups.let_go(by, now)
       end
 
       # Whatever holds "Clear my stats…" stops, with nothing cleared, as
       # when the window loses focus and a release may never be heard.
       def let_go_of_everything
-        @clearing = clearing.cancel
+        @screens[:stats].cancel_hold
         @groups.cancel_hold
       end
 
@@ -953,8 +941,7 @@ module DotPopper
         @groups.update(now, quiet: !playing?, showing: screen.announces?)
         @buy_pro.update(seconds)
         @arrival_seen = [arrival.key, now] if arrival? && @arrival_seen&.first != arrival.key
-        clear_stats if clearing.done?(now)
-        @undo = nil unless @undo&.open?(now)
+        @screens[:stats].update
         @hover = hover.at(hovered).update(seconds, style::HOVER)
         effects.update(seconds)
         follow_tutorial(seconds) if tutorial?
@@ -1018,17 +1005,9 @@ module DotPopper
         toy_pop(dot, x, y) if dot&.bright?
       end
 
-      def undo
-        @keeper.restore(@undo.cleared)
-        @undo = nil
-        stats_changed
-        sounds.play(:tick, pitch: 1.2)
-      end
+      def undo = @screens[:stats].undo
 
-      def hold_clear(by)
-        @clearing = clearing.press(by, now)
-        sounds.play(:tick, pitch: 0.7)
-      end
+      def hold_clear(by) = @screens[:stats].hold_clear(by)
 
       # Opens +screen+ (a Screens::Screen, or its name in Screens.made_for)
       # over the screens open now, unless it is open already.
@@ -1046,6 +1025,10 @@ module DotPopper
       # What sizes the screens' words (RoughMeasure's methods).
       attr_reader :measure
 
+      # Home's score record shows the records as they are now, as after
+      # clearing Stats or an undo.
+      def score_record_changed = @marquee = marquee.with(score_record: cabinet.score_record.of(cabinet.size_class))
+
       private
 
       # Opens the offer straight from Home, as Play does when no play
@@ -1053,7 +1036,7 @@ module DotPopper
       def offer_for_play
         return unless home? && offer_offered?
 
-        @stats = stats_sheet
+        @screens[:stats].refresh
         offer.open_for_play
       end
 
@@ -1122,28 +1105,14 @@ module DotPopper
         sounds.play(:tick, pitch: 1.3) if offer? && granted.by == :receipt
       end
 
-      # "Clear my stats…" was held long enough: Stats go, and Undo
-      # is offered.
-      def clear_stats
-        @clearing = clearing.cancel
-        @undo = UndoOffer.new(cleared: @keeper.clear, at: now, seconds: style::STATS_CLEAR.undo)
-        stats_changed
-        sounds.play(:bonk, pitch: 0.7)
-        @haptics.buzz(style::HAPTICS.penalty)
-      end
+      # "Clear my stats…" was held long enough (Screens::Stats#clear).
+      def clear_stats = @screens[:stats].clear
 
-      # Stats changed under the Stats screen: it, and Home's
-      # score record, show them as they are now.
+      # Stats changed under the Stats screen: it, and Home's score record,
+      # show them as they are now.
       def stats_changed
-        @stats = stats_sheet if stats?
-        @marquee = marquee.with(score_record: cabinet.score_record.of(cabinet.size_class))
-      end
-
-      def stats_sheet
-        size_class = cabinet.size_class
-        StatsSheet.build(stats_book.stats, score_record: cabinet.score_record.of(size_class), words:, streak: stats_book.streak,
-                           size_class:, field: cabinet.field, sizing: cabinet.sizing, achievements: @achievements,
-)
+        @screens[:stats].refresh if stats?
+        score_record_changed
       end
 
       # Play begins: afresh, its dot growing in, or, under the Tutorial,
@@ -1167,7 +1136,7 @@ module DotPopper
         @game_over = nil
         close_layer(:share_preview)
         @mistake = nil
-        @undo = nil # the game's records would be lost to an undo
+        @screens[:stats].forget_undo # the game's records would be lost to an undo
         @lead_in = nil
         @beckoned_at = nil
         sounds.play(:start)
@@ -1246,12 +1215,12 @@ module DotPopper
 
       def home_shown(event)
         @use_theme.refresh
-        @stats = nil
+        @screens[:stats].forget
         offer.closed_at_home
         @groups.close if group_open?
         @layers.clear
         @credits = nil
-        @clearing = clearing.cancel
+        @screens[:stats].cancel_hold
         effects.clear
         @game_over = nil
         @marquee = Marquee.new(style: style::HOME, score_record: event.score_record, at: now)

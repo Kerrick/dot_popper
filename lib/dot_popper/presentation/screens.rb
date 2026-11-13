@@ -12,12 +12,15 @@ module DotPopper
       # what the share preview copies; the offer of Pro sells through
       # +buy_pro+, as +storefront+ and +entitlement+ say; Game Over starts
       # the next game through +start_game+ and shares through +sharing+;
-      # an achievement's dialog shows what +view_achievements+ may.
-      def self.made_for(show, clipboard:, buy_pro:, storefront:, entitlement:, start_game:, sharing:, view_achievements:)
+      # an achievement's dialog shows what +view_achievements+ may; Stats
+      # shows +stats_book+ and +achievements+, cleared through +keeper+
+      # with a buzz of +haptics+.
+      def self.made_for(show, clipboard:, buy_pro:, storefront:, entitlement:, start_game:, sharing:, view_achievements:, keeper:,
+                        stats_book:, achievements:, haptics:)
         { home: Home.new(show), new_theme: NewTheme.new(show), tutorial: Tutorial.new(show), game: Game.new(show),
           game_over: GameOver.new(show, start_game:, sharing:), share_preview: SharePreview.new(show, clipboard:),
           offer: Offer.new(show, buy_pro:, storefront:, entitlement:),
-          stats: Stats.new(show), achievements: Achievements.new(show), achievement_dialog: AchievementDialog.new(show, view_achievements:),
+          stats: Stats.new(show, keeper:, stats_book:, achievements:, haptics:), achievements: Achievements.new(show), achievement_dialog: AchievementDialog.new(show, view_achievements:),
           themes: Themes.new(show), settings: Settings.new(show), credits: Credits.new(show), privacy: Privacy.new(show),
           server: ChangeServer.new(show), friend_groups: FriendGroups.new(show) }.freeze
       end
