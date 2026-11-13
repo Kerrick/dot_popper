@@ -51,7 +51,7 @@ module Hands
     end
   end
 
-  # A Show, built as Shell::App#load builds it in a test build on +os+ (as
+  # A Show, built as Composition::Root builds it in a test build on +os+ (as
   # Lota::System.os names it, and Shell::Platforms makes its Platform), at +width+ by +height+, with what the game
   # keeps for a player: Pro or not, games left, a friend group, a new theme
   # to tell, setdef gone. It moves on as frames do: the Cabinet, then the

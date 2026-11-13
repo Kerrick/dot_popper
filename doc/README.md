@@ -29,7 +29,8 @@ If you know LÖVE, [Why Ruby](why_ruby.md) sets Dot Popper's code beside the Lua
 | `lib/dot_popper/` | The rules. `rules.rb` holds every number that sets how the game plays, in dot radii; `game.rb` and `stack.rb` hold a game and its dots |
 | `lib/dot_popper/presentation/` | How the game looks and sounds, as values. `look.rb` holds every setting, and `words.rb` writes every sentence the player reads |
 | `lib/dot_popper/groups/` | The friend groups' client, which makes every network call on a thread of its own |
-| `lib/dot_popper/shell/` | Carries out the presentation with Lota: painters, the speaker, input, and save files |
+| `lib/dot_popper/composition/` | Puts the game together for one system and one kind of build, without Lota, from what the shell hands it |
+| `lib/dot_popper/shell/` | Carries out the presentation with Lota: painters, the speaker, input, and save files. Only it calls Lota, and only it reads Lota's names for things |
 | `bin/dot_popper` | The program in the packaged app. It starts the game as a fused Lota game, which saves in a folder named after the game, as a fused LÖVE game does |
 | `fledge.yml` | The app's name, version, identifier, icon, and installers, for Fledge |
 | `sig/` | RBS signatures for the rules |
