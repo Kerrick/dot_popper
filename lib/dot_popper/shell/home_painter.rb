@@ -11,7 +11,7 @@ module DotPopper
 
       def draw(show, layout)
         now = show.now
-        intro = show.marquee.intro(now)
+        intro = show.home_entrance.intro(now)
         plan = show.home_plan
         name(show, plan, layout, intro)
         legend(plan, intro) if plan.legend

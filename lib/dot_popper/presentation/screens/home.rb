@@ -84,7 +84,7 @@ module DotPopper
         def tile_note(name)
           groups = show.group_panel
           case name
-          when :stats then words.score_record_line(show.marquee.score_record)
+          when :stats then words.score_record_line(show.home_entrance.score_record)
           when :achievements then show.achievement_count&.then { AchievementWords.count(it) } || words.tile_note(:to_earn)
           when :themes then words.themes.fetch(show.in_use.key)
           when :groups then groups.member? ? words.titles_held(groups.titles_held, groups.groups.groups.size) : words.tile_note(:take_title)

@@ -37,7 +37,7 @@ class ClearingStatsTest < Minitest::Test
     assert @show.stats.empty, "the screen says there are no games yet"
     assert @show.undo_offer
     refute @show.clear_offered?
-    assert_equal 0, @show.marquee.score_record
+    assert_equal 0, @show.home_entrance.score_record
     assert_equal 0, @stats_book.stats.games
   end
 
@@ -71,7 +71,7 @@ class ClearingStatsTest < Minitest::Test
     refute @show.stats.empty
     assert_equal before, @stats_book.stats
     assert_equal score_record, @cabinet.score_record.of(@cabinet.size_class)
-    assert_equal score_record, @show.marquee.score_record
+    assert_equal score_record, @show.home_entrance.score_record
     assert @show.clear_offered?
   end
 
