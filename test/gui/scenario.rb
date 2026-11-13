@@ -141,6 +141,9 @@ module DotPopperGui
         yield && layout.width == L::Graphics.width && layout.height == L::Graphics.height
       end
       say "#{what}: the window is #{L::Graphics.width}x#{L::Graphics.height}"
+    rescue Failure => e
+      fail!("#{e.message}; the window is #{L::Graphics.width}x#{L::Graphics.height}, fullscreen " \
+            "#{L::Window.fullscreen.inspect}, the game laid out for #{layout.width}x#{layout.height}")
     end
 
     # Looking at the screen

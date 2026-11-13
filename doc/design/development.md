@@ -152,7 +152,7 @@ The GUI workflow (`.github/workflows/gui.yml`) runs it on `ubuntu-latest` under 
 $ xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" bash script/with-openbox.sh bundle exec rake test:gui
 ```
 
-`script/with-openbox.sh` starts Openbox, waits until it has taken the screen (`_NET_SUPPORTING_WM_CHECK`), then runs the command, so the game's window has a window manager to go fullscreen with. Elsewhere, run it on a build machine under a virtual display, or in a hidden session, never on a screen someone is using ([AGENTS.md](../../AGENTS.md)).
+`script/with-openbox.sh` starts Openbox, waits until it has taken the screen (Openbox says so by running its `--startup` command), then runs the command, so the game's window has a window manager to go fullscreen with. Without one, no window goes fullscreen, and `resizing` and both `window_buttons` tests fail with "never saw … fullscreen within 5000 frames", as if the game were at fault; so the script fails at once, with Openbox's own words, if Openbox ends or hasn't taken the screen within a minute, and prints them too if Openbox ends while the command runs. Elsewhere, run it on a build machine under a virtual display, or in a hidden session, never on a screen someone is using ([AGENTS.md](../../AGENTS.md)).
 
 On Windows, the resizing scenario needs a display at least 1,200 × 800 units (such as 2,560 × 1,600 pixels at 200%, or 1,920 × 1,080 at 100%). It opens at 1,200 × 800 and asks for 800 × 500 and 1,100 × 700 (`ResizingScenario::SIZES`). Windows doesn't give a window a size that won't fit the display at its scale, so on a smaller display the window ends at the game's minimum, 400 × 320 (`conf.rb`), and the scenario waits for 800 × 500 in vain. It passes under Xvfb at 1,280 × 1,024.
 
