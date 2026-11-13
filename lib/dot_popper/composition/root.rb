@@ -37,7 +37,9 @@ module DotPopper
     # until #start.
     class Root
       Style = Presentation::Style
-      PLAYTEST_LOG = "games.csv"
+      GAMES_LOG = "games.csv"
+      # The old name, until no commit uses it.
+      PLAYTEST_LOG = GAMES_LOG
       SMALLEST_WINDOW = [400, 320].freeze
 
       attr_reader :settings, :platform, :dot_size, :window, :cabinet, :show, :pen, :speaker, :splash, :storefront,
@@ -209,8 +211,8 @@ module DotPopper
         entitlement.subscribe(@show.offer)
         @refresh = Refresh.new([-> { @theme_feed&.ask }, -> { groups.refresh }], cabinet: @cabinet, clock: @clock)
         @cabinet.subscribe(@refresh)
-        @cabinet.subscribe(PlaytestLog.new(file(PLAYTEST_LOG), today:, archive: ->(name) { file(name) }))
-        @engine.say("each game is logged in #{@engine.path(PLAYTEST_LOG)}")
+        @cabinet.subscribe(GamesLog.new(file(GAMES_LOG), today:, archive: ->(name) { file(name) }))
+        @engine.say("each game is logged in #{@engine.path(GAMES_LOG)}")
         @show.group_panel.open if flag?("DOT_POPPER_GROUP_SCREEN")
         @cursor = Presentation::GamepadCursor.centered(@show.layout.whole, style: Style::GAMEPAD, radius: dot_size.radius)
         @cursor = @cursor.show if settings.fake_gamepad?

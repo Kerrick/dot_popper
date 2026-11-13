@@ -1,5 +1,5 @@
 module DotPopper
-  class PlaytestLog
+  class GamesLog
     COLUMNS: Array[String]
 
     HEADER: String
@@ -31,4 +31,6 @@ module DotPopper
 
     def set_aside: (String old) -> void
   end
+
+  class PlaytestLog = GamesLog
 end

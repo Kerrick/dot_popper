@@ -5,12 +5,12 @@ module DotPopper
   # the StatsBook, the two stores that hold every record, total, chart bar,
   # and goal streak, and the Achievements, the achievements earned, which are
   # part of what the player did as much as a record is. Nothing else is
-  # cleared, so the playtest log, the settings, what the game has taught,
+  # cleared, so the games log, the settings, what the game has taught,
   # and whether Pro was bought stay as they are.
   #
   # Clearing copies each store's text, exactly, to a backup named for
   # when it happened (score_record-20261105-093000.txt), through +folder+,
-  # which gives the store of a name, as PlaytestLog's +archive+ does, and
+  # which gives the store of a name, as GamesLog's +archive+ does, and
   # stores there answer +remove+ too. NOTE lists the latest backups, and
   # the next clearing removes them, so the folder only ever keeps one.
   # Lota's save folder cannot rename a file, so nothing is moved: the

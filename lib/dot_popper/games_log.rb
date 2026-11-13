@@ -12,7 +12,7 @@ module DotPopper
   # by an older version, is kept whole in a store of its own, named
   # games-<when>.csv and made by +archive+, and a new log starts under
   # the current header.
-  class PlaytestLog
+  class GamesLog
     COLUMNS = %w[time seed score duration pops mistakes softened mean_time_to_pop longest_time_to_pop goal goal_met].freeze
 
     HEADER = COLUMNS.join(",")
@@ -61,4 +61,7 @@ module DotPopper
       @archive.call("games-#{@clock.call.strftime("%Y%m%d-%H%M%S")}.csv").write(old)
     end
   end
+
+  # The old name, until no commit uses it.
+  PlaytestLog = GamesLog
 end

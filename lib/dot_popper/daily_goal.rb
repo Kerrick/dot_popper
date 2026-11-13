@@ -48,7 +48,7 @@ module DotPopper
       end
     end
 
-    # The goal as the playtest log names it: "clean_run_15".
+    # The goal as the games log names it: "clean_run_15".
     def to_s = "#{kind}_#{target}"
   end
 end
