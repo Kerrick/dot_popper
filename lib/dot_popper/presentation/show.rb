@@ -226,28 +226,15 @@ module DotPopper
       def group_open? = @groups.open?
 
       # Where the Friend group screen's parts go, while it is open.
-      def group_plan
-        where = [@groups.page, @groups.group_id]
-        @scroll = nil unless @group_scroll_at == where
-        @group_scroll_at = where
-        plan = GroupScreen.new(layout:, style: style::GROUPS, measure: @measure, panel: @groups, standard_dots: !cabinet.sizing.sized_to_screen?,
-                               back_text: words.go_back, offset: @scroll&.offset || 0.0, input:).plan
-        list_fit(plan.content, plan.window.height) if plan.window
-        plan
-      end
+      def group_plan = @screens[:friend_groups].plan
 
       # Where the notice of a first Join or Create puts its parts, while it
       # is open over the friend groups' screen (GroupNoticePlan), or nil.
-      def group_notice_plan
-        return unless group_open? && @groups.asking && !offer?
-
-        GroupNoticeDialog.new(layout:, measure: @measure, policy_text: group_word(GroupWords.notice_policy),
-                              later_text: group_word(GroupWords.notice_later), go_text: group_word(GroupWords.notice_go(@groups.asking))).plan
-      end
+      def group_notice_plan = @screens[:friend_groups].notice_plan
 
       # A friend groups' word (a ByInput), said as the player's input would
       # press it.
-      def group_word(word) = word.for(input)
+      def group_word(word) = @screens[:friend_groups].word(word)
 
       # Whether Home offers the way in to groups: where there is a
       # server, once a game has finished, or for someone in a group.
@@ -652,6 +639,9 @@ module DotPopper
       end
 
       def start_scroll(by, y) = @drag = [by, y]
+
+      # The open list goes back to its top, as when a screen's list changes.
+      def list_scroll_from_top = @scroll = nil
 
       # A press on a row of a scrolling list waits for its release, so a
       # drag that starts on a row scrolls the list instead of opening it.

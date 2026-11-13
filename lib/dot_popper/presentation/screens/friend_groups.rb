@@ -8,7 +8,36 @@ module DotPopper
       # the notice a first Join or Create shows over them (GroupScreen,
       # GroupNoticeDialog).
       class FriendGroups < Screen
-        def controls = (show.group_notice_plan || show.group_plan).controls.map { |name, frame| button(name, frame) }
+        # Where the open page's parts go (GroupScreen), its list fitted to
+        # its window, and scrolled back to its top when the page or the
+        # group changes.
+        def plan
+          panel = show.group_panel
+          where = [panel.page, panel.group_id]
+          show.list_scroll_from_top unless @scrolled_at == where
+          @scrolled_at = where
+          offset = show.scroll&.offset || 0.0
+          plan = GroupScreen.new(layout:, style: style::GROUPS, measure:, panel:, standard_dots: !show.cabinet.sizing.sized_to_screen?,
+                                 back_text: words.go_back, offset:, input: show.input).plan
+          show.list_fit(plan.content, plan.window.height) if plan.window
+          plan
+        end
+
+        # Where the notice of a first Join or Create puts its parts, while it
+        # is open over the page (GroupNoticePlan), or nil.
+        def notice_plan
+          panel = show.group_panel
+          return unless panel.open? && panel.asking && !show.offer?
+
+          GroupNoticeDialog.new(layout:, measure:, policy_text: word(GroupWords.notice_policy),
+                                later_text: word(GroupWords.notice_later), go_text: word(GroupWords.notice_go(panel.asking))).plan
+        end
+
+        # A friend groups' word (a ByInput), said as the player's input would
+        # press it.
+        def word(byinput) = byinput.for(show.input)
+
+        def controls = (notice_plan || plan).controls.map { |name, frame| button(name, frame) }
 
         def primary = show.group_panel.primary
 
