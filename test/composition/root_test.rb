@@ -297,6 +297,20 @@ class RootTest < Minitest::Test
     assert_equal [:tick, 1.3], game.speaker.played.last
   end
 
+  # The root subscribes the Show it builds to the rules' events: a game
+  # played there is followed by the Show, which lays out its Game Over.
+  def test_the_show_the_root_builds_shows_the_game_it_hears
+    game = root
+    game.show.play
+    game.show.skip_tutorial
+
+    assert_predicate game.cabinet, :playing?
+    game.cabinet.update(30)
+
+    assert_instance_of DotPopper::Cabinet::GameOver, game.cabinet.state
+    assert_equal game.cabinet.state.score, game.show.game_over&.score
+  end
+
   # The root subscribes every listener to the rules' events itself, in the
   # order they hear them: FinishGame finishes a game before the Show shows
   # it. Making a Show subscribes nothing.
