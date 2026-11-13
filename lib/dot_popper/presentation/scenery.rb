@@ -925,7 +925,7 @@ module DotPopper
         oval(out, color, *at.call(1, -64), 2.2 * s, 3.4 * s, 0.3)
       end
 
-      # A candle in a holder, its flame and a soft glow about it.
+      # A candle in a candlestick, its flame and a soft glow about it.
       def candle(out, color, x, y, s, tall)
         h = 40 * s * tall
         out << Fan.new(color:, points: [[x - (9 * s), y], [x + (9 * s), y], [x + (5 * s), y - (6 * s)], [x - (5 * s), y - (6 * s)]])
