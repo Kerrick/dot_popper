@@ -4,7 +4,7 @@ module DotPopper
   module Presentation
     # Home, shown since +at+, with the device's +score_record+:
     # how far its entrance has come, and the prompt's breath.
-    class Marquee < Data.define(:style, :score_record, :at)
+    class HomeEntrance < Data.define(:style, :score_record, :at)
       def intro(now) = style.intro.at(now - at)
 
       # The prompt breathes, between +faintest+ and fully opaque, once
@@ -14,5 +14,8 @@ module DotPopper
         1 - swing - (swing * Math.cos((now - at) * 2 * Math::PI / style.breath))
       end
     end
+
+    # Its old name, until no caller says it.
+    Marquee = HomeEntrance
   end
 end

@@ -36,8 +36,11 @@ module DotPopper
       # (Screens::Settings::SIZINGS).
       SIZINGS = Screens::Settings::SIZINGS
 
-      attr_reader :cabinet, :effects, :animations, :hud, :attract, :layout, :marquee, :game_over, :sounds, :now, :style,
+      attr_reader :cabinet, :effects, :animations, :hud, :attract, :layout, :home_entrance, :game_over, :sounds, :now, :style,
                   :stats_book, :input, :words, :tutorial, :lead_in, :window
+
+      # Its old name, until no caller says it.
+      alias marquee home_entrance
 
       def initialize(cabinet:, layout:, sounds:, radius:, start_game:, finish_game:, buy_pro:, use_theme:, join_or_create_friend_group:,
                      view_achievements:, stats_book:, achievements:, groups:, theme_keeper: nil,
@@ -81,7 +84,7 @@ module DotPopper
         @hud = Hud.blank(style::HUD, words)
         @attract = Attract.spawn(cabinet.field, style::HOME)
         @now = 0.0
-        @marquee = Marquee.new(style: style::HOME, score_record: cabinet.score_record.of(cabinet.size_class), at: @now)
+        @home_entrance = HomeEntrance.new(style: style::HOME, score_record: cabinet.score_record.of(cabinet.size_class), at: @now)
         @game_over = nil
         @tutor = tutor
         @clipboard = clipboard
@@ -796,7 +799,7 @@ module DotPopper
 
       # Home's score record shows the records as they are now, as after
       # clearing Stats or an undo.
-      def score_record_changed = @marquee = marquee.with(score_record: cabinet.score_record.of(cabinet.size_class))
+      def score_record_changed = @home_entrance = home_entrance.with(score_record: cabinet.score_record.of(cabinet.size_class))
 
 
       # The Tutorial opened over a game started paused (Screens::Home):
@@ -959,7 +962,7 @@ module DotPopper
         @screens[:stats].cancel_hold
         effects.clear
         @game_over = nil
-        @marquee = Marquee.new(style: style::HOME, score_record: event.score_record, at: now)
+        @home_entrance = HomeEntrance.new(style: style::HOME, score_record: event.score_record, at: now)
       end
 
 
