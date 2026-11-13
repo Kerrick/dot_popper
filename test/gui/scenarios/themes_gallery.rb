@@ -24,7 +24,7 @@ module DotPopperGui
       wait(2.5)
       keep_screenshot("#{tag}-#{theme}-over")
       continue_to_home
-      theme_keeper.instance_variable_set(:@told, [])
+      theme_keeper.rules.instance_variable_set(:@told, [])
       frames(4)
       keep_screenshot("#{tag}-#{theme}-arrival")
       show.back
