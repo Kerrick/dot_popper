@@ -10,6 +10,29 @@ class HudTest < Minitest::Test
     @hud = Hud.blank(Style::HUD, Style::WORDS).read(@game, 0.0)
   end
 
+  # Each readout's half of the pill is as wide as its widest text (its
+  # number, "00" or its label) and its padding, laid out again only when
+  # those words change; a number that bumps is drawn a size bigger.
+  def test_its_drawing_fits_the_pill_to_its_widest_words
+    measure = RoughMeasure.new
+    drawings = HudDrawings.new(type: Style::TYPE, measure:)
+    drawing = drawings.call(@hud, layout, 1.0)
+    plan = drawing.plan
+    number = layout.scaled(Style::TYPE.hud_number)
+    label = layout.scaled(Style::TYPE.hud_label)
+    pad = Hud.padding(measure.height(:bold, number))
+    widest = %w[0 10 00].map { measure.width(:bold, number, it) } + %w[SCORE TIME].map { measure.width(:semibold, label, it) }
+    assert_in_delta widest.max + (pad * 2.4), plan.cell
+    assert_equal [layout.center_x, layout.top], [plan.center_x, plan.top]
+    assert_equal [@hud.score_readout, @hud.time_readout], drawing.readouts
+    assert_equal [Pixels.font_size(number, step: Hud::BUMP_STEP)] * 2, drawing.sizes
+
+    assert_same plan, drawings.call(@hud.read(@game, 0.5), layout, 1.0).plan, "the same words, the same plan"
+    score!(@game, 1)
+    bumped = drawings.call(@hud.read(@game, 1.0), layout, 1.0)
+    assert_operator bumped.sizes.first, :>, bumped.sizes.last
+  end
+
   def test_it_shows_the_score_and_the_whole_seconds_left
     assert_equal %w[0 10], [@hud.score_readout.text, @hud.time_readout.text]
     assert_equal %w[SCORE TIME], [@hud.score_readout.label, @hud.time_readout.label]

@@ -23,6 +23,51 @@ module DotPopper
       def bumping?(index) = !ready && index == lit - 1
     end
 
+    # Where the HUD's parts go on +layout+, for the readouts' words: the
+    # numbers' and labels' type sizes and line heights, the pill's padding
+    # and +height+, and +cell+, each readout's half of the pill, wide
+    # enough for its widest text (its number, "00" or its label). The pill
+    # is centered on +center_x+ from +top+.
+    class HudPlan < Data.define(:number_size, :label_size, :number_height, :label_height, :pad, :cell, :height, :center_x, :top)
+      def self.for(readouts, layout:, type:, measure:)
+        number_size = layout.scaled(type.hud_number)
+        label_size = layout.scaled(type.hud_label)
+        number = measure.height(:bold, number_size)
+        label = measure.height(:semibold, label_size)
+        pad = Hud.padding(number)
+        widest = readouts.map do |readout|
+          [measure.width(:bold, number_size, readout.text), measure.width(:bold, number_size, "00"),
+           measure.width(:semibold, label_size, readout.label)].max
+        end
+        new(number_size:, label_size:, number_height: number, label_height: label, pad:, cell: widest.max + (pad * 2.4),
+            height: Hud.height(number, label), center_x: layout.center_x, top: layout.top)
+      end
+    end
+
+    # Everything Shell::HudPainter draws: its +plan+ (HudPlan), the score's
+    # and the time's Readouts, the type size each number is drawn at as it
+    # bumps (+sizes+), and the row toward a bonus dot (DotsInARow, or nil).
+    class HudDrawing < Data.define(:plan, :readouts, :sizes, :dots_in_a_row); end
+
+    # Makes the HUD's drawing for each frame, laying it out again only when
+    # the window, the type's scale (+scale+, the screen's density) or the
+    # readouts' words change.
+    class HudDrawings
+      def initialize(type:, measure:)
+        @type = type
+        @measure = measure
+        @plan = Memo.new
+      end
+
+      def call(hud, layout, scale)
+        readouts = [hud.score_readout, hud.time_readout]
+        key = [layout, scale, *readouts.flat_map { [it.text, it.label] }]
+        plan = @plan.fetch(key) { HudPlan.for(readouts, layout:, type: @type, measure: @measure) }
+        sizes = readouts.map { Pixels.font_size(plan.number_size * it.scale, step: Hud::BUMP_STEP) }
+        HudDrawing.new(plan:, readouts:, sizes:, dots_in_a_row: hud.dots_in_a_row_readout)
+      end
+    end
+
     # The score and the time left as the player last saw them, and when
     # each last changed, so a number can bump and the clock can tick. The
     # row (+row+ dots in a row of +size+ that earn a bonus dot, or
@@ -34,6 +79,8 @@ module DotPopper
       # distance between two, in their radii.
       PIP = 0.11
       PIP_STEP = 2.8
+      # The type sizes a number steps through as it bumps, in graphics units.
+      BUMP_STEP = 2
 
       def self.blank(style, words)
         new(style:, words:, score: nil, seconds: nil, dots_in_a_row: nil, size: nil, ready: false,
