@@ -167,6 +167,14 @@ module DotPopper
       end
     end
 
+    # Everything Shell::CreditsPainter draws for Credits and licenses: its
+    # +header+ (HeaderDrawing), the +window+ the page shows through, the
+    # +rows+ (CreditsLines' rows) that show in it at +offset+ down the page,
+    # the text's +size+ and its headings' (+heading_size+), and the scroll
+    # bar's +thumb+ (CreditsScroll#thumb) beside the window, at +bar_x+ but
+    # never past +bar_limit+.
+    class CreditsDrawing < Data.define(:header, :window, :rows, :offset, :size, :heading_size, :thumb, :bar_x, :bar_limit); end
+
     # How far down the page the Credits screen is: the page's +content+
     # height, the +window+ it shows through, and the +offset+ of the window
     # from the top. Every way of scrolling keeps the window on the page.

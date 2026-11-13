@@ -34,10 +34,32 @@ module DotPopper
         # What it says (CreditsText), composed once.
         def text = (@text ||= CreditsText.compose(words, @notices))
 
-        # Where its heading and its window of text go.
+        # Where its heading and its window of text go, worked out again
+        # only when the window or the words change.
         def plan
-          page = CreditsLayout.new(layout:, style: style::CREDITS)
-          page.with(wanted: CreditsLines.widest_as_written(text, size: page.text_size, measure:))
+          layout = self.layout
+          (@plan ||= Memo.new).fetch([layout, words]) do
+            page = CreditsLayout.new(layout:, style: style::CREDITS)
+            page.with(wanted: CreditsLines.widest_as_written(text, size: page.text_size, measure:))
+          end
+        end
+
+        # Everything its painter draws (CreditsDrawing), made again only
+        # when the page, its lines, the scroll, the words or Back's light
+        # changes.
+        def drawing
+          page = plan
+          lines = self.lines
+          scroll = @scroll
+          words = self.words
+          hover = show.hover
+          (@drawing ||= Memo.new).fetch([page, lines, scroll, words, hover]) do
+            window = page.window
+            CreditsDrawing.new(header: HeaderDrawing.for(words.button(:credits_heading), layout:, measure:, words:, hover:), window:,
+                               rows: lines.visible(scroll.offset, window.height, page.line), offset: scroll.offset, size: lines.size,
+                               heading_size: CreditsLines.heading_size(lines.size), thumb: scroll.thumb,
+                               bar_x: window.right + (layout.margin * 0.4), bar_limit: layout.safe.right)
+          end
         end
 
         # Its lines (CreditsLines), laid out for the screen's size.

@@ -98,6 +98,32 @@ class DrawingsTest < Minitest::Test
     assert_in_delta 1.0, lit[2]
   end
 
+  # Credits and licenses: the rows that show in its window at the
+  # scroll's place, and where the scroll bar's thumb is.
+  def test_credits_shows_the_rows_in_its_window_where_it_is_scrolled
+    fixture = self.fixture
+    show = fixture.show
+    show.open_settings
+    show.open_credits
+    screen = show.screen
+    top = screen.drawing
+    window = top.window
+    assert_equal show.words.button(:credits_heading), top.header.text
+    assert_equal 0.0, top.offset
+    refute_empty top.rows
+    assert(top.rows.all? { it.y - window.height < window.height })
+    assert_equal 0.0, top.thumb.first
+
+    screen.scroll = screen.scroll.by(window.height)
+    fixture.tick(0.1)
+    down = screen.drawing
+    assert_operator down.offset, :>, 0.0
+    assert_equal screen.scroll.offset, down.offset
+    refute_equal top.rows, down.rows
+    assert_operator down.thumb.first, :>, 0.0
+    assert_same down, screen.drawing
+  end
+
   # Nothing changed, nothing made: the same drawing, frame after frame.
   def test_change_server_is_not_made_again_while_nothing_changes
     fixture = fixture(gone: true)
