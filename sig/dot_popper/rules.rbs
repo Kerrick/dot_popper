@@ -43,6 +43,12 @@ module DotPopper
 
     LARGE_FIELD_FROM: Integer
 
+    STANDARD_AREA: Integer
+
+    SMALLEST_STANDARD_RADIUS: Integer
+
+    LARGEST_STANDARD_SHARE: Float
+
     FITTED_AREA: Integer
 
     SMALLEST_FITTED_RADIUS: Integer

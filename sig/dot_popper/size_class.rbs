@@ -12,6 +12,8 @@ module DotPopper
 
     LARGE: SizeClass
 
+    STANDARD: SizeClass
+
     FITTED: SizeClass
 
     ALL: Array[SizeClass]

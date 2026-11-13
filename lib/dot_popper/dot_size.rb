@@ -25,14 +25,17 @@ module DotPopper
       new(radius: Rules::RADIUS, reason: platform.touch? ? "#{reason}, about 8 mm" : reason)
     end
 
-    # The size of a dot "sized to your screen" (DotSizing) on a window
-    # +width+ by +height+ units: the radius that makes the field
-    # Rules::FITTED_AREA square radii, within the limits the rules set.
-    def self.fitted(width, height)
-      largest = [[width.to_f, height.to_f].min * Rules::LARGEST_FITTED_SHARE, Rules::SMALLEST_FITTED_RADIUS].max
-      radius = Math.sqrt(width.to_f * height.to_f / Rules::FITTED_AREA).clamp(Rules::SMALLEST_FITTED_RADIUS.to_f, largest)
-      new(radius:, reason: format("%.1f units, sized to the screen", radius))
+    # The standard size of a dot (DotSizing::STANDARD) on a window +width+
+    # by +height+ units: the radius that makes the field
+    # Rules::STANDARD_AREA square radii, within the limits the rules set.
+    def self.standard(width, height)
+      largest = [[width.to_f, height.to_f].min * Rules::LARGEST_STANDARD_SHARE, Rules::SMALLEST_STANDARD_RADIUS].max
+      radius = Math.sqrt(width.to_f * height.to_f / Rules::STANDARD_AREA).clamp(Rules::SMALLEST_STANDARD_RADIUS.to_f, largest)
+      new(radius:, reason: format("%.1f units, standard for the screen", radius))
     end
+
+    # .standard's old name, until no commit uses it.
+    def self.fitted(width, height) = standard(width, height)
 
     def field(width, height) = Field.new(width, height, radius)
   end

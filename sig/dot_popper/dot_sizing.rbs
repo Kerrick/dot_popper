@@ -8,6 +8,8 @@ module DotPopper
 
     FIXED: DotSizing
 
+    STANDARD: DotSizing
+
     SIZED_TO_SCREEN: DotSizing
 
     EARLIER_NAMES: Hash[String, DotSizing]
@@ -15,6 +17,8 @@ module DotPopper
     DEFAULT: DotSizing
 
     def self.parse: (String? text) -> DotSizing
+
+    def standard?: () -> bool
 
     def sized_to_screen?: () -> bool
 

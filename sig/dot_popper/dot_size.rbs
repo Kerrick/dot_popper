@@ -10,6 +10,8 @@ module DotPopper
 
     def self.for: (Platform platform, unit: String) -> DotSize
 
+    def self.standard: (number width, number height) -> DotSize
+
     def self.fitted: (number width, number height) -> DotSize
 
     def field: (number width, number height) -> Field
