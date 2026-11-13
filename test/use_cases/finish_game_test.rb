@@ -93,6 +93,31 @@ class FinishGameTest < Minitest::Test
     assert_equal [], @finish.result.achievements
   end
 
+  # What Game Over shows is told to the finished game's listeners as the
+  # game is finished, never left to be read back: each is told once a
+  # game is in Stats, with that game's own result and numbers.
+  def test_it_tells_its_listeners_each_game_it_finishes_with_that_games_result
+    cabinet = DotPopper::Cabinet.new(field, random: Random.new(3))
+    told = []
+    heard = []
+    @finish.subscribe(->(finished) { told << [finished, @stats_book.stats.games] })
+    cabinet.subscribe(@finish)
+    cabinet.subscribe { heard << it if it.is_a?(DotPopper::Events::GameEnded) }
+    2.times do
+      start!(cabinet)
+      cabinet.update(30)
+      cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
+      cabinet.press(0, 0)
+    end
+
+    assert_equal [1, 2], told.map(&:last), "told after the game is in Stats"
+    assert_equal heard, told.map { it.first.ended }, "each game's own, in order"
+    told.each do |finished, _|
+      assert_equal finished.ended.score, finished.stats.score
+      assert_instance_of DotPopper::UseCases::FinishGame::Result, finished.result
+    end
+  end
+
   private
 
   def ended(score: 3, size_class: DotPopper::SizeClass::STANDARD, tutorial: false)

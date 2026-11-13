@@ -24,6 +24,11 @@ module DotPopper
       # first earned in it that the player may see.
       Result = Data.define(:record, :goal_met, :achievements)
 
+      # A game finished, as its listeners are told: +ended+, the rules'
+      # Events::GameEnded; +stats+, its numbers (GameStats); and +result+,
+      # what Game Over shows of it (Result).
+      Finished = Data.define(:ended, :stats, :result)
+
       def initialize(stats_book:, achievements:, entitlement:, friend_groups:)
         @stats_book = stats_book
         @achievements = achievements
@@ -32,6 +37,14 @@ module DotPopper
         @recorder = GameStats::Recorder.new
         @achievement_recorder = AchievementRecorder.new
         @result = nil
+        @listeners = []
+      end
+
+      # Adds a listener, told each game as it is finished (Finished): what
+      # shows Game Over, which so hears it only once the game is finished.
+      def subscribe(listener)
+        @listeners << listener
+        self
       end
 
       # What Game Over shows of the last game finished (Result), or nil
@@ -46,7 +59,11 @@ module DotPopper
       def call(event)
         @recorder.call(event)
         @achievement_recorder.call(event)
-        @result = finish(event, stats:, earned: @achievement_recorder.earned) if event.is_a?(Events::GameEnded)
+        return unless event.is_a?(Events::GameEnded)
+
+        result = @result = finish(event, stats:, earned: @achievement_recorder.earned)
+        finished = Finished.new(ended: event, stats:, result:)
+        @listeners.each { it.call(finished) }
       end
 
       # +ended+ is the game's Events::GameEnded, +stats+ its numbers

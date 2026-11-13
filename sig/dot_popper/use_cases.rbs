@@ -33,10 +33,17 @@ module DotPopper
       @friend_groups: _FriendGroups
       @recorder: GameStats::Recorder
       @achievement_recorder: AchievementRecorder
+      @listeners: Array[_FinishedListener]
+
+      interface _FinishedListener
+        def call: (Finished finished) -> void
+      end
 
       def initialize: (stats_book: StatsBook, achievements: Achievements, entitlement: Entitlement, friend_groups: _FriendGroups) -> void
 
       attr_reader result: Result?
+
+      def subscribe: (_FinishedListener listener) -> self
 
       def stats: () -> GameStats
 
@@ -52,6 +59,16 @@ module DotPopper
         attr_reader achievements: Array[Achievement::id]
 
         def self.new: (record: Stats::Record?, goal_met: bool, achievements: Array[Achievement::id]) -> instance
+      end
+
+      class Finished < ::Data
+        attr_reader ended: Events::GameEnded
+
+        attr_reader stats: GameStats
+
+        attr_reader result: Result
+
+        def self.new: (ended: Events::GameEnded, stats: GameStats, result: Result) -> instance
       end
     end
 
