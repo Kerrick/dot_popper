@@ -69,7 +69,7 @@ module DotPopper
         @view_achievements = UseCases::ViewAchievements.new(achievements:, entitlement:, stats_book:, score_record: cabinet.score_record)
         @buy_pro = UseCases::BuyPro.new(store: storefront, entitlement:, cabinet:, achievements:, friend_groups: groups)
         entitlement.subscribe(->(granted) { pro_arrived(granted) })
-        @offer = false
+        @layers = [] # the screens open over the game's state, the top one last
         @offer_for_play = false
         @tutorial = nil
         @handing_over = nil
@@ -121,7 +121,7 @@ module DotPopper
       def screen
         if arrival? then @screens[:new_theme]
         elsif tutorial? then @screens[:tutorial]
-        elsif offer? then @screens[:offer]
+        elsif @layers.any? then @layers.last
         elsif dialog then @screens[:achievement_dialog]
         elsif page then @screens.fetch(page)
         elsif group_open? then @screens[:friend_groups]
@@ -541,7 +541,7 @@ module DotPopper
 
       def close_stats
         close_page
-        @offer = false
+        close_layer(:offer)
         @offer_focus = nil
         @offer_for_play = false
       end
@@ -557,7 +557,7 @@ module DotPopper
 
       def close_offer
         @offer_for_play = false
-        @offer = false
+        close_layer(:offer)
         @offer_focus = nil
         sounds.play(:tick, pitch: 0.8)
       end
@@ -573,7 +573,7 @@ module DotPopper
       def open_offer_for(feature)
         return if @entitlement.pro? || offer?
 
-        @offer = true
+        open_layer(:offer)
         @offer_focus = feature
         @buy_pro.open
         sounds.play(:tick)
@@ -600,14 +600,14 @@ module DotPopper
       def pro? = @entitlement.pro?
 
       # Whether the offer of Pro is open, over the screen it was opened from.
-      def offer? = @offer
+      def offer? = layer?(:offer)
 
       # Opens the offer over the screen in view, and asks the store for the
       # price, or asks again if an earlier request was never answered.
       def open_offer
         return unless offer_offered?
 
-        @offer = true
+        open_layer(:offer)
         @offer_focus = nil
         @buy_pro.open
         sounds.play(:tick)
@@ -1198,6 +1198,17 @@ module DotPopper
 
       private
 
+      # Opens the screen +name+ (as Screens.made_for names it) over the
+      # screens open now, unless it is open already.
+      def open_layer(name)
+        layer = @screens.fetch(name)
+        @layers << layer unless @layers.include?(layer)
+      end
+
+      def close_layer(name) = @layers.delete(@screens.fetch(name))
+
+      def layer?(name) = @layers.include?(@screens.fetch(name))
+
       # Opens the offer straight from Home, as Play does when no play
       # is left; Back from it returns to Home.
       def offer_for_play
@@ -1407,7 +1418,7 @@ module DotPopper
         @page = nil
         @dialog = nil
         @offer_for_play = false
-        @offer = false
+        close_layer(:offer)
         @groups.close if group_open?
         @credits = nil
         @clearing = clearing.cancel
