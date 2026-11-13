@@ -3,7 +3,7 @@
 module DotPopper
   module Shell
     # The native port's adapter on a computer whose build is sold through
-    # its own store (Presentation::Storefront::HELPER_CHANNELS). The game
+    # its own store (DotPopper::Store::HELPER_CHANNELS). The game
     # can't call StoreKit or Windows.Services.Store, so it starts a small
     # program shipped in the app, its store helper (macos/store,
     # windows/store), once for each request. The helper takes the same

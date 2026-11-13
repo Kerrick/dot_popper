@@ -10,6 +10,13 @@ require "platforms_helper"
 class WebsiteStoreTest < Minitest::Test
   include PresentationTest
 
+  Store = DotPopper::Store
+  NoStore = DotPopper::NoStore
+  NativeStore = DotPopper::NativeStore
+  FakeStore = DotPopper::FakeStore
+  WebsiteStore = DotPopper::WebsiteStore
+  FakeCheckout = DotPopper::FakeCheckout
+
   C = DotPopper::Continuity
   Memory = DotPopper::ScoreRecord::Memory
 
@@ -223,7 +230,7 @@ class WebsiteStoreTest < Minitest::Test
 
   def test_a_stores_copy_never_shows_paste_license_key
     s = new_show(cabinet: DotPopper::Cabinet.new(field(1200, 800)), layout: layout(1200, 800), sounds: FakeSounds.new, radius: R,
-                 storefront: Storefront.new(port: FakeStore.new(Memory.new), entitlement: DotPopper::Entitlement.free))
+                 storefront: Store.new(port: FakeStore.new(Memory.new), entitlement: DotPopper::Entitlement.free))
     s.open_offer
 
     refute_includes names(s), :paste
@@ -231,16 +238,16 @@ class WebsiteStoreTest < Minitest::Test
     refute s.paste_shortcut
   end
 
-  def test_storefront_for_gives_computers_the_website_and_never_ios
+  def test_store_for_gives_computers_the_website_and_never_ios
     made = []
     website = ->(fake:) { made << fake && :website }
     args = { native: :native_port, fake: FakeStore.new(Memory.new), entitlement: DotPopper::Entitlement.free, website: }
 
-    assert_equal :website, Storefront.for(DotPopperTest.platform("Linux"), **args, channel: nil)
-    assert_kind_of Storefront, Storefront.for(DotPopperTest.platform("Android"), **args, channel: nil)
-    assert_equal :website, Storefront.for(DotPopperTest.platform("Windows"), **args, channel: Storefront::WEBSITE)
-    assert_equal :website, Storefront.for(DotPopperTest.platform("Android"), **args, channel: Storefront::WEBSITE)
-    refute_equal :website, Storefront.for(DotPopperTest.platform("iOS"), **args, channel: Storefront::WEBSITE)
+    assert_equal :website, Store.for(DotPopperTest.platform("Linux"), **args, channel: nil)
+    assert_kind_of Store, Store.for(DotPopperTest.platform("Android"), **args, channel: nil)
+    assert_equal :website, Store.for(DotPopperTest.platform("Windows"), **args, channel: Store::WEBSITE)
+    assert_equal :website, Store.for(DotPopperTest.platform("Android"), **args, channel: Store::WEBSITE)
+    refute_equal :website, Store.for(DotPopperTest.platform("iOS"), **args, channel: Store::WEBSITE)
     assert_equal [true, false, false], made
   end
 

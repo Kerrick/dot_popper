@@ -114,11 +114,11 @@ module DotPopper
       # The native port: on a phone the app's host, by URL and answer file;
       # on a computer sold through its own store, the store helper shipped
       # in the app, by its pipe (Shell::StoreHelper). Which one a build uses
-      # is Storefront.for's choice, by the channel.
+      # is Store.for's choice, by the channel.
       def native_store
         return @engine.store_helper(automated: settings.automated?) if platform.own_store
 
-        Presentation::NativeStore.new(opener: @engine.opener, answers: @engine.store_answers)
+        NativeStore.new(opener: @engine.opener, answers: @engine.store_answers)
       end
 
       # The server friend groups and themes use: setdef's, or while setdef
@@ -182,9 +182,9 @@ module DotPopper
         unless Presentation::Splash.skipped?(settings.env)
           @splash = Presentation::Splash.start(calm: settings.calm?, sounding: !@speaker.muted?)
         end
-        @storefront = Presentation::Storefront.for(
+        @storefront = Store.for(
           platform, entitlement:, channel: settings.channel, native: native_store,
-                    fake: Presentation::FakeStore.new(file("fake_store.txt"), fails: Presentation::FakeStore.failure(settings.env)),
+                    fake: FakeStore.new(file("fake_store.txt"), fails: FakeStore.failure(settings.env)),
                     website: ->(fake:) { website_store(clipboard, fake:) }
         )
         games = free_games(entitlement, metered: FreeGames.metered?(settings.env, channel: settings.channel, offered: storefront.offered?))
@@ -265,8 +265,8 @@ module DotPopper
       # The website's store: its real checkout in the browser, or the test
       # build's, which puts a signed test key on the clipboard.
       def website_store(clipboard, fake:)
-        checkout = fake ? Presentation::FakeCheckout.new(clipboard:) : Presentation::BrowserCheckout.new(opener: @engine.opener)
-        Presentation::WebsiteStore.new(checkout:, entitlement:, gone: @gone, clipboard:, entered: -> { @watch.start })
+        checkout = fake ? FakeCheckout.new(clipboard:) : BrowserCheckout.new(opener: @engine.opener)
+        WebsiteStore.new(checkout:, entitlement:, gone: @gone, clipboard:, entered: -> { @watch.start })
       end
 
       # The feed that reads the server's unlocks, if the game has a server.

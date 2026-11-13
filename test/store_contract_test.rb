@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
-require_relative "presentation_helper"
+require_relative "test_helper"
 require_relative "store_contract"
 require "dot_popper/shell/store_answers"
 require "tmpdir"
 
-# The one contract, run against each adapter behind Storefront's port.
+# The one contract, run against each adapter behind the store's port.
 class FakeStoreContractTest < Minitest::Test
   include StoreContract
 
-  FakeStore = DotPopper::Presentation::FakeStore
+  FakeStore = DotPopper::FakeStore
 
   def new_store(fails: nil, ledger: DotPopper::ScoreRecord::Memory.new)
     FakeStore.new(ledger, fails:).tap { (@ledgers ||= {})[it] = ledger }
@@ -22,10 +22,10 @@ class FakeStoreContractTest < Minitest::Test
     ledger = DotPopper::ScoreRecord::Memory.new
     ledger.write("owned")
     entitlement = DotPopper::Entitlement.test
-    front = Storefront.new(port: new_store(ledger:), entitlement:)
+    front = Store.new(port: new_store(ledger:), entitlement:)
     front.connect
     settle(front) { front.price }
-    3.times { front.update(Storefront::EVERY) }
+    3.times { front.update(Store::EVERY) }
 
     refute_predicate entitlement, :pro?
   end
@@ -36,10 +36,10 @@ class FakeStoreContractTest < Minitest::Test
     ledger = DotPopper::ScoreRecord::Memory.new
     ledger.write(DotPopper::Receipt.issue(product_id: "com.setdef.DotPopper.pro"))
     entitlement = DotPopper::Entitlement.test
-    front = Storefront.new(port: new_store(ledger:), entitlement:)
+    front = Store.new(port: new_store(ledger:), entitlement:)
     front.connect
     settle(front) { front.price }
-    3.times { front.update(Storefront::EVERY) }
+    3.times { front.update(Store::EVERY) }
 
     assert_predicate entitlement, :pro?
     assert DotPopper::Receipt.valid?(ledger.read, DotPopper::Receipt::TEST)
@@ -145,7 +145,7 @@ class NativeStoreContractTest < Minitest::Test
     path = File.join(@folder, "#{@count}.txt")
     host = FakeHost.new(fails, path)
     (@hosts ||= {})[path] = host
-    DotPopper::Presentation::NativeStore.new(opener: host, answers: Polled.new(file: DotPopper::Shell::StoreAnswers.new(path:), host:))
+    DotPopper::NativeStore.new(opener: host, answers: Polled.new(file: DotPopper::Shell::StoreAnswers.new(path:), host:))
   end
 
   def relaunched(store)

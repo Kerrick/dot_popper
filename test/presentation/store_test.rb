@@ -5,8 +5,15 @@ require "platforms_helper"
 
 # Buying Pro: the URLs the hosts catch, the answers they
 # write back, and the calm screen that offers it.
-class StorefrontTest < Minitest::Test
+class StoreTest < Minitest::Test
   include PresentationTest
+
+  Store = DotPopper::Store
+  NoStore = DotPopper::NoStore
+  NativeStore = DotPopper::NativeStore
+  FakeStore = DotPopper::FakeStore
+  WebsiteStore = DotPopper::WebsiteStore
+  FakeCheckout = DotPopper::FakeCheckout
 
   class FakeOpener
     attr_reader :urls
@@ -35,39 +42,39 @@ class StorefrontTest < Minitest::Test
     @opener = FakeOpener.new
     @answers = FakeAnswers.new
     @entitlement = DotPopper::Entitlement.test
-    @store = Storefront.new(port: port, entitlement: @entitlement)
+    @store = Store.new(port: port, entitlement: @entitlement)
   end
 
-  def port = DotPopper::Presentation::NativeStore.new(opener: @opener, answers: @answers)
+  def port = DotPopper::NativeStore.new(opener: @opener, answers: @answers)
 
   # The two adapters a build chooses between, at the composition root.
   def stores
     @native ||= port
-    @fake ||= DotPopper::Presentation::FakeStore.new(DotPopper::ScoreRecord::Memory.new)
+    @fake ||= DotPopper::FakeStore.new(DotPopper::ScoreRecord::Memory.new)
     { native: @native, fake: @fake }
   end
 
   def hear(text)
     @answers.text = text
-    @store.update(Storefront::EVERY)
+    @store.update(Store::EVERY)
   end
 
   # Play takes only lowercase letters, digits, "_" and "." in a product
   # id, and one id serves every store.
   def test_pro_has_one_product_id_every_store_accepts
-    assert_match(/\A[a-z][a-z0-9_.]*\z/, Storefront::PRODUCT_ID)
-    assert_equal DotPopper::Receipt::PRODUCT_ID, Storefront::PRODUCT_ID
+    assert_match(/\A[a-z][a-z0-9_.]*\z/, Store::PRODUCT_ID)
+    assert_equal DotPopper::Receipt::PRODUCT_ID, Store::PRODUCT_ID
   end
 
   def test_a_url_names_the_action_the_request_the_product_and_where_to_answer
     assert_equal "dotpopper-store://buy?n=3&product=com.setdef.dotpopper.pro&file=%2Fsave%20dir%2Fanswer.txt",
-                 Storefront.url(:buy, 3, "/save dir/answer.txt")
+                 Store.url(:buy, 3, "/save dir/answer.txt")
   end
 
   def test_a_phone_test_build_is_metered_like_the_final_game
-    assert_predicate Storefront, :test_build?
+    assert_predicate Store, :test_build?
     %w[iOS Android].each do |os|
-      store = Storefront.for(DotPopperTest.platform(os), **stores, entitlement: @entitlement)
+      store = Store.for(DotPopperTest.platform(os), **stores, entitlement: @entitlement)
       games = DotPopper::FreeGames.new(DotPopper::ScoreRecord::Memory.new, today: -> { Date.today }, entitlement: @entitlement,
                                                                          metered: store.offered?)
 
@@ -76,9 +83,9 @@ class StorefrontTest < Minitest::Test
   end
 
   def test_a_test_build_uses_the_fake_store_on_every_system
-    assert_nil Storefront::BUILD_CHANNEL
+    assert_nil Store::BUILD_CHANNEL
     ["iOS", "Android", "Linux", "Windows", "OS X"].each do |os|
-      store = Storefront.for(DotPopperTest.platform(os), **stores, entitlement: @entitlement)
+      store = Store.for(DotPopperTest.platform(os), **stores, entitlement: @entitlement)
 
       assert_same @fake, store.instance_variable_get(:@port), os
     end
@@ -86,19 +93,19 @@ class StorefrontTest < Minitest::Test
 
   def test_a_store_build_uses_the_native_store_on_phones
     %w[iOS Android].each do |os|
-      store = Storefront.for(DotPopperTest.platform(os), **stores, entitlement: @entitlement, channel: "app-store")
+      store = Store.for(DotPopperTest.platform(os), **stores, entitlement: @entitlement, channel: "app-store")
 
       assert_same @native, store.instance_variable_get(:@port), os
     end
   end
 
   def test_a_computers_own_store_build_uses_the_native_port_on_that_computer_only
-    { Storefront::MAC_APP_STORE => "OS X", Storefront::MICROSOFT_STORE => "Windows" }.each do |channel, os|
-      store = Storefront.for(DotPopperTest.platform(os), **stores, entitlement: @entitlement, channel:)
+    { Store::MAC_APP_STORE => "OS X", Store::MICROSOFT_STORE => "Windows" }.each do |channel, os|
+      store = Store.for(DotPopperTest.platform(os), **stores, entitlement: @entitlement, channel:)
 
       assert_same @native, store.instance_variable_get(:@port), channel
       (["Linux", "OS X", "Windows"] - [os]).each do |other|
-        refute_predicate Storefront.for(DotPopperTest.platform(other), **stores, entitlement: @entitlement, channel:), :offered?, "#{channel} on #{other}"
+        refute_predicate Store.for(DotPopperTest.platform(other), **stores, entitlement: @entitlement, channel:), :offered?, "#{channel} on #{other}"
       end
     end
   end
@@ -144,10 +151,10 @@ class StorefrontTest < Minitest::Test
   end
   
   def test_a_receipt_the_test_key_signed_proves_nothing_in_a_store_build
-    store = Storefront.new(port:, entitlement: entitlement = DotPopper::Entitlement.free)
+    store = Store.new(port:, entitlement: entitlement = DotPopper::Entitlement.free)
     store.connect
     @answers.text = "answer=1\nowned=1\nstate=ready\nprice=$1.99\nreceipt=#{RECEIPT}\n"
-    store.update(Storefront::EVERY)
+    store.update(Store::EVERY)
   
     refute_predicate entitlement, :pro?
   end
@@ -205,10 +212,10 @@ class StorefrontTest < Minitest::Test
 
   def test_the_answer_is_read_only_every_so_often
     @answers.text = "answer=0\nowned=1\nstate=ready\nreceipt=#{RECEIPT}\n"
-    @store.update(Storefront::EVERY / 2)
+    @store.update(Store::EVERY / 2)
 
     refute_predicate @entitlement, :pro?
-    @store.update(Storefront::EVERY)
+    @store.update(Store::EVERY)
 
     assert_predicate @entitlement, :pro?
   end
@@ -226,13 +233,13 @@ class StorefrontTest < Minitest::Test
   end
 
   def test_a_computer_store_build_uses_its_channel_or_offers_nothing
-    refute_predicate Storefront.for(DotPopperTest.platform("Linux"), **stores, entitlement: @entitlement, channel: "steam"), :offered?
+    refute_predicate Store.for(DotPopperTest.platform("Linux"), **stores, entitlement: @entitlement, channel: "steam"), :offered?
     made = Object.new
     channels = { "steam" => ->(entitlement:) { made.tap { @given = entitlement } } }
 
-    assert_same made, Storefront.for(DotPopperTest.platform("Linux"), **stores, entitlement: @entitlement, channel: "steam", channels:)
+    assert_same made, Store.for(DotPopperTest.platform("Linux"), **stores, entitlement: @entitlement, channel: "steam", channels:)
     assert_same @entitlement, @given
-    assert_instance_of Storefront, Storefront.for(DotPopperTest.platform("iOS"), **stores, entitlement: @entitlement, channel: "steam", channels:)
+    assert_instance_of Store, Store.for(DotPopperTest.platform("iOS"), **stores, entitlement: @entitlement, channel: "steam", channels:)
   end
 
   def test_no_word_of_the_offer_calls_it_a_trial_or_a_demo
@@ -245,7 +252,7 @@ class StorefrontTest < Minitest::Test
     show, = offer_show
     @answers.text = "answer=0\nowned=1\nstate=ready\nreceipt=#{RECEIPT}\n"
     show.primary
-    show.update(Storefront::EVERY * 2)
+    show.update(Store::EVERY * 2)
 
     refute_predicate @entitlement, :pro?
   end
@@ -260,7 +267,7 @@ class StorefrontTest < Minitest::Test
   end
 
   def test_a_build_with_no_store_offers_nothing
-    show = build_show(storefront: NoStorefront.new)
+    show = build_show(storefront: NoStore.new)
     show.open_stats
 
     refute_includes show.controls.map(&:name), :offer
@@ -279,13 +286,13 @@ class StorefrontTest < Minitest::Test
 
   def offer_show
     opener = FakeOpener.new
-    store = Storefront.new(port: DotPopper::Presentation::NativeStore.new(opener:, answers: @answers), entitlement: @entitlement)
+    store = Store.new(port: DotPopper::NativeStore.new(opener:, answers: @answers), entitlement: @entitlement)
     show = build_show(storefront: store, entitlement: @entitlement)
     [show, opener]
   end
 
   def answer(text, show)
     @answers.text = text
-    show.update(Storefront::EVERY)
+    show.update(Store::EVERY)
   end
 end

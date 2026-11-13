@@ -435,7 +435,7 @@ class KeyboardTest < Minitest::Test
   # A license key the test build's checkout would sell.
   def key_for_sale
     clipboard = P::MemoryClipboard.new
-    P::FakeCheckout.new(clipboard:).buy
+    DotPopper::FakeCheckout.new(clipboard:).buy
     clipboard.text
   end
 

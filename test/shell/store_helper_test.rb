@@ -2,7 +2,7 @@
 
 require_relative "../presentation/presentation_helper"
 require "platforms_helper"
-require_relative "../presentation/store_contract"
+require_relative "../store_contract"
 require "dot_popper/shell/store_helper"
 require "rbconfig"
 require "tmpdir"
@@ -57,11 +57,11 @@ class StoreHelperContractTest < Minitest::Test
   def test_an_automated_run_starts_no_helper
     helper = StoreHelper.new([RbConfig.ruby, "-e", "exit"], automated: true)
 
-    refute helper.open(Storefront.url(:open, 1, StoreHelper::PIPE))
+    refute helper.open(Store.url(:open, 1, StoreHelper::PIPE))
   end
 
   def test_a_helper_that_is_not_there_is_refused
-    refute StoreHelper.new([File.join(@root, "missing")]).open(Storefront.url(:open, 1, StoreHelper::PIPE))
+    refute StoreHelper.new([File.join(@root, "missing")]).open(Store.url(:open, 1, StoreHelper::PIPE))
   end
 
   def test_an_older_requests_late_answer_never_hides_a_newer_ones

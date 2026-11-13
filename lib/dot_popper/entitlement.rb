@@ -24,7 +24,7 @@ module DotPopper
     FORCED_BY = "DOT_POPPER_PRO"
     # Whether a computer's copy has everything for nothing. It does not: a
     # desktop copy is free until a store, a channel's or a test build's fake,
-    # sells it (Presentation::Storefront; ADR-0009). Set it true to ship a desktop copy
+    # sells it (Store; ADR-0009). Set it true to ship a desktop copy
     # whole. A phone's copy is never pro this way: its host has a store of
     # its own (Platform#phone_host?).
     DESKTOP_PRO = false

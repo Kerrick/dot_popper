@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# What any adapter behind Storefront's port must do. Include it in a test
+# What any adapter behind the store's port (DotPopper::Store) must do. Include it in a test
 # class and write two methods:
 #
 #   new_store(fails: nil)  an adapter on a fresh install; +fails+ is one of
@@ -8,12 +8,12 @@
 #   relaunched(store)      a new adapter on the same install: the same
 #                          purchases, the same store, a game just started
 #
-# It reads answers only as Storefront does, through +read+, so the fake
+# It reads answers only as Store does, through +read+, so the fake
 # cannot drift from the port without failing here. Passing says the
 # adapter speaks the port; it says nothing of Apple's or Google's real
 # stores (ADR-0009).
 module StoreContract
-  Storefront = DotPopper::Presentation::Storefront
+  Store = DotPopper::Store
   STATES = %w[loading working ready pending canceled restored none failed unavailable].freeze
   UNDER_WAY = %w[loading working].freeze
 
@@ -156,15 +156,15 @@ module StoreContract
   end
 
   def test_a_request_the_system_will_not_take_is_refused
-    refute new_store(fails: "refused").open(Storefront.url(:open, 1, "anywhere"))
+    refute new_store(fails: "refused").open(Store.url(:open, 1, "anywhere"))
   end
 
-  # The port as the game drives it, through the Storefront above it.
+  # The port as the game drives it, through the Store above it.
 
   def test_through_the_storefront_buying_unlocks_and_restoring_finds_it
     store = new_store
     entitlement = DotPopper::Entitlement.test
-    front = Storefront.new(port: store, entitlement:)
+    front = Store.new(port: store, entitlement:)
     front.connect
     settle(front) { front.price }
 
@@ -179,7 +179,7 @@ module StoreContract
     assert_equal :ready, front.status
 
     again = DotPopper::Entitlement.test
-    other = Storefront.new(port: relaunched(store), entitlement: again)
+    other = Store.new(port: relaunched(store), entitlement: again)
     refute_predicate again, :pro?, "nothing is kept: a relaunch asks the store"
     other.connect
     settle(other) { again.pro? }
@@ -190,7 +190,7 @@ module StoreContract
   def test_through_the_storefront_a_failure_is_said_and_unlocks_nothing
     store = new_store(fails: "failed")
     entitlement = DotPopper::Entitlement.test
-    front = Storefront.new(port: store, entitlement:)
+    front = Store.new(port: store, entitlement:)
     front.connect
     settle(front) { front.price }
     front.buy
@@ -204,7 +204,7 @@ module StoreContract
 
   def ask(store, action)
     @number += 1
-    store.open(Storefront.url(action, @number, store.path))
+    store.open(Store.url(action, @number, store.path))
   end
 
   def open_it(store)
@@ -223,12 +223,12 @@ module StoreContract
     flunk "no final answer to request #{@number}"
   end
 
-  # Lets a Storefront read until the block is true.
+  # Lets a Store read until the block is true.
   def settle(front)
     30.times do
       return if yield
 
-      front.update(Storefront::EVERY)
+      front.update(Store::EVERY)
     end
     flunk "the storefront never heard"
   end

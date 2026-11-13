@@ -3,7 +3,7 @@
 module DotPopper
   module UseCases
     # Buying Pro, from the offer: asking the store (+store+, the
-    # Storefront port) for the price as the offer opens, Buy, Restore
+    # Store port) for the price as the offer opens, Buy, Restore
     # Purchases, and a license key pasted or typed on a copy that takes
     # one; once the player has Pro (+entitlement+, Entitlement), Buy and a
     # typed key do nothing. The store is heard only while no game

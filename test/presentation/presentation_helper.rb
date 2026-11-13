@@ -56,7 +56,7 @@ module PresentationTest
   # and the offer to Pro arriving, each after them. Every Show a test makes on one
   # cabinet starts its games through the cabinet's one Starts. The rest
   # of +options+ go to the Show as they are.
-  def self.show(cabinet:, entitlement: DotPopper::Entitlement.free, storefront: NoStorefront.new, games: DotPopper::FreeGames.unlimited,
+  def self.show(cabinet:, entitlement: DotPopper::Entitlement.free, storefront: DotPopper::NoStore.new, games: DotPopper::FreeGames.unlimited,
                 stats_book: DotPopper::StatsBook.new(DotPopper::ScoreRecord::Memory.new),
                 achievements: DotPopper::Achievements.new(DotPopper::ScoreRecord::Memory.new), groups: DotPopper::Groups::Session.off,
                 themes: DotPopper::Themes.new(DotPopper::ScoreRecord::Memory.new), use_theme: DotPopper::UseCases::UseTheme.new(themes:, entitlement:),

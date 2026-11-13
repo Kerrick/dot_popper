@@ -481,7 +481,7 @@ class ControllerTest < Minitest::Test
 
   def key_for_sale
     clipboard = P::MemoryClipboard.new
-    P::FakeCheckout.new(clipboard:).buy
+    DotPopper::FakeCheckout.new(clipboard:).buy
     clipboard.text
   end
 end

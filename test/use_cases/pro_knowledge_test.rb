@@ -24,8 +24,8 @@ class ProKnowledgeTest < Minitest::Test
 
   # What decides Pro, which only the use cases may hold, and the
   # composition root, which holds all of it.
-  DECIDING = [DotPopper::Entitlement, DotPopper::FreeGames, DotPopper::Continuity::License, Storefront, NoStorefront, WebsiteStore,
-              FakeStore, NativeStore, DotPopper::Composition::Root].freeze
+  DECIDING = [DotPopper::Entitlement, DotPopper::FreeGames, DotPopper::Continuity::License, DotPopper::Store, DotPopper::NoStore,
+              DotPopper::WebsiteStore, DotPopper::FakeStore, DotPopper::NativeStore, DotPopper::Composition::Root].freeze
 
   def test_the_presentation_holds_nothing_that_decides_pro_but_through_a_use_case
     show = game.show

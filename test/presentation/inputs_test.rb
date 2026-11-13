@@ -269,7 +269,7 @@ class InputsTest < Minitest::Test
     player.press(:play)
     player.press(:buy)
 
-    assert_equal P::BrowserCheckout::URL, fixture.opener.urls.last
+    assert_equal DotPopper::BrowserCheckout::URL, fixture.opener.urls.last
     assert_equal fixture.show.words.offer[:browser], fixture.show.offer_status
     assert_equal :pressed, player.press(:paste)
     assert_equal fixture.show.words.offer[:empty], fixture.show.offer_status, "Copy your license key first."

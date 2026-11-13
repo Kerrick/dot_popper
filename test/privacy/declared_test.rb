@@ -111,7 +111,7 @@ class PrivacyDeclaredTest < Minitest::Test
     openers = Dir[File.join(ROOT, "lib/**/*.rb")].select { source_of(it).include?("open_url") }.map { File.basename(it) }
 
     assert_equal ["url_opener.rb"], openers
-    assert_equal %w[dotpopper-share dotpopper-store], [DotPopper::Presentation::SheetSharing::SCHEME, DotPopper::Presentation::Storefront::SCHEME].sort
+    assert_equal %w[dotpopper-share dotpopper-store], [DotPopper::Presentation::SheetSharing::SCHEME, DotPopper::Store::SCHEME].sort
   end
 
   def test_the_deletion_words_are_the_screens

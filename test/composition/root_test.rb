@@ -10,6 +10,13 @@ require_relative "fake_engine"
 class RootTest < Minitest::Test
   include PresentationTest
 
+  Store = DotPopper::Store
+  NoStore = DotPopper::NoStore
+  NativeStore = DotPopper::NativeStore
+  FakeStore = DotPopper::FakeStore
+  WebsiteStore = DotPopper::WebsiteStore
+  FakeCheckout = DotPopper::FakeCheckout
+
   C = DotPopper::Continuity
   B = DotPopper::Build
   Root = DotPopper::Composition::Root
@@ -115,7 +122,7 @@ class RootTest < Minitest::Test
     refute root("Linux").cursor.visible
   end
 
-  # Storefront.for's table (doc/design/store-and-pro.md), as the root
+  # Store.for's table (doc/design/store-and-pro.md), as the root
   # builds it on each system for each channel.
   def test_each_build_sells_through_its_own_store_on_each_system
     expected = {
@@ -136,7 +143,7 @@ class RootTest < Minitest::Test
 
   def store_kind(store)
     case store
-    when NoStorefront then :none
+    when NoStore then :none
     when WebsiteStore then store.instance_variable_get(:@checkout).is_a?(FakeCheckout) ? :fake_website : :website
     else
       case port(store)
@@ -325,7 +332,7 @@ class RootTest < Minitest::Test
     achievements = DotPopper::Achievements.new(DotPopper::ScoreRecord::Memory.new)
     groups = DotPopper::Groups::Session.off
     themes = DotPopper::Themes.new(DotPopper::ScoreRecord::Memory.new)
-    use_cases = DotPopper::Composition.use_cases(cabinet:, free_games: DotPopper::FreeGames.unlimited, entitlement:, store: NoStorefront.new,
+    use_cases = DotPopper::Composition.use_cases(cabinet:, free_games: DotPopper::FreeGames.unlimited, entitlement:, store: NoStore.new,
                                                  achievements:, stats_book:, friend_groups: groups,
                                                  use_theme: DotPopper::UseCases::UseTheme.new(themes:, entitlement:))
     heard = -> { [cabinet, entitlement, use_cases[:finish_game]].map { it.instance_variable_get(:@listeners).size } }
