@@ -18,7 +18,10 @@ abort "usage: ruby script/check_build.rb CHANNEL VERSION FOLDER" unless channel 
 games = Dir.glob(File.join(File.expand_path(folder), "**", "game", "dot_popper", "lib", "dot_popper", "build.rb"))
            .map { File.expand_path("../../..", it) }
 abort "#{folder} holds #{games.size} copies of the game; expected one" unless games.size == 1
-game = games.first
+# Ruby records each file it loads by its real path, so the game's folder
+# is compared by its real path too: a folder reached through a symbolic
+# link (macOS's /var is /private/var) is still the app's own.
+game = File.realpath(games.first)
 puts "Checking the game in #{game}"
 
 $LOAD_PATH.unshift(File.join(game, "lib"))
