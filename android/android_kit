@@ -12,7 +12,9 @@
 # DOT_POPPER_KIT_PROBE=1, which the emulator runs pass as an intent extra
 # and a launch from the launcher never has, it also logs what Lota's
 # window reports on frames 60 and 600, each touch and key the game
-# receives (with the state it arrives in), each event the game announces,
+# receives (with the state it arrives in), each time the window gains or
+# loses focus and each time the game hears it came back (Refresh),
+# each event the game announces,
 # the frame the setdef splash is over on (a key before then only skips
 # the splash), and, every 15 frames of a game, where its topmost bright
 # dot is.
@@ -26,6 +28,16 @@ if ENV["DOT_POPPER_KIT_PROBE"] == "1"
       kit_wrap_touch if name == :touchpressed && !@kit_touch
       kit_wrap_load if name == :load && !@kit_load
       kit_wrap_key if name == :keypressed && !@kit_key
+      kit_wrap_focus if name == :focus && !@kit_focus
+    end
+
+    def kit_wrap_focus
+      @kit_focus = true
+      focus = method(:focus)
+      define_singleton_method(:focus) do |*arguments|
+        puts "kit probe: focus #{arguments.first.inspect}"
+        focus.call(*(focus.arity.negative? ? arguments : arguments.first(focus.arity)))
+      end
     end
 
     def kit_wrap_key
@@ -48,6 +60,12 @@ if ENV["DOT_POPPER_KIT_PROBE"] == "1"
           cabinet.subscribe { |event| puts "kit probe: event #{event.class.name.split('::').last}" }
           @kit_game = cabinet
           puts "kit probe: subscribed to the cabinet's events"
+          @app.instance_variable_get(:@game).refresh.singleton_class.prepend(Module.new do
+            def came_back
+              puts "kit probe: the game heard it came back"
+              super
+            end
+          end)
         rescue Exception => error # rubocop:disable Lint/RescueException
           puts "kit probe: error #{error.class}: #{error.message} at #{error.backtrace&.first}"
           raise

@@ -45,4 +45,21 @@ ruby "$here/android_emulator.rb" "$apk" "$package" "$out/back-on-title" \
   --expect-order "kit probe: keypressed :escape, :acback, false in Home" \
   --expect-order "exited with status 0" || status=1
 
+# Leaving for the launcher and coming back reaches the game as the
+# window's focus, lost and then gained, which Refresh hears as the game
+# coming back (DotPopper::Refresh), so a theme released meanwhile is
+# asked for. DOT_POPPER_AUTOMATED keeps it off the internet, so nothing
+# is asked of a server; the check is that the game hears it.
+ruby "$here/android_emulator.rb" "$apk" "$package" "$out/foreground" \
+  --env ALSOFT_DRIVERS=null --env DOT_POPPER_SAVE_AS=ci_foreground --env DOT_POPPER_KIT_PROBE=1 --env DOT_POPPER_AUTOMATED=1 \
+  --env DOT_POPPER_QUIT_AFTER=30 \
+  --ready "kit probe: splash over" --timeout 120 \
+  --key-after "2:KEYCODE_HOME:kit probe: splash over" \
+  --shell "10:am start -n PACKAGE/org.setdef.fledge.host.MainActivity" \
+  --expect-order "kit probe: splash over" \
+  --expect-order "kit probe: focus false" \
+  --expect-order "kit probe: focus true" \
+  --expect-order "kit probe: the game heard it came back" \
+  --expect-order "exited with status 0" || status=1
+
 exit $status
