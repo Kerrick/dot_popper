@@ -35,7 +35,7 @@ class FakeEngine
   end
 
   # What plays the sounds, with the store its mute is kept in.
-  class Speaker < FakeSounds
+  class SoundPlayer < FakeSounds
     attr_reader :store, :theme
 
     def initialize(store:)
@@ -100,7 +100,7 @@ class FakeEngine
   def desktop_window(exclusive:) = DesktopWindow.new(exclusive:)
   def pen(shaders:) = Pen.new(shaders:)
   def measure(_pen) = RoughMeasure.new
-  def speaker(store:) = Speaker.new(store:)
+  def speaker(store:) = SoundPlayer.new(store:)
   def notices = Notices.none
   def store_helper(automated:) = StoreHelper.new(automated:)
   def store_answers = Answers.new(path: "/save/store_answer.txt")

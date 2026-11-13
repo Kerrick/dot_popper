@@ -187,7 +187,7 @@ The words that say what to do follow the input the player used last. `Show#input
 | Ctrl+V or Cmd+V | Pastes, where a screen takes a paste (`Show#paste_shortcut`) |
 | Digits, Backspace, Delete | On the keypad that joins a friend group: a digit, or the last one away (`GroupPanel#type`) |
 | Letters, digits, hyphen, Backspace, Enter | On a computer's Pro offer that takes license keys: the key being typed (`WebsiteStore#type`) |
-| M | Sound off or on (`Speaker#toggle_mute`) |
+| M | Sound off or on (`SoundPlayer#toggle_mute`) |
 | H | How to play, from Home: Home's own key (`Screens::Home#type`) |
 | C | Credits and licenses, from Settings (`Screens::Settings#type`) |
 | Up, Down, Page Up, Page Down, Home, End | Scroll a list (`Show#scroll_key`). Only while a list scrolls do held keys repeat (`App#repeat_keys`) |
