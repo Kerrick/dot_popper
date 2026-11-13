@@ -6,6 +6,10 @@ module DotPopper
       # The share preview over Game Over, on a computer (ShareScreen):
       # Close and Copy.
       class SharePreview < Screen
+        # What it shows (Presentation::SharePreview): the text, and when it
+        # was copied.
+        attr_accessor :preview
+
         def controls
           plan = show.share_plan
           [button(:close, plan.close), button(:copy, plan.copy)]

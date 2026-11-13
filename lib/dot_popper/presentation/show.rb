@@ -97,7 +97,6 @@ module DotPopper
         @tutor = tutor
         @clipboard = clipboard
         @sharing = sharing
-        @preview = nil
         @mistake = nil
         @penalized_at = -Float::INFINITY
         @beckoned_at = nil
@@ -122,7 +121,6 @@ module DotPopper
         elsif tutorial? then @screens[:tutorial]
         elsif @layers.any? then @layers.last
         elsif home? then @screens[:home]
-        elsif sharing? then @screens[:share_preview]
         elsif game_over? then @screens[:game_over]
         else @screens[:game]
         end
@@ -848,17 +846,19 @@ module DotPopper
         return copy_result if sharing?
         return unless game_over? && game_over && !offer?
 
-        @preview = @sharing.offer(share_text, now)
+        preview = @sharing.offer(share_text, now) or return sounds.play(:tick)
+        open_layer(:share_preview)
+        @screens[:share_preview].preview = preview
         sounds.play(:tick)
       end
 
       # Whether the share preview is open over Game Over. It is the
       # presentation's alone: the game stays on Game Over meanwhile, its
       # grace counting as ever, and no tap there reaches the game.
-      def sharing? = !@preview.nil?
+      def sharing? = layer?(:share_preview)
 
       # What the share preview shows (SharePreview), while it is open.
-      def share_preview = @preview
+      def share_preview = (@screens[:share_preview].preview if sharing?)
 
       # Where the share preview's card, words and buttons go (SharePlan),
       # or nil while it is closed.
@@ -866,7 +866,7 @@ module DotPopper
         return unless sharing?
 
         ShareScreen.new(layout:, type: style::TYPE, words:, measure: @measure, style: style::SHARE_PREVIEW,
-                        lines: @preview.lines).plan
+                        lines: share_preview.lines).plan
       end
 
       # The share preview's Copy, the one press that writes the clipboard:
@@ -874,14 +874,15 @@ module DotPopper
       def copy_result
         return unless sharing?
 
-        @clipboard.copy(@preview.text)
-        @preview = @preview.copy(now)
+        preview = share_preview
+        @clipboard.copy(preview.text)
+        @screens[:share_preview].preview = preview.copy(now)
         sounds.play(:tick, pitch: 1.3)
       end
 
       # Closes the share preview, back to Game Over as it was.
       def close_share
-        @preview = nil
+        close_layer(:share_preview)
         sounds.play(:tick, pitch: 0.8)
       end
 
@@ -1334,7 +1335,7 @@ module DotPopper
         @tutorial_game = !scene.nil?
         @groups.game_started
         @game_over = nil
-        @preview = nil
+        close_layer(:share_preview)
         @mistake = nil
         @undo = nil # the game's records would be lost to an undo
         @lead_in = nil
@@ -1430,7 +1431,7 @@ module DotPopper
         @clearing = clearing.cancel
         effects.clear
         @game_over = nil
-        @preview = nil
+        close_layer(:share_preview)
         @marquee = Marquee.new(style: style::HOME, score_record: event.score_record, at: now)
       end
 
