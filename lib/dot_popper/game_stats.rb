@@ -13,15 +13,15 @@ module DotPopper
                                           :bonuses)
     def self.start = new(dots_popped: 0, mistakes: 0, softened: 0, times_to_pop: [], bright_since: 0.0, duration: 0.0)
 
-    # The stats of +game+ as play begins: none for a game begun afresh;
-    # for one the tutorial played over while it was paused
-    # (Cabinet::Paused), each of its popped dots, its score, and
-    # its row. Those dots were popped before the clock ran, so none has a wait;
-    # and the guide's mistake, which the player did not make, is not one
-    # of theirs.
-    def self.opening(game)
-      dots_popped = game.dots.count(&:popped?)
-      start.with(dots_popped:, score: game.score, dots_in_a_row: game.dots_in_a_row, most_dots_in_a_row: game.dots_in_a_row)
+    # The stats of a game as play begins on it (Events::GameStarted):
+    # none for a game begun afresh; for one the tutorial played over while
+    # it was paused (Cabinet::Paused), each of its popped dots, its score,
+    # and its row. Those dots were popped before the clock ran, so none
+    # has a wait; and the guide's mistake, which the player did not make,
+    # is not one of theirs.
+    def self.opening(started)
+      dots_popped = started.dots.count(&:popped?)
+      start.with(dots_popped:, score: started.score, dots_in_a_row: started.dots_in_a_row, most_dots_in_a_row: started.dots_in_a_row)
     end
 
     def initialize(dots_popped:, mistakes:, softened:, times_to_pop:, bright_since:, duration:, score: 0, dots_in_a_row: 0, most_dots_in_a_row: 0, bonuses: 0)
@@ -57,22 +57,19 @@ module DotPopper
     end
 
     # Listens to a Cabinet (Cabinet#subscribe) and keeps the stats of the game
-    # in play, or of the one just finished.
+    # in play, or of the one just finished, timing each event by the
+    # time played it carries.
     class Recorder
       attr_reader :stats
 
       def initialize
         @stats = GameStats.start
-        @game = nil
       end
 
       def call(event)
         case event
-        when Events::GameStarted
-          @game = event.game
-          @stats = GameStats.opening(event.game)
-        when Events::Popped, Events::Penalized, Events::GameEnded
-          @stats = stats.record(event, at: @game&.elapsed || 0.0)
+        when Events::GameStarted then @stats = GameStats.opening(event)
+        when Events::Popped, Events::Penalized, Events::GameEnded then @stats = stats.record(event, at: event.elapsed)
         end
       end
     end
