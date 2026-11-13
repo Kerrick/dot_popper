@@ -1,21 +1,21 @@
 # frozen_string_literal: true
 
-require_relative "../presentation/inputs"
-require "minitest/mock"
+require_relative "inputs"
 
 # The keyboard, on every screen that answers it: each key a player
-# presses, as Lota hands it to Shell::App#key_pressed (by LÖVE's name,
-# with the modifier keys Lota::Keyboard says are held), and what it does
-# there. Where a screen answers a key in more than one way, the order is
-# pinned: a typed license key's letters are never shortcuts, Ctrl+V pastes
-# before V is typed, and Alt+Enter is fullscreen's, not the main button's.
-# The App is given a Fixture's Show, and no window.
+# presses, as the shell hands it over (Presentation::KeyPress: the game's
+# name for it, and the modifier keys held), and what it does there
+# (Presentation::InputHandler). Where a screen answers a key in more than
+# one way, the order is pinned: a typed license key's letters are never
+# shortcuts, Ctrl+V pastes before V is typed, and Alt+Enter is
+# fullscreen's, not the main button's.
+# Written against Shell::App#key_pressed before its chain moved here;
+# only how a key reaches the game changed.
 class KeyboardTest < Minitest::Test
   include Inputs
 
-  # What only the engine can do, remembered: setdef's splash (as the
-  # App's splash, which a key skips), quitting, and switching fullscreen
-  # (as the App's window).
+  # What only the engine can do, remembered: setdef's splash, quitting,
+  # and switching fullscreen.
   class FakeShell
     attr_reader :quits, :switches, :skips
 
@@ -28,14 +28,6 @@ class KeyboardTest < Minitest::Test
     def skip_splash = (@skips += 1) && (@splash = false)
     def quit = @quits += 1
     def toggle_fullscreen = @switches += 1
-    def skip = (@skips += 1) && nil
-  end
-
-  def setup
-    require "lota"
-    require "dot_popper/shell"
-  rescue LoadError => e
-    skip "Lota isn't installed here (#{e.message})"
   end
 
   def test_any_key_during_the_splash_only_skips_it
@@ -326,27 +318,18 @@ class KeyboardTest < Minitest::Test
 
   def show = fixture.show
 
-  # LÖVE's names for the modifier keys, by the game's.
-  HELD = { ctrl: :lctrl, alt: :lalt, command: :lgui }.freeze
-
-  # A Show at +at+, on +os+, with a Fixture's other choices, in an App
-  # that Lota hands its keys to.
+  # A Show at +at+, on +os+, with a Fixture's other choices, and the
+  # handler the shell hands its keys to.
   def given(os: "Linux", at: :home, splash: false, **options)
     @fixture = Fixture.new(os:, width: 1200, height: 800, **options)
     @shell = FakeShell.new(splash:)
-    @app = DotPopper::Shell::App.allocate
-    { show:, platform: fixture.platform, touch: fixture.platform.touch?, speaker: show.sounds, window: @shell,
-      splash: (@shell if splash), input: DotPopper::Shell::LotaInput.new, hooks: nil }.each { @app.instance_variable_set(:"@#{_1}", _2) }
+    @handler = P::InputHandler.new(show:, platform: fixture.platform, shell: @shell)
     reach(at)
   end
 
   # The key the game calls +key+ (nil: one it doesn't name), pressed with
-  # the modifier keys +held+, as Lota calls the App.
-  def press(key, *held)
-    name = key.nil? ? "f1" : DotPopper::Shell::LotaInput::KEYS.key(key) || key.to_s
-    down = ->(*keys) { held.any? { keys.include?(HELD.fetch(it)) } }
-    Lota::Keyboard.stub(:down?, down) { Lota::Event.stub(:quit, -> { @shell.quit }) { @app.key_pressed(name) } }
-  end
+  # the modifier keys +held+.
+  def press(key, *held) = @handler.call(P::KeyPress.new(key:, held:))
 
   def reach(at)
     case at

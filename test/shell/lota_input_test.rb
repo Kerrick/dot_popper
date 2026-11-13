@@ -60,4 +60,15 @@ class LotaInputTest < Minitest::Test
     assert_equal :space, @input.key(:space)
     %w[lshift tab f1 kpplus].each { assert_nil @input.key(it) }
   end
+
+  # A key press says which modifier keys are held, either side's, by
+  # the game's names: Cmd on a Mac is LÖVE's gui key.
+  def test_a_key_press_names_the_modifier_keys_held
+    held = ->(*keys) { ->(*asked) { asked.intersect?(keys) } }
+
+    assert_equal DotPopper::Presentation::KeyPress.new(key: :v, held: []), @input.key_press("v", held.call)
+    assert_equal %i[ctrl], @input.key_press("v", held.call(:rctrl)).held
+    assert_equal %i[alt command], @input.key_press("return", held.call(:lalt, :rgui)).held
+    assert_nil @input.key_press("tab", held.call(:lctrl)).key
+  end
 end

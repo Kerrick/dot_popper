@@ -32,6 +32,10 @@ module DotPopper
         "up" => :up, "down" => :down, "pageup" => :page_up, "pagedown" => :page_down, "home" => :home, "end" => :end
       }.freeze
 
+      # LÖVE's names for the modifier keys, by the game's: Ctrl, Alt, and
+      # Cmd on a Mac (the Windows or Super key elsewhere), either side.
+      MODIFIERS = { ctrl: %i[lctrl rctrl], alt: %i[lalt ralt], command: %i[lgui rgui] }.freeze
+
       def initialize(router: Presentation::InputRouter.new) = super
 
       def mouse_pressed(x, y, button, istouch) = (router.mouse_pressed(x, y) if mouse?(button, istouch))
@@ -51,6 +55,10 @@ module DotPopper
 
       # The game's name for the key LÖVE calls +name+, or nil.
       def key(name) = KEYS[name.to_s]
+
+      # The key LÖVE calls +name+ pressed, with the modifier keys that
+      # +down+ (Lota::Keyboard.down?, given LÖVE's names) says are held.
+      def key_press(name, down) = Presentation::KeyPress.new(key: key(name), held: MODIFIERS.filter_map { |modifier, keys| modifier if down.call(*keys) })
 
       def gamepad_pressed(cursor) = router.gamepad_pressed(cursor)
       def gamepad_released(cursor) = router.gamepad_released(cursor)

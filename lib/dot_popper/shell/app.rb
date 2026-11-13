@@ -59,6 +59,7 @@ module DotPopper
                                              diagnostic: flag?("DOT_POPPER_DIAGNOSTIC_COLORS"))
         @renderer.prepare
         @input = LotaInput.new
+        @inputs = Presentation::InputHandler.new(show: @show, platform: @platform, shell: self)
         @buttons = Presentation::GamepadButtons.new
         @trigger = Presentation::Trigger.released
         @cursor = @game.cursor
@@ -189,6 +190,19 @@ module DotPopper
         @show.pointer_gone unless focused
       end
 
+      # What the Presentation::InputHandler asks of the engine: whether
+      # setdef's splash shows, and ending it, which the game never hears;
+      # closing the game; and switching fullscreen, as F11 does
+      # (DesktopWindow).
+      def splash? = !@splash.nil?
+      def skip_splash = @splash = @splash.skip
+      def quit = ::Lota::Event.quit
+
+      def toggle_fullscreen
+        @hooks&.happened("a fullscreen switch")
+        @window.toggle_fullscreen
+      end
+
       # Whether the mouse pointer is the system's pointing hand, as it is
       # while the mouse is over a button.
       def pointing_hand? = @hand == true
@@ -259,42 +273,9 @@ module DotPopper
       # The mouse wheel turned +y+ notches, up when positive.
       def wheel_moved(y) = @show.wheel_scroll(y)
 
-      # A key went down, which Lota calls +name+ (LotaInput#key names it as
-      # the game does; a key the game doesn't name only shows Buy's key).
-      def key_pressed(name)
-        return skip_splash if @splash
-
-        @show.keyboard_used(@platform.command_key? ? "\u2318B" : "Ctrl+B") unless @touch
-        key = @input.key(name) or return
-        return if key == :v && paste_chord? && @show.paste_shortcut
-        # Ctrl+B or Cmd+B buys on the offer: a chord, so no press that means
-        # continue or back, and no letter of a typed license key, buys.
-        return if key == :b && paste_chord? && @show.buy_shortcut
-        return if @show.type_key(key)
-        return @speaker.toggle_mute if key == :m
-        return if @show.scroll_key(key)
-        # Enter or Space presses the screen's main button, on any device;
-        # Alt+Enter (Cmd+Enter on a Mac) is fullscreen's instead.
-        return @show.primary if PRIMARY_KEYS.include?(key) && !(key != :space && fullscreen_chord?)
-        # Escape, which Android's Back arrives as, goes back from the
-        # Stats screen or Game Over first, on any device.
-        return if key == :escape && @show.back
-        # On Home Android's Back leaves the app, as Back on an app's
-        # first screen does; in a game it does nothing, so a stray edge
-        # swipe never throws a game away. iOS apps never quit themselves.
-        return ::Lota::Event.quit if key == :escape && @platform.quits_itself? && @show.home?
-        # A tablet's keyboard neither quits the app nor takes it out of
-        # fullscreen: iOS apps are left by the system, never by the app.
-        return if @touch
-
-        case key
-        when :escape then ::Lota::Event.quit
-        when :f11 then toggle_fullscreen
-        when :enter then toggle_fullscreen if fullscreen_chord?
-        end
-      end
-
-      PRIMARY_KEYS = %i[enter space].freeze
+      # A key went down, which Lota calls +name+: the game's name for it
+      # and the modifier keys held, for the Presentation::InputHandler.
+      def key_pressed(name) = @inputs.call(@input.key_press(name, ::Lota::Keyboard.method(:down?)))
 
       # The window changed size, or moved to a screen of another density.
       # For a moment after the window opens or changes size, the pointer
@@ -324,10 +305,6 @@ module DotPopper
       end
 
       private
-
-      # A press ends the setdef splash, and goes no further: it is never
-      # heard by the game, so it can touch nothing.
-      def skip_splash = @splash = @splash.skip
 
       # The gamepad's left stick and d-pad for the cursor, which on the
       # Credits screen scroll it instead and leave the cursor at rest
@@ -465,18 +442,6 @@ module DotPopper
       # from the keyboard. iOS apps are left by the system, never by the app.
       def leave_home
         ::Lota::Event.quit if @platform.quits_itself? && @show.ask_to_quit == :quit
-      end
-
-      # Whether Ctrl or Cmd is held, which makes V paste.
-      def paste_chord? = ::Lota::Keyboard.down?(:lctrl, :rctrl, :lgui, :rgui)
-
-      # Whether Alt or Cmd is held, which makes Enter switch fullscreen.
-      def fullscreen_chord? = ::Lota::Keyboard.down?(:lalt, :ralt, :lgui, :rgui)
-
-      # F11 or Alt+Enter, as Home's "Full screen" (DesktopWindow).
-      def toggle_fullscreen
-        @hooks&.happened("a fullscreen switch")
-        @window.toggle_fullscreen
       end
 
       def screen = @game.screen

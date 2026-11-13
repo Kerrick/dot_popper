@@ -179,7 +179,7 @@ The words that say what to do follow the input the player used last. `Show#input
 
 ## Keyboard
 
-`App#key_pressed`, in order. The first that applies wins. `Shell::LotaInput#key` first names the key as the game does, so the presentation never hears LÖVE's names: a letter or digit by itself (`:a`, `:"7"`), the keypad's digits, hyphen and Enter as the main keys', `:enter`, `:page_up` and `:page_down`. A key the game doesn't name only makes Buy name its key on the offer ([store-and-pro.md](store-and-pro.md)), as every key does.
+`Presentation::InputHandler`, in order. The first that applies wins. `Shell::LotaInput#key_press` first names the key, and the modifier keys held (`:ctrl`, `:alt`, `:command`), as the game does, so the presentation never hears LÖVE's names: a letter or digit by itself (`:a`, `:"7"`), the keypad's digits, hyphen and Enter as the main keys', `:enter`, `:page_up` and `:page_down`. A key the game doesn't name only makes Buy name its key on the offer ([store-and-pro.md](store-and-pro.md)), as every key does.
 
 | Key | What it does |
 | --- | --- |
@@ -209,6 +209,7 @@ Android's Back arrives as Escape ([platforms.md](platforms.md)). A phone's or ta
 | `test/presentation/chatter_test.rb` | Which presses and releases are dropped |
 | `test/presentation/mouse_travel_test.rb` | A deliberate move against a jitter |
 | `test/presentation/words_test.rb`, `show_test.rb` | The words for each input, and presses on each screen |
+| `test/presentation/keyboard_test.rb` | Each key on the screens that answer it, the modifier keys, the order when a screen answers a key more than one way, and each system's rules for Escape and fullscreen |
 | `test/presentation/inputs_test.rb` (with `inputs.rb`) | Touch, a controller, and a mouse with its keyboard, each alone: every screen entered and left, every control pressed to some effect, found by exploring the Show from Home rather than from a list; a Free player with no games left buying Pro in a test build and playing to Game Over; How to play played to its end; and what a controller alone cannot do today (a license key from the website, Change Server's address) |
 | GUI scenarios `pile`, `pile_gamepad`, `words`, `hover` (`test/gui/scenarios/`) | The real game: a mouse drag and throw, a gamepad drag and A's click, the words and the hand following the input, the hover |
 
