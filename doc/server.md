@@ -2,7 +2,7 @@
 
 Dot Popper is a one-minute arcade game. Friends form small groups that compete for one title each. The server's API is `docs/api.md` in the server's private repository, which is the source of truth; this is the game's summary of it.
 
-The server's tests make every exchange the game has with it against the real server and publish them, with the values both sides hold, as its `docs/exchanges.json`. The game's copy is `test/fixtures/server/exchanges.json`, whose SHA-256 is `ffec85ffe45bead7c5bcda9c1fb0a31a77587b6f7fdd25a00570501c49305754`, as the server's `docs/api.md` states it; `test/server_exchanges_test.rb` replays it with the game's own client. When the server publishes a new one, copy it and its SHA-256 here, and run the test with `DOT_POPPER_SERVER_CHECKOUT` naming a checkout of the server to check the copy.
+The server's tests make every exchange the game has with it against the real server and publish them, with the values both sides hold, as its `docs/exchanges.json`. The game's copy is `test/fixtures/server/exchanges.json`, whose SHA-256 is `0f8aae590acd47bae17e9095f1f3e0ba4abefada050441b67deb9b1ed068c3ce`, as the server's `docs/api.md` states it; `test/server_exchanges_test.rb` replays it with the game's own client. When the server publishes a new one, copy it and its SHA-256 here, and run the test with `DOT_POPPER_SERVER_CHECKOUT` naming a checkout of the server to check the copy.
 
 ## The title
 

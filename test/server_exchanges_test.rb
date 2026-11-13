@@ -74,6 +74,21 @@ class ServerExchangesTest < Minitest::Test
                     "A player can be in at most #{values.fetch("max_groups")} groups; a group holds at most #{values.fetch("max_members")} at once."
   end
 
+  def test_every_achievement_and_theme_key_is_one_the_server_takes
+    values = RECORD.fetch("values")
+
+    assert_empty DotPopper::Achievement::IDS.map(&:to_s).grep_v(Regexp.new(values.fetch("achievement_key_format")))
+    assert_empty DotPopper::Theme::ALL.map { it.key.to_s }.grep_v(Regexp.new(values.fetch("theme_key_format")))
+  end
+
+  # The server accepts the privacy document a release publishes only in
+  # this shape (the server's PrivacyPolicy::GameDocument).
+  def test_the_privacy_document_has_the_shape_the_server_takes
+    document = JSON.parse(File.read(File.expand_path("../doc/privacy.json", __dir__)))
+
+    assert_empty shape_problems(RECORD.dig("values", "privacy_document_shape"), document, "the document")
+  end
+
   def test_the_copy_is_the_one_the_server_published
     stated = File.read(File.expand_path("../doc/server.md", __dir__))[/`test\/fixtures\/server\/exchanges\.json`, whose SHA-256 is `(\h{64})`/, 1]
 
@@ -210,6 +225,34 @@ class ServerExchangesTest < Minitest::Test
   def body(exchange) = exchange.dig("request", "body")
   def score_of(name) = body(exchange(name)).fetch("score")
   def nonce_of(exchange) = H[body(exchange).fetch("nonce")]
+
+  def shape_problems(shape, value, path)
+    text = ->(it) { it.is_a?(String) && !it.strip.empty? }
+    case shape
+    when Hash
+      return ["#{path} should be an object"] unless value.is_a?(Hash)
+
+      shape.flat_map { |key, inner| value.key?(key) ? shape_problems(inner, value[key], "#{path}.#{key}") : ["#{path}.#{key} is missing"] }
+    when Array
+      return ["#{path} should be a list"] unless value.is_a?(Array)
+      return ["#{path} is empty"] if value.empty? && shape.first.is_a?(Hash)
+
+      value.each_with_index.flat_map { |item, index| shape_problems(shape.first, item, "#{path}[#{index}]") }
+    else
+      fine = case shape
+             when "text" then text.(value)
+             when "true or false" then [true, false].include?(value)
+             when "list" then value.is_a?(Array)
+             when "hash_of_text" then value.is_a?(Hash) && value.values.all?(&text)
+             when "hash_of_objects" then value.is_a?(Hash) && value.values.all?(Hash)
+             when "label_or_null", "plain_or_null" then value.nil? || text.(value)
+             when "withheld_or_null", "record_only_or_null"
+               value.nil? || text.(value) || (value.is_a?(Hash) && %w[kind reason].all? { text.(value[it].to_s) })
+             else flunk "the server's record names a shape this test does not know: #{shape}"
+             end
+      fine ? [] : ["#{path} should be #{shape}"]
+    end
+  end
 
   def serve
     loop do

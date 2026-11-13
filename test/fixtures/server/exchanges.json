@@ -38,7 +38,101 @@
     "max_members": 8,
     "max_groups": 20,
     "history_limit": 20,
-    "retry_after": 3600
+    "retry_after": 3600,
+    "achievement_key_format": "\\A[a-z0-9][a-z0-9_.-]{0,63}\\z",
+    "theme_key_format": "\\A[a-z0-9_]+\\z",
+    "privacy_document_shape": {
+      "game": "text",
+      "game_version": "text",
+      "on_device": {
+        "for_players": [
+          "text"
+        ],
+        "stays_on_the_device": "text",
+        "files": [
+          {
+            "name": "text",
+            "label": "label_or_null",
+            "not_for_players": "withheld_or_null",
+            "holds": "text",
+            "made_by": "text",
+            "also_sent": "list"
+          }
+        ]
+      },
+      "network": {
+        "server": "text",
+        "every_request": "text",
+        "outside_services": "text",
+        "requests": [
+          {
+            "kind": "text",
+            "method": "text",
+            "path": "text",
+            "query": "hash_of_text",
+            "body": "hash_of_text",
+            "sends_token": "true or false",
+            "when": "text",
+            "in_this_build": "true or false"
+          }
+        ]
+      },
+      "purchases": "text",
+      "sdks": {
+        "for_players": [
+          "text"
+        ],
+        "ruby_gems": "hash_of_objects",
+        "android_dependencies": "hash_of_objects",
+        "ios": {
+          "note": "text",
+          "plain": "plain_or_null",
+          "record_only": "record_only_or_null"
+        },
+        "outside_services": "text"
+      },
+      "permissions": {
+        "android_manifest": "hash_of_text",
+        "android_added_by_libraries": "hash_of_text",
+        "ios_usage_strings": "hash_of_text",
+        "ios_privacy_manifest": {
+          "tracking": "true or false",
+          "tracking_domains": "list"
+        }
+      },
+      "sensors": "hash_of_text",
+      "sharing": {
+        "how": "text",
+        "example": "text"
+      },
+      "deletion": {
+        "sentence": "text",
+        "shown": "text"
+      },
+      "store_labels": {
+        "apple": {
+          "data_types": [
+            {
+              "sent_by": "list"
+            }
+          ]
+        },
+        "google": {
+          "data_types": [
+            {
+              "sent_by": "list"
+            }
+          ]
+        }
+      },
+      "declared_but_not_enforced": [
+        {
+          "note": "text",
+          "plain": "plain_or_null",
+          "record_only": "record_only_or_null"
+        }
+      ]
+    }
   },
   "exchanges": [
     {
