@@ -7,10 +7,37 @@ module DotPopper
       # Delete my friend group data for a player the group server knows,
       # and Back.
       class Privacy < Page
-        # Where its lines and buttons go (PrivacyScreen).
+        # Where its lines and buttons go (PrivacyScreen), laid out again
+        # only when the window, the words or the friend-group server's
+        # knowing the player changes.
         def plan
-          lines = [[:bars, words.button(:privacy_stats)], [:crown, words.button(:privacy_groups)]]
-          PrivacyScreen.new(layout:, measure:, lines:, note: words.button(:privacy_delete_note), deletable: show.group_panel.known?).plan
+          words = self.words
+          layout = self.layout
+          known = show.group_panel.known?
+          (@plan ||= Memo.new).fetch([layout, words, known]) do
+            lines = [[:bars, words.button(:privacy_stats)], [:crown, words.button(:privacy_groups)]]
+            PrivacyScreen.new(layout:, measure:, lines:, note: words.button(:privacy_delete_note), deletable: known).plan
+          end
+        end
+
+        # Everything its painter draws (PrivacyDrawing), made again only
+        # when the plan, the words, a button's light or the hold changes.
+        def drawing
+          plan = self.plan
+          words = self.words
+          hover = show.hover
+          hold = show.group_panel.hold
+          progress = hold.progress(now)
+          (@drawing ||= Memo.new).fetch([plan, words, hover, hold.held?, progress]) do
+            hold_text = words.button(:privacy_hold)
+            noted = !plan.note_lines.empty?
+            rows = noted ? Words.wrap(hold_text, plan.delete.width) { measure.width(:semibold, 15, it) } : []
+            PrivacyDrawing.new(header: HeaderDrawing.for(words.button(:privacy_heading), layout:, measure:, words:, hover:), plan:,
+                               policy: words.button(:privacy_policy), policy_hover: hover.level(:policy),
+                               delete: words.button(:privacy_delete), delete_hover: hover.level(:privacy_delete),
+                               held: hold.held?, progress:, note_x: layout.center_x, hold_line: (hold_text if noted && !hold.held?),
+                               hold_rows: rows.size > 1 ? rows : [])
+          end
         end
 
         def controls

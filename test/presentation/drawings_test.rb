@@ -39,6 +39,44 @@ class DrawingsTest < Minitest::Test
     assert_in_delta 1.0, screen.drawing.paste_hover
   end
 
+  # For a player the friend-group server knows: Delete, and under it how
+  # to hold it, on one line where it fits, and wrapped to Delete's width
+  # where it does not; the line goes while Delete is held, which fills.
+  def test_privacy_says_how_to_hold_delete_and_how_far_it_is_held
+    { [1200, 800] => false, [400, 850] => true }.each do |(width, height), wraps|
+      fixture = Inputs::Fixture.new(os: "Linux", width:, height:, member: true)
+      show = fixture.show
+      show.open_settings
+      show.open_privacy
+      drawing = show.screen.drawing
+      words = show.words
+      assert_equal [words.button(:privacy_heading), words.button(:privacy_policy), words.button(:privacy_delete)],
+                   [drawing.header.text, drawing.policy, drawing.delete]
+      assert_equal words.button(:privacy_hold), drawing.hold_line
+      assert_equal wraps, drawing.hold_rows.size > 1, "#{width}x#{height}"
+      refute drawing.held
+
+      show.pad(:y)
+      fixture.tick(0.5)
+      held = show.screen.drawing
+      assert held.held
+      assert_nil held.hold_line
+      assert_in_delta 0.5 / GroupPanel::HOLD, held.progress, 0.05
+      assert_equal drawing.hold_rows, held.hold_rows
+    end
+  end
+
+  # For a player it does not know: no Delete, so nothing to hold.
+  def test_privacy_without_a_friend_group_has_nothing_to_hold
+    show = fixture.show
+    show.open_settings
+    show.open_privacy
+    drawing = show.screen.drawing
+    assert_nil drawing.plan.delete
+    assert_nil drawing.hold_line
+    assert_empty drawing.hold_rows
+  end
+
   # Nothing changed, nothing made: the same drawing, frame after frame.
   def test_change_server_is_not_made_again_while_nothing_changes
     fixture = fixture(gone: true)

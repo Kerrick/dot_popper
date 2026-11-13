@@ -213,6 +213,17 @@ module DotPopper
     # address and Use setdef's server, and how lit each is.
     class ServerDrawing < Data.define(:header, :plan, :paste, :reset, :paste_hover, :reset_hover); end
 
+    # Everything Shell::PrivacyPainter draws for the Privacy screen: its
+    # +header+ (HeaderDrawing), its +plan+ (PrivacyPlan), the words of
+    # Read the privacy policy and Delete my friend group data and how lit
+    # each is, whether Delete is +held+ and how far (+progress+, 0 to 1),
+    # and under it, centered on +note_x+, the words to hold it by:
+    # +hold_line+ on one line (none while it is held), and +hold_rows+,
+    # those words wrapped to Delete's width where they take more than one
+    # row.
+    class PrivacyDrawing < Data.define(:header, :plan, :policy, :policy_hover, :delete, :delete_hover, :held, :progress, :note_x,
+                                       :hold_line, :hold_rows); end
+
     # Change Server: its lines of text (a sign and words each), which
     # server is in use, Paste server address, Use setdef's server while a
     # replacement is chosen, and the line saying how the last paste went.
