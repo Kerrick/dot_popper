@@ -4,9 +4,9 @@ module DotPopper
   module Presentation
     module Screens
       # The card that tells of a new theme, once, over Home (ArrivalPlan):
-      # its switch, and Not now. A gamepad's own buttons are still Home's
-      # under it.
-      class NewTheme < Home
+      # its switch, and Not now. It waits for its answer, so nothing of
+      # Home's under it takes a press.
+      class NewTheme < Screen
         # No button for its first moments (Style::ARRIVAL_GRACE), so a press
         # meant for Home as it came answers nothing.
         def controls

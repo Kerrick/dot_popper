@@ -81,6 +81,18 @@ class ThemesTest < Minitest::Test
     assert_nil @show.arrival
   end
 
+  # The card waits for its answer by every input: a controller's own
+  # buttons, which would open Home's screens or How to play, do nothing
+  # under it, as a tap on Home's buttons under it does.
+  def test_under_the_card_a_controllers_own_buttons_do_nothing
+    show(pro: true, unlocked: ["ghost"])
+    %i[x y lb rb lt select].each { @show.pad(it) }
+
+    assert_equal :ghost, @show.arrival&.key
+    assert_predicate @show, :on_home?
+    refute_predicate @show, :tutorial?
+  end
+
   def test_the_card_comes_only_on_home
     show(pro: true, unlocked: ["ghost"])
     @show.open_stats rescue nil
