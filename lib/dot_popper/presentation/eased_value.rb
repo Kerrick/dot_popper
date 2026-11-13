@@ -19,8 +19,5 @@ module DotPopper
       # +duration+ seconds.
       def toward(target, now, duration) = with(from: value(now), to: target, at: now, duration:)
     end
-
-    # Its old name, until no caller says it.
-    Level = EasedValue
   end
 end
