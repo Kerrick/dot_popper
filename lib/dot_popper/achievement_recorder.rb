@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # Watches a Cabinet's events (Cabinet#subscribe) for the Achievements a game earns,
+  # Listens to a Cabinet's events (Cabinet#subscribe) for the Achievements a game earns,
   # and decides nothing: it only reads what the rules report. #earned
   # lists, in Achievement::IDS order, every achievement the game in play,
   # or the one just finished, has earned so far.
@@ -9,7 +9,7 @@ module DotPopper
   # Dots, the clock, and a game's length are read from each event, which
   # carries them as the rules settled them: a popped dot's place in the
   # stack, the clock after its second.
-  class AchievementWatch
+  class AchievementRecorder
     def initialize
       @watching = false
       @targets = {}
@@ -114,4 +114,7 @@ module DotPopper
 
     def find(id) = (@found << id unless @found.include?(id))
   end
+
+  # The old name, until no commit uses it.
+  AchievementWatch = AchievementRecorder
 end

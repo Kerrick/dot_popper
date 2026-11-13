@@ -15,7 +15,7 @@ module DotPopper
     # It hears the rules' events itself (Cabinet#subscribe, which the
     # composition root does), so what it finishes with comes from the
     # rules alone: the game's numbers (GameStats::Recorder), the
-    # achievements its play earned (AchievementWatch), and whether the
+    # achievements its play earned (AchievementRecorder), and whether the
     # tutorial opened it (Events::GameEnded#tutorial).
     class FinishGame
       # What Game Over shows of what the game did: +record+, the most
@@ -30,7 +30,7 @@ module DotPopper
         @entitlement = entitlement
         @friend_groups = friend_groups
         @recorder = GameStats::Recorder.new
-        @watch = AchievementWatch.new
+        @achievement_recorder = AchievementRecorder.new
         @result = nil
       end
 
@@ -45,8 +45,8 @@ module DotPopper
       # numbers and its achievements, and GameEnded finishes it.
       def call(event)
         @recorder.call(event)
-        @watch.call(event)
-        @result = finish(event, stats:, earned: @watch.earned) if event.is_a?(Events::GameEnded)
+        @achievement_recorder.call(event)
+        @result = finish(event, stats:, earned: @achievement_recorder.earned) if event.is_a?(Events::GameEnded)
       end
 
       # +ended+ is the game's Events::GameEnded, +stats+ its numbers

@@ -32,7 +32,7 @@ module DotPopper
       @entitlement: Entitlement
       @friend_groups: _FriendGroups
       @recorder: GameStats::Recorder
-      @watch: AchievementWatch
+      @achievement_recorder: AchievementRecorder
 
       def initialize: (stats_book: StatsBook, achievements: Achievements, entitlement: Entitlement, friend_groups: _FriendGroups) -> void
 

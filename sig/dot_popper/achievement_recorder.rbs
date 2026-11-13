@@ -1,5 +1,5 @@
 module DotPopper
-  class AchievementWatch
+  class AchievementRecorder
     @watching: bool
 
     @targets: Hash[Float, TouchTarget]
@@ -56,4 +56,6 @@ module DotPopper
 
     def find: (Achievement::id id) -> void
   end
+
+  class AchievementWatch = AchievementRecorder
 end
