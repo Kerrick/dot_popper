@@ -43,8 +43,5 @@ module DotPopper
         ::Lota::Graphics::Font.new(size, dpiscale: @density)
       end
     end
-
-    # Its old name, until no caller says it.
-    FontBook = FontCache
   end
 end
