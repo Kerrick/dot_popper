@@ -5,7 +5,7 @@ require "dot_popper/use_cases"
 
 # Joining or creating a friend group is Pro's: a Free player is offered
 # Pro, and nothing is sent.
-class JoinFriendGroupTest < Minitest::Test
+class JoinOrCreateFriendGroupTest < Minitest::Test
   # The friend-group session as a local fake: what it was asked.
   class Groups
     attr_reader :asked
@@ -17,12 +17,13 @@ class JoinFriendGroupTest < Minitest::Test
 
   def setup = @groups = Groups.new
 
-  def joining(pro:) = DotPopper::UseCases::JoinFriendGroup.new(groups: @groups, entitlement: DotPopper::Entitlement.new(forced: pro))
+  def joining(pro:) = DotPopper::UseCases::JoinOrCreateFriendGroup.new(groups: @groups, entitlement: DotPopper::Entitlement.new(forced: pro))
 
   def test_pro_creates_and_joins
     pro = joining(pro: true)
 
     refute_predicate pro, :locked?
+    assert_equal :go, pro.choose
     assert_equal :sent, pro.create
     assert_equal :sent, pro.join("2345678")
     assert_equal [:create, [:join, "2345678"]], @groups.asked
@@ -32,6 +33,7 @@ class JoinFriendGroupTest < Minitest::Test
     free = joining(pro: false)
 
     assert_predicate free, :locked?
+    assert_equal :offer, free.choose
     assert_equal :offer, free.create
     assert_equal :offer, free.join("2345678")
     assert_empty @groups.asked

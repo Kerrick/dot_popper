@@ -14,4 +14,4 @@ module DotPopper
   end
 end
 
-%w[start_game finish_game buy_pro use_theme join_friend_group view_achievements].each { require_relative "use_cases/#{it}" }
+%w[start_game finish_game buy_pro use_theme join_or_create_friend_group view_achievements].each { require_relative "use_cases/#{it}" }

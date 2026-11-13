@@ -51,7 +51,7 @@ module DotPopperGui
       show.open_stats
       check(!show.controls.map(&:name).include?(:offer), "the Stats screen no longer offers the purchase")
       check(!show.themes_locked?, "the themes are the player's to use")
-      check(!show.group_panel.locked?, "the player can create a friend group")
+      check(pro?, "the player has Pro, so Join and Create are theirs")
       show.open_themes
       check(show.themes?, "Themes opens")
       wait(0.5)

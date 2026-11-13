@@ -45,6 +45,11 @@ module DotPopperGui
     def show = app.show
     def pile = app.pile
     def game = cabinet.game
+
+    # Whether the player has Pro, which the screens are not told: a
+    # scenario asks the game's Entitlement, as the composition root built
+    # it.
+    def pro? = app.instance_variable_get(:@game).entitlement.pro?
     def layout = show.layout
     def words = show.words
 

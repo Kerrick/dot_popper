@@ -146,13 +146,15 @@ module DotPopper
       def join: (String code) -> void
     end
 
-    class JoinFriendGroup
+    class JoinOrCreateFriendGroup
       @groups: _Groups
       @entitlement: Entitlement
 
       def initialize: (groups: _Groups, entitlement: Entitlement) -> void
 
       def locked?: () -> bool
+
+      def choose: () -> (:offer | :go)
 
       def create: () -> (:sent | :offer)
 

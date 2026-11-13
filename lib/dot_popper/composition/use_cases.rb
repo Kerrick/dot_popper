@@ -18,7 +18,7 @@ module DotPopper
         finish_game: UseCases::FinishGame.new(stats_book:, achievements:, entitlement:, friend_groups:),
         buy_pro:,
         use_theme:,
-        join_friend_group: UseCases::JoinFriendGroup.new(groups: friend_groups, entitlement:),
+        join_or_create_friend_group: UseCases::JoinOrCreateFriendGroup.new(groups: friend_groups, entitlement:),
         view_achievements: UseCases::ViewAchievements.new(achievements:, entitlement:, stats_book:, score_record: cabinet.score_record)
       }
     end

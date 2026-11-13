@@ -12,10 +12,6 @@ module DotPopperGui
     SIZES = [[1200, 800, false], [400, 850, true], [850, 400, true]].freeze
     P = DotPopper::Presentation
 
-    # Whether the player has Pro, which the screens are not told: the
-    # gallery asks the game's Entitlement, as the composition root built it.
-    def pro? = app.instance_variable_get(:@game).entitlement.pro?
-
     def play
       keeper = show.instance_variable_get(:@theme_keeper)
       wait(0.5)

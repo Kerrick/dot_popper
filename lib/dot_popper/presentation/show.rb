@@ -28,7 +28,7 @@ module DotPopper
     # What a player does that needs two of the game's areas goes through
     # the use cases it is given, made by the composition root (ADR-0017):
     # +start_game+, +finish_game+, +buy_pro+, +use_theme+,
-    # +join_friend_group+ and +view_achievements+. It is never
+    # +join_or_create_friend_group+ and +view_achievements+. It is never
     # given what decides Pro, the store or the free games, so nothing here
     # can ask them.
     class Show
@@ -39,7 +39,7 @@ module DotPopper
       attr_reader :cabinet, :effects, :animations, :hud, :attract, :layout, :marquee, :game_over, :sounds, :now, :style,
                   :stats_book, :input, :words, :tutorial, :lead_in, :window
 
-      def initialize(cabinet:, layout:, sounds:, radius:, start_game:, finish_game:, buy_pro:, use_theme:, join_friend_group:,
+      def initialize(cabinet:, layout:, sounds:, radius:, start_game:, finish_game:, buy_pro:, use_theme:, join_or_create_friend_group:,
                      view_achievements:, stats_book:, achievements:, theme_keeper:, groups:, style: Style, random: Random.new, calm: false,
                      tutor: Tutor.new(ScoreRecord::Memory.new, times: style::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
                      sizing_store: ScoreRecord::Memory.new, input: InputKind::MOUSE, measure: RoughMeasure.new,
@@ -55,7 +55,7 @@ module DotPopper
         @achievement_watch = AchievementWatch.new
         # Methods, not blocks, so that what the panel keeps holds the Show
         # and the clipboard alone, and none of what the Show was given.
-        @groups = GroupPanel.new(groups:, joining: join_friend_group, sounds:, pro_offer: method(:open_offer_for), notice: group_notice,
+        @groups = GroupPanel.new(groups:, joining: join_or_create_friend_group, sounds:, pro_offer: method(:open_offer_for), notice: group_notice,
                                  shown: method(:friend_groups_shown))
         @groups.copy = clipboard.method(:copy)
         @finish_game = finish_game
