@@ -11,7 +11,7 @@ module DotPopper
       def draw(show, layout)
         words = show.words
         Header.new(pen:).draw(show, layout, words.button(:achievements_heading))
-        pen.text(Presentation::AchievementWords.count(show.achievement_count), pen.fonts.semibold(16), layout.center_x, layout.heading_y + (layout.heading_size * 0.72), pen.palette.soft) if show.pro?
+        pen.text(Presentation::AchievementWords.count(show.achievement_count), pen.fonts.semibold(16), layout.center_x, layout.heading_y + (layout.heading_size * 0.72), pen.palette.soft) if show.achievement_count
         window = show.achievements_layout.window
         pixels = pen.pixels
         G.scissor = pixels.snap(window.x), pixels.snap(window.y), pixels.snap(window.width), pixels.snap(window.height)

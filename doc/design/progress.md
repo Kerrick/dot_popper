@@ -170,7 +170,7 @@ Names, figures and sentences are in `Presentation::AchievementWords`. Each has a
 
 **Saving.** At each Game Over, `UseCases::FinishGame` gives the watch's finds to `Achievements#award`, which keeps the ones not earned before with today's date and writes `achievements.txt`. Achievements are earned and saved whether or not the player has Pro. An id a newer version saved and this one doesn't know is dropped on reading.
 
-**Showing.** Nothing shows during a game. For a Pro player, Game Over adds "New achievement: Sharpshooter" (or "New achievements: …") for the ones first earned that game, and friend groups hear of them. A Free player sees how each is earned on the Achievements screen but no earned marks or dates; what they earned is kept, shown once Pro is bought, and then reported to their friend groups. See [store-and-pro.md](store-and-pro.md) and [screens.md](screens.md).
+**Showing.** Nothing shows during a game. For a Pro player, Game Over adds "New achievement: Sharpshooter" (or "New achievements: …") for the ones first earned that game, and friend groups hear of them. A Free player sees how each is earned on the Achievements screen but no earned marks, dates, count or progress; what they earned is kept, shown once Pro is bought, and then reported to their friend groups. What the screen may show is `UseCases::ViewAchievements`'s to say (`#earned?`, `#day`, `#count`, `#progress`, all held back while `#locked?`), so the `Show` and the painters only draw it. See [store-and-pro.md](store-and-pro.md) and [screens.md](screens.md).
 
 Tests: `test/achievement_watch_test.rb`, `test/achievements_test.rb`, `test/visibility_test.rb`, `test/presentation/achievements_test.rb`.
 

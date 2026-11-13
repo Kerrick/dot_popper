@@ -136,5 +136,28 @@ module DotPopper
 
       def join: (String code) -> (:sent | :offer)
     end
+
+    class ViewAchievements
+      @achievements: Achievements
+      @entitlement: Entitlement
+      @stats_book: StatsBook
+      @score_record: ScoreRecord
+
+      def initialize: (achievements: Achievements, entitlement: Entitlement, stats_book: StatsBook, score_record: ScoreRecord) -> void
+
+      def locked?: () -> bool
+
+      def earned?: (Achievement::id id) -> bool
+
+      def day: (Achievement::id id) -> String?
+
+      def count: () -> Integer?
+
+      def progress: (Achievement::id id) -> [Integer, Integer]?
+
+      private
+
+      def most_dots_in_a_row: (Array[Stats::RecordSet] records) -> Integer
+    end
   end
 end

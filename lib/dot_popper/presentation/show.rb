@@ -66,6 +66,7 @@ module DotPopper
         @start_game = UseCases::StartGame.new(cabinet:, free_games: games)
         @finish_game = UseCases::FinishGame.new(stats_book:, achievements:, entitlement:, friend_groups: groups)
         @use_theme = use_theme
+        @view_achievements = UseCases::ViewAchievements.new(achievements:, entitlement:, stats_book:, score_record: cabinet.score_record)
         @buy_pro = UseCases::BuyPro.new(store: storefront, entitlement:, cabinet:, achievements:, friend_groups: groups)
         entitlement.subscribe(->(granted) { pro_arrived(granted) })
         @offer = false
@@ -996,7 +997,7 @@ module DotPopper
       def tile_note(name)
         case name
         when :stats then words.score_record_line(marquee.score_record)
-        when :achievements then pro? ? AchievementWords.count(@achievements.count) : words.tile_note(:to_earn)
+        when :achievements then achievement_count&.then { AchievementWords.count(it) } || words.tile_note(:to_earn)
         when :themes then words.themes.fetch(in_use.key)
         when :groups then @groups.member? ? words.titles_held(@groups.titles_held, @groups.groups.groups.size) : words.tile_note(:take_title)
         end
@@ -1055,7 +1056,8 @@ module DotPopper
 
       def open_achievements = open_page(:achievements)
       def achievements_layout = AchievementsScreen.new(layout:, ids: Achievement::IDS)
-      def achievement_count = @achievements.count
+      # How many achievements are earned, or nil where that is Pro's.
+      def achievement_count = @view_achievements.count
 
       # The Achievements grid, each cell where it is on screen, with the
       # list scrolled to fit its window.
@@ -1066,7 +1068,7 @@ module DotPopper
       end
 
       # A Free player sees only how each is earned; Pro also sees its day.
-      def achievement_earned?(id) = pro? && @achievements.earned?(id)
+      def achievement_earned?(id) = @view_achievements.earned?(id)
 
       def open_achievement(id)
         @dialog = id
@@ -1095,16 +1097,7 @@ module DotPopper
       # What the dialog says of how far along the player is: [record, goal]
       # for the four the game measures (Steady hand, Unshaken, Big score,
       # Long haul), or nil for the rest and for a Free player.
-      def achievement_progress(id)
-        return unless pro? && !@achievements.earned?(id)
-
-        case id
-        when :steady then [most_dots_in_a_row, Achievement::STEADY]
-        when :unshaken then [most_dots_in_a_row, Achievement::UNSHAKEN]
-        when :big_score then [SizeClass::ALL.map { cabinet.score_record.of(it) }.max || 0, Achievement::BIG_SCORE]
-        when :long_haul then [stats_book.stats.records.values.map(&:longest_game).max.to_f.round, Achievement::LONG_HAUL.to_i]
-        end
-      end
+      def achievement_progress(id) = @view_achievements.progress(id)
 
       def dialog_plan
         id = dialog or return
@@ -1115,15 +1108,15 @@ module DotPopper
       # What the dialog says of its state: the earned day or "Not earned
       # yet", or nothing for a Free player.
       def dialog_status(id)
-        return unless pro?
+        return if @view_achievements.locked?
 
-        day = @achievements.day(id)
+        day = @view_achievements.day(id)
         day ? AchievementWords.earned_on(day) : words.button(:not_earned)
       end
 
       def dialog_buttons
         steps = input == InputKind::GAMEPAD ? [[:achievement_prev, :prev], [:achievement_next, :next]] : []
-        return [[:achievement_close, :close], *steps] if pro?
+        return [[:achievement_close, :close], *steps] unless @view_achievements.locked?
 
         [[:achievement_pro, :get_pro], [:achievement_close, :close], *steps]
       end
@@ -1471,8 +1464,6 @@ module DotPopper
         order = %i[window borderless exclusive]
         window.display = order[(order.index(window.display).to_i + 1) % order.size]
       end
-
-      def most_dots_in_a_row = stats_book.stats.records.values.map(&:most_dots_in_a_row).max.to_i
 
       # A button drawn at +frame+, which a press reaches within a dot's
       # width, short of the safe area's bottom.
