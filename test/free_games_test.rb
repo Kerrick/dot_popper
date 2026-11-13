@@ -14,23 +14,23 @@ class FreeGamesTest < Minitest::Test
 
   def games(metered: true, **) = FreeGames.new(@store, today: -> { @day }, entitlement: @entitlement, metered:, **)
 
-  def test_a_fresh_save_holds_the_whole_bank_and_the_days_games
+  def test_a_fresh_save_holds_every_first_game_and_the_days_games
     games = games()
 
     assert_equal FreeGames::DAILY, games.daily_left
-    assert_equal FreeGames::BANK, games.bank_left
-    assert_equal FreeGames::DAILY + FreeGames::BANK, games.left
+    assert_equal FreeGames::FIRST_GAMES, games.first_games_left
+    assert_equal FreeGames::DAILY + FreeGames::FIRST_GAMES, games.left
     assert_predicate games, :can_play?
   end
 
-  def test_the_days_games_are_spent_before_the_bank
+  def test_the_days_games_are_spent_before_the_first_games
     games = games()
     FreeGames::DAILY.times { assert games.spend! }
 
     assert_equal 0, games.daily_left
-    assert_equal FreeGames::BANK, games.bank_left
+    assert_equal FreeGames::FIRST_GAMES, games.first_games_left
     assert games.spend!
-    assert_equal FreeGames::BANK - 1, games.bank_left
+    assert_equal FreeGames::FIRST_GAMES - 1, games.first_games_left
   end
 
   def test_the_days_games_return_tomorrow_and_do_not_carry_over
@@ -39,29 +39,29 @@ class FreeGamesTest < Minitest::Test
     @day += 1
 
     assert_equal FreeGames::DAILY, games.daily_left
-    assert_equal FreeGames::BANK, games.bank_left
+    assert_equal FreeGames::FIRST_GAMES, games.first_games_left
   end
 
-  def test_unspent_daily_games_never_join_the_bank
+  def test_unspent_daily_games_never_join_the_first_games
     games = games()
     @day += 5
 
-    assert_equal FreeGames::DAILY + FreeGames::BANK, games.left
+    assert_equal FreeGames::DAILY + FreeGames::FIRST_GAMES, games.left
   end
 
-  def test_the_bank_never_refills
+  def test_the_first_games_never_refill
     games = games()
-    (FreeGames::DAILY + FreeGames::BANK).times { assert games.spend! }
+    (FreeGames::DAILY + FreeGames::FIRST_GAMES).times { assert games.spend! }
     @day += 1
     FreeGames::DAILY.times { assert games.spend! }
     @day += 1
 
-    assert_equal 0, games.bank_left
+    assert_equal 0, games.first_games_left
     assert_equal FreeGames::DAILY, games.left
   end
 
   def test_out_of_games_refuses_until_the_next_day
-    games = games(bank: 0)
+    games = games(first_games: 0)
     FreeGames::DAILY.times { games.spend! }
 
     refute_predicate games, :can_play?
@@ -78,7 +78,7 @@ class FreeGamesTest < Minitest::Test
     again = games()
 
     assert_equal 0, again.daily_left
-    assert_equal FreeGames::BANK - 2, again.bank_left
+    assert_equal FreeGames::FIRST_GAMES - 2, again.first_games_left
   end
 
   def test_the_save_counts_the_first_games_used
@@ -92,25 +92,25 @@ class FreeGamesTest < Minitest::Test
     @store.write("day=2026-11-08\nspent=1\nbank=17\n")
     games = games()
 
-    assert_equal 17, games.bank_left
+    assert_equal 17, games.first_games_left
     assert_equal FreeGames::DAILY - 1, games.daily_left
     FreeGames::DAILY.times { games.spend! }
 
-    assert_equal 16, games().bank_left
+    assert_equal 16, games().first_games_left
     assert_includes @store.read, "first_games_used=4"
     refute_includes @store.read, "bank"
   end
 
   def test_an_earlier_save_with_more_left_than_the_first_games_has_used_none
-    @store.write("bank=#{FreeGames::BANK + 5}\n")
+    @store.write("bank=#{FreeGames::FIRST_GAMES + 5}\n")
 
-    assert_equal FreeGames::BANK, games().bank_left
+    assert_equal FreeGames::FIRST_GAMES, games().first_games_left
   end
 
   def test_more_used_than_the_first_games_leaves_none
-    @store.write("first_games_used=#{FreeGames::BANK + 5}\n")
+    @store.write("first_games_used=#{FreeGames::FIRST_GAMES + 5}\n")
 
-    assert_equal 0, games().bank_left
+    assert_equal 0, games().first_games_left
   end
 
   def test_a_day_rolled_over_in_the_save_starts_the_day_afresh
@@ -123,12 +123,12 @@ class FreeGamesTest < Minitest::Test
   def test_a_save_that_is_not_readable_is_a_fresh_one
     @store.write("day=never\nspent=-3\nbank=lots\nfirst_games_used=-1\n")
 
-    assert_equal FreeGames::DAILY + FreeGames::BANK, games().left
+    assert_equal FreeGames::DAILY + FreeGames::FIRST_GAMES, games().left
   end
 
   def test_the_pro_version_counts_nothing_and_never_refuses
     @entitlement.prove(DotPopper::Receipt.issue)
-    games = games(bank: 0, daily: 0)
+    games = games(first_games: 0, daily: 0)
 
     assert_predicate games, :can_play?
     refute_predicate games, :metered?
@@ -142,11 +142,11 @@ class FreeGamesTest < Minitest::Test
     @entitlement.prove(DotPopper::Receipt.issue)
 
     10.times { assert games.spend! }
-    assert_equal FreeGames::BANK - 1, games.bank_left
+    assert_equal FreeGames::FIRST_GAMES - 1, games.first_games_left
   end
 
   def test_buying_when_out_of_games_lets_play_go_on
-    games = games(bank: 0)
+    games = games(first_games: 0)
     FreeGames::DAILY.times { games.spend! }
     @entitlement.prove(DotPopper::Receipt.issue)
 
@@ -162,7 +162,7 @@ class FreeGamesTest < Minitest::Test
   end
 
   def test_a_build_that_cannot_sell_is_not_metered
-    games = games(metered: false, bank: 0, daily: 0)
+    games = games(metered: false, first_games: 0, daily: 0)
 
     assert_predicate games, :can_play?
     assert games.spend!

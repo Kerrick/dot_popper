@@ -25,7 +25,7 @@ class GamesTest < Minitest::Test
   def setup
     @day = Date.new(2026, 11, 8)
     @entitlement = DotPopper::Entitlement.test
-    @games = DotPopper::FreeGames.new(Memory.new, today: -> { @day }, entitlement: @entitlement, bank: 0)
+    @games = DotPopper::FreeGames.new(Memory.new, today: -> { @day }, entitlement: @entitlement, first_games: 0)
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(3))
     @show = new_show(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, games: @games, entitlement: @entitlement,
                      storefront: Store.new)

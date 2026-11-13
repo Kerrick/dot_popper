@@ -12,7 +12,7 @@ class StartGameTest < Minitest::Test
   def setup
     @day = Date.new(2026, 11, 8)
     @games = DotPopper::FreeGames.new(DotPopper::ScoreRecord::Memory.new, today: -> { @day }, entitlement: DotPopper::Entitlement.free,
-                                                                         bank: 0, daily: 2)
+                                                                         first_games: 0, daily: 2)
     @cabinet = Cabinet.new(field, random: Random.new(3))
     @started = []
     @cabinet.subscribe { @started << it if it.is_a?(DotPopper::Events::GameStarted) }

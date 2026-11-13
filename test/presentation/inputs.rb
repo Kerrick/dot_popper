@@ -86,7 +86,7 @@ module Inputs
       @entitlement = DotPopper::Entitlement.new(forced: pro, license:, trust: DotPopper::Receipt::TEST)
       @storefront = P::Storefront.for(platform, entitlement:, native: P::FakeStore.new(Memory.new), fake: P::FakeStore.new(Memory.new),
                                           website: ->(fake:) { website(fake:) }, channel:)
-      @games = DotPopper::FreeGames.new(Memory.new, today: -> { @day }, entitlement:, metered: storefront.offered?, bank: [games_left - 3, 0].max)
+      @games = DotPopper::FreeGames.new(Memory.new, today: -> { @day }, entitlement:, metered: storefront.offered?, first_games: [games_left - 3, 0].max)
       (3 - games_left.clamp(0, 3)).times { games.spend! }
       themes = DotPopper::Themes.new(Memory.new)
       themes.release(THEMES.map(&:to_s))
