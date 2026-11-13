@@ -5,7 +5,7 @@ require_relative "presentation_helper"
 class SizingPreviewTest < Minitest::Test
   include PresentationTest
 
-  STANDARD = DotPopper::DotSizing::STANDARD
+  FIXED = DotPopper::DotSizing::FIXED
   FITTED = DotPopper::DotSizing::SIZED_TO_SCREEN
 
   def preview(fitted, standard: 50) = SizingPreview.new(standard:, fitted:, style: Style::SIZING)
@@ -18,17 +18,17 @@ class SizingPreviewTest < Minitest::Test
   # bigger option." So on a phone the other reads "Bigger", and on a big
   # monitor "Smaller".
   def test_the_default_is_standard_and_the_other_is_named_for_what_it_does_here
-    assert_equal ["Standard", "Bigger"], [named(FITTED, 30), named(STANDARD, 30)]
-    assert_equal ["Standard", "Bigger"], [named(FITTED, 44.9), named(STANDARD, 44.9)]
-    assert_equal ["Standard", "Smaller"], [named(FITTED, 55.1), named(STANDARD, 55.1)]
-    assert_equal ["Standard", "Smaller"], [named(FITTED, 97), named(STANDARD, 97)]
+    assert_equal ["Standard", "Bigger"], [named(FITTED, 30), named(FIXED, 30)]
+    assert_equal ["Standard", "Bigger"], [named(FITTED, 44.9), named(FIXED, 44.9)]
+    assert_equal ["Standard", "Smaller"], [named(FITTED, 55.1), named(FIXED, 55.1)]
+    assert_equal ["Standard", "Smaller"], [named(FITTED, 97), named(FIXED, 97)]
   end
 
   # Under its name, each says what else it does: smaller dots leave more
   # room.
   def test_each_choice_says_how_much_room_it_leaves
-    assert_equal ["More room", "Less room"], [note(FITTED, 30), note(STANDARD, 30)]
-    assert_equal ["Less room", "More room"], [note(FITTED, 97), note(STANDARD, 97)]
+    assert_equal ["More room", "Less room"], [note(FITTED, 30), note(FIXED, 30)]
+    assert_equal ["Less room", "More room"], [note(FITTED, 97), note(FIXED, 97)]
   end
 
   # Within a tenth either way the two look alike, and Home leaves
@@ -51,12 +51,12 @@ class SizingPreviewTest < Minitest::Test
   # The icons stand in true proportion to the two sizes, as far as they
   # stay legible in a segment.
   def test_the_icons_are_in_proportion
-    standard = preview(30).icon(STANDARD, 50)
+    fixed = preview(30).icon(FIXED, 50)
 
-    assert_in_delta 50 * Style::SIZING.icon, standard
-    assert_in_delta standard * 0.6, preview(30).icon(FITTED, 50)
-    assert_in_delta standard * 1.5, preview(75).icon(FITTED, 50)
-    assert_equal standard, preview(97).icon(STANDARD, 50), "the standard icon never changes"
+    assert_in_delta 50 * Style::SIZING.icon, fixed
+    assert_in_delta fixed * 0.6, preview(30).icon(FITTED, 50)
+    assert_in_delta fixed * 1.5, preview(75).icon(FITTED, 50)
+    assert_equal fixed, preview(97).icon(FIXED, 50), "the fixed size's icon never changes"
   end
 
   def test_the_icons_stay_legible_and_inside_their_segment

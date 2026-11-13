@@ -209,7 +209,7 @@ class ShowTutorialTest < Minitest::Test
 
     @show.primary
     @show.open_stats
-    @show.choose_sizing(DotPopper::DotSizing::STANDARD)
+    @show.choose_sizing(DotPopper::DotSizing::FIXED)
     assert @show.tutorial?
     refute @show.stats?
   end

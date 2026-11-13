@@ -3,8 +3,9 @@
 module DotPopperGui
   # The choice of dot size on a narrow window (DOT_POPPER_WINDOW=400x850),
   # where the two sizes differ: a new player's first game with dots sized
-  # to the window, then the second segment, Standard, chosen with a click,
-  # remembered, and the next game played with the standard dots.
+  # to the window (Standard), then the second segment, the fixed size
+  # ("Bigger" there), chosen with a click, remembered, and the next game
+  # played with it.
   class DotSizeScenario < Scenario
     scenario :dot_size
 
@@ -24,13 +25,13 @@ module DotPopperGui
       check(show.sizing_offered?, "Settings offers the dot size on a narrow window")
       settings = show.reach_of(:settings)
       click(settings.center_x, settings.center_y)
-      second = show.reach_of(DotPopper::DotSizing::STANDARD) or fail!("Settings offers no standard size")
+      second = show.reach_of(DotPopper::DotSizing::FIXED) or fail!("Settings offers no fixed size")
       click(second.center_x, second.center_y)
-      check(!cabinet.sizing.sized_to_screen?, "a click on the second segment picks the standard size")
+      check(!cabinet.sizing.sized_to_screen?, "a click on the second segment picks the fixed size")
       check_equal(cabinet.sizing.to_text, File.read(saved("dot_size.txt")), "dot_size.txt remembers the choice")
       key(:escape)
       start_game
-      check_close(R::RADIUS, game.field.radius, "the next game's dots are the standard size")
+      check_close(R::RADIUS, game.field.radius, "the next game's dots are the fixed size")
     end
 
     private

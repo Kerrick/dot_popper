@@ -17,7 +17,7 @@ class SettingsTest < Minitest::Test
   # 800 by 600 fits a radius of about 35 when dots are sized to it.
   def test_a_tap_on_a_dot_size_chooses_it_and_it_is_remembered
     refute @cabinet.sizing.sized_to_screen?
-    @show.tap(*middle(@show.reach_of(DotPopper::DotSizing::STANDARD)))
+    @show.tap(*middle(@show.reach_of(DotPopper::DotSizing::FIXED)))
     assert_nil @sizing_store.read, "the chosen one again changes nothing, so nothing is saved"
 
     @show.tap(*middle(@show.reach_of(DotPopper::DotSizing::SIZED_TO_SCREEN)))
@@ -37,7 +37,7 @@ class SettingsTest < Minitest::Test
     assert_equal "standard", @sizing_store.read, "dot_size.txt's word for it, as every build wrote it"
   end
 
-  # On the 24 × 16 R window, dots sized to it are the standard size, so
+  # On the 24 × 16 R window, the two sizes are the same, so
   # Settings leaves the choice out, and a shoulder button changes nothing.
   def test_where_the_sizes_look_alike_the_choice_is_not_offered
     cabinet = DotPopper::Cabinet.new(field(1200, 800), random: Random.new(2), sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
@@ -45,7 +45,7 @@ class SettingsTest < Minitest::Test
     show.open_settings
 
     refute show.sizing_offered?
-    assert_nil show.reach_of(DotPopper::DotSizing::STANDARD)
+    assert_nil show.reach_of(DotPopper::DotSizing::FIXED)
     show.pad(:lb)
     assert cabinet.sizing.sized_to_screen?, "the saved choice stays"
     assert_nil @sizing_store.read

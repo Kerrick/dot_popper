@@ -76,7 +76,7 @@ class GuiScenariosTest < Minitest::Test
   end
 
   def test_choosing_the_dot_size_on_a_narrow_window
-    play("dot_size", "the first game's dots are sized to the window", "the next game's dots are the standard size",
+    play("dot_size", "the first game's dots are sized to the window", "the next game's dots are the fixed size",
          window: "400x850")
   end
 
