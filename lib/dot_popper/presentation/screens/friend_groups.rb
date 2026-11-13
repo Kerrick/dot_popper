@@ -18,6 +18,13 @@ module DotPopper
           true
         end
 
+        # Holding Start on a group leaves it; elsewhere it is the main
+        # button (GroupPanel#start).
+        def start = show.group_panel.start(:start, show.now)
+
+        # The keypad's digits, and Backspace (GroupPanel#type).
+        def type(key) = show.group_panel.type(key)
+
         # Each page's own (GroupPanel#pad); over the notice, X opens the
         # privacy policy, as it does on Privacy.
         def pad(button)

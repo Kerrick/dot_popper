@@ -15,6 +15,14 @@ module DotPopper
 
         def primary = show.play
 
+        # H opens How to play.
+        def type(key)
+          return false unless key == :h
+
+          show.how_to_play
+          true
+        end
+
         # X Stats, Y How to play, LB Achievements, RB Themes, LT Friend
         # groups, and View/Select Settings.
         def pad(button)

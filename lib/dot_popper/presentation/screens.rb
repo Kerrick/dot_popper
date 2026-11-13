@@ -42,6 +42,21 @@ module DotPopper
         # GamepadButtons names it) on this screen, as the screen labels it.
         def pad(button) = nil
 
+        # A gamepad's Start: the main button, unless the screen holds it.
+        def start = primary
+
+        # A key typed on a keyboard (+key+, as Shell::LotaInput names it)
+        # that this screen takes as its own. Says whether it took it.
+        def type(key) = false
+
+        # The system's paste shortcut (Ctrl+V, or Cmd+V on a Mac), where the
+        # screen takes a paste. Says whether it took it.
+        def paste = false
+
+        # Ctrl+B or Cmd+B: Buy, where the screen has it. Says whether it
+        # took it.
+        def buy = false
+
         private
 
         def layout = show.layout

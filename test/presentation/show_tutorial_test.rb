@@ -262,6 +262,19 @@ class ShowTutorialTest < Minitest::Test
     refute @show.tutorial?
   end
 
+  # H on a keyboard is How to play on Home, and another screen's key
+  # elsewhere, if anything.
+  def test_h_opens_it_from_home_only
+    play_through
+    finish_game
+    @show.open_stats
+    refute @show.type_key(:h), "not Stats' key"
+    @show.back
+    assert @show.type_key(:h)
+
+    assert @show.tutorial?
+  end
+
   def test_its_dots_follow_a_resized_window
     press_main
     @cabinet.screen = DotPopper::Field.new(400, 850, R)

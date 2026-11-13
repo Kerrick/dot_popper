@@ -27,9 +27,23 @@ module DotPopper
         def pad(button)
           case button
           in :x then show.keys? ? show.paste_key : show.restore
-          in :y then show.buy_shortcut
+          in :y then buy
           else nil
           end
+        end
+
+        # Buy where Pro is sold and not yet bought (UseCases::BuyPro).
+        def buy = show.buy
+
+        # A license key typed, on a copy that takes one (WebsiteStore#type).
+        def type(key) = show.keys? && show.typed_license_key(key)
+
+        # Paste license key, on a copy that takes one.
+        def paste
+          return false unless show.keys?
+
+          show.paste_key
+          true
         end
       end
     end

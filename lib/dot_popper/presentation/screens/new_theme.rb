@@ -22,6 +22,14 @@ module DotPopper
           show.answer_arrival(use: false)
           true
         end
+
+        # H still opens How to play under it, as on Home.
+        def type(key)
+          return false unless key == :h
+
+          show.how_to_play
+          true
+        end
       end
     end
   end

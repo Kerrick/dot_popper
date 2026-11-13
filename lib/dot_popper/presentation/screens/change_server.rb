@@ -10,6 +10,12 @@ module DotPopper
           plan = show.server_plan
           [button(:server_paste, plan.paste), (button(:server_reset, plan.reset) if plan.reset), back_button].compact
         end
+
+        # Paste server address.
+        def paste
+          show.paste_server
+          true
+        end
       end
     end
   end

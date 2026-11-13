@@ -331,14 +331,11 @@ module DotPopper
         press(control_at(x, y)&.name, x, y, by)
       end
 
-      # A key typed on a keyboard that the open screen takes as text: the
-      # digits and Backspace on the keypad that joins a friend group.
-      # Says whether it took it.
-      def type_key(key)
-        return typed_license_key(key) if offer? && @storefront.keys?
-
-        group_open? && @groups.type(key)
-      end
+      # A key typed on a keyboard (+key+, as Shell::LotaInput names it)
+      # that the screen on top takes as its own: the keypad's digits that
+      # join a friend group, a license key on the offer, H on Home and C on
+      # Settings. Says whether it took it.
+      def type_key(key) = screen.type(key)
 
       # A key typed into the offer of a copy that takes a license key, on a
       # computer: Paste license key's other way in (WebsiteStore#type).
@@ -526,11 +523,7 @@ module DotPopper
 
       # A gamepad's Start: the screen's main button (#primary), except on
       # a friend group, where holding it leaves the group (GroupPanel#start).
-      def start
-        return @groups.start(:start, now) if group_open? && !offer?
-
-        primary
-      end
+      def start = screen.start
 
       QUIT_ASK = 2.0 # seconds a second B has to quit from the title
 
@@ -762,7 +755,7 @@ module DotPopper
 
       # Ctrl+B or Cmd+B, or a controller's Y, on the offer: Buy, where Pro
       # is sold and not yet bought. Says whether it took the press.
-      def buy_shortcut = offer? && @buy_pro.buy
+      def buy_shortcut = screen.buy
 
       def credits? = @page == :credits
 
@@ -1044,13 +1037,7 @@ module DotPopper
       # The system's paste shortcut (Ctrl+V, or Cmd+V on a Mac) on a
       # computer: Paste license key on the offer, or Paste server address on
       # Change Server. Says whether it was taken.
-      def paste_shortcut
-        if offer? && @storefront.keys? then paste_key
-        elsif server? then paste_server
-        else return false
-        end
-        true
-      end
+      def paste_shortcut = screen.paste
       def open_policy = @links.open(PRIVACY_URL)
 
       def open_achievements = open_page(:achievements)

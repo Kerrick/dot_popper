@@ -272,8 +272,6 @@ module DotPopper
         return if key == :b && paste_chord? && @show.buy_shortcut
         return if @show.type_key(key)
         return @speaker.toggle_mute if key == :m
-        return @show.how_to_play if key == :h
-        return @show.open_credits if key == :c && @show.settings?
         return if @show.scroll_key(key)
         # Enter or Space presses the screen's main button, on any device;
         # Alt+Enter (Cmd+Enter on a Mac) is fullscreen's instead.

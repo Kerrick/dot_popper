@@ -17,6 +17,14 @@ module DotPopper
             back_button
         end
 
+        # C opens Credits and licenses.
+        def type(key)
+          return false unless key == :c
+
+          show.open_credits
+          true
+        end
+
         # View/Select Sound, LB Dot size where it is offered, RB Display,
         # X Credits and licenses, Y Privacy.
         def pad(button)
