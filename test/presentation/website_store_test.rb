@@ -234,11 +234,11 @@ class WebsiteStoreTest < Minitest::Test
     website = ->(fake:) { made << fake && :website }
     args = { native: :native_port, fake: FakeStore.new(Memory.new), entitlement: DotPopper::Entitlement.free, website: }
 
-    assert_equal :website, Storefront.for("Linux", **args, channel: nil)
-    assert_kind_of Storefront, Storefront.for("Android", **args, channel: nil)
-    assert_equal :website, Storefront.for("Windows", **args, channel: Storefront::WEBSITE)
-    assert_equal :website, Storefront.for("Android", **args, channel: Storefront::WEBSITE)
-    refute_equal :website, Storefront.for("iOS", **args, channel: Storefront::WEBSITE)
+    assert_equal :website, Storefront.for(DotPopperTest.platform("Linux"), **args, channel: nil)
+    assert_kind_of Storefront, Storefront.for(DotPopperTest.platform("Android"), **args, channel: nil)
+    assert_equal :website, Storefront.for(DotPopperTest.platform("Windows"), **args, channel: Storefront::WEBSITE)
+    assert_equal :website, Storefront.for(DotPopperTest.platform("Android"), **args, channel: Storefront::WEBSITE)
+    refute_equal :website, Storefront.for(DotPopperTest.platform("iOS"), **args, channel: Storefront::WEBSITE)
     assert_equal [true, false, false], made
   end
 

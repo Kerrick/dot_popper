@@ -30,8 +30,6 @@ module DotPopper
       # The one product, as App Store Connect and the Play Console must
       # name it (and ios/store_check's StoreKit configuration file).
       PRODUCT_ID = "com.setdef.dotpopper.pro"
-      # The systems whose hosts catch SCHEME, as Lota::System.os names them.
-      SYSTEMS = %w[iOS Android].freeze
       # How often, in seconds, the answer file is read.
       EVERY = 0.25
       # What a query value keeps as it is, as in SheetSharing.
@@ -61,41 +59,42 @@ module DotPopper
       # with no channel, as every CI kit is today.
       def self.test_build? = BUILD_CHANNEL.nil?
 
-      # The channels of the computers' own stores, each with the system it
-      # sells for, as Lota::System.os names it. Their copies also buy
-      # through the native port. Its host is a small program shipped beside
+      # The channels of the computers' own stores, each sold for the one
+      # system whose own store it is (Platform#own_store). Their copies also
+      # buy through the native port. Its host is a small program shipped beside
       # the game (Shell::StoreHelper), since neither Lota nor LÖVE can call
       # StoreKit or Windows.Services.Store: the Mac App Store's uses StoreKit
       # 2 (macos/store), the Microsoft Store's Windows.Services.Store
       # (windows/store). On any other system those channels offer nothing.
       MAC_APP_STORE = Build::MAC_APP_STORE
       MICROSOFT_STORE = Build::MICROSOFT_STORE
-      HELPER_CHANNELS = { MAC_APP_STORE => "OS X", MICROSOFT_STORE => "Windows" }.freeze
+      HELPER_CHANNELS = [MAC_APP_STORE, MICROSOFT_STORE].freeze
 
       # The channel for copies no store controls: setdef's website, whose
       # store is a WebsiteStore (license keys). An iOS build never takes it
       # (Apple 3.1.1); an Android build for an APK or another store does.
       WEBSITE = Build::WEBSITE
 
-      # The storefront for this build, chosen once: with no +channel+, a
-      # test build, on a phone the +fake+ store port, and on a computer the
+      # The storefront for this build on +platform+ (Platform), chosen once:
+      # with no +channel+, a test build, on a phone the +fake+ store port, and on a computer the
       # +website+ store with its fake checkout, as computers' copies will
       # mostly be sold. With a channel, the +native+ port where the host
       # has a store or the channel is that computer's own store's
-      # (HELPER_CHANNELS), the website store for WEBSITE, and else, on a
+      # (Platform#own_store), the website store for WEBSITE where the
+      # platform allows website sales, and else, on a
       # computer, the channel's own store, or none, which offers nothing, so
       # no one is offered a purchase that cannot complete. A channel nobody
       # has built is none. +website+ is called for the website store, with
       # whether the checkout is the test build's (+fake:+).
-      def self.for(os, native:, fake:, entitlement:, website: nil, channel: BUILD_CHANNEL, channels: CHANNELS)
+      def self.for(platform, native:, fake:, entitlement:, website: nil, channel: BUILD_CHANNEL, channels: CHANNELS)
         if channel.nil?
-          return new(port: fake, entitlement:) if SYSTEMS.include?(os) || website.nil?
+          return new(port: fake, entitlement:) if platform.phone_host? || website.nil?
 
           return website.call(fake: true)
         end
-        return website.call(fake: false) if channel == WEBSITE && os != "iOS" && website
-        return new(port: native, entitlement:) if SYSTEMS.include?(os) || HELPER_CHANNELS[channel] == os
-        return NoStorefront.new if HELPER_CHANNELS.key?(channel)
+        return website.call(fake: false) if channel == WEBSITE && platform.website_sales? && website
+        return new(port: native, entitlement:) if platform.phone_host? || platform.own_store == channel
+        return NoStorefront.new if HELPER_CHANNELS.include?(channel)
 
         sold = channels[channel]
         sold ? sold.call(entitlement:) : NoStorefront.new

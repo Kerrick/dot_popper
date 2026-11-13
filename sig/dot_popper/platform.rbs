@@ -1,0 +1,41 @@
+module DotPopper
+  class Platform < ::Data
+    attr_reader touch: bool
+
+    attr_reader quits_itself: bool
+
+    attr_reader buzzes: bool
+
+    attr_reader command_key: bool
+
+    attr_reader phone_host: bool
+
+    attr_reader own_store: String?
+
+    attr_reader website_sales: bool
+
+    attr_reader unit: String
+
+    def self.new: (touch: bool, quits_itself: bool, buzzes: bool, command_key: bool, phone_host: bool, own_store: String?,
+                   website_sales: bool, unit: String) -> instance
+
+    def initialize: (touch: bool, quits_itself: bool, buzzes: bool, command_key: bool, phone_host: bool, own_store: String?,
+                     website_sales: bool, unit: String) -> void
+
+    COMPUTER: Platform
+
+    PHONE: Platform
+
+    def touch?: () -> bool
+
+    def quits_itself?: () -> bool
+
+    def buzzes?: () -> bool
+
+    def command_key?: () -> bool
+
+    def phone_host?: () -> bool
+
+    def website_sales?: () -> bool
+  end
+end

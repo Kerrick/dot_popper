@@ -14,20 +14,14 @@ module DotPopper
   # 7.9 to 9.6 mm across today's iPhones and iPads, and 50 dp is 7.9 mm by
   # Android's definition (160 dp to the inch).
   class DotSize < Data.define(:radius, :reason)
-    TOUCH_SYSTEMS = %w[iOS Android].freeze
-
     # The reason is frozen, as every part of a value is, so a DotSize can
     # be shared between Ractors.
     def initialize(radius:, reason:) = super(radius:, reason: -reason)
 
-    # +os+ is what Lota::System.os answers, such as "OS X", "Windows",
-    # "Linux", "iOS", or "Android".
-    def self.for(os)
-      if TOUCH_SYSTEMS.include?(os)
-        new(radius: Rules::RADIUS, reason: "#{Rules::RADIUS} #{os == "iOS" ? "points" : "dp"}, about 8 mm")
-      else
-        new(radius: Rules::RADIUS, reason: "#{Rules::RADIUS} logical pixels")
-      end
+    # The usual size on +platform+ (Platform): under a finger, about 8 mm.
+    def self.for(platform)
+      reason = "#{Rules::RADIUS} #{platform.unit}"
+      new(radius: Rules::RADIUS, reason: platform.touch? ? "#{reason}, about 8 mm" : reason)
     end
 
     # The size of a dot "sized to your screen" (DotSizing) on a window
@@ -40,8 +34,5 @@ module DotPopper
     end
 
     def field(width, height) = Field.new(width, height, radius)
-
-    # Whether +os+ is a phone or tablet, played by touch and fullscreen.
-    def self.touch?(os) = TOUCH_SYSTEMS.include?(os)
   end
 end

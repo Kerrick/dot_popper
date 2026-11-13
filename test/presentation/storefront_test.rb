@@ -66,7 +66,7 @@ class StorefrontTest < Minitest::Test
   def test_a_phone_test_build_is_metered_like_the_final_game
     assert_predicate Storefront, :test_build?
     %w[iOS Android].each do |os|
-      store = Storefront.for(os, **stores, entitlement: @entitlement)
+      store = Storefront.for(DotPopperTest.platform(os), **stores, entitlement: @entitlement)
       games = DotPopper::FreeGames.new(DotPopper::ScoreRecord::Memory.new, today: -> { Date.today }, entitlement: @entitlement,
                                                                          metered: store.offered?)
 
@@ -77,7 +77,7 @@ class StorefrontTest < Minitest::Test
   def test_a_test_build_uses_the_fake_store_on_every_system
     assert_nil Storefront::BUILD_CHANNEL
     ["iOS", "Android", "Linux", "Windows", "OS X"].each do |os|
-      store = Storefront.for(os, **stores, entitlement: @entitlement)
+      store = Storefront.for(DotPopperTest.platform(os), **stores, entitlement: @entitlement)
 
       assert_same @fake, store.instance_variable_get(:@port), os
     end
@@ -85,7 +85,7 @@ class StorefrontTest < Minitest::Test
 
   def test_a_store_build_uses_the_native_store_on_phones
     %w[iOS Android].each do |os|
-      store = Storefront.for(os, **stores, entitlement: @entitlement, channel: "app-store")
+      store = Storefront.for(DotPopperTest.platform(os), **stores, entitlement: @entitlement, channel: "app-store")
 
       assert_same @native, store.instance_variable_get(:@port), os
     end
@@ -93,11 +93,11 @@ class StorefrontTest < Minitest::Test
 
   def test_a_computers_own_store_build_uses_the_native_port_on_that_computer_only
     { Storefront::MAC_APP_STORE => "OS X", Storefront::MICROSOFT_STORE => "Windows" }.each do |channel, os|
-      store = Storefront.for(os, **stores, entitlement: @entitlement, channel:)
+      store = Storefront.for(DotPopperTest.platform(os), **stores, entitlement: @entitlement, channel:)
 
       assert_same @native, store.instance_variable_get(:@port), channel
       (["Linux", "OS X", "Windows"] - [os]).each do |other|
-        refute_predicate Storefront.for(other, **stores, entitlement: @entitlement, channel:), :offered?, "#{channel} on #{other}"
+        refute_predicate Storefront.for(DotPopperTest.platform(other), **stores, entitlement: @entitlement, channel:), :offered?, "#{channel} on #{other}"
       end
     end
   end
@@ -213,25 +213,25 @@ class StorefrontTest < Minitest::Test
   end
 
   def test_a_computer_is_free_by_default_and_the_setting_still_stands_in
-    refute DotPopper::Entitlement.forced?({}, os: "Linux")
-    refute DotPopper::Entitlement.forced?({}, os: "Windows")
-    refute DotPopper::Entitlement.forced?({}, os: "OS X")
-    assert DotPopper::Entitlement.forced?({ "DOT_POPPER_PRO" => "1" }, os: "Linux")
-    refute DotPopper::Entitlement.forced?({}, os: "iOS")
-    refute DotPopper::Entitlement.forced?({}, os: "Android")
-    refute DotPopper::Entitlement.forced?({ "DOT_POPPER_PRO" => "0" }, os: "Windows")
-    assert DotPopper::Entitlement.forced?({ "DOT_POPPER_PRO" => "1" }, os: "iOS")
+    refute DotPopper::Entitlement.forced?({}, platform: DotPopperTest.platform("Linux"))
+    refute DotPopper::Entitlement.forced?({}, platform: DotPopperTest.platform("Windows"))
+    refute DotPopper::Entitlement.forced?({}, platform: DotPopperTest.platform("OS X"))
+    assert DotPopper::Entitlement.forced?({ "DOT_POPPER_PRO" => "1" }, platform: DotPopperTest.platform("Linux"))
+    refute DotPopper::Entitlement.forced?({}, platform: DotPopperTest.platform("iOS"))
+    refute DotPopper::Entitlement.forced?({}, platform: DotPopperTest.platform("Android"))
+    refute DotPopper::Entitlement.forced?({ "DOT_POPPER_PRO" => "0" }, platform: DotPopperTest.platform("Windows"))
+    assert DotPopper::Entitlement.forced?({ "DOT_POPPER_PRO" => "1" }, platform: DotPopperTest.platform("iOS"))
     assert DotPopper::Entitlement.forced?({ "DOT_POPPER_PRO" => "1" })
   end
 
   def test_a_computer_store_build_uses_its_channel_or_offers_nothing
-    refute_predicate Storefront.for("Linux", **stores, entitlement: @entitlement, channel: "steam"), :offered?
+    refute_predicate Storefront.for(DotPopperTest.platform("Linux"), **stores, entitlement: @entitlement, channel: "steam"), :offered?
     made = Object.new
     channels = { "steam" => ->(entitlement:) { made.tap { @given = entitlement } } }
 
-    assert_same made, Storefront.for("Linux", **stores, entitlement: @entitlement, channel: "steam", channels:)
+    assert_same made, Storefront.for(DotPopperTest.platform("Linux"), **stores, entitlement: @entitlement, channel: "steam", channels:)
     assert_same @entitlement, @given
-    assert_instance_of Storefront, Storefront.for("iOS", **stores, entitlement: @entitlement, channel: "steam", channels:)
+    assert_instance_of Storefront, Storefront.for(DotPopperTest.platform("iOS"), **stores, entitlement: @entitlement, channel: "steam", channels:)
   end
 
   def test_no_word_of_the_offer_calls_it_a_trial_or_a_demo

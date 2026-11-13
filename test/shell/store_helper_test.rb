@@ -77,15 +77,15 @@ class StoreHelperContractTest < Minitest::Test
     File.write(File.join(mac, "Helpers", "dot-popper-store"), "")
     File.chmod(0o755, File.join(mac, "Helpers", "dot-popper-store"))
 
-    assert_equal File.join(mac, "Helpers", "dot-popper-store"), StoreHelper.find("OS X", starts: [File.join(mac, "Resources", "game", "lib")])
-    assert_nil StoreHelper.find("Windows", starts: [File.join(mac, "Resources", "game", "lib")])
-    assert_nil StoreHelper.find("Linux", starts: [mac])
+    assert_equal File.join(mac, "Helpers", "dot-popper-store"), StoreHelper.find(DotPopperTest.platform("OS X"), starts: [File.join(mac, "Resources", "game", "lib")])
+    assert_nil StoreHelper.find(DotPopperTest.platform("Windows"), starts: [File.join(mac, "Resources", "game", "lib")])
+    assert_nil StoreHelper.find(DotPopperTest.platform("Linux"), starts: [mac])
 
     windows = File.join(@root, "Dot Popper")
     FileUtils.mkdir_p(File.join(windows, "game"))
     File.write(File.join(windows, "dot-popper-store.exe"), "")
     File.chmod(0o755, File.join(windows, "dot-popper-store.exe"))
 
-    assert_equal File.join(windows, "dot-popper-store.exe"), StoreHelper.find("Windows", starts: [File.join(windows, "game")])
+    assert_equal File.join(windows, "dot-popper-store.exe"), StoreHelper.find(DotPopperTest.platform("Windows"), starts: [File.join(windows, "game")])
   end
 end

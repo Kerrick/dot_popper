@@ -68,9 +68,9 @@ class ShareTest < Minitest::Test
   def test_a_phone_shares_through_its_own_sheet_and_a_computer_in_the_game
     opener = FakeOpener.new(takes: true)
 
-    assert_equal SheetSharing.new(opener:, fallback: InGameSharing.new), SheetSharing.for("iOS", opener:)
-    assert_equal SheetSharing.new(opener:, fallback: InGameSharing.new), SheetSharing.for("Android", opener:)
-    ["OS X", "Windows", "Linux"].each { assert_equal InGameSharing.new, SheetSharing.for(it, opener:) }
+    assert_equal SheetSharing.new(opener:, fallback: InGameSharing.new), SheetSharing.for(DotPopperTest.platform("iOS"), opener:)
+    assert_equal SheetSharing.new(opener:, fallback: InGameSharing.new), SheetSharing.for(DotPopperTest.platform("Android"), opener:)
+    ["OS X", "Windows", "Linux"].each { assert_equal InGameSharing.new, SheetSharing.for(DotPopperTest.platform(it), opener:) }
     assert_empty opener.urls
   end
 
@@ -82,7 +82,7 @@ class ShareTest < Minitest::Test
   def test_a_sheet_that_takes_the_text_opens_no_preview
     opener = FakeOpener.new(takes: true)
 
-    assert_nil SheetSharing.for("iOS", opener:).offer("Dot Popper: 3 points", 4.0)
+    assert_nil SheetSharing.for(DotPopperTest.platform("iOS"), opener:).offer("Dot Popper: 3 points", 4.0)
     assert_equal [SheetSharing.url("Dot Popper: 3 points")], opener.urls
   end
 
@@ -90,7 +90,7 @@ class ShareTest < Minitest::Test
     opener = FakeOpener.new(takes: false)
 
     assert_equal SharePreview.open("Dot Popper: 3 points", 4.0),
-                 SheetSharing.for("Android", opener:).offer("Dot Popper: 3 points", 4.0)
+                 SheetSharing.for(DotPopperTest.platform("Android"), opener:).offer("Dot Popper: 3 points", 4.0)
   end
 
   def test_share_my_score_rises_into_place_once_the_score_has_landed

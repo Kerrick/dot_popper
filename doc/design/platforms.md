@@ -8,7 +8,20 @@ What differs between Windows, macOS, Linux, iOS and iPadOS, and Android: the win
 
 ## At a glance
 
-`Shell::App#load` asks `Lota::System.os`. `DotSize.touch?` is true for `"iOS"` and `"Android"` (`DotSize::TOUCH_SYSTEMS`), and every phone-and-tablet difference below follows that flag (`@touch`), or `@android` and `@ios`.
+`Shell::App#load` asks `Lota::System.os` once, and `Shell::Platforms` turns its answer into the game's own `Platform` (`lib/dot_popper/platform.rb`), the one place a system's name is compared; `test/platform_test.rb` fails if anything outside the shell names one. Every difference below follows one of its questions:
+
+| `Platform` | Means | True on |
+| --- | --- | --- |
+| `touch?` | A phone or tablet: played by touch, filling the screen, never quit or taken out of fullscreen from a keyboard | iOS, Android |
+| `phone_host?` | The phone host catches the game's own URLs, for the share sheet and the store | iOS, Android |
+| `quits_itself?` | The game may quit itself | every system but iOS |
+| `buzzes?` | A pop and a mistake buzz | Android |
+| `command_key?` | Shortcuts are held with Command, not Ctrl | macOS |
+| `own_store` | The channel of the computer's own store, sold through the store helper | macOS (`mac-app-store`), Windows (`microsoft-store`) |
+| `website_sales?` | A copy may sell through setdef's website | every system but iOS |
+| `unit` | What a graphics unit is called, for the printed dot size | "points" on iOS, "dp" on Android, "logical pixels" on a computer |
+
+A system Lota names that `Shell::Platforms` doesn't know plays as a computer.
 
 | | Windows | macOS | Linux | iOS and iPadOS | Android |
 | --- | --- | --- | --- | --- | --- |
@@ -27,9 +40,9 @@ The standard dot is the same size on every platform ([rules.md](rules.md)). Sell
 
 On a computer, `App#open_window` sizes the window to the play area `Style::WINDOW` names, fitted to the desktop, and Settings offers Window, Borderless and Full screen (`Shell::DesktopWindow`; [screens.md](screens.md)). On a phone or tablet, `App#fill_screen` calls `Lota::Window.set_fullscreen(true, :desktop)` instead, and the window control is `Presentation::NoWindowControl`, so Home has no Quit and Settings no Display. On iOS, fullscreen hides the status bar and makes a swipe from the screen's edge need a second swipe before the system acts on it, so a tap near the edge stays a tap. A game played with the whole screen shouldn't lose taps to system gestures. [doc/ios.md](../ios.md), "Fullscreen and the safe area", has the details.
 
-**A phone's or tablet's keyboard never quits or leaves fullscreen.** `App#key_pressed` returns before Escape's quit and the fullscreen keys when `@touch` is set, since an iOS app never quits itself. What works before that point works on every device: M mutes, H opens How to play, Enter and Space press the screen's main button, Escape goes back where there is somewhere to go, and the keypad and scroll keys work ([input.md](input.md), "Keyboard").
+**A phone's or tablet's keyboard never quits or leaves fullscreen.** `App#key_pressed` returns before Escape's quit and the fullscreen keys on a touch platform (`Platform#touch?`), since an iOS app never quits itself. What works before that point works on every device: M mutes, H opens How to play, Enter and Space press the screen's main button, Escape goes back where there is somewhere to go, and the keypad and scroll keys work ([input.md](input.md), "Keyboard").
 
-**Leaving.** On Android, Escape (which Back arrives as) on Home quits (`Lota::Event.quit`). On iOS nothing quits: B on Home neither asks nor quits (`App#leave_home`).
+**Leaving.** On Android, Escape (which Back arrives as) on Home quits (`Lota::Event.quit`). On iOS nothing quits (`Platform#quits_itself?`): B on Home neither asks nor quits (`App#leave_home`).
 
 ## What the game prints as it starts
 
@@ -152,7 +165,7 @@ The Android app is built by the Android route of Lota's phone guide, with Lota's
 
 ## Haptics
 
-Only Android buzzes. `Shell::Haptics.for` gives a `Haptics`, which calls `Lota::System.vibrate`, on Android (`BUZZING_SYSTEMS`), and `Presentation::NoHaptics`, which does nothing, everywhere else. On iOS, LÖVE ignores the length it is given and plays the system's long vibration (`common/ios.mm`), so each pop's buzz would run into the next, and an iPad has no motor. A short tap on iOS would need `UIImpactFeedbackGenerator`, which neither LÖVE nor Lota exposes. A device that cannot buzz is no reason to stop the game: a failed buzz only warns. The lengths are `Style::HAPTICS` (15 ms for a pop, 40 ms for a mistake); [look-and-sound.md](look-and-sound.md) has when each plays. `test/presentation/show_test.rb` checks the buzzes the Show asks for.
+Only Android buzzes. `Shell::Haptics.for` gives a `Haptics`, which calls `Lota::System.vibrate`, on Android (`Platform#buzzes?`), and `Presentation::NoHaptics`, which does nothing, everywhere else. On iOS, LÖVE ignores the length it is given and plays the system's long vibration (`common/ios.mm`), so each pop's buzz would run into the next, and an iPad has no motor. A short tap on iOS would need `UIImpactFeedbackGenerator`, which neither LÖVE nor Lota exposes. A device that cannot buzz is no reason to stop the game: a failed buzz only warns. The lengths are `Style::HAPTICS` (15 ms for a pop, 40 ms for a mistake); [look-and-sound.md](look-and-sound.md) has when each plays. `test/presentation/show_test.rb` checks the buzzes the Show asks for.
 
 ## The phones' notices
 

@@ -58,7 +58,7 @@ Tests: `test/build_test.rb`, `test/shell/store_build_test.rb`, `test/set_build_c
 
 ### Which store each build gets
 
-`Storefront.for(os, native:, fake:, entitlement:, website:, channel:)` chooses once, called only from `Shell::App#load`. `os` is as `Lota::System.os` names it.
+`Storefront.for(platform, native:, fake:, entitlement:, website:, channel:)` chooses once, called only from `Shell::App#load`. `platform` is the game's `Platform`, which the shell makes from `Lota::System.os` (`Shell::Platforms`); the table names each system as Lota does.
 
 | Channel | iOS | Android | macOS (`OS X`) | Windows | Linux |
 | --- | --- | --- | --- | --- | --- |
@@ -68,7 +68,7 @@ Tests: `test/build_test.rb`, `test/shell/store_build_test.rb`, `test/set_build_c
 | `microsoft-store` (`MICROSOFT_STORE`) | `NativeStore` | `NativeStore` | `NoStorefront` | `Shell::StoreHelper` | `NoStorefront` |
 | any other | `NativeStore` | `NativeStore` | `Storefront::CHANNELS[name]`, or `NoStorefront` | same | same |
 
-`FakeStore`, `NativeStore` and `StoreHelper` sit behind a `Storefront`; `WebsiteStore` and `NoStorefront` answer the Storefront's methods themselves. `Storefront::SYSTEMS` (iOS, Android) are the systems whose hosts catch the store URL; `HELPER_CHANNELS` maps each computer store's channel to its system. An iOS build never takes the website store (Apple 3.1.1). `Storefront::CHANNELS` is the registry for other computer channels (such as Steam), each a callable taking `entitlement:`; it is empty. `NoStorefront` offers nothing, so no one is offered a purchase that cannot complete. No environment variable selects any of this.
+`FakeStore`, `NativeStore` and `StoreHelper` sit behind a `Storefront`; `WebsiteStore` and `NoStorefront` answer the Storefront's methods themselves. A platform in the phone host (`Platform#phone_host?`: iOS, Android) catches the store URL; `HELPER_CHANNELS` are the computer stores' channels, each sold through the native port only on the platform whose own store it is (`Platform#own_store`). An iOS build never takes the website store (`Platform#website_sales?`; Apple 3.1.1). `Storefront::CHANNELS` is the registry for other computer channels (such as Steam), each a callable taking `entitlement:`; it is empty. `NoStorefront` offers nothing, so no one is offered a purchase that cannot complete. No environment variable selects any of this.
 
 `script/check_build.rb` and the release checks are in [Release checks](#release-checks).
 

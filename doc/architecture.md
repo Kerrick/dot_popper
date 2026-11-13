@@ -12,7 +12,7 @@ Dot Popper is Ruby on [Lota](https://github.com/setdef/Lota), which runs LÖVE's
 
 | Part | Where | Holds | May use |
 | --- | --- | --- | --- |
-| **Core** | `lib/dot_popper/*.rb`, and `network/`, `groups/`, `continuity/`, `receipt/` | The rules (dots, the field, the score, the clock, spawning), the flow from Home to a game to Game Over (`Cabinet`), Stats and records, free games, Pro (`Entitlement`, `Receipt`, `Continuity`), the HTTP client every request goes through (`Network`), the friend-group client (`Groups`), the build's kind (`Build`), and the guard on automated runs (`Automation`) | Ruby's standard library only |
+| **Core** | `lib/dot_popper/*.rb`, and `network/`, `groups/`, `continuity/`, `receipt/` | The rules (dots, the field, the score, the clock, spawning), the flow from Home to a game to Game Over (`Cabinet`), Stats and records, free games, Pro (`Entitlement`, `Receipt`, `Continuity`), the HTTP client every request goes through (`Network`), the friend-group client (`Groups`), the build's kind (`Build`), what the system means for the game (`Platform`), and the guard on automated runs (`Automation`) | Ruby's standard library only |
 | **Use cases** | `lib/dot_popper/use_cases/` | What a player does that needs two of the game's areas: starting a game, finishing one, buying Pro, using a theme, joining a friend group, looking at achievements ([use cases](#use-cases)) | The core |
 | **Presentation** | `lib/dot_popper/presentation/` | Everything a player sees, hears and presses that isn't a rule: every number, color, word, size, timing and animation (`Style`, `Words`), layout plans, effects, the tutorial, the sound synthesizer, input routing, and the `Show`, which ties them to the core's events | The use cases and the core |
 | **Shell** | `lib/dot_popper/shell/` | Carrying the presentation out with Lota: painters, the `Renderer`, the `Speaker`, gamepads, the Game Over pile's physics, save files, the clipboard, URLs, the store helper, and `App`, which wires everything together | The presentation, the use cases, the core and Lota |
@@ -84,7 +84,7 @@ The game runs on Lota's one thread. Friend groups' requests and the theme feed's
 
 ## Platforms
 
-One code base runs on macOS, Windows and Linux (built by `lota fuse`, [ADR-0006](adr/0006-lota-fuse-builds-the-desktop-apps.md)) and on iOS, iPadOS and Android (built by Lota's phone guide with Fledge). The differences are in a few places: `DotSize.for` and `DotSize.touch?` by system; `conf.rb`'s renderers; `Shell::Haptics`, `SheetSharing.for` and `Storefront.for` by system; the phone hosts' native files; and the desktop's window controls (`Shell::DesktopWindow`). [Platforms](design/platforms.md) has the details.
+One code base runs on macOS, Windows and Linux (built by `lota fuse`, [ADR-0006](adr/0006-lota-fuse-builds-the-desktop-apps.md)) and on iOS, iPadOS and Android (built by Lota's phone guide with Fledge). The shell makes one `Platform` value from Lota's name for the system (`Shell::Platforms`), and everywhere else the game asks it its own questions (is this a touch device, does it quit itself, does it buzz, which store is its own), so nothing beyond the shell names a system. The differences are in a few places: `DotSize.for`, `Entitlement.forced?`, `Shell::Haptics`, `SheetSharing.for` and `Storefront.for` by platform; `conf.rb`'s renderers; the phone hosts' native files; and the desktop's window controls (`Shell::DesktopWindow`). [Platforms](design/platforms.md) has the details.
 
 ## Design documents
 

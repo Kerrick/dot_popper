@@ -21,17 +21,18 @@ module DotPopper
     # an automated run stays off it (Automation). Its request is refused,
     # as on a system that will not open the URL.
     class StoreHelper
-      NAMES = { "OS X" => "dot-popper-store", "Windows" => "dot-popper-store.exe" }.freeze
+      # The helper's file name, by the channel of the store it sells through.
+      NAMES = { Build::MAC_APP_STORE => "dot-popper-store", Build::MICROSOFT_STORE => "dot-popper-store.exe" }.freeze
       # The helper's path in what +path+ answers, which the URL names.
       PIPE = "-"
       # How many folders up from a start the helper is looked for.
       DEPTH = 6
 
-      # The helper beside this game on +os+, or none: on macOS in the app's
-      # Contents/Helpers, on Windows beside the program. Looked for from
-      # each folder in +starts+ and the folders above it.
-      def self.find(os, starts:)
-        name = NAMES[os] or return nil
+      # The helper beside this game on +platform+ (Platform), or none: on
+      # macOS in the app's Contents/Helpers, on Windows beside the program.
+      # Looked for from each folder in +starts+ and the folders above it.
+      def self.find(platform, starts:)
+        name = NAMES[platform.own_store] or return nil
         starts.each do |start|
           folder = File.expand_path(start)
           DEPTH.times do

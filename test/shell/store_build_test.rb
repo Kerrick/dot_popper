@@ -61,7 +61,7 @@ class StoreBuildTest < Minitest::Test
 
   def test_a_computers_own_store_reads_its_helpers_pipe_and_an_automated_run_starts_none
     %w[OS\ X Windows].each do |os|
-      port = app(DotPopper::Presentation::Storefront::MICROSOFT_STORE).send(:native_store, os)
+      port = app(DotPopper::Presentation::Storefront::MICROSOFT_STORE).send(:native_store, DotPopperTest.platform(os))
 
       assert_instance_of DotPopper::Shell::StoreHelper, port, os
       assert_equal "-", port.path

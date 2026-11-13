@@ -192,7 +192,7 @@ Played with dots sized to the screen.
 
 ### On a phone: the system's share sheet
 
-On iOS and Android (`SheetSharing::SYSTEMS`), the text goes to the system's own share sheet and no preview opens. Players on a phone expect the phone's sheet, which reaches messages, chats and notes in one tap. `Presentation::SheetSharing` opens `dotpopper-share://score?text=…`, the text percent-encoded as RFC 3986's unreserved characters (a space `%20`, a plus `%2B`), and the app's host catches that URL before it leaves the app. How the hosts do it, and why, is [ADR-0008](../adr/0008-native-features-live-outside-the-ruby-process.md) and [doc/ios.md](../ios.md), "Share my score". If the host refuses the URL, `open_url` answers false and the preview opens instead.
+On iOS and Android (in the phone host, `Platform#phone_host?`), the text goes to the system's own share sheet and no preview opens. Players on a phone expect the phone's sheet, which reaches messages, chats and notes in one tap. `Presentation::SheetSharing` opens `dotpopper-share://score?text=…`, the text percent-encoded as RFC 3986's unreserved characters (a space `%20`, a plus `%2B`), and the app's host catches that URL before it leaves the app. How the hosts do it, and why, is [ADR-0008](../adr/0008-native-features-live-outside-the-ruby-process.md) and [doc/ios.md](../ios.md), "Share my score". If the host refuses the URL, `open_url` answers false and the preview opens instead.
 
 ### On a computer: the preview
 

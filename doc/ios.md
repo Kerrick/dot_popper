@@ -33,7 +33,7 @@ The bundle identifier is `com.setdef.DotPopper`, set in `fledge.yml`.
 
 ## How the game behaves on iOS
 
-When the game starts, `Shell::App#load` asks `Lota::System.os` which system it is on. On iOS the answer is `"iOS"` (from LÖVE's `System::getOS`), and `DotSize.touch?` turns that into a single "this is a touch device" flag. Every difference described below depends on that flag or on Lota itself, so a desktop follows exactly the same code paths as before.
+When the game starts, `Shell::App#load` asks `Lota::System.os` which system it is on. On iOS the answer is `"iOS"` (from LÖVE's `System::getOS`), and `Shell::Platforms` turns that into the game's `Platform`: a touch device in the phone host, which never quits itself and never sells through the website. Every difference described below depends on those answers or on Lota itself, so a desktop follows exactly the same code paths as before.
 
 ### Fullscreen and the safe area
 
@@ -77,7 +77,7 @@ Lota's host program, which the kit uses, already does this. If no audio device i
 
 ### Haptics
 
-iOS gets no vibration. On iOS, LÖVE's `vibrate` ignores the length it is given and plays the system's long vibration (`vibrate` in `common/ios.mm`), so on an iPhone every pop's buzz would run into the next one. An iPad has no vibration motor anyway. So `Shell::Haptics.for` turns vibration on only for Android. A short tap on iOS would need Apple's `UIImpactFeedbackGenerator`, which neither LÖVE nor Lota exposes.
+iOS gets no vibration. On iOS, LÖVE's `vibrate` ignores the length it is given and plays the system's long vibration (`vibrate` in `common/ios.mm`), so on an iPhone every pop's buzz would run into the next one. An iPad has no vibration motor anyway. So vibration is on only for Android (`Platform#buzzes?`, which `Shell::Haptics.for` asks). A short tap on iOS would need Apple's `UIImpactFeedbackGenerator`, which neither LÖVE nor Lota exposes.
 
 ### Share my score
 

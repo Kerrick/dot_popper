@@ -143,7 +143,7 @@ Above that band the pop moves into 2 to 5 kHz, where the ear is most sensitive (
 
 ## Haptics
 
-On a pop the phone buzzes 15 ms, and on a mistake 40 ms (`Style::HAPTICS`; 0 turns either off), so a player feels the difference as they hear it. A bonus dot's pop adds two more of the mistake's length. `Shell::Haptics` calls `Lota::System.vibrate`, and only on Android (`BUZZING_SYSTEMS`); every other system gets `Presentation::NoHaptics`, which does nothing. LÖVE can vibrate only on iOS and Android, and on iOS it ignores the length and plays the system's long vibration, which would run every pop into the next; iPads have no vibration motor. A short tap on iOS would need `UIImpactFeedbackGenerator`, which neither LÖVE nor Lota exposes. Android's host starts each buzz on a thread of its own ([PACKAGING.md](../../PACKAGING.md)). The tutorial's guide never buzzes ([tutorial.md](tutorial.md)).
+On a pop the phone buzzes 15 ms, and on a mistake 40 ms (`Style::HAPTICS`; 0 turns either off), so a player feels the difference as they hear it. A bonus dot's pop adds two more of the mistake's length. `Shell::Haptics` calls `Lota::System.vibrate`, and only on Android (`Platform#buzzes?`); every other system gets `Presentation::NoHaptics`, which does nothing. LÖVE can vibrate only on iOS and Android, and on iOS it ignores the length and plays the system's long vibration, which would run every pop into the next; iPads have no vibration motor. A short tap on iOS would need `UIImpactFeedbackGenerator`, which neither LÖVE nor Lota exposes. Android's host starts each buzz on a thread of its own ([PACKAGING.md](../../PACKAGING.md)). The tutorial's guide never buzzes ([tutorial.md](tutorial.md)).
 
 ## Themes
 

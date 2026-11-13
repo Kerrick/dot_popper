@@ -2,6 +2,7 @@
 
 require "minitest/autorun"
 require "dot_popper"
+require "dot_popper/shell/platforms"
 
 # The suite is an automated run: it reaches no outside host (Automation).
 ENV["DOT_POPPER_AUTOMATED"] = "1"
@@ -9,6 +10,10 @@ DotPopper::Automation.guard!
 
 module DotPopperTest
   R = DotPopper::Rules::RADIUS
+
+  # The Platform the shell makes on the system Lota::System.os calls
+  # +name+, such as "iOS" or "OS X".
+  def self.platform(name) = DotPopper::Shell::Platforms.for(name)
 
   def field(width = 800, height = 600) = DotPopper::Field.new(width, height, R)
 

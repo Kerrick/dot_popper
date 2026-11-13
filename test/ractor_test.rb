@@ -12,7 +12,7 @@ class RactorTest < Minitest::Test
     stack = DotPopper::Stack.new(dots: [dot(100, 100), dot(200, 200, popped: true)])
     stands = { dots: stack, score: 1, countdown: DotPopper::Countdown.new(remaining: 3), elapsed: 1.0 }
     values = [field, stack, stack.dots.first, DotPopper::Countdown.new(remaining: 3),
-              DotPopper::DotSize.for("iOS"), DotPopper::DotSize.fitted(395, 850), DotPopper::DotSizing::SIZED_TO_SCREEN,
+              DotPopper::DotSize.for(DotPopperTest.platform("iOS")), DotPopper::DotSize.fitted(395, 850), DotPopper::DotSizing::SIZED_TO_SCREEN,
               DotPopper::SizeClass::FITTED, DotPopper::Events::Missed.new(x: 1, y: 2),
               DotPopper::Events::Popped.new(dot: stack.dots.first.pop, x: 1, y: 2, points: 1, seconds: 1.0,
                                             spawned: stack.dots.last, **stands),
@@ -39,7 +39,7 @@ class RactorTest < Minitest::Test
 
   def test_the_rule_numbers_can_be_read_from_any_ractor
     DotPopper::Rules.constants.each { assert Ractor.shareable?(DotPopper::Rules.const_get(it)), it }
-    assert Ractor.shareable?(DotPopper::DotSize::TOUCH_SYSTEMS)
+    DotPopper::Shell::Platforms::BY_NAME.each_value { assert Ractor.shareable?(it), it }
   end
 
   # Ruby 4.0.9 on Windows (x64-mingw-ucrt) deadlocks when a Ractor other

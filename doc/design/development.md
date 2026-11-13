@@ -81,7 +81,7 @@ $ RULES_FUZZ_SEED=12345 bundle exec ruby -Ilib -Itest test/rules_fuzz_test.rb
 The rules' values (fields, dots, stacks, countdowns, events, `DotSize`, `DotSizing`, `SizeClass`) are deeply frozen, so any Ractor can read them without a copy. `test/ractor_test.rb` holds that in place:
 
 - `test_the_rules_values_can_be_shared_between_ractors` asserts `Ractor.shareable?` for one of each value, events included. A value that builds a string at run time, such as a reason or a name, must freeze it.
-- `test_the_rule_numbers_can_be_read_from_any_ractor` asserts it for every constant in `Rules`, and `DotSize::TOUCH_SYSTEMS`.
+- `test_the_rule_numbers_can_be_read_from_any_ractor` asserts it for every constant in `Rules`, and every system's `Platform` (`Shell::Platforms::BY_NAME`).
 - `test_a_game_played_in_a_ractor_matches_one_played_here` plays one seeded game here and one in a Ractor (`RactorTest.play_a_game`) and asserts they end with the same score and dots.
 
 ### On Windows, the game in a Ractor is skipped

@@ -14,17 +14,15 @@ module DotPopper
     # +fallback+'s way, the in-game preview.
     class SheetSharing < Data.define(:opener, :fallback)
       SCHEME = "dotpopper-share"
-      # The systems whose hosts catch SCHEME, as Lota::System.os names them.
-      SYSTEMS = %w[iOS Android].freeze
       # What a query value keeps as it is (RFC 3986's unreserved); every
       # other byte is percent-encoded, a space as %20 and a plus as %2B,
       # which both iOS's and Android's URL parsers decode alike.
       UNRESERVED = /[^A-Za-z0-9\-._~]/n
 
-      # The sharing for +os+: the sheet where the host shows one, else the
-      # in-game preview.
-      def self.for(os, opener:)
-        SYSTEMS.include?(os) ? new(opener:, fallback: InGameSharing.new) : InGameSharing.new
+      # The sharing on +platform+ (Platform): the sheet where the phone
+      # host shows one, else the in-game preview.
+      def self.for(platform, opener:)
+        platform.phone_host? ? new(opener:, fallback: InGameSharing.new) : InGameSharing.new
       end
 
       # The URL that carries +text+ to the host.

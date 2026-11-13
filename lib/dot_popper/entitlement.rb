@@ -25,10 +25,9 @@ module DotPopper
     # Whether a computer's copy has everything for nothing. It does not: a
     # desktop copy is free until a store, a channel's or a test build's fake,
     # sells it (Presentation::Storefront; ADR-0009). Set it true to ship a desktop copy
-    # whole. The systems that have a store of their own are STORE_SYSTEMS,
-    # as Lota::System.os names them.
+    # whole. A phone's copy is never pro this way: its host has a store of
+    # its own (Platform#phone_host?).
     DESKTOP_PRO = false
-    STORE_SYSTEMS = %w[iOS Android].freeze
 
     # An entitlement with no proof, as a store build's starts.
     def self.free = new
@@ -37,13 +36,13 @@ module DotPopper
     def self.test = new(trust: Receipt::TEST)
 
     # Whether this copy is pro without a purchase: by DOT_POPPER_PRO when
-    # it is set, and otherwise on a computer (+os+ as Lota::System.os names
-    # it), by DESKTOP_PRO.
-    def self.forced?(env, os: nil)
+    # it is set, and otherwise on a computer (+platform+, a Platform), by
+    # DESKTOP_PRO.
+    def self.forced?(env, platform: nil)
       value = env.fetch(FORCED_BY, "")
       return value == "1" unless value.empty?
 
-      DESKTOP_PRO && !os.nil? && !STORE_SYSTEMS.include?(os)
+      DESKTOP_PRO && !platform.nil? && !platform.phone_host?
     end
 
     # +license+ (Continuity::License, or anything that answers pro?) is a

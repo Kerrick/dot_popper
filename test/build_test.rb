@@ -47,7 +47,7 @@ class BuildTest < Minitest::Test
 
     assert_equal [storefront::MAC_APP_STORE, storefront::MICROSOFT_STORE, storefront::WEBSITE],
                  [DotPopper::Build::MAC_APP_STORE, DotPopper::Build::MICROSOFT_STORE, DotPopper::Build::WEBSITE]
-    assert_empty storefront::HELPER_CHANNELS.keys - DotPopper::Build::CHANNEL_NAMES
+    assert_empty storefront::HELPER_CHANNELS - DotPopper::Build::CHANNEL_NAMES
   end
 
   def test_the_storefront_takes_its_channel_from_the_build

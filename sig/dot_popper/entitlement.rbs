@@ -2,7 +2,6 @@ module DotPopper
   class Entitlement
     FORCED_BY: String
     DESKTOP_PRO: bool
-    STORE_SYSTEMS: Array[String]
 
     @forced: bool
     @license: _License?
@@ -29,7 +28,7 @@ module DotPopper
 
     def self.free: () -> Entitlement
     def self.test: () -> Entitlement
-    def self.forced?: (untyped env, ?os: String?) -> bool
+    def self.forced?: (untyped env, ?platform: Platform?) -> bool
     def initialize: (?forced: bool, ?license: _License?, ?trust: Receipt::Trust) -> void
     def pro?: () -> bool
     def subscribe: (_Listener listener) -> self

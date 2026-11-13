@@ -52,14 +52,13 @@ module Hands
   end
 
   # A Show, built as Shell::App#load builds it in a test build on +os+ (as
-  # Lota::System.os names it), at +width+ by +height+, with what the game
+  # Lota::System.os names it, and Shell::Platforms makes its Platform), at +width+ by +height+, with what the game
   # keeps for a player: Pro or not, games left, a friend group, a new theme
   # to tell, setdef gone. It moves on as frames do: the Cabinet, then the
   # Show.
   class World
     include PresentationTest
 
-    PHONES = %w[iOS Android].freeze
     THEMES = %i[ghost jack_o_lantern].freeze
 
     attr_reader :os, :show, :cabinet, :sounds, :window, :clipboard, :opener, :entitlement, :games, :storefront, :server_choice, :to_pop
@@ -84,7 +83,7 @@ module Hands
       @gone.heard(:gone, @day - 200) if gone
       license = DotPopper::Continuity::License.new(Memory.new, pins: DotPopper::Continuity::TEST_PINS)
       @entitlement = DotPopper::Entitlement.new(forced: pro, license:, trust: DotPopper::Receipt::TEST)
-      @storefront = P::Storefront.for(os, entitlement:, native: P::FakeStore.new(Memory.new), fake: P::FakeStore.new(Memory.new),
+      @storefront = P::Storefront.for(platform, entitlement:, native: P::FakeStore.new(Memory.new), fake: P::FakeStore.new(Memory.new),
                                           website: ->(fake:) { website(fake:) }, channel:)
       @games = DotPopper::FreeGames.new(Memory.new, today: -> { @day }, entitlement:, metered: storefront.offered?, bank: [games_left - 3, 0].max)
       (3 - games_left.clamp(0, 3)).times { games.spend! }
@@ -96,7 +95,7 @@ module Hands
       session = DotPopper::Groups::Session.new(store: Memory.new, worker: Server.new)
       @server_choice = P::ServerChoice.new(Memory.new, gone: @gone, clipboard:)
       @show = Show.new(cabinet:, layout: layout(width, height), sounds:, radius: R, random: Random.new(5), clipboard:, window:, stats_book: book,
-                       sharing: P::SheetSharing.for(os, opener:), links: opener, entitlement:, storefront:, games:,
+                       sharing: P::SheetSharing.for(platform, opener:), links: opener, entitlement:, storefront:, games:,
                        theme_keeper: themes, groups: session, group_notice: P::GroupNotice.new(Memory.new),
                        tutorial_flag: P::TutorialFlag.new(Memory.new((P::TutorialFlag::SEEN if played))), input: P::InputKind.starting(touch: phone?),
                        server_choice: @server_choice)
@@ -105,7 +104,8 @@ module Hands
       tick(0.5)
     end
 
-    def phone? = PHONES.include?(os)
+    def phone? = platform.touch?
+    def platform = DotPopperTest.platform(os)
 
     # The frames of +seconds+, each at most Rules::LONGEST_FRAME, as
     # Shell::App#update runs them.

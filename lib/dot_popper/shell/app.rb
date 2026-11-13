@@ -32,12 +32,9 @@ module DotPopper
       end
 
       def load
-        os = ::Lota::System.os
-        @dot_size = DotSize.for(os)
-        @touch = DotSize.touch?(os)
-        @android = os == "Android"
-        @mac = os == "OS X"
-        @ios = os == "iOS"
+        @platform = Platforms.for(::Lota::System.os)
+        @dot_size = DotSize.for(@platform)
+        @touch = @platform.touch?
         puts "Dot Popper: a dot's radius is #{@dot_size.reason}"
         # With DOT_POPPER_PERF=1: whether this build's Ruby verifies
         # Ed25519, which the packaged-app playthroughs check. Where it
@@ -69,7 +66,7 @@ module DotPopper
         pins = trusted_pins
         license = Continuity::License.new(license_store, pins:)
         @watch = watch(license, pins, test_build)
-        entitlement = Entitlement.new(forced: Entitlement.forced?(@env, os:), license:, trust: trusted_receipts)
+        entitlement = Entitlement.new(forced: Entitlement.forced?(@env, platform: @platform), license:, trust: trusted_receipts)
         clipboard = Clipboard.new
         @server_choice = Presentation::ServerChoice.new(SaveFile.new(name: "server.txt"), gone: @gone, clipboard:)
         theme_keeper = Presentation::ThemeKeeper.new(SaveFile.new(name: "themes.txt"), themes: Style::THEMES)
@@ -85,10 +82,10 @@ module DotPopper
         @speaker.use(use_theme.current)
         @splash = @splash.with(sounding: !@speaker.muted?) if @splash
         storefront = Presentation::Storefront.for(
-          os, entitlement:, channel: @channel,
-              native: native_store(os),
-              fake: Presentation::FakeStore.new(SaveFile.new(name: "fake_store.txt"), fails: Presentation::FakeStore.failure(@env)),
-              website: ->(fake:) { website_store(entitlement, clipboard, fake:) }
+          @platform, entitlement:, channel: @channel,
+                     native: native_store(@platform),
+                     fake: Presentation::FakeStore.new(SaveFile.new(name: "fake_store.txt"), fails: Presentation::FakeStore.failure(@env)),
+                     website: ->(fake:) { website_store(entitlement, clipboard, fake:) }
         )
         games = free_games(entitlement, metered: storefront.offered? && player?)
         groups = groups_session
@@ -96,8 +93,8 @@ module DotPopper
                                        random:, calm: flag?("DOT_POPPER_CALM"),
                                        tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt"),
                                                                     times: Style::LESSON.times),
-                                       haptics: Haptics.for(os), clipboard:, notices:,
-                                       sharing: Presentation::SheetSharing.for(os, opener: UrlOpener.new),
+                                       haptics: Haptics.for(@platform), clipboard:, notices:,
+                                       sharing: Presentation::SheetSharing.for(@platform, opener: UrlOpener.new),
                                        stats_book:, achievements:, keeper:, sizing_store:, input: starting_input, measure: FontMeasure.new(@pen.fonts),
                                        window: @window,
                                        tutorial_flag: Presentation::TutorialFlag.new(
@@ -335,7 +332,7 @@ module DotPopper
       def key_pressed(key)
         return skip_splash if @splash
 
-        @show.keyboard_used(@mac ? "\u2318B" : "Ctrl+B") unless @touch
+        @show.keyboard_used(@platform.command_key? ? "\u2318B" : "Ctrl+B") unless @touch
         return if key == :v && paste_chord? && @show.paste_shortcut
         # Ctrl+B or Cmd+B buys on the offer: a chord, so no press that means
         # continue or back, and no letter of a typed license key, buys.
@@ -353,8 +350,8 @@ module DotPopper
         return if key == :escape && @show.back
         # On Home Android's Back leaves the app, as Back on an app's
         # first screen does; in a game it does nothing, so a stray edge
-        # swipe never throws a game away.
-        return ::Lota::Event.quit if key == :escape && @android && @show.home?
+        # swipe never throws a game away. iOS apps never quit themselves.
+        return ::Lota::Event.quit if key == :escape && @platform.quits_itself? && @show.home?
         # A tablet's keyboard neither quits the app nor takes it out of
         # fullscreen: iOS apps are left by the system, never by the app.
         return if @touch
@@ -472,9 +469,9 @@ module DotPopper
       # on a computer sold through its own store, the store helper shipped
       # in the app, by its pipe (StoreHelper). Which one a build uses is
       # Storefront.for's choice, by the channel.
-      def native_store(os)
-        if Presentation::Storefront::HELPER_CHANNELS.value?(os)
-          return StoreHelper.new(StoreHelper.find(os, starts: [__dir__, File.dirname(File.expand_path($PROGRAM_NAME))]),
+      def native_store(platform)
+        if platform.own_store
+          return StoreHelper.new(StoreHelper.find(platform, starts: [__dir__, File.dirname(File.expand_path($PROGRAM_NAME))]),
                                  automated: Automation.on?(@env))
         end
 
@@ -663,7 +660,7 @@ module DotPopper
       # B on Home: asks, then quits on a second press, as Escape quits
       # from the keyboard. iOS apps are left by the system, never by the app.
       def leave_home
-        ::Lota::Event.quit if !@ios && @show.ask_to_quit == :quit
+        ::Lota::Event.quit if @platform.quits_itself? && @show.ask_to_quit == :quit
       end
 
       # Whether Ctrl or Cmd is held, which makes V paste.
