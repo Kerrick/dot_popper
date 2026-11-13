@@ -38,6 +38,10 @@ module DotPopper
         # the key can do its usual job.
         def back = false
 
+        # A gamepad's X, Y, LB, RB, LT or View/Select (+button, as
+        # GamepadButtons names it) on this screen, as the screen labels it.
+        def pad(button) = nil
+
         private
 
         def layout = show.layout

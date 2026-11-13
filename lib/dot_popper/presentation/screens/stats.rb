@@ -11,6 +11,9 @@ module DotPopper
            (button(:clear, layout.clear_stats_button) if show.clear_offered?),
            back_button].compact
         end
+
+        # Y: Undo while it is offered, or else hold to clear the stats.
+        def pad(button) = (show.clear_or_undo(:y) if button == :y)
       end
     end
   end

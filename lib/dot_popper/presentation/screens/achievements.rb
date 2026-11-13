@@ -14,6 +14,9 @@ module DotPopper
           end
           cells << back_button
         end
+
+        # X: the first achievement's dialog.
+        def pad(button) = (show.open_achievement(DotPopper::Achievement::IDS.first) if button == :x)
       end
     end
   end

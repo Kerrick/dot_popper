@@ -16,6 +16,19 @@ module DotPopper
           seen.map { it.with(frame: it.frame.cut(top: page.y, bottom: page.bottom), reach: it.reach.cut(top: page.y, bottom: page.bottom)) } <<
             back_button
         end
+
+        # View/Select Sound, LB Dot size where it is offered, RB Display,
+        # X Credits and licenses, Y Privacy.
+        def pad(button)
+          case button
+          in :lb then show.choose_sizing(show.cabinet.sizing.toggled) if show.sizing_offered?
+          in :rb then show.next_display
+          in :x then show.open_credits
+          in :y then show.open_privacy
+          in :select then show.set_sound(show.sounds.muted?)
+          else nil
+          end
+        end
       end
     end
   end

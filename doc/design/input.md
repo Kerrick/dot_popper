@@ -104,7 +104,7 @@ Lota names a gamepad's buttons as LÖVE names an Xbox pad's (SDL maps every othe
 
 The d-pad has no intent of its own: it moves the cursor. The right stick scrolls a list (`Show#stick_scroll`, `Style::CREDITS.stick` lines a second at full tilt) and, on Game Over, rolls the pile ([look-and-sound.md](look-and-sound.md)).
 
-Each screen's own buttons (`Show#pad`, `#pad_game_over`, `#pad_dialog`, `#pad_offer`, `#pad_groups`, `GroupPanel#pad`):
+Each screen's own buttons (`Show#pad` asks the screen on top, `Show#screen`: `Screens::Home#pad`, `Screens::GameOver#pad` and the rest, and for the friend groups `GroupPanel#pad`):
 
 | Screen | Buttons |
 | --- | --- |

@@ -15,6 +15,13 @@ module DotPopper
 
         def primary = show.play_again
 
+        # LB opens the new achievement, and RB the friend group, as their
+        # lines say.
+        def pad(button)
+          chip = { lb: :over_achievement, rb: :over_group }[button] or return
+          show.open_from_game_over(chip == :over_achievement ? :achievement : :group) if show.game_over_chips.any? { it.name == chip && it.opens }
+        end
+
         # Escape or B goes Home, as Home does.
         def back
           show.continue_on

@@ -15,6 +15,15 @@ module DotPopper
           show.close_dialog
           true
         end
+
+        # LB and RB: the previous and next achievement.
+        def pad(button)
+          case button
+          in :lb then show.step_achievement(-1)
+          in :rb then show.step_achievement(1)
+          else nil
+          end
+        end
       end
     end
   end

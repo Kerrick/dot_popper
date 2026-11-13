@@ -650,6 +650,16 @@ module DotPopper
       # (doc/design/store-and-pro.md).
       def offer_offered? = @buy_pro.offered?
 
+      # Whether the store takes a license key (WebsiteStore), rather than
+      # restoring its purchases.
+      def keys? = @storefront.keys?
+
+      # Restore Purchases, on the offer.
+      def restore = @buy_pro.restore
+
+      # Friend groups, opened from Home.
+      def open_groups = (@groups.open if on_home?)
+
       # Whether the player has Pro.
       def pro? = @entitlement.pro?
 
@@ -1135,35 +1145,9 @@ module DotPopper
         PrivacyScreen.new(layout:, measure: @measure, lines:, note: words.button(:privacy_delete_note), deletable: @groups.known?).plan
       end
 
-      # A gamepad's button (+name+, a GamepadButtons intent) on this
-      # screen, as +by+, for a button that is held.
-      def pad(name)
-        return pad_offer(name) if offer?
-        return pad_game_over(name) if game_over? && !sharing?
-        return pad_groups(name) if group_open?
-        return pad_dialog(name) if dialog
-
-        case [@page, name]
-        in [nil, :x] then open_stats
-        in [nil, :y] then how_to_play
-        in [nil, :lb] then open_achievements
-        in [nil, :rb] then open_themes
-        in [nil, :lt] then (@groups.open if on_home?)
-        in [nil, :select] then open_settings
-        in [:stats, :y] then clear_or_undo(:y)
-        in [:achievements, :x] then open_achievement(Achievement::IDS.first)
-        in [:themes, :lb] then step_theme(-1)
-        in [:themes, :rb] then step_theme(1)
-        in [:settings, :lb] then choose_sizing(cabinet.sizing.toggled) if sizing_offered?
-        in [:settings, :rb] then next_display
-        in [:settings, :x] then open_credits
-        in [:settings, :y] then open_privacy
-        in [:settings, :select] then set_sound(sounds.muted?)
-        in [:privacy, :x] then open_policy
-        in [:privacy, :y] then @groups.hold_delete(:y, now)
-        else nil
-        end
-      end
+      # A gamepad's button (+name+, a GamepadButtons intent) on the screen
+      # on top.
+      def pad(name) = screen.pad(name)
 
       PRIVACY_URL = "https://dot-popper.setdef.com/privacy"
 
@@ -1242,6 +1226,18 @@ module DotPopper
         return open_offer_for(:themes) if @use_theme.call(theme) == :offer
 
         sounds.play(:tick, pitch: 1.2)
+      end
+
+      def step_theme(by)
+        list = themes
+        use(list[(list.index(in_use).to_i + by) % list.size])
+      end
+
+      def next_display
+        return unless window.offered?
+
+        order = %i[window borderless exclusive]
+        window.display = order[(order.index(window.display).to_i + 1) % order.size]
       end
 
       private
@@ -1327,47 +1323,6 @@ module DotPopper
       # had its own tick as it was pressed.
       def pro_arrived(granted)
         sounds.play(:tick, pitch: 1.3) if offer? && granted.by == :receipt
-      end
-
-      # LB opens the new achievement, and RB the friend group, as their
-      # lines on Game Over say.
-      def pad_game_over(name)
-        chip = { lb: :over_achievement, rb: :over_group }[name] or return
-        open_from_game_over(chip == :over_achievement ? :achievement : :group) if game_over_chips.any? { it.name == chip && it.opens }
-      end
-
-      # The friend groups' buttons; over the notice, X opens the privacy
-      # policy, as it does on Privacy.
-      def pad_groups(name)
-        return (open_policy if name == :x) if @groups.asking
-
-        @groups.pad(name)
-      end
-
-      def pad_offer(name)
-        case name
-        when :x then @storefront.keys? ? paste_key : @buy_pro.restore
-        when :y then buy_shortcut
-        end
-      end
-
-      def pad_dialog(name)
-        case name
-        when :lb then step_achievement(-1)
-        when :rb then step_achievement(1)
-        end
-      end
-
-      def step_theme(by)
-        list = themes
-        use(list[(list.index(in_use).to_i + by) % list.size])
-      end
-
-      def next_display
-        return unless window.offered?
-
-        order = %i[window borderless exclusive]
-        window.display = order[(order.index(window.display).to_i + 1) % order.size]
       end
 
       def hold_clear(by)

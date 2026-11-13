@@ -14,6 +14,20 @@ module DotPopper
         end
 
         def primary = show.play
+
+        # X Stats, Y How to play, LB Achievements, RB Themes, LT Friend
+        # groups, and View/Select Settings.
+        def pad(button)
+          case button
+          in :x then show.open_stats
+          in :y then show.how_to_play
+          in :lb then show.open_achievements
+          in :rb then show.open_themes
+          in :lt then show.open_groups
+          in :select then show.open_settings
+          else nil
+          end
+        end
       end
     end
   end

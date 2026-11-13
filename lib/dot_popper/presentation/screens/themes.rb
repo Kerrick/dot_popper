@@ -11,6 +11,15 @@ module DotPopper
           steps = show.input == InputKind::GAMEPAD ? plan.steps.map { |name, rect| button(name, rect) } : []
           plan.cards.map { button(it.theme, it.rect) } + steps << back_button
         end
+
+        # LB and RB: use the previous or next theme.
+        def pad(button)
+          case button
+          in :lb then show.step_theme(-1)
+          in :rb then show.step_theme(1)
+          else nil
+          end
+        end
       end
     end
   end

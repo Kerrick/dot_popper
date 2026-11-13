@@ -21,6 +21,16 @@ module DotPopper
           show.close_offer
           true
         end
+
+        # X Paste license key on a copy that takes one, or else Restore
+        # Purchases; Y Buy.
+        def pad(button)
+          case button
+          in :x then show.keys? ? show.paste_key : show.restore
+          in :y then show.buy_shortcut
+          else nil
+          end
+        end
       end
     end
   end

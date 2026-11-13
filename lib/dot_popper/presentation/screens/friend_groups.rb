@@ -17,6 +17,14 @@ module DotPopper
           show.group_panel.back
           true
         end
+
+        # Each page's own (GroupPanel#pad); over the notice, X opens the
+        # privacy policy, as it does on Privacy.
+        def pad(button)
+          return (show.open_policy if button == :x) if show.group_panel.asking
+
+          show.group_panel.pad(button)
+        end
       end
     end
   end
