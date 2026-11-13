@@ -12,7 +12,7 @@ module DotPopperGui
   #   between two popped dots differs between them while bright too, so a
   #   popped dot's own details are the ones it had.
   # - No piece of a popped dot looks like the bright dot at a glance, or
-  #   a player takes it for a piece of the bright dot (Glance).
+  #   a player takes it for a piece of the bright dot (ColorDifference).
   # - A dot drawn twice at the same moment of the game, with real time
   #   between, looks the same, so no screenshot here depends on how fast
   #   the machine draws.
@@ -53,7 +53,7 @@ module DotPopperGui
     OWN_DOTS = %i[jack_o_lantern ghost].freeze
 
     # How near, at the least, a popped dot's colors may come to the
-    # bright dot's (Glance.nearest, CIELAB distance). Classic,
+    # bright dot's (ColorDifference.nearest, CIELAB distance). Classic,
     # Jack-o'-lantern, Ghost and Eclipse, which read at a glance, keep
     # 60.0, 56.4, 72.8 and 84.0 away; the Santa a playtester could not
     # tell from the bright one when popped (the shader before 79ca5ae)
@@ -152,7 +152,7 @@ module DotPopperGui
 
     # The nearest each popped dot comes to the same dot bright.
     def nearest(drawn)
-      distance = drawn.popped.zip(drawn.bright).map { |popped, bright| Glance.nearest(popped, bright) }.min
+      distance = drawn.popped.zip(drawn.bright).map { |popped, bright| ColorDifference.nearest(popped, bright) }.min
       say format("%s popped comes within %.1f of the bright dot", drawn.key, distance)
       distance
     end
@@ -197,8 +197,8 @@ module DotPopperGui
 
     def color(i, j) = @colors[j + @half][i + @half]
 
-    # The CIELAB colors (Glance.lab) of the points within +reach+ radii.
-    def labs(reach = 0.9) = points(reach).map { Glance.lab(color(*it)) }
+    # The CIELAB colors (ColorDifference.lab) of the points within +reach+ radii.
+    def labs(reach = 0.9) = points(reach).map { ColorDifference.lab(color(*it)) }
 
     private
 
@@ -223,7 +223,7 @@ module DotPopperGui
   # lightness and in color, so a popped dot as light as Classic's lilac rim
   # is far from a gold bright dot, and a pale gray glint is near a white
   # one.
-  module Glance
+  module ColorDifference
     SLIVER = 0.3
     CLOSEST = 0.001
     STEP = 2.0 # colors are rounded to this many units, to be quick
@@ -265,4 +265,7 @@ module DotPopperGui
       nearest
     end
   end
+
+  # The old name, until no commit uses it.
+  Glance = ColorDifference
 end

@@ -207,7 +207,7 @@ Every theme keeps a bright dot told from a popped one by shape and lightness, no
 
 It also checks that Classic comes first and is the only theme without art, that every theme has a name, that a dot keeps its seed through its pop while each dot has its own, and that no dot shader reads where on the screen it draws.
 
-Nothing in a popped dot may be taken for a piece of the bright dot at a glance: no highlight, rim light, sheen, pale band, light eye or vivid accent in the bright dot's colors. A popped dot reads by its shape in dark tones, as Jack-o'-lantern's carved face is darker than its dark body and Ghost's eye holes are only a little lighter than its own. A playtester could not tell popped Santas from the bright one while they had a pale beard and light eyes. The palette can't show this, because a shader draws the dot, so `test/gui/scenarios/popped_dots.rb` (in `rake test:gui`) measures it from screenshots of each theme's dots 1, 2 and 3, bright and popped (`Glance`):
+Nothing in a popped dot may be taken for a piece of the bright dot at a glance: no highlight, rim light, sheen, pale band, light eye or vivid accent in the bright dot's colors. A popped dot reads by its shape in dark tones, as Jack-o'-lantern's carved face is darker than its dark body and Ghost's eye holes are only a little lighter than its own. A playtester could not tell popped Santas from the bright one while they had a pale beard and light eyes. The palette can't show this, because a shader draws the dot, so `test/gui/scenarios/popped_dots.rb` (in `rake test:gui`) measures it from screenshots of each theme's dots 1, 2 and 3, bright and popped (`ColorDifference`):
 
 | Rule | At least |
 | --- | --- |
