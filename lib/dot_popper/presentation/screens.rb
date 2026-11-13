@@ -17,10 +17,13 @@ module DotPopper
       # with a buzz of +haptics+; Credits says +notices+; Settings keeps the
       # dot size in +sizing_store+; Change Server chooses +server_choice+;
       # Themes and the new-theme card use themes through +use_theme+, and
-      # the card tells +theme_keeper+ it was told.
+      # the card tells +theme_keeper+ it was told; Home starts games through
+      # +start_game+, the Tutorial first while +tutorial_flag+ says, and
+      # counts +games+.
       def self.made_for(show, clipboard:, buy_pro:, storefront:, entitlement:, start_game:, sharing:, view_achievements:, keeper:,
-                        stats_book:, achievements:, haptics:, notices:, sizing_store:, server_choice:, theme_keeper:, use_theme:)
-        { home: Home.new(show), new_theme: NewTheme.new(show, theme_keeper:, use_theme:), tutorial: Tutorial.new(show), game: Game.new(show),
+                        stats_book:, achievements:, haptics:, notices:, sizing_store:, server_choice:, theme_keeper:, use_theme:,
+                        tutorial_flag:, games:)
+        { home: Home.new(show, start_game:, tutorial_flag:, games:), new_theme: NewTheme.new(show, theme_keeper:, use_theme:), tutorial: Tutorial.new(show), game: Game.new(show),
           game_over: GameOver.new(show, start_game:, sharing:), share_preview: SharePreview.new(show, clipboard:),
           offer: Offer.new(show, buy_pro:, storefront:, entitlement:),
           stats: Stats.new(show, keeper:, stats_book:, achievements:, haptics:), achievements: Achievements.new(show), achievement_dialog: AchievementDialog.new(show, view_achievements:),

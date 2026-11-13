@@ -71,7 +71,6 @@ module DotPopper
         @handing_over = nil
         @lead_in = nil
         @measure = measure
-        @plans = {}
         @stats_book = stats_book
         @layout = layout
         @sounds = sounds
@@ -100,7 +99,8 @@ module DotPopper
         @hover = Hover.none
         @screens = Screens.made_for(self, clipboard:, buy_pro: @buy_pro, storefront:, entitlement:, start_game: @start_game, sharing:,
                                           view_achievements: @view_achievements, keeper:, stats_book:, achievements:, haptics:, notices:,
-                                          sizing_store:, server_choice:, theme_keeper:, use_theme:)
+                                          sizing_store:, server_choice:, theme_keeper:, use_theme:,
+                                          tutorial_flag:, games:)
         cabinet.subscribe(@recorder)
         cabinet.subscribe(self)
       end
@@ -338,21 +338,9 @@ module DotPopper
       # only a press at a place may touch the score.
       def primary = screen.primary
 
-      # Home's Play: a game starts, or on a first Play, a game with
-      # the Tutorial over it (TutorialFlag), which is seen from then on.
-      def play
-        return unless on_home?
-        return open_tutorial if @tutorial_flag.due?(played: stats_offered?)
-
-        offer_for_play if @start_game.call == :none_left
-      end
-
-      # Home's "How to play", H, or a gamepad's Y there: a game with
-      # the Tutorial over it, at once, whether it was seen or not, as on a
-      # first Play.
-      def how_to_play
-        open_tutorial if on_home?
-      end
+      # Home's Play (Screens::Home#play) and How to play.
+      def play = @screens[:home].play
+      def how_to_play = @screens[:home].how_to_play
 
       # The Tutorial's skip button, Escape, or a gamepad's B: the Tutorial
       # goes, showing at once what it had yet to show of the game, and the
@@ -409,29 +397,12 @@ module DotPopper
       # a friend group, where holding it leaves the group (GroupPanel#start).
       def start = screen.start
 
-      QUIT_ASK = 2.0 # seconds a second B has to quit from the title
+      QUIT_ASK = Screens::Home::QUIT_ASK # seconds a second B has to quit from Home
 
-      # B on Home, where a controller has no other way to quit: the
-      # first press asks, and :quit if a second comes within QUIT_ASK
-      # seconds, so a stray press never closes the game.
-      def ask_to_quit
-        return unless on_home?
-        return :quit if quit_asked?
-
-        @quit_asked_at = now
-        sounds.play(:tick, pitch: 0.8)
-        :asked
-      end
-
-      # How much of "Press B again to quit" shows: all of it while a second
-      # press would quit, fading out in its last third of a second.
-      def quit_prompt
-        return 0.0 unless quit_asked? && home?
-
-        ((QUIT_ASK - (now - @quit_asked_at)) / 0.3).clamp(0.0, 1.0)
-      end
-
-      def quit_asked? = @quit_asked_at && now - @quit_asked_at <= QUIT_ASK
+      # B on Home (Screens::Home#ask_to_quit), and how much of "Press B
+      # again to quit" shows.
+      def ask_to_quit = @screens[:home].ask_to_quit
+      def quit_prompt = @screens[:home].quit_prompt
 
       # Escape, Android's Back, or a gamepad's B: closes the share
       # preview, leaves the Stats screen, and goes on from Game Over to
@@ -734,38 +705,18 @@ module DotPopper
       # DotSizing and its Rect, while Home offers it.
       def sizing_reaches = SIZINGS.map { [it, reach_of(it)] }
 
-      # Where Home's parts go (HomePlan).
-      def home_plan
-        planned(HomeScreen.new(layout:, type: style::TYPE, words:, measure: @measure, played: stats_offered?,
-                               tile_names:, window: window.offered?))
-      end
-
-      # The four large buttons on Home, Friend groups only where a server is offered.
-      def tile_names = [:stats, :achievements, :themes, *(:groups if group_offered?)]
-
-      # What Home says of the games left, or nil where none are counted.
-      def games_line = (words.games_left(games.left) if games.metered?)
-
-      # What Play says, and what it leaves to say beneath it.
-      def play_word = @start_game.none_left? ? words.button(:get_pro) : words.play
-
-      def play_note
-        return unless games.metered?
-
-        @start_game.none_left? ? words.no_games_left(games.daily) : words.games_left(games.left)
-      end
+      # Where Home's parts go (HomePlan), its large buttons, what it says
+      # of the games left, and what Play says (Screens::Home).
+      def home_plan = @screens[:home].plan
+      def tile_names = @screens[:home].tile_names
+      def games_line = @screens[:home].games_line
+      def play_word = @screens[:home].play_word
+      def play_note = @screens[:home].play_note
 
       # A large button's name and its one value.
       def tile_word(name) = words.tile(name)
 
-      def tile_note(name)
-        case name
-        when :stats then words.score_record_line(marquee.score_record)
-        when :achievements then achievement_count&.then { AchievementWords.count(it) } || words.tile_note(:to_earn)
-        when :themes then words.themes.fetch(in_use.key)
-        when :groups then @groups.member? ? words.titles_held(@groups.titles_held, @groups.groups.groups.size) : words.tile_note(:take_title)
-        end
-      end
+      def tile_note(name) = @screens[:home].tile_note(name)
 
       # A screen's heading's type size and middle, fitted beside Back
       # (Layout#heading_place).
@@ -835,17 +786,6 @@ module DotPopper
       # before a game has finished.
       def game_over_plan = @screens[:game_over].plan
 
-      # The plan of +screen+ (a HomeScreen), laid out
-      # again only when the screen differs from the last of its kind, since
-      # laying one out measures every line, a millisecond a frame on a
-      # phone, and each frame asks for it more than once.
-      def planned(screen)
-        last = @plans[screen.class]
-        return last.last if last&.first == screen
-
-        (@plans[screen.class] = [screen, screen.plan]).last
-      end
-
       # Game Over's words to lay out (GameOverScreen), or nil before a game
       # has finished.
       def game_over_screen = @screens[:game_over].layout_screen
@@ -900,13 +840,6 @@ module DotPopper
         @tutorial.tap(x, y)
       end
 
-      # A tap on Home away from its buttons: a bright dot there pops
-      # for fun, with no score; anywhere else, nothing happens.
-      def toy_tap(x, y)
-        dot = attract.dots.top_at(x, y)
-        toy_pop(dot, x, y) if dot&.bright?
-      end
-
       def undo = @screens[:stats].undo
 
       def hold_clear(by) = @screens[:stats].hold_clear(by)
@@ -931,32 +864,24 @@ module DotPopper
       # clearing Stats or an undo.
       def score_record_changed = @marquee = marquee.with(score_record: cabinet.score_record.of(cabinet.size_class))
 
-      private
 
-      # Opens the offer straight from Home, as Play does when no play
-      # is left; Back from it returns to Home.
-      def offer_for_play
-        return unless home? && offer_offered?
-
-        @screens[:stats].refresh
-        offer.open_for_play
-      end
-
-      # Plays the Tutorial over a game started paused on the field a game
-      # would start on, through the one way into a game (UseCases::StartGame),
-      # and sizes the effects to its dots. With no game left, the offer of
-      # Pro opens instead, and the Tutorial stays due.
-      def open_tutorial
-        opening = Tutorial.opening(cabinet.field, [layout.center_x, layout.center_y], style:)
-        started = @start_game.call(opening)
-        return offer_for_play if started == :none_left
-        return unless started == :started
-
-        @tutorial_flag.seen!
+      # The Tutorial opened over a game started paused (Screens::Home):
+      # the effects are sized to its dots, and it plays.
+      def tutorial_began
         effects.clear
         effects.scale_to(cabinet.field.radius)
         @tutorial = Tutorial.new(cabinet:, effects:, sounds:, haptics: @haptics, style:, now:, calm: @calm, palette:)
       end
+
+      # One of Home's dots, popped by a tap: its droplets, its ring,
+      # and its bloop, but no score.
+      def toy_pop(dot, x, y)
+        effects.burst(x, y, style::POP_BURST, palette.confetti)
+        effects.ring(dot.x, dot.y, style::SHOCKWAVE)
+        sounds.play(:pop, pan: pan(x))
+      end
+      private
+
 
       # The Tutorial moves on, and once it is over, the game plays on, and
       # only its clock starts, lit as it starts to run (LeadIn).
@@ -1116,13 +1041,6 @@ module DotPopper
         @marquee = Marquee.new(style: style::HOME, score_record: event.score_record, at: now)
       end
 
-      # One of Home's dots, popped by a tap: its droplets, its ring,
-      # and its bloop, but no score.
-      def toy_pop(dot, x, y)
-        effects.burst(x, y, style::POP_BURST, palette.confetti)
-        effects.ring(dot.x, dot.y, style::SHOCKWAVE)
-        sounds.play(:pop, pan: pan(x))
-      end
 
       # One floater to the left and one to the right of the tap; with only
       # one, it sits over the tap.

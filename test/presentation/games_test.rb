@@ -202,15 +202,20 @@ class GamesTest < Minitest::Test
     end
   end
 
-  # Play and the Tutorial's opening are the Show's only ways into a game,
-  # and both go through the one door (UseCases::StartGame, whose own test
-  # checks that nothing else starts one).
+  # Play and the Tutorial's opening, both Home's, are the Show's only
+  # ways into a game, and both go through the one door
+  # (UseCases::StartGame, whose own test checks that nothing else starts
+  # one). The Show makes the door, and the screens are given it.
   def test_the_show_starts_a_game_only_through_the_one_door
-    lines = File.readlines(File.expand_path("../../lib/dot_popper/presentation/show.rb", __dir__)).map(&:strip).reject { it.start_with?("#") }
+    folder = File.expand_path("../../lib/dot_popper/presentation", __dir__)
+    code = ->(path) { File.readlines(path).map(&:strip).reject { it.start_with?("#") } }
+    show = code.("#{folder}/show.rb")
+    screens = Dir["#{folder}/screens/*.rb"].to_h { [File.basename(it), code.(it)] }
 
-    assert_equal 1, lines.grep(/StartGame\.new/).size
-    assert_equal 2, lines.grep(/@start_game\.call/).size
-    assert_equal 1, lines.grep(/Tutorial\.new/).size
+    assert_equal 1, show.grep(/StartGame\.new/).size
+    assert_empty show.grep(/start_game\.call/)
+    assert_equal({ "home.rb" => 2 }, screens.transform_values { it.grep(/@start_game\.call/).size }.reject { |_, n| n.zero? })
+    assert_equal 1, show.grep(/Tutorial\.new/).size
   end
 
   def test_with_none_left_how_to_play_opens_the_offer_as_play_does
