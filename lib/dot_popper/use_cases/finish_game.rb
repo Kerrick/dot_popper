@@ -11,6 +11,12 @@ module DotPopper
     # only for a player with Pro (+entitlement+, Entitlement); a Free
     # player's is kept and shown once Pro is bought. The score record is
     # Cabinet's own, judged as the game ends (Events::GameEnded).
+    #
+    # It hears the rules' events itself (Cabinet#subscribe, which the
+    # composition root does), so what it finishes with comes from the
+    # rules alone: the game's numbers (GameStats::Recorder), the
+    # achievements its play earned (AchievementWatch), and whether the
+    # tutorial opened it (Events::GameEnded#tutorial).
     class FinishGame
       # What Game Over shows of what the game did: +record+, the most
       # impressive record it set in its class (Stats::Record), or nil;
@@ -23,16 +29,33 @@ module DotPopper
         @achievements = achievements
         @entitlement = entitlement
         @friend_groups = friend_groups
+        @recorder = GameStats::Recorder.new
+        @watch = AchievementWatch.new
+        @result = nil
+      end
+
+      # What Game Over shows of the last game finished (Result), or nil
+      # before one has.
+      attr_reader :result
+
+      # The numbers of the game in play, or of the one just finished.
+      def stats = @recorder.stats
+
+      # Hears one of the rules' events: each counts toward the game's
+      # numbers and its achievements, and GameEnded finishes it.
+      def call(event)
+        @recorder.call(event)
+        @watch.call(event)
+        @result = finish(event, stats:, earned: @watch.earned) if event.is_a?(Events::GameEnded)
       end
 
       # +ended+ is the game's Events::GameEnded, +stats+ its numbers
-      # (GameStats), and +earned+ the achievements its play earned
-      # (AchievementWatch#earned). +tutorial+ says the tutorial played over
-      # its opening, so it never counts in a friend group; nor does a game
+      # (GameStats), and +earned+ the achievements its play earned. A game
+      # the tutorial opened never counts in a friend group; nor does one
       # with standard dots.
-      def call(ended, stats:, earned: [], tutorial: false)
+      def finish(ended, stats:, earned: [])
         recorded = @stats_book.record(stats, ended.size_class)
-        @friend_groups.game_finished(score: ended.score, sized_to_screen: ended.size_class == SizeClass::FITTED && !tutorial)
+        @friend_groups.game_finished(score: ended.score, sized_to_screen: ended.size_class == SizeClass::FITTED && !ended.tutorial)
         fresh = @achievements.award(earned, day: @stats_book.today.iso8601)
         pro = @entitlement.pro?
         @friend_groups.report_achievements(fresh) if pro

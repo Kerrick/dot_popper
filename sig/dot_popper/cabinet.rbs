@@ -58,11 +58,11 @@ module DotPopper
 
     def unpause: () -> self
 
-    def finish: (Game game, Integer seed, SizeClass size_class) -> GameOver
+    def finish: (Game game, Integer seed, SizeClass size_class, bool tutorial) -> GameOver
 
     private
 
-    def begin_game: (Game game, Integer seed, ?SizeClass size_class) -> Playing
+    def begin_game: (Game game, Integer seed, ?SizeClass size_class, ?tutorial: bool) -> Playing
 
     def advance: (state next_state) -> self
 
@@ -83,7 +83,9 @@ module DotPopper
 
       attr_reader size_class: SizeClass
 
-      def self.new: (game: Game, seed: Integer, size_class: SizeClass) -> instance
+      attr_reader tutorial: bool
+
+      def self.new: (game: Game, seed: Integer, size_class: SizeClass, tutorial: bool) -> instance
 
       def press: (Cabinet cabinet, number x, number y) -> (Playing | GameOver)
 

@@ -130,24 +130,25 @@ module DotPopper
       state = self.state
       return self unless state.is_a?(Paused)
 
-      advance(begin_game(state.game, state.seed, state.size_class))
+      advance(begin_game(state.game, state.seed, state.size_class, tutorial: true))
     end
 
     # The game's score counts among the records of +size_class+, the class
-    # it started in, even if the window changed size meanwhile.
-    def finish(game, seed, size_class)
+    # it started in, even if the window changed size meanwhile. +tutorial+
+    # says the tutorial played over its opening (#start_paused).
+    def finish(game, seed, size_class, tutorial)
       first = score_record.first?(size_class)
       new_score_record = score_record.record(game.score, size_class)
       announce(Events::GameEnded.new(score_record: score_record.of(size_class), new_score_record:, seed:, size_class:, first:,
-                                     field: game.field, dots: game.dots, score: game.score, elapsed: game.elapsed))
+                                     field: game.field, dots: game.dots, score: game.score, elapsed: game.elapsed, tutorial:))
       GameOver.new(game:, new_score_record:)
     end
 
     private
 
-    def begin_game(game, seed, size_class = self.size_class)
+    def begin_game(game, seed, size_class = self.size_class, tutorial: false)
       announce(Events::GameStarted.new(seed:, field: game.field, dots: game.dots, score: game.score, dots_in_a_row: game.dots_in_a_row))
-      Playing.new(game:, seed:, size_class:)
+      Playing.new(game:, seed:, size_class:, tutorial:)
     end
 
     def advance(next_state)
@@ -164,8 +165,9 @@ module DotPopper
     end
 
     # A game in progress. It ends the moment the clock reaches zero,
-    # whether time ran out or a penalty took the last of it.
-    class Playing < Data.define(:game, :seed, :size_class)
+    # whether time ran out or a penalty took the last of it. +tutorial+
+    # says the tutorial played over its opening, while it was Paused.
+    class Playing < Data.define(:game, :seed, :size_class, :tutorial)
       def press(cabinet, x, y)
         cabinet.announce(game.tap_at(x, y))
         settle(cabinet)
@@ -178,7 +180,7 @@ module DotPopper
 
       private
 
-      def settle(cabinet) = game.over? ? cabinet.finish(game, seed, size_class) : self
+      def settle(cabinet) = game.over? ? cabinet.finish(game, seed, size_class, tutorial) : self
     end
 
     # A game made but not yet begun: its clock has not run, and while the

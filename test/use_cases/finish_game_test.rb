@@ -32,22 +32,22 @@ class FinishGameTest < Minitest::Test
   end
 
   def test_the_game_goes_into_stats
-    @finish.call(ended, stats: stats(dots_popped: 3))
+    @finish.finish(ended, stats: stats(dots_popped: 3))
 
     assert_equal 1, @stats_book.stats.games
     assert_equal 3, @stats_book.stats.dots_popped
   end
 
   def test_game_over_names_the_most_impressive_record_the_game_set
-    assert_nil @finish.call(ended, stats: stats(most_dots_in_a_row: 2)).record, "a first game has nothing to beat"
+    assert_nil @finish.finish(ended, stats: stats(most_dots_in_a_row: 2)).record, "a first game has nothing to beat"
 
-    result = @finish.call(ended, stats: stats(most_dots_in_a_row: 5))
+    result = @finish.finish(ended, stats: stats(most_dots_in_a_row: 5))
     assert_equal :most_dots_in_a_row, result.record.kind
     assert_equal 5, result.record.value
   end
 
   def test_a_free_players_achievements_are_kept_but_not_shown_or_reported
-    result = @finish.call(ended, stats: stats, earned: %i[big_score])
+    result = @finish.finish(ended, stats: stats, earned: %i[big_score])
 
     assert_empty result.achievements
     assert @achievements.earned?(:big_score)
@@ -56,28 +56,44 @@ class FinishGameTest < Minitest::Test
   end
 
   def test_a_pro_player_sees_and_reports_only_those_first_earned_in_this_game
-    @finish.call(ended, stats: stats, earned: %i[big_score])
+    @finish.finish(ended, stats: stats, earned: %i[big_score])
     pro = DotPopper::UseCases::FinishGame.new(stats_book: @stats_book, achievements: @achievements, entitlement: DotPopper::Entitlement.new(forced: true),
                                               friend_groups: @groups)
-    result = pro.call(ended, stats: stats, earned: %i[big_score blink])
+    result = pro.finish(ended, stats: stats, earned: %i[big_score blink])
 
     assert_equal %i[blink], result.achievements
     assert_equal [%i[blink]], @groups.achievements
   end
 
   def test_only_a_game_with_dots_sized_to_the_screen_and_no_tutorial_counts_in_a_friend_group
-    @finish.call(ended(score: 4), stats: stats)
-    @finish.call(ended(score: 5), stats: stats, tutorial: true)
-    @finish.call(ended(score: 6, size_class: DotPopper::SizeClass::SMALL), stats: stats)
+    @finish.finish(ended(score: 4), stats: stats)
+    @finish.finish(ended(score: 5, tutorial: true), stats: stats)
+    @finish.finish(ended(score: 6, size_class: DotPopper::SizeClass::SMALL), stats: stats)
 
     assert_equal [[4, true], [5, false], [6, false]], @groups.games
   end
 
+  # Heard as the rules announce each event, what it finishes with is the
+  # game's own: its numbers, and whether the tutorial opened it.
+  def test_it_finishes_each_game_from_the_rules_events_alone
+    cabinet = DotPopper::Cabinet.new(field, random: Random.new(3), sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
+    cabinet.subscribe(@finish)
+    play = ->(start) { start.call.then { cabinet.update(30) }.then { cabinet.update(DotPopper::Rules::GAME_OVER_GRACE) } }
+    play.(-> { cabinet.start_game })
+    cabinet.press(0, 0)
+    play.(-> { cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)])).unpause })
+
+    assert_equal 2, @stats_book.stats.games
+    assert_equal [true, false], @groups.games.map(&:last), "the tutorial's game never counts"
+    assert_equal cabinet.game.score, @finish.stats.score
+    assert_equal [], @finish.result.achievements
+  end
+
   private
 
-  def ended(score: 3, size_class: DotPopper::SizeClass::FITTED)
+  def ended(score: 3, size_class: DotPopper::SizeClass::FITTED, tutorial: false)
     DotPopper::Events::GameEnded.new(score_record: score, new_score_record: false, seed: 1, size_class:, field:, dots: DotPopper::Stack.new,
-                                     score:, elapsed: 10.0)
+                                     score:, elapsed: 10.0, tutorial:)
   end
 
   def stats(**) = DotPopper::GameStats.start.with(duration: 10.0, **)

@@ -94,9 +94,11 @@ module DotPopper
 
       attr_reader elapsed: Float
 
-      def self.new: (score_record: Integer, new_score_record: bool, seed: Integer, size_class: SizeClass, field: Field, dots: Stack, score: Integer, elapsed: Float, ?first: bool) -> instance
+      attr_reader tutorial: bool
 
-      def initialize: (score_record: Integer, new_score_record: bool, seed: Integer, size_class: SizeClass, field: Field, dots: Stack, score: Integer, elapsed: Float, ?first: bool) -> void
+      def self.new: (score_record: Integer, new_score_record: bool, seed: Integer, size_class: SizeClass, field: Field, dots: Stack, score: Integer, elapsed: Float, ?first: bool, ?tutorial: bool) -> instance
+
+      def initialize: (score_record: Integer, new_score_record: bool, seed: Integer, size_class: SizeClass, field: Field, dots: Stack, score: Integer, elapsed: Float, ?first: bool, ?tutorial: bool) -> void
     end
 
     class HomeShown < ::Data

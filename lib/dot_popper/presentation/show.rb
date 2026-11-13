@@ -51,8 +51,6 @@ module DotPopper
         @links = links
         @tutorial_flag = tutorial_flag
         @theme_keeper = theme_keeper
-        @achievements = achievements
-        @achievement_watch = AchievementWatch.new
         # Methods, not blocks, so that what the panel keeps holds the Show
         # and the clipboard alone, and none of what the Show was given.
         @groups = GroupPanel.new(groups:, joining: join_or_create_friend_group, sounds:, pro_offer: method(:open_offer_for), notice: group_notice,
@@ -88,14 +86,12 @@ module DotPopper
         @mistake = nil
         @penalized_at = -Float::INFINITY
         @beckoned_at = nil
-        @recorder = GameStats::Recorder.new
         @keeper = keeper
         @pointer = nil
         @hover = Hover.none
         @screens = Screens.made_for(self, clipboard:, buy_pro:, start_game:, sharing:, view_achievements:, keeper:, stats_book:,
                                           achievements:, haptics:, notices:, sizing_store:, server_choice:, theme_keeper:, use_theme:,
                                           tutorial_flag:)
-        cabinet.subscribe(@recorder)
         cabinet.subscribe(self)
       end
 
@@ -127,7 +123,7 @@ module DotPopper
       attr_reader :radius
 
       # The numbers of the game in play, or of the one just finished.
-      def game_stats = @recorder.stats
+      def game_stats = @finish_game.stats
 
       # The colors of the theme in use (ThemeKeeper), which only changes
       # between games.
@@ -808,7 +804,6 @@ module DotPopper
 
       # Hears one of the rules' events (Cabinet#subscribe).
       def call(event)
-        @achievement_watch.call(event)
         case event
         when Events::GameStarted then game_started(event)
         when Events::Popped then popped(event)
@@ -933,7 +928,6 @@ module DotPopper
           @hud = Hud.blank(style::HUD, words)
           event.dots.each { animations.spawn(it.id, now) }
         end
-        @tutorial_game = !scene.nil?
         @groups.game_started
         @game_over = nil
         close_layer(:share_preview)
@@ -1004,10 +998,10 @@ module DotPopper
       end
 
 
-      # The game is finished (UseCases::FinishGame), and Game Over shows
-      # what it did.
+      # The game is finished (UseCases::FinishGame, which heard it first),
+      # and Game Over shows what it did.
       def game_ended(event)
-        result = @finish_game.call(event, stats: game_stats, earned: @achievement_watch.earned, tutorial: @tutorial_game)
+        result = @finish_game.result
         lesson = @tutor.lesson(@mistake) if @mistake&.among(event.dots)
         @game_over = GameOver.new(style: style::GAME_OVER, score: event.score, score_record: event.score_record, new_score_record: event.new_score_record, at: now,
                              stats: game_stats, record: result.record, goal_met: result.goal_met, lesson:, achievements: result.achievements,

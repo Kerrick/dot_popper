@@ -35,8 +35,9 @@ module DotPopper
     # whether this game set it, +first+ whether it was the first game on
     # such screens, which sets a record but is never a new one, and +seed+
     # the one its dots were drawn from. +elapsed+ is how long it played.
-    class GameEnded < Data.define(:score_record, :new_score_record, :seed, :size_class, :first, :field, :dots, :score, :elapsed)
-      def initialize(score_record:, new_score_record:, seed:, size_class:, field:, dots:, score:, elapsed:, first: false) = super
+    # +tutorial+ says the tutorial played over its opening.
+    class GameEnded < Data.define(:score_record, :new_score_record, :seed, :size_class, :first, :field, :dots, :score, :elapsed, :tutorial)
+      def initialize(score_record:, new_score_record:, seed:, size_class:, field:, dots:, score:, elapsed:, first: false, tutorial: false) = super
     end
 
     # Home came up; +score_record+ is the score record on screens like

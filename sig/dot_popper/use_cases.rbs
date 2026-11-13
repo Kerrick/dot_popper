@@ -30,10 +30,18 @@ module DotPopper
       @achievements: Achievements
       @entitlement: Entitlement
       @friend_groups: _FriendGroups
+      @recorder: GameStats::Recorder
+      @watch: AchievementWatch
 
       def initialize: (stats_book: StatsBook, achievements: Achievements, entitlement: Entitlement, friend_groups: _FriendGroups) -> void
 
-      def call: (Events::GameEnded ended, stats: GameStats, ?earned: Array[Achievement::id], ?tutorial: bool) -> Result
+      attr_reader result: Result?
+
+      def stats: () -> GameStats
+
+      def call: (event event) -> void
+
+      def finish: (Events::GameEnded ended, stats: GameStats, ?earned: Array[Achievement::id]) -> Result
 
       class Result < ::Data
         attr_reader record: Stats::Record?
