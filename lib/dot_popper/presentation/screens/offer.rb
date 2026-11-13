@@ -203,7 +203,8 @@ module DotPopper
         KEY_BINDINGS = [
           KeyBinding.new(keys: :v, with: KeyBinding::COMMAND, does: :paste),
           KeyBinding.new(keys: :b, with: KeyBinding::COMMAND, does: :buy),
-          KeyBinding.new(keys: [*("a".."z"), *("0".."9"), :minus, :backspace, :delete, :enter].map(&:to_sym), does: :type),
+          KeyBinding.new(keys: [*("a".."z"), *("0".."9"), :minus, :backspace, :delete, :enter].map(&:to_sym),
+                         held_or_not: true, does: :type),
           KeyBinding.new(keys: :space, does: :typing?)
         ].freeze
 

@@ -30,13 +30,13 @@ module DotPopper
 
       # The keys every screen takes, after the screen's own, in order; the
       # first that answers a key and takes it wins (KeyBinding). Escape
-      # goes back before it leaves, and Alt or Cmd makes Enter
-      # fullscreen's, not the main button's.
+      # goes back before it leaves, and Enter alone is the main button's,
+      # Alt or Cmd with Enter fullscreen's.
       KEY_BINDINGS = [
         KeyBinding.new(keys: :m, does: :mute),
         KeyBinding.new(keys: %i[up down page_up page_down home end], does: :scroll),
         KeyBinding.new(keys: :space, does: :primary),
-        KeyBinding.new(keys: :enter, without: %i[alt command], does: :primary),
+        KeyBinding.new(keys: :enter, does: :primary),
         KeyBinding.new(keys: :escape, does: :back),
         KeyBinding.new(keys: :escape, does: :leave),
         KeyBinding.new(keys: :f11, does: :fullscreen),

@@ -170,16 +170,20 @@ class KeyboardTest < Minitest::Test
       assert show.sounds.muted?, at
       press(:m, :ctrl)
 
-      refute show.sounds.muted?, "#{at}: Ctrl+M too"
+      assert show.sounds.muted?, "#{at}: Ctrl+M is no M"
     end
   end
 
   def test_h_on_home_opens_how_to_play
-    [[], [:ctrl], [:alt]].each do |held|
-      given
-      press(:h, *held)
+    given
+    press(:h)
 
-      assert show.tutorial?, held.inspect
+    assert show.tutorial?
+    %i[ctrl alt command].each do |held|
+      given
+      press(:h, held)
+
+      assert show.on_home?, "#{held}+H is no H"
     end
     %i[stats settings game_over].each do |at|
       given(at:)
@@ -256,11 +260,38 @@ class KeyboardTest < Minitest::Test
     press(:enter, :ctrl)
 
     assert_equal 0, @shell.switches
-    assert show.playing?, "Ctrl+Enter is Enter"
+    assert show.on_home?, "Ctrl+Enter is no Enter"
     given
     press(:space, :alt)
 
-    assert show.playing?, "Alt+Space is Space"
+    assert show.on_home?, "Alt+Space is no Space"
+  end
+
+  # A key held with Ctrl, Cmd or Alt acts only where a table binds that
+  # chord (Ctrl or Cmd with V or B, Alt or Cmd with Enter); elsewhere it
+  # is no press of the plain key. On a license key, a key's letters are
+  # typed with any of them held, so they are never shortcuts.
+  def test_a_chord_is_not_the_plain_key
+    { [:settings, :c] => -> { show.settings? }, [:keypad, :"2"] => -> { show.group_panel.code.empty? },
+      [:credits, :down] => -> { show.credits.offset.zero? }, [:stats, :escape] => -> { show.stats? },
+      [:home, :f11] => -> { @shell.switches.zero? }, [:home, :space] => -> { show.on_home? } }.each do |(at, key), still|
+      %i[ctrl alt command].each do |held|
+        given(at:, pro: at == :keypad)
+        press(key, held)
+
+        assert still.call, "#{held}+#{key} on #{at}"
+        assert_equal 0, @shell.quits, "#{held}+#{key} on #{at}"
+      end
+    end
+    given(at: :server, gone: true, copied: SERVER)
+    press(:v, :ctrl, :alt)
+
+    assert_nil fixture.server_choice.address, "Ctrl+Alt+V is no Ctrl+V"
+    given(at: :offer)
+    press(:m, :alt)
+    press(:k, :command)
+
+    assert_equal "MK", fixture.storefront.typed
   end
 
   def test_f11_switches_fullscreen_on_a_computer_only
