@@ -25,7 +25,7 @@ class ShowTest < Minitest::Test
   end
 
   # Home's dots are a toy on Home alone: on a screen over it, which veils
-  # them, and under the offer of Pro, a tap where one shows through pops
+  # them, and under the offer of Pro, a tap where one shows through does
   # nothing and makes no sound.
   def test_home_dots_pop_only_on_home
     { themes: -> { @show.open_themes }, privacy: -> { @show.open_settings && @show.open_privacy },

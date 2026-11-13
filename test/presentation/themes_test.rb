@@ -103,7 +103,7 @@ class ThemesTest < Minitest::Test
   end
 
   # Home's dots under the card are not Home's toy while it waits.
-  def test_under_the_card_a_tap_pops_none_of_homes_dots
+  def test_under_the_card_a_tap_on_homes_dots_does_nothing
     show(pro: true, unlocked: ["ghost"])
     dots = @show.attract.dots
     bright = dots.find { it.bright? && dots.top_at(it.x, it.y) == it && @show.control_at(it.x, it.y).nil? }
