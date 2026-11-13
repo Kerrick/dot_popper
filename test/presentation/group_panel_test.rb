@@ -93,6 +93,18 @@ class GroupPanelTest < Minitest::Test
     assert_includes lines, Words.blurb
   end
 
+  # Only games with the default size count, and a group says so to a
+  # player who chose the other, naming the choice as Settings does.
+  def test_with_the_other_dot_size_a_group_says_which_games_count
+    @cabinet.sizing = DotPopper::DotSizing::DEFAULT
+    join!
+    refute_includes lines, Words.standard_note
+
+    @cabinet.sizing = DotPopper::DotSizing::DEFAULT.toggled
+
+    assert_includes lines, "Only games with standard dots count. Choose Standard in Settings."
+  end
+
   def test_no_screen_has_a_field_for_text_or_a_picker_of_dots
     panel.open
 

@@ -130,7 +130,8 @@ module DotPopper
           cabinet = show.cabinet
           size_class = cabinet.size_class
           StatsSheet.build(@stats_book.stats, score_record: cabinet.score_record.of(size_class), words:, streak: @stats_book.streak,
-                                              size_class:, field: cabinet.field, sizing: cabinet.sizing, achievements: @achievements)
+                                              size_class:, field: cabinet.field, sizing: cabinet.sizing, preview: show.sizing_preview,
+                                              achievements: @achievements)
         end
       end
     end

@@ -178,13 +178,13 @@ module DotPopper
         sized ? screen_size.fetch(:fitted_played) : format(screen_size.fetch(:played), *Words.dots_across(field))
       end
 
-      # The name of one choice of dot size, on its segment of Home's
-      # "Dot size" control, by what it does on this screen next to the
-      # other, as the +preview+ (SizingPreview) sees it: on a phone,
-      # fitting the dots to the screen gives "Smaller dots" and the fixed
-      # size "Bigger dots"; on a big monitor, the other way about. A
-      # player chooses what they see, not how the size is worked out.
-      def sizing(sizing, preview) = screen_size.fetch(effect_of(sizing, preview))
+      # The name of one choice of dot size, on its segment of Settings'
+      # "Dot size" control. The default is "Standard" on every screen, and
+      # the other is named by what it does here next to it, as the
+      # +preview+ (SizingPreview) sees it: "Bigger" on a phone, "Smaller"
+      # on a big monitor. A player sees only their own two sizes, so the
+      # words say what happens on this screen, not how a size is worked out.
+      def sizing(sizing, preview) = screen_size.fetch(sizing.sized_to_screen? ? :standard : effect_of(sizing, preview))
 
       # What else that choice does, under its name: "More room" for the
       # smaller dots, "Less room" for the bigger.
@@ -194,13 +194,16 @@ module DotPopper
       def sizing_label = screen_size.fetch(:choice)
 
       # The Stats screen's heading for the records it shows: "Your stats
-      # with standard dots on screens this size".
-      def records_heading(sizing) = labels.fetch(sizing.sized_to_screen? ? :fitted_records : :records)
+      # with standard dots", or for the other size "Your stats with bigger
+      # dots on screens this size", by its name here (#sizing). Where the
+      # two sizes look alike, Settings names neither, and nor does this.
+      def records_heading(sizing, preview = nil) = sized(:records, sizing, preview)
 
       # The line under the Stats screen's chart, when some of its bars
       # are of games that do not count toward the records shown: "Brighter
-      # bars are games with dots sized to the screen."
-      def chart_note(sizing) = labels.fetch(sizing.sized_to_screen? ? :fitted_chart_note : :chart_note)
+      # bars are games with standard dots.", in the same words as
+      # #records_heading.
+      def chart_note(sizing, preview = nil) = sized(:chart_note, sizing, preview)
 
       # How many dots fit across +field+ and down it, side by side, to the
       # nearest whole dot, and never none.
@@ -285,6 +288,19 @@ module DotPopper
         elsif score == score_record && score_record.positive? then ", tying my record!"
         else ""
         end
+      end
+
+      # The label +key+ for the dots +sizing+ gives, with their name in
+      # it: one for the standard size, and for the other, whose records
+      # are kept by screen size, one with its name here, or one with none
+      # where the two look alike.
+      def sized(key, sizing, preview)
+        return format(labels.fetch(key), sizing(sizing, preview).downcase) if sizing.sized_to_screen?
+
+        effect = preview && effect_of(sizing, preview)
+        return labels.fetch(:"#{key}_unnamed") unless %i[smaller bigger].include?(effect)
+
+        format(labels.fetch(:"#{key}_by_screen"), sizing(sizing, preview).downcase)
       end
 
       # :smaller or :bigger: what +sizing+ does to the dots here, next to

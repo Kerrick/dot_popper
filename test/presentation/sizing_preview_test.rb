@@ -12,15 +12,16 @@ class SizingPreviewTest < Minitest::Test
   def named(sizing, fitted) = Style::WORDS.sizing(sizing, preview(fitted))
   def note(sizing, fitted) = Style::WORDS.sizing_note(sizing, preview(fitted))
 
-  # The maintainer: "Standard" is poorly named when it isn't the
-  # standard. Each choice is named for what a player sees it do here,
-  # next to the other, so on a phone the default reads "Smaller"
-  # and on a big monitor "Bigger".
-  def test_each_choice_is_named_for_what_it_does_here
-    assert_equal ["Smaller", "Bigger"], [named(FITTED, 30), named(STANDARD, 30)]
-    assert_equal ["Smaller", "Bigger"], [named(FITTED, 44.9), named(STANDARD, 44.9)]
-    assert_equal ["Bigger", "Smaller"], [named(FITTED, 55.1), named(STANDARD, 55.1)]
-    assert_equal ["Bigger", "Smaller"], [named(FITTED, 97), named(STANDARD, 97)]
+  # The default is "Standard" everywhere, and the other is named for
+  # what a player sees it do here, next to it. The maintainer: "A player
+  # sees only their own relative dot sizes: the smaller option, and the
+  # bigger option." So on a phone the other reads "Bigger", and on a big
+  # monitor "Smaller".
+  def test_the_default_is_standard_and_the_other_is_named_for_what_it_does_here
+    assert_equal ["Standard", "Bigger"], [named(FITTED, 30), named(STANDARD, 30)]
+    assert_equal ["Standard", "Bigger"], [named(FITTED, 44.9), named(STANDARD, 44.9)]
+    assert_equal ["Standard", "Smaller"], [named(FITTED, 55.1), named(STANDARD, 55.1)]
+    assert_equal ["Standard", "Smaller"], [named(FITTED, 97), named(STANDARD, 97)]
   end
 
   # Under its name, each says what else it does: smaller dots leave more

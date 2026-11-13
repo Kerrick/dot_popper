@@ -17,7 +17,8 @@ module DotPopper
     # streaks (+streak+ is the current one, as it stands today), and the
     # last few scores for the chart. The records, and +score_record+, are those of
     # screens of +size_class+, the screen's now, and +notes+ say how big
-    # +field+, the screen, is, and what +sizing+ (DotSizing) does. With no game played yet, +empty+ is true
+    # +field+, the screen, is, and what +sizing+ (DotSizing) does, named as
+    # +preview+ (SizingPreview) names it in Settings. With no game played yet, +empty+ is true
     # and there is nothing to list. +mine+ says, for each of the last
     # +scores+, whether it was played in +size_class+, and so counts
     # toward the records shown; the chart dims the others, and +chart_note+
@@ -40,10 +41,10 @@ module DotPopper
       end
 
       def self.build(stats, score_record:, words:, streak: 0, size_class: SizeClass::MEDIUM, field: nil,
-                     sizing: DotSizing::STANDARD, achievements: nil)
+                     sizing: DotSizing::STANDARD, preview: nil, achievements: nil)
         labels = words.labels
         mine = stats.records_in(size_class)
-        records = StatsSection.new(heading: words.records_heading(sizing), rows: [
+        records = StatsSection.new(heading: words.records_heading(sizing, preview), rows: [
           StatsRow.new(label: labels[:score_record], value: score_record.to_s),
           StatsRow.new(label: labels[:longest_game], value: Words.count(mine.longest_game.round, "second")),
           StatsRow.new(label: labels[:most_dots_in_a_row], value: mine.most_dots_in_a_row.to_s),
@@ -64,7 +65,7 @@ module DotPopper
         mine = stats.recent_classes.map { it == size_class }
         new(records:, totals:, goal:, scores: stats.recent, empty: stats.games.zero?,
             notes: field ? [words.screen_here(field)] : [], mine:,
-            chart_note: (words.chart_note(sizing) unless mine.all?), achievements: achievements_section(achievements))
+            chart_note: (words.chart_note(sizing, preview) unless mine.all?), achievements: achievements_section(achievements))
       end
     end
 

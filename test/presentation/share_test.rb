@@ -19,9 +19,9 @@ class ShareTest < Minitest::Test
   end
 
   def test_the_preview_keeps_the_text_and_when_it_was_copied
-    preview = SharePreview.open("Dot Popper: 3 points\nPlayed with dots sized to the screen.", 2.0)
+    preview = SharePreview.open("Dot Popper: 3 points\nPlayed with standard dots.", 2.0)
 
-    assert_equal ["Dot Popper: 3 points", "Played with dots sized to the screen."], preview.lines
+    assert_equal ["Dot Popper: 3 points", "Played with standard dots."], preview.lines
     refute preview.copied?
     assert_in_delta 0.0, preview.confirmation(5.0, Style::SHARE_PREVIEW)
     copied = preview.copy(3.0)

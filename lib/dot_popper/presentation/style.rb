@@ -108,10 +108,11 @@ module DotPopper
         }.freeze,
         cleared: "Stats cleared.", undo: ByInput.new(touch: "Undo", mouse: "Undo", gamepad: "Undo (Y)"),
         labels: {
-          records: "Your stats with standard dots on screens this size",
-          fitted_records: "Your stats with dots sized to the screen",
-          chart_note: "Brighter bars are games with standard dots on screens this size.",
-          fitted_chart_note: "Brighter bars are games with dots sized to the screen.",
+          records: "Your stats with %s dots", records_by_screen: "Your stats with %s dots on screens this size",
+          records_unnamed: "Your stats on screens this size",
+          chart_note: "Brighter bars are games with %s dots.",
+          chart_note_by_screen: "Brighter bars are games with %s dots on screens this size.",
+          chart_note_unnamed: "Brighter bars are games on screens this size.",
           score_record: "Highest score", longest_game: "Longest game",
           most_dots_in_a_row: "Most dots in a row without a mistake", shortest_time_to_pop: "Shortest Time to Pop",
           longest_time_to_pop: "Longest Time to Pop",
@@ -132,8 +133,8 @@ module DotPopper
         screen_size: {
           here: "This screen is about %d dots wide and %d dots tall.",
           played: "Played on a screen about %d dots wide and %d dots tall.",
-          fitted_played: "Played with dots sized to the screen.",
-          choice: "Dot size", smaller: "Smaller", bigger: "Bigger", smaller_note: "More room",
+          fitted_played: "Played with standard dots.",
+          choice: "Dot size", standard: "Standard", smaller: "Smaller", bigger: "Bigger", smaller_note: "More room",
           bigger_note: "Less room", alike_note: "",
           alike: "About the same"
         }.freeze,

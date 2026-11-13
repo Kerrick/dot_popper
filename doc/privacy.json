@@ -358,7 +358,7 @@
         "path": "/games",
         "query": {},
         "body": {
-          "score": "the score of a game that counts: played by a group member, with dots sized to the screen, not the tutorial's"
+          "score": "the score of a game that counts: played by a group member, with standard dots, not the tutorial's"
         },
         "sends_token": true,
         "when": "After a game that counts, or at the next contact if it could not be sent then, while the player is in a group.",
