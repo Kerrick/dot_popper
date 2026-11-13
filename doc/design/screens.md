@@ -13,7 +13,7 @@ Where the parts go is worked out without Lota in `lib/dot_popper/presentation/` 
 | Screen | Opened from | Back goes to | Code |
 | --- | --- | --- | --- |
 | setdef splash | launch | (ends by itself, or on any press) | `Presentation::Splash`, `Shell::SplashPainter` |
-| Home | after the splash; Back from every screen over it; Game Over's Home | (Escape quits on a computer; Android's Back leaves the app) | `HomeScreen`, `Shell::HomePainter` |
+| Home | after the splash; Back from every screen over it; Game Over's Home | (Escape twice quits on a computer; Android's Back leaves the app) | `HomeScreen`, `Shell::HomePainter` |
 | Stats | Home's Stats button | Home | `StatsLayout`, `Shell::StatsPainter` |
 | Achievements | Home's Achievements button; Game Over's new-achievement line | Home | `AchievementsScreen`, `Shell::AchievementsPainter` |
 | an achievement's dialog | a cell of Achievements | Achievements | `AchievementDialog` |
@@ -156,7 +156,7 @@ The margin is `Layout#page_margin`, 16 on a phone (a safe area under 600 on its 
 - A tap on one of Home's bright dots pops it for fun, with its droplets, ring and sound, and scores nothing (`Screens::Home#empty`). Empty space does nothing, and on every other screen a tap on a dot showing through does nothing.
 - Enter, Space, a gamepad's Start, and its A aimed at no button press Play (`Show#primary`). Only "(A)" is shown.
 - H, or the gamepad's Y, opens How to play. M mutes, on any screen. On a gamepad X opens Stats, LB Achievements, RB Themes, LT Friend groups, and View/Select opens Settings (`Show#pad`, `GamepadButtons::SETTINGS`), as a console game's options button does.
-- **Quitting.** On a computer, Escape quits from Home, and Quit quits at once: a press on a labeled button is deliberate, so it asks nothing. On Android, Back leaves the app from Home. iOS leaves quitting to the system. A controller's B asks first: the first press plays a tick and shows "Press B again to quit", and a second B within two seconds quits (`Show#ask_to_quit`, `QUIT_ASK`), so a stray press never closes the game. The line fades out over its last 0.3 s (`#quit_prompt`). It stands at `HomePlan#quit_line`, midway between Play's bottom and the part below it, and `HomeScreen#fits?` keeps a 200 × 18 box there clear of everything, so Play never moves for it.
+- **Quitting.** On a computer, Quit quits at once: a press on a labeled button is deliberate, so it asks nothing. On Android, Back leaves the app from Home. iOS leaves quitting to the system. A controller's B, and a computer's Escape, ask first: the first press plays a tick and shows "Press B again to quit" (or "Press Escape again to quit", naming the key that asked; `Show#quit_again`), and a second press of either within two seconds quits (`Show#ask_to_quit`, `QUIT_ASK`), so a stray press never closes the game. The line fades out over its last 0.3 s (`#quit_prompt`). It stands at `HomePlan#quit_line`, midway between Play's bottom and the part below it, and `HomeScreen#fits?` keeps a 200 × 18 box there clear of everything, so Play never moves for it.
 
 ### The window choice on computers
 

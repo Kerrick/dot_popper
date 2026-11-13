@@ -27,7 +27,7 @@ A system Lota names that `Shell::Platforms` doesn't know plays as a computer. Wh
 | Window | Sized to fit the desktop, resizable, with Settings' Display choice | as Windows | as Windows | Fills the screen | Fills the screen |
 | Renderers (`RendererChoice.usual`) | LÖVE's order: Vulkan, then OpenGL | Metal | OpenGL only | Metal | LÖVE's order: Vulkan, then OpenGL ES |
 | Vulkan rescue | Runs the game again | Never needed | Never needed | Never needed | Asks the player to start it again |
-| Leaving the game | Quit on Home, Escape, B twice | as Windows | as Windows | Only the system | Back on Home, B twice |
+| Leaving the game | Quit on Home, Escape or B twice | as Windows | as Windows | Only the system | Back on Home, B twice |
 | Haptics | None | None | None | None | A buzz on a pop and a mistake |
 | Share my score | The game's preview | as Windows | as Windows | The system's share sheet | The system's share sheet |
 | Starting input (`InputKind.starting`) | Mouse | Mouse | Mouse | Touch | Touch |
@@ -41,7 +41,7 @@ On a computer, the composition root has the engine size the window (`Shell::Engi
 
 **A phone's or tablet's keyboard never quits or leaves fullscreen.** `Presentation::InputHandler` returns before Escape's quit and the fullscreen keys on a touch platform (`Platform#touch?`), since an iOS app never quits itself. What works before that point works on every device: M mutes, H opens How to play, Enter and Space press the screen's main button, Escape goes back where there is somewhere to go, and the keypad and scroll keys work ([input.md](input.md), "Keyboard").
 
-**Leaving.** On Android, Escape (which Back arrives as) on Home quits (`Lota::Event.quit`). On iOS nothing quits (`Platform#quits_itself?`): B on Home neither asks nor quits (`App#leave_home`).
+**Leaving.** On a computer, Escape on Home asks first and quits on a second press, as B does (`InputHandler#leave_home`). On Android, Escape (which Back arrives as) on Home quits at once (`Lota::Event.quit`), as Back does on an app's first screen. On iOS nothing quits (`Platform#quits_itself?`): B on Home neither asks nor quits (`InputHandler#leave_home`).
 
 ## What the game prints as it starts
 

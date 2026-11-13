@@ -82,6 +82,10 @@ module DotPopper
       # "1 of 3 titles".
       def titles_held(held, groups) = "#{held} of #{groups} #{groups == 1 ? "title" : "titles"}"
 
+      # What Home says while a second press would quit, naming the key that
+      # asked (+by+, :b or :escape): "Press B again to quit".
+      def quit_again(by = :b) = super().fetch(by)
+
       # What the Stats screen says while "Clear my stats…" is held:
       # on a gamepad, naming +button+, the one held ("A" or "Y").
       def keep_holding(button) = super().for(input).sub("%s", button.to_s)

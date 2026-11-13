@@ -324,20 +324,51 @@ class KeyboardTest < Minitest::Test
     end
   end
 
-  # With no Back, Escape quits a computer's game, during a game too, and
-  # Android's Back leaves the app from Home only; iOS apps never quit.
-  def test_escape_with_no_back_quits_as_each_system_does
-    { "Linux" => [1, 1], "Windows" => [1, 1], "OS X" => [1, 1], "Android" => [1, 0], "iOS" => [0, 0] }.each do |os, (home, game)|
+  # Where a screen has no Back, Escape does what a controller's B does:
+  # on Home a computer asks, and a second Escape (or B) within
+  # Show::QUIT_ASK quits; in a game nothing, so no stray key ends one.
+  # Android's Back, which arrives as Escape, leaves the app from Home at
+  # once, as Back does on an app's first screen; iOS apps never quit.
+  def test_escape_with_no_back_does_what_b_does
+    ["Linux", "Windows", "OS X"].each do |os|
+      given(os:)
+      press(:escape)
+
+      assert_equal 0, @shell.quits, "#{os}: the first Escape asks"
+      assert_operator show.quit_prompt, :>, 0.0, os
+      assert_equal "Press Escape again to quit", show.quit_again, os
+      press(:escape)
+
+      assert_equal 1, @shell.quits, "#{os}: the second Escape quits"
+      given(os:, at: :game)
+      press(:escape)
+      press(:escape)
+
+      assert_equal 0, @shell.quits, "#{os}: Escape in a game"
+      assert show.playing?, os
+    end
+    { "Android" => 1, "iOS" => 0 }.each do |os, home|
       given(os:)
       press(:escape)
 
       assert_equal home, @shell.quits, "#{os}: Escape on Home"
+      assert_equal 0.0, show.quit_prompt, os
       given(os:, at: :game)
       press(:escape)
 
-      assert_equal game, @shell.quits, "#{os}: Escape in a game"
+      assert_equal 0, @shell.quits, "#{os}: Escape in a game"
       assert show.playing?, os
     end
+  end
+
+  def test_a_second_escape_quits_only_while_the_question_shows
+    given
+    press(:escape)
+    fixture.tick(P::Show::QUIT_ASK + 0.5)
+    press(:escape)
+
+    assert_equal 0, @shell.quits, "too late: it asks again"
+    assert_operator show.quit_prompt, :>, 0.0
   end
 
   def test_a_key_the_game_does_not_name_does_nothing_else

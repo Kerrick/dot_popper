@@ -53,6 +53,12 @@ module DotPopperGui
       keep_screenshot("quit-prompt")
       wait(DotPopper::Presentation::Show::QUIT_ASK + 0.2)
       check(show.home? && show.quit_prompt.zero?, "with no second B, the question goes and the game stays")
+      key(:escape)
+      wait(0.2)
+      check_equal("Press Escape again to quit", show.quit_again, "Escape on Home asks, naming Escape")
+      keep_screenshot("quit-prompt-escape")
+      wait(DotPopper::Presentation::Show::QUIT_ASK + 0.2)
+      check(show.home? && show.quit_prompt.zero?, "with no second Escape, the question goes and the game stays")
     end
 
     def home_drawn

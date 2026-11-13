@@ -375,10 +375,12 @@ module DotPopper
 
       QUIT_ASK = Screens::Home::QUIT_ASK # seconds a second B has to quit from Home
 
-      # B on Home (Screens::Home#ask_to_quit), and how much of "Press B
-      # again to quit" shows.
-      def ask_to_quit = @screens[:home].ask_to_quit
+      # B or a computer's Escape on Home (Screens::Home#ask_to_quit), how
+      # much of "Press B again to quit" shows, and its words, naming the
+      # key that asked: "Press Escape again to quit" after Escape.
+      def ask_to_quit(by = :b) = @screens[:home].ask_to_quit(by)
       def quit_prompt = @screens[:home].quit_prompt
+      def quit_again = words.quit_again(@screens[:home].quit_asked_by)
 
       # Escape, Android's Back, or a gamepad's B, on the screen on top
       # (Screens::Screen#back): its Back, Close or Home. Says whether it had

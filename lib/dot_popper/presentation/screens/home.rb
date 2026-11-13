@@ -17,6 +17,7 @@ module DotPopper
           @tutorial_flag = tutorial_flag
           @planned = nil
           @quit_asked_at = nil
+          @quit_asked_by = :b
         end
 
         # Play: a game starts, or on a first Play, a game with the Tutorial
@@ -35,17 +36,23 @@ module DotPopper
           open_tutorial if show.on_home?
         end
 
-        # B, where a controller has no other way to quit: the first press
-        # asks, and :quit if a second comes within QUIT_ASK seconds, so a
-        # stray press never closes the game.
-        def ask_to_quit
+        # B, where a controller has no other way to quit, or a computer's
+        # Escape (+by+ :b or :escape): the first press asks, and :quit if a
+        # second, of either, comes within QUIT_ASK seconds, so a stray
+        # press never closes the game.
+        def ask_to_quit(by = :b)
           return unless show.on_home?
           return :quit if quit_asked?
 
           @quit_asked_at = now
+          @quit_asked_by = by
           sounds.play(:tick, pitch: 0.8)
           :asked
         end
+
+        # The key that asked to quit last (#ask_to_quit), :b or :escape,
+        # which "Press B again to quit" names.
+        attr_reader :quit_asked_by
 
         # How much of "Press B again to quit" shows: all of it while a
         # second press would quit, fading out in its last third of a second.

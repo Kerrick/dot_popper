@@ -143,6 +143,7 @@ class ControllerTest < Minitest::Test
 
       assert_equal 0, @shell.quits, "#{os}: the first B asks"
       assert_operator show.quit_prompt, :>, 0.0, os unless os == "iOS"
+      assert_equal "Press B again to quit", show.quit_again, os unless os == "iOS"
       button("b")
 
       assert_equal quits, @shell.quits, "#{os}: the second B"

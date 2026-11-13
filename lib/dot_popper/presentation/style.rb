@@ -64,7 +64,7 @@ module DotPopper
           mouse: "Keep holding to clear your records, totals, chart, achievements, and streak.",
           gamepad: "Keep holding %s to clear your records, totals, chart, achievements, and streak."
         ),
-        quit_again: "Press B again to quit",
+        quit_again: { b: "Press B again to quit", escape: "Press Escape again to quit" }.freeze,
         quit: ByInput.new(touch: "Quit", mouse: "Quit", gamepad: "Quit (B)"),
         # The Themes screen: its button's word and heading, and each theme's name.
         themes: { heading: "Themes", new: "A new theme", later: "Not now", use: "Use %s", classic: "Classic", ghost: "Ghost", jack_o_lantern: "Jack-o'-lantern", awake: "Awake", eclipse: "Eclipse",

@@ -137,15 +137,15 @@ module DotPopper
         pen.fonts.bold(size)
       end
 
-      # "Press B again to quit", above the bottom row, while a second B
-      # would quit.
+      # "Press B again to quit" (or Escape, after Escape), above the
+      # bottom row, while a second press would quit.
       def quit_prompt(show, plan)
         alpha = show.quit_prompt
         return unless alpha.positive?
 
         x, y = plan.quit_line
         font = pen.fonts.semibold(18)
-        pen.text(show.words.quit_again, font, x, y, pen.palette.cream, alpha)
+        pen.text(show.quit_again, font, x, y, pen.palette.cream, alpha)
       end
     end
   end

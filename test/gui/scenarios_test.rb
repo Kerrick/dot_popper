@@ -99,7 +99,7 @@ class GuiScenariosTest < Minitest::Test
   end
 
   def test_the_words_follow_the_input
-    play("words", "makes it touch", "makes it the mouse", "makes it Press A")
+    play("words", "makes it touch", "makes it the mouse", "makes it Press A", "Escape on Home asks, naming Escape")
   end
 
   def test_sharing_shows_the_result_and_copies_only_on_copy

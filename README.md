@@ -88,7 +88,7 @@ The first time you press Play, a short tutorial with no words shows you how, in 
 | Change the dot size | Choose it in Settings | LB, in Settings |
 | Turn the sound off or on | Press M, or choose it in Settings | View, in Settings |
 | Switch to fullscreen and back | Choose Window, Borderless or Full screen in Settings, or press F11, or Alt+Enter (Cmd+Enter on a Mac) | RB, in Settings |
-| Quit | Click Quit on Home, or press Escape, on Home or during a game | B twice, on Home |
+| Quit | Click Quit on Home, or press Escape twice, on Home | B twice, on Home |
 
 On a Mac, Windows or Linux, Quit sits beside Settings at the bottom of Home, and Settings holds the Display choice, so the mouse alone can fill the screen and leave the game, even in fullscreen, where the window's own buttons are gone. From any other screen, click Back, or Home on Game Over, to get Home.
 

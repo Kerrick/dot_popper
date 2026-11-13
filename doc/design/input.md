@@ -196,10 +196,12 @@ The table below is the keys' order. `test/presentation/input_doc_test.rb` fails 
 | M | Every screen | Sound off or on (`SoundPlayer#toggle_mute`) |
 | Up, Down, Page Up, Page Down, Home, End | Every screen | Scroll a list (`Show#scroll_key`). Only while a list scrolls do held keys repeat (`App#repeat_keys`) |
 | Space, Enter | Every screen | The screen's main button (`Show#primary`), on any device. Nothing during a game |
-| Escape | Every screen | Back, Close or Home where there is one (`Show#back`). Otherwise, on a computer it quits, during a game too; on Android's Home it leaves the app; on iOS it does nothing |
+| Escape | Every screen | Back, Close or Home where there is one (`Show#back`). Otherwise what a controller's B does: on a computer's Home it asks, "Press Escape again to quit", and a second Escape or B within 2 seconds quits (`InputHandler#leave_home`); in a game, nothing. On Android's Home, where Escape is the system's Back, it leaves the app at once; on iOS it does nothing |
 | F11, Alt+Enter (Cmd+Enter on a Mac) | Every screen | Switches fullscreen (`DesktopWindow#toggle_fullscreen`), on a computer only |
 
 Android's Back arrives as Escape ([platforms.md](platforms.md)). A phone's or tablet's keyboard never quits the app or leaves fullscreen.
+
+Escape and B do the same, so one rule holds for every input, and no single key ends a game in play: Juul's *The Art of Failure* asks that a loss feel like the player's own, and a game thrown away by a stray key does not; *Designing for People* (Lee, Wickens, Liu and Boyle) makes the wrong action hard. The Quit button on Home still quits at once, since a press on a labeled button is deliberate.
 
 ## Where it is tested
 

@@ -155,13 +155,18 @@ module DotPopper
       # Back, Close or Home, where the screen on top has one.
       def back(_key) = @show.back
 
-      # Escape where the screen has no Back: on Home a system that lets an
-      # app quit itself quits (Android's Back leaves the app, as Back on an
-      # app's first screen does); elsewhere a computer quits, during a game
-      # too, and a phone's or tablet's keyboard does nothing, so a stray
-      # edge swipe never throws a game away. iOS apps never quit themselves.
+      # Escape where the screen has no Back does what a controller's B
+      # does: on a computer's Home it asks, and quits on a second press;
+      # anywhere else, during a game too, nothing, so no stray key ends a
+      # game. On a phone or tablet Escape is the system's Back: Android's
+      # leaves the app from Home at once, as Back on an app's first screen
+      # does, and iOS apps never quit themselves.
       def leave(_key)
-        @shell.quit if (@platform.quits_itself? && @show.home?) || !@platform.touch?
+        if @platform.touch?
+          @shell.quit if @platform.quits_itself? && @show.home?
+        else
+          leave_home(:escape)
+        end
         true
       end
 
@@ -383,10 +388,11 @@ module DotPopper
         @pile.release(:gamepad, point.x, point.y)
       end
 
-      # B on Home: asks, then quits on a second press, as Escape quits
-      # from the keyboard. iOS apps are left by the system, never by the app.
-      def leave_home
-        @shell.quit if @platform.quits_itself? && @show.ask_to_quit == :quit
+      # B, or a computer's Escape, on Home (+by+ :b or :escape): asks, then
+      # quits on a second press. iOS apps are left by the system, never by
+      # the app.
+      def leave_home(by = :b)
+        @shell.quit if @platform.quits_itself? && @show.ask_to_quit(by) == :quit
       end
     end
   end
