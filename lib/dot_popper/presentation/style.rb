@@ -134,7 +134,7 @@ module DotPopper
           here: "This screen is about %d dots wide and %d dots tall.",
           played: "Played on a screen about %d dots wide and %d dots tall.",
           fitted_played: "Played with standard dots.",
-          choice: "Dot size", standard: "Standard", smaller: "Smaller", bigger: "Bigger", smaller_note: "More room",
+          choice: "Dot size", fitted: "Standard", smaller: "Smaller", bigger: "Bigger", smaller_note: "More room",
           bigger_note: "Less room", alike_note: "",
           alike: "About the same"
         }.freeze,
