@@ -135,6 +135,41 @@ class GroupPanelTest < Minitest::Test
     assert_empty @worker.started
   end
 
+  # A license key that holds Pro until it is gone, as when it moves to
+  # another device (Continuity::License).
+  License = Struct.new(:pro?)
+
+  # Pro gone while the code pad is open: Join sends nothing, and the
+  # offer of Pro opens instead.
+  def test_joining_after_pro_is_gone_leads_to_the_offer_and_sends_nothing
+    license = License.new(true)
+    build(entitlement: DotPopper::Entitlement.new(license:))
+    open_join
+    tap_code("2345678")
+    license[:pro?] = false
+    tap_control(:code_submit)
+
+    assert_predicate @show, :offer?
+    assert_equal :groups, @show.offer_focus
+    assert_empty @worker.started
+  end
+
+  # Pro gone while the friend groups' notice is open: Create sends
+  # nothing, and the offer of Pro opens instead.
+  def test_creating_after_pro_is_gone_leads_to_the_offer_and_sends_nothing
+    license = License.new(true)
+    with_notice
+    build(entitlement: DotPopper::Entitlement.new(license:), group_notice: DotPopper::Presentation::GroupNotice.new(@notice_store))
+    panel.open
+    tap_control(:group_create)
+    assert_equal :create, panel.asking
+    license[:pro?] = false
+    @show.primary
+
+    assert_predicate @show, :offer?
+    assert_empty @worker.started
+  end
+
   class Links
     attr_reader :opened
 
