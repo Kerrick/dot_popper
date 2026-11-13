@@ -22,7 +22,7 @@ module DotPopper
             ),
             art: ThemeArt.new(
               dot: "gingerbread", scenery: :icing,
-              sky: ThemeSky.new(top: hex["#170c12"], mid: hex["#22101a"], bottom: hex["#2e161a"], glow: hex["#c0602a"], glow_at: [0.5, 1.05],
+              sky: ThemeSky.new(top: hex["#1e0f18"], mid: hex["#301424"], bottom: hex["#421a26"], glow: hex["#c0602a"], glow_at: [0.5, 1.05],
                                 glow_amount: 0.22, edge: hex["#080406"], stars: 0.0),
               wordmark: "assets/fonts/Fredoka-Bold.ttf", dotted_name: true,
               sounds: {
