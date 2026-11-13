@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "test_helper"
+require "dot_popper/presentation"
 
 # A store build is decided by the build alone. Nothing a player can set, in
 # the environment, a file or an argument, selects the test keys, grants Pro,
