@@ -12,8 +12,12 @@ class NoWarningsTest < Minitest::Test
 
   def test_no_file_warns_when_compiled
     files = Dir[File.join(ROOT, "{lib,script,test}/**/*.rb")] + Dir[File.join(ROOT, "*.rb")]
+    # The files' names go in on standard input, not as arguments: a system
+    # limits how long a command line may be, and Windows' limit is shorter
+    # than the names of every file put end to end.
     _, warnings, status = Open3.capture3(RbConfig.ruby, "-w", "-e",
-                                         "ARGV.each { RubyVM::InstructionSequence.compile_file(it) }", *files)
+                                         "$stdin.each_line(chomp: true) { RubyVM::InstructionSequence.compile_file(it) }",
+                                         stdin_data: files.join("\n"))
 
     assert_predicate status, :success?, warnings
     assert_empty warnings
