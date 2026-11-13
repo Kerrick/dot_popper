@@ -99,9 +99,10 @@ module DotPopper
     #
     # It plays the sounds of its popping, cost, and chimes through the Show's +effects+,
     # +sounds+, and +haptics+, on the +cabinet+'s game, already paused with
-    # its first dot (Tutorial.opening, started by UseCases::StartGame), as
-    # +style+ (Style) says, on the Show's clock from +now+.
-    class Tutorial
+    # its first dot (TutorialScene.opening, started by UseCases::StartGame),
+    # as +style+ (Style) says, on the Show's clock from +now+. It is the
+    # scene the Tutorial screen (Screens::Tutorial) plays.
+    class TutorialScene
       BRIGHT = 0 # the first bright dot's id
       NEXT = 1 # the one the game spawns under it
       LAST = 2 # the one the next one's pop spawns, which the game goes on with
@@ -536,5 +537,8 @@ module DotPopper
 
       def pan(x) = @style::SOUND.stereo.pan(x, field.width)
     end
+
+    # Its old name, until no caller says it.
+    Tutorial = TutorialScene
   end
 end
