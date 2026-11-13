@@ -100,7 +100,7 @@ module DotPopper
         @hover = Hover.none
         @screens = Screens.made_for(self, clipboard:, buy_pro: @buy_pro, storefront:, entitlement:, start_game: @start_game, sharing:,
                                           view_achievements: @view_achievements, keeper:, stats_book:, achievements:, haptics:, notices:,
-                                          sizing_store:, server_choice:)
+                                          sizing_store:, server_choice:, theme_keeper:, use_theme:)
         cabinet.subscribe(@recorder)
         cabinet.subscribe(self)
       end
@@ -150,10 +150,10 @@ module DotPopper
       # Whether the card for this theme has been up ARRIVAL_GRACE since it
       # first appeared, so a press meant for Home as it came answers nothing.
       def arrival_settled? = @arrival_seen&.first == arrival&.key && now - @arrival_seen.last >= style::ARRIVAL_GRACE
-      def arrival_plan = ArrivalPlan.new(layout:, word: (arrival_use_word if arrival?), measure: @measure)
+      def arrival_plan = @screens[:new_theme].plan
 
       # The switch's word: a Free player's is "Get Pro", since it opens the offer.
-      def arrival_use_word = themes_locked? ? words.offer.fetch(:entry) : format(words.themes.fetch(:use), words.themes.fetch(arrival.key))
+      def arrival_use_word = @screens[:new_theme].use_word
       def themes = @theme_keeper.shown
       def in_use = @use_theme.current
 
@@ -169,22 +169,13 @@ module DotPopper
       def themes_offered? = true
 
       # Where the Themes screen's cards go (LooksLayout).
-      def themes_layout = ThemesLayout.new(layout:, themes: themes, style: style::THEMES_LAYOUT)
+      def themes_layout = @screens[:themes].plan
 
       def open_themes = open_page(:themes)
       def close_themes = close_page
 
-      # Uses +theme+ from now on, and the whole screen takes its colors at
-      # once, so the choice is seen before it is left.
-      def use(theme)
-        return unless themes?
-
-        case @use_theme.call(theme)
-        in :offer then open_offer_for(:themes)
-        in :same then sounds.play(:tick, pitch: 0.8)
-        in :used then sounds.play(:tick, pitch: 1.2)
-        end
-      end
+      # Uses +theme+ from now on, from Themes (Screens::Themes#use).
+      def use(theme) = @screens[:themes].use(theme)
 
       # The player pressed with +kind+ (InputKind): from now on the words
       # say what to do with it.
@@ -904,26 +895,11 @@ module DotPopper
         end
       end
 
-      # The player has answered the notice of a new theme. A Pro player's
-      # switch uses it at once; a Free player's opens the offer, the same
-      # as tapping Themes.
-      def answer_arrival(use:)
-        return :waiting unless arrival_settled?
+      # The player has answered the card telling of a new theme
+      # (Screens::NewTheme#answer).
+      def answer_arrival(use:) = @screens[:new_theme].answer(use:)
 
-        theme = arrival
-        return unless theme
-
-        @theme_keeper.told(theme)
-        return sounds.play(:tick, pitch: 0.8) unless use
-        return open_offer_for(:themes) if @use_theme.call(theme) == :offer
-
-        sounds.play(:tick, pitch: 1.2)
-      end
-
-      def step_theme(by)
-        list = themes
-        use(list[(list.index(in_use).to_i + by) % list.size])
-      end
+      def step_theme(by) = @screens[:themes].step(by)
 
       def next_display = @screens[:settings].next_display
 
