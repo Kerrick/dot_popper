@@ -728,10 +728,10 @@ class ShowTest < Minitest::Test
     use_cases[:finish_game].subscribe(told.method(:<<))
     show = Show.new(cabinet:, layout:, sounds: FakeSounds.new, radius: R, stats_book:, achievements:, themes:, groups:, **use_cases)
     use_cases[:finish_game].subscribe(show)
-    [0, 3].each do |pops|
+    [0, 3].each do |taps|
       press_main(show)
       show.skip_tutorial
-      pops.times do
+      taps.times do
         bright = cabinet.game.dots.find(&:bright?)
         clear_around!(live(cabinet), bright)
         show.tap(bright.x, bright.y)
@@ -740,7 +740,7 @@ class ShowTest < Minitest::Test
       result = told.last.result
 
       assert_equal [cabinet.game.score, result.record, result.goal_met, result.achievements],
-                   [show.game_over.score, show.game_over.record, show.game_over.goal_met, show.game_over.achievements], "#{pops} pops"
+                   [show.game_over.score, show.game_over.record, show.game_over.goal_met, show.game_over.achievements], "#{taps} taps on bright dots"
       cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
       press_main(show)
     end
