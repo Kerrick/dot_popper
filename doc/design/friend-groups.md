@@ -52,7 +52,7 @@ Whatever goes wrong in `Link` (no network, no certificates, a missing library, a
 
 ### Retry-After
 
-A 429 starts a wait (`Session#wait_out`): the `Retry-After` header's seconds, 60 if it gives none (`USUAL_WAIT`), and an hour at most (`LONGEST_TIME_TO_POP`, 3,600 seconds). During it, Create and Join send nothing and say "Too many tries. Wait a while.", and waiting games and achievements wait too.
+A 429 starts a wait (`Session#wait_out`): the `Retry-After` header's seconds, 60 if it gives none (`USUAL_WAIT`), and an hour at most (`LONGEST_RETRY_WAIT`, 3,600 seconds). During it, Create and Join send nothing and say "Too many tries. Wait a while.", and waiting games and achievements wait too.
 
 ### Waiting games
 
