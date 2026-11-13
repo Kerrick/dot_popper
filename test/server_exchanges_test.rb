@@ -9,7 +9,7 @@ require "dot_popper/presentation"
 # Replays the server's own record of every exchange (its
 # docs/exchanges.json, made by its tests against its real app, copied to
 # test/fixtures/server/) with the game's own client: Groups::Session,
-# ThemeFeed, License and SetdefServer, through a real Network::Link, to a
+# ThemeReleases, License and SetdefServer, through a real Network::Link, to a
 # local socket that answers only what the record holds, and refuses any
 # request it doesn't hold exactly. So the game can change nothing it
 # sends or reads without this failing, and a new copy of the record
@@ -33,7 +33,7 @@ class ServerExchangesTest < Minitest::Test
   class Themes
     attr_reader :keys
 
-    def receive(keys) = (@keys = keys) && true
+    def release(keys) = (@keys = keys) && true
   end
 
   def setup
@@ -207,8 +207,8 @@ class ServerExchangesTest < Minitest::Test
     asking = exchange("the themes a player who started on a date has")
     started_on = asking.dig("request", "path")[/started_on=([\d-]+)/, 1]
     themes = Themes.new
-    feed = DotPopper::Presentation::ThemeFeed.new(worker: InlineWorker.new(Network::Link.new(@url)), theme_keeper: themes,
-                                                  store: DotPopper::ScoreRecord::Memory.new, clock: -> { Time.utc(*started_on.split("-").map(&:to_i), 12) })
+    feed = DotPopper::ThemeReleases.new(worker: InlineWorker.new(Network::Link.new(@url)), themes:,
+                                        store: DotPopper::ScoreRecord::Memory.new, clock: -> { Time.utc(*started_on.split("-").map(&:to_i), 12) })
     feed.ask
     feed.update
 
