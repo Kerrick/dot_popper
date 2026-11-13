@@ -62,7 +62,20 @@ module Inputs
 
     THEMES = %i[ghost jack_o_lantern].freeze
 
-    attr_reader :os, :show, :cabinet, :sounds, :window, :clipboard, :opener, :entitlement, :games, :storefront, :server_choice, :to_pop
+    attr_reader :os, :show, :cabinet, :sounds, :window, :clipboard, :opener, :entitlement, :games, :storefront, :server_choice, :to_pop,
+                :shell
+
+    # What the InputHandler asks of the engine, remembered: the splash is
+    # long over, and the game is asked to quit or to switch fullscreen.
+    class Shell
+      attr_reader :quits, :switches
+
+      def initialize = @quits = @switches = 0
+      def splash? = false
+      def skip_splash = nil
+      def quit = @quits += 1
+      def toggle_fullscreen = @switches += 1
+    end
 
     # +to_pop+ is how many bright dots a game is played for (Input#play)
     # before it is left to its clock: 20 in a row earn Steady input, so
@@ -101,6 +114,9 @@ module Inputs
                        tutorial_flag: P::TutorialFlag.new(Memory.new((P::TutorialFlag::SEEN if played))), input: P::InputKind.starting(touch: phone?),
                        server_choice: @server_choice)
       storefront.connect
+      @shell = Shell.new
+      @keys = P::InputHandler.new(show:, platform:, shell:, pile: nil,
+                                  cursor: P::GamepadCursor.centered(show.layout.whole, style: P::Style::GAMEPAD, radius: R))
       join(session) if member
       # A new theme's card takes presses once it has been up a moment
       # (Style::ARRIVAL_GRACE); at launch that passes during the splash.
@@ -108,6 +124,10 @@ module Inputs
     end
 
     def phone? = platform.touch?
+
+    # A key on a keyboard (+key+, as Shell::LotaInput names it), with the
+    # modifier keys +held+, handed on as Shell::App hands it.
+    def key(key, *held) = @keys.call(P::KeyPress.new(key:, held:))
     def platform = DotPopperTest.platform(os)
 
     # The frames of +seconds+, each at most Rules::LONGEST_FRAME, as
@@ -277,18 +297,8 @@ module Inputs
       [show.clearing, show.group_panel.hold].find(&:held?)
     end
 
-    # A key, in App#key_pressed's order: a key the screen types, one that
-    # scrolls its list, Enter or Space for its main button, and Escape
-    # (which Android's Back arrives as) for its Back. What the Show does
-    # not take, App does with as the system would (Escape quits a
-    # computer's game; Android's Back leaves the app from Home).
-    def press_key(name)
-      return if show.type_key(name)
-      return if show.scroll_key(name)
-      return show.primary if %i[enter space].include?(name)
-
-      show.back if name == :escape
-    end
+    # A key, handed on as Shell::App hands it (Presentation::InputHandler).
+    def press_key(name) = fixture.key(name)
 
     # The control named +name+, scrolled into view.
     def reveal(name)
@@ -368,10 +378,9 @@ module Inputs
     def act(name)
       fixture.tick(LOOK)
       show.input = kind
-      show.keyboard_used("Ctrl+B")
       case name
-      in "Ctrl+V" then show.paste_shortcut
-      in "Ctrl+B" then show.buy_shortcut
+      in "Ctrl+V" then fixture.key(:v, :ctrl)
+      in "Ctrl+B" then fixture.key(:b, :ctrl)
       else press_key(KEYS.fetch(name))
       end
       fixture.tick(CLICK)

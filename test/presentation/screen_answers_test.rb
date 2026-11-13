@@ -88,26 +88,15 @@ class ScreenAnswersTest < Minitest::Test
       show.let_go(:start)
     end
 
-    # A key on a computer's keyboard, in App#key_pressed's order.
-    def key(name)
+    # A key on a computer's keyboard, with the modifier keys +held+, as
+    # Shell::App hands it on (Presentation::InputHandler).
+    def key(name, *held)
       show.input = P::InputKind::MOUSE
-      show.keyboard_used("Ctrl+B")
-      return if show.type_key(name)
-      return if show.scroll_key(name)
-      return show.primary if %i[enter space].include?(name)
-
-      show.back if name == :escape
+      fixture.key(name, *held)
     end
 
-    def paste
-      show.input = P::InputKind::MOUSE
-      show.paste_shortcut
-    end
-
-    def buy
-      show.input = P::InputKind::MOUSE
-      show.buy_shortcut
-    end
+    def paste = key(:v, :ctrl)
+    def buy = key(:b, :ctrl)
 
     def wheel = show.wheel_scroll(-3)
 
@@ -165,6 +154,7 @@ class ScreenAnswersTest < Minitest::Test
       sounds = fixture.sounds
       { screen: Inputs.say(Inputs.screen(show)), scroll: show.scroll&.offset&.round(1), dialog: show.dialog, theme: show.in_use.key,
         clipboard: fixture.clipboard.paste, opened: fixture.opener.urls.dup, quits: fixture.window.respond_to?(:quits) && fixture.window.quits,
+        game_quits: fixture.shell.quits,
         display: fixture.window.display, muted: sounds.muted?, dot_size: show.cabinet.sizing.to_text,
         holding: [show.clearing, show.group_panel.hold].find(&:held?)&.then { :held }, asked_to_quit: show.quit_prompt.positive?,
         store: fixture.storefront.status, status: show.offer_status, server: fixture.server_choice.address,
@@ -263,7 +253,7 @@ class ScreenAnswersTest < Minitest::Test
 
   # Each table lists the presses that do something on its screen; every
   # other press in PRESSES must do nothing there.
-  # Home, on a computer, for a player who has played: Escape is not the Show's (Shell::App quits the game).
+  # Home, on a computer, for a player who has played: Escape asks to quit, as B does.
   HOME = {
     "A at nothing" => "Playing",
     "B" => "asks to quit",
@@ -278,6 +268,7 @@ class ScreenAnswersTest < Minitest::Test
     "Start held" => "Playing",
     "Enter" => "Playing",
     "Space" => "Playing",
+    "Escape" => "asks to quit",
     "H" => "Paused, tutorial",
     "tap on a bright dot" => "pop 1.0"
   }.freeze
@@ -302,7 +293,7 @@ class ScreenAnswersTest < Minitest::Test
   }.freeze
   def test_on_tutorial = check(WAYS.fetch(:tutorial), TUTORIAL)
 
-  # A game in play: only a press at a place reaches it.
+  # A game in play: only a press at a place reaches it, and no key ends it.
   GAME = {
     "tap on a dot in play" => "score 1"
   }.freeze
