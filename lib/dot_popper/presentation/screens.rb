@@ -7,26 +7,23 @@ module DotPopper
     # made, and Show#screen is the one place that says which is on top;
     # every press, button, key and scroll asks that screen.
     module Screens
-      # One of each screen for +show+, by name (Show#on_top? asks by it). +clipboard+ takes
-      # what the share preview copies; the offer of Pro asks everything of
-      # +buy_pro+; Game Over starts
-      # the next game through +start_game+ and shares through +sharing+;
-      # an achievement's dialog shows what +view_achievements+ may; Stats
-      # shows +stats_book+ and +achievements+, cleared through +keeper+
-      # with a buzz of +haptics+; Credits says +notices+; Settings keeps the
-      # dot size in +sizing_store+; Change Server chooses +server_choice+;
-      # Themes and the new-theme card use themes through +use_theme+, and
-      # the card tells +themes+ (DotPopper::Themes) it was told; Home starts games through
-      # +start_game+, the Tutorial first while +tutorial_flag+ says.
-      def self.made_for(show, clipboard:, buy_pro:, start_game:, sharing:, view_achievements:, keeper:,
-                        stats_book:, achievements:, haptics:, notices:, sizing_store:, server_choice:, themes:, use_theme:,
-                        tutorial_flag:)
-        { home: Home.new(show, start_game:, tutorial_flag:), new_theme: NewTheme.new(show, themes:, use_theme:), tutorial: Tutorial.new(show), game: Game.new(show),
-          game_over: GameOver.new(show, start_game:, sharing:), share_preview: SharePreview.new(show, clipboard:),
-          offer: Offer.new(show, buy_pro:),
-          stats: Stats.new(show, keeper:, stats_book:, achievements:, haptics:), achievements: Achievements.new(show), achievement_dialog: AchievementDialog.new(show, view_achievements:),
-          themes: Themes.new(show, use_theme:), settings: Settings.new(show, sizing_store:), credits: Credits.new(show, notices:), privacy: Privacy.new(show),
-          server: ChangeServer.new(show, server_choice:), friend_groups: FriendGroups.new(show) }.freeze
+      # Every screen, by the name the Show knows it by (Show#on_top?,
+      # Show#screens), in no order.
+      ALL = { home: "Home", new_theme: "NewTheme", tutorial: "Tutorial", game: "Game", game_over: "GameOver",
+              share_preview: "SharePreview", offer: "Offer", stats: "Stats", achievements: "Achievements",
+              achievement_dialog: "AchievementDialog", themes: "Themes", settings: "Settings", credits: "Credits",
+              privacy: "Privacy", server: "ChangeServer", friend_groups: "FriendGroups" }.freeze
+
+      # One of each screen for +show+, by name, each given the collaborators
+      # its constructor names from +collaborators+ (the use cases, the
+      # clipboard, the presentation's own stores; Show#initialize lists
+      # them), so that a new screen is a class and a line in ALL.
+      def self.made_for(show, **collaborators)
+        ALL.transform_values do |name|
+          screen = const_get(name)
+          wanted = screen.instance_method(:initialize).parameters.filter_map { |kind, key| key if kind == :keyreq }
+          screen.new(show, **collaborators.slice(*wanted))
+        end.freeze
       end
 
       # What every screen answers, and what a screen answers where it has
