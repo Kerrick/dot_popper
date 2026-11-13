@@ -40,7 +40,8 @@ module DotPopper
                   :stats_book, :input, :words, :tutorial, :lead_in, :window
 
       def initialize(cabinet:, layout:, sounds:, radius:, start_game:, finish_game:, buy_pro:, use_theme:, join_or_create_friend_group:,
-                     view_achievements:, stats_book:, achievements:, theme_keeper:, groups:, style: Style, random: Random.new, calm: false,
+                     view_achievements:, stats_book:, achievements:, groups:, theme_keeper: nil,
+                     themes: theme_keeper&.rules || DotPopper::Themes.new(ScoreRecord::Memory.new), style: Style, random: Random.new, calm: false,
                      tutor: Tutor.new(ScoreRecord::Memory.new, times: style::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
                      sizing_store: ScoreRecord::Memory.new, input: InputKind::MOUSE, measure: RoughMeasure.new,
                      keeper: StatsKeeper.new(score_record: cabinet.score_record, stats_book:, achievements:), notices: Notices.none,
@@ -51,6 +52,7 @@ module DotPopper
         @links = links
         @tutorial_flag = tutorial_flag
         @theme_keeper = theme_keeper
+        @themes = themes
         # Methods, not blocks, so that what the panel keeps holds the Show
         # and the clipboard alone, and none of what the Show was given.
         @groups = GroupPanel.new(groups:, joining: join_or_create_friend_group, sounds:, pro_offer: method(:open_offer_for), notice: group_notice,
@@ -90,7 +92,7 @@ module DotPopper
         @pointer = nil
         @hover = Hover.none
         @screens = Screens.made_for(self, clipboard:, buy_pro:, start_game:, sharing:, view_achievements:, keeper:, stats_book:,
-                                          achievements:, haptics:, notices:, sizing_store:, server_choice:, theme_keeper:, use_theme:,
+                                          achievements:, haptics:, notices:, sizing_store:, server_choice:, themes:, use_theme:,
                                           tutorial_flag:)
       end
 
@@ -134,7 +136,7 @@ module DotPopper
 
       # The new theme to tell the player of, once, at Home, when nothing
       # else is asked of them; nil the rest of the time.
-      def arrival = (@theme_keeper.arrival if on_home?)
+      def arrival = (theme_of(@themes.new_theme) if on_home?)
       def arrival? = !arrival.nil?
       # Whether the card for this theme has been up ARRIVAL_GRACE since it
       # first appeared, so a press meant for Home as it came answers nothing.
@@ -143,15 +145,15 @@ module DotPopper
 
       # The switch's word: a Free player's is "Get Pro", since it opens the offer.
       def arrival_use_word = @screens[:new_theme].use_word
-      def themes = @theme_keeper.shown
+      def themes = @themes.choices.map { theme_of(it) }
       # The art of the theme in use (UseCases::UseTheme answers its key).
-      def in_use = style::THEMES.find { it.key == @use_theme.current }
+      def in_use = theme_of(@use_theme.current)
 
       # Whether tapping a theme leads to Pro, as it does for a Free player,
       # and whether +theme+ is open to use, earned or in season. They show
       # the same to either player.
       def themes_locked? = @use_theme.locked?
-      def theme_open?(theme) = @theme_keeper.open?(theme)
+      def theme_open?(theme) = @themes.open?(theme.key)
 
       # Where the Themes screen's cards go (LooksLayout).
       def themes_layout = @screens[:themes].plan
@@ -809,6 +811,9 @@ module DotPopper
         sounds.play(:pop, pan: pan(x))
       end
       private
+
+      # The art of the theme +key+ (Theme), or nil for none.
+      def theme_of(key) = key && style::THEMES.find { it.key == key }
 
 
       # The Tutorial moves on, and once it is over, the game plays on, and
