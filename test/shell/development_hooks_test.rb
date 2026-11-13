@@ -14,7 +14,7 @@ class DevelopmentHooksTest < Minitest::Test
             "DOT_POPPER_FAKE_DRAG" => "0.5,0.9,0.3,0.3" }.freeze
 
   def hooks(env, channel: nil)
-    settings = DotPopper::Composition::Settings.new(env, channel:)
+    settings = DotPopper::Composition::DeveloperSettings.new(env, channel:)
     game = DotPopper::Composition::Root.new(engine: FakeEngine.new("Linux"), settings:)
     DotPopper::Shell::DevelopmentHooks.for(settings, cabinet: game.cabinet, show: game.show, pile: nil, dragging: nil,
                                                      pad: ->(*) {})

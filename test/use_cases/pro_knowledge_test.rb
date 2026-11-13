@@ -84,7 +84,7 @@ class ProKnowledgeTest < Minitest::Test
   private
 
   def game = DotPopper::Composition::Root.new(engine: FakeEngine.new("Windows"),
-                                              settings: DotPopper::Composition::Settings.new({ "DOT_POPPER_QUIT_AFTER" => "600" }))
+                                              settings: DotPopper::Composition::DeveloperSettings.new({ "DOT_POPPER_QUIT_AFTER" => "600" }))
 
   # Everything +from+ holds, and what that holds in turn, each with the
   # owners that reach it ([name, owner]): the presentation's objects'

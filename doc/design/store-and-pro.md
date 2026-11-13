@@ -42,7 +42,7 @@ What a build trusts and sells is decided by the build alone, never by anything a
 
 ### Developer settings in a store build
 
-The game reads the environment only through `Build.settings(env, channel:)`, which `Composition::Settings` wraps, and so do `conf.rb` (`DOT_POPPER_SAVE_AS`) and `main.rb` (`DOT_POPPER_SCENARIO`). In a test build it is the environment untouched. In a store build it drops every `DOT_POPPER_*` setting not in `Build::HARMLESS`:
+The game reads the environment only through `Build.settings(env, channel:)`, which `Composition::DeveloperSettings` wraps, and so do `conf.rb` (`DOT_POPPER_SAVE_AS`) and `main.rb` (`DOT_POPPER_SCENARIO`). In a test build it is the environment untouched. In a store build it drops every `DOT_POPPER_*` setting not in `Build::HARMLESS`:
 
 `AUTOPLAY CALM DIAGNOSTIC_COLORS FAKE_DRAG FAKE_GAMEPAD FAKE_TILT FULLSCREEN NO_SHADERS NO_SPLASH NO_TUTORIAL NO_VULKAN PERF QUIT_AFTER RENDERERS SEED SHOTS TUTORIAL WINDOW`
 

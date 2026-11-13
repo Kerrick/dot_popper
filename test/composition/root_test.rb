@@ -27,7 +27,7 @@ class RootTest < Minitest::Test
   AUTOMATED = { "DOT_POPPER_QUIT_AFTER" => "600" }.freeze
 
   def root(system = "Linux", channel: nil, env: AUTOMATED, engine: FakeEngine.new(system))
-    Root.new(engine:, settings: DotPopper::Composition::Settings.new(env, channel:))
+    Root.new(engine:, settings: DotPopper::Composition::DeveloperSettings.new(env, channel:))
   end
 
   def port(storefront) = storefront.instance_variable_get(:@port)
@@ -413,7 +413,7 @@ class RootTest < Minitest::Test
   def test_coming_back_asks_again_for_themes_and_groups_and_nothing_asked_once_a_start
     now = 0.0
     engine = FakeEngine.new("iOS")
-    game = Root.new(engine:, settings: DotPopper::Composition::Settings.new(SETTINGS, channel: nil), clock: -> { now })
+    game = Root.new(engine:, settings: DotPopper::Composition::DeveloperSettings.new(SETTINGS, channel: nil), clock: -> { now })
     asked = []
     game.theme_feed.define_singleton_method(:ask) { asked << :themes }
     game.show.group_panel.groups.define_singleton_method(:refresh) { asked << :groups }
