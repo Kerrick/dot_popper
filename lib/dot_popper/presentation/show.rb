@@ -1543,7 +1543,7 @@ module DotPopper
       # playing, and its HUD, so nothing on screen jumps.
       def game_started(event)
         scene, @handing_over = @handing_over, nil
-        @scale = event.game.field.radius
+        @scale = event.field.radius
         effects.scale_to(@scale)
         if scene
           @animations = scene.animations
@@ -1552,7 +1552,7 @@ module DotPopper
           effects.clear
           animations.clear
           @hud = Hud.blank(style::HUD, words)
-          event.game.dots.each { animations.spawn(it.id, now) }
+          event.dots.each { animations.spawn(it.id, now) }
         end
         @tutorial_game = !scene.nil?
         @groups.game_started
@@ -1574,7 +1574,7 @@ module DotPopper
         effects.ring(event.spawned.x, event.spawned.y, style::SPAWN_RIPPLE, follow: event.spawned.id)
         float_pair(event.x, event.y, Words.points(event.points), Words.seconds(event.seconds),
                    palette.cream, palette.gain, style::GAIN_FLOAT)
-        sounds.play(:pop, pitch: pop_pitch, pan: pan(event.x))
+        sounds.play(:pop, pitch: pop_pitch(event.score), pan: pan(event.x))
         @haptics.buzz(style::HAPTICS.pop)
         bonus_popped(event) if dot.bonus?
         bonus_earned(event.spawned) if event.spawned.bonus?
@@ -1611,7 +1611,7 @@ module DotPopper
         @penalized_at = now
         animations.wobble(event.dot.id, now)
         effects.ring(event.dot.x, event.dot.y, style::ALARM_RING, follow: event.dot.id)
-        hidden = cabinet.game.dots.bright_beneath(event.dot, event.x, event.y)
+        hidden = event.dots.bright_beneath(event.dot, event.x, event.y)
         effects.reveal(hidden, style::REVEAL) if hidden
         @mistake = Mistake.new(popped: event.dot.id, bright: hidden.id) if hidden
         effects.kick(style::PENALTY_SHAKE)
@@ -1636,10 +1636,10 @@ module DotPopper
         achievements = @achievements.award(@achievement_watch.earned, day: stats_book.today.iso8601)
         @groups.report_achievements(achievements) if @entitlement.pro?
         achievements = [] unless @entitlement.pro? # kept, and shown once Pro is bought
-        lesson = @tutor.lesson(@mistake) if @mistake&.among(event.game.dots)
+        lesson = @tutor.lesson(@mistake) if @mistake&.among(event.dots)
         @game_over = GameOver.new(style: style::GAME_OVER, score: event.score, score_record: event.score_record, new_score_record: event.new_score_record, at: now,
                              stats: game_stats, record: result.records.first, goal_met: result.goal_met, lesson:, achievements:,
-                             first: event.first, screen: words.played_on(event.game.field, sized: event.size_class == SizeClass::FITTED))
+                             first: event.first, screen: words.played_on(event.field, sized: event.size_class == SizeClass::FITTED))
         sounds.play(event.new_score_record ? :new_score_record : :game_over)
       end
 
@@ -1688,9 +1688,10 @@ module DotPopper
       # Where across the stereo field a sound at +x+ plays.
       def pan(x) = style::SOUND.stereo.pan(x, layout.width)
 
-      def pop_pitch
+      # The pop's pitch climbs with +score+, the score it reached.
+      def pop_pitch(score)
         sound = style::SOUND
-        [1.0 + (cabinet.game.score * sound.pop_climb), sound.pop_highest].min
+        [1.0 + (score * sound.pop_climb), sound.pop_highest].min
       end
 
       def tick(seconds)
