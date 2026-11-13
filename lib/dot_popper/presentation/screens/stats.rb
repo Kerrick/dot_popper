@@ -8,6 +8,8 @@ module DotPopper
       # stats…", held to clear them through +keeper+ (StatsBackup), or
       # Undo for a while after.
       class Stats < Page
+        include Scrolling
+
         def initialize(show, keeper:, stats_book:, achievements:, haptics:)
           super(show)
           @keeper = keeper
@@ -105,8 +107,6 @@ module DotPopper
         # Y: Undo while it is offered, or else hold to clear the stats.
         def pad(button) = (clear_or_undo(:y) if button == :y)
 
-        def scrolls? = true
-
         def answers = [*super, :undo, :clear]
 
         def pressed(name, by)
@@ -116,8 +116,6 @@ module DotPopper
           else super
           end
         end
-
-        def empty(_x, y, by) = show.start_scroll(by, y)
 
         private
 

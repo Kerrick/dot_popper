@@ -6,6 +6,8 @@ module DotPopper
       # Achievements, over Home (AchievementsScreen): a grid of cells that
       # scrolls, each opening its achievement's dialog, and Back.
       class Achievements < Page
+        include Scrolling
+
         # Where the grid goes (AchievementsScreen).
         def grid = AchievementsScreen.new(layout:, ids: DotPopper::Achievement::IDS)
 
@@ -13,8 +15,8 @@ module DotPopper
         # window.
         def cells
           grid = self.grid
-          show.list_fit(grid.height, grid.window.height)
-          grid.cells(show.scroll.offset)
+          fit(grid.height, grid.window.height)
+          grid.cells(scroll.offset)
         end
 
         def controls
@@ -29,8 +31,6 @@ module DotPopper
         # X: the first achievement's dialog.
         def pad(button) = (show.screens.fetch(:achievement_dialog).open_at(DotPopper::Achievement::IDS.first) if button == :x)
 
-        def scrolls? = true
-
         def answers = [*super, :achievement]
 
         def pressed(name, by)
@@ -41,8 +41,6 @@ module DotPopper
         end
 
         def list_row?(name) = name in [:achievement, _]
-
-        def empty(_x, y, by) = show.start_scroll(by, y)
       end
     end
   end

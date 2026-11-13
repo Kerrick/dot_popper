@@ -48,7 +48,7 @@ module DotPopper
         # that starts on a row scrolls the list instead.
         def tap(x, y, by)
           name = show.control_at(x, y)&.name
-          return show.press_list(x, y, by) if list_row?(name)
+          return press_row(name, x, y, by) if list_row?(name)
 
           press(name, x, y, by)
         end
@@ -115,8 +115,18 @@ module DotPopper
         def buy = false
 
         # Whether this screen's list scrolls, by the wheel, the keys, a
-        # drag and the right stick.
+        # drag and the right stick (Scrolling).
         def scrolls? = false
+
+        # How far its list is scrolled (CreditsScroll), or nil where it has
+        # none.
+        def scroll = nil
+
+        # The line its list moves by, per wheel notch or stick second.
+        def line = Scrolling::LINE
+
+        # +by+ let go of a press on it.
+        def let_go(by) = nil
 
         # Whether the left stick and d-pad scroll it too, instead of moving
         # the gamepad's cursor.
@@ -152,6 +162,67 @@ module DotPopper
         def back_button = button(:back, layout.back_button)
 
         def within_safe(reach) = reach.with(height: [reach.height, layout.safe.bottom - reach.y].min)
+      end
+
+      # A screen whose list scrolls: by the wheel, the keys, the right stick,
+      # and a drag that starts on empty space or on one of its rows, which
+      # opens on its release only if it was not dragged. It keeps its own
+      # scroll, and a press's drag, until it lets go.
+      module Scrolling
+        LINE = 40.0
+
+        attr_reader :scroll
+
+        def scrolls? = true
+
+        # Its list's scroll fitted to +content+ and its +window+, from the
+        # top where it had none.
+        def fit(content, window)
+          @scroll = @scroll ? @scroll.fitted(content:, window:) : CreditsScroll.at_top(content:, window:)
+        end
+
+        # Its list moved by +pixels+, or to +moved+ (a CreditsScroll).
+        def scroll_by(pixels) = @scroll = @scroll&.by(pixels)
+        def scroll_to(moved) = @scroll = moved
+
+        # Its list goes back to its top, and no press is held on it.
+        def scroll_from_top
+          @scroll = nil
+          @drag = nil
+          @row = nil
+        end
+
+        # A press on empty space starts a drag.
+        def empty(_x, y, by) = @drag = [by, y]
+
+        # +by+ dragged to +y+: the list follows, and a press on a row
+        # dragged more than a little no longer opens it.
+        def drag(by, y)
+          held, from = @drag
+          return unless held == by
+
+          scroll_by(from - y)
+          @row = nil if @row&.first == by && (from - y).abs > 3
+          @drag = [by, y]
+        end
+
+        def let_go(by)
+          @drag = nil if @drag&.first == by
+          return unless @row&.first == by
+
+          _, name, x, y = @row
+          @row = nil
+          press(name, x, y, by)
+        end
+
+        private
+
+        # A press on a row waits for its release (#let_go), so a drag that
+        # starts on a row scrolls the list instead of opening it.
+        def press_row(name, x, y, by)
+          @row = [by, name, x, y]
+          @drag = [by, y]
+        end
       end
 
       # A screen over Home (Show#open_page), with Back in its corner:

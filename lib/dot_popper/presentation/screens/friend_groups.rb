@@ -8,18 +8,20 @@ module DotPopper
       # the notice a first Join or Create shows over them (GroupScreen,
       # GroupNoticeDialog).
       class FriendGroups < Screen
+        include Scrolling
+
         # Where the open page's parts go (GroupScreen), its list fitted to
         # its window, and scrolled back to its top when the page or the
         # group changes.
         def plan
           panel = show.group_panel
           where = [panel.page, panel.group_id]
-          show.list_scroll_from_top unless @scrolled_at == where
+          scroll_from_top unless @scrolled_at == where
           @scrolled_at = where
-          offset = show.scroll&.offset || 0.0
+          offset = scroll&.offset || 0.0
           plan = GroupScreen.new(layout:, style: style::GROUPS, measure:, panel:,
                                  back_text: words.go_back, offset:, input: show.input).plan
-          show.list_fit(plan.content, plan.window.height) if plan.window
+          fit(plan.content, plan.window.height) if plan.window
           plan
         end
 
@@ -65,8 +67,6 @@ module DotPopper
           show.group_panel.pad(button)
         end
 
-        def scrolls? = true
-
         def answers = [:back, :policy, *GroupPanel::ANSWERS]
 
         # Back, the notice's privacy policy, and every other button the
@@ -81,8 +81,6 @@ module DotPopper
 
         # A row of the list of groups.
         def list_row?(name) = show.group_panel.page == :list && (name in [:group_show, _])
-
-        def empty(_x, y, by) = show.start_scroll(by, y)
 
         def covers? = true
       end

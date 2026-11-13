@@ -246,6 +246,7 @@ class ScreenAnswersTest < Minitest::Test
     privacy: at(fixture: { member: true }, path: %i[settings privacy]),
     change_server: at(fixture: { gone: true, copied: "https://groups.example.org" }, path: %i[settings server]),
     friend_groups: at(fixture: SMALL.merge(pro: true, member: true), path: [:groups]),
+    a_long_list_of_friend_groups: at(fixture: SMALL.merge(pro: true, member: true, groups: 9), path: [:groups]),
     a_friend_group: at(fixture: { pro: true, member: true }, path: [:groups, [:group_show, 1]]),
     join_notice: at(fixture: { pro: true, member: true }, path: %i[groups group_join_open]),
     keypad: at(fixture: { pro: true, member: true }, path: [:groups, :group_join_open, :notice_go, [:code_digit, "2"]])
@@ -559,6 +560,28 @@ class ScreenAnswersTest < Minitest::Test
   }.freeze
   def test_on_friend_groups = check(WAYS.fetch(:friend_groups), FRIEND_GROUPS)
 
+  # The list of a member of nine friend groups, in the smallest window,
+  # where it scrolls; a drag that starts on a group scrolls it.
+  A_LONG_LIST_OF_FRIEND_GROUPS = {
+    "A at nothing" => "Home",
+    "B" => "Home",
+    "X" => "Home, groups list, join notice",
+    "Y" => "Home, groups list, create notice",
+    "Y held" => "Home, groups list, create notice",
+    "RB" => "Home, groups group; group 4",
+    "Start" => "Home",
+    "Start held" => "Home",
+    "Enter" => "Home",
+    "Space" => "Home",
+    "Escape" => "Home",
+    "End" => "scrolled",
+    "wheel" => "scrolled",
+    "right stick" => "scrolled",
+    "drag" => "scrolled",
+    "drag from a row" => "scrolled"
+  }.freeze
+  def test_on_a_long_list_of_friend_groups = check(WAYS.fetch(:a_long_list_of_friend_groups), A_LONG_LIST_OF_FRIEND_GROUPS)
+
   # A friend group: Start held leaves it.
   A_FRIEND_GROUP = {
     "A at nothing" => "Home, groups list",
@@ -629,6 +652,7 @@ class ScreenAnswersTest < Minitest::Test
     privacy: "veils",
     change_server: "veils",
     friend_groups: "veils",
+    a_long_list_of_friend_groups: "veils",
     a_friend_group: "veils",
     join_notice: "veils",
     keypad: "veils"

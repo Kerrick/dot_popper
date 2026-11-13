@@ -7,6 +7,8 @@ module DotPopper
       # and licenses, Privacy, Change Server while setdef is gone, and
       # Back. Only the buttons in view take presses.
       class Settings < Page
+        include Scrolling
+
         # The dot-size choices in the order its row draws them: the
         # default, Standard, first.
         SIZINGS = [DotSizing::STANDARD, DotSizing::BIGGER_OR_SMALLER].freeze
@@ -27,9 +29,8 @@ module DotPopper
             rows << [:dot_size, words.button(:dot_size), :dot, SIZINGS.map { [words.sizing(it, show.sizing_preview), it == cabinet.sizing, it] }]
           end
           rows << [:display, words.button(:display), :corners, display_choices] if show.window.offered?
-          open = show.settings?
-          plan = SettingsScreen.new(layout:, rows:, offset: open && show.scroll ? show.scroll.offset : 0.0, server: show.server_offered?).plan
-          show.list_fit(plan.height, layout.page.height) if open
+          plan = SettingsScreen.new(layout:, rows:, offset: scroll ? scroll.offset : 0.0, server: show.server_offered?).plan
+          fit(plan.height, layout.page.height)
           plan
         end
 
@@ -125,8 +126,6 @@ module DotPopper
           end
         end
 
-        def scrolls? = true
-
         def answers = [*super, :sound, :dot_size, :display, :credits, :privacy, :server]
 
         def pressed(name, by)
@@ -140,8 +139,6 @@ module DotPopper
           else super
           end
         end
-
-        def empty(_x, y, by) = show.start_scroll(by, y)
 
         private
 

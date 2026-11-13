@@ -401,8 +401,7 @@ module DotPopper
         return unless home?
 
         open_layer(name)
-        @scroll = nil
-        @list_press = nil
+        lists_from_top
         sounds.play(:tick)
       end
 
@@ -412,9 +411,15 @@ module DotPopper
       def close_page
         close_layer(screen) if screen.is_a?(Screens::Page)
         @screens[:stats].cancel_hold
-        @scroll = nil
+        lists_from_top
         sounds.play(:tick, pitch: 0.8)
       end
+
+      # As a screen over Home opens or closes, the lists start again from
+      # their top: the screen opened, the one returned to, and the friend
+      # groups' list, as when every list shared one scroll. Credits keeps
+      # its own (Screens::Credits#open).
+      def lists_from_top = %i[stats achievements settings friend_groups].each { @screens[it].scroll_from_top }
 
       def open_stats = @screens[:stats].open
 
@@ -511,9 +516,9 @@ module DotPopper
       # Opens the Credits screen over the Stats screen, at the top.
       def open_credits = @screens[:credits].open
 
-      # What a screen's list scrolls by, for Credits and the lists
-      # (CreditsScroll), or nil where nothing scrolls.
-      def scroll = credits? ? credits : @scroll
+      # How far the list of the screen on top is scrolled (CreditsScroll),
+      # or nil where it has none (Screens::Scrolling).
+      def scroll = screen.scroll
 
       def scrolling? = screen.scrolls?
 
@@ -522,19 +527,14 @@ module DotPopper
       def stick_scrolls? = screen.stick_scrolls?
 
       # The line a list moves by, per wheel notch or stick second.
-      def scroll_line = credits? ? credits_layout.line : 40.0
+      def scroll_line = screen.line
 
-      # Keeps the open list's scroll, moved by +pixels+.
-      def scroll_by(pixels)
-        return @screens[:credits].scroll = credits.by(pixels) if credits?
+      # Moves the list on top by +pixels+.
+      def scroll_by(pixels) = (screen.scroll_by(pixels) if scrolling?)
 
-        @scroll = @scroll&.by(pixels)
-      end
-
-      # A list reports its content's height and the window it shows in.
-      def list_fit(content, window)
-        @scroll = @scroll ? @scroll.fitted(content:, window:) : CreditsScroll.at_top(content:, window:)
-      end
+      # The list on top reports its content's height and the window it
+      # shows in, as the Stats screen's painter measures them.
+      def list_fit(content, window) = screen.fit(content, window)
 
       # A mouse wheel's notches, +notches+ of them, positive for up.
       def wheel_scroll(notches)
@@ -549,50 +549,25 @@ module DotPopper
         scroll_by(push.y * style::CREDITS.stick * scroll_line * seconds)
       end
 
-      # A key that scrolls the Credits screen; says whether it was one.
+      # A key that scrolls the list on top; says whether it was one.
       def scroll_key(name)
         return false unless scrolling? && scroll
 
-        moved = scroll.key(name, line: scroll_line)
-        credits? ? @screens[:credits].scroll = moved : @scroll = moved
+        screen.scroll_to(scroll.key(name, line: scroll_line))
         %i[up down page_up page_down home end].include?(name)
       end
 
       # A finger or the mouse, +by+ (as #tap names it), dragged to +y+,
-      # drags the page along with it.
-      def drag_scroll(by, y)
-        held, from = @drag
-        return unless held == by && scrolling?
-
-        scroll_by(from - y)
-        @list_press = nil if @list_press&.first == by && (from - y).abs > 3
-        @drag = [by, y]
-      end
-
-      def start_scroll(by, y) = @drag = [by, y]
-
-      # The open list goes back to its top, as when a screen's list changes.
-      def list_scroll_from_top = @scroll = nil
-
-      # A press on a row of a scrolling list waits for its release, so a
-      # drag that starts on a row scrolls the list instead of opening it.
-      def press_list(x, y, by)
-        @list_press = [by, control_at(x, y).name, x, y]
-        @drag = [by, y]
-      end
+      # drags the list on top along with it.
+      def drag_scroll(by, y) = (screen.drag(by, y) if scrolling?)
 
       def list_row_at?(x, y) = screen.list_row?(control_at(x, y)&.name)
 
-
-      # +by+ (as #tap names it) let go. A hold of "Clear my stats…" it
-      # made ends, with nothing cleared, if it was let go too soon.
+      # +by+ (as #tap names it) let go: of a list's row it pressed, which
+      # opens if it was not dragged, and of a hold of "Clear my stats…",
+      # which ends with nothing cleared if it was let go too soon.
       def let_go(by)
-        @drag = nil if @drag&.first == by
-        if @list_press&.first == by
-          _, name, x, y = @list_press
-          @list_press = nil
-          press(name, x, y, by)
-        end
+        screen.let_go(by)
         @screens[:stats].release(by)
         @groups.let_go(by, now)
       end

@@ -6,6 +6,8 @@ module DotPopper
       # Credits and licenses, over Settings (CreditsLayout): the text of
       # +notices+ and the game's own, which scrolls, and Back.
       class Credits < Page
+        include Scrolling
+
         def initialize(show, notices:)
           super(show)
           @notices = notices
@@ -52,12 +54,11 @@ module DotPopper
 
         def controls = [back_button]
 
-        def scrolls? = true
+        # The text moves by its own line.
+        def line = plan.line
 
         # The text is read with the left stick too, and the cursor waits.
         def stick_scrolls? = true
-
-        def empty(_x, y, by) = show.start_scroll(by, y)
       end
     end
   end

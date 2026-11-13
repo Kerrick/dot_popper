@@ -27,7 +27,8 @@ module Inputs
   # every request is taken, and answered as the real server answers it.
   # Nothing leaves the process.
   class Server
-    def initialize = (@answers = []) && (@groups = [group(1), group(2)])
+    # +groups+ is how many groups the player is in, once joined.
+    def initialize(groups: 2) = (@answers = []) && (@groups = (1..groups).map { group(it) })
 
     def start(job, _token) = @answers << [job, DotPopper::Network::Reply.new(status: job.kind == :create || job.kind == :join ? 201 : 200, body: answer(job))]
     def finished = @answers.shift(@answers.size)
@@ -82,8 +83,9 @@ module Inputs
     # Game Over has an achievement's line to open. +copied+ is on the
     # clipboard, as text the player copied elsewhere.
     # +channel+ is the build's (Build::CHANNEL), nil for a test build.
+    # +groups+ is how many friend groups a member is in.
     def initialize(os:, width:, height:, pro: false, games_left: 20, played: true, member: false, arrival: false, gone: false, to_pop: 3,
-                   copied: nil, channel: nil)
+                   copied: nil, channel: nil, groups: 2)
       @os = os
       @to_pop = to_pop
       @day = Date.new(2026, 11, 12)
@@ -106,7 +108,7 @@ module Inputs
       (arrival ? themes.choices[0...-1] : themes.choices).each { themes.told(it) }
       book = DotPopper::StatsBook.new(Memory.new, today: -> { @day })
       book.record(DotPopper::GameStats.start, @cabinet.size_class) if played
-      session = DotPopper::Groups::Session.new(store: Memory.new, worker: Server.new)
+      session = DotPopper::Groups::Session.new(store: Memory.new, worker: Server.new(groups:))
       @server_choice = P::ServerChoice.new(Memory.new, gone: @gone, clipboard:)
       @show = new_show(cabinet:, layout: layout(width, height), sounds:, radius: R, random: Random.new(5), clipboard:, window:, stats_book: book,
                        sharing: P::SheetSharing.for(platform, opener:), links: opener, entitlement:, storefront:, games:,

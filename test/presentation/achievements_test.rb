@@ -117,7 +117,7 @@ class AchievementsOnStatsTest < Minitest::Test
     @show.achievement_pro
     assert_predicate @show, :offer?
 
-    before = @show.scroll.offset
+    before = grid_offset
     @show.wheel_scroll(-3)
     refute @show.scroll_key(:end)
     @show.stick_scroll(Stick.new(x: 0, y: 1.0), 1.0)
@@ -126,9 +126,9 @@ class AchievementsOnStatsTest < Minitest::Test
     @show.let_go(7)
 
     refute_predicate @show, :scrolling?
-    assert_equal before, @show.scroll.offset
+    assert_equal before, grid_offset
     @show.back
-    assert_equal before, @show.scroll.offset
+    assert_equal before, grid_offset
   end
 
   # An achievement's dialog holds every input while it is open: the
@@ -142,17 +142,17 @@ class AchievementsOnStatsTest < Minitest::Test
     assert_operator @show.scroll.farthest, :>, 0.0, "the grid scrolls here"
     @show.open_achievement(DotPopper::Achievement::IDS.first)
 
-    before = @show.scroll.offset
+    before = grid_offset
     @show.wheel_scroll(-3)
     refute @show.scroll_key(:end)
     @show.stick_scroll(Stick.new(x: 0, y: 1.0), 1.0)
 
     refute_predicate @show, :scrolling?
-    assert_equal before, @show.scroll.offset
+    assert_equal before, grid_offset
     @show.back
     refute @show.dialog
     assert_predicate @show, :scrolling?
-    assert_equal before, @show.scroll.offset
+    assert_equal before, grid_offset
   end
 
   def test_clearing_the_stats_clears_the_achievements_and_undo_brings_them_back
@@ -175,6 +175,9 @@ class AchievementsOnStatsTest < Minitest::Test
   end
 
   private
+
+  # How far the Achievements grid is scrolled, under whatever is over it.
+  def grid_offset = @show.screens.fetch(:achievements).scroll.offset
 
   def stats
     DotPopper::Stats.new(games: 4, dots_popped: 40, mistakes: 2, seconds: 100.0, days: 2, recent: [3, 9],
