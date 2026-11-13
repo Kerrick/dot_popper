@@ -35,6 +35,8 @@ module DotPopper
 
         # A tap beside the card closes it; on the card it does nothing.
         def empty(x, y, _by) = (show.close_share unless show.share_plan.card.contains?(x, y))
+
+        def announces? = true
       end
     end
   end

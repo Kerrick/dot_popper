@@ -120,6 +120,10 @@ module DotPopper
       # the screen for the game's state.
       def screen = @layers.last || state_screen
 
+      # The screens open over the screen for the game's state, the top
+      # one last, for the renderer to draw.
+      attr_reader :layers
+
       # The screen for Cabinet's state, under any opened over it: Home,
       # or the card telling of a new theme over it; the Tutorial over the
       # paused game; a game; or Game Over.

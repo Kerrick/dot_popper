@@ -55,6 +55,8 @@ module DotPopper
           else nil
           end
         end
+
+        def covers? = true
       end
     end
   end

@@ -53,6 +53,8 @@ module DotPopper
           else nil
           end
         end
+
+        def announces? = true
       end
     end
   end

@@ -7,13 +7,14 @@ module DotPopper
     # into the Pile after time's up) over the Bloom's glow, the rings and
     # outlines that follow them, which after time's up are the pile's and
     # dim with it, under Game Over's card and buttons, the numbers that
-    # float up, the screen's words and HUD on top, the share preview over
-    # those when it is open, and over everything, the gamepad's cursor
-    # when it shows. Only the HUD shakes. The Tutorial is drawn as a game
-    # is, from its own dots and HUD, with its spotlight, hand and skip
-    # button over them.
+    # float up, the screen's words and HUD on top, the screens open over
+    # the game's state (Show#layers), each by its painter, and over
+    # everything, the gamepad's cursor when it shows. Only the HUD shakes.
+    # The Tutorial is drawn as a game is, from its own dots and HUD, with
+    # its spotlight, hand and skip button over them.
     class Renderer
       G = ::Lota::Graphics
+      Screens = Presentation::Screens
 
       # With +diagnostic+ (DOT_POPPER_DIAGNOSTIC_COLORS), each frame clears
       # to pure blue and draws no night, so any pixel the game's drawing
@@ -45,82 +46,90 @@ module DotPopper
         @arrival = ArrivalPainter.new(pen:, dots: @dots)
         @tutorial = TutorialPainter.new(pen:)
         @at_rest = Presentation::DotAnimations.new(pen.style::MOTION)
+        @pages = { Screens::Stats => @stats, Screens::Themes => @themes, Screens::Credits => @credits, Screens::Achievements => @achievements,
+                   Screens::Settings => @settings, Screens::Privacy => @privacy, Screens::ChangeServer => @server }.freeze
       end
 
-      # The frame, with the setdef +splash+ over it while there is one.
+      # The frame, with the setdef +splash+ over it while there is one:
+      # what the Show says is showing (Show#screen). Under everything is
+      # the game's state: Home's dots, the Tutorial over its game, or a
+      # game and after it Game Over. Over that, the screens open over it,
+      # from the last that covers the rest up to the top one.
       def draw(cursor, splash = nil)
         width, height = cover
         layout = @show.layout
         backdrop(width, height)
-        if @show.tutorial?
-          tutorial(width, height, layout)
-        elsif @show.home?
-          @dots.draw(@show.attract.dots, @at_rest, @show.now, radius)
-          if @show.offer?
-            veil(width, height, @pen.style::STATS.veil)
-            @offer.draw(@show, layout)
-          elsif @show.page
-            veil(width, height, @pen.style::STATS.veil)
-            page_screen.draw(@show, layout)
-            @achievements.dialog(@show, layout) if @show.dialog
-          elsif @show.group_open?
-            veil(width, height, @pen.style::GROUPS.veil)
-            @group.draw(@show, layout)
-          else
-            veil(width, height, @pen.style::HOME.dim)
-            @home.draw(@show, layout)
-            @arrival.draw(@show, layout) if @show.arrival?
-          end
-        else
-          @effects.flash(@show.effects, width, height)
-          glow
-          field
-          @effects.scene(@show.effects, dots)
-          veil(width, height, @show.game_over&.dim(@show.now).to_f) unless @show.playing?
-          @effects.words(@show.effects, layout)
-          @game_over.draw(@show, layout) unless @show.playing?
-          lead_in = @show.lead_in
-          if lead_in
-            pill = @hud.bounds(@show.hud, layout)
-            @tutorial.lead_in_under(lead_in, @show.now, pill, @hud.spots(@show.hud, layout),
-                                     @show.cabinet.game.field.radius)
-          end
-          hud(layout) unless @show.game_over&.then { it.arrival(@show.now) >= 1.0 }
-          @tutorial.lead_in_over(lead_in, @show.now, pill) if lead_in
-          @share.draw(@show, layout, width, height)
-          offer_over(width, height, layout) if @show.offer?
-          banner(layout) unless @show.playing? || @show.offer?
+        state = @show.state_screen
+        case state
+        when Screens::Tutorial then tutorial(width, height, layout)
+        when Screens::Home, Screens::NewTheme then @dots.draw(@show.attract.dots, @at_rest, @show.now, radius)
+        else game(width, height, layout)
         end
-        banner(layout) if @show.on_home? || (@show.game_over? && !@show.offer?)
+        screens(state, width, height, layout)
+        if @show.screen.announces?
+          banner(layout)
+          banner(layout) if state.is_a?(Screens::GameOver)
+        end
         splash ? @splash.draw(splash) : @cursor.draw(cursor)
       end
 
       private
 
-      # The offer of Pro over Game Over, opened by its Get Pro, over the
-      # finished game veiled as Home's dots are under it.
-      def offer_over(width, height, layout)
-        veil(width, height, @pen.style::STATS.veil)
-        @offer.draw(@show, layout)
+      # The screens over the game's state, from the last one that covers
+      # the rest (or the screen for the state itself) up to the top one.
+      def screens(state, width, height, layout)
+        layers = @show.layers
+        from = layers.rindex { it.covers? }
+        draw_screen(state, width, height, layout) unless from
+        (from || 0).upto(layers.size - 1) { draw_screen(layers[it], width, height, layout) }
+      end
+
+      # One screen, over the veil it draws over what is under it.
+      def draw_screen(screen, width, height, layout)
+        case screen
+        when Screens::Home, Screens::NewTheme
+          veil(width, height, @pen.style::HOME.dim)
+          @home.draw(@show, layout)
+          @arrival.draw(@show, layout) if screen.is_a?(Screens::NewTheme)
+        when Screens::Page
+          veil(width, height, @pen.style::STATS.veil)
+          @pages.fetch(screen.class).draw(@show, layout)
+        when Screens::AchievementDialog then @achievements.dialog(@show, layout)
+        when Screens::FriendGroups
+          veil(width, height, @pen.style::GROUPS.veil)
+          @group.draw(@show, layout)
+        when Screens::Offer
+          veil(width, height, @pen.style::STATS.veil)
+          @offer.draw(@show, layout)
+        when Screens::SharePreview then @share.draw(@show, layout, width, height)
+        end
+      end
+
+      # A game, and after it, Game Over over its pile: the dots over their
+      # glow, the effects, the veil and words of Game Over, the lead-in
+      # after the Tutorial, and the HUD until Game Over has arrived.
+      def game(width, height, layout)
+        @effects.flash(@show.effects, width, height)
+        glow
+        field
+        @effects.scene(@show.effects, dots)
+        veil(width, height, @show.game_over&.dim(@show.now).to_f) unless @show.playing?
+        @effects.words(@show.effects, layout)
+        @game_over.draw(@show, layout) unless @show.playing?
+        lead_in = @show.lead_in
+        if lead_in
+          pill = @hud.bounds(@show.hud, layout)
+          @tutorial.lead_in_under(lead_in, @show.now, pill, @hud.spots(@show.hud, layout),
+                                   @show.cabinet.game.field.radius)
+        end
+        hud(layout) unless @show.game_over&.then { it.arrival(@show.now) >= 1.0 }
+        @tutorial.lead_in_over(lead_in, @show.now, pill) if lead_in
       end
 
       # A title change's announcement, for the few seconds it shows.
       def banner(layout) = @group.banner(@show.group_panel.banner, @show.now, layout, @show.banner_y)
 
       def radius = @show.cabinet.field.radius
-
-      # The screen open over Home's dimmed dots.
-      def page_screen
-        case @show.page
-        when :stats then @stats
-        when :themes then @themes
-        when :credits then @credits
-        when :achievements then @achievements
-        when :settings then @settings
-        when :privacy then @privacy
-        when :server then @server
-        end
-      end
 
       # The Tutorial, drawn as the game it opens is: its dots over their
       # glow and the effects of its taps, its HUD, never shaken, and its

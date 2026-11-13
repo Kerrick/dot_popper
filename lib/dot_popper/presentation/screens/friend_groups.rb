@@ -49,6 +49,8 @@ module DotPopper
         def list_row?(name) = show.group_panel.page == :list && (name in [:group_show, _])
 
         def empty(_x, y, by) = show.start_scroll(by, y)
+
+        def covers? = true
       end
     end
   end

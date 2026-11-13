@@ -43,6 +43,8 @@ module DotPopper
 
         # A press away from its buttons waits, as it may drag the pile.
         def waits_for_release?(x, y) = show.control_at(x, y).nil?
+
+        def announces? = true
       end
     end
   end

@@ -100,6 +100,13 @@ module DotPopper
         # the gamepad's cursor.
         def stick_scrolls? = false
 
+        # Whether it covers the screens under it, veiled, so that none of
+        # them is drawn; a dialog or card over a screen shows it.
+        def covers? = false
+
+        # Whether a title change's announcement shows over it (GroupBanner).
+        def announces? = false
+
         private
 
         def layout = show.layout
@@ -119,6 +126,8 @@ module DotPopper
       # A screen over Home, which Show#page names, with Back in its corner:
       # Back, and its main button, close it.
       class Page < Screen
+        def covers? = true
+
         def primary = show.close_page
 
         def pressed(name, by) = (show.close_page if name == :back)
