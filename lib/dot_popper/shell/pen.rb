@@ -19,7 +19,7 @@ module DotPopper
       def initialize(style, shaders: true)
         @style = style
         @palette = style::PALETTE
-        @fonts = FontBook.new(style::TYPE)
+        @fonts = FontCache.new(style::TYPE)
         @theme_shaders = {}
         @hands = HandSprites.new
         @square = G::Image.new(::Lota::Image::ImageData.new(2, 2, :rgba8, ("\xFF".b * 16)))
