@@ -35,12 +35,15 @@ module DotPopper
       def sold? = @store.sold?
       def keys? = @store.keys?
 
-      # The price the store gave, or nil before it has; how the store is
-      # getting on (:ready, :waiting and the like); and the license key
-      # typed so far, or "".
+      # The price the store gave, or nil before it has; and the license
+      # key typed so far, or "".
       def price = @store.price
-      def status = @store.status
       def typed = @store.typed
+
+      # What the offer says of buying: :thanks once the player has Pro,
+      # which the offer thanks them for in place of selling it; until
+      # then, how the store is getting on (:ready, :waiting and the like).
+      def status = owned? ? :thanks : @store.status
 
       # The offer opened: asks the store for the price and what this
       # player owns, or asks again if an earlier request went unanswered.

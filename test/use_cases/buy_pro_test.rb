@@ -17,6 +17,7 @@ class BuyProTest < Minitest::Test
     def initialize = (@asked = []) && (@sold = true)
 
     def offered? = true
+    def status = :ready
     def sold? = sold
     def connect = @asked << :connect
     def buy = @asked << :buy
@@ -52,6 +53,10 @@ class BuyProTest < Minitest::Test
     assert_equal %i[connect buy], @store.asked
   end
 
+  def test_the_offer_says_how_the_store_is_getting_on_until_the_player_has_pro
+    assert_equal :ready, @buy.status
+  end
+
   def test_nothing_is_bought_once_pro_or_where_pro_is_not_sold
     @store.sold = false
     refute @buy.buy
@@ -61,6 +66,7 @@ class BuyProTest < Minitest::Test
     refute @buy.buy
     refute @buy.type(:a)
     refute_predicate @buy, :offered?
+    assert_equal :thanks, @buy.status
     assert_empty @store.asked
   end
 
