@@ -51,7 +51,6 @@ module DotPopper
         @server_choice = server_choice
         @window = window
         @links = links
-        @page = nil # which screen is open over Home, or nil for Home itself
         @tutorial_flag = tutorial_flag
         @entitlement = entitlement
         @theme_keeper = theme_keeper
@@ -121,7 +120,6 @@ module DotPopper
         if arrival? then @screens[:new_theme]
         elsif tutorial? then @screens[:tutorial]
         elsif @layers.any? then @layers.last
-        elsif page then @screens.fetch(page)
         elsif group_open? then @screens[:friend_groups]
         elsif home? then @screens[:home]
         elsif sharing? then @screens[:share_preview]
@@ -142,7 +140,7 @@ module DotPopper
 
       # Whether the Themes screen is open over the Stats screen, and what
       # it shows: every theme the player can use, and the one in use.
-      def themes? = @page == :themes
+      def themes? = page == :themes
 
       # The new theme to tell the player of, once, at Home, when nothing
       # else is asked of them; nil the rest of the time.
@@ -209,20 +207,25 @@ module DotPopper
       # Whether the Stats screen is open over Home. It is the
       # presentation's alone: the game stays on its title meanwhile, and
       # no tap there reaches the game.
-      def stats? = @page == :stats
+      def stats? = page == :stats
 
       # Home itself, with no other screen open over it.
-      def on_home? = home? && @page.nil? && !group_open? && !offer?
+      def on_home? = home? && @layers.empty? && !group_open?
 
-      # The screen open over Home, or nil.
-      attr_reader :page
+      # The screen open over Home (Screens::Page), by the name
+      # Screens.made_for gives it, or nil: the topmost, as Credits, Privacy
+      # and Change Server open over Settings.
+      def page
+        at = @layers.rindex { it.is_a?(Screens::Page) } or return
+        @screens.key(@layers[at])
+      end
 
       # The Achievements screen, the achievement open in its dialog (or
       # nil), Settings, and Privacy.
-      def achievements_open? = @page == :achievements
+      def achievements_open? = page == :achievements
       def dialog = (@screens[:achievement_dialog].achievement if layer?(:achievement_dialog))
-      def settings? = @page == :settings
-      def privacy? = @page == :privacy
+      def settings? = page == :settings
+      def privacy? = page == :privacy
 
       # The friend groups' screens' state and their announcements (GroupPanel).
       def group_panel = @groups
@@ -512,18 +515,22 @@ module DotPopper
 
       # Opens the screen +name+ over Home, with its list at the top.
       def open_page(name)
-        return unless @page || home?
+        return unless page || home?
 
-        @page = name
+        close_layer(page) if page && !(page == :settings && SETTINGS_PAGES.include?(name))
+        open_layer(name)
         @scroll = nil
         @list_press = nil
         sounds.play(:tick)
       end
 
-      # Leaves the open screen: Credits and Privacy go back to Settings,
-      # the others to Home.
+      # The screens Settings opens over itself, which Back returns to it.
+      SETTINGS_PAGES = %i[credits privacy server].freeze
+
+      # Leaves the open screen: Credits, Privacy and Change Server go back
+      # to Settings, the others to Home.
       def close_page
-        @page = %i[credits privacy server].include?(@page) ? :settings : nil
+        close_layer(page) if page
         @clearing = clearing.cancel
         @scroll = nil
         close_layer(:achievement_dialog)
@@ -698,7 +705,7 @@ module DotPopper
       # is sold and not yet bought. Says whether it took the press.
       def buy_shortcut = screen.buy
 
-      def credits? = @page == :credits
+      def credits? = page == :credits
 
       # How far down the Credits screen is scrolled (CreditsScroll), while
       # it is open.
@@ -949,7 +956,7 @@ module DotPopper
         open_page(:server) if settings? && server_offered?
       end
 
-      def server? = @page == :server
+      def server? = page == :server
       def server_offered? = @server_choice&.offered? || false
 
       # The words and buttons of Change Server (ServerScreen).
@@ -1414,7 +1421,7 @@ module DotPopper
       def home_shown(event)
         @use_theme.refresh
         @stats = nil
-        @page = nil
+        @layers.reject! { it.is_a?(Screens::Page) }
         close_layer(:achievement_dialog)
         @offer_for_play = false
         close_layer(:offer)
