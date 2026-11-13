@@ -9,7 +9,7 @@ module DotPopper
   # and whether Pro was bought stay as they are.
   #
   # Clearing copies each store's text, exactly, to a backup named for
-  # when it happened (best_score-20261105-093000.txt), through +folder+,
+  # when it happened (score_record-20261105-093000.txt), through +folder+,
   # which gives the store of a name, as PlaytestLog's +archive+ does, and
   # stores there answer +remove+ too. NOTE lists the latest backups, and
   # the next clearing removes them, so the folder only ever keeps one.

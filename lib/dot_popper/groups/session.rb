@@ -53,7 +53,7 @@ module DotPopper
       NEVER_TAKEN = [400, 404, 422].freeze
       # The longest a Retry-After is believed, in seconds, and how long to
       # wait when a 429 names no time.
-      LONGEST_TIME_TO_POP = 3_600
+      LONGEST_RETRY_WAIT = 3_600
       USUAL_WAIT = 60
       # A Worker that is never asked to do anything.
       NO_WORKER = Struct.new(:none) do
@@ -107,7 +107,7 @@ module DotPopper
       # Whether a counting game has ended and its result is still awaited.
       def result_due? = @result_due
 
-      # Themes up the groups, at launch and when the groups' screen opens.
+      # Fetches the groups, at launch and when the groups' screen opens.
       # Without a token there is nothing to look up and nothing is sent.
       def refresh
         return unless known?
@@ -238,7 +238,7 @@ module DotPopper
       def waiting_out? = @wait_until && @clock.call.to_i < @wait_until
 
       def wait_out(seconds)
-        @wait_until = @clock.call.to_i + (seconds || USUAL_WAIT).clamp(0, LONGEST_TIME_TO_POP)
+        @wait_until = @clock.call.to_i + (seconds || USUAL_WAIT).clamp(0, LONGEST_RETRY_WAIT)
       end
 
       def settle(job, reply)
