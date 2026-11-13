@@ -174,20 +174,20 @@ class CabinetTest < Minitest::Test
     assert_equal 300, @cabinet.game.field.width
   end
 
-  # 1200 by 800 is the reference window, where a fitted dot is the usual
+  # 1200 by 800 is the reference window, where a standard dot is the usual
   # 50; 600 by 400 fits a radius of 25, which the rules raise to 30.
-  def test_sized_to_the_screen_sets_each_games_radius_when_it_starts_and_keeps_it
+  def test_standard_dots_set_each_games_radius_when_it_starts_and_keep_it
     @cabinet.screen = field(600, 400)
-    @cabinet.sizing = DotPopper::DotSizing::SIZED_TO_SCREEN
+    @cabinet.sizing = DotPopper::DotSizing::STANDARD
     start!(@cabinet)
     assert_in_delta 30.0, @cabinet.game.field.radius
-    assert_equal DotPopper::SizeClass::FITTED, @cabinet.state.size_class
+    assert_equal DotPopper::SizeClass::STANDARD, @cabinet.state.size_class
 
     @cabinet.screen = field(1200, 800)
     @cabinet.sizing = DotPopper::DotSizing::FIXED
     assert_in_delta 30.0, @cabinet.game.field.radius, 0.001, "a game keeps its radius through a resize"
     assert_equal 1200, @cabinet.game.field.width
-    assert_equal DotPopper::DotSizing::SIZED_TO_SCREEN, @cabinet.sizing, "only the title changes the choice"
+    assert_equal DotPopper::DotSizing::STANDARD, @cabinet.sizing, "only the title changes the choice"
     assert_in_delta 50.0, @cabinet.field.radius, 0.001, "the next game fits the new screen"
   end
 

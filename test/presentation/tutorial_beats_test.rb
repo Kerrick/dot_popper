@@ -192,7 +192,7 @@ class TutorialBeatsTest < Minitest::Test
   # game, and answers its Show; with a block, it hears the Show each
   # frame.
   def self.play(width, height)
-    radius = DotPopper::DotSize.fitted(width, height).radius
+    radius = DotPopper::DotSize.standard(width, height).radius
     cabinet = DotPopper::Cabinet.new(DotPopper::Field.new(width, height, radius), random: Random.new(2))
     screen = Layout.new(width:, height:, safe: Rect.new(x: 0, y: 0, width:, height:), style: Style::LAYOUT)
     show = PresentationTest.show(cabinet:, layout: screen, sounds: FakeSounds.new, radius:, random: Random.new(3),

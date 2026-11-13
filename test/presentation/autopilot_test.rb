@@ -85,7 +85,7 @@ class AutopilotTest < Minitest::Test
       break if games >= 3
     end
 
-    assert cabinet.sizing.sized_to_screen?
+    assert cabinet.sizing.standard?
     assert_equal 3, games
   end
 

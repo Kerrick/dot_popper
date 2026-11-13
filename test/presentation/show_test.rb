@@ -91,13 +91,13 @@ class ShowTest < Minitest::Test
     assert_equal 0, @cabinet.game.score
   end
 
-  # Play is at least a dot fitted to the screen across, whichever size is
+  # Play is at least a standard dot across, whichever size is
   # chosen, and a press reaches it a margin past its edges.
   def test_play_is_big_and_easy_to_reach
     button = @show.home_plan.play_button
     layout = @show.layout
 
-    assert_operator button.height, :>=, 2 * DotPopper::DotSize.fitted(layout.width, layout.height).radius
+    assert_operator button.height, :>=, 2 * DotPopper::DotSize.standard(layout.width, layout.height).radius
     assert_operator @show.play_reach.width, :>, button.width
     assert @show.play_reach.contains?(button.x - 5, button.y - 5)
   end

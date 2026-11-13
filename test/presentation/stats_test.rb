@@ -51,13 +51,13 @@ class StatsSheetTest < Minitest::Test
 
   def test_with_standard_dots_the_sheet_says_so
     phone = DotPopper::Field.new(395, 850, R)
-    fitted = StatsSheet.build(stats, score_record: 0, words: Style::WORDS, size_class: DotPopper::SizeClass::FITTED,
+    standard = StatsSheet.build(stats, score_record: 0, words: Style::WORDS, size_class: DotPopper::SizeClass::STANDARD,
                                        field: DotPopper::Field.new(395, 850, 30),
-                                       sizing: DotPopper::DotSizing::SIZED_TO_SCREEN, preview: SizingPreview.of(phone, Style::SIZING))
+                                       sizing: DotPopper::DotSizing::STANDARD, preview: SizingPreview.of(phone, Style::SIZING))
 
-    assert_equal "Your stats with standard dots", fitted.records.heading
-    assert_equal ["None yet"], fitted.records.rows.map(&:value).values_at(3)
-    assert_equal ["This screen is about 7 dots wide and 14 dots tall."], fitted.notes
+    assert_equal "Your stats with standard dots", standard.records.heading
+    assert_equal ["None yet"], standard.records.rows.map(&:value).values_at(3)
+    assert_equal ["This screen is about 7 dots wide and 14 dots tall."], standard.notes
   end
 
   # The other size is named as Settings names it here: "Bigger" on a

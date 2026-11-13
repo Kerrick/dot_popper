@@ -80,7 +80,7 @@ class FinishGameTest < Minitest::Test
   # Heard as the rules announce each event, what it finishes with is the
   # game's own: its numbers, and whether the tutorial opened it.
   def test_it_finishes_each_game_from_the_rules_events_alone
-    cabinet = DotPopper::Cabinet.new(field, random: Random.new(3), sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
+    cabinet = DotPopper::Cabinet.new(field, random: Random.new(3), sizing: DotPopper::DotSizing::STANDARD)
     cabinet.subscribe(@finish)
     play = ->(start) { start.call.then { cabinet.update(30) }.then { cabinet.update(DotPopper::Rules::GAME_OVER_GRACE) } }
     play.(-> { start!(cabinet) })
@@ -95,7 +95,7 @@ class FinishGameTest < Minitest::Test
 
   private
 
-  def ended(score: 3, size_class: DotPopper::SizeClass::FITTED, tutorial: false)
+  def ended(score: 3, size_class: DotPopper::SizeClass::STANDARD, tutorial: false)
     DotPopper::Events::GameEnded.new(score_record: score, new_score_record: false, seed: 1, size_class:, field:, dots: DotPopper::Stack.new,
                                      score:, elapsed: 10.0, tutorial:)
   end

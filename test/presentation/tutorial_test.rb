@@ -47,7 +47,7 @@ class TutorialTest < Minitest::Test
   def test_the_bright_dot_freezes_well_away_from_the_middle_where_a_gamepad_cursor_starts
     sizes = ScreenPlansTest::SIZES
     sizes.each do |width, height|
-      radius = DotPopper::DotSize.fitted(width, height).radius
+      radius = DotPopper::DotSize.standard(width, height).radius
       field = DotPopper::Field.new(width, height, radius)
       inset = Rect.new(x: 0.0, y: 44.0, width: width.to_f, height: height - 78.0)
       screen = Layout.new(width:, height:, safe: inset, style: Style::LAYOUT)

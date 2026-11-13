@@ -44,7 +44,7 @@ class ScreenPlansTest < Minitest::Test
   def test_game_overs_lines_never_overlap_each_other
     SIZES.each do |width, height|
       screen_layout = layout(width, height)
-      radius = DotPopper::DotSize.fitted(width, height).radius
+      radius = DotPopper::DotSize.standard(width, height).radius
       [true, false].repeated_permutation(2).to_a.product([[], CHIPS.first(1), CHIPS]) do |(new_score_record, record), chips|
         plan = GameOverScreen.new(layout: screen_layout, type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
                                   scrim: Style::GAME_OVER_BACKING, game_over: game_over(new_score_record:, record:),

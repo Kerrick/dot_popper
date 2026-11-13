@@ -65,10 +65,10 @@ class StatsTest < Minitest::Test
   # file written before they were kept leaves its scores' unknown.
   def test_each_last_score_keeps_its_class_and_older_ones_are_unknown
     old = Stats.parse("games=2\nrecent=3,9\n")
-    stats = add(add(old, game(score: 4)), game(score: 6), size_class: DotPopper::SizeClass::FITTED)
+    stats = add(add(old, game(score: 4)), game(score: 6), size_class: DotPopper::SizeClass::STANDARD)
 
     assert_equal [3, 9, 4, 6], stats.recent
-    assert_equal [nil, nil, MEDIUM, DotPopper::SizeClass::FITTED], stats.recent_classes
+    assert_equal [nil, nil, MEDIUM, DotPopper::SizeClass::STANDARD], stats.recent_classes
     assert_includes stats.to_text, "recent_classes=?,?,medium,fitted\n"
     assert_equal stats.recent_classes, Stats.parse(stats.to_text).recent_classes
   end
