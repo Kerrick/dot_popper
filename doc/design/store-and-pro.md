@@ -8,7 +8,7 @@ How Dot Popper sells Pro and decides who has it: Free and Pro, the build's chann
 
 ## Free and Pro
 
-Pro is one purchase, the non-consumable product `com.setdef.dotpopper.pro`, all lowercase because Google Play takes no capitals in a product id, and the same in every store (`Presentation::Storefront::PRODUCT_ID`, `Receipt::PRODUCT_ID`, and `ios/store_check/Tests/DotPopper.storekit`). It adds four things, as the offer lists them (`Style::WORDS.offer[:includes]`):
+Pro is one purchase, the non-consumable product `com.setdef.dotpopper.pro`, all lowercase because Google Play takes no capitals in a product id, and the same in every store (`Store::PRODUCT_ID`, `Receipt::PRODUCT_ID`, and `ios/store_check/Tests/DotPopper.storekit`). It adds four things, as the offer lists them (`Style::WORDS.offer[:includes]`):
 
 | Pro adds | Free has |
 | --- | --- |
@@ -35,10 +35,10 @@ Nothing the game writes grants Pro: no file, flag or count. Within a run nothing
 
 What a build trusts and sells is decided by the build alone, never by anything a player can set at run time (the maintainer's rule: a kitchen-table workaround such as setting a variable must not grant Pro).
 
-- `DotPopper::Build::CHANNEL` (`lib/dot_popper/build.rb`) is the channel the build is sold through, or nil for a test build. `Presentation::Storefront::BUILD_CHANNEL` is the same constant. `Storefront.test_build?` is `BUILD_CHANNEL.nil?`. A build with a channel is a store build in the code's words (`Build.store?`), the `website` channel's included.
-- The channels' names are listed once, in `Build`: `app-store`, `mac-app-store`, `google-play` and `microsoft-store` (`Build::STORES`, the app stores), and `website` (`Build::WEBSITE`), together `Build::CHANNEL_NAMES`. `Storefront::MAC_APP_STORE`, `MICROSOFT_STORE` and `WEBSITE` are the same strings, and the scripts take the list from `Build`.
+- `DotPopper::Build::CHANNEL` (`lib/dot_popper/build.rb`) is the channel the build is sold through, or nil for a test build. `Store::BUILD_CHANNEL` is the same constant. `Store.test_build?` is `BUILD_CHANNEL.nil?`. A build with a channel is a store build in the code's words (`Build.store?`), the `website` channel's included.
+- The channels' names are listed once, in `Build`: `app-store`, `mac-app-store`, `google-play` and `microsoft-store` (`Build::STORES`, the app stores), and `website` (`Build::WEBSITE`), together `Build::CHANNEL_NAMES`. `Store::MAC_APP_STORE`, `MICROSOFT_STORE` and `WEBSITE` are the same strings, and the scripts take the list from `Build`.
 - The repository's own file keeps it nil, so every playtest kit and every test build CI makes is a test build. A channel's own CI job sets it before `lota fuse` with `ruby script/set_build_channel.rb CHANNEL`, which rewrites the `CHANNEL = nil` line and refuses a name not in `Build::CHANNEL_NAMES`. The Package workflow's `website` jobs run it with `website`, its `msix` job with `microsoft-store`, and its `mac-app-store` job with `mac-app-store`. No workflow builds `app-store` or `google-play` yet. On a phone any channel other than `website` gives the native port.
-- **License keys:** `Build.license_keys?` is false for the four app stores' channels, whose copies never accept, keep, verify or send a website license key (Apple 3.1.1; Google's billing rules): `Composition::Root#license_store` keeps nothing in place of `license.txt`, so a key left on disk grants nothing and is never sent. The website channel and a test build keep `license.txt`.
+- **License keys:** `Build.license_keys?` is false for the four app stores' channels, whose copies never accept, keep, verify or send a website license key (Apple 3.1.1; Google's billing rules): `Continuity::License.kept_in` keeps nothing in place of `license.txt` (the composition root opens the file only where it allows), so a key left on disk grants nothing and is never sent. The website channel and a test build keep `license.txt`.
 
 ### Developer settings in a store build
 
@@ -50,33 +50,33 @@ So a new setting is inert in a store build until someone adds it to that list. A
 
 In a store build, also:
 
-- the pins are setdef's (`Composition::Root.trusted_pins`), and the receipts trusted are the stores' (`.trusted_receipts`);
-- free games are always metered (`Composition::Root#player?` is true, so the bot and scenarios do not skip the limit);
+- the pins are setdef's (`Continuity.pins_for`), and the receipts trusted are the stores' (`Receipt.trusted`); the composition root asks both of Monetization by the channel and hands them to the `Entitlement`;
+- free games are always metered (`FreeGames.player?` is true, so the bot and scenarios do not skip the limit);
 - an automated run still sells through the build's channel and uses the real pins, so a pipeline that wants fakes runs the test build.
 
 Tests: `test/build_test.rb`, `test/composition/root_test.rb`, `test/set_build_channel_test.rb`, `test/check_build_test.rb`.
 
 ### Which store each build gets
 
-`Storefront.for(platform, native:, fake:, entitlement:, website:, channel:)` chooses once, called only from the composition root (`Composition::Root`). `platform` is the game's `Platform`, which the shell makes from `Lota::System.os` (`Shell::Platforms`); the table names each system as Lota does.
+`Store.for(platform, native:, fake:, entitlement:, website:, channel:)` (`lib/dot_popper/store.rb`) chooses once, called only from the composition root (`Composition::Root`). `platform` is the game's `Platform`, which the shell makes from `Lota::System.os` (`Shell::Platforms`); the table names each system as Lota does.
 
 | Channel | iOS | Android | macOS (`OS X`) | Windows | Linux |
 | --- | --- | --- | --- | --- | --- |
 | nil (test build) | `FakeStore` | `FakeStore` | `WebsiteStore` + `FakeCheckout` | `WebsiteStore` + `FakeCheckout` | `WebsiteStore` + `FakeCheckout` |
-| `website` (`Storefront::WEBSITE`) | `NativeStore` | `WebsiteStore` + `BrowserCheckout` | `WebsiteStore` + `BrowserCheckout` | `WebsiteStore` + `BrowserCheckout` | `WebsiteStore` + `BrowserCheckout` |
-| `mac-app-store` (`MAC_APP_STORE`) | `NativeStore` | `NativeStore` | `Shell::StoreHelper` | `NoStorefront` | `NoStorefront` |
-| `microsoft-store` (`MICROSOFT_STORE`) | `NativeStore` | `NativeStore` | `NoStorefront` | `Shell::StoreHelper` | `NoStorefront` |
-| any other | `NativeStore` | `NativeStore` | `Storefront::CHANNELS[name]`, or `NoStorefront` | same | same |
+| `website` (`Store::WEBSITE`) | `NativeStore` | `WebsiteStore` + `BrowserCheckout` | `WebsiteStore` + `BrowserCheckout` | `WebsiteStore` + `BrowserCheckout` | `WebsiteStore` + `BrowserCheckout` |
+| `mac-app-store` (`MAC_APP_STORE`) | `NativeStore` | `NativeStore` | `Shell::StoreHelper` | `NoStore` | `NoStore` |
+| `microsoft-store` (`MICROSOFT_STORE`) | `NativeStore` | `NativeStore` | `NoStore` | `Shell::StoreHelper` | `NoStore` |
+| any other | `NativeStore` | `NativeStore` | `Store::CHANNELS[name]`, or `NoStore` | same | same |
 
-`FakeStore`, `NativeStore` and `StoreHelper` sit behind a `Storefront`; `WebsiteStore` and `NoStorefront` answer the Storefront's methods themselves. A platform in the phone host (`Platform#phone_host?`: iOS, Android) catches the store URL; `HELPER_CHANNELS` are the computer stores' channels, each sold through the native port only on the platform whose own store it is (`Platform#own_store`). An iOS build never takes the website store (`Platform#website_sales?`; Apple 3.1.1). `Storefront::CHANNELS` is the registry for other computer channels (such as Steam), each a callable taking `entitlement:`; it is empty. `NoStorefront` offers nothing, so no one is offered a purchase that cannot complete. No environment variable selects any of this.
+`FakeStore`, `NativeStore` and `StoreHelper` sit behind a `Store`; `WebsiteStore` and `NoStore` answer the Store's methods themselves (`DotPopper::_Store` in `sig/dot_popper/store.rbs`). A platform in the phone host (`Platform#phone_host?`: iOS, Android) catches the store URL; `HELPER_CHANNELS` are the computer stores' channels, each sold through the native port only on the platform whose own store it is (`Platform#own_store`). An iOS build never takes the website store (`Platform#website_sales?`; Apple 3.1.1). `Store::CHANNELS` is the registry for other computer channels (such as Steam), each a callable taking `entitlement:`; it is empty. `NoStore` offers nothing, so no one is offered a purchase that cannot complete. No environment variable selects any of this.
 
 `script/check_build.rb` and the release checks are in [Release checks](#release-checks).
 
-## The Storefront port
+## The store port
 
-`Presentation::Storefront` (`lib/dot_popper/presentation/storefront.rb`) is the game's half of every store purchase: the offer, Buy, Restore, the thanks, and proving Pro. Its only way to a store is a port: `open(url)`, answering whether the request was taken, and `read`, `remove` and `path` for the answer.
+`Store` (`lib/dot_popper/store.rb`, Monetization's, in the core, which Steep checks strictly) is the game's half of every store purchase: the offer, Buy, Restore, the thanks, and proving Pro. Its only way to a store is a port: `open(url)`, answering whether the request was taken, and `read`, `remove` and `path` for the answer.
 
-**The request.** A URL in the scheme `dotpopper-store` (`Storefront::SCHEME`): `dotpopper-store://ACTION?n=NUMBER&product=com.setdef.dotpopper.pro&file=PATH`, where ACTION is `open`, `buy` or `restore`, NUMBER counts up with each request, and PATH is where to answer (`-` for a store helper's standard output). The scheme is registered with no system, so no other app can send one.
+**The request.** A URL in the scheme `dotpopper-store` (`Store::SCHEME`): `dotpopper-store://ACTION?n=NUMBER&product=com.setdef.dotpopper.pro&file=PATH`, where ACTION is `open`, `buy` or `restore`, NUMBER counts up with each request, and PATH is where to answer (`-` for a store helper's standard output). The scheme is registered with no system, so no other app can send one.
 
 **The answer.** The whole state each time, as `name=value` lines, so a missed answer costs nothing:
 
@@ -88,20 +88,20 @@ Tests: `test/build_test.rb`, `test/composition/root_test.rb`, `test/set_build_ch
 | `price=$1.99` | the store's own price, in the player's currency |
 | `receipt=…` | while owned, the store's receipt (see [Receipts](#receipts)) |
 
-`Storefront::STATES` maps those to what the offer tells apart; any other state is `:failed`. A receipt is proved from any answer. The price and state are taken only from an answer to the newest request (`answer >= number`), so an older answer never overwrites a newer state.
+`Store::STATES` maps those to what the offer tells apart; any other state is `:failed`. A receipt is proved from any answer. The price and state are taken only from an answer to the newest request (`answer >= number`), so an older answer never overwrites a newer state.
 
 **When it is asked and read.**
 
 - `#connect` asks `open` at launch (`Composition::Root#start`) and each time the offer opens, so a purchase on another device or after a reinstall simply appears and an unanswered request is cleared. It removes any old answer first, and asks nothing once the player has Pro.
 - `#buy` asks only once a price has come and nothing is under way. The offer's Buy without a price is "Try again", which connects again (`UseCases::BuyPro#buy`).
 - `#restore` asks unless something is under way.
-- `#update` reads the answer every `Storefront::EVERY` (0.25 s). `UseCases::BuyPro#update`, which the offer of Pro (`Screens::Offer#update`) calls each frame through the `Show`, calls it only while no game is in play, so a purchase never lands mid-game (`test_a_store_is_not_read_during_a_game`).
+- `#update` reads the answer every `Store::EVERY` (0.25 s). `UseCases::BuyPro#update`, which the offer of Pro (`Screens::Offer#update`) calls each frame through the `Show`, calls it only while no game is in play, so a purchase never lands mid-game (`test_a_store_is_not_read_during_a_game`).
 
 **When Pro arrives.** `Entitlement` announces `Entitlement::ProGranted` to its listeners the moment Pro first arrives in a run: `by: :receipt` when a store's receipt verifies (`#prove`), `by: :license_key` when a key is entered (`#enter`, which the website store enters keys through). Pro the game starts with, from a key already entered or `DOT_POPPER_PRO`, is not an arrival. `UseCases::BuyPro` hears it first and reports the achievements already earned to the player's friend groups, whichever way Pro came; the offer of Pro (`Screens::Offer#call`) hears it next and, for a store's purchase while it is open, plays a tick (a key entered has its own tick as it is pressed). The composition root subscribes both, in that order.
 
 ### The adapters
 
-**`NativeStore`** (`storefront.rb`) is the phones' adapter: its URLs go out by `Shell::UrlOpener` and its answers come back in `Shell::StoreAnswers`, the file `store_answer.txt` in the save folder. `StoreAnswers` is a plain file, not a `SaveFile`, because it is read four times a second and is usually absent. The hosts catch the URL before it leaves the app:
+**`NativeStore`** (`store.rb`) is the phones' adapter: its URLs go out by `Shell::UrlOpener` and its answers come back in `Shell::StoreAnswers`, the file `store_answer.txt` in the save folder. `StoreAnswers` is a plain file, not a `SaveFile`, because it is read four times a second and is usually absent. The hosts catch the URL before it leaves the app:
 
 - iOS: `DotPopperApplication` in `ios/host/Host/main.m` hands it to `DotPopperStore` in `ios/host/Host/Store.swift` (StoreKit 2, which is Swift-only). It writes the answer file atomically.
 - Android: `MainActivity#startActivity` hands it to `ProStore` (`android/host/src/main/java/org/setdef/fledge/host/ProStore.java`, Play Billing 9.1.0, which `android/host/build.gradle` adds). It writes a finished file and renames it over the answer. Each purchase is acknowledged, or Play refunds it after three days. A pending purchase never counts as owned.
@@ -115,26 +115,26 @@ Both ask for owned purchases first (StoreKit's `Transaction.currentEntitlements`
 
 `StoreHelper` starts the helper once for each request with the same URL and `file=-` (`StoreHelper::PIPE`), and reads the same whole-state answers from its standard output, each ending with an empty line, on a thread of its own. Two helpers can run at once; the newest request's answer is kept. `StoreHelper.find` looks for the helper, and for it in a `Helpers` folder, from the game's folder and up to six folders above it (`DEPTH`). With no helper, or in an automated run (`Automation`), `open` answers false and the request is refused. Both helpers take `--check`, which asks the store nothing; the Windows helper's `--self-test` runs in CI and in `test/windows_store_helper_test.rb`. Signing and packaging are in [doc/publishing.md](../publishing.md).
 
-**`FakeStore`** (`lib/dot_popper/presentation/fake_store.rb`) is a test build's store on a phone, behind the same port. It answers `loading` or `working` at once and the real answer `FakeStore::READS` (2) reads later, so a purchase takes the same asynchronous road. Its price is `$1.99` (`FakeStore::PRICE`). Its ledger, `fake_store.txt`, is the store's own record of what this install bought, apart from `Entitlement`: Buy writes a receipt there (`Receipt.issue`, Play's form signed by `Receipt::TestKey`), and every answer while owned hands that receipt over, so the game proves a fake purchase with the code that proves a real one. A ledger edited to say anything else does not verify. A receipt bought before the product id was lowercased (`com.setdef.DotPopper.pro`, `FakeStore::EARLIER`) is bought again under today's id when the ledger is read, so a playtester keeps pretend Pro. Nothing on any screen says the store is a fake.
+**`FakeStore`** (`lib/dot_popper/fake_store.rb`) is a test build's store on a phone, behind the same port. It answers `loading` or `working` at once and the real answer `FakeStore::READS` (2) reads later, so a purchase takes the same asynchronous road. Its price is `$1.99` (`FakeStore::PRICE`). Its ledger, `fake_store.txt`, is the store's own record of what this install bought, apart from `Entitlement`: Buy writes a receipt there (`Receipt.issue`, Play's form signed by `Receipt::TestKey`), and every answer while owned hands that receipt over, so the game proves a fake purchase with the code that proves a real one. A ledger edited to say anything else does not verify. A receipt bought before the product id was lowercased (`com.setdef.DotPopper.pro`, `FakeStore::EARLIER`) is bought again under today's id when the ledger is read, so a playtester keeps pretend Pro. Nothing on any screen says the store is a fake.
 
 `DOT_POPPER_FAKE_STORE_FAILS` (`FakeStore::FAILS_BY`) makes the fake go wrong, for a developer only and in a test build only: `refused` (the system will not take the request), `unavailable` (no store answers), and `failed`, `canceled` or `pending` (how a Buy can end; a Restore takes `failed` and `canceled`, and `pending` is a Buy's alone).
 
-**`WebsiteStore`** (`lib/dot_popper/presentation/website_store.rb`) is the store for copies no store controls: setdef's website, itch.io, Homebrew, winget, a Linux package or an APK. It answers the Storefront's methods, plus `#keys?` (true: a license key is how Pro arrives) and `#paste`. Its price is `WebsiteStore::PRICE` (`$1.99`), which must match the checkout page. It has no Restore: the key is the purchase, on any device. Its checkout is a port, `#buy` answering the state to show:
+**`WebsiteStore`** (`lib/dot_popper/website_store.rb`, with its checkouts) is the store for copies no store controls: setdef's website, itch.io, Homebrew, winget, a Linux package or an APK. It answers the Store's methods, plus `#keys?` (true: a license key is how Pro arrives) and `#paste`. Its price is `WebsiteStore::PRICE` (`$1.99`), which must match the checkout page. It has no Restore: the key is the purchase, on any device. Its checkout is a port, `#buy` answering the state to show:
 
 - `BrowserCheckout` opens `BrowserCheckout::URL` (`https://dot-popper.setdef.com/buy`) in the player's browser and answers `:browser` ("Finish in your browser. Your key comes by email."), or `:unavailable`. The URL is the one constant to set once a payment company is chosen.
 - `FakeCheckout`, a test build's on a computer, puts a real license key signed by the test key on the clipboard and answers `:copied` ("Your license key is copied. Paste it here."). Paste license key then takes the road a bought key takes.
 
-**`NoStorefront`** offers nothing: `offered?` is false, its status is `:unavailable`, and every request does nothing.
+**`NoStore`** offers nothing: `offered?` is false, its status is `:unavailable`, and every request does nothing.
 
 ### The store contract
 
-`test/presentation/store_contract.rb` is one suite of what any adapter must do, included by each adapter's test, which writes `new_store(fails:)` and `relaunched(store)`. It reads answers only through `read`, as `Storefront` does. It checks that a request is taken and names where its answer goes; that an answer comes later than the question; that every answer is the whole state and names its request; the price on opening; buying after the price, and failing without it; that owning hands over a receipt the test build trusts; restoring nothing and restoring a purchase; a purchase known after a relaunch; removing the answer; each failure; and buying, restoring and failing again through `Storefront`.
+`test/store_contract.rb` is one suite of what any adapter must do, included by each adapter's test, which writes `new_store(fails:)` and `relaunched(store)`. It reads answers only through `read`, as `Store` does. It checks that a request is taken and names where its answer goes; that an answer comes later than the question; that every answer is the whole state and names its request; the price on opening; buying after the price, and failing without it; that owning hands over a receipt the test build trusts; restoring nothing and restoring a purchase; a purchase known after a relaunch; removing the answer; each failure; and buying, restoring and failing again through `Store`.
 
-- `FakeStoreContractTest` (`test/presentation/store_contract_test.rb`) runs it on `FakeStore`.
+- `FakeStoreContractTest` (`test/store_contract_test.rb`) runs it on `FakeStore`.
 - `NativeStoreContractTest` runs it on `NativeStore` over a real answer file and a Ruby stand-in for the host, transcribed from `Store.swift` and `ProStore.java`. It shows `NativeStore`'s Ruby half and the suite's fairness, not the hosts.
 - `StoreHelperContractTest` (`test/shell/store_helper_test.rb`) runs it on `StoreHelper` with real processes against a Ruby stand-in for the helper.
 
-`ios/store_check` (XcodeGen, then `xcodebuild test` on a Simulator) drives the real `Store.swift` through its URLs and answer file against StoreKit's local test session; it is run by hand, not in CI. Other tests: `test/presentation/storefront_test.rb`, `test/presentation/website_store_test.rb`, and the GUI scenario `test/gui/scenarios/purchase.rb`.
+`ios/store_check` (XcodeGen, then `xcodebuild test` on a Simulator) drives the real `Store.swift` through its URLs and answer file against StoreKit's local test session; it is run by hand, not in CI. Other tests: `test/presentation/store_test.rb`, `test/presentation/website_store_test.rb`, and the GUI scenario `test/gui/scenarios/purchase.rb`.
 
 ## Receipts
 
@@ -148,7 +148,7 @@ A receipt is a store's signed record of a purchase of Pro, which the game verifi
 
 ### Whose receipts a build trusts
 
-A `Receipt::Trust` holds the Apple roots, the Play keys, the app's ID, the product ID, and whether Windows' word is taken (`windows_license`). `Composition::Root.trusted_receipts` picks one by the channel alone:
+A `Receipt::Trust` holds the Apple roots, the Play keys, the app's ID, the product ID, and whether Windows' word is taken (`windows_license`). `Receipt.trusted(channel)` picks one by the channel alone, and the composition root hands it to the `Entitlement`:
 
 | Build | Trust | Accepts |
 | --- | --- | --- |
@@ -193,7 +193,7 @@ GUI galleries: `test/gui/scenarios/offer_gallery.rb`, `website_gallery.rb`.
 - Pro counts nothing and keeps what was left (`#metered?` is false once `Entitlement#pro?`).
 - The save is `games.txt`, lines `day=2026-11-08`, `spent=2` and `first_games_used=3`. It counts the first games used, not those left, so a change to `FreeGames::FIRST_GAMES` reaches every player. A save from an earlier build has `bank=17` (the first games left) instead; it is read as `FIRST_GAMES` less those, and written the new way at the next game. It is not part of `StatsBackup`, so clearing Stats cannot refill it. A missing file has all its first games. The day is the player's local date, from the same `today` as the daily goal (`DOT_POPPER_TODAY` in a test build).
 
-**Where it meters.** `Composition::Root#free_games` builds it with `metered: storefront.offered? && player?`: where Pro can be bought, and someone is playing. `#player?` is always true in a store build; in a test build it is false for the autoplay bot and for a GUI scenario, unless the scenario sets `DOT_POPPER_FREE_GAMES`. A build with `NoStorefront` counts nothing, since a limit with no way past it is a dead end. Test builds have a store, a fake one, so they are metered like the final game, desktop included. `DOT_POPPER_FREE_GAMES=n` starts a new save with n first games and n a day.
+**Where it meters.** `FreeGames.metered?` decides, and the composition root builds `FreeGames` with its answer: where Pro can be bought (the store is `offered?`), and someone is playing (`FreeGames.player?`). `FreeGames.player?` is always true in a store build; in a test build it is false for the autoplay bot and for a GUI scenario, unless the scenario sets `DOT_POPPER_FREE_GAMES`. A build with `NoStore` counts nothing, since a limit with no way past it is a dead end. Test builds have a store, a fake one, so they are metered like the final game, desktop included. `DOT_POPPER_FREE_GAMES=n` (`FreeGames.starting`) starts a new save with n first games and n a day.
 
 **The one way into a game.** `UseCases::StartGame` (`lib/dot_popper/use_cases/start_game.rb`) is the only way into a game: Play, and the opening of the Tutorial (a first Play and How to play alike), whose game begins as it opens, go through it. It spends a game and starts it, or with none left starts nothing, and the `Show` opens the offer. `Cabinet` starts a game only when asked, never on a press, and only through its `Cabinet::Starts`, which it hands out once: the composition root gives them to `StartGame`, and asking again raises (`test/use_cases/start_game_test.rb`, `test/composition/root_test.rb`). The cabinet has no method of its own that starts a game, so nothing that holds only the cabinet can, even by sending a name (`test/cabinet_test.rb`). As a second line, the same test fails if any other line in the game's code takes a cabinet's Starts or reads `StartGame`'s by reflection (`@starts`); it reads the source, so a name built at run time would pass it. Ruby cannot forbid reflection, so this guards against an honest mistake, not a determined one. `test/presentation/games_test.rb` gives a `Show` a door that never opens and checks that no way in starts a game. The Tutorial's end and its Skip start nothing, so they spend nothing.
 
@@ -254,7 +254,7 @@ Tests: `test/continuity/license_test.rb`, `test/continuity/signatures_test.rb`, 
 
 A build for sale is checked as it was built, not as the repository says: the repository's own `build.rb` is always a test build.
 
-- `ruby script/check_build.rb CHANNEL VERSION FOLDER` loads the game's code from the unpacked app in FOLDER (its `game/dot_popper`, as `lota fuse` lays it out), with Lota installed, and fails unless all of it is the app's own; `Build::CHANNEL` is CHANNEL; `Composition::Root.trusted_pins` are `SETDEF_PINS` and share no key with `TEST_PINS`; no license key signed by any of `Continuity::TestKeys` verifies, no proof certificate by the test root verifies, and the fake store's receipt proves nothing in it, each beside its control (the same proof does verify against the test build's trust, so a Ruby that verifies nothing fails); no setting grants Pro or changes the server; and the app's `fledge.yml` says VERSION. A `google-play` build also needs `Receipt::PLAY_KEYS`; a `website` build needs no Play key or store identifier. It reaches nothing on the internet.
+- `ruby script/check_build.rb CHANNEL VERSION FOLDER` loads the game's code from the unpacked app in FOLDER (its `game/dot_popper`, as `lota fuse` lays it out), with Lota installed, and fails unless all of it is the app's own; `Build::CHANNEL` is CHANNEL; `Continuity.pins_for(CHANNEL)` are `SETDEF_PINS` and share no key with `TEST_PINS`; no license key signed by any of `Continuity::TestKeys` verifies, no proof certificate by the test root verifies, and the fake store's receipt proves nothing in it, each beside its control (the same proof does verify against the test build's trust, so a Ruby that verifies nothing fails); no setting grants Pro or changes the server; and the app's `fledge.yml` says VERSION. A `google-play` build also needs `Receipt::PLAY_KEYS`; a `website` build needs no Play key or store identifier. It reaches nothing on the internet.
 - The Package workflow runs it on every build for sale it makes: each file of each `website` build (the `.zip` and the installer on Windows, the `.tar.gz` and the `.dmg` on macOS, the `.tar.gz` and the AppImage on Linux), the MSIX's folder and the Mac App Store app. The packaged Ruby's Ed25519 is checked by each playthrough instead (`DOT_POPPER_PERF=1`; see [License keys](#license-keys)).
 - `ruby script/check_store_identifiers.rb CHANNEL` fails while an identifier CHANNEL needs is unset in the environment, still a placeholder (`setdef.DotPopper`, `CN=Dot Popper test`), or the wrong form: `MSIX_IDENTITY_NAME` and `MSIX_PUBLISHER` for `microsoft-store`, `APPLE_TEAM_ID` for `mac-app-store` and `app-store`, none for `website` or `google-play`. No workflow releases a store's build yet, so none runs it; the store's release job will, with the repository variables.
 - `ruby script/release_kind.rb TAG` says what a tag releases: `website`, `playtest` or `none` (its `WEBSITE_TAGS`). A `website` release carries the website builds alone; the test builds and the kits, whose fakes give Pro away, go only to a `playtest` prerelease. How to release is in [doc/publishing.md](../publishing.md).
