@@ -55,7 +55,7 @@ Once a game has been played, Home's **Dot size** control appears only where sizi
 
 ### Input
 
-A finger on the screen reaches the game as a `touchpressed` call with the device type `touchscreen`. SDL also generates a mouse press for each finger, marked `istouch`, and `InputRouter` ignores those, so one finger makes exactly one tap. A mouse or trackpad connected to an iPad clicks just as on a Mac. Every screen in the game can be used by tapping alone.
+A finger on the screen reaches the game as a `touchpressed` call with the device type `touchscreen`. SDL also generates a mouse press for each finger, marked `istouch`, and the shell ignores those (`Shell::LotaInput`), so one finger makes exactly one tap. A mouse or trackpad connected to an iPad clicks just as on a Mac. Every screen in the game can be used by tapping alone.
 
 The keyboard does less on iOS. **M** still turns sound on or off, **Enter** and **Space** press the screen's main button, and **Escape** goes back from the Stats screen and on from Game Over, but never quits, because iOS apps are closed by the system, never by the app itself. **F11** and **Alt+Enter** do nothing either, since the app is always fullscreen.
 

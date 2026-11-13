@@ -11,15 +11,15 @@ How a press reaches Dot Popper, from a mouse, a finger, a gamepad or a keyboard:
 Every press goes through one path, so every rule about presses holds for every kind of input without extra code.
 
 1. `main.rb` hands each of Lota's callbacks to `Shell::App` (`mouse_pressed`, `touch_pressed`, `gamepad_pressed`, `gamepad_axis`, and their moves and releases).
-2. `Presentation::InputRouter` decides which callbacks are presses, and turns each into a `Tap` (`x`, `y`, and the `InputKind` that made it).
+2. `Shell::LotaInput` leaves out what Lota reports that is no press of the player's own, and `Presentation::InputRouter` decides which of the rest are presses, and turns each into a `Tap` (`x`, `y`, and the `InputKind` that made it).
 3. `App#press` hands the `Tap` to `Show#tap` on the frame it happens, unless the Show waits for its release (Game Over, below).
 4. `Show#tap` sends it to the game (`Cabinet#press`) during a game, or to the button under it (`Show#controls`, `Show#control_at`) anywhere else.
 
-`InputRouter`'s rules:
+The rules:
 
 - A mouse press counts for buttons 1, 2 and 3, when the button goes down.
-- A finger counts when it goes down, and each finger is a press of its own. Only a `touchscreen` device counts: a trackpad's touches (0 to 1 coordinates) do not.
-- SDL makes up a mouse press, marked `istouch`, for each finger. It is ignored, so one finger is one press.
+- A finger counts when it goes down, and each finger is a press of its own. Only a `touchscreen` device counts: a trackpad's touches (0 to 1 coordinates) do not (`LotaInput`).
+- SDL makes up a mouse press, marked `istouch`, for each finger. It is ignored, so one finger is one press (`LotaInput`).
 - A gamepad's press is a click at the gamepad cursor (`InputRouter#gamepad_pressed`). Its release is at the cursor too, wherever it has moved.
 - Moves and releases are sorted the same way, for dragging the pile and scrolling lists.
 
@@ -201,7 +201,7 @@ Android's Back arrives as Escape ([platforms.md](platforms.md)). A phone's or ta
 
 | Test | What it checks |
 | --- | --- |
-| `test/presentation/input_router_test.rb` | Which callbacks are presses, and their `InputKind` |
+| `test/presentation/input_router_test.rb`, `test/shell/lota_input_test.rb` | Which callbacks are presses, and their `InputKind`; that SDL's made-up mouse and a trackpad's touches are not |
 | `test/presentation/gamepad_cursor_test.rb` | The dead zone, curve, speed, ramp, d-pad and showing |
 | `test/presentation/gamepad_buttons_test.rb` | The button map, Select on Home and in Settings, Start and B on Home, the trigger's thresholds |
 | `test/shell/gamepads_test.rb` | Which joysticks are kept, and their pushes added |

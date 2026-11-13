@@ -58,7 +58,7 @@ module DotPopper
         @renderer = Renderer.new(@show, @pen, pile: @pile, sparks: @sparks, bloom: @bloom,
                                              diagnostic: flag?("DOT_POPPER_DIAGNOSTIC_COLORS"))
         @renderer.prepare
-        @input = Presentation::InputRouter.new
+        @input = LotaInput.new
         @buttons = Presentation::GamepadButtons.new
         @trigger = Presentation::Trigger.released
         @cursor = @game.cursor
