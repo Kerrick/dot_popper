@@ -26,6 +26,7 @@ Dot Popper's architecturally significant decisions, one per record, in the MADR 
 | [0016](0016-the-tutorial-is-a-layer-over-a-paused-game.md) | The tutorial is a layer over the first game, paused, and Skip takes the layer away | accepted |
 | [0017](0017-use-cases-hold-the-rules-that-need-two-areas.md) | Use cases hold the rules that need two of the game's areas | accepted |
 | [0018](0018-screens-are-objects-on-a-stack.md) | Screens are objects on a stack, and the one on top answers every input | accepted |
+| [0019](0019-clean-architecture-and-domain-driven-design-in-three-areas.md) | The code follows Clean Architecture and Domain-Driven Design, with the domain in three areas | accepted |
 
 ## Keeping the log
 
