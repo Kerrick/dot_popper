@@ -41,8 +41,6 @@ module DotPopper
 
       def initialize: (stats_book: StatsBook, achievements: Achievements, entitlement: Entitlement, friend_groups: _FriendGroups) -> void
 
-      attr_reader result: Result?
-
       def subscribe: (_FinishedListener listener) -> self
 
       def stats: () -> GameStats

@@ -82,6 +82,8 @@ class FinishGameTest < Minitest::Test
   def test_it_finishes_each_game_from_the_rules_events_alone
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(3), sizing: DotPopper::DotSizing::STANDARD)
     cabinet.subscribe(@finish)
+    told = []
+    @finish.subscribe(told.method(:<<))
     play = ->(start) { start.call.then { cabinet.update(30) }.then { cabinet.update(DotPopper::Rules::GAME_OVER_GRACE) } }
     play.(-> { start!(cabinet) })
     cabinet.press(0, 0)
@@ -90,7 +92,7 @@ class FinishGameTest < Minitest::Test
     assert_equal 2, @stats_book.stats.games
     assert_equal [true, false], @groups.games.map(&:last), "the tutorial's game never counts"
     assert_equal cabinet.game.score, @finish.stats.score
-    assert_equal [], @finish.result.achievements
+    assert_equal [[], []], told.map { it.result.achievements }
   end
 
   # What Game Over shows is told to the finished game's listeners as the

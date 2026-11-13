@@ -36,7 +36,6 @@ module DotPopper
         @friend_groups = friend_groups
         @recorder = GameStats::Recorder.new
         @achievement_recorder = AchievementRecorder.new
-        @result = nil
         @listeners = []
       end
 
@@ -46,10 +45,6 @@ module DotPopper
         @listeners << listener
         self
       end
-
-      # What Game Over shows of the last game finished (Result), or nil
-      # before one has.
-      attr_reader :result
 
       # The numbers of the game in play, or of the one just finished.
       def stats = @recorder.stats
@@ -61,7 +56,7 @@ module DotPopper
         @achievement_recorder.call(event)
         return unless event.is_a?(Events::GameEnded)
 
-        result = @result = finish(event, stats:, earned: @achievement_recorder.earned)
+        result = finish(event, stats:, earned: @achievement_recorder.earned)
         finished = Finished.new(ended: event, stats:, result:)
         @listeners.each { it.call(finished) }
       end
