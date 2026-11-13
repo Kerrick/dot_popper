@@ -241,16 +241,16 @@ module DotPopperGui
     # can be nearer.
     def self.closest(color, targets)
       start = targets.bsearch_index { it[0] >= color[0] } || targets.size
-      best = Float::INFINITY
+      nearest = Float::INFINITY
       [(start...targets.size), (start - 1).downto(0)].each do |indices|
         indices.each do |i|
           target = targets[i]
-          break if (target[0] - color[0]).abs >= best
+          break if (target[0] - color[0]).abs >= nearest
 
-          best = [best, Math.sqrt(color.zip(target).sum { |a, b| (a - b)**2 })].min
+          nearest = [nearest, Math.sqrt(color.zip(target).sum { |a, b| (a - b)**2 })].min
         end
       end
-      best
+      nearest
     end
   end
 end

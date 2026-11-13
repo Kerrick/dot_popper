@@ -28,7 +28,7 @@ module DotPopper
       # with the same face and outline (look-and-sound.md, "Contrast").
       def seed(dot) = dot.id
 
-      # The seed of a dot drawn outside play, such as the title's examples.
+      # The seed of a dot drawn outside play, such as Home's examples.
       EXAMPLE_SEED = 9
     end
   end
