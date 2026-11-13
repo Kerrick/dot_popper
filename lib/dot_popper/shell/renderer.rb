@@ -46,7 +46,8 @@ module DotPopper
         @arrival = ArrivalPainter.new(pen:, dots: @dots)
         @tutorial = TutorialPainter.new(pen:)
         @at_rest = Presentation::DotAnimations.new(pen.style::MOTION)
-        @pages = { Screens::Stats => @stats, Screens::Themes => @themes, Screens::Credits => @credits,
+        @pages = { Screens::Stats => @stats,
+                   Screens::Themes => @themes,
                    Screens::Achievements => @achievements }.freeze
       end
 
@@ -91,6 +92,9 @@ module DotPopper
         when Screens::Settings
           veil(width, height, @pen.style::STATS.veil)
           @settings.draw(screen.drawing)
+        when Screens::Credits
+          veil(width, height, @pen.style::STATS.veil)
+          @credits.draw(screen.drawing)
         when Screens::ChangeServer
           veil(width, height, @pen.style::STATS.veil)
           @server.draw(screen.drawing)
