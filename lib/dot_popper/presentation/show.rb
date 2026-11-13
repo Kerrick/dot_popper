@@ -678,7 +678,6 @@ module DotPopper
       def server_offered? = @screens[:server].offered?
 
       # The words and buttons of Change Server (ServerScreen).
-      def server_plan = @screens[:server].plan
       def paste_server = @screens[:server].paste_address
 
       # The system's paste shortcut (Ctrl+V, or Cmd+V on a Mac) on a
