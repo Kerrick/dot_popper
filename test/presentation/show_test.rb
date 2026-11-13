@@ -709,6 +709,44 @@ class ShowTest < Minitest::Test
     assert_empty @show.effects.floating_texts
   end
 
+  # Game Over shows what FinishGame tells the Show as it finishes each
+  # game, so each Game Over is its own game's, even for a Show that hears
+  # the rules' events before FinishGame does.
+  def test_each_game_over_shows_its_own_games_result_whatever_order_the_rules_are_heard_in
+    cabinet = DotPopper::Cabinet.new(field, random: Random.new(2))
+    show = nil
+    cabinet.subscribe { show&.call(it) }
+    entitlement = DotPopper::Entitlement.free
+    stats_book = DotPopper::StatsBook.new(DotPopper::ScoreRecord::Memory.new)
+    achievements = DotPopper::Achievements.new(DotPopper::ScoreRecord::Memory.new)
+    themes = DotPopper::Themes.new(DotPopper::ScoreRecord::Memory.new)
+    groups = DotPopper::Groups::Session.off
+    use_cases = DotPopper::Composition.use_cases(cabinet:, free_games: DotPopper::FreeGames.unlimited, entitlement:, store: NoStorefront.new,
+                                                 achievements:, stats_book:, friend_groups: groups, starts: DotPopperTest.starts_of(cabinet),
+                                                 use_theme: DotPopper::UseCases::UseTheme.new(themes:, entitlement:))
+    told = []
+    use_cases[:finish_game].subscribe(told.method(:<<))
+    show = Show.new(cabinet:, layout:, sounds: FakeSounds.new, radius: R, stats_book:, achievements:, themes:, groups:, **use_cases)
+    use_cases[:finish_game].subscribe(show)
+    [0, 3].each do |pops|
+      press_main(show)
+      show.skip_tutorial
+      pops.times do
+        bright = cabinet.game.dots.find(&:bright?)
+        clear_around!(live(cabinet), bright)
+        show.tap(bright.x, bright.y)
+      end
+      cabinet.update(20)
+      result = told.last.result
+
+      assert_equal [cabinet.game.score, result.record, result.goal_met, result.achievements],
+                   [show.game_over.score, show.game_over.record, show.game_over.goal_met, show.game_over.achievements], "#{pops} pops"
+      cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
+      press_main(show)
+    end
+    refute_nil told.last.result.record, "the second game set a record the first did not"
+  end
+
   private
 
   def middle(rect) = [rect.center_x, rect.center_y]

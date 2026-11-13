@@ -763,14 +763,18 @@ module DotPopper
         follow_game_over if game_over?
       end
 
-      # Hears one of the rules' events (Cabinet#subscribe).
+      # Hears one of the rules' events (Cabinet#subscribe), and each game
+      # as it is finished (UseCases::FinishGame#subscribe), which Game Over
+      # shows: told it, rather than reading it back as the rules' GameEnded
+      # is heard, Game Over is the game's own whatever order the listeners
+      # hear the rules in.
       def call(event)
         case event
         when Events::GameStarted then game_started(event)
         when Events::Popped then popped(event)
         when Events::Penalized then penalized(event)
         when Events::Missed then effects.ring(event.x, event.y, style::TOUCH_RIPPLE)
-        when Events::GameEnded then game_ended(event)
+        when UseCases::FinishGame::Finished then game_ended(event.ended, event.stats, event.result)
         when Events::HomeShown then home_shown(event)
         end
       end
@@ -940,13 +944,13 @@ module DotPopper
       end
 
 
-      # The game is finished (UseCases::FinishGame, which heard it first),
-      # and Game Over shows what it did.
-      def game_ended(event)
-        result = @finish_game.result
+      # The game is finished (UseCases::FinishGame, which tells it): +event+
+      # is its GameEnded, +stats+ its numbers and +result+ what it did
+      # (FinishGame::Result), which Game Over shows.
+      def game_ended(event, stats, result)
         lesson = @tutor.lesson(@mistake) if @mistake&.among(event.dots)
         @game_over = GameOver.new(style: style::GAME_OVER, score: event.score, score_record: event.score_record, new_score_record: event.new_score_record, at: now,
-                             stats: game_stats, record: result.record, goal_met: result.goal_met, lesson:, achievements: result.achievements,
+                             stats:, record: result.record, goal_met: result.goal_met, lesson:, achievements: result.achievements,
                              first: event.first, screen: words.played_on(event.field, standard: event.size_class == SizeClass::STANDARD))
         sounds.play(event.new_score_record ? :new_score_record : :game_over)
       end

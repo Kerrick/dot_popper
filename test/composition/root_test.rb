@@ -312,8 +312,8 @@ class RootTest < Minitest::Test
   end
 
   # The root subscribes every listener to the rules' events itself, in the
-  # order they hear them: FinishGame finishes a game before the Show shows
-  # it. Making a Show subscribes nothing.
+  # order they hear them, and the Show to each game FinishGame finishes.
+  # Making a Show subscribes nothing.
   def test_the_root_subscribes_the_rules_listeners_and_a_show_subscribes_none
     game = root
     listeners = game.cabinet.instance_variable_get(:@listeners).map(&:class)
@@ -328,7 +328,7 @@ class RootTest < Minitest::Test
     use_cases = DotPopper::Composition.use_cases(cabinet:, free_games: DotPopper::FreeGames.unlimited, entitlement:, store: NoStorefront.new,
                                                  achievements:, stats_book:, friend_groups: groups,
                                                  use_theme: DotPopper::UseCases::UseTheme.new(themes:, entitlement:))
-    heard = -> { [cabinet, entitlement].map { it.instance_variable_get(:@listeners).size } }
+    heard = -> { [cabinet, entitlement, use_cases[:finish_game]].map { it.instance_variable_get(:@listeners).size } }
     before = heard.call
     Show.new(cabinet:, layout:, sounds: FakeSounds.new, radius: R, stats_book:, achievements:, themes:, groups:, **use_cases)
 
