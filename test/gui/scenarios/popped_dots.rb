@@ -11,8 +11,8 @@ module DotPopperGui
   # - Each dot is the same dot before and after its pop: whatever differs
   #   between two popped dots differs between them while bright too, so a
   #   popped dot's own details are the ones it had.
-  # - Nothing in a popped dot is bright, or a player takes a piece of it
-  #   for the bright dot.
+  # - No piece of a popped dot looks like the bright dot at a glance, or
+  #   a player takes it for a piece of the bright dot (Glance).
   #
   # Needs DOT_POPPER_PRO=1.
   class PoppedDotsScenario < Scenario
@@ -47,16 +47,19 @@ module DotPopperGui
     # popped dots must still differ, or a dot lost its own at its pop.
     OWN_DOTS = %i[jack_o_lantern ghost].freeze
 
-    # Lightness a popped dot's lightest hundredth, and its lightest
-    # thousandth, may not pass. Jack-o'-lantern, Ghost and Eclipse, drawn
-    # in dark tones, reach 0.17, 0.25 and 0.15 at the hundredth (Ghost's
-    # eye holes and rim) and 0.21, 0.25 and 0.21 at the thousandth.
-    LIGHTEST_HUNDREDTH = 0.26
-    LIGHTEST_THOUSANDTH = 0.3
+    # How near, at the least, a popped dot's colors may come to the
+    # bright dot's (Glance.nearest, CIELAB distance). Classic,
+    # Jack-o'-lantern, Ghost and Eclipse, which read at a glance, keep
+    # 60.0, 56.4, 72.8 and 84.0 away; the Santa a playtester could not
+    # tell from the bright one when popped (the shader before 79ca5ae)
+    # came within 31.0, his eyes' pale glints against the bright Santa's
+    # white beard.
+    NEAREST = 45
 
-    # Themes whose popped dots are known to be too light, until each is
-    # redrawn. Each must still fail, so the list cannot go stale.
-    TOO_LIGHT = %i[classic awake jingle_bell].freeze
+    # Themes whose popped dots are known to come too near their bright
+    # dot, until each is redrawn. Each must still fail, so the list cannot
+    # go stale.
+    TOO_NEAR = %i[awake jingle_bell turkey].freeze
 
     def play
       keeper = show.instance_variable_get(:@theme_keeper)
@@ -68,11 +71,11 @@ module DotPopperGui
       say "ok - popped dots differ in no color, lightness or size"
       drawn.each { follows(it) }
       say "ok - each dot is the same dot before and after its pop"
-      light = drawn.reject { dark?(it) }.map(&:key)
-      fail!("too light when popped: #{(light - TOO_LIGHT).join(", ")}") unless (light - TOO_LIGHT).empty?
-      say "ok - no popped dot is brighter than the shipped dark themes'"
-      fail!("dark when popped now, so off the list: #{(TOO_LIGHT - light).join(", ")}") unless (TOO_LIGHT - light).empty?
-      say "ok - every theme listed as too light still is"
+      near = drawn.select { nearest(it) < NEAREST }.map(&:key)
+      fail!("popped dots too near the bright one: #{(near - TOO_NEAR).join(", ")}") unless (near - TOO_NEAR).empty?
+      say "ok - no popped dot comes near the bright one"
+      fail!("far enough from the bright dot now, so off the list: #{(TOO_NEAR - near).join(", ")}") unless (TOO_NEAR - near).empty?
+      say "ok - every theme listed as too near still is"
     end
 
     private
@@ -135,8 +138,11 @@ module DotPopperGui
       fail!("#{drawn.key}'s popped dots are all alike, so a dot loses its own at its pop") if OWN_DOTS.include?(drawn.key) && !differ.all?
     end
 
-    def dark?(drawn) = drawn.popped.all? do
-      it.lightness(0.99, reach: 0.96) <= LIGHTEST_HUNDREDTH && it.lightness(0.999, reach: 0.96) <= LIGHTEST_THOUSANDTH
+    # The nearest each popped dot comes to the same dot bright.
+    def nearest(drawn)
+      distance = drawn.popped.zip(drawn.bright).map { |popped, bright| Glance.nearest(popped, bright) }.min
+      say format("%s popped comes within %.1f of the bright dot", drawn.key, distance)
+      distance
     end
 
     def spread(values) = values.max - values.min
@@ -179,6 +185,9 @@ module DotPopperGui
 
     def color(i, j) = @colors[j + @half][i + @half]
 
+    # The CIELAB colors (Glance.lab) of the points within +reach+ radii.
+    def labs(reach = 0.9) = points(reach).map { Glance.lab(color(*it)) }
+
     private
 
     def points(reach = nil)
@@ -189,5 +198,59 @@ module DotPopperGui
     def changed?(one, other, by) = one.zip(other).any? { |a, b| (a - b).abs > by }
 
     def lightness_of(rgb) = (0.2126 * rgb[0]) + (0.7152 * rgb[1]) + (0.0722 * rgb[2])
+  end
+
+  # How near a popped dot comes to looking like the bright dot, as a
+  # player sees them at a glance in a crowd: the eye finds the bright dot
+  # by its color, and what shows of a covered one is a sliver, often less
+  # than a third of it. So the bright dot is taken as its lightest SLIVER
+  # of points, the colors a sliver of it shows at its lightest, and a popped
+  # dot by its CLOSEST share of points nearest those colors, as a small
+  # pale glint is enough to take for the bright dot. The distance is in
+  # CIELAB (CIE 1976), where equal steps look about equally far apart in
+  # lightness and in color, so a popped dot as light as Classic's lilac rim
+  # is far from a gold bright dot, and a pale gray glint is near a white
+  # one.
+  module Glance
+    SLIVER = 0.3
+    CLOSEST = 0.001
+    STEP = 2.0 # colors are rounded to this many units, to be quick
+
+    def self.nearest(popped, bright)
+      light = bright.labs.sort_by(&:first)
+      targets = light.last((light.size * SLIVER).ceil).map { round(it) }.uniq.sort
+      distances = popped.labs.map { round(it) }.tally.flat_map { |color, count| [closest(color, targets)] * count }.sort
+      distances[(CLOSEST * (distances.size - 1)).round]
+    end
+
+    # [L*, a*, b*] of an sRGB color, each channel from 0 to 1, under D65.
+    def self.lab(rgb)
+      r, g, b = rgb.map { it <= 0.04045 ? it / 12.92 : ((it + 0.055) / 1.055)**2.4 }
+      x = f(((0.4124 * r) + (0.3576 * g) + (0.1805 * b)) / 0.95047)
+      y = f((0.2126 * r) + (0.7152 * g) + (0.0722 * b))
+      z = f(((0.0193 * r) + (0.1192 * g) + (0.9505 * b)) / 1.08883)
+      [(116 * y) - 16, 500 * (x - y), 200 * (y - z)]
+    end
+
+    def self.f(t) = t > 0.008856 ? t**(1 / 3.0) : (7.787 * t) + (16 / 116.0)
+
+    def self.round(lab) = lab.map { (it / STEP).round * STEP }
+
+    # The distance from +color+ to the nearest of +targets+, sorted by
+    # lightness: none farther in lightness alone than the nearest so far
+    # can be nearer.
+    def self.closest(color, targets)
+      start = targets.bsearch_index { it[0] >= color[0] } || targets.size
+      best = Float::INFINITY
+      [(start...targets.size), (start - 1).downto(0)].each do |indices|
+        indices.each do |i|
+          target = targets[i]
+          break if (target[0] - color[0]).abs >= best
+
+          best = [best, Math.sqrt(color.zip(target).sum { |a, b| (a - b)**2 })].min
+        end
+      end
+      best
+    end
   end
 end

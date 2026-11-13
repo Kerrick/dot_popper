@@ -141,11 +141,11 @@ class GuiScenariosTest < Minitest::Test
          DOT_POPPER_GUI_INPUT: "gamepad", DOT_POPPER_FAKE_GAMEPAD: "1")
   end
 
-  def test_popped_dots_are_alike_their_own_and_never_bright
+  def test_popped_dots_are_alike_their_own_and_far_from_the_bright_one
     play("popped_dots", "popped dots differ in no color, lightness or size",
          "each dot is the same dot before and after its pop",
-         "no popped dot is brighter than the shipped dark themes'",
-         "every theme listed as too light still is", DOT_POPPER_PRO: "1")
+         "no popped dot comes near the bright one",
+         "every theme listed as too near still is", DOT_POPPER_PRO: "1")
   end
 
   def test_a_game_without_shaders
