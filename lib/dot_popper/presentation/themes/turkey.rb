@@ -4,7 +4,7 @@ module DotPopper
   module Presentation
     module Themes
       # A tom turkey in full display, and the same turkey gone to roost when
-      # popped, by a stand of oaks at nightfall.
+      # popped, over the faint rays of a turkey's fanned tail.
       module Turkey
         def self.theme(base, hex)
           Theme.new(
@@ -21,9 +21,9 @@ module DotPopper
               confetti: [hex["#c8451a"], hex["#fa8a28"], hex["#ffcc52"], hex["#fff1dc"], hex["#7a4a26"]].freeze
             ),
             art: ThemeArt.new(
-              dot: "turkey", scenery: :roost,
+              dot: "turkey", scenery: :fan,
               sky: ThemeSky.new(top: hex["#121028"], mid: hex["#2c1e3e"], bottom: hex["#5a3036"], glow: hex["#e8843e"], glow_at: [0.5, 1.02],
-                                glow_amount: 0.4, edge: hex["#08060e"], stars: 0.7),
+                                glow_amount: 0.26, edge: hex["#08060e"], stars: 0.0),
               wordmark: "assets/fonts/Fredoka-Bold.ttf", dotted_name: true,
               sounds: {
                 # A gobble: a quick warble of falling notes, pitched low.
