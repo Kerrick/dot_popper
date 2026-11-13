@@ -41,7 +41,10 @@ module DotPopper
       SMALLEST_WINDOW = [400, 320].freeze
 
       attr_reader :settings, :platform, :dot_size, :window, :cabinet, :show, :pen, :speaker, :splash, :storefront,
-                  :entitlement, :theme_feed, :watch, :cursor, :autopilot, :haptics, :sharing, :refresh
+                  :entitlement, :theme_feed, :watch, :cursor, :bot, :haptics, :sharing, :refresh
+
+      # Its old name, until no caller says it.
+      alias autopilot bot
 
       def initialize(engine:, settings: DeveloperSettings.new, clock: -> { Time.now.to_f })
         @engine = engine
@@ -211,7 +214,7 @@ module DotPopper
         @show.group_panel.open if flag?("DOT_POPPER_GROUP_SCREEN")
         @cursor = Presentation::GamepadCursor.centered(@show.layout.whole, style: Style::GAMEPAD, radius: dot_size.radius)
         @cursor = @cursor.show if settings.fake_gamepad?
-        @autopilot = Presentation::Autopilot.new(Style::AUTOPILOT) if flag?("DOT_POPPER_AUTOPLAY")
+        @bot = Presentation::Bot.new(Style::BOT) if flag?("DOT_POPPER_AUTOPLAY")
       end
 
       # A scenario's unlocks and theme, in place of the server's.

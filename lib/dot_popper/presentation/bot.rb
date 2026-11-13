@@ -14,7 +14,7 @@ module DotPopper
     # the choice of dot size, it taps the other one, so a run shows
     # Home's dots change. It sees only what a player sees: the dots and
     # the screen.
-    class Autopilot
+    class Bot
       # Where it looks for an uncovered part of the bright dot: its center,
       # then points around it, in radii.
       PROBES = [[0, 0]] + (0...8).map { [0.6 * Math.cos(it * Math::PI / 4), 0.6 * Math.sin(it * Math::PI / 4)] }
@@ -177,5 +177,8 @@ module DotPopper
         dot && [dot.x, dot.y]
       end
     end
+
+    # Its old name, until no caller says it.
+    Autopilot = Bot
   end
 end

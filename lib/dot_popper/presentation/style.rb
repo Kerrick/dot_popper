@@ -556,9 +556,11 @@ module DotPopper
       # each screen, the Stats screen too, how long it thinks before each
       # tap (which grows with the score, so a game ends), and how often it
       # taps a popped dot.
-      class AutopilotStyle < Data.define(:home_wait, :game_over_wait, :stats_wait, :think, :tiring, :mistakes); end
-      AUTOPILOT = AutopilotStyle.new(home_wait: 1.6, game_over_wait: 3.2, stats_wait: 3.0, think: 0.22..0.45,
-                                    tiring: 0.07, mistakes: 0.2)
+      class BotStyle < Data.define(:home_wait, :game_over_wait, :stats_wait, :think, :tiring, :mistakes); end
+      BOT = BotStyle.new(home_wait: 1.6, game_over_wait: 3.2, stats_wait: 3.0, think: 0.22..0.45, tiring: 0.07, mistakes: 0.2)
+      # Their old names, until no caller says them.
+      AutopilotStyle = BotStyle
+      AUTOPILOT = BOT
     end
   end
 end
