@@ -88,7 +88,7 @@ class TutorialTest < Minitest::Test
     assert_equal :points, @tutorial.beat
     assert_equal %i[pop], @sounds.names
     assert_equal [Style::HAPTICS.pop], @haptics.buzzes
-    assert_equal 1, @effects.take_sprays.size, "it bursts at once"
+    assert_equal 1, @effects.take_bursts.size, "it bursts at once"
     assert bright.bright?, "still bright as its numbers fly out of it"
     assert_nil next_dot, "and nothing is born under it yet"
     assert_equal [0, 10], shown

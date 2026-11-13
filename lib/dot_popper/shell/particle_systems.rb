@@ -34,7 +34,7 @@ module DotPopper
       def update(seconds, effects)
         @systems.each_value(&:reset) if effects.cleared != @cleared
         @cleared = effects.cleared
-        effects.take_sprays.each { |spray| emit(spray, effects.shares(spray)) }
+        effects.take_bursts.each { |burst| emit(burst, effects.shares(burst)) }
         @systems.each_value { it.update(seconds) }
       end
 
@@ -47,20 +47,20 @@ module DotPopper
 
       private
 
-      def emit(spray, shares)
+      def emit(burst, shares)
         shares.each do |color, count|
           next if count.zero?
 
-          system = system_for(spray, color) or next
-          system.move_to(spray.x, spray.y)
+          system = system_for(burst, color) or next
+          system.move_to(burst.x, burst.y)
           system.emit(count)
         end
       end
 
-      def system_for(spray, color)
-        texture = @sprites[spray.style.sprite] or return
-        @systems[[spray.style, spray.longest, spray.radius, color]] ||= configure(
-          G::ParticleSystem.new(texture, spray.style.count * BUFFER), spray.emission(texture.width), color
+      def system_for(burst, color)
+        texture = @sprites[burst.style.sprite] or return
+        @systems[[burst.style, burst.longest, burst.radius, color]] ||= configure(
+          G::ParticleSystem.new(texture, burst.style.count * BUFFER), burst.emission(texture.width), color
         )
       end
 

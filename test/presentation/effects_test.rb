@@ -9,29 +9,29 @@ class EffectsTest < Minitest::Test
 
   def test_a_burst_waits_for_the_shell_to_throw_it
     @effects.burst(10, 20, Style::POP_BURST, Style::PALETTE.confetti)
-    sprays = @effects.take_sprays
+    bursts = @effects.take_bursts
 
-    assert_equal [[10, 20]], sprays.map { [it.x, it.y] }
-    assert_empty @effects.take_sprays
+    assert_equal [[10, 20]], bursts.map { [it.x, it.y] }
+    assert_empty @effects.take_bursts
   end
 
   def test_a_pop_never_outlives_the_longest_life
     @effects.burst(0, 0, Style::POP_BURST.with(life: 5.0..6.0), Style::PALETTE.confetti)
 
-    assert_operator @effects.take_sprays.first.longest, :<=, Burst::LONGEST_LIFE
+    assert_operator @effects.take_bursts.first.longest, :<=, Burst::LONGEST_LIFE
   end
 
   def test_waiting_bursts_are_capped
     50.times { @effects.burst(0, 0, Style::POP_BURST, Style::PALETTE.confetti) }
 
-    assert_equal Effects::MOST_SPRAYS, @effects.take_sprays.size
+    assert_equal Effects::MOST_PENDING_BURSTS, @effects.take_bursts.size
   end
 
   def test_a_clear_drops_waiting_bursts_and_says_so
     @effects.burst(0, 0, Style::POP_BURST, Style::PALETTE.confetti)
     @effects.clear
 
-    assert_empty @effects.take_sprays
+    assert_empty @effects.take_bursts
     assert_equal 1, @effects.cleared
   end
 

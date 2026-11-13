@@ -521,7 +521,7 @@ class ShowTest < Minitest::Test
 
     assert_equal ["+1", "+1s"], @show.effects.floating_texts.map(&:text)
     assert_equal :pop, @sounds.names.last
-    assert_equal [Style::POP_BURST], @show.effects.take_sprays.map(&:style)
+    assert_equal [Style::POP_BURST], @show.effects.take_bursts.map(&:style)
     assert_equal 2, @show.effects.rings.size
   end
 
