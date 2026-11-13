@@ -1,6 +1,6 @@
 module DotPopper
   class AchievementWatch
-    @game: Game?
+    @watching: bool
 
     @targets: Hash[Float, TouchTarget]
 
@@ -32,11 +32,11 @@ module DotPopper
 
     def reset: () -> void
 
-    def begin_game: (Game game) -> void
+    def begin_game: (Events::GameStarted started) -> void
 
-    def popped: (Events::Popped event, Game game) -> void
+    def popped: (Events::Popped event) -> void
 
-    def penalized: (Game game) -> void
+    def penalized: (Events::Penalized event) -> void
 
     def ended: (Events::GameEnded event) -> void
 
@@ -46,11 +46,11 @@ module DotPopper
 
     def dots_in_a_row: () -> void
 
-    def early: (Game game) -> void
+    def early: (Events::Popped popped) -> void
 
-    def clock: (Game game) -> void
+    def clock: (Events::Popped | Events::Penalized tapped) -> void
 
-    def appeared: (Dot dot, Array[Dot] above, Game game) -> void
+    def appeared: (Dot dot, Array[Dot] above, Events::Popped popped) -> void
 
     def target: (Float radius) -> TouchTarget
 
