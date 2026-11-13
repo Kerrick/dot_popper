@@ -61,7 +61,7 @@ module DotPopperGui
 
       panel.open
       shoot("group-list")
-      return show.back unless panel.pro?
+      return show.back if panel.locked?
 
       panel.press(:group_join_open, :touch, 0.0)
       panel.press(:notice_go, :touch, 0.0) if panel.asking

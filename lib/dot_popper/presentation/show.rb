@@ -58,7 +58,7 @@ module DotPopper
         @theme_keeper = theme_keeper
         @achievements = achievements
         @achievement_watch = AchievementWatch.new
-        @groups = GroupPanel.new(groups:, entitlement:, sounds:, pro_offer: ->(feature) { open_offer_for(feature) }, notice: group_notice)
+        @groups = GroupPanel.new(groups:, joining: UseCases::JoinFriendGroup.new(groups:, entitlement:), sounds:, pro_offer: ->(feature) { open_offer_for(feature) }, notice: group_notice)
         @groups.copy = ->(text) { clipboard.copy(text) }
         @offer_focus = nil
         @storefront = storefront

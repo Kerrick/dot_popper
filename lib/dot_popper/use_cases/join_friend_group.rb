@@ -1,0 +1,37 @@
+# frozen_string_literal: true
+
+module DotPopper
+  module UseCases
+    # Joining or creating a friend group: a group is Metagame's (+groups+,
+    # the Groups::Session that asks the server), and taking part is Pro's
+    # (+entitlement+, Entitlement), since everyone who competes for a
+    # title has Pro. A Free player is offered Pro instead. Leaving a group
+    # and deleting friend group data never need Pro, so they are not here.
+    class JoinFriendGroup
+      def initialize(groups:, entitlement:)
+        @groups = groups
+        @entitlement = entitlement
+      end
+
+      # Whether Join and Create lead to Pro, as for a Free player.
+      def locked? = !@entitlement.pro?
+
+      # Creates a group: :sent, or :offer for a Free player.
+      def create
+        return :offer if locked?
+
+        @groups.create
+        :sent
+      end
+
+      # Joins the group whose code is +code+: :sent, or :offer for a Free
+      # player.
+      def join(code)
+        return :offer if locked?
+
+        @groups.join(code)
+        :sent
+      end
+    end
+  end
+end

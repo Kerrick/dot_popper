@@ -132,8 +132,9 @@ module DotPopper
     # tapped so far, what a long press would do, and what to tell the
     # player next. Nothing here is typed, so a controller can do all of it.
     # It asks the Session (Groups) for everything, and never waits for it.
-    # Pro changes only what Create and Join do (+entitlement+): for a Free
-    # player they call +pro_offer+ with :groups, which opens the offer of
+    # Pro changes only what Create and Join do, which go through +joining+
+    # (UseCases::JoinFriendGroup): for a Free player they call +pro_offer+
+    # with :groups, which opens the offer of
     # Pro over this panel, where it was. Leaving and deleting never need it.
     # A Pro player's first Join or Create asks first (+notice+, a
     # GroupNotice): it says who keeps the scores, once ever, before any
@@ -145,12 +146,12 @@ module DotPopper
 
       attr_reader :groups, :code, :banner, :hold, :note, :page, :group_id
 
-      def initialize(groups:, entitlement:, sounds:, pro_offer: ->(_feature) {}, notice: GroupNotice.read)
+      def initialize(groups:, joining:, sounds:, pro_offer: ->(_feature) {}, notice: GroupNotice.read)
         @pro_offer = pro_offer
         @notice = notice
         @asking = nil
         @groups = groups
-        @entitlement = entitlement
+        @joining = joining
         @sounds = sounds
         @open = false
         @page = :list
@@ -170,7 +171,9 @@ module DotPopper
 
       # How many of the player's groups they hold the title of, for Home.
       def titles_held = groups.groups.count(&:champion?)
-      def pro? = @entitlement.pro?
+      # Whether Join and Create lead to the offer of Pro, as for a Free
+      # player.
+      def locked? = @joining.locked?
       def group = @group_id && groups.group(@group_id)
 
       # Opens on the list of groups, or at the code pad for someone with
@@ -404,7 +407,7 @@ module DotPopper
       end
 
       def open_join
-        return @pro_offer.call(:groups) unless pro?
+        return @pro_offer.call(:groups) if locked?
         return ask(:join) if @notice.due?
 
         @code = ""
@@ -444,17 +447,17 @@ module DotPopper
       end
 
       def submit_join
-        return @pro_offer.call(:groups) unless pro?
+        return @pro_offer.call(:groups) if locked?
         return @sounds.play(:tick, pitch: 0.8) unless code_complete? # Join looks disabled until then
 
-        groups.join(code)
+        @joining.join(code)
       end
 
       def create
-        return @pro_offer.call(:groups) unless pro?
+        return @pro_offer.call(:groups) if locked?
         return ask(:create) if @notice.due?
 
-        groups.create
+        @joining.create
       end
 
       def ask(what)

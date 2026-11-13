@@ -116,5 +116,25 @@ module DotPopper
 
       def refresh: () -> untyped
     end
+
+    # What a friend group's Join and Create ask of Groups::Session.
+    interface _Groups
+      def create: () -> void
+
+      def join: (String code) -> void
+    end
+
+    class JoinFriendGroup
+      @groups: _Groups
+      @entitlement: Entitlement
+
+      def initialize: (groups: _Groups, entitlement: Entitlement) -> void
+
+      def locked?: () -> bool
+
+      def create: () -> (:sent | :offer)
+
+      def join: (String code) -> (:sent | :offer)
+    end
   end
 end
