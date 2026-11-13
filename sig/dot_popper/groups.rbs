@@ -67,5 +67,177 @@ module DotPopper
 
       def forget: () -> void
     end
+
+    class Member < ::Data
+      attr_reader number: Integer
+
+      attr_reader top_score: Integer
+
+      def self.new: (number: Integer, top_score: Integer) -> instance
+
+      def self.parse: (untyped data) -> Member?
+    end
+
+    class Group < ::Data
+      ID: Regexp
+
+      attr_reader id: group_id
+
+      attr_reader join_code: String
+
+      attr_reader you: Integer
+
+      attr_reader members: Array[Member]
+
+      attr_reader champion_number: Integer?
+
+      attr_reader top_score: Integer
+
+      attr_reader reign_started_at: String?
+
+      def self.new: (id: group_id, join_code: String, you: Integer, members: Array[Member], champion_number: Integer?, top_score: Integer, reign_started_at: String?) -> instance
+
+      def self.id?: (untyped value) -> bool
+
+      def self.parse: (untyped data) -> Group?
+
+      def champion?: () -> bool
+
+      def vacant?: () -> bool
+
+      def standings: () -> Array[Member]
+
+      def fingerprint: () -> String
+
+      def score_to_win: () -> Integer
+    end
+
+    class TitleChange < ::Data
+      attr_reader id: Integer
+
+      attr_reader champion_number: Integer
+
+      attr_reader previous_champion_number: Integer?
+
+      attr_reader score: Integer
+
+      attr_reader at: String?
+
+      attr_reader passed_on: bool?
+
+      def self.new: (id: Integer, champion_number: Integer, previous_champion_number: Integer?, score: Integer, at: String?, ?passed_on: bool?) -> instance
+
+      def initialize: (id: Integer, champion_number: Integer, previous_champion_number: Integer?, score: Integer, at: String?, ?passed_on: bool?) -> void
+
+      def self.parse: (untyped data) -> TitleChange?
+    end
+
+    class MemberAchievement < ::Data
+      attr_reader id: Integer
+
+      attr_reader member_number: Integer
+
+      attr_reader key: Symbol
+
+      attr_reader at: String?
+
+      def self.new: (id: Integer, member_number: Integer, key: Symbol, at: String?) -> instance
+
+      def self.parse: (untyped data) -> MemberAchievement?
+    end
+
+    class Announcement < ::Data
+      attr_reader group_id: group_id
+
+      attr_reader champion_number: Integer
+
+      attr_reader score: Integer
+
+      attr_reader kind: Symbol
+
+      def self.new: (group_id: group_id, champion_number: Integer, score: Integer, kind: Symbol) -> instance
+
+      def self.of: (Group group, TitleChange change) -> Announcement
+
+      def self.kind_of: (Group group, TitleChange change) -> Symbol
+    end
+
+    # A group's part in a game's reply: the group, whether the game won
+    # its title, and whether it raised the champion's own top score.
+    type outcome = [Group, bool, bool]
+
+    class GameResult < ::Data
+      attr_reader won: Integer
+
+      attr_reader raised: Integer
+
+      attr_reader short: Integer?
+
+      attr_reader reigning: bool
+
+      attr_reader taken: Array[group_id]
+
+      def self.new: (won: Integer, raised: Integer, short: Integer?, reigning: bool, ?taken: Array[group_id]) -> instance
+
+      def initialize: (won: Integer, raised: Integer, short: Integer?, reigning: bool, ?taken: Array[group_id]) -> void
+
+      def self.of: (Array[outcome] outcomes, Integer score) -> GameResult
+    end
+
+    class ReadModel
+      @last_known_member: bool
+
+      @seen: Hash[group_id, Seen]
+
+      @groups: Array[Group]
+
+      @changes: Hash[group_id, Array[TitleChange]]
+
+      @history: Hash[group_id, Array[TitleChange | MemberAchievement]]
+
+      @announcements: Array[Announcement]
+
+      @arrival: group_id?
+
+      attr_reader groups: Array[Group]
+
+      attr_reader seen: Hash[group_id, Seen]
+
+      attr_reader last_known_member: bool
+
+      def initialize: (?last_known_member: bool, ?seen: Hash[group_id, Seen]) -> void
+
+      def member?: () -> bool
+
+      def group: (group_id id) -> Group?
+
+      def title_changes: (group_id id) -> Array[TitleChange]?
+
+      def history: (group_id id) -> Array[TitleChange | MemberAchievement]?
+
+      def replace: (Array[Group] groups) -> void
+
+      def upsert: (Group group) -> void
+
+      def gone: (group_id id) -> void
+
+      def remember_membership: () -> bool
+
+      def title_moved?: (Group group) -> bool
+
+      def read_history: (group_id id, untyped body) -> bool
+
+      def next_announcement: () -> Announcement?
+
+      def arrived: (group_id id) -> void
+
+      def take_arrival: () -> group_id?
+
+      def forget: () -> void
+
+      private
+
+      def announce: (Group group, Array[TitleChange] changes) -> void
+    end
   end
 end

@@ -67,7 +67,7 @@ module DotPopper
       # The Session for a game whose server is at +url+, or Session.off.
       def self.at(url, store:) = url ? new(store:, worker: Network::Worker.new(Network::Link.new(url))) : off
 
-      attr_reader :groups, :error, :token, :game_result
+      attr_reader :error, :token, :game_result
 
       def initialize(store:, worker:, clock: -> { Time.now }, available: true)
         @store = store
@@ -76,13 +76,8 @@ module DotPopper
         @available = available
         @waiting = []
         @running = 0
-        @groups = []
-        @changes = {}
-        @history = {}
         @fetching = []
-        @announcements = []
         @error = nil
-        @arrival = nil
         @game_result = nil
         @result_due = false
         load_saved
@@ -94,13 +89,14 @@ module DotPopper
       # Whether this player belongs to any group, as far as is known: after
       # a launch with no network the groups are unknown, but their games
       # still count.
-      def member? = !@groups.empty? || @was_member
-      def group(id) = @groups.find { it.id == id }
+      def member? = @read.member?
+      def groups = @read.groups
+      def group(id) = @read.group(id)
       # A group's title changes, newest first, or nil before they are read.
-      def title_changes(id) = @changes[id]
+      def title_changes(id) = @read.title_changes(id)
       # A group's history, title changes and members' achievements together,
       # newest first, or nil before it is read.
-      def history(id) = @history[id]
+      def history(id) = @read.history(id)
       # Whether a counting game has ended and its result is still awaited.
       def result_due? = @result_due
 
@@ -109,8 +105,8 @@ module DotPopper
       def refresh
         return unless known?
 
-        @error = nil if @groups.empty?
-        ask(Job.of(:groups, loud: @groups.empty?))
+        @error = nil if groups.empty?
+        ask(Job.of(:groups, loud: groups.empty?))
       end
 
       def create = as_player(Job.of(:create, loud: true))
@@ -168,14 +164,10 @@ module DotPopper
       end
 
       # The next title change to tell the player, once, or nil.
-      def next_announcement = @announcements.shift
+      def next_announcement = @read.next_announcement
 
       # The group just created or joined, once, for a screen to open.
-      def take_arrival
-        arrival = @arrival
-        @arrival = nil
-        arrival
-      end
+      def take_arrival = @read.take_arrival
 
       private
 
@@ -292,10 +284,9 @@ module DotPopper
       def read_groups(body)
         return unless body.is_a?(Array)
 
-        @groups = body.filter_map { Group.parse(it) }
-        @seen.select! { |id, _| group(id) }
+        @read.replace(body.filter_map { Group.parse(it) })
         remember_membership
-        @groups.each { follow(it) }
+        groups.each { follow(it) }
         send_pending
       end
 
@@ -307,52 +298,29 @@ module DotPopper
         return unless group
 
         upsert(group)
-        @arrival = group.id
+        @read.arrived(group.id)
       end
 
       def upsert(group)
-        index = @groups.index { it.id == group.id }
-        index ? @groups[index] = group : @groups << group
+        @read.upsert(group)
         remember_membership
         follow(group)
         send_pending
       end
 
       def gone(id)
-        @groups.reject! { it.id == id }
-        @changes.delete(id)
-        @history.delete(id)
-        @seen.delete(id)
+        @read.gone(id)
         remember_membership
         save
       end
 
       # Reads a group's history if its title has moved since it last was.
       def follow(group)
-        fetch_changes(group.id) unless @seen[group.id]&.fingerprint == group.fingerprint
+        fetch_changes(group.id) if @read.title_moved?(group)
       end
 
       def read_history(id, body)
-        return unless body.is_a?(Array) && (known_group = group(id))
-
-        changes = body.filter_map { TitleChange.parse(it) }.sort_by { -it.id }
-        @changes[id] = changes
-        @history[id] = (changes + body.filter_map { MemberAchievement.parse(it) }).sort_by { -it.id }
-        announce(known_group, changes)
-        @seen[id] = Seen.new(last: [@seen[id]&.last.to_i, changes.first&.id.to_i].max, fingerprint: known_group.fingerprint)
-        save
-      end
-
-      # Tells the player of the newest change they have not been told of. A
-      # group met for the first time has nothing new: what happened before
-      # is its history.
-      def announce(group, changes)
-        seen = @seen[group.id] or return
-        newest = changes.first
-        return unless newest && newest.id > seen.last
-
-        @announcements.reject! { it.group_id == group.id }
-        @announcements << Announcement.of(group, newest)
+        save if @read.read_history(id, body)
       end
 
       def finish_game(score, body)
@@ -393,24 +361,19 @@ module DotPopper
         save
       end
 
+      # Leaving the last group drops the score waiting, as it has no group
+      # to go to.
       def remember_membership
-        member = !@groups.empty?
-        return if @was_member == member && (member || @outbox.score.nil?)
+        return unless @read.remember_membership || (!member? && @outbox.score)
 
-        @was_member = member
-        @outbox.drop_score unless member
+        @outbox.drop_score unless member?
         save
       end
 
       def forget_identity
         @token = nil
-        @groups = []
-        @changes = {}
-        @history = {}
         @outbox.forget
-        @seen = {}
-        @announcements.clear
-        @was_member = false
+        @read.forget
         @wait_until = nil
         @result_due = false
         @game_result = nil
@@ -422,12 +385,11 @@ module DotPopper
         saved = GroupFile.parse(@store.read)
         @token = saved.token
         @outbox = Outbox.new(score: saved.unsent_score, achievements: saved.unsent_achievements)
-        @was_member = saved.member
-        @seen = saved.seen
+        @read = ReadModel.new(last_known_member: saved.member, seen: saved.seen)
       end
 
       def save
-        @store.write(GroupFile.new(token: @token, unsent_score: @outbox.score, member: @was_member, seen: @seen,
+        @store.write(GroupFile.new(token: @token, unsent_score: @outbox.score, member: @read.last_known_member, seen: @read.seen,
                                    unsent_achievements: @outbox.achievements).to_s)
       end
     end
