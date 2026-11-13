@@ -38,7 +38,7 @@ A Skip button stands at the bottom right of the safe area (`Layout#skip_button`)
 
 ## The beats
 
-The beat is `Tutorial#beat`. Time in the scene flows at `Tutorial#rate`, from 1 (the game's own speed) to 0 (stopped), and always eases rather than snapping (`Level`).
+The beat is `Tutorial#beat`. Time in the scene flows at `Tutorial#rate`, from 1 (the game's own speed) to 0 (stopped), and always eases rather than snapping (`EasedValue`).
 
 | Beat | What happens | Ends when |
 | --- | --- | --- |

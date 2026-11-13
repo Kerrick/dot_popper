@@ -133,7 +133,7 @@ module DotPopper
         @now = now
         @since = now
         @beat = :drift
-        @time = Level.steady(1.0)
+        @time = EasedValue.steady(1.0)
         @cues = []
         @flights = []
         @spotlight = Spotlight.off(@script.spotlight)
