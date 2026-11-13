@@ -59,7 +59,6 @@ module DotPopper
         @groups = GroupPanel.new(groups:, joining: UseCases::JoinFriendGroup.new(groups:, entitlement:), sounds:, pro_offer: ->(feature) { open_offer_for(feature) }, notice: group_notice,
                                 shown: ->(open) { open ? open_layer(:friend_groups) : close_layer(:friend_groups) })
         @groups.copy = ->(text) { clipboard.copy(text) }
-        @offer_focus = nil
         @storefront = storefront
         @games = games
         @start_game = UseCases::StartGame.new(cabinet:, free_games: games)
@@ -69,7 +68,6 @@ module DotPopper
         @buy_pro = UseCases::BuyPro.new(store: storefront, entitlement:, cabinet:, achievements:, friend_groups: groups)
         entitlement.subscribe(->(granted) { pro_arrived(granted) })
         @layers = [] # the screens open over the game's state, the top one last
-        @offer_for_play = false
         @tutorial = nil
         @handing_over = nil
         @lead_in = nil
@@ -109,7 +107,7 @@ module DotPopper
         @undo = nil
         @pointer = nil
         @hover = Hover.none
-        @screens = Screens.made_for(self, clipboard:)
+        @screens = Screens.made_for(self, clipboard:, buy_pro: @buy_pro, storefront:, entitlement:)
         cabinet.subscribe(@recorder)
         cabinet.subscribe(self)
       end
@@ -195,7 +193,7 @@ module DotPopper
       # The player pressed with +kind+ (InputKind): from now on the words
       # say what to do with it.
       def input=(kind)
-        @key_hint = nil # a pointer or a controller took over from the keyboard
+        @screens[:offer].key_hint = nil # a pointer or a controller took over from the keyboard
         return if kind == input
 
         @input = kind
@@ -338,9 +336,6 @@ module DotPopper
       # Settings. Says whether it took it.
       def type_key(key) = screen.type(key)
 
-      # A key typed into the offer of a copy that takes a license key, on a
-      # computer: Paste license key's other way in (WebsiteStore#type).
-      def typed_license_key(key) = @buy_pro.type(key)
 
       # What a press does on the screen on top: the control +name+, or
       # with none, empty space at +x+, +y+ (Screens::Screen#press).
@@ -415,11 +410,7 @@ module DotPopper
         play
       end
 
-      def offer_over_game_over
-        @offer_for_play = true
-        open_offer
-        @offer_focus = :games
-      end
+      def offer_over_game_over = offer.open_for_play
 
       # One of Game Over's lines that opens something: a new achievement
       # in its dialog, or the friend group whose title the game took.
@@ -553,9 +544,7 @@ module DotPopper
 
       def close_stats
         close_page
-        close_layer(:offer)
-        @offer_focus = nil
-        @offer_for_play = false
+        offer.close(quiet: true)
       end
 
       # Back, from the Credits screen to the Stats screen, or from the
@@ -567,29 +556,15 @@ module DotPopper
         close_page if page
       end
 
-      def close_offer
-        @offer_for_play = false
-        close_layer(:offer)
-        @offer_focus = nil
-        sounds.play(:tick, pitch: 0.8)
-      end
+      def close_offer = offer.close
 
-      # What the open offer leads with, or nil when it was not opened by a
-      # tap on something Pro has.
-      attr_reader :offer_focus
+      # What the open offer leads with (Screens::Offer#focus).
+      def offer_focus = offer.focus
 
       # A Free player tapped something that comes with Pro (+feature+ is
       # :achievements, :themes or :groups): the offer opens over the screen
-      # they are on, leading with it, and Back closes it to that same screen,
-      # open as it was, so no one loses their place.
-      def open_offer_for(feature)
-        return if @entitlement.pro? || offer?
-
-        open_layer(:offer)
-        @offer_focus = feature
-        @buy_pro.open
-        sounds.play(:tick)
-      end
+      # they are on, leading with it (Screens::Offer#open_led_by).
+      def open_offer_for(feature) = offer.open_led_by(feature)
 
       # Whether Pro can be offered at all: where there is a store, to a
       # player who has not bought it. No screen has a button for it. The
@@ -600,10 +575,7 @@ module DotPopper
 
       # Whether the store takes a license key (WebsiteStore), rather than
       # restoring its purchases.
-      def keys? = @storefront.keys?
-
-      # Restore Purchases, on the offer.
-      def restore = @buy_pro.restore
+      def keys? = offer.keys?
 
       # Friend groups, opened from Home.
       def open_groups = (@groups.open if on_home?)
@@ -614,99 +586,45 @@ module DotPopper
       # Whether the offer of Pro is open, over the screen it was opened from.
       def offer? = layer?(:offer)
 
-      # Opens the offer over the screen in view, and asks the store for the
-      # price, or asks again if an earlier request was never answered.
-      def open_offer
-        return unless offer_offered?
+      # The offer of Pro (Screens::Offer), open or not.
+      def offer = @screens[:offer]
 
-        open_layer(:offer)
-        @offer_focus = nil
-        @buy_pro.open
-        sounds.play(:tick)
-      end
+      # Opens the offer over the screen in view (Screens::Offer#open_plainly).
+      def open_offer = offer.open_plainly
 
       # Where the offer's words and buttons go (OfferPlan), or nil while it
       # is closed.
-      def offer_plan
-        return unless offer?
-
-        offer_screen.plan
-      end
+      def offer_plan = (offer.plan if offer?)
 
       # The offer's words and parts to lay out (OfferScreen).
-      def offer_screen
-        OfferScreen.new(layout:, type: style::TYPE, words:, measure: @measure, offering: !@entitlement.pro?,
-                        note: (words.offer[:no_games] if @offer_for_play), focus: @offer_focus, art: offer_art,
-                        sold: @storefront.sold?, second: @storefront.keys? ? :paste : :restore)
-      end
+      def offer_screen = offer.layout_screen
 
-      # How tall the offer's picture of what was tapped is: the themes'
-      # cards, the achievement's card, or a feature's sign.
-      def offer_art
-        case @offer_focus
-        when :themes then layout.short? ? 64.0 : 100.0
-        when :achievements then layout.short? ? 84.0 : 110.0
-        else layout.short? ? 40.0 : 56.0
-        end
-      end
 
       # The themes the offer shows: every one but the ordinary, as Pro
       # would give them now.
       def offer_themes = themes.reject(&:ordinary?)
 
       # The achievement a Free player tapped, which the offer leads with.
-      attr_reader :offer_achievement
+      def offer_achievement = offer.achievement
 
       # The price the store gave, or nil before it has.
-      def offer_price = @storefront.price
+      def offer_price = offer.price
 
-      # What the offer says of how the store is getting on: thanks once the
-      # player owns it, and otherwise a word only when there is something to
-      # say.
-      def offer_status
-        return words.offer[:thanks] if @entitlement.pro?
-        return "#{words.offer[:typing]} #{typed_tail}" if @storefront.respond_to?(:typed) && !@storefront.typed.empty? && @storefront.status == :ready
+      # What the offer says of how the store is getting on.
+      def offer_status = offer.status
 
-        words.offer.fetch(@storefront.status, "")
-      end
 
-      # The last of the key being typed, for the line to show.
-      def typed_tail
-        typed = @storefront.typed
-        typed.length > 24 ? "…#{typed[-24..]}" : typed
-      end
+      # Paste license key, on the offer (Screens::Offer#paste_key).
+      def paste_key = offer.paste_key
 
-      # Paste license key: what is on the clipboard, entered as a key, on a
-      # copy that takes one (WebsiteStore). A key that is good is Pro at
-      # once, which Entitlement announces as Pro arriving.
-      def paste_key
-        return unless offer? && @storefront.keys?
 
-        @buy_pro.paste
-        sounds.play(:tick)
-      end
-
-      # Buy where the store gave a price, and otherwise the same button's
-      # "Try again" (UseCases::BuyPro).
-      def buy = @buy_pro.buy
-
-      # Buy's words, with the controller's button that presses it (Y) while
-      # a controller is in use. Buy's other ways are its own button, tapped
-      # or clicked, and Ctrl+B or Cmd+B; none is a press that means
-      # continue or back elsewhere.
-      def buy_label
-        label = offer_price ? format(words.offer[:buy], offer_price) : words.offer[:retry]
-        return "#{label} (Y)" if input == InputKind::GAMEPAD
-
-        @key_hint ? "#{label} (#{@key_hint})" : label
-      end
+      # Buy's words (Screens::Offer#buy_label).
+      def buy_label = offer.buy_label
 
       # A key was pressed on a computer's keyboard: until a pointer or a
       # controller is used, Buy names its key, +buy_key+ ("Ctrl+B", or
       # "⌘B" on a Mac).
-      def keyboard_used(buy_key)
-        @key_hint = buy_key
-      end
+      def keyboard_used(buy_key) = offer.key_hint = buy_key
 
       # Ctrl+B or Cmd+B, or a controller's Y, on the offer: Buy, where Pro
       # is sold and not yet bought. Says whether it took the press.
@@ -1019,7 +937,7 @@ module DotPopper
       def achievement_pro
         id = dialog
         open_offer_for(:achievements)
-        @offer_achievement = id
+        offer.led_by_achievement(id)
         close_layer(:achievement_dialog)
       end
 
@@ -1220,9 +1138,7 @@ module DotPopper
         return unless home? && offer_offered?
 
         @stats = stats_sheet
-        @offer_for_play = true
-        open_offer
-        @offer_focus = :games
+        offer.open_for_play
       end
 
       # Plays the Tutorial over a game started paused on the field a game
@@ -1420,7 +1336,7 @@ module DotPopper
       def home_shown(event)
         @use_theme.refresh
         @stats = nil
-        @offer_for_play = false
+        offer.closed_at_home
         @groups.close if group_open?
         @layers.clear
         @credits = nil

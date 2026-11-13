@@ -12,6 +12,7 @@ class ProKnowledgeTest < Minitest::Test
     lib/dot_popper/entitlement.rb
     lib/dot_popper/free_games.rb
     lib/dot_popper/presentation/fake_store.rb
+    lib/dot_popper/presentation/screens/offer.rb
     lib/dot_popper/presentation/show.rb
     lib/dot_popper/presentation/storefront.rb
     lib/dot_popper/presentation/website_store.rb
