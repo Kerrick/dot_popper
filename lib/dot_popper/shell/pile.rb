@@ -42,7 +42,7 @@ module DotPopper
         @world&.update(@style.step(seconds))
       end
 
-      # Pulls the balls toward +pull+ (a Presentation::Pull, 1 being the
+      # Pulls the balls toward +pull+ (a Presentation::Gravity, 1 being the
       # pile's own gravity) from now on, under a lid. With +wake+, every
       # ball asleep wakes, since Box2D leaves a sleeping body where it is
       # whatever the gravity does.

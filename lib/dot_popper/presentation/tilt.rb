@@ -97,7 +97,7 @@ module DotPopper
 
     # A low-pass filter: a value that eases toward each new reading,
     # covering 63% of the way in +time_constant+ seconds, however long
-    # the frames are. It filters Pulls, or any value that adds, subtracts
+    # the frames are. It filters Gravity values, or any value that adds, subtracts
     # and scales as they do.
     class LowPass < Data.define(:value, :time_constant)
       def update(seconds, target)
@@ -123,7 +123,7 @@ module DotPopper
       end
 
       # A reading from Lota::Sensor, in meters a second squared.
-      def self.si(x, y, z) = new(x:, y:, z:) * (1.0 / Pull::STANDARD_GRAVITY)
+      def self.si(x, y, z) = new(x:, y:, z:) * (1.0 / Gravity::STANDARD_GRAVITY)
 
       def +(other) = Reading.new(x: x + other.x, y: y + other.y, z: z + other.z)
       def -(other) = Reading.new(x: x - other.x, y: y - other.y, z: z - other.z)
@@ -181,8 +181,8 @@ module DotPopper
       def initialize(style, orientation: :portrait)
         @style = style
         @orientation = orientation
-        @pull = LowPass.new(value: Pull.down, time_constant: style.smoothing)
-        @woken = Pull.down
+        @pull = LowPass.new(value: Gravity.down, time_constant: style.smoothing)
+        @woken = Gravity.down
         @shakes = nil
       end
 
@@ -204,9 +204,9 @@ module DotPopper
 
       def target(reading, stick)
         pushed = Math.hypot(stick.x, stick.y) > @style.dead_zone
-        return Pull.from_stick(stick, @style.dead_zone) if pushed || reading.nil?
+        return Gravity.from_stick(stick, @style.dead_zone) if pushed || reading.nil?
 
-        Pull.from_device(reading.x, reading.y, @orientation)
+        Gravity.from_device(reading.x, reading.y, @orientation)
       end
 
       def woken?

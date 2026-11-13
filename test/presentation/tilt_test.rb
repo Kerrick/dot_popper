@@ -17,7 +17,7 @@ class TiltTest < Minitest::Test
     Reading.new(x: (x * Math.cos(lean)) + (lx * Math.sin(lean)), y: (y * Math.cos(lean)) + (ly * Math.sin(lean)))
   end
 
-  def pull(reading, orientation) = Pull.from_device(reading.x, reading.y, orientation)
+  def pull(reading, orientation) = Gravity.from_device(reading.x, reading.y, orientation)
 
   def assert_pull(expected_x, expected_y, actual)
     assert_in_delta expected_x, actual.x, 1e-9, "x of #{actual}"
@@ -84,19 +84,19 @@ class TiltTest < Minitest::Test
   end
 
   def test_lying_flat_the_dots_feel_no_pull_across_the_screen
-    ORIENTATIONS.each { assert_pull 0.0, 0.0, Pull.from_device(0.0, 0.0, it) }
+    ORIENTATIONS.each { assert_pull 0.0, 0.0, Gravity.from_device(0.0, 0.0, it) }
   end
 
   def test_an_unknown_orientation_is_the_devices_own
-    assert_equal Pull.from_device(0.3, 0.8, :portrait), Pull.from_device(0.3, 0.8, :unknown)
+    assert_equal Gravity.from_device(0.3, 0.8, :portrait), Gravity.from_device(0.3, 0.8, :unknown)
   end
 
   def test_a_pull_of_one_is_the_piles_own_gravity
-    assert_equal [0.0, Style::PILE.gravity_for(R)], Pull.down.gravity(Style::PILE.gravity_for(R))
+    assert_equal [0.0, Style::PILE.gravity_for(R)], Gravity.down.gravity(Style::PILE.gravity_for(R))
   end
 
   def test_a_reading_in_meters_a_second_squared_is_turned_to_g
-    reading = Reading.si(0.0, Pull::STANDARD_GRAVITY, 0.0)
+    reading = Reading.si(0.0, Gravity::STANDARD_GRAVITY, 0.0)
 
     assert_in_delta 1.0, reading.y
   end
@@ -113,31 +113,31 @@ class TiltTest < Minitest::Test
   def test_the_fake_tilt_the_docs_give_rolls_the_dots_sideways
     fake = Reading.parse("0.6,0")
 
-    assert_pull(-0.6, 0.0, Pull.from_device(fake.x, fake.y, :portrait))
+    assert_pull(-0.6, 0.0, Gravity.from_device(fake.x, fake.y, :portrait))
   end
 
   # The low-pass filter.
 
   def test_the_filter_eases_toward_a_reading_by_its_time_constant
-    filter = LowPass.new(value: Pull.down, time_constant: 0.2).update(0.2, Pull.new(x: 1.0, y: 1.0))
+    filter = LowPass.new(value: Gravity.down, time_constant: 0.2).update(0.2, Gravity.new(x: 1.0, y: 1.0))
 
     assert_in_delta 1 - Math.exp(-1), filter.value.x
     assert_in_delta 1.0, filter.value.y
   end
 
   def test_the_filter_does_not_depend_on_the_frame_rate
-    target = Pull.new(x: -1.0, y: 0.0)
-    once = LowPass.new(value: Pull.down, time_constant: 0.2).update(0.1, target)
-    twice = LowPass.new(value: Pull.down, time_constant: 0.2).update(0.05, target).update(0.05, target)
+    target = Gravity.new(x: -1.0, y: 0.0)
+    once = LowPass.new(value: Gravity.down, time_constant: 0.2).update(0.1, target)
+    twice = LowPass.new(value: Gravity.down, time_constant: 0.2).update(0.05, target).update(0.05, target)
 
     assert_in_delta once.value.x, twice.value.x
     assert_in_delta once.value.y, twice.value.y
   end
 
   def test_the_filter_smooths_a_jittery_reading
-    filter = LowPass.new(value: Pull.down, time_constant: Style::TILT.smoothing)
+    filter = LowPass.new(value: Gravity.down, time_constant: Style::TILT.smoothing)
     xs = 120.times.map do |i|
-      filter = filter.update(1 / 60.0, Pull.new(x: i.even? ? 0.2 : -0.2, y: 1.0))
+      filter = filter.update(1 / 60.0, Gravity.new(x: i.even? ? 0.2 : -0.2, y: 1.0))
       filter.value.x
     end
 
@@ -244,7 +244,7 @@ class TiltTest < Minitest::Test
     fling = Style::TILT.fling
     random = Random.new(3)
     50.times do
-      vx, vy = fling.velocity(Pull.down, 10.0, R, random)
+      vx, vy = fling.velocity(Gravity.down, 10.0, R, random)
       speed = Math.hypot(vx, vy)
 
       assert_operator vy, :<, 0.0
@@ -256,14 +256,14 @@ class TiltTest < Minitest::Test
   # The gamepad's right stick.
 
   def test_a_stick_at_rest_drops_the_dots_as_before
-    assert_equal Pull.down, Pull.from_stick(Stick.rest, 0.2)
-    assert_equal Pull.down, Pull.from_stick(Stick.new(x: 0.1, y: -0.1), 0.2)
+    assert_equal Gravity.down, Gravity.from_stick(Stick.rest, 0.2)
+    assert_equal Gravity.down, Gravity.from_stick(Stick.new(x: 0.1, y: -0.1), 0.2)
   end
 
   def test_a_pushed_stick_pulls_its_way_at_full_gravity
-    assert_pull(-1.0, 0.0, Pull.from_stick(Stick.new(x: -0.5, y: 0.0), 0.2))
-    assert_pull 0.0, -1.0, Pull.from_stick(Stick.new(x: 0.0, y: -1.0), 0.2)
-    right_down = Pull.from_stick(Stick.new(x: 0.6, y: 0.6), 0.2)
+    assert_pull(-1.0, 0.0, Gravity.from_stick(Stick.new(x: -0.5, y: 0.0), 0.2))
+    assert_pull 0.0, -1.0, Gravity.from_stick(Stick.new(x: 0.0, y: -1.0), 0.2)
+    right_down = Gravity.from_stick(Stick.new(x: 0.6, y: 0.6), 0.2)
 
     assert_in_delta 1.0, right_down.length
     assert_in_delta right_down.x, right_down.y
@@ -275,7 +275,7 @@ class TiltTest < Minitest::Test
     tilt = Tilt.new(Style::TILT)
     step = tilt.update(1 / 60.0)
 
-    assert_equal Pull.down, step.pull
+    assert_equal Gravity.down, step.pull
     refute step.wake
     assert_in_delta 0.0, step.kick
   end
