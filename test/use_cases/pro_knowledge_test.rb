@@ -7,6 +7,7 @@ require "test_helper"
 # Pro on screen, and the composition root that wires them name it.
 class ProKnowledgeTest < Minitest::Test
   KNOWS = %w[
+    lib/dot_popper/composition/root.rb
     lib/dot_popper/continuity/license.rb
     lib/dot_popper/entitlement.rb
     lib/dot_popper/free_games.rb
@@ -14,7 +15,6 @@ class ProKnowledgeTest < Minitest::Test
     lib/dot_popper/presentation/show.rb
     lib/dot_popper/presentation/storefront.rb
     lib/dot_popper/presentation/website_store.rb
-    lib/dot_popper/shell/app.rb
     lib/dot_popper/use_cases/buy_pro.rb
     lib/dot_popper/use_cases/finish_game.rb
     lib/dot_popper/use_cases/join_friend_group.rb

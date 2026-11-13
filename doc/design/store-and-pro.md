@@ -38,11 +38,11 @@ What a build trusts and sells is decided by the build alone, never by anything a
 - `DotPopper::Build::CHANNEL` (`lib/dot_popper/build.rb`) is the channel the build is sold through, or nil for a test build. `Presentation::Storefront::BUILD_CHANNEL` is the same constant. `Storefront.test_build?` is `BUILD_CHANNEL.nil?`. A build with a channel is a store build in the code's words (`Build.store?`), the `website` channel's included.
 - The channels' names are listed once, in `Build`: `app-store`, `mac-app-store`, `google-play` and `microsoft-store` (`Build::STORES`, the app stores), and `website` (`Build::WEBSITE`), together `Build::CHANNEL_NAMES`. `Storefront::MAC_APP_STORE`, `MICROSOFT_STORE` and `WEBSITE` are the same strings, and the scripts take the list from `Build`.
 - The repository's own file keeps it nil, so every playtest kit and every test build CI makes is a test build. A channel's own CI job sets it before `lota fuse` with `ruby script/set_build_channel.rb CHANNEL`, which rewrites the `CHANNEL = nil` line and refuses a name not in `Build::CHANNEL_NAMES`. The Package workflow's `website` jobs run it with `website`, its `msix` job with `microsoft-store`, and its `mac-app-store` job with `mac-app-store`. No workflow builds `app-store` or `google-play` yet. On a phone any channel other than `website` gives the native port.
-- **License keys:** `Build.license_keys?` is false for the four app stores' channels, whose copies never accept, keep, verify or send a website license key (Apple 3.1.1; Google's billing rules): `Shell::App#license_store` keeps nothing in place of `license.txt`, so a key left on disk grants nothing and is never sent. The website channel and a test build keep `license.txt`.
+- **License keys:** `Build.license_keys?` is false for the four app stores' channels, whose copies never accept, keep, verify or send a website license key (Apple 3.1.1; Google's billing rules): `Composition::Root#license_store` keeps nothing in place of `license.txt`, so a key left on disk grants nothing and is never sent. The website channel and a test build keep `license.txt`.
 
 ### Developer settings in a store build
 
-`Shell::App` reads the environment only through `Build.settings(env, channel:)`, and so do `conf.rb` (`DOT_POPPER_SAVE_AS`) and `main.rb` (`DOT_POPPER_SCENARIO`). In a test build it is the environment untouched. In a store build it drops every `DOT_POPPER_*` setting not in `Build::HARMLESS`:
+The game reads the environment only through `Build.settings(env, channel:)`, which `Composition::Settings` wraps, and so do `conf.rb` (`DOT_POPPER_SAVE_AS`) and `main.rb` (`DOT_POPPER_SCENARIO`). In a test build it is the environment untouched. In a store build it drops every `DOT_POPPER_*` setting not in `Build::HARMLESS`:
 
 `AUTOPLAY CALM DIAGNOSTIC_COLORS FAKE_DRAG FAKE_GAMEPAD FAKE_TILT FULLSCREEN NO_SHADERS NO_SPLASH NO_TUTORIAL NO_VULKAN PERF QUIT_AFTER RENDERERS SEED SHOTS TUTORIAL WINDOW`
 
@@ -50,15 +50,15 @@ So a new setting is inert in a store build until someone adds it to that list. A
 
 In a store build, also:
 
-- the pins are setdef's (`Shell::App#trusted_pins`), and the receipts trusted are the stores' (`#trusted_receipts`);
-- free games are always metered (`Shell::App#player?` is true, so the bot and scenarios do not skip the limit);
+- the pins are setdef's (`Composition::Root.trusted_pins`), and the receipts trusted are the stores' (`.trusted_receipts`);
+- free games are always metered (`Composition::Root#player?` is true, so the bot and scenarios do not skip the limit);
 - an automated run still sells through the build's channel and uses the real pins, so a pipeline that wants fakes runs the test build.
 
-Tests: `test/build_test.rb`, `test/shell/store_build_test.rb`, `test/set_build_channel_test.rb`, `test/check_build_test.rb`.
+Tests: `test/build_test.rb`, `test/composition/root_test.rb`, `test/set_build_channel_test.rb`, `test/check_build_test.rb`.
 
 ### Which store each build gets
 
-`Storefront.for(platform, native:, fake:, entitlement:, website:, channel:)` chooses once, called only from `Shell::App#load`. `platform` is the game's `Platform`, which the shell makes from `Lota::System.os` (`Shell::Platforms`); the table names each system as Lota does.
+`Storefront.for(platform, native:, fake:, entitlement:, website:, channel:)` chooses once, called only from the composition root (`Composition::Root`). `platform` is the game's `Platform`, which the shell makes from `Lota::System.os` (`Shell::Platforms`); the table names each system as Lota does.
 
 | Channel | iOS | Android | macOS (`OS X`) | Windows | Linux |
 | --- | --- | --- | --- | --- | --- |
@@ -92,7 +92,7 @@ Tests: `test/build_test.rb`, `test/shell/store_build_test.rb`, `test/set_build_c
 
 **When it is asked and read.**
 
-- `#connect` asks `open` at launch (`Shell::App#load`) and each time the offer opens, so a purchase on another device or after a reinstall simply appears and an unanswered request is cleared. It removes any old answer first, and asks nothing once the player has Pro.
+- `#connect` asks `open` at launch (`Composition::Root#start`) and each time the offer opens, so a purchase on another device or after a reinstall simply appears and an unanswered request is cleared. It removes any old answer first, and asks nothing once the player has Pro.
 - `#buy` asks only once a price has come and nothing is under way. The offer's Buy without a price is "Try again", which connects again (`UseCases::BuyPro#buy`).
 - `#restore` asks unless something is under way.
 - `#update` reads the answer every `Storefront::EVERY` (0.25 s). `UseCases::BuyPro#update`, which the `Show` calls each frame, calls it only while no game is in play, so a purchase never lands mid-game (`test_a_store_is_not_read_during_a_game`).
@@ -148,7 +148,7 @@ A receipt is a store's signed record of a purchase of Pro, which the game verifi
 
 ### Whose receipts a build trusts
 
-A `Receipt::Trust` holds the Apple roots, the Play keys, the app's ID, the product ID, and whether Windows' word is taken (`windows_license`). `Shell::App#trusted_receipts` picks one by the channel alone:
+A `Receipt::Trust` holds the Apple roots, the Play keys, the app's ID, the product ID, and whether Windows' word is taken (`windows_license`). `Composition::Root.trusted_receipts` picks one by the channel alone:
 
 | Build | Trust | Accepts |
 | --- | --- | --- |
@@ -193,7 +193,7 @@ GUI galleries: `test/gui/scenarios/offer_gallery.rb`, `website_gallery.rb`.
 - Pro counts nothing and keeps what was left (`#metered?` is false once `Entitlement#pro?`).
 - The save is `games.txt`, lines `day=2026-11-08`, `spent=2` and `first_games_used=3`. It counts the first games used, not those left, so a change to `FreeGames::BANK` reaches every player. A save from an earlier build has `bank=17` (the first games left) instead; it is read as `BANK` less those, and written the new way at the next game. It is not part of `StatsKeeper`, so clearing Stats cannot refill it. A missing file is a full bank. The day is the player's local date, from the same `today` as the daily goal (`DOT_POPPER_TODAY` in a test build).
 
-**Where it meters.** `Shell::App#free_games` builds it with `metered: storefront.offered? && player?`: where Pro can be bought, and someone is playing. `#player?` is always true in a store build; in a test build it is false for the autoplay bot and for a GUI scenario, unless the scenario sets `DOT_POPPER_FREE_GAMES`. A build with `NoStorefront` counts nothing, since a limit with no way past it is a dead end. Test builds have a store, a fake one, so they are metered like the final game, desktop included. `DOT_POPPER_FREE_GAMES=n` starts a new save with n games in the bank and n a day.
+**Where it meters.** `Composition::Root#free_games` builds it with `metered: storefront.offered? && player?`: where Pro can be bought, and someone is playing. `#player?` is always true in a store build; in a test build it is false for the autoplay bot and for a GUI scenario, unless the scenario sets `DOT_POPPER_FREE_GAMES`. A build with `NoStorefront` counts nothing, since a limit with no way past it is a dead end. Test builds have a store, a fake one, so they are metered like the final game, desktop included. `DOT_POPPER_FREE_GAMES=n` starts a new save with n games in the bank and n a day.
 
 **The one door.** `UseCases::StartGame` (`lib/dot_popper/use_cases/start_game.rb`) is the only way into a game: Play, and the opening of the Tutorial (a first Play and How to play alike), whose game begins as it opens, go through it. It spends a game and starts it, or with none left starts nothing, and the `Show` opens the offer. `Cabinet` starts a game only when asked, never on a press, and `test/use_cases/start_game_test.rb` fails if anything else asks. The Tutorial's end and its Skip start nothing, so they spend nothing.
 
@@ -231,7 +231,7 @@ Ed25519 comes from OpenSSL in every build, with no pure-Ruby fallback (`Continui
 
 **The one test** (`Continuity::Watch`, `Continuity::Gone`, `setdef.txt`, `lib/dot_popper/continuity/watch.rb`): setdef is gone when its server gives no valid signed answer to `GET /proof` and at least one connectivity check answers as expected. The checks (`Continuity::Connectivity::CHECKS`) are Apple's, Google's and Microsoft's, asked only after the proof fails, one at a time, stopping at the first that answers: `http://captive.apple.com/hotspot-detect.html` (200, "Success"), `http://connectivitycheck.gstatic.com/generate_204` (204, empty) and `http://www.msftconnecttest.com/connecttest.txt` (200, "Microsoft Connect Test"). With no internet nothing changes. A device found gone stays gone, and `setdef.txt` keeps the day it was first found gone, until setdef's server proves itself again. A runtime that cannot verify Ed25519 never finds setdef gone.
 
-The watch runs once each start (`Shell::App#load`) and again when a key is entered, on a thread at priority -2, and its result is taken up on the game's thread (`Watch#update`, each frame). `Continuity::Gone` announces each answer it takes up to its listeners: `SetdefHere` when setdef's server proved itself, which makes `ServerChoice` forget a chosen server, and `SetdefGone` (with the day it was first found gone and today) whenever a check leaves setdef gone, which makes `ThemeKeeper` open themes by their dates once it has been gone long enough. At launch, before any check, `Shell::App#load` opens them by date once. While setdef answers it also sends what the license owes.
+The watch runs once each start (`Composition::Root#start`) and again when a key is entered, on a thread at priority -2, and its result is taken up on the game's thread (`Watch#update`, each frame). `Continuity::Gone` announces each answer it takes up to its listeners: `SetdefHere` when setdef's server proved itself, which makes `ServerChoice` forget a chosen server, and `SetdefGone` (with the day it was first found gone and today) whenever a check leaves setdef gone, which makes `ThemeKeeper` open themes by their dates once it has been gone long enough. At launch, before any check, the composition root (`Composition::Root`) opens them by date once. While setdef answers it also sends what the license owes.
 
 | Build | Watch |
 | --- | --- |
@@ -247,13 +247,13 @@ The proof and the license requests always go to setdef's own server, never to a 
 - **Change Server** (`Presentation::ServerChoice`, `server.txt`) is a pill on Settings, shown only while setdef is gone, that opens a screen of its own. The warning comes first, since it is what to know before choosing (Podmajersky; Hodent): "The server you choose receives your friend group scores. It can't give you Pro." Then what to do, which server is in use, and Paste server address and Use setdef's server. Only one HTTPS address with a host and nothing else is taken (`ServerChoice.https?`), from the clipboard (Ctrl+V or Cmd+V too). It is used from the next start, since a group belongs to one server, for friend groups and themes. Its token is kept in `group-<host>.txt`, so setdef's token is never sent elsewhere. When setdef answers again the pill goes and the game returns to setdef's server (`ServerChoice#forget`). Nothing a server sends grants Pro. Apple's 2.5.19 bars hidden features, so Change Server is to be described in Notes for Review.
 - **On a website copy, Pro is no longer sold** (`WebsiteStore#sold?`): Buy goes, the offer says "Pro is no longer sold.", and Paste license key stays, so a key bought earlier still enters (Johnson: say plainly what has happened; no dead button).
 
-Tests: `test/continuity/license_test.rb`, `test/continuity/signatures_test.rb`, `test/shell/store_build_test.rb`.
+Tests: `test/continuity/license_test.rb`, `test/continuity/signatures_test.rb`, `test/composition/root_test.rb`.
 
 ## Release checks
 
 A build for sale is checked as it was built, not as the repository says: the repository's own `build.rb` is always a test build.
 
-- `ruby script/check_build.rb CHANNEL VERSION FOLDER` loads the game's code from the unpacked app in FOLDER (its `game/dot_popper`, as `lota fuse` lays it out), with Lota installed, and fails unless all of it is the app's own; `Build::CHANNEL` is CHANNEL; `Shell::App#trusted_pins` are `SETDEF_PINS` and share no key with `TEST_PINS`; no license key signed by any of `Continuity::TestKeys` verifies, no proof certificate by the test root verifies, and the fake store's receipt proves nothing in it, each beside its control (the same proof does verify against the test build's trust, so a Ruby that verifies nothing fails); no setting grants Pro or changes the server; and the app's `fledge.yml` says VERSION. A `google-play` build also needs `Receipt::PLAY_KEYS`; a `website` build needs no Play key or store identifier. It reaches nothing on the internet.
+- `ruby script/check_build.rb CHANNEL VERSION FOLDER` loads the game's code from the unpacked app in FOLDER (its `game/dot_popper`, as `lota fuse` lays it out), with Lota installed, and fails unless all of it is the app's own; `Build::CHANNEL` is CHANNEL; `Composition::Root.trusted_pins` are `SETDEF_PINS` and share no key with `TEST_PINS`; no license key signed by any of `Continuity::TestKeys` verifies, no proof certificate by the test root verifies, and the fake store's receipt proves nothing in it, each beside its control (the same proof does verify against the test build's trust, so a Ruby that verifies nothing fails); no setting grants Pro or changes the server; and the app's `fledge.yml` says VERSION. A `google-play` build also needs `Receipt::PLAY_KEYS`; a `website` build needs no Play key or store identifier. It reaches nothing on the internet.
 - The Package workflow runs it on every build for sale it makes: each file of each `website` build (the `.zip` and the installer on Windows, the `.tar.gz` and the `.dmg` on macOS, the `.tar.gz` and the AppImage on Linux), the MSIX's folder and the Mac App Store app. The packaged Ruby's Ed25519 is checked by each playthrough instead (`DOT_POPPER_PERF=1`; see [License keys](#license-keys)).
 - `ruby script/check_store_identifiers.rb CHANNEL` fails while an identifier CHANNEL needs is unset in the environment, still a placeholder (`setdef.DotPopper`, `CN=Dot Popper test`), or the wrong form: `MSIX_IDENTITY_NAME` and `MSIX_PUBLISHER` for `microsoft-store`, `APPLE_TEAM_ID` for `mac-app-store` and `app-store`, none for `website` or `google-play`. No workflow releases a store's build yet, so none runs it; the store's release job will, with the repository variables.
 - `ruby script/release_kind.rb TAG` says what a tag releases: `website`, `playtest` or `none` (its `WEBSITE_TAGS`). A `website` release carries the website builds alone; the test builds and the kits, whose fakes give Pro away, go only to a `playtest` prerelease. How to release is in [doc/publishing.md](../publishing.md).

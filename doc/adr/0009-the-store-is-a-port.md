@@ -19,7 +19,7 @@ Pro is sold through several stores (the App Store, Google Play, the Mac App Stor
 
 ## Considered Options
 
-1. One port (Freeman and Pryce's ports and adapters; Feathers' seam): a request URL and a whole-state answer, with adapters for the native hosts and helpers (`NativeStore`, `Shell::StoreHelper`), a fake store with its own ledger (`FakeStore`), the website store (`WebsiteStore`), and none (`NoStorefront`); `Storefront.for`, called once in `Shell::App`, picks the adapter from the build's channel alone, and a test build (no channel) gets the fakes.
+1. One port (Freeman and Pryce's ports and adapters; Feathers' seam): a request URL and a whole-state answer, with adapters for the native hosts and helpers (`NativeStore`, `Shell::StoreHelper`), a fake store with its own ledger (`FakeStore`), the website store (`WebsiteStore`), and none (`NoStorefront`); `Storefront.for`, called once at the composition root, picks the adapter from the build's channel alone, and a test build (no channel) gets the fakes.
 2. The real store on phones in every build, desktops free, and a fake chosen by an environment variable (`DOT_POPPER_FAKE_STORE=1`) for rehearsals.
 
 ## Decision Outcome

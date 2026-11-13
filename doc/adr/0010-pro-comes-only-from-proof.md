@@ -39,7 +39,7 @@ The Microsoft Store has no receipt the game can verify: Windows.Services.Store p
 
 ### Confirmation
 
-`test/receipt_test.rb`, `test/entitlement_test.rb`, `test/build_test.rb`, `test/shell/store_build_test.rb` and `test/continuity/license_test.rb` check that only verified proof grants Pro, that edited files and test keys prove nothing in a store build, and which settings a store build obeys. `script/check_build.rb` checks each build for sale as it was built.
+`test/receipt_test.rb`, `test/entitlement_test.rb`, `test/build_test.rb`, `test/composition/root_test.rb` and `test/continuity/license_test.rb` check that only verified proof grants Pro, that edited files and test keys prove nothing in a store build, and which settings a store build obeys. `script/check_build.rb` checks each build for sale as it was built.
 
 ## More Information
 

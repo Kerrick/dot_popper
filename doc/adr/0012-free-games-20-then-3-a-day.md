@@ -36,7 +36,7 @@ Chosen: option 1, the maintainer's decision, replacing the brief. The record cal
 
 ### Confirmation
 
-`test/free_games_test.rb` tests the count, the day and the bank; `test/presentation/games_test.rb` checks that every way into a game spends one and that Play opens the offer with none left; `test/shell/store_build_test.rb` that a store build always meters. README.md and `doc/publishing.md` state the numbers and must change with `FreeGames::BANK` and `FreeGames::DAILY`.
+`test/free_games_test.rb` tests the count, the day and the bank; `test/presentation/games_test.rb` checks that every way into a game spends one and that Play opens the offer with none left; `test/composition/root_test.rb` that a store build always meters. README.md and `doc/publishing.md` state the numbers and must change with `FreeGames::BANK` and `FreeGames::DAILY`.
 
 ## More Information
 

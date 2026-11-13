@@ -20,7 +20,7 @@ Every file lives in Lota's save folder (paths per system are in [README.md](../.
 | `score_record-…`, `stats-…`, `achievements-YYYYMMDD-HHMMSS.txt` | the backup made by the last clearing | `StatsKeeper` |
 | `cleared.txt` | when Stats were last cleared, and the backups' names | `StatsKeeper` |
 
-`Shell::App#load` makes each store. Lota's save folder can neither rename nor append to a file, so every store is rewritten whole, and "keeping a file whole" means writing a copy.
+The composition root (`Composition::Root`) makes each store, asking the engine for a save file by name (`Shell::Engine#file`, a `Shell::SaveFile`). Lota's save folder can neither rename nor append to a file, so every store is rewritten whole, and "keeping a file whole" means writing a copy.
 
 ## The games log
 
@@ -66,7 +66,7 @@ A class's records are saved under its name: `medium.most_dots_in_a_row=18`.
 
 Why keep all this: a player who comes back wants to see that they are improving, and a single highest score hides most of that.
 
-**Older files.** A `score_record.txt` holding one bare number, or a `stats.txt` whose records have no class name, gives those records to the class of the screen the game opens on (`legacy:`, `SizeClass.of(screen)` in `Shell::App#load`), and is saved again in the new form at once, so they stay in that class whichever screen the game opens on next.
+**Older files.** A `score_record.txt` holding one bare number, or a `stats.txt` whose records have no class name, gives those records to the class of the screen the game opens on (`legacy:`, `SizeClass.of(screen)` in `Composition::Root`), and is saved again in the new form at once, so they stay in that class whichever screen the game opens on next.
 
 Tests: `test/stats_test.rb`, `test/stats_book_test.rb`, `test/score_record_test.rb`, `test/game_stats_test.rb`.
 

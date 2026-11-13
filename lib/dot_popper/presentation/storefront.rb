@@ -17,7 +17,7 @@ module DotPopper
     # before it leaves the app and asks StoreKit or Play Billing; FakeStore
     # is the adapter for a build with no channel, a test build. Which one
     # is chosen once, by Storefront.for, at the composition root
-    # (Shell::App), from the build; nothing above the port differs between
+    # (Composition::Root), from the build; nothing above the port differs between
     # them (test/presentation/store_contract.rb, ADR-0009).
     # +entitlement+ (Entitlement) is Pro the moment the store hands over a
     # receipt that verifies (Receipt); an answer's "owned" alone proves

@@ -204,20 +204,30 @@ class PrivacyDeclaredTest < Minitest::Test
     @saved_names ||= shell_sources.flat_map { |path| names_in(Prism.parse_file(path).value) }
   end
 
-  def shell_sources = Dir[File.join(ROOT, "lib/dot_popper/shell/*.rb")]
+  # Where save files are opened: the shell (Shell::SaveFile.new), and the
+  # composition root, which asks the engine for each by name (#file).
+  def shell_sources = Dir[File.join(ROOT, "lib/dot_popper/{shell,composition}/*.rb")]
 
+  # Each name a save file is opened by, leaving out the engine's and the
+  # root's own #file, which only pass a name on.
   def names_in(node)
+    return [] if node.is_a?(Prism::DefNode) && node.name == :file
+
     found = save_file_call?(node) ? [name_of(node)] : []
     node.compact_child_nodes.each { found.concat(names_in(it)) }
     found
   end
 
   def save_file_call?(node)
-    node.is_a?(Prism::CallNode) && node.name == :new && node.receiver.is_a?(Prism::ConstantReadNode) && node.receiver.name == :SaveFile
+    return false unless node.is_a?(Prism::CallNode)
+    return node.receiver.is_a?(Prism::ConstantReadNode) && node.receiver.name == :SaveFile if node.name == :new
+
+    node.name == :file && node.arguments && (node.receiver.nil? || node.receiver.is_a?(Prism::InstanceVariableReadNode))
   end
 
   def name_of(call)
-    value = call.arguments.arguments.first.elements.find { it.key.unescaped == "name" }.value
+    first = call.arguments.arguments.first
+    value = call.name == :file ? first : first.elements.find { it.key.unescaped == "name" }.value
     case value
     when Prism::StringNode then value.unescaped
     when Prism::ConstantReadNode then value.name

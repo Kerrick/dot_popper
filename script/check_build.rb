@@ -48,8 +48,8 @@ c = DotPopper::Continuity
 check.call("#{channel.inspect} is a channel the game names (#{build::CHANNEL_NAMES.join(", ")})") { build::CHANNEL_NAMES.include?(channel) }
 check.call("the app was built for #{channel.inspect} (Build::CHANNEL is #{build::CHANNEL.inspect})") { build::CHANNEL == channel }
 
-app = DotPopper::Shell::App.new({})
-pins = app.send(:trusted_pins)
+root = DotPopper::Composition::Root
+pins = root.trusted_pins(build::CHANNEL)
 check.call("it trusts setdef's own keys (Continuity::SETDEF_PINS)") { pins.equal?(c::PINNED) && c::PINNED == c::SETDEF_PINS && c.live?(pins) }
 check.call("it trusts no test key") do
   (pins.roots & c::TEST_PINS.roots).empty? && (pins.license_keys & c::TEST_PINS.license_keys).empty?
@@ -70,7 +70,7 @@ end
 check.call("the fake store's receipt proves nothing in it") do
   receipt = DotPopper::Receipt.issue
   DotPopper::Entitlement.new(trust: DotPopper::Receipt::TEST).prove(receipt) &&
-    !DotPopper::Entitlement.new(trust: app.send(:trusted_receipts)).prove(receipt)
+    !DotPopper::Entitlement.new(trust: root.trusted_receipts(build::CHANNEL)).prove(receipt)
 end
 check.call("no setting grants Pro or changes the server in it") do
   env = build.settings({ "DOT_POPPER_PRO" => "1", "DOT_POPPER_SERVER" => "http://localhost:1" })

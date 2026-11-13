@@ -15,7 +15,7 @@ How a game of Dot Popper plays, as the code has it: the field, the dots and thei
 
 ### The desktop window
 
-A desktop window opens at 24 × 16 R, 1200 × 800 units at the standard radius, shrunk to fit within 90% of the desktop, and never under 400 × 320 units (`Style::WINDOW`, `WindowStyle#mode_for` in `lib/dot_popper/presentation/layout.rb`, `Shell::App::SMALLEST_WINDOW`). In the simulator, that field plays like an 11-inch iPad, so a computer and a tablet give comparable games. The player may resize it or go full screen (F11, or Settings' Display). Phones and tablets fill the screen.
+A desktop window opens at 24 × 16 R, 1200 × 800 units at the standard radius, shrunk to fit within 90% of the desktop, and never under 400 × 320 units (`Style::WINDOW`, `WindowStyle#mode_for` in `lib/dot_popper/presentation/layout.rb`, `Composition::Root::SMALLEST_WINDOW`). In the simulator, that field plays like an 11-inch iPad, so a computer and a tablet give comparable games. The player may resize it or go full screen (F11, or Settings' Display). Phones and tablets fill the screen.
 
 ## Dots
 

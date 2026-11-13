@@ -10,8 +10,6 @@ module DotPopper
     # a gamepad, the Show hears of it, so its words name that press.
     class App
       Style = Presentation::Style
-      PLAYTEST_LOG = "games.csv"
-      SMALLEST_WINDOW = [400, 320].freeze
 
       # What the GUI suite's director (test/gui/director.rb) watches as it
       # plays: the rules, the Show, and the game-over pile.
@@ -19,119 +17,58 @@ module DotPopper
 
       # +channel+ is the build's (Build::CHANNEL). It, and not the
       # environment, decides which keys and store this run trusts, and
-      # which developer settings (@env) it obeys.
+      # which developer settings it obeys (Composition::Settings).
       def initialize(env = ENV, channel: Build::CHANNEL)
-        @channel = channel
-        @env = Build.settings(env, channel:)
-        Automation.guard!(exit_on_attempt: true) if Automation.on?(@env)
+        @settings = Composition::Settings.new(env, channel:)
+        Automation.guard!(exit_on_attempt: true) if @settings.automated?
         @elapsed = 0.0
         @uptime = 0.0
         @chatter = Presentation::Chatter.quiet(Style::CHATTER)
         @clock = Presentation::FrameClock.start
-        @splash = Presentation::Splash.start(calm: flag?("DOT_POPPER_CALM")) unless Presentation::Splash.skipped?(@env)
       end
 
+      # Builds the game (Composition::Root) on what Lota gives it, then
+      # what carries the game out with Lota: the pile, gamepads, tilting,
+      # dragging, particles and the renderer.
       def load
-        @platform = Platforms.for(::Lota::System.os)
-        @dot_size = DotSize.for(@platform)
+        @engine = Engine.new(Platforms.for(::Lota::System.os))
+        @game = Composition::Root.new(engine: @engine, settings: @settings)
+        @platform = @game.platform
         @touch = @platform.touch?
-        puts "Dot Popper: a dot's radius is #{@dot_size.reason}"
-        # With DOT_POPPER_PERF=1: whether this build's Ruby verifies
-        # Ed25519, which the packaged-app playthroughs check. Where it
-        # does not, setdef is never found gone (Continuity::Watch).
-        puts "Dot Popper: Ed25519 #{Continuity::Ed25519.available? ? "verifies" : "does not verify"} the server's test vector" if flag?("DOT_POPPER_PERF")
-        @touch ? fill_screen : open_window
-        # A desktop's title offers "Full screen" and Quit; a phone's or
-        # tablet's game already fills its screen, and leaves by the system.
-        @window = if @touch then Presentation::NoWindowControl.new
-                  else DesktopWindow.new(exclusive: @env["DOT_POPPER_FULLSCREEN"] == "exclusive")
-                  end
-        report_renderer
-        report_screen
-        random = seed ? Random.new(seed) : Random.new
-        # A record saved before records were kept by size of screen goes to this
-        # screen's class.
-        legacy = SizeClass.of(screen)
-        sizing_store = SaveFile.new(name: "dot_size.txt")
-        @cabinet = Cabinet.new(screen, score_record: ScoreRecord.new(SaveFile.new(name: "score_record.txt"), legacy:), random:,
-                                 sizing: DotSizing.parse(sizing_store.read))
-        puts "Dot Popper: dots are sized to the screen as each game starts" if @cabinet.sizing.sized_to_screen?
-        stats_book = StatsBook.new(SaveFile.new(name: "stats.txt"), today:, legacy:)
-        notices = NoticeFiles.new(cabinet: File.expand_path("../../..", __dir__),
-                                  starts: [File.dirname(File.expand_path($PROGRAM_NAME))]).notices
-        achievements = Achievements.new(SaveFile.new(name: "achievements.txt"))
-        keeper = StatsKeeper.new(score_record: @cabinet.score_record, stats_book:, achievements:, folder: ->(name) { SaveFile.new(name:) })
-        test_build = !Build.store?(@channel)
-        @gone = Continuity::Gone.new(SaveFile.new(name: "setdef.txt"))
-        pins = trusted_pins
-        license = Continuity::License.new(license_store, pins:)
-        @watch = watch(license, pins, test_build)
-        entitlement = Entitlement.new(forced: Entitlement.forced?(@env, platform: @platform), license:, trust: trusted_receipts)
-        clipboard = Clipboard.new
-        @server_choice = Presentation::ServerChoice.new(SaveFile.new(name: "server.txt"), gone: @gone, clipboard:)
-        theme_keeper = Presentation::ThemeKeeper.new(SaveFile.new(name: "themes.txt"), themes: Style::THEMES)
-        use_theme = UseCases::UseTheme.new(themes: theme_keeper, entitlement:)
-        use_fixture(theme_keeper, use_theme)
-        theme_keeper.open_by_date(today.call, @gone.days(today.call))
-        @gone.subscribe(@server_choice).subscribe(theme_keeper)
-        @theme_feed = theme_feed(theme_keeper)
-        @theme_feed&.ask
-        @pen = Pen.new(Style, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
-        @pen.use(use_theme.current)
-        @speaker = Speaker.new(Style::PATCHES, store: SaveFile.new(name: "sound.txt"), volume: Style::SOUND.volume)
-        @speaker.use(use_theme.current)
-        @splash = @splash.with(sounding: !@speaker.muted?) if @splash
-        storefront = Presentation::Storefront.for(
-          @platform, entitlement:, channel: @channel,
-                     native: native_store(@platform),
-                     fake: Presentation::FakeStore.new(SaveFile.new(name: "fake_store.txt"), fails: Presentation::FakeStore.failure(@env)),
-                     website: ->(fake:) { website_store(entitlement, clipboard, fake:) }
-        )
-        games = free_games(entitlement, metered: storefront.offered? && player?)
-        groups = groups_session
-        @show = Presentation::Show.new(groups:, cabinet: @cabinet, layout:, sounds: @speaker, radius: @dot_size.radius,
-                                       random:, calm: flag?("DOT_POPPER_CALM"),
-                                       tutor: Presentation::Tutor.new(SaveFile.new(name: "taught.txt"),
-                                                                    times: Style::LESSON.times),
-                                       haptics: Haptics.for(@platform), clipboard:, notices:,
-                                       sharing: Presentation::SheetSharing.for(@platform, opener: UrlOpener.new),
-                                       stats_book:, achievements:, keeper:, sizing_store:, input: starting_input, measure: FontMeasure.new(@pen.fonts),
-                                       window: @window,
-                                       tutorial_flag: Presentation::TutorialFlag.new(
-                                         SaveFile.new(name: "tutorial.txt"), mode: Presentation::TutorialFlag.mode(@env)
-                                       ),
-                                       group_notice: Presentation::GroupNotice.new(SaveFile.new(name: "group_notice.txt")),
-                                       entitlement:, theme_keeper:, storefront:, games:, links: UrlOpener.new,
-                                       server_choice: @server_choice, use_theme:)
-        storefront.connect
-        @watch.start
-        @cabinet.subscribe(PlaytestLog.new(SaveFile.new(name: PLAYTEST_LOG), today:,
-                                        archive: ->(name) { SaveFile.new(name:) }))
-        puts "Dot Popper: each game is logged in #{File.join(::Lota::Filesystem.save_directory, PLAYTEST_LOG)}"
-        @pile = Pile.new(flag?("DOT_POPPER_CALM") ? Style::CALM_PILE : Style::PILE)
+        @dot_size = @game.dot_size
+        @window = @game.window
+        @cabinet = @game.cabinet
+        @show = @game.show
+        @pen = @game.pen
+        @speaker = @game.speaker
+        @splash = @game.splash
+        @theme_feed = @game.theme_feed
+        @watch = @game.watch
+        @game.start
+        @pile = Pile.new(@game.pile_style)
         @cabinet.subscribe(@pile)
         @gamepads = Gamepads.new(pretend: fake_gamepad?)
-        @tilting = tilting
+        fake = @game.fake_tilt
+        @tilting = Tilting.new(pile: @pile, gamepads: @gamepads,
+                               accelerometer: fake ? FakeAccelerometer.new(steady: fake) : Accelerometer.new,
+                               style: @game.tilt_style, turns: @touch)
         @cabinet.subscribe(@tilting)
-        @dragging = Dragging.new(pile: @pile, show: @show, style: flag?("DOT_POPPER_CALM") ? Style::CALM_GRAB : Style::GRAB)
+        @dragging = Dragging.new(pile: @pile, show: @show, style: @game.grab_style)
         @cabinet.subscribe(@dragging)
-        @fake_drag = Presentation::FakeDrag.parse(@env["DOT_POPPER_FAKE_DRAG"])
+        @fake_drag = Presentation::FakeDrag.parse(@settings["DOT_POPPER_FAKE_DRAG"])
         @sparks = Sparks.new(Style)
         @bloom = Bloom.new(@pen, Style::BLOOM)
         @renderer = Renderer.new(@show, @pen, pile: @pile, sparks: @sparks, bloom: @bloom,
                                              diagnostic: flag?("DOT_POPPER_DIAGNOSTIC_COLORS"))
         @renderer.prepare
-        @show.group_panel.open if flag?("DOT_POPPER_GROUP_SCREEN")
         @input = Presentation::InputRouter.new
         @buttons = Presentation::GamepadButtons.new
         @trigger = Presentation::Trigger.released
-        @cursor = Presentation::GamepadCursor.centered(@show.layout.whole, style: Style::GAMEPAD,
-                                                       radius: @dot_size.radius)
-        @cursor = @cursor.show if fake_gamepad?
+        @cursor = @game.cursor
         @pad_held = []
-        @autopilot = Presentation::Autopilot.new(Style::AUTOPILOT) if flag?("DOT_POPPER_AUTOPLAY")
-        @shots = Presentation::ShotSchedule.parse(@env["DOT_POPPER_SHOTS"])
-        @quit_after = Float(@env.fetch("DOT_POPPER_QUIT_AFTER", ""), exception: false)
+        @autopilot = @game.autopilot
+        @shots = Presentation::ShotSchedule.parse(@settings["DOT_POPPER_SHOTS"])
+        @quit_after = Float(@settings.fetch("DOT_POPPER_QUIT_AFTER"), exception: false)
         @frames = Presentation::FrameMeter.start(5) if flag?("DOT_POPPER_PERF")
         @cabinet.subscribe { happened(it.class.name.split("::").last) } if @frames
       end
@@ -379,12 +316,12 @@ module DotPopper
         return unless @show
 
         happened("a resize")
-        report_screen
+        @engine.report_screen
         @pen.refresh
         @sparks.refresh
         @bloom.refresh
         @cabinet.screen = screen
-        @show.resize(layout, @cabinet.field)
+        @show.resize(@engine.layout, @cabinet.field)
         # The heap keeps the finished game's dots, and their radius.
         game = @cabinet.game
         @pile.refit(game ? Field.new(screen.width, screen.height, game.field.radius) : @cabinet.field)
@@ -417,96 +354,6 @@ module DotPopper
 
         @reading = reading
         ::Lota::Keyboard.key_repeat = reading
-      end
-
-      # A scenario's unlocks and theme, in place of the server's.
-      def use_fixture(theme_keeper, use_theme)
-        keys = @env["DOT_POPPER_THEME_UNLOCKS"]
-        theme_keeper.receive(keys.split(",")) if keys
-        key = @env["DOT_POPPER_THEME"]&.to_sym or return
-
-        Style::THEMES.find { it.key == key }&.then { use_theme.call(it) }
-      end
-
-      # The server friend groups and themes use: setdef's, or while setdef
-      # is gone, a replacement the player chose (Presentation::ServerChoice),
-      # or none in an automated run.
-      def server_url
-        own = Network::Settings.server_url(@env) or return
-        @server_choice.server_url(own)
-      end
-
-      # Friend groups on the server in use, each server's token kept apart,
-      # so setdef's is never sent to a replacement.
-      def groups_session
-        require "uri"
-        url = server_url
-        own = url.nil? || url == Network::Settings.server_url(@env)
-        Groups::Session.at(url, store: own ? SaveFile.new(name: "group.txt") : SaveFile.new(name: "group-#{URI(url).host.to_s.downcase}.txt"))
-      end
-
-      # The keys this run trusts, decided by the build alone: the test
-      # keys in a test build, setdef's in a store build, whatever the
-      # environment says.
-      # Where the license key is kept: license.txt, except in an app
-      # store's build, which never reads that file (so a key left on disk
-      # grants nothing and is never sent) and keeps nothing in its place.
-      def license_store = Build.license_keys?(@channel) ? SaveFile.new(name: "license.txt") : ScoreRecord::Memory.new
-
-      def trusted_pins = Build.store?(@channel) ? Continuity::PINNED : Continuity::TEST_PINS
-
-      # Whose receipts prove Pro, by the channel alone: in a test build only
-      # the fake store's; in the Microsoft Store's build Windows' word,
-      # which comes only down the store helper's pipe; in any other store
-      # build the signed receipts of Apple and Google.
-      def trusted_receipts
-        return Receipt::TEST unless Build.store?(@channel)
-
-        @channel == Presentation::Storefront::MICROSOFT_STORE ? Receipt::MICROSOFT_STORE : Receipt::STORES
-      end
-
-      # The native port: on a phone the app's host, by URL and answer file;
-      # on a computer sold through its own store, the store helper shipped
-      # in the app, by its pipe (StoreHelper). Which one a build uses is
-      # Storefront.for's choice, by the channel.
-      def native_store(platform)
-        if platform.own_store
-          return StoreHelper.new(StoreHelper.find(platform, starts: [__dir__, File.dirname(File.expand_path($PROGRAM_NAME))]),
-                                 automated: Automation.on?(@env))
-        end
-
-        Presentation::NativeStore.new(opener: UrlOpener.new, answers: StoreAnswers.in_save_folder)
-      end
-
-      # What asks whether setdef is gone, and where a license key is: the
-      # test build's fake, in this process, sending nothing anywhere; the
-      # real server and connectivity checks once setdef's real keys are
-      # pinned (Continuity.live?), never in an automated run; and else
-      # nothing.
-      def watch(license, pins, test_build)
-        if test_build
-          fake = Continuity::FakeSetdef.new(SaveFile.new(name: "fake_setdef.txt"), mode: Continuity::FakeSetdef.mode(@env))
-          Continuity::Watch.new(server: fake, connectivity: fake, gone: @gone, license:, today:, pins:)
-        elsif Continuity.live? && !Automation.on?(@env)
-          Continuity::Watch.new(server: Continuity::SetdefServer.new(Network::Link.new(Network::Settings::SERVER_URL)),
-                                connectivity: Continuity::Connectivity.new, gone: @gone, license:, today:, pins:)
-        else
-          Continuity::NoWatch.new(gone: @gone, license:)
-        end
-      end
-
-      # The website's store: its real checkout in the browser, or the test
-      # build's, which puts a signed test key on the clipboard.
-      def website_store(entitlement, clipboard, fake:)
-        checkout = fake ? Presentation::FakeCheckout.new(clipboard:) : Presentation::BrowserCheckout.new(opener: UrlOpener.new)
-        Presentation::WebsiteStore.new(checkout:, entitlement:, gone: @gone, clipboard:, entered: -> { @watch.start })
-      end
-
-      # The feed that reads the server's unlocks, if the game has a server.
-      def theme_feed(theme_keeper)
-        url = server_url or return
-        Presentation::ThemeFeed.new(worker: Network::Worker.new(Network::Link.new(url)), theme_keeper:,
-                                    store: SaveFile.new(name: "started_on.txt"), clock: utc_clock)
       end
 
       # Puts on the Show's look if it has changed (Presentation::ThemeKeeper),
@@ -577,12 +424,6 @@ module DotPopper
         @hand_cursor ||= ::Lota::Mouse.system_cursor(:hand)
       end
 
-      def starting_input
-        return Presentation::InputKind::GAMEPAD if fake_gamepad?
-
-        Presentation::InputKind.starting(touch: @touch)
-      end
-
       # A mouse button or finger went down, as +tap+ (or nil for none). It
       # counts at once, unless the Show waits for its release, on Game
       # Over, where it may become a drag.
@@ -619,7 +460,7 @@ module DotPopper
         end
       end
 
-      def fake_gamepad? = flag?("DOT_POPPER_FAKE_GAMEPAD")
+      def fake_gamepad? = @settings.fake_gamepad?
 
       # A or the right trigger, +source+, went down: a press at the cursor,
       # as a mouse button's. On Game Over it waits to be let go, as a
@@ -640,23 +481,6 @@ module DotPopper
         @dragging.release(:gamepad, point.x, point.y)
       end
 
-      # The window, sized in graphics units: where the system's window
-      # coordinates are pixels (Windows at 200%), its size and smallest
-      # size are scaled to them, so a scaled display gets the same window.
-      def open_window
-        width, = ::Lota::Window.mode
-        per_unit = [width.to_f / ::Lota::Graphics.width, 1.0].max
-        size = Style::WINDOW.mode_for(*::Lota::Window.desktop_dimensions, @dot_size.radius, per_unit:, smallest: SMALLEST_WINDOW,
-                                                                                           wanted: window_size)
-        ::Lota::Window.set_mode(size[0], size[1], resizable: true, centered: true, minwidth: size[2], minheight: size[3])
-      end
-
-      # A phone or tablet's window already covers the screen; fullscreen
-      # hides the status bar over it and, on iOS, makes a swipe from an
-      # edge ask twice before it leaves the game (SDL's UIKit view
-      # controller), so a tap near the edge stays a tap.
-      def fill_screen = ::Lota::Window.set_fullscreen(true, :desktop)
-
       # B on Home: asks, then quits on a second press, as Escape quits
       # from the keyboard. iOS apps are left by the system, never by the app.
       def leave_home
@@ -675,94 +499,7 @@ module DotPopper
         @window.toggle_fullscreen
       end
 
-      # The window as a field of dots at the usual size; the game sizes a
-      # game's dots on it as the player chose (DotSizing).
-      def screen = @dot_size.field(*::Lota::Graphics.dimensions)
-
-      # The graphics renderer LÖVE chose, as Vulkan, OpenGL ES, or Metal,
-      # its version, and the GPU's maker and name.
-      def report_renderer
-        name, version, vendor, device = ::Lota::Graphics.renderer_info
-        puts "Dot Popper: renderer #{name} #{version} / #{vendor} / #{device}"
-      end
-
-      # One line on what the window is (Presentation::ScreenReport), to
-      # compare a real device's run with an SDL test program's on it.
-      def report_screen
-        width, height, flags = ::Lota::Window.mode
-        mode_flags = %i[fullscreen fullscreentype highdpi usedpiscale].filter_map do |name|
-          [name, flags.public_send(name)] if flags.respond_to?(name)
-        end.to_h
-        report = Presentation::ScreenReport.new(
-          units: ::Lota::Graphics.dimensions, pixels: ::Lota::Graphics.pixel_dimensions,
-          dpi_scale: ::Lota::Graphics.dpi_scale, native: ::Lota::Window.native_dpi_scale,
-          safe: ::Lota::Window.safe_area, mode: [width, height, mode_flags]
-        )
-        puts "Dot Popper: #{report}"
-      end
-
-      def layout
-        width, height = ::Lota::Graphics.dimensions
-        x, y, safe_width, safe_height = ::Lota::Window.safe_area
-        safe = Presentation::Rect.new(x:, y:, width: safe_width, height: safe_height)
-        safe = Presentation::Rect.new(x: 0, y: 0, width:, height:) unless safe.width.to_f.positive?
-        Presentation::Layout.new(width:, height:, safe:, style: Style::LAYOUT)
-      end
-
-      # DOT_POPPER_WINDOW=400x850: a window of that size, for checking a
-      # narrow screen; nil without it.
-      def window_size
-        width, height = @env.fetch("DOT_POPPER_WINDOW", "").split("x", 2).map { Integer(it, exception: false) }
-        [[width, SMALLEST_WINDOW[0]].max, [height, SMALLEST_WINDOW[1]].max] if width && height
-      end
-
-      # Whether someone is playing, not a machine: not the autoplay bot,
-      # and not a GUI scenario, unless it sets DOT_POPPER_FREE_GAMES to try
-      # the limit.
-      def player?
-        return true if Build.store?(@channel)
-        return false if flag?("DOT_POPPER_AUTOPLAY")
-
-        @env.fetch("DOT_POPPER_SCENARIO", "").empty? || @env.key?("DOT_POPPER_FREE_GAMES")
-      end
-
-      # The games a free player has left, counted where Pro
-      # can be bought, as #player? allows. DOT_POPPER_FREE_GAMES=n starts a
-      # new save with n games in the bank and n for the day, to try the
-      # limit.
-      def free_games(entitlement, metered:, store: SaveFile.new(name: "games.txt"))
-        start = Integer(@env.fetch("DOT_POPPER_FREE_GAMES", ""), exception: false)
-        FreeGames.new(store, today:, entitlement:, metered:,
-                      **(start ? { bank: start, daily: start } : {}))
-      end
-
-      # The moment the server's dates are told from, in UTC: now, or
-      # midnight UTC of DOT_POPPER_TODAY's day.
-      def utc_clock
-        pretend = Date.iso8601(@env.fetch("DOT_POPPER_TODAY", ""))
-        -> { Time.utc(pretend.year, pretend.month, pretend.day) }
-      rescue Date::Error
-        -> { Time.now.utc }
-      end
-
-      # The player's local date, or DOT_POPPER_TODAY's, to try another
-      # day's goal or a streak.
-      def today
-        pretend = Date.iso8601(@env.fetch("DOT_POPPER_TODAY", ""))
-        -> { pretend }
-      rescue Date::Error
-        -> { Date.today }
-      end
-
-      # Playing with the game-over pile: by the accelerometer, or
-      # DOT_POPPER_FAKE_TILT's steady reading in its place, and by any
-      # gamepad's right stick.
-      def tilting
-        fake = Presentation::Reading.parse(@env["DOT_POPPER_FAKE_TILT"])
-        Tilting.new(pile: @pile, gamepads: @gamepads,
-                    accelerometer: fake ? FakeAccelerometer.new(steady: fake) : Accelerometer.new,
-                    style: flag?("DOT_POPPER_CALM") ? Style::CALM_TILT : Style::TILT, turns: @touch)
-      end
+      def screen = @game.screen
 
       # The middle of the pile's ball nearest +x+, +y+, or that point with
       # no pile.
@@ -771,8 +508,7 @@ module DotPopper
         dot ? [dot.x, dot.y] : [x, y]
       end
 
-      def flag?(name) = @env[name] == "1"
-      def seed = Integer(@env.fetch("DOT_POPPER_SEED", ""), exception: false)
+      def flag?(name) = @settings.flag?(name)
 
       # The development hooks main.rb describes.
       def development(seconds)

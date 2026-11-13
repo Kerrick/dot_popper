@@ -61,7 +61,7 @@ A Box2D world that cannot be made leaves the dots where they are at Game Over. S
 
 Behind everything is the night: the `backdrop` shader in the palette's four inks, or a theme's baked scene (see "Themes"). It reaches a unit past Lota's dimensions (`Renderer#cover`), and every frame is cleared first to the night's darkest ink, `ink_edge` (`Renderer#prepare`), so a pixel nothing draws is never black or another color. Lota's dimensions are whole units, rounded down, while the drawable may be a fraction of a unit wider: on an iPhone 13 mini turned landscape it is 2338 pixels at a scale of 2.88, 811.8 units, which Lota reports as 811.
 
-The game prints one line on what its window is as it starts and on every resize or rotation (`Presentation::ScreenReport`, `App#report_screen`): its size in units and pixels, the dpi scale as Lota reports it and natively, the safe area and the window's mode. It lets a run on a real device be set beside an SDL test program's on the same one. `DOT_POPPER_DIAGNOSTIC_COLORS=1` clears each frame to pure blue and draws no night ([ios.md](../ios.md)).
+The game prints one line on what its window is as it starts and on every resize or rotation (`Presentation::ScreenReport`, `Shell::Engine#report_screen`): its size in units and pixels, the dpi scale as Lota reports it and natively, the safe area and the window's mode. It lets a run on a real device be set beside an SDL test program's on the same one. `DOT_POPPER_DIAGNOSTIC_COLORS=1` clears each frame to pure blue and draws no night ([ios.md](../ios.md)).
 
 ## Effects
 
@@ -227,7 +227,7 @@ A theme other than Classic exists to the player only once the server has named i
 - `themes.txt` keeps three lines: `unlocked:`, `told:` and `chosen:`.
 - How themes open by their dates while setdef is gone (`Theme#opens_on`, `ThemeKeeper#open_by_date`, `GONE_DAYS`) is in [store-and-pro.md](store-and-pro.md). The request and both files are declared in [privacy.json](../privacy.json) ([privacy.md](privacy.md)).
 
-Using a theme other than Classic is Pro's: a Free player always uses Classic, and sees the others on the Themes screen, where tapping one opens the offer ([store-and-pro.md](store-and-pro.md), [screens.md](screens.md)). `DOT_POPPER_THEME_UNLOCKS=ghost,eclipse` and `DOT_POPPER_THEME=ghost` stand in for the server and the player's choice in GUI scenarios (`App#use_fixture`).
+Using a theme other than Classic is Pro's: a Free player always uses Classic, and sees the others on the Themes screen, where tapping one opens the offer ([store-and-pro.md](store-and-pro.md), [screens.md](screens.md)). `DOT_POPPER_THEME_UNLOCKS=ghost,eclipse` and `DOT_POPPER_THEME=ghost` stand in for the server and the player's choice in GUI scenarios (`Composition::Root#use_fixture`). A store build ignores both.
 
 ### The Themes screen
 
