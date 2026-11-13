@@ -277,6 +277,20 @@ class RootTest < Minitest::Test
     assert_empty engine.file("server.txt").read.to_s
   end
 
+  # The root makes the use cases and subscribes them, and the offer, to
+  # what they hear: Pro arriving reaches BuyPro first, which tells friend
+  # groups what was earned while Free, and then ticks on the open offer.
+  def test_pro_arriving_is_heard_by_buy_pro_and_then_by_the_offer
+    game = root
+    listeners = game.entitlement.instance_variable_get(:@listeners)
+
+    assert_equal [DotPopper::UseCases::BuyPro, Screens::Offer], listeners.map(&:class)
+    game.show.offer.open_led_by(:themes)
+    game.entitlement.prove(DotPopper::Receipt.issue)
+
+    assert_equal [:tick, 1.3], game.speaker.played.last
+  end
+
   def test_a_scenarios_theme_is_used_in_a_test_build_and_ignored_in_a_store_build
     env = { "DOT_POPPER_PRO" => "1", "DOT_POPPER_THEME" => "ghost", "DOT_POPPER_THEME_UNLOCKS" => "ghost" }
 

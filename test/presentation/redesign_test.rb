@@ -27,7 +27,7 @@ class RedesignTest < Minitest::Test
     @book = DotPopper::StatsBook.new(DotPopper::ScoreRecord::Memory.new)
     @book.record(DotPopper::GameStats.start.with(most_dots_in_a_row: 19), DotPopper::SizeClass::MEDIUM) if played
     @earned = DotPopper::Achievements.new(DotPopper::ScoreRecord::Memory.new)
-    Show.new(cabinet: @cabinet, layout: layout(1200, 800), sounds: @sounds, radius: R, stats_book: @book, achievements: @earned,
+    new_show(cabinet: @cabinet, layout: layout(1200, 800), sounds: @sounds, radius: R, stats_book: @book, achievements: @earned,
              entitlement: pro ? DotPopper::Entitlement.new(forced: true) : DotPopper::Entitlement.free)
   end
 
@@ -137,7 +137,7 @@ class RedesignTest < Minitest::Test
     store = Store.new
     entitlement = DotPopper::Entitlement.test
     cabinet = DotPopper::Cabinet.new(field(1200, 800), random: Random.new(2))
-    s = Show.new(cabinet:, layout: layout(1200, 800), sounds: FakeSounds.new, radius: R, entitlement:, storefront: store,
+    s = new_show(cabinet:, layout: layout(1200, 800), sounds: FakeSounds.new, radius: R, entitlement:, storefront: store,
                  theme_keeper: ThemeKeeper.new(DotPopper::ScoreRecord::Memory.new, themes: Style::THEMES))
     s.open_themes
     s.use(s.themes.last)

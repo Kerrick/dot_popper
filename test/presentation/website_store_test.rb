@@ -29,7 +29,7 @@ class WebsiteStoreTest < Minitest::Test
     cabinet = DotPopper::Cabinet.new(field(1200, 800), random: Random.new(2))
     book = DotPopper::StatsBook.new(Memory.new)
     book.record(DotPopper::GameStats.start, DotPopper::SizeClass::MEDIUM)
-    Show.new(cabinet:, layout: layout(1200, 800), sounds: FakeSounds.new, radius: R, stats_book: book, clipboard: @clipboard,
+    new_show(cabinet:, layout: layout(1200, 800), sounds: FakeSounds.new, radius: R, stats_book: book, clipboard: @clipboard,
              entitlement: @entitlement, storefront: @store, server_choice: @choice)
   end
 
@@ -125,11 +125,11 @@ class WebsiteStoreTest < Minitest::Test
     click(s, :buy)
 
     assert_equal s.words.offer[:copied], s.offer_status
-    refute s.pro?
+    refute @entitlement.pro?
     before = s.sounds.played.size
     click(s, :paste)
 
-    assert s.pro?
+    assert @entitlement.pro?
     assert_equal 1, @entered
     assert_equal [[:tick, 1.0]], s.sounds.played.drop(before), "the paste's own tick once, and no purchase tick: that is a receipt's"
     assert_equal s.words.offer[:thanks], s.offer_status
@@ -145,13 +145,13 @@ class WebsiteStoreTest < Minitest::Test
     achievements = DotPopper::Achievements.new(Memory.new)
     achievements.award(%i[blink], day: "2026-11-01")
     cabinet = DotPopper::Cabinet.new(field(1200, 800), random: Random.new(2))
-    s = Show.new(cabinet:, layout: layout(1200, 800), sounds: FakeSounds.new, radius: R, clipboard: @clipboard, entitlement: @entitlement,
+    s = new_show(cabinet:, layout: layout(1200, 800), sounds: FakeSounds.new, radius: R, clipboard: @clipboard, entitlement: @entitlement,
                  storefront: @store, groups:, achievements:)
     s.open_offer
     click(s, :buy)
     click(s, :paste)
 
-    assert s.pro?
+    assert @entitlement.pro?
     assert_equal [%i[blink]], reported
   end
 
@@ -163,7 +163,7 @@ class WebsiteStoreTest < Minitest::Test
     s.open_offer
 
     assert s.paste_shortcut
-    assert s.pro?
+    assert @entitlement.pro?
   end
 
   def test_a_keyboard_types_the_key_ignoring_case_spaces_and_hyphens
@@ -177,11 +177,11 @@ class WebsiteStoreTest < Minitest::Test
       assert s.type_key(c == "-" ? :minus : c.downcase.to_sym), c
     end
     assert_equal "#{s.words.offer[:typing]} …#{text.upcase[-24..]}", s.offer_status
-    refute s.pro?
+    refute @entitlement.pro?
     s.type_key(:backspace)
     s.type_key(text[-1].downcase.to_sym)
     assert s.type_key(:enter)
-    assert s.pro?
+    assert @entitlement.pro?
   end
 
   def test_typing_does_nothing_on_other_screens
@@ -204,7 +204,7 @@ class WebsiteStoreTest < Minitest::Test
     click(s, :paste)
 
     assert_equal s.words.offer[:invalid], s.offer_status
-    refute s.pro?
+    refute @entitlement.pro?
   end
 
   def test_while_setdef_is_gone_buy_goes_and_the_offer_says_pro_is_no_longer_sold
@@ -218,11 +218,11 @@ class WebsiteStoreTest < Minitest::Test
     @clipboard.copy(C::LicenseKey.issue(C::TestKeys::LICENSE).text)
     click(s, :paste)
 
-    assert s.pro?, "a key bought before still works"
+    assert @entitlement.pro?, "a key bought before still works"
   end
 
   def test_a_stores_copy_never_shows_paste_license_key
-    s = Show.new(cabinet: DotPopper::Cabinet.new(field(1200, 800)), layout: layout(1200, 800), sounds: FakeSounds.new, radius: R,
+    s = new_show(cabinet: DotPopper::Cabinet.new(field(1200, 800)), layout: layout(1200, 800), sounds: FakeSounds.new, radius: R,
                  storefront: Storefront.new(port: FakeStore.new(Memory.new), entitlement: DotPopper::Entitlement.free))
     s.open_offer
 

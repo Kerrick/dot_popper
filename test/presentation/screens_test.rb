@@ -10,7 +10,7 @@ class ScreensTest < Minitest::Test
 
   def setup
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2))
-    @show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, entitlement: DotPopper::Entitlement.free)
+    @show = new_show(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, entitlement: DotPopper::Entitlement.free)
   end
 
   def test_the_screen_for_the_games_state_is_under_everything

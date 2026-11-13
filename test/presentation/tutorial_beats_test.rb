@@ -195,7 +195,7 @@ class TutorialBeatsTest < Minitest::Test
     radius = DotPopper::DotSize.fitted(width, height).radius
     cabinet = DotPopper::Cabinet.new(DotPopper::Field.new(width, height, radius), random: Random.new(2))
     screen = Layout.new(width:, height:, safe: Rect.new(x: 0, y: 0, width:, height:), style: Style::LAYOUT)
-    show = Show.new(cabinet:, layout: screen, sounds: FakeSounds.new, radius:, random: Random.new(3),
+    show = PresentationTest.show(cabinet:, layout: screen, sounds: FakeSounds.new, radius:, random: Random.new(3),
                     tutorial_flag: TutorialFlag.new(DotPopper::ScoreRecord::Memory.new))
     reach = show.play_reach
     show.tap(reach.center_x, reach.center_y)

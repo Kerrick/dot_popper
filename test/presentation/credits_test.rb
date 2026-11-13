@@ -196,7 +196,7 @@ class CreditsTest < Minitest::Test
     @sounds = FakeSounds.new
     notices = Notices.new(iosevka: Array.new(30) { "Some license words, #{it} " * 20 }.join("\n\n"), ofl: "Font text")
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(2))
-    show = Show.new(cabinet:, layout: layout, sounds: @sounds, radius: R, notices:, measure: RoughMeasure.new)
+    show = new_show(cabinet:, layout: layout, sounds: @sounds, radius: R, notices:, measure: RoughMeasure.new)
     show.primary
     cabinet.update(30)
     show.update(1.0)

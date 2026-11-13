@@ -4,15 +4,14 @@ module DotPopper
   module Presentation
     module Screens
       # The offer of Pro, over the screen it was opened from (OfferScreen):
-      # Buy, Restore Purchases or Paste license key, and Back. It sells
-      # through +buy_pro+ (UseCases::BuyPro), shows what +storefront+ says
-      # of the store, and thanks the player once +entitlement+ has Pro.
+      # Buy, Restore Purchases or Paste license key, and Back. It asks
+      # everything of +buy_pro+ (UseCases::BuyPro): it sells through it,
+      # shows what it says of the store, and thanks the player once it says
+      # they have Pro.
       class Offer < Screen
-        def initialize(show, buy_pro:, storefront:, entitlement:)
+        def initialize(show, buy_pro:)
           super(show)
           @buy_pro = buy_pro
-          @storefront = storefront
-          @entitlement = entitlement
           @focus = nil
           @for_play = false
           @key_hint = nil
@@ -29,7 +28,7 @@ module DotPopper
         # are on, leading with it, and Back closes it to that same screen,
         # open as it was, so no one loses their place.
         def open_led_by(feature)
-          return if @entitlement.pro? || opened?
+          return if @buy_pro.owned? || opened?
 
           show.open_layer(self)
           @focus = feature
@@ -41,10 +40,26 @@ module DotPopper
         # with.
         def led_by_achievement(id) = @achievement = id
 
+        # Whether Pro can be offered at all: where there is a store, to a
+        # player who has not bought it.
+        def offered? = @buy_pro.offered?
+
+        # Hears the store, +seconds+ on, while no game is in play
+        # (UseCases::BuyPro#update).
+        def update(seconds) = @buy_pro.update(seconds)
+
+        # Pro arrived (a ProGranted, which the composition root subscribes
+        # it to hear): a tick marks a store's purchase landing while
+        # it is open. A license key entered has had its own tick as it was
+        # pressed.
+        def call(granted)
+          sounds.play(:tick, pitch: 1.3) if opened? && granted.by == :receipt
+        end
+
         # Opens over the screen in view, and asks the store for the price,
         # or asks again if an earlier request was never answered.
         def open_plainly
-          return unless @buy_pro.offered?
+          return unless offered?
 
           show.open_layer(self)
           @focus = nil
@@ -73,9 +88,9 @@ module DotPopper
 
         # The words and parts to lay out (OfferScreen), and where they go.
         def layout_screen
-          OfferScreen.new(layout:, type: style::TYPE, words:, measure:, offering: !@entitlement.pro?,
+          OfferScreen.new(layout:, type: style::TYPE, words:, measure:, offering: !@buy_pro.owned?,
                           note: (words.offer[:no_games] if for_play), focus:, art:,
-                          sold: @storefront.sold?, second: keys? ? :paste : :restore)
+                          sold: @buy_pro.sold?, second: keys? ? :paste : :restore)
         end
 
         def plan = layout_screen.plan
@@ -92,19 +107,19 @@ module DotPopper
 
         # Whether the store takes a license key (WebsiteStore), rather than
         # restoring its purchases.
-        def keys? = @storefront.keys?
+        def keys? = @buy_pro.keys?
 
         # The price the store gave, or nil before it has.
-        def price = @storefront.price
+        def price = @buy_pro.price
 
         # What it says of how the store is getting on: thanks once the
         # player owns Pro, and otherwise a word only when there is something
         # to say.
         def status
-          return words.offer[:thanks] if @entitlement.pro?
-          return "#{words.offer[:typing]} #{typed_tail}" if @storefront.respond_to?(:typed) && !@storefront.typed.empty? && @storefront.status == :ready
+          return words.offer[:thanks] if @buy_pro.owned?
+          return "#{words.offer[:typing]} #{typed_tail}" if !@buy_pro.typed.empty? && @buy_pro.status == :ready
 
-          words.offer.fetch(@storefront.status, "")
+          words.offer.fetch(@buy_pro.status, "")
         end
 
         # Buy's words, with the controller's button that presses it (Y) while
@@ -131,7 +146,7 @@ module DotPopper
 
         # Paste license key: what is on the clipboard, entered as a key, on a
         # copy that takes one (WebsiteStore). A key that is good is Pro at
-        # once, which Entitlement announces as Pro arriving.
+        # once, which is announced as Pro arriving (#call).
         def paste_key
           return unless opened? && keys?
 
@@ -196,7 +211,7 @@ module DotPopper
 
         # The last of the key being typed, for the line to show.
         def typed_tail
-          typed = @storefront.typed
+          typed = @buy_pro.typed
           typed.length > 24 ? "…#{typed[-24..]}" : typed
         end
       end

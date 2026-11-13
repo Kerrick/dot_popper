@@ -288,7 +288,7 @@ class ShowTutorialTest < Minitest::Test
   private
 
   def show(keeper: DotPopper::StatsKeeper.new(score_record: @score_record, stats_book: @stats_book))
-    Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3), stats_book: @stats_book,
+    new_show(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3), stats_book: @stats_book,
              keeper:, tutorial_flag: TutorialFlag.new(@store))
   end
 

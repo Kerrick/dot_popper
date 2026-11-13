@@ -41,6 +41,7 @@ class BuyProTest < Minitest::Test
     @groups = Groups.new
     @buy = DotPopper::UseCases::BuyPro.new(store: @store, entitlement: @entitlement, cabinet: @cabinet, achievements: @achievements,
                                            friend_groups: @groups)
+    @entitlement.subscribe(@buy) # as the composition root subscribes it
   end
 
   def test_buy_with_a_price_buys_and_without_one_asks_again
@@ -83,7 +84,8 @@ class BuyProTest < Minitest::Test
   def test_a_license_key_entered_is_pro_arriving_too
     license = DotPopper::Continuity::License.new(DotPopper::ScoreRecord::Memory.new, pins: DotPopper::Continuity::TEST_PINS)
     entitlement = DotPopper::Entitlement.new(license:)
-    DotPopper::UseCases::BuyPro.new(store: @store, entitlement:, cabinet: @cabinet, achievements: @achievements, friend_groups: @groups)
+    entitlement.subscribe(DotPopper::UseCases::BuyPro.new(store: @store, entitlement:, cabinet: @cabinet, achievements: @achievements,
+                                                          friend_groups: @groups))
     @achievements.award(%i[steady], day: "2026-11-01")
     entitlement.enter(DotPopper::Continuity::LicenseKey.issue(DotPopper::Continuity::TestKeys::LICENSE).text)
 

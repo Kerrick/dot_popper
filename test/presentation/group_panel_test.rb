@@ -34,7 +34,7 @@ class GroupPanelTest < Minitest::Test
   end
 
   def build(width: 800, height: 600, entitlement: @pro, group_notice: DotPopper::Presentation::GroupNotice.read, links: DotPopper::Presentation::NoLinks.new)
-    @show = Show.new(cabinet: @cabinet, layout: layout(width, height), sounds: @sounds, radius: R,
+    @show = new_show(cabinet: @cabinet, layout: layout(width, height), sounds: @sounds, radius: R,
                      entitlement:, groups: @session, group_notice:, links:)
   end
 

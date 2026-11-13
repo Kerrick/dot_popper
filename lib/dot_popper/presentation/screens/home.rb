@@ -6,16 +6,15 @@ module DotPopper
       # Home: the game's name, Play, today's goal, the large buttons and
       # the bottom row (HomeScreen lays them out). Play starts a game
       # through +start_game+ (UseCases::StartGame), with the Tutorial over
-      # it while +tutorial_flag+ says it is due; +games+ (FreeGames) says
-      # how many are left.
+      # it while +tutorial_flag+ says it is due, and says how many games
+      # are left.
       class Home < Screen
         QUIT_ASK = 2.0 # seconds a second B has to quit from Home
 
-        def initialize(show, start_game:, tutorial_flag:, games:)
+        def initialize(show, start_game:, tutorial_flag:)
           super(show)
           @start_game = start_game
           @tutorial_flag = tutorial_flag
-          @games = games
           @planned = nil
           @quit_asked_at = nil
         end
@@ -70,15 +69,15 @@ module DotPopper
         end
 
         # What it says of the games left, or nil where none are counted.
-        def games_line = (words.games_left(@games.left) if @games.metered?)
+        def games_line = @start_game.left&.then { words.games_left(it) }
 
         # What Play says, and what it leaves to say beneath it.
         def play_word = @start_game.none_left? ? words.button(:get_pro) : words.play
 
         def play_note
-          return unless @games.metered?
+          left = @start_game.left or return
 
-          @start_game.none_left? ? words.no_games_left(@games.daily) : words.games_left(@games.left)
+          @start_game.none_left? ? words.no_games_left(@start_game.daily) : words.games_left(left)
         end
 
         # A large button's one value.
@@ -167,7 +166,7 @@ module DotPopper
         # The offer of Pro, from Play with no game left; Back from it
         # returns here.
         def offer_play
-          return unless show.home? && show.offer_offered?
+          return unless show.home? && show.offer.offered?
 
           show.screens.fetch(:stats).refresh
           show.offer.open_for_play

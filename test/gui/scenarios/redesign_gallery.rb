@@ -12,6 +12,10 @@ module DotPopperGui
     SIZES = [[1200, 800, false], [400, 850, true], [850, 400, true]].freeze
     P = DotPopper::Presentation
 
+    # Whether the player has Pro, which the screens are not told: the
+    # gallery asks the game's Entitlement, as the composition root built it.
+    def pro? = app.instance_variable_get(:@game).entitlement.pro?
+
     def play
       keeper = show.instance_variable_get(:@theme_keeper)
       wait(0.5)
@@ -20,7 +24,7 @@ module DotPopperGui
       shoot("home-first", settle: 1.5)
       quick_game
       SIZES.each { |width, height, phone| screens(width, height, phone) }
-      groups if show.pro? && show.group_panel.available?
+      groups if pro? && show.group_panel.available?
     end
 
     # The friend groups' screens, against a local stand-in for the server
@@ -105,7 +109,7 @@ module DotPopperGui
       shoot("ach-open")
       show.back
       show.back
-      offers unless show.pro?
+      offers unless pro?
       game_over
     end
 
@@ -130,7 +134,7 @@ module DotPopperGui
       3.times { pop_bright }
       run_out_the_clock
       lines = { goal_met: true }
-      lines[:achievements] = [:sharpshooter] if show.pro?
+      lines[:achievements] = [:sharpshooter] if pro?
       show.instance_variable_set(:@game_over, show.game_over.with(**lines))
       shoot("over", settle: 3.0)
       continue_to_home

@@ -8,10 +8,12 @@ module DotPopper
     # one; once the player has Pro (+entitlement+, Entitlement), Buy and a
     # typed key do nothing. The store is heard only while no game
     # is in play (+cabinet+, Cabinet), so a purchase never lands mid-game.
-    # When Pro arrives (Entitlement::ProGranted), the player's friend
-    # groups (+friend_groups+) hear of every achievement already earned
-    # (+achievements+, Achievements), which a Free player's games kept but
-    # never reported.
+    # When Pro arrives (Entitlement::ProGranted, which the composition
+    # root subscribes it to), the player's friend groups (+friend_groups+)
+    # hear of every achievement already earned (+achievements+,
+    # Achievements), which a Free player's games kept but never reported.
+    # It is the offer's one way to the store and to whether the player
+    # has Pro, so no screen holds either.
     class BuyPro
       def initialize(store:, entitlement:, cabinet:, achievements:, friend_groups:)
         @store = store
@@ -19,12 +21,26 @@ module DotPopper
         @cabinet = cabinet
         @achievements = achievements
         @friend_groups = friend_groups
-        entitlement.subscribe(self)
       end
 
       # Whether Pro can be offered: where there is a store, to a player
       # who has not bought it.
-      def offered? = @store.offered? && !@entitlement.pro?
+      def offered? = @store.offered? && !owned?
+
+      # Whether the player has Pro, which the offer thanks them for.
+      def owned? = @entitlement.pro?
+
+      # Whether the store sells Pro here, and whether it takes a license
+      # key (WebsiteStore) rather than restoring its purchases.
+      def sold? = @store.sold?
+      def keys? = @store.keys?
+
+      # The price the store gave, or nil before it has; how the store is
+      # getting on (:ready, :waiting and the like); and the license key
+      # typed so far, or "".
+      def price = @store.price
+      def status = @store.status
+      def typed = @store.typed
 
       # The offer opened: asks the store for the price and what this
       # player owns, or asks again if an earlier request went unanswered.
@@ -34,7 +50,7 @@ module DotPopper
       # a purchase, and before one has come, Buy's "Try again", which asks
       # again. Says whether it was taken.
       def buy
-        return false if @entitlement.pro? || !@store.sold?
+        return false if owned? || !@store.sold?
 
         @store.price ? @store.buy : @store.connect
         true
@@ -47,7 +63,7 @@ module DotPopper
 
       # A key typed as a license key, on a copy that takes one; says
       # whether it was taken.
-      def type(key) = !@entitlement.pro? && @store.type(key)
+      def type(key) = !owned? && @store.type(key)
 
       # Hears the store, +seconds+ on, unless a game is in play.
       def update(seconds)

@@ -313,7 +313,7 @@ class ScreenPlansTest < Minitest::Test
     notices = Notices.new(iosevka: Array.new(40) { long.join("\n") }.join("\n\n"), ofl: "Fredoka text", lota: "Lota text",
                           fledge: ["Fledge text"])
     cabinet = DotPopper::Cabinet.new(field(screen_layout.width, screen_layout.height), random: Random.new(2))
-    show = Show.new(cabinet:, layout: screen_layout, sounds: FakeSounds.new, radius: R, notices:, measure: RoughMeasure.new)
+    show = new_show(cabinet:, layout: screen_layout, sounds: FakeSounds.new, radius: R, notices:, measure: RoughMeasure.new)
     show.primary
     cabinet.update(30)
     show.update(1.0)
@@ -330,7 +330,7 @@ class ScreenPlansTest < Minitest::Test
   # at its top and scrolled to its end, Credits, and Privacy.
   def each_screen(width, height, window: NoWindowControl.new)
     cabinet = DotPopper::Cabinet.new(field(width, height), random: Random.new(2))
-    show = Show.new(cabinet:, layout: layout(width, height), sounds: FakeSounds.new, radius: R, window:)
+    show = new_show(cabinet:, layout: layout(width, height), sounds: FakeSounds.new, radius: R, window:)
     yield "the first Home", show
     show.primary
     cabinet.update(30)

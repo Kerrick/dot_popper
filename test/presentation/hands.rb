@@ -95,7 +95,7 @@ module Hands
       book.record(DotPopper::GameStats.start, @cabinet.size_class) if played
       session = DotPopper::Groups::Session.new(store: Memory.new, worker: Server.new)
       @server_choice = P::ServerChoice.new(Memory.new, gone: @gone, clipboard:)
-      @show = Show.new(cabinet:, layout: layout(width, height), sounds:, radius: R, random: Random.new(5), clipboard:, window:, stats_book: book,
+      @show = new_show(cabinet:, layout: layout(width, height), sounds:, radius: R, random: Random.new(5), clipboard:, window:, stats_book: book,
                        sharing: P::SheetSharing.for(platform, opener:), links: opener, entitlement:, storefront:, games:,
                        theme_keeper: themes, groups: session, group_notice: P::GroupNotice.new(Memory.new),
                        tutorial_flag: P::TutorialFlag.new(Memory.new((P::TutorialFlag::SEEN if played))), input: P::InputKind.starting(touch: phone?),

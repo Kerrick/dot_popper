@@ -27,7 +27,7 @@ class GamesTest < Minitest::Test
     @entitlement = DotPopper::Entitlement.test
     @games = DotPopper::FreeGames.new(Memory.new, today: -> { @day }, entitlement: @entitlement, bank: 0)
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(3))
-    @show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, games: @games, entitlement: @entitlement,
+    @show = new_show(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, games: @games, entitlement: @entitlement,
                      storefront: Store.new)
   end
 
@@ -96,7 +96,7 @@ class GamesTest < Minitest::Test
   # which does nothing under the offer, before asking the screen on top.
   def test_over_game_over_a_controllers_y_buys_as_its_words_say
     store = Buying.new
-    @show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, games: @games, entitlement: @entitlement,
+    @show = new_show(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, games: @games, entitlement: @entitlement,
                      storefront: store, input: InputKind::GAMEPAD)
     2.times { @games.spend! }
     press_main
@@ -202,20 +202,34 @@ class GamesTest < Minitest::Test
     end
   end
 
-  # Play and the Tutorial's opening, both Home's, are the Show's only
-  # ways into a game, and both go through the one door
-  # (UseCases::StartGame, whose own test checks that nothing else starts
-  # one). The Show makes the door, and the screens are given it.
-  def test_the_show_starts_a_game_only_through_the_one_door
-    folder = File.expand_path("../../lib/dot_popper/presentation", __dir__)
-    code = ->(path) { File.readlines(path).map(&:strip).reject { it.start_with?("#") } }
-    show = code.("#{folder}/show.rb")
-    screens = Dir["#{folder}/screens/*.rb"].to_h { [File.basename(it), code.(it)] }
+  # A door into a game that never opens: it answers that no game is left,
+  # starts nothing, and counts how often it was asked.
+  class ShutDoor
+    attr_reader :asked
 
-    assert_equal 1, show.grep(/StartGame\.new/).size
-    assert_empty show.grep(/start_game\.call/)
-    assert_equal({ "home.rb" => 2 }, screens.transform_values { it.grep(/@start_game\.call/).size }.reject { |_, n| n.zero? })
-    assert_equal 1, show.grep(/Tutorial\.new/).size
+    def initialize = @asked = 0
+    def call(_opening = nil) = (@asked += 1) && :none_left
+    def none_left? = true
+    def left = 0
+    def daily = DotPopper::FreeGames::DAILY
+  end
+
+  # Every way into a game goes through the StartGame the Show is given
+  # (UseCases::StartGame, whose own test checks that nothing else starts
+  # one), once, and through nothing else: given a door that never opens,
+  # no way in starts a game, however the screens reach it.
+  WAYS_IN.each do |name, way_in|
+    define_method(test_name(name, "goes only through the door the show is given")) do
+      door = ShutDoor.new
+      show = tutorial_show(seen: name.match?(/\APlay\z|Start|How to Play/), start_game: door)
+      started = started_games
+      way_in.call(self, show)
+
+      assert_equal 1, door.asked, name
+      assert_empty started, name
+      refute_predicate show, :tutorial?, name
+      assert_instance_of DotPopper::Cabinet::Home, @cabinet.state, name
+    end
   end
 
   def test_with_none_left_how_to_play_opens_the_offer_as_play_does
@@ -230,7 +244,7 @@ class GamesTest < Minitest::Test
   def test_with_none_left_a_first_play_leaves_the_tutorial_due
     3.times { @games.spend! }
     flag = TutorialFlag.new(Memory.new)
-    show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, games: @games,
+    show = new_show(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, games: @games,
                     entitlement: @entitlement, storefront: Store.new, tutorial_flag: flag)
     press_main(show)
 
@@ -249,8 +263,9 @@ class GamesTest < Minitest::Test
   end
 
   # A Show with its Tutorial still due, or, +seen+, only How to Play's.
-  def tutorial_show(seen: false) = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, games: @games,
-                                                entitlement: @entitlement, storefront: Store.new, tutorial_flag: TutorialFlag.new(Memory.new).tap { it.seen! if seen })
+  def tutorial_show(seen: false, **) = new_show(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, games: @games,
+                                                    entitlement: @entitlement, storefront: Store.new,
+                                                    tutorial_flag: TutorialFlag.new(Memory.new).tap { it.seen! if seen }, **)
 
   def started_games = [].tap { |seen| @cabinet.subscribe { |event| seen << event if event.is_a?(DotPopper::Events::GameStarted) } }
 

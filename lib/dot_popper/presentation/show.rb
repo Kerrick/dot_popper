@@ -20,52 +20,47 @@ module DotPopper
     # methods). +sharing+ (InGameSharing's methods) offers Game
     # Over's result to share, in a preview or a phone's own sheet, and
     # +clipboard+ takes it when the player copies it. +achievements+
-    # (Achievements) keeps the achievements a game earns, as it ends, and the
-    # Stats screen lists them once the +entitlement+ says the pro
-    # version was bought. +tutorial_flag+
+    # (Achievements) are listed on the Achievements screen. +tutorial_flag+
     # (TutorialFlag) says whether Play opens the Tutorial first. +window+
     # (NoWindowControl's methods) is the desktop's window, which
     # Home's "Full screen" and Quit switch and close where it offers them.
-    # +games+ (FreeGames) counts the games a free player may start: Play
-    # spends one, and with none left leads to the offer of Pro.
+    #
+    # What a player does that needs two of the game's areas goes through
+    # the use cases it is given, made by the composition root (ADR-0017):
+    # +start_game+, +finish_game+, +buy_pro+, +use_theme+,
+    # +join_friend_group+ and +view_achievements+. It is never
+    # given what decides Pro, the store or the free games, so nothing here
+    # can ask them.
     class Show
       # The dot-size choices in the order Settings draws them
       # (Screens::Settings::SIZINGS).
       SIZINGS = Screens::Settings::SIZINGS
 
       attr_reader :cabinet, :effects, :animations, :hud, :attract, :layout, :marquee, :game_over, :sounds, :now, :style,
-                  :stats_book, :input, :words, :tutorial, :lead_in, :window, :games
+                  :stats_book, :input, :words, :tutorial, :lead_in, :window
 
-      def initialize(cabinet:, layout:, sounds:, radius:, style: Style, random: Random.new, calm: false,
+      def initialize(cabinet:, layout:, sounds:, radius:, start_game:, finish_game:, buy_pro:, use_theme:, join_friend_group:,
+                     view_achievements:, stats_book:, achievements:, theme_keeper:, groups:, style: Style, random: Random.new, calm: false,
                      tutor: Tutor.new(ScoreRecord::Memory.new, times: style::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
-                     stats_book: StatsBook.new(ScoreRecord::Memory.new), sizing_store: ScoreRecord::Memory.new,
-                     input: InputKind::MOUSE, measure: RoughMeasure.new,
-                     achievements: Achievements.new(ScoreRecord::Memory.new),
+                     sizing_store: ScoreRecord::Memory.new, input: InputKind::MOUSE, measure: RoughMeasure.new,
                      keeper: StatsKeeper.new(score_record: cabinet.score_record, stats_book:, achievements:), notices: Notices.none,
                      sharing: InGameSharing.new, tutorial_flag: TutorialFlag.never, window: NoWindowControl.new,
-                     entitlement: Entitlement.free, theme_keeper: ThemeKeeper.plain(style::THEMES),
-                     groups: Groups::Session.off, storefront: NoStorefront.new, games: FreeGames.unlimited, links: NoLinks.new,
-                     group_notice: GroupNotice.read, server_choice: nil,
-                     use_theme: UseCases::UseTheme.new(themes: theme_keeper, entitlement:))
+                     links: NoLinks.new, group_notice: GroupNotice.read, server_choice: nil)
         @cabinet = cabinet
         @window = window
         @links = links
         @tutorial_flag = tutorial_flag
-        @entitlement = entitlement
         @theme_keeper = theme_keeper
         @achievements = achievements
         @achievement_watch = AchievementWatch.new
-        @groups = GroupPanel.new(groups:, joining: UseCases::JoinFriendGroup.new(groups:, entitlement:), sounds:, pro_offer: ->(feature) { open_offer_for(feature) }, notice: group_notice,
-                                shown: ->(open) { open ? open_layer(:friend_groups) : close_layer(:friend_groups) })
-        @groups.copy = ->(text) { clipboard.copy(text) }
-        @storefront = storefront
-        @games = games
-        @start_game = UseCases::StartGame.new(cabinet:, free_games: games)
-        @finish_game = UseCases::FinishGame.new(stats_book:, achievements:, entitlement:, friend_groups: groups)
+        # Methods, not blocks, so that what the panel keeps holds the Show
+        # and the clipboard alone, and none of what the Show was given.
+        @groups = GroupPanel.new(groups:, joining: join_friend_group, sounds:, pro_offer: method(:open_offer_for), notice: group_notice,
+                                 shown: method(:friend_groups_shown))
+        @groups.copy = clipboard.method(:copy)
+        @finish_game = finish_game
         @use_theme = use_theme
-        @view_achievements = UseCases::ViewAchievements.new(achievements:, entitlement:, stats_book:, score_record: cabinet.score_record)
-        @buy_pro = UseCases::BuyPro.new(store: storefront, entitlement:, cabinet:, achievements:, friend_groups: groups)
-        entitlement.subscribe(->(granted) { pro_arrived(granted) })
+        @view_achievements = view_achievements
         @layers = [] # the screens open over the game's state, the top one last
         @tutorial = nil
         @handing_over = nil
@@ -97,10 +92,9 @@ module DotPopper
         @keeper = keeper
         @pointer = nil
         @hover = Hover.none
-        @screens = Screens.made_for(self, clipboard:, buy_pro: @buy_pro, storefront:, entitlement:, start_game: @start_game, sharing:,
-                                          view_achievements: @view_achievements, keeper:, stats_book:, achievements:, haptics:, notices:,
-                                          sizing_store:, server_choice:, theme_keeper:, use_theme:,
-                                          tutorial_flag:, games:)
+        @screens = Screens.made_for(self, clipboard:, buy_pro:, start_game:, sharing:, view_achievements:, keeper:, stats_book:,
+                                          achievements:, haptics:, notices:, sizing_store:, server_choice:, theme_keeper:, use_theme:,
+                                          tutorial_flag:)
         cabinet.subscribe(@recorder)
         cabinet.subscribe(self)
       end
@@ -476,17 +470,17 @@ module DotPopper
       # offer opens from what Pro brings (an achievement, a theme, a friend
       # group) and from Play with no game left
       # (doc/design/store-and-pro.md).
-      def offer_offered? = @buy_pro.offered?
+      def offer_offered? = offer.offered?
 
       # Whether the store takes a license key (WebsiteStore), rather than
       # restoring its purchases.
       def keys? = offer.keys?
 
+      # The friend groups' screens opened (+open+) or closed, on the stack.
+      def friend_groups_shown(open) = open ? open_layer(:friend_groups) : close_layer(:friend_groups)
+
       # Friend groups, opened from Home.
       def open_groups = (@groups.open if on_home?)
-
-      # Whether the player has Pro.
-      def pro? = @entitlement.pro?
 
       # Whether the offer of Pro is open, over the screen it was opened from.
       def offer? = layer?(:offer)
@@ -801,7 +795,7 @@ module DotPopper
       def update(seconds)
         @now += seconds
         @groups.update(now, quiet: !playing?, showing: screen.announces?)
-        @buy_pro.update(seconds)
+        offer.update(seconds)
         @arrival_seen = [arrival.key, now] if arrival? && @arrival_seen&.first != arrival.key
         @screens[:stats].update
         @hover = hover.at(hovered).update(seconds, style::HOVER)
@@ -912,13 +906,6 @@ module DotPopper
         sounds.play(:tick)
       end
 
-
-      # Pro arrived (Entitlement::ProGranted): a tick marks a store's
-      # purchase landing while the offer is open. A license key entered has
-      # had its own tick as it was pressed.
-      def pro_arrived(granted)
-        sounds.play(:tick, pitch: 1.3) if offer? && granted.by == :receipt
-      end
 
       # "Clear my stats…" was held long enough (Screens::Stats#clear).
       def clear_stats = @screens[:stats].clear

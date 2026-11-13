@@ -19,6 +19,11 @@ module DotPopper
       # offer of Pro instead.
       def none_left? = !@free_games.can_play?
 
+      # How many games the player has left, or nil where none are counted
+      # (FreeGames#metered?), for Play's word; and how many each day gives.
+      def left = (@free_games.left if @free_games.metered?)
+      def daily = @free_games.daily
+
       # Starts a game from Home and spends a free game on it: in play at
       # once, or with +opening+ (a Stack), paused before its clock first
       # runs, with those dots first, for the tutorial to play over.

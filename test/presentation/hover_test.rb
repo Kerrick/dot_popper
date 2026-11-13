@@ -13,7 +13,7 @@ class HoverTest < Minitest::Test
   def setup
     @sounds = FakeSounds.new
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2))
-    @show = Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3))
+    @show = new_show(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3))
   end
 
   def test_a_level_eases_up_while_over_and_back_down_once_left

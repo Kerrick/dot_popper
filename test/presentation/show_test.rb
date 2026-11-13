@@ -10,7 +10,7 @@ class ShowTest < Minitest::Test
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2))
     @clipboard = MemoryClipboard.new
     @sizing_store = DotPopper::ScoreRecord::Memory.new
-    @show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3),
+    @show = new_show(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3),
                      clipboard: @clipboard, sizing_store: @sizing_store)
   end
 
@@ -46,7 +46,7 @@ class ShowTest < Minitest::Test
   # cover one another, so each bright dot can be tapped on the spot.
   def calm_show
     @cabinet = DotPopper::Cabinet.new(field(4000, 3000), random: Random.new(2))
-    show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3))
+    show = new_show(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3))
     show.tap(*middle(show.play_reach))
     show
   end
@@ -128,7 +128,7 @@ class ShowTest < Minitest::Test
     @show.input = InputKind::TOUCH
     assert_equal "Play", @show.words.play
     assert_equal "Play again",
-                 Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, input: InputKind::TOUCH).words.play_again
+                 new_show(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, input: InputKind::TOUCH).words.play_again
   end
 
   RESULT = "Dot Popper: 1 point\n🟡 1 dot · ⚫ 0 mistakes · ⏱ 11 seconds\n" \
@@ -234,7 +234,7 @@ class ShowTest < Minitest::Test
 
       def offer(text, _now) = (@offered = text) && nil
     end.new
-    show = Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, clipboard: @clipboard, sharing: sheet)
+    show = new_show(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, clipboard: @clipboard, sharing: sheet)
     press_main(show)
     @cabinet.update(20)
     show.share
@@ -271,7 +271,7 @@ class ShowTest < Minitest::Test
   # 2026-11-01's goal is to pop 10 bright dots in the first 10 seconds.
   def test_the_game_that_meets_todays_goal_celebrates_it_once_the_score_has_counted
     stats_book = DotPopper::StatsBook.new(DotPopper::ScoreRecord::Memory.new, today: -> { Date.new(2026, 11, 1) })
-    show = Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3), stats_book:)
+    show = new_show(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3), stats_book:)
     press_main(show)
     10.times do
       bright = @cabinet.game.dots.find(&:bright?)
@@ -529,7 +529,7 @@ class ShowTest < Minitest::Test
 
   def test_a_pop_buzzes_briefly_and_a_wrong_tap_longer
     haptics = FakeHaptics.new
-    @show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3), haptics:)
+    @show = new_show(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3), haptics:)
     start_and_pop
     popped = @cabinet.game.dots.find(&:popped?)
     clear_around!(@cabinet.game, popped)
@@ -592,7 +592,7 @@ class ShowTest < Minitest::Test
   # after a game whose mistake had the bright dot hidden beneath.
   def test_game_over_teaches_the_stack_after_a_wrong_tap_over_the_bright_dot
     store = DotPopper::ScoreRecord::Memory.new
-    @show = Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3),
+    @show = new_show(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3),
                      tutor: Tutor.new(store, times: 1))
     start_and_pop
     popped = @cabinet.game.dots.first
@@ -651,7 +651,7 @@ class ShowTest < Minitest::Test
   # it was, so Game Over shows nothing, and that Game Over doesn't count.
   def test_a_wrong_tap_whose_bright_dot_was_popped_later_teaches_nothing
     store = DotPopper::ScoreRecord::Memory.new
-    @show = Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3),
+    @show = new_show(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3),
                      tutor: Tutor.new(store, times: 2))
     hide_bright_under_a_popped_dot_and_tap_it
     bright = @cabinet.game.dots.find(&:bright?)

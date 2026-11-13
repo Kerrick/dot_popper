@@ -9,8 +9,8 @@ module DotPopper
     module Screens
       # One of each screen for +show+, by name: a screen over Home by the
       # name Show#page gives it, the rest by their own. +clipboard+ takes
-      # what the share preview copies; the offer of Pro sells through
-      # +buy_pro+, as +storefront+ and +entitlement+ say; Game Over starts
+      # what the share preview copies; the offer of Pro asks everything of
+      # +buy_pro+; Game Over starts
       # the next game through +start_game+ and shares through +sharing+;
       # an achievement's dialog shows what +view_achievements+ may; Stats
       # shows +stats_book+ and +achievements+, cleared through +keeper+
@@ -18,14 +18,13 @@ module DotPopper
       # dot size in +sizing_store+; Change Server chooses +server_choice+;
       # Themes and the new-theme card use themes through +use_theme+, and
       # the card tells +theme_keeper+ it was told; Home starts games through
-      # +start_game+, the Tutorial first while +tutorial_flag+ says, and
-      # counts +games+.
-      def self.made_for(show, clipboard:, buy_pro:, storefront:, entitlement:, start_game:, sharing:, view_achievements:, keeper:,
+      # +start_game+, the Tutorial first while +tutorial_flag+ says.
+      def self.made_for(show, clipboard:, buy_pro:, start_game:, sharing:, view_achievements:, keeper:,
                         stats_book:, achievements:, haptics:, notices:, sizing_store:, server_choice:, theme_keeper:, use_theme:,
-                        tutorial_flag:, games:)
-        { home: Home.new(show, start_game:, tutorial_flag:, games:), new_theme: NewTheme.new(show, theme_keeper:, use_theme:), tutorial: Tutorial.new(show), game: Game.new(show),
+                        tutorial_flag:)
+        { home: Home.new(show, start_game:, tutorial_flag:), new_theme: NewTheme.new(show, theme_keeper:, use_theme:), tutorial: Tutorial.new(show), game: Game.new(show),
           game_over: GameOver.new(show, start_game:, sharing:), share_preview: SharePreview.new(show, clipboard:),
-          offer: Offer.new(show, buy_pro:, storefront:, entitlement:),
+          offer: Offer.new(show, buy_pro:),
           stats: Stats.new(show, keeper:, stats_book:, achievements:, haptics:), achievements: Achievements.new(show), achievement_dialog: AchievementDialog.new(show, view_achievements:),
           themes: Themes.new(show, use_theme:), settings: Settings.new(show, sizing_store:), credits: Credits.new(show, notices:), privacy: Privacy.new(show),
           server: ChangeServer.new(show, server_choice:), friend_groups: FriendGroups.new(show) }.freeze

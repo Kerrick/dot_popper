@@ -274,7 +274,7 @@ class StorefrontTest < Minitest::Test
 
   def build_show(**options)
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(3))
-    Show.new(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R, measure: RoughMeasure.new, **options)
+    new_show(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R, measure: RoughMeasure.new, **options)
   end
 
   def offer_show

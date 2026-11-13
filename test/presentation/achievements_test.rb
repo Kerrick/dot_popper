@@ -20,7 +20,7 @@ class AchievementsOnStatsTest < Minitest::Test
     stats_book = DotPopper::StatsBook.new(@folder.call("stats"), today: -> { Date.new(2026, 11, 8) })
     keeper = DotPopper::StatsKeeper.new(score_record: @cabinet.score_record, stats_book:, achievements: @achievements, folder: @folder)
     entitlement = DotPopper::Entitlement.new(forced: pro)
-    @show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, stats_book:, keeper:,
+    @show = new_show(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, stats_book:, keeper:,
                      achievements: @achievements, entitlement:)
   end
 

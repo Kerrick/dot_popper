@@ -10,7 +10,7 @@ class SettingsTest < Minitest::Test
   def setup
     @sizing_store = DotPopper::ScoreRecord::Memory.new
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2))
-    @show = Show.new(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, sizing_store: @sizing_store)
+    @show = new_show(cabinet: @cabinet, layout: layout, sounds: FakeSounds.new, radius: R, sizing_store: @sizing_store)
     @show.open_settings
   end
 
@@ -34,7 +34,7 @@ class SettingsTest < Minitest::Test
   # Settings leaves the choice out, and a shoulder button changes nothing.
   def test_where_the_sizes_look_alike_the_choice_is_not_offered
     cabinet = DotPopper::Cabinet.new(field(1200, 800), random: Random.new(2), sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
-    show = Show.new(cabinet:, layout: layout(1200, 800), sounds: FakeSounds.new, radius: R, sizing_store: @sizing_store)
+    show = new_show(cabinet:, layout: layout(1200, 800), sounds: FakeSounds.new, radius: R, sizing_store: @sizing_store)
     show.open_settings
 
     refute show.sizing_offered?
@@ -45,7 +45,7 @@ class SettingsTest < Minitest::Test
   end
 
   def test_a_short_window_scrolls_to_what_does_not_fit
-    show = Show.new(cabinet: @cabinet, layout: layout(400, 320), sounds: FakeSounds.new, radius: R, window: FakeWindow.new)
+    show = new_show(cabinet: @cabinet, layout: layout(400, 320), sounds: FakeSounds.new, radius: R, window: FakeWindow.new)
     show.open_settings
     assert_nil show.reach_of(:privacy), "Privacy is below the window"
 

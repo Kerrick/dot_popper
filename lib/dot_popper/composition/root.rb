@@ -3,6 +3,7 @@
 require "uri"
 require_relative "../presentation"
 require_relative "settings"
+require_relative "use_cases"
 
 module DotPopper
   module Composition
@@ -203,6 +204,8 @@ module DotPopper
         @haptics = platform.buzzes? ? @engine.buzzer : Presentation::NoHaptics.new
         @sharing = Presentation::SheetSharing.for(platform, opener: @engine.opener)
         groups = groups_session
+        use_cases = Composition.use_cases(cabinet: @cabinet, free_games: games, entitlement:, store: storefront, achievements:,
+                                          stats_book:, friend_groups: groups, use_theme:)
         @show = Presentation::Show.new(
           groups:, cabinet: @cabinet, layout: @engine.layout, sounds: @speaker, radius: dot_size.radius,
           random:, calm: settings.calm?, tutor: Presentation::Tutor.new(file("taught.txt"), times: Style::LESSON.times),
@@ -211,9 +214,11 @@ module DotPopper
           window: @window,
           tutorial_flag: Presentation::TutorialFlag.new(file("tutorial.txt"), mode: Presentation::TutorialFlag.mode(settings.env)),
           group_notice: Presentation::GroupNotice.new(file("group_notice.txt")),
-          entitlement:, theme_keeper:, storefront:, games:, links: @engine.opener,
-          server_choice: @server_choice, use_theme:
+          theme_keeper:, links: @engine.opener, server_choice: @server_choice, **use_cases
         )
+        # A store's purchase landing ticks on the offer, after BuyPro has
+        # told friend groups of what was earned while Free.
+        entitlement.subscribe(@show.offer)
         @refresh = Refresh.new([-> { @theme_feed&.ask }, -> { groups.refresh }], cabinet: @cabinet, clock: @clock)
         @cabinet.subscribe(@refresh)
         @cabinet.subscribe(PlaytestLog.new(file(PLAYTEST_LOG), today:, archive: ->(name) { file(name) }))

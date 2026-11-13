@@ -28,7 +28,7 @@ class AutopilotTest < Minitest::Test
   def test_with_the_show_it_copies_every_other_result
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
     clipboard = MemoryClipboard.new
-    show = Show.new(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R, clipboard:)
+    show = new_show(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R, clipboard:)
     pilot = Autopilot.new(Style::AUTOPILOT, random: Random.new(5))
     copies = []
     games = 0
@@ -49,7 +49,7 @@ class AutopilotTest < Minitest::Test
 
   def test_on_its_second_visit_home_it_opens_the_stats_and_goes_back
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
-    show = Show.new(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R)
+    show = new_show(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R)
     pilot = Autopilot.new(Style::AUTOPILOT, random: Random.new(5))
     opened = false
     games = 0
@@ -72,7 +72,7 @@ class AutopilotTest < Minitest::Test
   # offers the choice, and the pilot switches it once there.
   def test_it_switches_the_dot_size_once_home_offers_it
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
-    show = Show.new(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R)
+    show = new_show(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R)
     pilot = Autopilot.new(Style::AUTOPILOT, random: Random.new(5))
     games = 0
     cabinet.subscribe { games += 1 if it.is_a?(DotPopper::Events::GameStarted) }
@@ -95,7 +95,7 @@ class AutopilotTest < Minitest::Test
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
     keeper = ThemeKeeper.new(DotPopper::ScoreRecord::Memory.new, themes: Style::THEMES)
     keeper.receive(%w[ghost])
-    show = Show.new(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R, theme_keeper: keeper)
+    show = new_show(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R, theme_keeper: keeper)
     pilot = Autopilot.new(Style::AUTOPILOT, random: Random.new(5))
     assert show.arrival?
     600.times do
