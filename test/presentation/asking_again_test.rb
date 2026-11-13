@@ -64,7 +64,7 @@ class AskingAgainTest < Minitest::Test
   end
 
   def play_until_game_over
-    @cabinet.start_game
+    @show.play
     tick(DotPopper::Rules::STARTING_SECONDS + 1) until @show.game_over?
     tick(DotPopper::Rules::GAME_OVER_GRACE)
   end
@@ -88,7 +88,7 @@ class AskingAgainTest < Minitest::Test
   end
 
   def test_coming_back_during_a_game_hands_nothing_to_the_network_until_after_it
-    @cabinet.start_game
+    @show.play
     @now += Refresh::FLOOR
     @refresh.came_back
     tick

@@ -79,9 +79,9 @@ class FinishGameTest < Minitest::Test
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(3), sizing: DotPopper::DotSizing::SIZED_TO_SCREEN)
     cabinet.subscribe(@finish)
     play = ->(start) { start.call.then { cabinet.update(30) }.then { cabinet.update(DotPopper::Rules::GAME_OVER_GRACE) } }
-    play.(-> { cabinet.start_game })
+    play.(-> { start!(cabinet) })
     cabinet.press(0, 0)
-    play.(-> { cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)])).unpause })
+    play.(-> { start_paused!(cabinet, DotPopper::Stack.new(dots: [dot(300, 300, id: 0)])).unpause })
 
     assert_equal 2, @stats_book.stats.games
     assert_equal [true, false], @groups.games.map(&:last), "the tutorial's game never counts"

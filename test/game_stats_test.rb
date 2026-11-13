@@ -11,7 +11,7 @@ class GameStatsTest < Minitest::Test
     @cabinet = Cabinet.new(field, random: Random.new(9))
     @recorder = GameStats::Recorder.new
     @cabinet.subscribe(@recorder)
-    @cabinet.start_game
+    start!(@cabinet)
   end
 
   def test_it_counts_dots_popped_and_times_each_wait_from_the_dot_appearing
@@ -51,7 +51,7 @@ class GameStatsTest < Minitest::Test
     @cabinet.update(20)
     @cabinet.update(1)
     @cabinet.press(0, 0)
-    @cabinet.start_game
+    start!(@cabinet)
 
     assert_equal GameStats.start, @recorder.stats
   end
@@ -106,7 +106,7 @@ class GameStatsTest < Minitest::Test
     cabinet = Cabinet.new(field, random: Random.new(9))
     recorder = GameStats::Recorder.new
     cabinet.subscribe(recorder)
-    cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
+    start_paused!(cabinet, DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
     cabinet.press_paused(300, 300)
     cabinet.press_paused(300, 300)
     spawned = cabinet.game.dots.to_a.last

@@ -518,7 +518,7 @@ class TutorialTest < Minitest::Test
   # The Tutorial over +cabinet+'s game, started paused with its opening
   # dots from +center+, as the one way into a game starts it.
   def tutorial_on(cabinet, center, **)
-    cabinet.start_paused(Tutorial.opening(cabinet.field, center))
+    start_paused!(cabinet, Tutorial.opening(cabinet.field, center))
     Tutorial.new(cabinet:, **)
   end
 end

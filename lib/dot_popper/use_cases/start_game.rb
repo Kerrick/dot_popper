@@ -8,10 +8,12 @@ module DotPopper
     # game starts, and the player is offered Pro instead. A game is
     # Gameplay's (+cabinet+, a Cabinet) and the count of free games
     # Monetization's (+free_games+, FreeGames), so neither knows of the
-    # other.
+    # other. It holds the cabinet's +starts+ (Cabinet::Starts), which the
+    # cabinet hands out once, so it alone can start a game there.
     class StartGame
-      def initialize(cabinet:, free_games:)
+      def initialize(cabinet:, free_games:, starts: cabinet.starts)
         @cabinet = cabinet
+        @starts = starts
         @free_games = free_games
       end
 
@@ -34,7 +36,7 @@ module DotPopper
         return :not_home unless @cabinet.state.is_a?(Cabinet::Home)
         return :none_left unless @free_games.spend!
 
-        opening ? @cabinet.start_paused(opening) : @cabinet.start_game
+        opening ? @starts.paused(opening) : @starts.game
         :started
       end
     end

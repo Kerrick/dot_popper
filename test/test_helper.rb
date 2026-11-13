@@ -22,6 +22,17 @@ module DotPopperTest
     DotPopper::Game.new(field, random:, dots: DotPopper::Stack.new(dots:))
   end
 
+  # Each cabinet's one Starts (Cabinet#starts), taken by the first start
+  # a test makes on it, as UseCases::StartGame takes it in the game.
+  STARTS = ObjectSpace::WeakKeyMap.new
+
+  # Starts a game on +cabinet+, in play at once, or paused with +dots+
+  # first for the tutorial; answers the cabinet.
+  def start!(cabinet, seed = nil) = starts_of(cabinet).game(seed)
+  def start_paused!(cabinet, dots, seed = nil) = starts_of(cabinet).paused(dots, seed)
+  def starts_of(cabinet) = DotPopperTest.starts_of(cabinet)
+  def self.starts_of(cabinet) = (STARTS[cabinet] ||= cabinet.starts)
+
   # Sets a game's score as if earlier taps had earned it.
   def score!(game, points) = game.instance_variable_set(:@score, points)
 

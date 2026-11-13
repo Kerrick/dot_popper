@@ -20,6 +20,23 @@ module DotPopper
 
     @listeners: Array[_Listener]
 
+    @starts_taken: bool
+
+    class StartsTaken < StandardError
+    end
+
+    def starts: () -> Starts
+
+    class Starts
+      @start: ^(Stack?, Integer?) -> Cabinet
+
+      def initialize: (^(Stack?, Integer?) -> Cabinet start) -> void
+
+      def game: (?Integer? seed) -> Cabinet
+
+      def paused: (Stack dots, ?Integer? seed) -> Cabinet
+    end
+
     def initialize: (Field screen, ?score_record: ScoreRecord, ?random: Random, ?sizing: DotSizing) -> void
 
     def subscribe: (?_Listener? listener) ?{ (event event) -> void } -> self
@@ -44,11 +61,7 @@ module DotPopper
 
     def show_home: () -> Home
 
-    def start_game: (?Integer seed) -> self
-
     def playing?: () -> bool
-
-    def start_paused: (Stack dots, ?Integer seed) -> self
 
     def press_paused: (number x, number y) -> tap_event?
 
@@ -61,6 +74,12 @@ module DotPopper
     def finish: (Game game, Integer seed, SizeClass size_class, bool tutorial) -> GameOver
 
     private
+
+    def start_game: (Integer seed) -> self
+
+    def start_paused: (Stack dots, Integer seed) -> self
+
+    def draw_seed: () -> Integer
 
     def begin_game: (Game game, Integer seed, ?SizeClass size_class, ?tutorial: bool) -> Playing
 

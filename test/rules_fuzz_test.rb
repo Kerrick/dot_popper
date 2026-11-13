@@ -31,7 +31,7 @@ class RulesFuzzTest < Minitest::Test
       before = cabinet.state
       seen << before.class
       kept = [cabinet.game&.score, cabinet.game&.countdown]
-      if before.is_a?(DotPopper::Cabinet::Home) && random.rand < 0.1 then cabinet.start_game
+      if before.is_a?(DotPopper::Cabinet::Home) && random.rand < 0.1 then start!(cabinet)
       elsif random.rand < 0.5 then cabinet.press(*aim_anywhere(cabinet, random))
       else cabinet.update(random.rand(1.5))
       end

@@ -60,7 +60,7 @@ class RefreshTest < Minitest::Test
   end
 
   def test_nothing_is_asked_during_a_game
-    @cabinet.start_game
+    start!(@cabinet)
     later
     @refresh.came_back
 
@@ -68,7 +68,7 @@ class RefreshTest < Minitest::Test
   end
 
   def test_nothing_is_asked_while_the_tutorial_plays_over_a_game
-    @cabinet.start_paused(DotPopper::Stack.new)
+    start_paused!(@cabinet, DotPopper::Stack.new)
     later
     @refresh.came_back
 
@@ -76,7 +76,7 @@ class RefreshTest < Minitest::Test
   end
 
   def test_coming_back_during_a_game_waits_for_home
-    @cabinet.start_game
+    start!(@cabinet)
     later
     @refresh.came_back
     finish_and_go_home
@@ -103,7 +103,7 @@ class RefreshTest < Minitest::Test
   private
 
   def play_a_game
-    @cabinet.start_game
+    start!(@cabinet)
     finish_and_go_home
   end
 

@@ -27,7 +27,7 @@ class CabinetTest < Minitest::Test
   end
 
   def test_starting_a_game_from_home_starts_a_fresh_one_in_play
-    @cabinet.start_game
+    start!(@cabinet)
 
     assert_instance_of Cabinet::Playing, @cabinet.state
     assert_predicate @cabinet, :playing?
@@ -38,7 +38,7 @@ class CabinetTest < Minitest::Test
   end
 
   def test_presses_in_play_reach_the_game_and_are_announced
-    @cabinet.start_game
+    start!(@cabinet)
     target = @cabinet.game.dots.first
 
     @cabinet.press(target.x, target.y)
@@ -50,7 +50,7 @@ class CabinetTest < Minitest::Test
   # Each event carries the game as it stood when the event was told, so
   # a listener needs nothing but the event.
   def test_every_event_carries_the_game_as_it_stood_when_it_was_told
-    @cabinet.start_game
+    start!(@cabinet)
     game = @cabinet.game
     assert_stood game, @heard.last, :field, :dots, :score, :dots_in_a_row
     @cabinet.update(1.25)
@@ -78,7 +78,7 @@ class CabinetTest < Minitest::Test
   end
 
   def test_a_penalty_that_empties_the_clock_ends_the_game_at_once
-    @cabinet.start_game
+    start!(@cabinet)
     target = @cabinet.game.dots.first
     @cabinet.press(target.x, target.y)
     @cabinet.update(10.5) # 0.5 s left, and the popped dot is still on top where it went
@@ -90,7 +90,7 @@ class CabinetTest < Minitest::Test
   end
 
   def test_game_over_ignores_presses_for_a_moment_then_returns_to_home
-    @cabinet.start_game
+    start!(@cabinet)
     @cabinet.update(11)
 
     @cabinet.press(400, 300)
@@ -119,7 +119,7 @@ class CabinetTest < Minitest::Test
     @cabinet.update(20)
     @cabinet.update(1)
     @cabinet.press(0, 0) # to Home
-    @cabinet.start_game # and a new game
+    start!(@cabinet) # and a new game
 
     assert_equal 0, @cabinet.game.score
     assert_equal 1, @cabinet.game.dots.size
@@ -153,7 +153,7 @@ class CabinetTest < Minitest::Test
 
     @cabinet.update(1)
     @cabinet.press(0, 0)
-    @cabinet.start_game
+    start!(@cabinet)
     @cabinet.update(20)
     refute @heard.last.first
     refute @heard.last.new_score_record
@@ -169,7 +169,7 @@ class CabinetTest < Minitest::Test
 
   def test_a_new_game_uses_the_field_as_it_is_when_the_game_starts
     @cabinet.screen = field(300, 200)
-    @cabinet.start_game
+    start!(@cabinet)
 
     assert_equal 300, @cabinet.game.field.width
   end
@@ -179,7 +179,7 @@ class CabinetTest < Minitest::Test
   def test_sized_to_the_screen_sets_each_games_radius_when_it_starts_and_keeps_it
     @cabinet.screen = field(600, 400)
     @cabinet.sizing = DotPopper::DotSizing::SIZED_TO_SCREEN
-    @cabinet.start_game
+    start!(@cabinet)
     assert_in_delta 30.0, @cabinet.game.field.radius
     assert_equal DotPopper::SizeClass::FITTED, @cabinet.state.size_class
 
@@ -196,7 +196,7 @@ class CabinetTest < Minitest::Test
   end
 
   def test_each_game_has_a_seed_of_its_own_that_replays_its_dots
-    @cabinet.start_game
+    start!(@cabinet)
     first = @heard.last.seed
     seeded = DotPopper::Game.new(field, random: Random.new(first))
 
@@ -207,7 +207,7 @@ class CabinetTest < Minitest::Test
 
   def test_a_paused_game_is_made_on_home_and_announced_only_when_unpaused
     first = DotPopper::Stack.new(dots: [dot(300, 300, id: 0)])
-    @cabinet.start_paused(first)
+    start_paused!(@cabinet, first)
 
     assert_instance_of Cabinet::Paused, @cabinet.state
     assert_predicate @cabinet, :paused?
@@ -217,7 +217,7 @@ class CabinetTest < Minitest::Test
   end
 
   def test_a_paused_games_clock_does_not_run_and_no_press_reaches_it
-    @cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, velocity_x: 50, id: 0)]))
+    start_paused!(@cabinet, DotPopper::Stack.new(dots: [dot(300, 300, velocity_x: 50, id: 0)]))
     @cabinet.update(3.0)
     @cabinet.press(300, 300)
 
@@ -229,7 +229,7 @@ class CabinetTest < Minitest::Test
   end
 
   def test_the_tutorials_presses_reach_a_paused_game_by_the_usual_rules_and_tell_no_one
-    @cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
+    start_paused!(@cabinet, DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
     popped = @cabinet.press_paused(300, 300)
     bright = @cabinet.game.dots.find(&:bright?)
     clear_around!(@cabinet.game, @cabinet.game.dots.first)
@@ -245,14 +245,14 @@ class CabinetTest < Minitest::Test
   end
 
   def test_the_tutorial_arranges_a_paused_games_dots
-    @cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
+    start_paused!(@cabinet, DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
     @cabinet.arrange(@cabinet.game.dots.first.with(velocity_y: -60.0))
 
     assert_equal(-60.0, @cabinet.game.dots.first.velocity_y)
   end
 
   def test_unpausing_begins_play_on_the_same_game_as_it_is
-    @cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
+    start_paused!(@cabinet, DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
     @cabinet.press_paused(300, 300)
     game = @cabinet.game
     @cabinet.unpause
@@ -269,7 +269,7 @@ class CabinetTest < Minitest::Test
 
   def test_a_paused_games_seed_replays_the_dots_it_spawns
     first = DotPopper::Stack.new(dots: [dot(300, 300, id: 0)])
-    @cabinet.start_paused(first)
+    start_paused!(@cabinet, first)
     @cabinet.press_paused(300, 300)
     @cabinet.unpause
     seeded = DotPopper::Game.new(field, random: Random.new(@heard.last.seed), dots: first)
@@ -279,7 +279,7 @@ class CabinetTest < Minitest::Test
   end
 
   def test_a_paused_game_counts_among_the_records_of_the_screen_it_was_made_on
-    @cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
+    start_paused!(@cabinet, DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
     made_on = @cabinet.size_class
     @cabinet.screen = DotPopper::Field.new(2000, 1500, R)
     @cabinet.unpause
@@ -289,7 +289,7 @@ class CabinetTest < Minitest::Test
   end
 
   def test_a_resized_window_keeps_a_paused_games_dots_on_it
-    @cabinet.start_paused(DotPopper::Stack.new(dots: [dot(700, 300, id: 0)]))
+    start_paused!(@cabinet, DotPopper::Stack.new(dots: [dot(700, 300, id: 0)]))
     @cabinet.screen = DotPopper::Field.new(400, 850, R)
 
     assert_equal 400, @cabinet.game.field.width
@@ -297,11 +297,11 @@ class CabinetTest < Minitest::Test
   end
 
   def test_only_home_starts_a_game
-    @cabinet.start_game
+    start!(@cabinet)
     game = @cabinet.game
-    @cabinet.start_game
+    start!(@cabinet)
     @cabinet.update(11)
-    @cabinet.start_game
+    start!(@cabinet)
 
     assert_same game, @cabinet.game
     assert_instance_of Cabinet::GameOver, @cabinet.state
@@ -311,9 +311,9 @@ class CabinetTest < Minitest::Test
   def test_only_home_makes_a_paused_game_and_only_a_paused_game_unpauses
     @cabinet.unpause
     assert_instance_of Cabinet::Home, @cabinet.state
-    @cabinet.start_game
+    start!(@cabinet)
     game = @cabinet.game
-    @cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
+    start_paused!(@cabinet, DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
     @cabinet.unpause
 
     assert_same game, @cabinet.game
@@ -327,11 +327,11 @@ class CabinetTest < Minitest::Test
     @cabinet.update(20)
     @cabinet.update(1)
     @cabinet.press(0, 0)
-    @cabinet.start_game
+    start!(@cabinet)
   end
 
   def play_to_score(points)
-    @cabinet.start_game
+    start!(@cabinet)
     points.times do
       bright = @cabinet.game.dots.find(&:bright?)
       clear_around!(@cabinet.game, bright)

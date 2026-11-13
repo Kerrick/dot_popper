@@ -60,20 +60,31 @@ class StartGameTest < Minitest::Test
 
   def test_a_game_unmetered_costs_nothing
     games = DotPopper::FreeGames.unlimited
-    start = DotPopper::UseCases::StartGame.new(cabinet: @cabinet, free_games: games)
+    cabinet = Cabinet.new(field, random: Random.new(3)) # one StartGame for each cabinet
+    start = DotPopper::UseCases::StartGame.new(cabinet:, free_games: games)
 
     assert_equal :started, start.call
-    assert_predicate @cabinet, :playing?
+    assert_predicate cabinet, :playing?
   end
 
-  # A call of Cabinet#start_game or #start_paused (".start_game"), or the
-  # name as a Symbol (send(:start_game), method(:start_paused),
-  # &:start_game).
-  STARTS = /[.:]start_(?:game|paused)\b/
+  # A cabinet hands out its one Starts once, and the use case takes it as
+  # it is made, so nothing else can start a game on that cabinet.
+  def test_a_cabinet_hands_out_its_starts_once_and_the_use_case_holds_them
+    assert_raises(Cabinet::StartsTaken) { @cabinet.starts }
+    assert_raises(Cabinet::StartsTaken) { DotPopper::UseCases::StartGame.new(cabinet: @cabinet, free_games: @games) }
+  end
 
-  # Nothing but this use case starts a game: no screen, no shell, no
-  # script, and no file outside lib/ that the phones load. It reads the
-  # source, so it cannot see a name built at run time.
+  # A Cabinet's Starts taken (".starts"), or a call of its private
+  # #start_game or #start_paused by name or as a Symbol (send(:start_game),
+  # method(:start_paused)), the second line behind the Starts handed out
+  # once.
+  STARTS = /[.:]start_(?:game|paused)\b|\.starts\b/
+
+  # Nothing but this use case, and the composition root that hands it
+  # the cabinet's Starts, takes them or calls the start methods: no
+  # screen, no shell, no script, and no file outside lib/ that the phones
+  # load. It reads the source, so it cannot see a name
+  # built at run time.
   def test_nothing_else_starts_a_game
     root = File.expand_path("../..", __dir__)
     files = Dir["#{root}/{lib,script}/**/*.rb"] + Dir["#{root}/bin/*"] + ["#{root}/main.rb", "#{root}/conf.rb", "#{root}/android/android_kit"]
@@ -81,7 +92,7 @@ class StartGameTest < Minitest::Test
       File.readlines(path).filter_map { |line| path.delete_prefix("#{root}/") if line.match?(STARTS) && !line.strip.start_with?("#") }
     end
 
-    assert_equal ["lib/dot_popper/use_cases/start_game.rb"], callers.uniq
+    assert_equal ["lib/dot_popper/composition/use_cases.rb", "lib/dot_popper/use_cases/start_game.rb"], callers.uniq.sort
   end
 
   private

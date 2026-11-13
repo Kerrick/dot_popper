@@ -66,7 +66,7 @@ class BuyProTest < Minitest::Test
 
   def test_the_store_is_heard_only_while_no_game_is_in_play
     @buy.update(0.25)
-    @cabinet.start_game
+    start!(@cabinet)
     @buy.update(0.25)
     @cabinet.update(20)
     @buy.update(0.5)

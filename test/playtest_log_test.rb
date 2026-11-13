@@ -54,7 +54,7 @@ class PlaytestLogTest < Minitest::Test
   end
 
   def test_a_game_still_in_play_is_not_logged
-    @cabinet.start_game
+    start!(@cabinet)
 
     assert_nil @store.read
   end
@@ -62,7 +62,7 @@ class PlaytestLogTest < Minitest::Test
   private
 
   def play_game(dots_popped:)
-    @cabinet.start_game
+    start!(@cabinet)
     dots_popped.times do |i|
       @cabinet.update(1.0) if i.zero?
       bright = @cabinet.game.dots.find(&:bright?)

@@ -77,7 +77,7 @@ class RactorTest < Minitest::Test
   # Over and Home, with a mistake and a miss on the way. Answers the
   # events the paused game's presses returned.
   def play_paused_then_on(cabinet)
-    cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
+    start_paused!(cabinet, DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
     returned = [cabinet.press_paused(300, 300)]
     cabinet.unpause
     game = cabinet.game
