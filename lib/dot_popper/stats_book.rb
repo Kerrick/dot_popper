@@ -58,7 +58,7 @@ module DotPopper
     # The days in a row, up to today, that the goal was met.
     def streak = stats.streak.current_on(today)
 
-    # What one game did to the lifetime: +records+ (Stats::Record,
+    # What one game did to Stats: +records+ (Stats::Record,
     # most impressive first) and +goal_met+.
     class Result < Data.define(:records, :goal_met); end
   end

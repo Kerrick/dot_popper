@@ -125,7 +125,7 @@ class AchievementsOnStatsTest < Minitest::Test
   private
 
   def stats
-    DotPopper::Stats.new(games: 4, pops: 40, mistakes: 2, seconds: 100.0, days: 2, recent: [3, 9],
+    DotPopper::Stats.new(games: 4, dots_popped: 40, mistakes: 2, seconds: 100.0, days: 2, recent: [3, 9],
                                  recent_classes: [MEDIUM] * 2)
   end
 

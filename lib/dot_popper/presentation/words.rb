@@ -134,7 +134,7 @@ module DotPopper
       # What the game was made of, each fact a sign and a number, so it
       # reads in any language: the bright dots popped, the mistakes, and
       # how long the game lasted, in seconds, as the game's own "+1s".
-      def self.facts(stats) = [[:bright, stats.pops.to_s], [:popped, stats.mistakes.to_s], [:stopwatch, "#{stats.duration.round}s"]]
+      def self.facts(stats) = [[:bright, stats.dots_popped.to_s], [:popped, stats.mistakes.to_s], [:stopwatch, "#{stats.duration.round}s"]]
 
       # The one lifetime record a game set that Game Over names (the most
       # impressive, Stats::Record::ORDER), as a sentence:
@@ -163,7 +163,7 @@ module DotPopper
       def share_text(score, stats, score_record:, new_score_record:, record: nil, screen: nil, first: false)
         ["Dot Popper: #{Words.count(score, "point")}#{score_record_note(score, score_record, new_score_record) unless first}",
          (self.record(record) if record),
-         "🟡 #{Words.count(stats.pops, "dot")} · ⚫ #{Words.count(stats.mistakes, "mistake")} · " \
+         "🟡 #{Words.count(stats.dots_popped, "dot")} · ⚫ #{Words.count(stats.mistakes, "mistake")} · " \
          "⏱ #{Words.count(stats.duration.round, "second")}",
          screen].compact.join("\n")
       end

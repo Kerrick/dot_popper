@@ -9,7 +9,7 @@ class StatsSheetTest < Minitest::Test
     records = DotPopper::Stats::Records.new(games: 40, longest_game: 47.6, most_dots_in_a_row: 18, shortest_time_to_pop: 0.34,
                                                 longest_time_to_pop: 6.2)
     phone = DotPopper::Stats::Records.new(games: 2, longest_game: 12.0, most_dots_in_a_row: 3)
-    DotPopper::Stats.new(games: 42, pops: 812, mistakes: 61, seconds: 1890.0, days: 5, recent: [3, 9, 27, 12],
+    DotPopper::Stats.new(games: 42, dots_popped: 812, mistakes: 61, seconds: 1890.0, days: 5, recent: [3, 9, 27, 12],
                                  recent_classes: [MEDIUM] * 4,
                                  streak: DotPopper::GoalStreak.new(current: 3, longest: 7, last_met: "2026-11-04"),
                                  records: { MEDIUM => records, DotPopper::SizeClass::SMALL => phone })

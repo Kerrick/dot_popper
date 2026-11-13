@@ -12,7 +12,7 @@ module DotPopper
     # is how hard a spawn works for a touch target (Spawner); 0 turns the
     # rule off, as the simulator does to measure it. +bonus+
     # (Rules::Bonus) is the row's reward; nil turns it off, likewise.
-    # +dots_in_a_row+ counts the dots in a row since the last wrong tap or
+    # +dots_in_a_row+ counts the dots in a row since the last mistake or
     # bonus dot, toward the next bonus dot.
     def initialize(field, random: Random.new, dots: nil, spawn_tries: Rules::SPAWN_TRIES, bonus: Rules::BONUS)
       @field = field

@@ -2,13 +2,13 @@
 
 module DotPopper
   # The highest score on this device, kept for each SizeClass, since a
-  # phone's best and a big monitor's are different contests. It reads and
+  # phone's score record and a big monitor's are different contests. It reads and
   # writes through a store that answers +read+ and +write(text)+, so the
   # rules never touch a file system themselves (Lota's save folder in the
   # game, memory in tests). It saves as lines of +class=score+.
   #
   # A store written before scores were kept by class holds one bare
-  # number. That best belongs to +legacy+, the class of the screen the
+  # number. That record belongs to +legacy+, the class of the screen the
   # game opens on, and is saved again in the new form at once, so it
   # stays there whichever screen the game opens on next.
   class ScoreRecord
@@ -20,14 +20,14 @@ module DotPopper
       save if Table.old?(text)
     end
 
-    # The best score on screens of +size_class+, or 0 before there is one.
+    # The score record on screens of +size_class+, or 0 before there is one.
     def of(size_class) = @values.fetch(size_class, 0)
 
     # Whether no game has been recorded on screens of +size_class+ yet.
     def first?(size_class) = !@values.key?(size_class)
 
     # Records +score+ as one played on +size_class+, and says whether it
-    # beat that class's best. A class's first game sets its best but
+    # beat that class's record. A class's first game sets its record but
     # beats nothing, so it is never a new record: there was nothing to beat.
     def record(score, size_class)
       first = first?(size_class)
@@ -41,7 +41,7 @@ module DotPopper
     # The store's whole text, as saved, for #restore (RecordKeeper).
     def saved = @store.read
 
-    # Forgets every class's best, as on a new device.
+    # Forgets every class's score record, as on a new device.
     def clear
       @values = {}
       @store.write("")

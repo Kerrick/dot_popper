@@ -69,7 +69,7 @@ class ScreenPlansTest < Minitest::Test
   # fits across its bubble, and Close and Copy are side by side, a
   # fingertip tall at least.
   def test_the_share_preview_never_overlaps_or_runs_off_screen
-    stats = DotPopper::GameStats.start.with(pops: 128, mistakes: 11, duration: 141.0)
+    stats = DotPopper::GameStats.start.with(dots_popped: 128, mistakes: 11, duration: 141.0)
     record = DotPopper::Stats::Record.new(kind: :longest_time_to_pop, value: 12.3)
     screen = format(WORDS.screen_size.fetch(:played), 38, 21)
     SIZES.each do |width, height|
@@ -139,7 +139,7 @@ class ScreenPlansTest < Minitest::Test
   # The facts stand in one row where it fits, and one under another
   # where it does not, every one inside the room.
   def test_game_overs_facts_stack_where_a_row_does_not_fit
-    huge = game_over.with(stats: DotPopper::GameStats.start.with(pops: 123_456_789, mistakes: 123_456_789, duration: 123_456_789.0))
+    huge = game_over.with(stats: DotPopper::GameStats.start.with(dots_popped: 123_456_789, mistakes: 123_456_789, duration: 123_456_789.0))
     wide = GameOverScreen.new(layout: layout(1200, 800), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,
                               scrim: Style::GAME_OVER_BACKING, game_over:, below: 0).plan
     narrow = GameOverScreen.new(layout: layout(320, 800), type: Style::TYPE, words: WORDS, measure: RoughMeasure.new,

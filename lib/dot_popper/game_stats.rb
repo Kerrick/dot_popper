@@ -2,30 +2,30 @@
 
 module DotPopper
   # What happened in one game, in numbers a player can learn from: how
-  # many dots were popped, how many wrong taps (mistakes) there were and how
+  # many dots were popped, how many mistakes there were and how
   # many of those the score floor softened, how long each fresh dot took
   # to pop from when it appeared (its wait), how long the game ran, the
-  # score, and the dots in a row since the last wrong tap (+dots_in_a_row+) with the
-  # most of those the game had (+most_dots_in_a_row+), and how many of the pops
-  # were of bonus dots (+bonuses+). It is built from the
+  # score, and the dots in a row since the last mistake (+dots_in_a_row+) with the
+  # most of those the game had (+most_dots_in_a_row+), and how many of the dots popped
+  # were bonus dots (+bonuses+). It is built from the
   # rules' events, so it decides nothing.
-  class GameStats < Data.define(:pops, :mistakes, :softened, :times_to_pop, :fresh_since, :duration, :score, :dots_in_a_row, :most_dots_in_a_row,
+  class GameStats < Data.define(:dots_popped, :mistakes, :softened, :times_to_pop, :fresh_since, :duration, :score, :dots_in_a_row, :most_dots_in_a_row,
                                           :bonuses)
-    def self.start = new(pops: 0, mistakes: 0, softened: 0, times_to_pop: [], fresh_since: 0.0, duration: 0.0)
+    def self.start = new(dots_popped: 0, mistakes: 0, softened: 0, times_to_pop: [], fresh_since: 0.0, duration: 0.0)
 
     # The stats of +game+ as play begins: none for a game begun afresh;
     # for one the tutorial played over while it was paused
-    # (Cabinet::Paused), a pop for each of its popped dots, its score, and
-    # its row. Those pops came before the clock ran, so none has a wait;
+    # (Cabinet::Paused), each of its popped dots, its score, and
+    # its row. Those dots were popped before the clock ran, so none has a wait;
     # and the guide's mistake, which the player did not make, is not one
     # of theirs.
     def self.opening(game)
-      pops = game.dots.count(&:popped?)
-      start.with(pops:, score: game.score, dots_in_a_row: game.dots_in_a_row, most_dots_in_a_row: game.dots_in_a_row)
+      dots_popped = game.dots.count(&:popped?)
+      start.with(dots_popped:, score: game.score, dots_in_a_row: game.dots_in_a_row, most_dots_in_a_row: game.dots_in_a_row)
     end
 
-    def initialize(pops:, mistakes:, softened:, times_to_pop:, fresh_since:, duration:, score: 0, dots_in_a_row: 0, most_dots_in_a_row: 0, bonuses: 0)
-      super(pops:, mistakes:, softened:, times_to_pop: times_to_pop.dup.freeze, fresh_since: fresh_since.to_f, duration: duration.to_f,
+    def initialize(dots_popped:, mistakes:, softened:, times_to_pop:, fresh_since:, duration:, score: 0, dots_in_a_row: 0, most_dots_in_a_row: 0, bonuses: 0)
+      super(dots_popped:, mistakes:, softened:, times_to_pop: times_to_pop.dup.freeze, fresh_since: fresh_since.to_f, duration: duration.to_f,
             score:, dots_in_a_row:, most_dots_in_a_row:, bonuses:)
     end
 
@@ -51,7 +51,7 @@ module DotPopper
     def mean_time_to_pop = times_to_pop.empty? ? 0.0 : times_to_pop.sum / times_to_pop.size
 
     # How many dots were popped in the game's first +seconds+.
-    def pops_within(seconds)
+    def dots_popped_within(seconds)
       at = 0.0
       times_to_pop.count { (at += it) <= seconds }
     end
@@ -81,7 +81,7 @@ module DotPopper
 
     def popped(event, at)
       ran = dots_in_a_row + 1
-      with(pops: pops + 1, times_to_pop: times_to_pop + [at - fresh_since], fresh_since: at, score: score + event.points, dots_in_a_row: ran,
+      with(dots_popped: dots_popped + 1, times_to_pop: times_to_pop + [at - fresh_since], fresh_since: at, score: score + event.points, dots_in_a_row: ran,
            most_dots_in_a_row: [most_dots_in_a_row, ran].max, bonuses: bonuses + (event.dot.bonus? ? 1 : 0))
     end
   end

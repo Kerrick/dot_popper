@@ -51,7 +51,7 @@ module DotPopper
         ])
         totals = StatsSection.new(title: labels[:totals], rows: [
           StatsRow.new(label: labels[:games], value: stats.games.to_s),
-          StatsRow.new(label: labels[:pops], value: stats.pops.to_s),
+          StatsRow.new(label: labels[:dots_popped], value: stats.dots_popped.to_s),
           StatsRow.new(label: labels[:mistakes], value: stats.mistakes.to_s),
           StatsRow.new(label: labels[:seconds], value: Words.duration(stats.seconds)),
           StatsRow.new(label: labels[:days], value: stats.days.to_s)

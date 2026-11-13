@@ -116,7 +116,7 @@ module DotPopper
           score_record: "Highest score", longest_game: "Longest game",
           most_dots_in_a_row: "Most dots in a row without a mistake", shortest_time_to_pop: "Shortest Time to Pop",
           longest_time_to_pop: "Longest Time to Pop",
-          totals: "All your games", games: "Games played", pops: "Dots popped", mistakes: "Mistakes",
+          totals: "All your games", games: "Games played", dots_popped: "Dots popped", mistakes: "Mistakes",
           seconds: "Time played", days: "Days played", none: "None yet",
           goal: "Daily goal", streak: "Days in a row", longest_streak: "Most days in a row"
         }.freeze,

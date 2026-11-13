@@ -8,8 +8,8 @@ class StatsTest < Minitest::Test
   SMALL = DotPopper::SizeClass::SMALL
   MEDIUM = DotPopper::SizeClass::MEDIUM
 
-  def game(score: 10, pops: 12, mistakes: 1, duration: 30.0, most_dots_in_a_row: 8, times_to_pop: [0.8, 2.5, 1.2])
-    GameStats.start.with(score:, pops:, mistakes:, duration:, most_dots_in_a_row:, times_to_pop:)
+  def game(score: 10, dots_popped: 12, mistakes: 1, duration: 30.0, most_dots_in_a_row: 8, times_to_pop: [0.8, 2.5, 1.2])
+    GameStats.start.with(score:, dots_popped:, mistakes:, duration:, most_dots_in_a_row:, times_to_pop:)
   end
 
   def add(stats, game, day: "d", size_class: MEDIUM) = stats.add(game, day:, size_class:)
@@ -18,7 +18,7 @@ class StatsTest < Minitest::Test
     stats = add(Stats.new, game, day: "2026-11-05")
     records = stats.records_in(MEDIUM)
 
-    assert_equal [1, 12, 1, 1, "2026-11-05"], [stats.games, stats.pops, stats.mistakes, stats.days, stats.last_day]
+    assert_equal [1, 12, 1, 1, "2026-11-05"], [stats.games, stats.dots_popped, stats.mistakes, stats.days, stats.last_day]
     assert_in_delta 30.0, stats.seconds
     assert_equal 1, records.games
     assert_in_delta 30.0, records.longest_game
@@ -91,7 +91,7 @@ class StatsTest < Minitest::Test
   end
 
   def test_a_game_with_no_pops_has_no_shortest_time_to_pop
-    assert_nil add(Stats.new, game(pops: 0, times_to_pop: [])).records_in(MEDIUM).shortest_time_to_pop
+    assert_nil add(Stats.new, game(dots_popped: 0, times_to_pop: [])).records_in(MEDIUM).shortest_time_to_pop
   end
 
   def test_only_the_last_twenty_scores_are_kept
@@ -158,7 +158,7 @@ class StatsTest < Minitest::Test
                                 "huge.games=3\n")
 
     assert_equal 7, stats.games
-    assert_equal 0, stats.pops
+    assert_equal 0, stats.dots_popped
     assert_equal 0, stats.mistakes
     assert_in_delta 0.0, stats.records_in(MEDIUM).longest_time_to_pop
     assert_nil stats.last_day

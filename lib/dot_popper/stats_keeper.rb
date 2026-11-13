@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # Clears the player's records, and brings them back: the ScoreRecord and
-  # the StatsBook, the two stores that hold every best, total, chart bar,
+  # Clears the player's Stats, and brings them back: the ScoreRecord and
+  # the StatsBook, the two stores that hold every record, total, chart bar,
   # and goal streak, and the Achievements, the achievements earned, which are
-  # records of what the player did as much as a best is. Nothing else is
-  # a record, so the playtest log, the settings, what the game has taught,
+  # part of what the player did as much as a record is. Nothing else is
+  # cleared, so the playtest log, the settings, what the game has taught,
   # and whether Pro was bought stay as they are.
   #
   # Clearing copies each store's text, exactly, to a backup named for

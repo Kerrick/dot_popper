@@ -32,7 +32,7 @@ module DotPopper
       def champion? = champion_number == you
       def vacant? = champion_number.nil?
 
-      # The members, best first, the champion leading a tie.
+      # The members, highest top score first, the champion leading a tie.
       def standings = members.sort_by { [it.number == champion_number ? 0 : 1, -it.top_score, it.number] }
 
       # What a change in the group's title looks like from outside, so that

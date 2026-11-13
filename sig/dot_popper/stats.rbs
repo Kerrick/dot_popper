@@ -8,7 +8,7 @@ module DotPopper
 
     attr_reader games: Integer
 
-    attr_reader pops: Integer
+    attr_reader dots_popped: Integer
 
     attr_reader mistakes: Integer
 
@@ -26,11 +26,11 @@ module DotPopper
 
     attr_reader records: Hash[SizeClass, Records]
 
-    def self.new: (?games: Integer, ?pops: Integer, ?mistakes: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
+    def self.new: (?games: Integer, ?dots_popped: Integer, ?mistakes: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
                    ?recent: Array[Integer], ?recent_classes: Array[SizeClass?], ?streak: GoalStreak,
                    ?records: Hash[SizeClass, Records]) -> instance
 
-    def initialize: (?games: Integer, ?pops: Integer, ?mistakes: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
+    def initialize: (?games: Integer, ?dots_popped: Integer, ?mistakes: Integer, ?seconds: number, ?days: Integer, ?last_day: String?,
                      ?recent: Array[Integer], ?recent_classes: Array[SizeClass?], ?streak: GoalStreak,
                      ?records: Hash[SizeClass, Records]) -> void
 

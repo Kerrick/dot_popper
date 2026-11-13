@@ -34,7 +34,7 @@ class StatsKeeperTest < Minitest::Test
     assert @score_record.first?(MEDIUM)
     assert_equal 0, @score_record.of(MEDIUM)
     stats = @stats_book.stats
-    assert_equal [0, 0, [], 0, 0], [stats.games, stats.pops, stats.recent, stats.streak.longest, @stats_book.streak]
+    assert_equal [0, 0, [], 0, 0], [stats.games, stats.dots_popped, stats.recent, stats.streak.longest, @stats_book.streak]
     refute @stats_book.goal_done?
     refute_predicate stats.records_in(MEDIUM).most_dots_in_a_row, :positive?
 

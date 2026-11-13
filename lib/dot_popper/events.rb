@@ -25,10 +25,10 @@ module DotPopper
     # skipped (Cabinet#unpause).
     class GameStarted < Data.define(:game, :seed); end
 
-    # A game's clock reached zero; +best+ is the device's best score on
-    # screens of +size_class+ (SizeClass) after this game, +new_best+
+    # A game's clock reached zero; +score_record+ is the device's score record on
+    # screens of +size_class+ (SizeClass) after this game, +new_score_record+
     # whether this game set it, +first+ whether it was the first game on
-    # such screens, which sets a best but is never a new one, and +seed+
+    # such screens, which sets a record but is never a new one, and +seed+
     # the one its dots were drawn from.
     class GameEnded < Data.define(:game, :score_record, :new_score_record, :seed, :size_class, :first)
       def initialize(game:, score_record:, new_score_record:, seed:, size_class:, first: false) = super
@@ -36,7 +36,7 @@ module DotPopper
       def score = game.score
     end
 
-    # The title screen came up; +best+ is the score record on screens like
+    # Home came up; +score_record+ is the score record on screens like
     # this one.
     class HomeShown < Data.define(:score_record); end
   end

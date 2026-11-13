@@ -36,7 +36,7 @@ module DotPopper
     def press(x, y) = advance(state.press(self, x, y))
     def update(seconds) = advance(state.update(self, seconds))
 
-    # The game in play or just finished, or nil on the title.
+    # The game in play or just finished, or nil on Home.
     def game = state.game
 
     # The field a game started now would play on, and the class of
@@ -57,7 +57,7 @@ module DotPopper
     # Whether the game is paused before its clock first runs (Paused).
     def paused? = state.is_a?(Paused)
 
-    # The player chose how dots are sized. Only the title may change it,
+    # The player chose how dots are sized. Only Home may change it,
     # so a game in play keeps the radius it started with.
     def sizing=(sizing)
       @sizing = sizing if state.is_a?(Home)
@@ -184,7 +184,7 @@ module DotPopper
 
     # The game is over and its score is shown. Presses are ignored for a
     # moment so a last frantic tap does not skip it; after that, a press
-    # goes back to the title.
+    # goes back to Home.
     class GameOver < Data.define(:game, :new_score_record, :shown)
       def initialize(game:, new_score_record:, shown: 0.0) = super
 

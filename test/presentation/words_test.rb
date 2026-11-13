@@ -30,7 +30,7 @@ class WordsTest < Minitest::Test
   # The result to share names a new record or a tie, and otherwise only
   # the score.
   def test_the_shared_result_says_the_score_and_what_the_game_was
-    stats = DotPopper::GameStats.start.with(pops: 27, mistakes: 1, duration: 38.2)
+    stats = DotPopper::GameStats.start.with(dots_popped: 27, mistakes: 1, duration: 38.2)
 
     assert_equal "Dot Popper: 25 points, a new record!\n🟡 27 dots · ⚫ 1 mistake · ⏱ 38 seconds",
                  Style::WORDS.share_text(25, stats, score_record: 25, new_score_record: true)
@@ -42,7 +42,7 @@ class WordsTest < Minitest::Test
   end
 
   def test_the_shared_result_names_a_record_on_its_own_line
-    stats = DotPopper::GameStats.start.with(pops: 27, mistakes: 1, duration: 38.2)
+    stats = DotPopper::GameStats.start.with(dots_popped: 27, mistakes: 1, duration: 38.2)
     record = DotPopper::Stats::Record.new(kind: :most_dots_in_a_row, value: 18)
 
     assert_equal "Dot Popper: 25 points, a new record!\nNew record: 18 dots in a row without a mistake\n" \
@@ -53,7 +53,7 @@ class WordsTest < Minitest::Test
   # A score depends on how crowded the screen gets, so the shared result
   # says how big the screen was, counted in dots side by side.
   def test_the_shared_result_can_say_the_screen_it_was_played_on
-    stats = DotPopper::GameStats.start.with(pops: 27, mistakes: 1, duration: 38.2)
+    stats = DotPopper::GameStats.start.with(dots_popped: 27, mistakes: 1, duration: 38.2)
     screen = Style::WORDS.played_on(DotPopper::Field.new(1200, 800, 50))
 
     assert_equal "Played on a screen about 12 dots wide and 8 dots tall.", screen
@@ -104,7 +104,7 @@ class WordsTest < Minitest::Test
 
   # Game Over's facts are signs and numbers, with no word to translate.
   def test_the_game_in_signs_and_numbers
-    stats = DotPopper::GameStats.start.with(pops: 14, mistakes: 2, times_to_pop: [1.0, 3.14], duration: 33.6)
+    stats = DotPopper::GameStats.start.with(dots_popped: 14, mistakes: 2, times_to_pop: [1.0, 3.14], duration: 33.6)
 
     assert_equal [[:bright, "14"], [:popped, "2"], [:stopwatch, "34s"]], Words.facts(stats)
     assert_equal [[:bright, "0"], [:popped, "0"], [:stopwatch, "0s"]], Words.facts(DotPopper::GameStats.start)

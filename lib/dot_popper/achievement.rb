@@ -15,7 +15,7 @@ module DotPopper
              long_haul].freeze
 
     SHARP = 0.10 # a pop with less than this share of the dot showing is sharp (Visibility)
-    SHARP_TRIO = 3 # sharp pops in one game
+    SHARP_TRIO = 3 # dots popped sharply in one game
     SHARP_TRIO_BELOW = 0.25 # a pop in a trio only needs this little of the dot showing
     PATIENCE = 3.0 # seconds waited for a dot that spawned covered, tapping nothing, before popping it
     BLINK = 0.4 # a dot popped within this many seconds of the pop before it
@@ -24,7 +24,7 @@ module DotPopper
     SHAKE_OFF = 10 # dots in a row after a mistake
     BRINK = 2.0 # seconds left on the clock, to come back from...
     BACK = 10.0 # ...to this many
-    FAST_START = 15 # pops in a game's first FAST_START_SECONDS
+    FAST_START = 15 # dots popped in a game's first FAST_START_SECONDS
     FAST_START_SECONDS = 10.0
     BIG_SCORE = 75
     LONG_HAUL = 90.0 # seconds a game lasts

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # How big a game's dots are, which the player chooses on the title.
+  # How big a game's dots are, which the player chooses on Home.
   # With SIZED_TO_SCREEN, dots sized to the screen and the DEFAULT, each
   # game's radius is DotSize.fitted to its screen, so every screen has
   # about the same room in radii. That narrows the difference between

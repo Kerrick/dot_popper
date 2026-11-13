@@ -3,7 +3,7 @@
 module DotPopper
   # Which screens a game's records are compared with. With R fixed, a
   # field's size in square radii decides how crowded it gets, so a phone's
-  # game and a big monitor's are different contests: a best is kept for
+  # game and a big monitor's are different contests: a record is kept for
   # each SMALL, MEDIUM, or LARGE field (Rules::SMALL_FIELD_BELOW and
   # LARGE_FIELD_FROM), and one more for dots sized to the screen. +name+ is how a save file writes it.
   class SizeClass < Data.define(:name)

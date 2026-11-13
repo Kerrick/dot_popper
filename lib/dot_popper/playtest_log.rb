@@ -35,7 +35,7 @@ module DotPopper
 
     def row(ended, stats)
       goal = DailyGoal.for(@today.call)
-      [@clock.call.iso8601, ended.seed, ended.score, seconds(stats.duration), stats.pops, stats.mistakes, stats.softened,
+      [@clock.call.iso8601, ended.seed, ended.score, seconds(stats.duration), stats.dots_popped, stats.mistakes, stats.softened,
        seconds(stats.mean_time_to_pop), seconds(stats.longest_time_to_pop), goal, goal.met?(stats)].join(",")
     end
 

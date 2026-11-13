@@ -121,7 +121,7 @@ class BonusTest < Minitest::Test
     end
 
     assert_equal 1, stats.bonuses
-    assert_equal Rules::BONUS.dots_in_a_row + 1, stats.pops, "a bonus pop is a pop"
+    assert_equal Rules::BONUS.dots_in_a_row + 1, stats.dots_popped, "a bonus pop is a pop"
     assert_equal Rules::BONUS.dots_in_a_row + 1, stats.most_dots_in_a_row
   end
 end

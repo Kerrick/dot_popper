@@ -219,7 +219,7 @@ class ShowTest < Minitest::Test
     @cabinet.update(20)
 
     assert_equal 1, @show.stats_book.stats.games
-    assert_equal 1, @show.stats_book.stats.pops
+    assert_equal 1, @show.stats_book.stats.dots_popped
     assert_equal [1], @show.stats_book.stats.recent
   end
 
@@ -650,7 +650,7 @@ class ShowTest < Minitest::Test
     assert @show.game_over?
     assert_equal :game_over, @sounds.names.last, "a first game has no best to beat"
     assert @show.game_over.first
-    assert_equal 1, @show.game_over.stats.pops
+    assert_equal 1, @show.game_over.stats.dots_popped
     assert_in_delta 0.0, @show.game_over.prompt(@show.now)
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     @show.update(0.01)

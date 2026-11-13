@@ -24,13 +24,13 @@ module DotPopper
 
     LOWEST_SCORE = 0
 
-    # The one rule that rewards a run. +row+ dots in a row without a
-    # wrong tap earn a bonus dot: the next fresh dot the game spawns is a
+    # The one rule that rewards dots in a row. +row+ dots in a row without a
+    # mistake earn a bonus dot: the next fresh dot the game spawns is a
     # bonus dot, in place of the ordinary one, never an extra target.
     # Popping it pays +points+ and +seconds+ on top of a pop's own. A
-    # wrong tap starts the count over; a bonus dot already earned stays,
+    # mistake starts the count over; a bonus dot already earned stays,
     # and popping it starts the count over too. Nothing about it is
-    # random: the same pops always earn it. The numbers were chosen with
+    # random: popping the same dots always earns it. The numbers were chosen with
     # script/simulate.rb (see doc/design/rules.md).
     class Bonus < Data.define(:dots_in_a_row, :points, :seconds); end
 

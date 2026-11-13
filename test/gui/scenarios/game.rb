@@ -12,7 +12,7 @@ module DotPopperGui
     scenario :game
 
     R = DotPopper::Rules
-    POPS = 4
+    DOTS_POPPED = 4
 
     def play
       check(show.home?, "the game opens on the title")
@@ -21,10 +21,10 @@ module DotPopperGui
       shot = screenshot
       check_fresh_pixel(fresh_dot, shot)
       check_hud_drawn(shot)
-      POPS.times { pop_fresh }
-      expect(pops: POPS, mistakes: 0)
+      DOTS_POPPED.times { pop_fresh }
+      expect(dots_popped: DOTS_POPPED, mistakes: 0)
       tap_too_soon
-      expect(pops: POPS, mistakes: 1)
+      expect(dots_popped: DOTS_POPPED, mistakes: 1)
       run_out_the_clock
       game_over
       click_empty_space
@@ -37,18 +37,18 @@ module DotPopperGui
 
     private
 
-    # Checks the score and the clock are what the rules make of +pops+
+    # Checks the score and the clock are what the rules make of +dots_popped+
     # and +mistakes+: a point and a second for each pop, two of each lost to
     # each mistake, the score never below zero, and the clock down by the
     # game time that has passed.
-    def expect(pops:, mistakes:)
-      check_equal(expected_score(pops, mistakes), game.score, "the score after #{pops} pops and #{mistakes} mistakes")
-      granted = R::STARTING_SECONDS + (pops * R::POP_SECONDS) - (mistakes * R::PENALTY_SECONDS)
+    def expect(dots_popped:, mistakes:)
+      check_equal(expected_score(dots_popped, mistakes), game.score, "the score after #{dots_popped} dots popped and #{mistakes} mistakes")
+      granted = R::STARTING_SECONDS + (dots_popped * R::POP_SECONDS) - (mistakes * R::PENALTY_SECONDS)
       check_close(granted, game.countdown.remaining + game.elapsed, "the clock's time left and time played add up")
     end
 
-    def expected_score(pops, mistakes)
-      [(pops * R::POP_POINTS) - (mistakes * R::PENALTY_POINTS), R::LOWEST_SCORE].max
+    def expected_score(dots_popped, mistakes)
+      [(dots_popped * R::POP_POINTS) - (mistakes * R::PENALTY_POINTS), R::LOWEST_SCORE].max
     end
 
     # Waits for a popped dot to lie over the fresh one, and taps between
@@ -80,9 +80,9 @@ module DotPopperGui
 
     def game_over
       ended = events.grep(DotPopper::Events::GameEnded).last
-      score = expected_score(POPS, 1)
+      score = expected_score(DOTS_POPPED, 1)
       check_equal(score, ended.score, "Game Over's score")
-      check_close(R::STARTING_SECONDS + POPS - (R::PENALTY_SECONDS * 1), ended.game.elapsed,
+      check_close(R::STARTING_SECONDS + DOTS_POPPED - (R::PENALTY_SECONDS * 1), ended.game.elapsed,
                   "the game lasted the time it was given")
       lesson = show.game_over.lesson
       fresh = ended.game.dots.find(&:fresh?)

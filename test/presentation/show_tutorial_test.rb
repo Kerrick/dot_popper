@@ -58,7 +58,7 @@ class ShowTutorialTest < Minitest::Test
     update_for(0.1) until @show.game_over?
 
     assert_equal 1, @stats_book.stats.games
-    assert_operator @show.game_stats.pops, :>=, 2, "its two pops are the game's"
+    assert_operator @show.game_stats.dots_popped, :>=, 2, "its two pops are the game's"
     assert_equal @cabinet.game.score, @show.game_stats.score
     assert_equal @cabinet.game.score, @score_record.of(@cabinet.size_class)
   end
@@ -132,7 +132,7 @@ class ShowTutorialTest < Minitest::Test
     @show.back
 
     assert_equal [0, 9.0, 0], [@cabinet.game.score, @cabinet.game.countdown.remaining, @cabinet.game.dots_in_a_row]
-    assert_equal [1, 0], [@show.game_stats.pops, @show.game_stats.mistakes]
+    assert_equal [1, 0], [@show.game_stats.dots_popped, @show.game_stats.mistakes]
   end
 
   # While the tutorial hides what the rules already did, Skip shows it at
@@ -227,7 +227,7 @@ class ShowTutorialTest < Minitest::Test
   end
 
   def test_a_player_who_has_played_before_goes_straight_to_the_game
-    @stats_book.record(DotPopper::GameStats.start.with(pops: 3, duration: 13.0, score: 3), DotPopper::SizeClass::MEDIUM)
+    @stats_book.record(DotPopper::GameStats.start.with(dots_popped: 3, duration: 13.0, score: 3), DotPopper::SizeClass::MEDIUM)
     press_main
 
     refute @show.tutorial?

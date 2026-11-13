@@ -21,7 +21,7 @@ class GameStatsTest < Minitest::Test
     pop!
 
     stats = @recorder.stats
-    assert_equal 2, stats.pops
+    assert_equal 2, stats.dots_popped
     assert_equal [1.5, 0.5], stats.times_to_pop.map { it.round(6) }
     assert_in_delta 1.5, stats.longest_time_to_pop
     assert_in_delta 1.0, stats.mean_time_to_pop
@@ -82,8 +82,8 @@ class GameStatsTest < Minitest::Test
 
     stats = @recorder.stats
     assert_in_delta 0.5, stats.shortest_time_to_pop
-    assert_equal 2, stats.pops_within(10)
-    assert_equal 3, stats.pops_within(10.5)
+    assert_equal 2, stats.dots_popped_within(10)
+    assert_equal 3, stats.dots_popped_within(10.5)
     assert_nil GameStats.start.shortest_time_to_pop
   end
 
@@ -115,7 +115,7 @@ class GameStatsTest < Minitest::Test
     cabinet.unpause
 
     stats = recorder.stats
-    assert_equal [2, 0, 1, 1, 1], [stats.pops, stats.mistakes, stats.score, stats.dots_in_a_row, stats.most_dots_in_a_row]
+    assert_equal [2, 0, 1, 1, 1], [stats.dots_popped, stats.mistakes, stats.score, stats.dots_in_a_row, stats.most_dots_in_a_row]
     assert_empty stats.times_to_pop
     assert_nil stats.shortest_time_to_pop
 
@@ -123,7 +123,7 @@ class GameStatsTest < Minitest::Test
     fresh = cabinet.game.dots.to_a.last
     clear_around!(cabinet.game, fresh)
     cabinet.press(fresh.x, fresh.y)
-    assert_equal [3, 2, 2], [recorder.stats.pops, recorder.stats.score, recorder.stats.most_dots_in_a_row], "the row is the game's own"
+    assert_equal [3, 2, 2], [recorder.stats.dots_popped, recorder.stats.score, recorder.stats.most_dots_in_a_row], "the row is the game's own"
     assert_equal [1.5], recorder.stats.times_to_pop.map { it.round(6) }, "the first wait runs from the clock starting"
   end
 end

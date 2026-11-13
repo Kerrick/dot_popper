@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # The rules of Dot Popper: dots, scoring, the clock, and the flow from
-# title to game over. Nothing here draws, plays sounds, or reads input, so
+# Home to Game Over. Nothing here draws, plays sounds, or reads input, so
 # all of it runs, and is tested, without a window.
 require "date"
 

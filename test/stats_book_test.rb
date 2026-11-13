@@ -13,7 +13,7 @@ class StatsBookTest < Minitest::Test
   end
 
   def test_a_game_is_added_and_saved_on_todays_date
-    @stats_book.record(GameStats.start.with(score: 4, pops: 4, duration: 14.0), MEDIUM)
+    @stats_book.record(GameStats.start.with(score: 4, dots_popped: 4, duration: 14.0), MEDIUM)
 
     saved = StatsBook.new(@store).stats
     assert_equal 1, saved.games

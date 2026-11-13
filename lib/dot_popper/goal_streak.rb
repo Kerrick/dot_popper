@@ -3,8 +3,8 @@
 module DotPopper
   # The days in a row the daily goal was met: +current+ such days up to
   # +last_met+ (an ISO 8601 date, or nil before the first), and the
-  # +longest+ run there has ever been. A day missed only starts the count
-  # again; the longest run keeps.
+  # +longest+ streak there has ever been. A day missed only starts the count
+  # again; the longest streak keeps.
   class GoalStreak < Data.define(:current, :longest, :last_met)
     def initialize(current: 0, longest: 0, last_met: nil) = super
 

@@ -143,7 +143,7 @@ module DotPopper
       # A game just ended. The server cannot tell how a score was won, so
       # only a game that counts is sent: one played by a member, with dots
       # sized to the screen, and not the tutorial's (+sized_to_screen+ is
-      # false for the others). If it cannot be sent now, the best such game
+      # false for the others). If it cannot be sent now, the highest-scoring such game
       # waits and is sent with the next contact.
       def game_finished(score:, sized_to_screen:)
         @game_result = nil
