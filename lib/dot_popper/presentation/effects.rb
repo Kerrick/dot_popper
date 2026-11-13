@@ -4,7 +4,7 @@ module DotPopper
   module Presentation
     # Everything that plays out after a tap and then goes away: droplets,
     # rings, reveals, floating numbers, the shake, and the edge flash. It
-    # keeps its own clock, +now+; rings, floaters, the shake, and the flash are
+    # keeps its own clock, +now+; rings, floating texts, the shake, and the flash are
     # values that say how they look at a moment. Droplets are LÖVE's
     # particles, so a burst waits here as a Spray until the shell takes
     # it; +cleared+ counts the clears, so the shell knows to drop the
@@ -12,11 +12,15 @@ module DotPopper
     # graphics units, scaled by +radius+, the game's dots' (#scale_to).
     class Effects
       MOST_RINGS = 32
-      MOST_FLOATERS = 24
+      MOST_FLOATING_TEXTS = 24
+      MOST_FLOATERS = MOST_FLOATING_TEXTS # its old name, until no caller says it
 
       MOST_SPRAYS = 16
 
-      attr_reader :rings, :reveals, :floaters, :shake, :flash, :now, :cleared
+      attr_reader :rings, :reveals, :floating_texts, :shake, :flash, :now, :cleared
+
+      # Its old name, until no caller says it.
+      alias floaters floating_texts
 
       def initialize(radius:, random: Random.new, calm: false)
         @radius = radius
@@ -26,7 +30,7 @@ module DotPopper
         @sprays = []
         @rings = []
         @reveals = []
-        @floaters = []
+        @floating_texts = []
         @shake = Shake.none(radius, calm:)
         @flash = EdgeFlash::NONE
       end
@@ -59,7 +63,7 @@ module DotPopper
       end
 
       def float(text, x, y, color, style)
-        keep(@floaters, Floater.new(text:, x:, y:, color:, style:, scale: @radius, born: now), MOST_FLOATERS)
+        keep(@floating_texts, FloatingText.new(text:, x:, y:, color:, style:, scale: @radius, born: now), MOST_FLOATING_TEXTS)
       end
 
       # Measures every effect from now on in dots of +radius+, as a game
@@ -81,7 +85,7 @@ module DotPopper
         @now += seconds
         @rings.select! { it.alive?(now) }
         @reveals.select! { it.alive?(now) }
-        @floaters.select! { it.alive?(now) }
+        @floating_texts.select! { it.alive?(now) }
       end
 
       def clear
@@ -89,7 +93,7 @@ module DotPopper
         @sprays.clear
         @rings.clear
         @reveals.clear
-        @floaters.clear
+        @floating_texts.clear
       end
 
       private
