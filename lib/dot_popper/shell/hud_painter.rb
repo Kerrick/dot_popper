@@ -7,39 +7,37 @@ module DotPopper
     # a bigger font for a moment; glyphs are never stretched.
     class HudPainter < Data.define(:pen, :dots)
       G = ::Lota::Graphics
-      BUMP_STEP = 2 # font sizes a bump steps through, in graphics units
 
-      def draw(hud, layout)
-        number, label = fonts(layout)
-        readouts = [hud.score_readout, hud.time_readout]
-        pad = padding(number)
-        cell = cell(readouts, number, label)
-        pill = pill(bounds(hud, layout))
-        readouts.each_with_index do |readout, i|
-          readout(readout, pill.x + (cell * (i + 0.5)), pill.y + (pad * 0.55), number, label, layout)
+      # Draws +drawing+ (Presentation::HudDrawing) and answers the pill.
+      def draw(drawing)
+        plan = drawing.plan
+        number, label = fonts(plan)
+        pad = plan.pad
+        cell = plan.cell
+        pill = pill(bounds(drawing))
+        drawing.readouts.each_with_index do |readout, i|
+          readout(readout, drawing.sizes[i], pill.x + (cell * (i + 0.5)), pill.y + (pad * 0.55), number, label)
         end
         divider(pill.x + cell, pill.y + (pad * 0.7), pill.bottom - (pad * 0.7))
-        dots_in_a_row(hud.dots_in_a_row_readout, pill) if hud.dots_in_a_row_readout
+        dots_in_a_row(drawing.dots_in_a_row, pill) if drawing.dots_in_a_row
         pill
       end
 
       # Where the pill goes, on whole device pixels, without drawing it.
-      def bounds(hud, layout)
-        number, label = fonts(layout)
-        cell = cell([hud.score_readout, hud.time_readout], number, label)
-        height = Presentation::Hud.height(number.height, label.height)
+      def bounds(drawing)
+        plan = drawing.plan
         pixels = pen.pixels
-        Presentation::Rect.new(x: pixels.snap(layout.center_x - cell), y: pixels.snap(layout.top),
-                               width: pixels.snap(cell * 2), height: pixels.snap(height))
+        Presentation::Rect.new(x: pixels.snap(plan.center_x - plan.cell), y: pixels.snap(plan.top),
+                               width: pixels.snap(plan.cell * 2), height: pixels.snap(plan.height))
       end
 
       # Where the middles of the score's and the time's numbers are drawn,
       # as [x, y] by name, for the Tutorial to point at.
-      def spots(hud, layout)
-        number, label = fonts(layout)
-        cell = cell([hud.score_readout, hud.time_readout], number, label)
-        rect = bounds(hud, layout)
-        y = number_middle(rect.y + (padding(number) * 0.55), number, label)
+      def spots(drawing)
+        plan = drawing.plan
+        cell = plan.cell
+        rect = bounds(drawing)
+        y = number_middle(rect.y + (plan.pad * 0.55), plan)
         { score: [rect.x + (cell * 0.5), y], time: [rect.x + (cell * 1.5), y],
           dots_in_a_row: [rect.center_x, dots_in_a_row_top(rect)] }
       end
@@ -50,7 +48,7 @@ module DotPopper
         hud = pen.style::HUD
         size = layout.scaled(pen.style::TYPE.hud_number)
         largest = [hud.bump.from, hud.pulse.from].max
-        largest.step(0.85, -0.01) { pen.fonts.bold(Presentation::Pixels.font_size(size * it, step: BUMP_STEP)) }
+        largest.step(0.85, -0.01) { pen.fonts.bold(Presentation::Pixels.font_size(size * it, step: Presentation::Hud::BUMP_STEP)) }
       end
 
       private
@@ -75,22 +73,11 @@ module DotPopper
       # The middle of the row's row of dots, hung under the +pill+.
       def dots_in_a_row_top(pill) = pill.bottom + (pill.height * Presentation::Hud::PIP * 1.7)
 
-      def fonts(layout)
-        type = pen.style::TYPE
-        [pen.fonts.bold(layout.scaled(type.hud_number)), pen.fonts.semibold(layout.scaled(type.hud_label))]
-      end
-
-      def padding(number) = Presentation::Hud.padding(number.height)
+      def fonts(plan) = [pen.fonts.bold(plan.number_size), pen.fonts.semibold(plan.label_size)]
 
       # The middle of a readout's number, under its label, from the top of
       # the readout.
-      def number_middle(top, number, label) = top + label.height + (number.height * 0.42)
-
-      # Each readout's half of the pill: room for its widest text.
-      def cell(readouts, number, label)
-        readouts.map { [number.width(it.text), number.width("00"), label.width(it.label)].max }.max +
-          (padding(number) * 2.4)
-      end
+      def number_middle(top, plan) = top + plan.label_height + (plan.number_height * 0.42)
 
       def pill(rect)
         pixels = pen.pixels
@@ -113,11 +100,10 @@ module DotPopper
         G.line(at, pixels.snap(top), at, pixels.snap(bottom))
       end
 
-      def readout(readout, x, top, number, label, layout)
+      def readout(readout, size, x, top, number, label)
         palette = pen.palette
         pen.outlined(readout.label, label, x, top + (label.height / 2.0), palette.soft)
-        center = number_middle(top, number, label)
-        size = Presentation::Pixels.font_size(layout.scaled(pen.style::TYPE.hud_number) * readout.scale, step: BUMP_STEP)
+        center = top + label.height + (number.height * 0.42)
         color = palette.cream.mix(palette.urgent, readout.urgency)
         pen.outlined(readout.text, pen.fonts.bold(size), x, center, color)
       end

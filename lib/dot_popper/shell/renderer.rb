@@ -28,6 +28,7 @@ module DotPopper
         @dots = DotPainter.new(pen:, clock: -> { @show.now })
         @effects = EffectsPainter.new(pen:, particle_systems:)
         @hud = HudPainter.new(pen:, dots: @dots)
+        @huds = Presentation::HudDrawings.new(type: pen.style::TYPE, measure: show.measure)
         @home = HomePainter.new(pen:, dots: @dots)
         @stats = StatsPainter.new(pen:)
         @settings = SettingsPainter.new(pen:, dots: @dots)
@@ -127,12 +128,13 @@ module DotPopper
         @effects.words(@show.effects, layout)
         @game_over.draw(@show, layout) unless @show.playing?
         highlight = @show.clock_highlight
+        shown = !@show.game_over&.then { it.arrival(@show.now) >= 1.0 }
+        hud = hud_drawing(@show.hud, layout) if highlight || shown
         if highlight
-          pill = @hud.bounds(@show.hud, layout)
-          @tutorial.clock_highlight_under(highlight, @show.now, pill, @hud.spots(@show.hud, layout),
-                                           @show.cabinet.game.field.radius)
+          pill = @hud.bounds(hud)
+          @tutorial.clock_highlight_under(highlight, @show.now, pill, @hud.spots(hud), @show.cabinet.game.field.radius)
         end
-        hud(layout) unless @show.game_over&.then { it.arrival(@show.now) >= 1.0 }
+        hud(hud) if shown
         @tutorial.clock_highlight_over(highlight, @show.now, pill) if highlight
       end
 
@@ -154,10 +156,11 @@ module DotPopper
         @dots.draw(scene.dots, scene.animations, scene.now, scene.radius)
         @effects.scene(@show.effects, scene.dots)
         @effects.words(@show.effects, layout)
-        pill = @hud.bounds(scene.hud, layout)
-        spots = @hud.spots(scene.hud, layout)
+        hud = hud_drawing(scene.hud, layout)
+        pill = @hud.bounds(hud)
+        spots = @hud.spots(hud)
         @tutorial.under_hud(scene, pill, spots)
-        @hud.draw(scene.hud, layout)
+        @hud.draw(hud)
         @tutorial.over_hud(@show, scene, layout, pill, spots)
       end
 
@@ -197,13 +200,17 @@ module DotPopper
       # Over then shows the score itself. After a mistake
       # the HUD shakes, by whole device pixels; the dots never do, since a
       # tap is judged where a dot really is.
-      def hud(layout)
+      def hud(drawing)
         pixels = @pen.pixels
         G.push do
           G.translate(pixels.snap(@show.effects.shake_x), pixels.snap(@show.effects.shake_y))
-          @hud.draw(@show.hud, layout)
+          @hud.draw(drawing)
         end
       end
+
+      # What the HUD painter draws for +hud+ (Presentation::HudDrawing), laid
+      # out for +layout+ at the screen's density.
+      def hud_drawing(hud, layout) = @huds.call(hud, layout, @pen.pixels.scale)
 
       public
 
