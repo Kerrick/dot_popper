@@ -8,7 +8,7 @@ module DotPopper
     # with no name the game made up for itself. The words that say what to
     # do are ByInputs, said as a tap, a click, or a gamepad's button,
     # whichever +input+ (InputKind) the player last used (#for): +play+,
-    # +play_again+, +go_back+, +credits+, +share+, +how_to_play+ and the
+    # +play_again+, +go_back+, +share+, +how_to_play+ and the
     # share preview's +copy+ and +close+. +labels+ name the Stats
     # screen's sections
     # and rows, by what they count. +goals+ say each kind of DailyGoal as
@@ -18,7 +18,7 @@ module DotPopper
     class Words < Data.define(:game_name, :play, :play_again, :time_up, :new_score_record, :score_record, :score, :time,
                               :share, :share_heading, :copied, :copy, :close, :stats, :how_to_play, :go_back,
                               :no_games, :clear, :keep_holding, :hold_to_clear, :cleared, :undo, :labels, :goals, :goal_done, :goal_met,
-                              :screen_size, :credits, :credits_heading, :notice, :quit_again, :quit, :themes, :offer, :buttons,
+                              :screen_size, :credits_heading, :notice, :quit_again, :quit, :themes, :offer, :buttons,
                               :input)
       MINUS = "−" # a true minus sign, as wide as the plus
       # How near a game must come to the score record for Game Over to say by how
@@ -54,7 +54,6 @@ module DotPopper
       def clear = super.for(input)
       def hold_to_clear = super.for(input)
       def undo = super.for(input)
-      def credits = super.for(input)
       def share = super.for(input)
       def how_to_play = super.for(input)
       def copy = super.for(input)

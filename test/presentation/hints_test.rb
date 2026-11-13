@@ -46,7 +46,6 @@ class HintsTest < Minitest::Test
     [:clear] => [:stats, :y, ->(t) { t.show.clearing.held? }],
     [:hold_to_clear] => [:stats, :y, ->(t) { t.show.clearing.held? }],
     [:undo] => [:cleared, :y, ->(t) { t.show.played? }],
-    [:credits] => [:settings, :x, ->(t) { t.show.credits? }],
     %i[buttons settings] => [:home, :select, ->(t) { t.show.settings? }],
     %i[buttons skip] => [:tutorial, :b, ->(t) { !t.show.tutorial? }],
     %i[buttons home] => [:game_over, :b, ->(t) { t.show.on_home? }],

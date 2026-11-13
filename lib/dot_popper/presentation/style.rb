@@ -85,7 +85,6 @@ module DotPopper
           mouse: "Press and hold to clear your records, totals, chart, achievements, and streak.",
           gamepad: "Hold Y to clear your records, totals, chart, achievements, and streak."
         ),
-        credits: ByInput.new(touch: "Credits", mouse: "Credits", gamepad: "Credits (X)"),
         credits_heading: "Credits",
         # The Credits screen's own words. A later line of thanks goes in
         # as +thanks:+, which the screen leaves out while there is none.
