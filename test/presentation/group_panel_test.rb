@@ -254,13 +254,15 @@ class GroupPanelTest < Minitest::Test
   end
 
   def test_a_free_player_sees_the_offer_not_the_notice
-    with_notice
-    build(entitlement: DotPopper::Entitlement.free, group_notice: DotPopper::Presentation::GroupNotice.new(@notice_store))
-    panel.open
-    tap_control(:group_join_open)
+    %i[group_join_open group_create].each do |pressed|
+      with_notice
+      build(entitlement: DotPopper::Entitlement.free, group_notice: DotPopper::Presentation::GroupNotice.new(@notice_store))
+      panel.open
+      tap_control(pressed)
 
-    assert_predicate @show, :offer?
-    assert_nil panel.asking
+      assert_predicate @show, :offer?, pressed
+      assert_nil panel.asking, pressed
+    end
   end
 
   # The gesture doc/privacy.json describes: Delete my friend group data,

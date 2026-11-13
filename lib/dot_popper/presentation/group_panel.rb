@@ -405,7 +405,7 @@ module DotPopper
       end
 
       def open_join
-        return offer_pro if @joining.choose == :offer
+        return offer_pro if @joining.start == :offer
         return ask(:join) if @notice.due?
 
         @code = ""
@@ -444,15 +444,19 @@ module DotPopper
         @sounds.play(:tick, pitch: 0.8)
       end
 
+      # Join, on the code pad, which only a player who could start to
+      # join reaches; if Pro has gone since, the offer opens instead.
       def submit_join
-        return offer_pro if @joining.choose == :offer
         return @sounds.play(:tick, pitch: 0.8) unless code_complete? # Join looks disabled until then
 
         offer_pro if @joining.join(code) == :offer
       end
 
+      # Create: a Free player is offered Pro before the notice, as before
+      # anything else; the request answers the same once nothing comes
+      # first.
       def create
-        return offer_pro if @joining.choose == :offer
+        return offer_pro if @notice.due? && @joining.start == :offer
         return ask(:create) if @notice.due?
 
         offer_pro if @joining.create == :offer
