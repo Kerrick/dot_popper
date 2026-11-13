@@ -163,36 +163,31 @@ class RootTest < Minitest::Test
     end
   end
 
-  def test_a_store_build_trusts_setdefs_keys_though_the_environment_says_automated
-    assert_same C::PINNED, root(channel: B::WEBSITE, env: SETTINGS).trusted_pins
-    assert_same C::TEST_PINS, root(env: SETTINGS).trusted_pins
-  end
+  # The keys and receipts a build trusts are Monetization's to decide
+  # (Continuity.pins_for, Receipt.trusted); the root gives what it decides
+  # to the Entitlement, whatever the environment says.
+  def test_a_test_signed_license_key_unlocks_only_a_test_build
+    key = C::LicenseKey.issue(C::TestKeys::LICENSE).text
 
-  def test_a_test_signed_license_key_does_not_unlock_pro_in_a_store_build
-    key = C::LicenseKey.issue(C::TestKeys::LICENSE)
-
-    refute key.valid?(root(channel: B::WEBSITE, env: SETTINGS).trusted_pins)
-    assert key.valid?(root(env: SETTINGS).trusted_pins)
+    assert_equal :invalid, root(channel: B::WEBSITE, env: SETTINGS).entitlement.enter(key)
+    assert_equal :entered, root(env: SETTINGS).entitlement.enter(key)
   end
 
   def test_only_a_test_build_takes_the_fake_stores_receipts
     receipt = DotPopper::Receipt.issue
 
-    assert_same DotPopper::Receipt::STORES, root("iOS", channel: B::APP_STORE, env: SETTINGS).trusted_receipts
-    refute DotPopper::Entitlement.new(trust: root("iOS", channel: B::APP_STORE, env: SETTINGS).trusted_receipts).prove(receipt)
-    assert DotPopper::Entitlement.new(trust: root(env: SETTINGS).trusted_receipts).prove(receipt)
+    refute root("iOS", channel: B::APP_STORE, env: SETTINGS).entitlement.prove(receipt)
+    assert root(env: SETTINGS).entitlement.prove(receipt)
   end
 
   # Windows' word for a license is taken in the Microsoft Store's build
   # only, whose answers come down the helper's pipe and from no file.
   def test_only_the_microsoft_store_build_takes_windows_word
     word = "microsoft:#{DotPopper::Receipt::PRODUCT_ID}:9NBLGGH4R315/000N"
-    trust = ->(channel) { root("Windows", channel:, env: SETTINGS).trusted_receipts }
 
-    assert_same DotPopper::Receipt::MICROSOFT_STORE, trust.call(B::MICROSOFT_STORE)
-    assert DotPopper::Entitlement.new(trust: trust.call(B::MICROSOFT_STORE)).prove(word)
+    assert root("Windows", channel: B::MICROSOFT_STORE, env: SETTINGS).entitlement.prove(word)
     [nil, B::APP_STORE, B::MAC_APP_STORE, B::WEBSITE].each do |channel|
-      refute DotPopper::Entitlement.new(trust: trust.call(channel)).prove(word), channel.inspect
+      refute root("Windows", channel:, env: SETTINGS).entitlement.prove(word), channel.inspect
     end
   end
 
@@ -204,13 +199,18 @@ class RootTest < Minitest::Test
     end
   end
 
+  # Who is metered is Monetization's to decide (FreeGames.metered?); Home
+  # says how many games are left wherever they are counted.
   def test_the_free_game_limit_counts_in_a_store_build_even_for_a_bot_or_a_scenario
-    assert_predicate root(channel: B::WEBSITE, env: SETTINGS), :player?
-    refute_predicate root(env: SETTINGS), :player?
-    refute_predicate root(env: { "DOT_POPPER_AUTOPLAY" => "1" }), :player?
-    refute_predicate root(env: { "DOT_POPPER_SCENARIO" => "game" }), :player?
-    assert_predicate root(env: { "DOT_POPPER_SCENARIO" => "game", "DOT_POPPER_FREE_GAMES" => "2" }), :player?
-    assert_predicate root(env: {}), :player?
+    bot = { "DOT_POPPER_AUTOPLAY" => "1", "DOT_POPPER_SCENARIO" => "game" }
+    counted = ->(channel, env) { !root(channel:, env:).show.screens[:home].games_line.nil? }
+
+    assert counted.call(B::WEBSITE, bot)
+    refute counted.call(nil, bot)
+    refute counted.call(nil, { "DOT_POPPER_AUTOPLAY" => "1" })
+    refute counted.call(nil, { "DOT_POPPER_SCENARIO" => "game" })
+    assert counted.call(nil, { "DOT_POPPER_SCENARIO" => "game", "DOT_POPPER_FREE_GAMES" => "2" })
+    assert counted.call(nil, {})
   end
 
   def test_a_store_build_starts_with_the_usual_free_games
@@ -239,21 +239,20 @@ class RootTest < Minitest::Test
   end
 
   # A license file on disk is never read in an app store's build, so it
-  # grants nothing and the watch owes the server no request about it.
-  def test_an_app_stores_build_never_reads_a_license_key_and_asks_the_server_nothing
+  # grants nothing and the watch owes the server no request about it
+  # (Continuity::License.kept_in).
+  def test_an_app_stores_build_never_reads_a_license_key
     B::STORES.each do |channel|
-      store = root(channel:, env: SETTINGS).license_store
+      engine = FakeEngine.new("Linux")
+      root(channel:, engine:, env: SETTINGS)
 
-      assert_instance_of DotPopper::ScoreRecord::Memory, store, channel
-      assert_nil store.read, channel
-      license = C::License.new(store, pins: C::TEST_PINS)
-
-      refute_predicate license, :pro?, channel
-      assert_nil license.due("n" * 16), channel
+      refute engine.opened?("license.txt"), channel
     end
-    engine = FakeEngine.new("Linux")
     [B::WEBSITE, nil].each do |channel|
-      assert_same engine.file("license.txt"), root(channel:, engine:, env: SETTINGS).license_store, channel.inspect
+      engine = FakeEngine.new("Linux")
+      root(channel:, engine:, env: SETTINGS)
+
+      assert engine.opened?("license.txt"), channel.inspect
     end
   end
 

@@ -91,6 +91,9 @@ class FakeEngine
     @files[name] ||= Memory.new
   end
 
+  # Whether the save file +name+ was asked for.
+  def opened?(name) = @files.key?(name)
+
   def path(name) = "/save/#{name}"
   def say(line) = @said << line
   def dimensions = [@width, @height]

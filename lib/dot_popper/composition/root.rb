@@ -87,21 +87,6 @@ module DotPopper
       # or nil.
       def fake_tilt = Presentation::Reading.parse(settings["DOT_POPPER_FAKE_TILT"])
 
-      # Whether someone is playing, not a machine (FreeGames.player?).
-      def player? = FreeGames.player?(settings.env, channel: settings.channel)
-
-      # The keys and the receipts a build for +channel+ trusts, as
-      # Monetization decides them, by the channel alone
-      # (Continuity.pins_for, Receipt.trusted).
-      def self.trusted_pins(channel) = Continuity.pins_for(channel)
-      def self.trusted_receipts(channel) = Receipt.trusted(channel)
-
-      def trusted_pins = self.class.trusted_pins(settings.channel)
-      def trusted_receipts = self.class.trusted_receipts(settings.channel)
-
-      # Where the license key is kept (Continuity::License.kept_in).
-      def license_store = Continuity::License.kept_in(settings.channel) { file("license.txt") }
-
       # The games a free player has left, counted as +metered+ says
       # (FreeGames.metered?), starting as a developer may ask
       # (FreeGames.starting).
@@ -162,10 +147,13 @@ module DotPopper
         achievements = Achievements.new(file("achievements.txt"))
         keeper = StatsBackup.new(score_record: @cabinet.score_record, stats_book:, achievements:, folder: ->(name) { file(name) })
         @gone = Continuity::Gone.new(file("setdef.txt"))
-        pins = trusted_pins
-        license = Continuity::License.new(license_store, pins:)
+        # What this build trusts, and where it keeps a license key, as
+        # Monetization decides by the channel alone (ADR-0010).
+        channel = settings.channel
+        pins = Continuity.pins_for(channel)
+        license = Continuity::License.new(Continuity::License.kept_in(channel) { file("license.txt") }, pins:)
         @watch = watch_for(license, pins)
-        @entitlement = Entitlement.new(forced: Entitlement.forced?(settings.env, platform:), license:, trust: trusted_receipts)
+        @entitlement = Entitlement.new(forced: Entitlement.forced?(settings.env, platform:), license:, trust: Receipt.trusted(channel))
         clipboard = @engine.clipboard
         @server_choice = Presentation::ServerChoice.new(file("server.txt"), gone: @gone, clipboard:)
         theme_keeper = Presentation::ThemeKeeper.new(file("themes.txt"), themes: Style::THEMES)
@@ -187,7 +175,7 @@ module DotPopper
                     fake: FakeStore.new(file("fake_store.txt"), fails: FakeStore.failure(settings.env)),
                     website: ->(fake:) { website_store(clipboard, fake:) }
         )
-        games = free_games(entitlement, metered: FreeGames.metered?(settings.env, channel: settings.channel, offered: storefront.offered?))
+        games = free_games(entitlement, metered: FreeGames.metered?(settings.env, channel:, offered: storefront.offered?))
         @haptics = platform.buzzes? ? @engine.buzzer : Presentation::NoHaptics.new
         @sharing = Presentation::SheetSharing.for(platform, opener: @engine.opener)
         groups = groups_session
