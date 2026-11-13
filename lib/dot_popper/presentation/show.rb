@@ -809,11 +809,13 @@ module DotPopper
 
       # One of Home's dots, popped by a tap: its droplets, its ring,
       # and its bloop, but no score.
-      def toy_pop(dot, x, y)
+      def pop_home_dot(dot, x, y)
         effects.burst(x, y, style::POP_BURST, palette.confetti)
         effects.ring(dot.x, dot.y, style::SHOCKWAVE)
         sounds.play(:pop, pan: pan(x))
       end
+      # Its old name, until no caller says it.
+      alias toy_pop pop_home_dot
       private
 
       # The art of the theme +key+ (Theme), or nil for none.
