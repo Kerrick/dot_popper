@@ -45,7 +45,7 @@ A game starts with 10 seconds on the clock. Each dot you pop gives you a point a
 
 At the start of each game, Dot Popper works out the standard dot size from your screen, so that every screen is about as crowded as a 1200 × 800 window. That narrows the difference between screens, but not all of it: scores still differ between screen sizes and between ways of playing, such as a mouse, a finger or a controller.
 
-On a screen where the size makes a visible difference, the game offers a Dot size choice in Settings: Standard, or the other size, which is called Bigger on a phone and Smaller on a large monitor. That other size is the same on every screen: a large screen gives you more room, and a small window crowds sooner. Dot Popper keeps your records with it apart for small, medium, and large screens, so a game on one never competes with a game on another.
+On a screen where the size makes a visible difference, and on any screen once you have chosen the other size, the game offers a Dot size choice in Settings: Standard, or the other size, which is called Bigger on a phone and Smaller on a large monitor. That other size is the same on every screen: a large screen gives you more room, and a small window crowds sooner. Dot Popper keeps your records with it apart for small, medium, and large screens, so a game on one never competes with a game on another.
 
 ## Install
 
