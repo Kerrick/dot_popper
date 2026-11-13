@@ -572,6 +572,229 @@ class SessionTest < Minitest::Test
     assert_equal [9, 2], @session.title_changes(1).map(&:id)
   end
 
+  # What group.txt holds, byte for byte: the token, the unsent score,
+  # "1" if last known to be in a group, each group's newest change shown
+  # and how it looked then, and the achievement keys not yet sent.
+  def test_group_txt_is_written_line_by_line
+    joined(changes: [change(4)])
+
+    assert_equal "t\n\n1\n1|4|1~50\n", @store.read
+    played(score: 60)
+    answer(0)
+    @session.report_achievements(%w[steady blink])
+    pump
+    answer(0)
+    answer(0)
+
+    assert_equal "t\n60\n1\n1|4|1~50\nsteady,blink", @store.read
+    refreshed([group, group(id: "a-b", top: 7, champion: nil)], changes: [])
+
+    assert_equal "t\n60\n1\n1|4|1~50 a-b|0|~7\nsteady,blink", @store.read
+  end
+
+  def test_group_txt_once_forgotten_is_four_empty_lines
+    joined
+    @session.refresh
+    pump
+    answer(401)
+
+    assert_equal "\n\n\n\n", @store.read
+  end
+
+  def test_group_txt_reads_back_what_it_wrote
+    @store.write("t\n60\n1\n1|4|1~50 a-b|0|~7\nsteady")
+    @session = new_session
+    @session.report_achievements(["blink"])
+
+    assert_equal "t\n60\n1\n1|4|1~50 a-b|0|~7\nsteady,blink", @store.read
+    assert_predicate @session, :known?
+    assert_predicate @session, :member?
+  end
+
+  # A build from before achievements were sent (never released) wrote four
+  # lines; their file is read, and the next save adds the fifth.
+  def test_group_txt_of_four_lines_is_read
+    @store.write("t\n7\n1\n1|4|1~50")
+    @session = new_session
+    refreshed
+
+    assert_equal [{ score: 7 }], @worker.started.map { it.first.body }, "the unsent score goes, and no history: the title has not moved"
+    @session.report_achievements(["blink"])
+
+    assert_equal "t\n7\n1\n1|4|1~50\nblink", @store.read
+  end
+
+  def test_group_txt_reads_leniently
+    @store.write("t\nseven\nyes\nnot-an-entry 2|x\n")
+    @session = new_session
+    @session.report_achievements(["blink"])
+
+    refute_predicate @session, :member?
+    assert_equal "t\n\n\nnot-an-entry|0| 2|0|\nblink", @store.read
+  end
+
+  def test_an_empty_or_missing_group_txt_is_a_new_player
+    [nil, "", "\n\n\n\n"].each do |text|
+      @session = Groups::Session.new(store: DotPopper::ScoreRecord::Memory.new(text), worker: @worker)
+
+      refute_predicate @session, :known?
+      refute_predicate @session, :member?
+    end
+  end
+
+  def test_achievements_wait_until_the_player_is_in_a_group
+    @session.report_achievements(["steady"])
+    pump
+
+    assert_empty @worker.started
+    assert_equal "\n\n\n\nsteady", @store.read
+    joined
+    pump
+
+    assert_equal [[:post, "/achievements", { key: "steady" }]], @worker.started.map { [it.first.verb, it.first.path, it.first.body] }
+  end
+
+  def test_each_achievement_is_sent_once_and_forgotten_once_taken
+    joined
+    @session.report_achievements(%w[steady blink])
+    @session.report_achievements(%w[steady])
+    pump
+
+    assert_equal [{ key: "steady" }, { key: "blink" }], @worker.started.map { it.first.body }
+    answer(201, { "groups" => [group(top: 70)] })
+    answer(201, {})
+
+    assert_equal "t\n\n1\n1|0|1~50\n", @store.read
+    assert_equal 70, @session.group(1).top_score
+    assert_equal ["/groups/1/history"], paths
+  end
+
+  [400, 404, 422].each do |status|
+    define_method(:"test_an_achievement_answered_#{status}_is_dropped") do
+      joined
+      @session.report_achievements(["steady"])
+      pump
+      answer(status)
+
+      assert_equal "t\n\n1\n1|0|1~50\n", @store.read
+      assert_nil @session.error
+    end
+  end
+
+  [0, 429, 500].each do |status|
+    define_method(:"test_an_achievement_answered_#{status}_waits_for_the_next_contact") do
+      joined
+      @session.report_achievements(["steady"])
+      pump
+      answer(status, {}, retry_after: 1)
+
+      assert_equal "t\n\n1\n1|0|1~50\nsteady", @store.read
+      @time += 5
+      refreshed
+
+      assert_equal [{ key: "steady" }], @worker.started.map { it.first.body }
+    end
+  end
+
+  def test_nothing_owed_is_sent_while_waiting_out_a_429
+    joined
+    @session.refresh
+    pump
+    answer(429, {}, retry_after: 30)
+    played(score: 10)
+    @session.report_achievements(["steady"])
+    pump
+
+    assert_empty @worker.started
+  end
+
+  def test_a_refused_player_makes_no_group
+    @session.create
+    pump
+    answer(500)
+
+    assert_equal :failed, @session.error
+    assert_empty @worker.started
+    refute_predicate @session, :known?
+  end
+
+  def test_any_401_forgets_the_player_and_what_was_owed
+    joined
+    played(score: 30)
+    answer(401)
+
+    assert_nil @session.token
+    assert_equal "\n\n\n\n", @store.read
+  end
+
+  def test_a_group_opened_twice_reads_its_history_once_at_a_time
+    joined
+    @session.look_at(1)
+    @session.look_at(1)
+    pump
+
+    assert_equal ["/groups/1", "/groups/1/history", "/groups/1"], paths
+  end
+
+  def test_busy_while_anything_is_asked_and_unanswered
+    joined
+
+    refute_predicate @session, :busy?
+    @session.refresh
+
+    assert_predicate @session, :busy?
+    pump
+    answer(200, [group])
+
+    refute_predicate @session, :busy?
+  end
+
+  def test_the_list_says_offline_only_while_no_group_is_known_and_clears_its_error
+    @session.create
+    pump
+    answer(0)
+
+    assert_equal :offline, @session.error
+    @store.write("t\n\n\n\n")
+    @session = new_session
+    @session.create
+    pump
+    answer(500)
+    @session.refresh
+
+    assert_nil @session.error
+  end
+
+  def test_only_the_last_games_result_is_shown
+    joined
+    played(score: 30)
+    played(score: 25)
+
+    refute_predicate @session, :result_due?
+    answer(200, { "groups" => [{ "group" => group(top: 50), "won_title" => false }] })
+
+    assert_nil @session.game_result
+  end
+
+  def test_a_new_game_clears_the_last_result
+    joined
+    played(score: 60)
+    answer(200, { "groups" => [{ "group" => group(top: 60, champion: 2), "won_title" => true }] })
+    @session.game_started
+
+    assert_nil @session.game_result
+    refute_predicate @session, :result_due?
+  end
+
+  def test_a_second_change_before_the_first_is_told_replaces_it
+    joined
+    refreshed([group(top: 60)], changes: [change(5, champion: 1, previous: 2, score: 60)])
+    refreshed([group(top: 70)], changes: [change(6, champion: 1, previous: 2, score: 70), change(5)])
+
+    assert_equal 70, @session.next_announcement.score
+    assert_nil @session.next_announcement
+  end
+
   def test_no_server_means_no_groups
     refute_predicate Groups::Session.at(nil, store: @store), :available?
   end
