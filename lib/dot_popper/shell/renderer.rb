@@ -66,10 +66,7 @@ module DotPopper
         else game(width, height, layout)
         end
         screens(state, width, height, layout)
-        if @show.screen.announces?
-          banner(layout)
-          banner(layout) if state.is_a?(Screens::GameOver)
-        end
+        banner(layout) if @show.screen.announces?
         splash ? @splash.draw(splash) : @cursor.draw(cursor)
       end
 
