@@ -20,6 +20,12 @@ uniform float time;  // seconds, for the twinkle in his eyes
 
 const vec3 L = vec3(-0.4336, -0.6401, 0.6341);
 
+// How much lighter the popped dot is drawn than its colors below say:
+// light enough to see what it is at a phone's size, as the popped
+// Jack-o'-lantern and Ghost are, and still far from the bright dot's
+// lightest colors (test/gui/scenarios/popped_dots.rb).
+const float POPPED_LIFT = 1.5;
+
 vec4 over(vec4 top, vec4 bottom) { return top + bottom * (1.0 - top.a); }
 float cover_of(float sd, float aa) { return clamp(0.5 - sd / aa, 0.0, 1.0); }
 float hash1(vec2 q) { return fract(sin(dot(q, vec2(127.1, 311.7))) * 43758.5453); }
@@ -175,7 +181,7 @@ vec3 santa(vec2 p, float d, float aa, float bright_look, float bonus) {
   s = mix(s, night_trim, cover_of(trim, aa));
   s = mix(s, mix(vec3(0.08, 0.08, 0.13), vec3(0.18, 0.18, 0.27), pom_lit * 0.7 + lock_small * 0.3), cover_of(pom, aa));
 
-  vec3 col = mix(s, awake, bright_look);
+  vec3 col = mix(s * POPPED_LIFT, awake, bright_look);
   float w = mix(max(0.038, 1.5 * aa), max(0.022, 1.5 * aa), bright_look);
   float ring = clamp((d - (1.0 - w)) / aa + 0.5, 0.0, 1.0);
   vec3 rim_color = mix(mix(vec3(0.2, 0.19, 0.3), vec3(0.34, 0.33, 0.48), clamp(0.5 + 0.6 * dot(p, vec2(-0.53, -0.848)), 0.0, 1.0)),
