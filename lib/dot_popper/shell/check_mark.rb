@@ -26,8 +26,5 @@ module DotPopper
         G.line(x, y, x + (width * 0.38), y + (width * 0.38), x + width, y - (width * 0.42))
       end
     end
-
-    # Its old name, until no caller says it.
-    Check = CheckMark
   end
 end
