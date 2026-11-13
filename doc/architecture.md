@@ -50,7 +50,7 @@ The game's domain is in three areas, the maintainer's division: Gameplay and Met
 
 `FinishGame` is called from the `Show`'s `GameEnded` with the game's `GameStats` and what its `AchievementWatch` found, so the listeners that count a game as it plays stay where they were. The score record is judged by `Cabinet` as the game ends and carried by `GameEnded`, as before: a record is the same area as the game, so no rule of Pro is in it, and moving it would change what `GameEnded` carries for every listener with no rule gained.
 
-Changes that another area cares about are announced by the object that knows, rather than found by the `Show` comparing before and after: `Entitlement` announces `Entitlement::ProGranted` when Pro arrives ([store and Pro](design/store-and-pro.md#the-storefront-port)).
+Changes that another area cares about are announced by the object that knows, rather than found by the `Show` comparing before and after: `Entitlement` announces `Entitlement::ProGranted` when Pro arrives ([store and Pro](design/store-and-pro.md#the-storefront-port)), and `Continuity::Gone` announces `SetdefGone` or `SetdefHere` with each check it takes up, which `ThemeKeeper` and `ServerChoice` hear ([when setdef is gone](design/store-and-pro.md#when-setdef-is-gone)).
 
 `StartGame` spends in the same call that starts the game, before it starts, as the `Show` did. Spending as an echo of the game's own `GameStarted` was weighed and set aside: a game the tutorial plays over announces `GameStarted` only as play begins, after the tutorial, but is spent as it opens (ADR-0016), so the echo would move the spend, or need an event the rules make only for Monetization.
 
@@ -60,14 +60,14 @@ Lota calls `main.rb`'s callbacks; each goes straight to `Shell::App` (`lib/dot_p
 
 1. **Presses.** A mouse, touch or key callback goes through `Presentation::Chatter` (a failing mouse's double click), then `InputRouter`, which turns it into a `Tap` or a pointer move, then `Show#tap`, which decides whether it is for a button, the pile, the tutorial or the game, and passes a game's press to `Cabinet#press` on the frame it happened. A gamepad's A presses at its cursor through the same path.
 2. **Time.** `Lota.update` calls `App#tick`, which measures the time between the last two frames starting to draw (`FrameClock`), not Lota's own `dt`, and clamps it to `Rules::LONGEST_FRAME` (0.1 seconds).
-3. **Update.** `App#update` moves the gamepad cursor, the bot if it plays, `Cabinet`, the `Show` (its effects, animations, HUD, the screens' state, the store's answers and the friend-group session), the theme feed and the setdef watch, then the shell's tilt, drag, pile physics and particles.
+3. **Update.** `App#update` moves the gamepad cursor, the bot if it plays, `Cabinet`, the `Show` (its effects, animations, HUD, the screens' state, the store's answers through `UseCases::BuyPro`, and the friend-group session), the theme feed and the setdef watch, then the shell's tilt, drag, pile physics and particles.
 4. **Draw.** `Lota.draw` calls `Renderer#draw`, which draws the `Show`'s state through the `Pen` and the painters straight to the window at its own pixels: the night, the dots and their glow (or the pile after time's up), effects, the screen's words, buttons and HUD, the share preview, and the gamepad cursor.
 
 The GUI scenarios replace step 2 with a fixed step and push presses onto Lota's event queue, so everything else runs as a player's game does ([ADR-0005](adr/0005-gui-scenarios-play-the-real-game.md)).
 
 ## Composition
 
-`Shell::App#load` is the composition root. It reads the system (`Lota::System.os`), makes every `SaveFile`, the `Cabinet` with its `ScoreRecord`, `StatsBook`, `Achievements` and `StatsKeeper`, the `Entitlement` with the trusted pins and receipts, the `Storefront` for this build (`Storefront.for`), `FreeGames`, the friend-group `Session`, the `ThemeKeeper` and `ThemeFeed`, the `Pen`, the `Speaker`, and the `Show`, which takes all of them as arguments with harmless defaults. Tests build a `Show` from those defaults, with memory stores in place of files.
+`Shell::App#load` is the composition root. It reads the system (`Lota::System.os`), makes every `SaveFile`, the `Cabinet` with its `ScoreRecord`, `StatsBook`, `Achievements` and `StatsKeeper`, the `Entitlement` with the trusted pins and receipts, the `Storefront` for this build (`Storefront.for`), `FreeGames`, the friend-group `Session`, the `ThemeKeeper` and `ThemeFeed`, the `Pen`, the `Speaker`, and the `Show`, which takes all of them as arguments with harmless defaults and makes the use cases from them. It subscribes the `ServerChoice` and the `ThemeKeeper` to `Continuity::Gone`. Tests build a `Show` from those defaults, with memory stores in place of files.
 
 `conf.rb` runs before all of this, and before the window opens: it names the save folder (`t.identity`), sets the window, and chooses the renderers, with the rescue that starts the game again without Vulkan when Vulkan can't start it ([ADR-0007](adr/0007-renderers-per-platform-with-a-relaunch-without-vulkan.md)).
 

@@ -727,7 +727,7 @@ module DotPopper
 
       # Paste license key: what is on the clipboard, entered as a key, on a
       # copy that takes one (WebsiteStore). A key that is good is Pro at
-      # once, and #follow_store hears it as a purchase.
+      # once, which Entitlement announces as Pro arriving.
       def paste_key
         return unless offer? && @storefront.keys?
 

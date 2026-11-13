@@ -2,15 +2,29 @@
 
 module DotPopper
   module Continuity
+    # A check left setdef gone, as it found or as it could not tell
+    # otherwise: gone +since+ the day it was first found gone, as of
+    # +today+.
+    class SetdefGone < Data.define(:since, :today)
+      # Whole days it has been gone.
+      def days = (today - since).to_i
+    end
+
+    # setdef's server proved itself in a check.
+    class SetdefHere < Data.define; end
+
     # Whether setdef is gone, kept as the day it was first found gone
     # (setdef.txt): the one test every rule about it uses. setdef is gone
     # when its server gives no valid signed proof and at least one
     # connectivity check answers as expected. With no internet the test is
     # false, and nothing changes: a device found gone stays gone until
-    # setdef's server proves itself again.
+    # setdef's server proves itself again. Each answer it hears is
+    # announced to its listeners (#subscribe): SetdefHere when setdef
+    # answered, and SetdefGone whenever setdef is gone after it.
     class Gone
       def initialize(store)
         @store = store
+        @listeners = []
         @since = begin
           Date.iso8601(store.read.to_s.strip)
         rescue Date::Error
@@ -26,19 +40,31 @@ module DotPopper
       # Whole days setdef has been gone by +today+, or 0.
       def days(today) = since ? (today - since).to_i : 0
 
+      # Adds a listener: anything that answers +call(event)+.
+      def subscribe(listener)
+        @listeners << listener
+        self
+      end
+
       # The answer to a check (Watch): :here, :gone or :unknown.
       def heard(answer, today)
         case answer
         when :here
           @store.write("") if gone?
           @since = nil
+          return announce(SetdefHere.new)
         when :gone
-          return if gone?
-
-          @since = today
-          @store.write(today.iso8601)
+          unless gone?
+            @since = today
+            @store.write(today.iso8601)
+          end
         end
+        announce(SetdefGone.new(since:, today:)) if gone?
       end
+
+      private
+
+      def announce(event) = @listeners.each { it.call(event) }
     end
 
     # Asks, on a thread of its own and at low priority, so no frame waits:

@@ -119,6 +119,19 @@ class LicenseTest < Minitest::Test
     refute_predicate offline.gone, :gone?
   end
 
+  def test_each_answer_says_whether_setdef_is_gone_or_here
+    gone = C::Gone.new(Memory.new)
+    heard = []
+    gone.subscribe(->(event) { heard << event })
+    gone.heard(:unknown, TODAY)
+    gone.heard(:gone, TODAY + 1)
+    gone.heard(:unknown, TODAY + 4)
+    gone.heard(:here, TODAY + 5)
+
+    assert_equal [C::SetdefGone.new(since: TODAY + 1, today: TODAY + 1), C::SetdefGone.new(since: TODAY + 1, today: TODAY + 4), C::SetdefHere.new], heard
+    assert_equal 3, heard[1].days
+  end
+
   def test_gone_lasts_through_no_internet_and_ends_when_setdef_proves_itself
     store = Memory.new
     gone = C::Gone.new(store)

@@ -57,6 +57,12 @@ module DotPopper
         reset if !offered? && address
       end
 
+      # Hears Continuity::Gone: once setdef answers again, a chosen server
+      # is forgotten, and the game returns to setdef's.
+      def call(event)
+        forget if event.is_a?(Continuity::SetdefHere)
+      end
+
       # Whether +text+ is one HTTPS address with a host, and nothing else.
       def self.https?(text)
         require "uri"

@@ -252,13 +252,12 @@ class WebsiteStoreTest < Minitest::Test
     @gone.heard(:gone, Date.new(2027, 1, 1))
     @clipboard.copy("https://groups.example.org")
     @choice.paste
+    @gone.subscribe(@choice)
     @gone.heard(:here, Date.new(2027, 2, 1))
     own = "https://server.dot-popper.setdef.com"
 
     assert_equal own, @choice.server_url(own)
-    @choice.forget
-
-    assert_nil @choice.address
+    assert_nil @choice.address, "forgotten as setdef answers"
   end
 
   def test_a_server_address_must_be_one_https_address
@@ -276,5 +275,15 @@ class WebsiteStoreTest < Minitest::Test
     assert_equal %i[ghost gingerbread jack_o_lantern jingle_bell ornament peppermint pumpkin_pie santa snowman turkey], keeper.choices.reject(&:ordinary?).map(&:key).sort
     assert keeper.open_by_date(Date.new(2027, 10, 1), 400)
     assert_equal Style::THEMES.size, keeper.choices.size
+  end
+
+  def test_a_check_that_leaves_setdef_gone_long_enough_opens_themes_by_their_dates
+    keeper = ThemeKeeper.new(Memory.new, themes: Style::THEMES, entitlement: DotPopper::Entitlement.free)
+    @gone.subscribe(keeper)
+    @gone.heard(:gone, Date.new(2027, 1, 1))
+    assert_equal [:classic], keeper.choices.map(&:key)
+
+    @gone.heard(:unknown, Date.new(2027, 7, 1))
+    assert_includes keeper.choices.map(&:key), :ghost
   end
 end

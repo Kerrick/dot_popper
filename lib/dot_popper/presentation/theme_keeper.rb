@@ -52,6 +52,13 @@ module DotPopper
         true
       end
 
+      # Hears Continuity::Gone: each check that leaves setdef gone opens
+      # the themes whose dates have passed, once it has been gone long
+      # enough.
+      def call(event)
+        open_by_date(event.today, event.days) if event.is_a?(Continuity::SetdefGone)
+      end
+
       # Opens every theme whose date has passed by +today+, once setdef has
       # been gone +gone_days+ of at least GONE_DAYS, as the server would
       # have released it. Says whether any was new.

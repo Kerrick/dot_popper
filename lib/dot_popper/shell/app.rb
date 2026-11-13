@@ -74,8 +74,8 @@ module DotPopper
         @server_choice = Presentation::ServerChoice.new(SaveFile.new(name: "server.txt"), gone: @gone, clipboard:)
         theme_keeper = Presentation::ThemeKeeper.new(SaveFile.new(name: "themes.txt"), themes: Style::THEMES, entitlement:)
         use_fixture(theme_keeper)
-        @theme_keeper = theme_keeper
         theme_keeper.open_by_date(today.call, @gone.days(today.call))
+        @gone.subscribe(@server_choice).subscribe(theme_keeper)
         @theme_feed = theme_feed(theme_keeper)
         @theme_feed&.ask
         @pen = Pen.new(Style, shaders: !flag?("DOT_POPPER_NO_SHADERS"))
@@ -164,7 +164,7 @@ module DotPopper
         @cabinet.update(seconds)
         @show.update(seconds)
         @theme_feed&.update
-        follow_watch
+        @watch.update # what it found, Continuity::Gone announces
         use_theme
         point_the_mouse
         repeat_keys
@@ -502,14 +502,6 @@ module DotPopper
       def website_store(entitlement, clipboard, fake:)
         checkout = fake ? Presentation::FakeCheckout.new(clipboard:) : Presentation::BrowserCheckout.new(opener: UrlOpener.new)
         Presentation::WebsiteStore.new(checkout:, entitlement:, gone: @gone, clipboard:, entered: -> { @watch.start })
-      end
-
-      # Takes up a finished check of setdef: back again, a chosen server is
-      # forgotten; gone long enough, themes open by their dates.
-      def follow_watch
-        answer = @watch.update or return
-        @server_choice.forget if answer == :here
-        @theme_keeper.open_by_date(today.call, @gone.days(today.call))
       end
 
       # The feed that reads the server's unlocks, if the game has a server.

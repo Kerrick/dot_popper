@@ -114,7 +114,7 @@ class GamesTest < Minitest::Test
 
   # Every way into a game, as a table: each spends exactly one game as
   # the game begins, and with none left opens the offer instead. A new
-  # way in belongs here, and must go through Show#with_a_game.
+  # way in belongs here, and must go through UseCases::StartGame.
   WAYS_IN = {
     "Play" => ->(test, show) { test.press_main(show) },
     "Enter/Start" => ->(_test, show) { show.primary },
