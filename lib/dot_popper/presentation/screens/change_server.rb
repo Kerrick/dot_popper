@@ -20,12 +20,31 @@ module DotPopper
         def open = (show.open_page(:server) if show.settings? && offered?)
 
         # Where its words and buttons go (ServerScreen).
+        # Laid out again only when the window, the words or the choice
+        # changes.
         def plan
           choice = @choice
-          now = format(words.button(:server_now), choice&.address || words.button(:server_setdef))
-          status = choice&.status && words.button(:"server_#{choice.status}")
-          ServerScreen.new(layout:, measure:, lines: [[:crown, words.button(:server_warning)], [:copy, words.button(:server_how)]],
-                           now:, status:, resettable: !choice&.address.nil?).plan
+          words = self.words
+          layout = self.layout
+          (@plan ||= Memo.new).fetch([layout, words, choice&.address, choice&.status]) do
+            now = format(words.button(:server_now), choice&.address || words.button(:server_setdef))
+            status = choice&.status && words.button(:"server_#{choice.status}")
+            ServerScreen.new(layout:, measure:, lines: [[:crown, words.button(:server_warning)], [:copy, words.button(:server_how)]],
+                             now:, status:, resettable: !choice&.address.nil?).plan
+          end
+        end
+
+        # Everything its painter draws (ServerDrawing), made again only when
+        # the plan, the words or a button's light changes.
+        def drawing
+          plan = self.plan
+          hover = show.hover
+          words = self.words
+          (@drawing ||= Memo.new).fetch([plan, words, hover]) do
+            ServerDrawing.new(header: HeaderDrawing.for(words.button(:server_heading), layout:, measure:, words:, hover:), plan:,
+                              paste: words.button(:server_paste), reset: words.button(:server_reset),
+                              paste_hover: hover.level(:server_paste), reset_hover: hover.level(:server_reset))
+          end
         end
 
         # Paste server address: the clipboard's, as the server to use.

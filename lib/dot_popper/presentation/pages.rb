@@ -178,6 +178,41 @@ module DotPopper
       end
     end
 
+    # The last value a block made, made again only when what it was made
+    # from (+key+, compared with ==) differs: a screen keeps what its
+    # painter draws so, and a frame that changes nothing makes nothing.
+    class Memo
+      def initialize
+        @made = false
+        @key = nil
+        @value = nil
+      end
+
+      def fetch(key)
+        return @value if @made && @key == key
+
+        @made = true
+        @key = key
+        @value = yield
+      end
+    end
+
+    # A screen's heading and Back, as Shell::Header draws them: +text+ at
+    # +size+, centered on +x+ at +y+ (Layout#heading_place), and Back at
+    # +back+, saying +back_word+, as lit as the mouse over it has made it
+    # (+back_hover+, from 0 to 1).
+    class HeaderDrawing < Data.define(:text, :size, :x, :y, :back, :back_word, :back_hover)
+      def self.for(text, layout:, measure:, words:, hover:)
+        size, x = layout.heading_place(text, measure)
+        new(text:, size:, x:, y: layout.heading_y, back: layout.back_button, back_word: words.go_back, back_hover: hover.level(:back))
+      end
+    end
+
+    # Everything Shell::ServerPainter draws for Change Server: its +header+
+    # (HeaderDrawing), its +plan+ (ServerPlan), the words of Paste server
+    # address and Use setdef's server, and how lit each is.
+    class ServerDrawing < Data.define(:header, :plan, :paste, :reset, :paste_hover, :reset_hover); end
+
     # Change Server: its lines of text (a sign and words each), which
     # server is in use, Paste server address, Use setdef's server while a
     # replacement is chosen, and the line saying how the last paste went.
