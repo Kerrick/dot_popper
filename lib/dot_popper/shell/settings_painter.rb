@@ -53,12 +53,17 @@ module DotPopper
       end
     end
 
-    # A screen's heading and Back: top left beside the heading on a short window.
+    # A screen's heading and Back (Presentation::HeaderDrawing): top left
+    # beside the heading on a short window. Until every screen hands it a
+    # HeaderDrawing, it makes one from the Show, its +layout+ and +heading+.
     class Header < Data.define(:pen)
-      def draw(show, layout, heading)
-        size, x = show.heading_place(heading)
-        pen.text(heading, pen.fonts.bold(size), x, layout.heading_y, pen.palette.cream)
-        PillButton.new(pen:).draw(layout.back_button, show.words.go_back, hover: show.hover.level(:back),
+      def draw(header, layout = nil, heading = nil)
+        if layout
+          show = header
+          header = Presentation::HeaderDrawing.for(heading, layout:, measure: show.measure, words: show.words, hover: show.hover)
+        end
+        pen.text(header.text, pen.fonts.bold(header.size), header.x, header.y, pen.palette.cream)
+        PillButton.new(pen:).draw(header.back, header.back_word, hover: header.back_hover,
                                   icon: ->(x, y, size) { Glyphs.new(pen:).draw(:chevron_left, x, y, size * 0.38) })
       end
     end

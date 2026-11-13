@@ -6,15 +6,15 @@ module DotPopper
     # and what to do, each after its sign, which server is in use, Paste
     # server address, Use setdef's server once another is chosen, and how
     # the last paste went.
+    # It draws what the screen hands it (Presentation::ServerDrawing).
     class ServerPainter < Data.define(:pen)
-      def draw(show, layout)
-        plan = show.server_plan
-        words = show.words
-        Header.new(pen:).draw(show, layout, words.button(:server_heading))
+      def draw(drawing)
+        plan = drawing.plan
+        Header.new(pen:).draw(drawing.header)
         lines(plan)
         line(plan.now, plan, plan.now_y, pen.palette.soft)
-        PillButton.new(pen:).draw(plan.paste, words.button(:server_paste), hover: show.hover.level(:server_paste))
-        PillButton.new(pen:).draw(plan.reset, words.button(:server_reset), hover: show.hover.level(:server_reset)) if plan.reset
+        PillButton.new(pen:).draw(plan.paste, drawing.paste, hover: drawing.paste_hover)
+        PillButton.new(pen:).draw(plan.reset, drawing.reset, hover: drawing.reset_hover) if plan.reset
         line(plan.status, plan, plan.status_y, pen.palette.cream) if plan.status
       end
 

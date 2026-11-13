@@ -47,7 +47,7 @@ module DotPopper
         @tutorial = TutorialPainter.new(pen:)
         @at_rest = Presentation::DotAnimations.new(pen.style::MOTION)
         @pages = { Screens::Stats => @stats, Screens::Themes => @themes, Screens::Credits => @credits, Screens::Achievements => @achievements,
-                   Screens::Settings => @settings, Screens::Privacy => @privacy, Screens::ChangeServer => @server }.freeze
+                   Screens::Settings => @settings, Screens::Privacy => @privacy }.freeze
       end
 
       # The frame, with the setdef +splash+ over it while there is one:
@@ -88,6 +88,9 @@ module DotPopper
           veil(width, height, @pen.style::HOME.dim)
           @home.draw(@show, layout)
           @arrival.draw(@show, layout) if screen.is_a?(Screens::NewTheme)
+        when Screens::ChangeServer
+          veil(width, height, @pen.style::STATS.veil)
+          @server.draw(screen.drawing)
         when Screens::Page
           veil(width, height, @pen.style::STATS.veil)
           @pages.fetch(screen.class).draw(@show, layout)
