@@ -23,11 +23,11 @@ module DotPopper
         confetti: [hex["#ffbf52"], hex["#ff8fb8"], hex["#7df0c6"], hex["#b9a6ff"], hex["#fff4de"]].freeze
       )
 
-      # The themes the game can use, the ordinary one first (ThemeKeeper).
-      # The others exist for a player only once the server has said so;
-      # each is its own file in presentation/themes/. Every one keeps a
-      # bright dot light against a dark popped one, by shape and lightness,
-      # not hue alone.
+      # Every theme's art and sound, the ordinary one first, in the order
+      # of DotPopper::Theme::ALL, which says which a player has. Each is
+      # its own file in presentation/themes/. Every one keeps a bright dot
+      # light against a dark popped one, by shape and lightness, not hue
+      # alone.
       THEMES = [
         Theme.new(key: :classic, palette: PALETTE),
         Themes::Ghost.theme(PALETTE, hex),

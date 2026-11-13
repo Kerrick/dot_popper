@@ -65,4 +65,17 @@ class UseThemeTest < Minitest::Test
     theme.refresh
     assert_equal :ghost, theme.current
   end
+
+  # With the game's own Themes: a theme a Pro player chose is current
+  # after a restart, and a saved choice of a theme since removed gives way
+  # to the ordinary one.
+  def test_with_the_games_themes_a_choice_lasts_and_a_removed_one_gives_way
+    store = DotPopper::ScoreRecord::Memory.new("unlocked: ghost jingle_bell\ntold: ghost\nchosen: jingle_bell\n")
+    pro = DotPopper::Entitlement.new(forced: true)
+    theme = DotPopper::UseCases::UseTheme.new(themes: DotPopper::Themes.new(store), entitlement: pro)
+
+    assert_equal :classic, theme.current
+    assert_equal :used, theme.call(:ghost)
+    assert_equal :ghost, DotPopper::UseCases::UseTheme.new(themes: DotPopper::Themes.new(store), entitlement: pro).current
+  end
 end

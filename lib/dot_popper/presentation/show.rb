@@ -43,8 +43,7 @@ module DotPopper
       alias lead_in clock_highlight
 
       def initialize(cabinet:, layout:, sounds:, radius:, start_game:, finish_game:, buy_pro:, use_theme:, join_or_create_friend_group:,
-                     view_achievements:, stats_book:, achievements:, groups:, theme_keeper: nil,
-                     themes: theme_keeper&.rules || DotPopper::Themes.new(ScoreRecord::Memory.new), style: Style, random: Random.new, calm: false,
+                     view_achievements:, stats_book:, achievements:, themes:, groups:, style: Style, random: Random.new, calm: false,
                      tutor: Tutor.new(ScoreRecord::Memory.new, times: style::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
                      sizing_store: ScoreRecord::Memory.new, input: InputKind::MOUSE, measure: RoughMeasure.new,
                      keeper: StatsBackup.new(score_record: cabinet.score_record, stats_book:, achievements:), notices: Notices.none,
@@ -54,7 +53,6 @@ module DotPopper
         @window = window
         @links = links
         @tutorial_flag = tutorial_flag
-        @theme_keeper = theme_keeper
         @themes = themes
         # Methods, not blocks, so that what the panel keeps holds the Show
         # and the clipboard alone, and none of what the Show was given.
@@ -127,7 +125,7 @@ module DotPopper
       # The numbers of the game in play, or of the one just finished.
       def game_stats = @finish_game.stats
 
-      # The colors of the theme in use (ThemeKeeper), which only changes
+      # The colors of the theme in use (UseCases::UseTheme), which only changes
       # between games.
       def palette = in_use.palette
 

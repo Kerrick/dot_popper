@@ -302,26 +302,4 @@ class WebsiteStoreTest < Minitest::Test
     ["https://a.example", "https://a.example:8443/api"].each { assert ServerChoice.https?(it), it }
     ["http://a.example", "https://", "https://u:p@a.example", "https://a.example b", "ftp://a.example", "a.example"].each { refute ServerChoice.https?(it), it }
   end
-
-  def test_themes_open_by_their_dates_only_once_setdef_has_been_gone_180_days
-    keeper = ThemeKeeper.new(Memory.new, themes: Style::THEMES)
-    today = Date.new(2027, 6, 1)
-
-    refute keeper.open_by_date(today, 179)
-    assert_equal [:classic], keeper.choices.map(&:key)
-    assert keeper.open_by_date(today, 180)
-    assert_equal %i[ghost gingerbread jack_o_lantern ornament peppermint pumpkin_pie santa snowman turkey], keeper.choices.reject(&:ordinary?).map(&:key).sort
-    assert keeper.open_by_date(Date.new(2027, 10, 1), 400)
-    assert_equal Style::THEMES.size, keeper.choices.size
-  end
-
-  def test_a_check_that_leaves_setdef_gone_long_enough_opens_themes_by_their_dates
-    keeper = ThemeKeeper.new(Memory.new, themes: Style::THEMES)
-    @gone.subscribe(keeper)
-    @gone.heard(:gone, Date.new(2027, 1, 1))
-    assert_equal [:classic], keeper.choices.map(&:key)
-
-    @gone.heard(:unknown, Date.new(2027, 7, 1))
-    assert_includes keeper.choices.map(&:key), :ghost
-  end
 end

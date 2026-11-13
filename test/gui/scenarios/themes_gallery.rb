@@ -12,8 +12,8 @@ module DotPopperGui
     def play
       tag = ENV.fetch("DOT_POPPER_GALLERY", "themes")
       theme = ENV.fetch("DOT_POPPER_THEME", "classic")
-      theme_keeper = show.instance_variable_get(:@themes)
-      theme_keeper.told(theme_keeper.new_theme) until theme_keeper.new_theme.nil?
+      themes = show.instance_variable_get(:@themes)
+      themes.told(themes.new_theme) until themes.new_theme.nil?
       wait(1.0)
       keep_screenshot("#{tag}-#{theme}-home")
       start_game
@@ -24,7 +24,7 @@ module DotPopperGui
       wait(2.5)
       keep_screenshot("#{tag}-#{theme}-over")
       continue_to_home
-      theme_keeper.instance_variable_set(:@told, [])
+      themes.instance_variable_set(:@told, [])
       frames(4)
       keep_screenshot("#{tag}-#{theme}-arrival")
       show.back

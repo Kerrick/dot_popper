@@ -198,7 +198,7 @@ module DotPopper
         ::Lota::Keyboard.key_repeat = reading
       end
 
-      # Puts on the Show's look if it has changed (Presentation::ThemeKeeper),
+      # Puts on the Show's look if it has changed (UseCases::UseTheme),
       # which is only ever between games.
       def use_theme
         return unless @pen.use(@show.in_use)

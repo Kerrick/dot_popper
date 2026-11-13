@@ -31,7 +31,7 @@ module DotPopper
 
       attr_reader :palette
 
-      # Puts on +theme+ (Presentation::ThemeKeeper): the shaders are given
+      # Puts on +theme+ (Presentation::Theme): the shaders are given
       # its colors, its own dot shader is made ready, and the hover's lit
       # colors follow it. Says whether it was a change, so the caller can
       # redraw what it keeps, such as the clear color and the theme's
