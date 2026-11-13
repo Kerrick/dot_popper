@@ -810,7 +810,9 @@ module DotPopper
       end
 
       # A mouse wheel's notches, +notches+ of them, positive for up.
-      def wheel_scroll(notches) = scroll_by(-notches * style::CREDITS.wheel * scroll_line)
+      def wheel_scroll(notches)
+        scroll_by(-notches * style::CREDITS.wheel * scroll_line) if scrolling?
+      end
 
       # A gamepad's stick or d-pad (Stick) held for +seconds+.
       def stick_scroll(stick, seconds)

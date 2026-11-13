@@ -45,9 +45,6 @@ module DotPopper
           show.paste_key
           true
         end
-
-        # What is under it scrolls, unseen, where that is a list.
-        def scrolls? = %i[credits achievements stats settings].include?(show.page) || show.group_open?
       end
     end
   end

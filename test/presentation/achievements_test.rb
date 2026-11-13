@@ -104,6 +104,33 @@ class AchievementsOnStatsTest < Minitest::Test
     assert_nil StatsSheet.build(stats, score_record: 1, words: Style::WORDS).achievements
   end
 
+  # The offer of Pro, opened from an achievement's dialog, covers the grid
+  # whole: the wheel, the keys, the sticks and a drag scroll nothing
+  # hidden under it, and Back finds the grid where it was.
+  def test_nothing_scrolls_under_the_offer
+    show(pro: false)
+    @show.resize(layout(400, 500), field(400, 500))
+    @show.open_achievements
+    @show.achievement_cells
+    assert_operator @show.scroll.farthest, :>, 0.0, "the grid scrolls here"
+    @show.open_achievement(DotPopper::Achievement::IDS.first)
+    @show.achievement_pro
+    assert_predicate @show, :offer?
+
+    before = @show.scroll.offset
+    @show.wheel_scroll(-3)
+    refute @show.scroll_key(:end)
+    @show.stick_scroll(Stick.new(x: 0, y: 1.0), 1.0)
+    @show.tap(5, 300, by: 7)
+    @show.drag_scroll(7, 100)
+    @show.let_go(7)
+
+    refute_predicate @show, :scrolling?
+    assert_equal before, @show.scroll.offset
+    @show.back
+    assert_equal before, @show.scroll.offset
+  end
+
   def test_clearing_the_stats_clears_the_achievements_and_undo_brings_them_back
     show(pro: true)
     play_a_sharp_game
