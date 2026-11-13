@@ -30,13 +30,15 @@ abort "#{folder} holds #{games.size} copies of the game; expected one" unless ga
 game = File.realpath(games.first)
 puts "Checking the game in #{game}"
 
-# The test build's proofs, made by this repository's code (a test build's
-# keys, whatever channel the checkout is stamped with), each checked there
+# The test build's proofs, made by this repository's code: the test
+# build's own part, loaded by name, since a checkout stamped for a channel
+# (script/set_build_channel.rb) no longer loads it. Each is checked there
 # against the test build's own trust: the controls, so a Ruby that
 # verifies nothing cannot pass the checks below.
 MAKE_PROOFS = <<~RUBY
   require "json"
   require "dot_popper"
+  require "dot_popper/test_build/core"
   c = DotPopper::Continuity
   hex = ->(bytes) { bytes.unpack1("H*") }
   keys = [c::TestKeys::ROOT, c::TestKeys::LICENSE, c::TestKeys::ONLINE].map { c::LicenseKey.issue(it).text }

@@ -101,6 +101,20 @@ class CheckBuildTest < Minitest::Test
     assert_match(/^ok   no license key signed by a test key unlocks it$/, out)
   end
 
+  # CI runs the script in a checkout stamped for the channel, which no
+  # longer loads the test build's part by itself.
+  def test_the_check_runs_from_a_checkout_stamped_for_the_channel
+    stamp("website")
+    Dir.mktmpdir("dot_popper_checkout") do |checkout|
+      FileUtils.cp_r(%w[lib script].map { File.join(ROOT, it) }, checkout)
+      build = File.join(checkout, "lib/dot_popper/build.rb")
+      File.write(build, BuildChannel.stamp(File.read(build), "website"))
+      out, status = Open3.capture2e(RbConfig.ruby, File.join(checkout, "script", "check_build.rb"), "website", @version, @app)
+
+      assert status.success?, out
+    end
+  end
+
   def test_a_google_play_build_needs_the_play_key
     stamp("google-play")
     ok, out = check("google-play")
