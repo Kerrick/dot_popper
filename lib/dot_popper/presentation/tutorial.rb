@@ -17,12 +17,16 @@ module DotPopper
     # then the spotlight moves to the clock as time flows again, in
     # +handover+, and the game goes on from there. A beat that waits for
     # the dots to move never waits more than +longest+, should they
-    # bounce. +spotlight+, +ghost+ and +lead+ are the spotlight's look,
+    # bounce. +spotlight+, +guide+ and +lead+ are the spotlight's look,
     # the guide's, and the lead-in's. +notice+ is how long the row of dots
     # in a row rings when it changes.
     class TutorialStyle < Data.define(:drift, :stop, :resume, :slow, :start, :born, :peek, :clear, :flight,
-                                     :quick, :gap, :hold, :linger, :handover, :longest, :spotlight, :ghost, :lead,
-                                     :notice); end
+                                     :quick, :gap, :hold, :linger, :handover, :longest, :spotlight, :guide, :lead,
+                                     :notice)
+      # Its old keyword and reader, +ghost+, until no caller says them.
+      def initialize(guide: nil, ghost: nil, **rest) = super(guide: guide || ghost, **rest)
+      def ghost = guide
+    end
 
     # The row of dots in a row just changed, since +at+: a ring around it,
     # fading over +duration+, in +tone+, :gain as it counts a pop and
@@ -64,7 +68,7 @@ module DotPopper
     #
     # 1. A bright dot drifts, time eases to a stop, a spotlight finds it,
     #    and the guide, the player's own hand or pointer drawn faintly
-    #    (GhostHand), taps it, over and over, until the player does.
+    #    (GuideHand), taps it, over and over, until the player does.
     # 2. Its pop bursts from the dot while it still looks bright, and
     #    holds time still at that instant while "+1" flies out of it into
     #    the HUD's score, and a stopwatch into its time, each ticking up as
@@ -110,7 +114,7 @@ module DotPopper
       # and a tap on the field does nothing at all.
       TURNS = { aim: BRIGHT, aim_next: NEXT }.freeze
 
-      attr_reader :animations, :hud, :spotlight, :ghost, :beat, :now, :row_notice
+      attr_reader :animations, :hud, :spotlight, :guide, :beat, :now, :row_notice
 
       # The dots the tutorial's game begins with on +field+: its first
       # bright dot, placed from +center+, the screen's middle, as +style+
@@ -132,7 +136,7 @@ module DotPopper
         @style = style
         @palette = palette
         @script = style::TUTORIAL
-        @guide = calm ? @script.ghost.with(wag: style::CALM_WAG) : @script.ghost
+        @guide_style = calm ? @script.guide.with(wag: style::CALM_WAG) : @script.guide
         @waited_out = Float::INFINITY
         @now = now
         @since = now
@@ -141,7 +145,7 @@ module DotPopper
         @cues = []
         @flights = []
         @spotlight = Spotlight.off(@script.spotlight)
-        @ghost = GhostHand.none(@guide)
+        @guide = GuideHand.none(@guide_style)
         @animations = DotAnimations.new(style::MOTION)
         @shown = [] # the ids of the game's dots it has shown born
         @bright = [] # the ids of dots the rules popped that it still draws bright
@@ -181,8 +185,12 @@ module DotPopper
         game.dots.each { spawned(it) unless @shown.include?(it.id) }
       end
 
-      # Where the guide is, and how it presses (GhostPose), or nil.
-      def ghost_pose = ghost.pose(now, dots, radius)
+      # Where the guide is, and how it presses (GuidePose), or nil.
+      def guide_pose = guide.pose(now, dots, radius)
+
+      # Their old names, until no caller says them.
+      alias ghost guide
+      alias ghost_pose guide_pose
 
       # The numbers in the air (Flight).
       def flights = @flights.select { it.flying?(now) }
@@ -281,7 +289,7 @@ module DotPopper
       def hand_the_turn_to_the_player(id)
         stop_time
         @spotlight = spotlight.toward(Anchor.dot(id), now)
-        @ghost = ghost.tapping(Anchor.dot(id), now)
+        @guide = guide.tapping(Anchor.dot(id), now)
         dot = dot(id)
         @effects.ring(dot.x, dot.y, @style::SPAWN_RIPPLE, follow: id)
       end
@@ -304,7 +312,7 @@ module DotPopper
         burst(dot, x, y)
         enter(:points)
         stop_time
-        @ghost = ghost.gone(now)
+        @guide = guide.gone(now)
         ends = one_by_one(x, y, gains(popped), light: true)
         cue(ends + @script.hold) { resume }
       end
@@ -405,8 +413,8 @@ module DotPopper
         enter(:warn)
         stop_time
         @spotlight = spotlight.toward(Anchor.dot(BRIGHT), now)
-        @ghost = ghost.tapping(Anchor.dot(BRIGHT), now)
-        cue(now + (GhostHand::PRESSED * @guide.loop)) { guide_makes_a_mistake }
+        @guide = guide.tapping(Anchor.dot(BRIGHT), now)
+        cue(now + (GuideHand::PRESSED * @guide_style.loop)) { guide_makes_a_mistake }
       end
 
       # Where the guide waits: well above the popped dot, the hand's middle
@@ -415,7 +423,7 @@ module DotPopper
       # with half a radius more beside it, for its thumb as it wags.
       def waiting_place
         dot = dot(BRIGHT)
-        across, down = @guide.hover
+        across, down = @guide_style.hover
         side = radius / 2.0
         Anchor.at((dot.x + (across * radius)).clamp(field.min_x + side, field.max_x - side),
                   (dot.y + (down * radius)).clamp(field.min_y, field.max_y))
@@ -442,8 +450,8 @@ module DotPopper
         @sounds.play(:bonk, pan: pan(x))
         ends = one_by_one(x, y, losses(penalty))
         goes = ends - @script.flight
-        cue(goes) { @ghost = ghost.hovering(waiting_place, now) }
-        @waited_out = goes + @guide.glide + @guide.waiting
+        cue(goes) { @guide = guide.hovering(waiting_place, now) }
+        @waited_out = goes + @guide_style.glide + @guide_style.waiting
         cue(ends) { let_it_slide }
       end
 
@@ -463,7 +471,7 @@ module DotPopper
         burst(dot, x, y)
         enter(:runs)
         stop_time
-        @ghost = ghost.gone(now)
+        @guide = guide.gone(now)
         flying = now + @script.gap
         cue(flying) { @spotlight = spotlight.toward(nil, now) }
         gains(popped).each { |to, amount, color, _| fly_in(x, y, to, amount, color, flying, @script.quick) }

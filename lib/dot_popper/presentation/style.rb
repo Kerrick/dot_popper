@@ -233,7 +233,7 @@ module DotPopper
         clear: 2.3, flight: 0.42, quick: 0.45, gap: 0.12, hold: 0.3, linger: 0.35, handover: 0.35,
         longest: 5.0,
         spotlight: SpotlightStyle.new(dim: 0.62, move: 0.35, feather: 0.9, dot: 1.5),
-        ghost: GhostStyle.new(loop: 1.6, glide: 0.5, fade: 0.25, rest: [0.75, 0.9].freeze, hover: [-0.2, -4.6].freeze,
+        guide: GuideStyle.new(loop: 1.6, glide: 0.5, fade: 0.25, rest: [0.75, 0.9].freeze, hover: [-0.2, -4.6].freeze,
                              wag: WagStyle.new(cycles: 2, time: 0.8, angle: 0.21), settle: 0.25),
         lead: ClockHighlightStyle.new(dim: 0.6, halo: 1.3, fade: 0.4),
         notice: 0.9

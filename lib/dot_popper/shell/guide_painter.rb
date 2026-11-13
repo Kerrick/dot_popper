@@ -2,7 +2,7 @@
 
 module DotPopper
   module Shell
-    # The Tutorial's ghost hand, drawn as the player's own hand on the
+    # The Tutorial's guide hand, drawn as the player's own hand on the
     # input they last used (Presentation::InputKind): a pointing hand for
     # a touchscreen, a mouse pointer that clicks, or a gamepad's reticle
     # with its A button beside it. The pointer and the reticle are pale and
@@ -10,7 +10,7 @@ module DotPopper
     # emoji, touches the dot only with its fingertip, and is solid. Each
     # press rings where it lands. Its letter and its tip sit on whole
     # device pixels.
-    class GhostPainter < Data.define(:pen)
+    class GuidePainter < Data.define(:pen)
       G = ::Lota::Graphics
       ALPHA = 0.85 # how much of the pointer and the reticle show at most
       RING = 0.4 # seconds a press's ring lasts
@@ -151,5 +151,8 @@ module DotPopper
         G.circle(:line, x, y, from + ((to - from) * Presentation::Ease.out_cubic(since / RING)), 48)
       end
     end
+
+    # Its old name, until no caller says it.
+    GhostPainter = GuidePainter
   end
 end

@@ -2,14 +2,14 @@
 
 module DotPopper
   module Presentation
-    # How the Tutorial's ghost hand moves, in seconds and radii: one tap's
+    # How the Tutorial's guide hand moves, in seconds and radii: one tap's
     # loop, how long it glides from one dot to another and fades in or
     # out, where it rests between taps (+rest+, an [x, y] offset from the
     # dot, down and to the right), where it waits beside a dot it will not
     # tap again (+hover+, an [x, y] offset from that dot, which the
     # Tutorial keeps on screen), how it wags its finger there, "no"
     # (+wag+, a WagStyle), and how long it then holds still (+settle+).
-    class GhostStyle < Data.define(:loop, :glide, :fade, :rest, :hover, :wag, :settle)
+    class GuideStyle < Data.define(:loop, :glide, :fade, :rest, :hover, :wag, :settle)
       # How long it waits, from arriving, before it may move on.
       def waiting = wag.time + settle
     end
@@ -27,29 +27,29 @@ module DotPopper
       end
     end
 
-    # Where the ghost hand is at one moment, and how it is pressing:
+    # Where the guide hand is at one moment, and how it is pressing:
     # +press+ from 0 (lifted) to 1 (down), +since_press+ the seconds since
     # this tap went down, or nil between taps, +alpha+ how much of it
     # shows, and +turn+ how far it is turned as it wags, in radians. The
     # shell draws it as the player's own hand: a pointing hand, a mouse
     # pointer, or a gamepad's reticle and its A button.
-    class GhostPose < Data.define(:x, :y, :press, :since_press, :alpha, :turn)
+    class GuidePose < Data.define(:x, :y, :press, :since_press, :alpha, :turn)
       def initialize(x:, y:, press:, since_press:, alpha:, turn: 0.0) = super
 
       # This pose +share+ of the way to +other+.
       def toward(other, share)
-        GhostPose.new(x: x + ((other.x - x) * share), y: y + ((other.y - y) * share),
+        GuidePose.new(x: x + ((other.x - x) * share), y: y + ((other.y - y) * share),
                       press: press + ((other.press - press) * share), since_press: other.since_press,
                       alpha: alpha + ((other.alpha - alpha) * share), turn: turn + ((other.turn - turn) * share))
       end
     end
 
-    # The ghost hand that shows the player what to do, without a word: it
+    # The guide hand that shows the player what to do, without a word: it
     # taps a dot over and over (+mode+ :tap), waits beside one, holding
     # back (:hover), or fades away (:gone). +to+ is the dot's Anchor, and
     # since +at+ it glides there from where the hand was before
-    # (+before+, the GhostHand it was), or fades in if it was nowhere.
-    class GhostHand < Data.define(:mode, :to, :at, :before, :style)
+    # (+before+, the GuideHand it was), or fades in if it was nowhere.
+    class GuideHand < Data.define(:mode, :to, :at, :before, :style)
       # One tap's loop: it comes in from rest, goes down, holds, comes up,
       # and goes back to rest, as fractions of the loop.
       ARRIVES = 0.25
@@ -64,7 +64,7 @@ module DotPopper
       def hovering(anchor, now) = moving(:hover, anchor, now)
       def gone(now) = mode == :gone ? self : with(mode: :gone, to: nil, at: now, before: without_before)
 
-      # Its pose at +now+ (GhostPose) among +dots+ of +radius+, or nil
+      # Its pose at +now+ (GuidePose) among +dots+ of +radius+, or nil
       # where it shows nowhere.
       def pose(now, dots, radius)
         share = (now - at) / (mode == :gone ? style.fade : style.glide)
@@ -105,7 +105,7 @@ module DotPopper
                else 1.0
                end
         rest_x, rest_y = style.rest
-        GhostPose.new(x: x + (rest_x * radius * away), y: y + (rest_y * radius * away), press: press_at(t),
+        GuidePose.new(x: x + (rest_x * radius * away), y: y + (rest_y * radius * away), press: press_at(t),
                       since_press: t >= ARRIVES && t < RESTS ? (t - ARRIVES) * style.loop : nil, alpha: 1.0)
       end
 
@@ -120,8 +120,13 @@ module DotPopper
       # At the place it waits, never pressing: it wags its finger, "no",
       # then holds still.
       def hover_pose(x, y, elapsed, _radius)
-        GhostPose.new(x:, y:, press: 0.0, since_press: nil, alpha: 1.0, turn: style.wag.turn(elapsed))
+        GuidePose.new(x:, y:, press: 0.0, since_press: nil, alpha: 1.0, turn: style.wag.turn(elapsed))
       end
     end
+
+    # Their old names, until no caller says them.
+    GhostStyle = GuideStyle
+    GhostPose = GuidePose
+    GhostHand = GuideHand
   end
 end
