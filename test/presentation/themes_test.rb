@@ -20,6 +20,36 @@ class ThemesTest < Minitest::Test
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), score_record: DotPopper::ScoreRecord.new(DotPopper::ScoreRecord::Memory.new))
     @show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, entitlement:, theme_keeper: @theme_keeper,
                      stats_book: DotPopper::StatsBook.new(DotPopper::ScoreRecord::Memory.new, today: -> { @day }))
+    settle
+  end
+
+  # The card has been up long enough to take a press.
+  def settle
+    @show.update(0.0)
+    @show.update(Style::ARRIVAL_GRACE)
+  end
+
+  # A theme that arrives while Home is up, as one asked for again after a
+  # game does, takes no press for a moment: a tap meant for Play, or
+  # Enter, Space or Escape pressed as it appears, answers nothing
+  # (Lee, Wickens, Liu and Boyle: make the wrong action hard; Johnson: we
+  # miss what we did not expect).
+  def test_a_card_that_appears_under_a_finger_waits_a_moment_before_it_takes_a_press
+    show(pro: true)
+    @theme_keeper.receive(["ghost"])
+    @show.update(0.016)
+    use_key = @show.arrival_plan.use_button
+    @show.tap(use_key.center_x, use_key.center_y)
+    @show.primary
+
+    assert @show.back, "Escape is taken, and goes nowhere"
+    assert_equal :ghost, @show.arrival.key, "still to be told"
+    assert_predicate @show.in_use, :ordinary?
+    @show.update(Style::ARRIVAL_GRACE)
+    @show.tap(use_key.center_x, use_key.center_y)
+
+    assert_equal :ghost, @show.in_use.key
+    assert_nil @show.arrival
   end
 
   def test_nothing_of_a_theme_shows_until_the_server_unlocks_it

@@ -130,6 +130,9 @@ module DotPopper
       # else is asked of them; nil the rest of the time.
       def arrival = (@theme_keeper.arrival if on_home?)
       def arrival? = !arrival.nil?
+      # Whether the card for this theme has been up ARRIVAL_GRACE since it
+      # first appeared, so a press meant for Home as it came answers nothing.
+      def arrival_settled? = @arrival_seen&.first == arrival&.key && now - @arrival_seen.last >= style::ARRIVAL_GRACE
       def arrival_plan = ArrivalPlan.new(layout:, word: (arrival_use_word if arrival?), measure: @measure)
 
       # The switch's word: a Free player's is "Get Pro", since it opens the offer.
@@ -1215,6 +1218,7 @@ module DotPopper
         @now += seconds
         @groups.update(now, quiet: !playing?, showing: (home? && !stats?) || game_over?)
         @buy_pro.update(seconds)
+        @arrival_seen = [arrival.key, now] if arrival? && @arrival_seen&.first != arrival.key
         clear_stats if clearing.done?(now)
         @undo = nil unless @undo&.open?(now)
         @hover = hover.at(hovered).update(seconds, style::HOVER)
@@ -1337,6 +1341,8 @@ module DotPopper
       end
 
       def arrival_controls
+        return [] unless arrival_settled?
+
         plan = arrival_plan
         [button(:arrival_later, plan.later_button), button(:arrival_use, plan.use_button)]
       end
@@ -1345,6 +1351,8 @@ module DotPopper
       # switch uses it at once; a Free player's opens the offer, the same
       # as tapping Themes.
       def answer_arrival(use:)
+        return :waiting unless arrival_settled?
+
         theme = arrival
         return unless theme
 

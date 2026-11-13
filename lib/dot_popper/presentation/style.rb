@@ -205,6 +205,10 @@ module DotPopper
       # enough to answer the hand and soft enough not to flicker as the
       # pointer crosses an edge. Only the mouse hovers: a finger or a
       # gamepad never does.
+      # How long the card that tells of a new theme takes no press after
+      # it appears: one can come while Home is up, under a finger already
+      # on its way to Play (DotPopper::Refresh).
+      ARRIVAL_GRACE = 0.5
       HOVER = HoverStyle.new(seconds: 0.12, fill: hex["#2b2766", 0.9], edge: hex["#fff4de"])
 
       # The stacking rule, taught on the first two Game Overs after a wrong

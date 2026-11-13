@@ -101,7 +101,9 @@ module Hands
                        server_choice: @server_choice)
       storefront.connect
       join(session) if member
-      tick(0.5)
+      # A new theme's card takes presses once it has been up a moment
+      # (Style::ARRIVAL_GRACE); at launch that passes during the splash.
+      tick(arrival ? 0.5 + Style::ARRIVAL_GRACE : 0.5)
     end
 
     def phone? = platform.touch?
