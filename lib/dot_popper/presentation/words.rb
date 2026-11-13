@@ -9,7 +9,7 @@ module DotPopper
     # do are ByInputs, said as a tap, a click, or a gamepad's button,
     # whichever +input+ (InputKind) the player last used (#for): +play+,
     # +continue+, +go_back+, +credits+, +share+, +how_to_play+ and the
-    # share preview's +copy+ and +close+. +labels+ name the Records
+    # share preview's +copy+ and +close+. +labels+ name the Stats
     # screen's sections
     # and rows, by what they count. +goals+ say each kind of DailyGoal as
     # the end of "Today's goal: ...", with %d for its target. +screen_size+
@@ -21,7 +21,7 @@ module DotPopper
                               :screen_size, :credits, :credits_heading, :notice, :quit_again, :quit, :themes, :offer, :buttons,
                               :input)
       MINUS = "−" # a true minus sign, as wide as the plus
-      # How near a game must come to the best for Game Over to say by how
+      # How near a game must come to the score record for Game Over to say by how
       # much; further off, the gap is only a number to dwell on.
       CLOSE_TO_SCORE_RECORD = 3
 
@@ -114,9 +114,9 @@ module DotPopper
       # "Your record: 27".
       def score_record_line(score_record) = "#{self.score_record}: #{score_record}"
 
-      # How a finished game compares with the best it did not beat:
-      # "3 points short of your record of 27". With no best yet, nothing. A
-      # class's +first+ game only says the best it set, "Your record: 18":
+      # How a finished game compares with the score record it did not beat:
+      # "3 points short of your record of 27". With no record yet, nothing. A
+      # class's +first+ game only says the record it set, "Your record: 18":
       # with nothing before it, it neither tied nor beat anything.
       def short_of_score_record(score, score_record, first: false)
         return score_record_line(score_record) if first
@@ -136,7 +136,7 @@ module DotPopper
       # how long the game lasted, in seconds, as the game's own "+1s".
       def self.facts(stats) = [[:bright, stats.dots_popped.to_s], [:popped, stats.mistakes.to_s], [:stopwatch, "#{stats.duration.round}s"]]
 
-      # The one lifetime record a game set that Game Over names (the most
+      # The one record a game set that Game Over names (the most
       # impressive, Stats::Record::ORDER), as a sentence:
       # "New record: 18 dots in a row without a mistake".
       def record(record)
@@ -151,8 +151,8 @@ module DotPopper
       end
 
       # What "Share my score" offers to share, and its Copy puts on the
-      # clipboard: the score, whether it set or tied the player's +best+,
-      # the lifetime +record+ it set, if any, what the game was made of,
+      # clipboard: the score, whether it set or tied the player's +score_record+,
+      # the +record+ it set, if any, what the game was made of,
       # and the +screen+ it was played on (#played_on), since a score
       # depends on that.
       #

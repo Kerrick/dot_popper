@@ -422,7 +422,7 @@ class SessionTest < Minitest::Test
     refute @session.game_result.won.positive?
   end
 
-  def test_a_game_held_while_offline_waits_and_keeps_only_the_best
+  def test_a_game_held_while_offline_waits_and_keeps_only_the_highest
     joined
     played(score: 30)
     answer(0)

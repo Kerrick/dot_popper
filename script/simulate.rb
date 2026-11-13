@@ -170,16 +170,16 @@ module Simulation
     JOBS.map { |job| Ractor.new(job, games) { |each, count| Simulation.play(each, count) } }.map(&:value)
   end
 
-  def self.play_serially(games) = JOBS.map { play(it, games) }
+  def self.play_one_after_another(games) = JOBS.map { play(it, games) }
 
   def self.run(games)
-    serial, serial_seconds = timed { play_serially(games) }
+    sequential, sequential_seconds = timed { play_one_after_another(games) }
     parallel, parallel_seconds = timed { play_in_parallel(games) }
-    abort "The Ractors' games differ from the serial ones." unless parallel == serial
+    abort "The Ractors' games differ from those played one after another." unless parallel == sequential
 
     report(games, parallel)
     puts format("\n%d runs: %.2f s one after another, %.2f s in Ractors, %.1fx as fast (%d cores)",
-                JOBS.size, serial_seconds, parallel_seconds, serial_seconds / parallel_seconds, Etc.nprocessors)
+                JOBS.size, sequential_seconds, parallel_seconds, sequential_seconds / parallel_seconds, Etc.nprocessors)
   end
 
   def self.timed

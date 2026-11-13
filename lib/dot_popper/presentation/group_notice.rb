@@ -6,7 +6,7 @@ module DotPopper
     # Dot Popper keeps the player's scores online, with a link to the
     # privacy policy. It shows until the player goes on past it once, and
     # never again; the store, which answers +read+ and +write(text)+ as
-    # ScoreRecord's does, keeps that, apart from the records, so clearing
+    # ScoreRecord's does, keeps that, apart from Stats, so clearing
     # them leaves it.
     class GroupNotice
       READ = "read"

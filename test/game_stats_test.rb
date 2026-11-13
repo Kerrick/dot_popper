@@ -14,7 +14,7 @@ class GameStatsTest < Minitest::Test
     @cabinet.press(0, 0)
   end
 
-  def test_it_counts_pops_and_times_each_wait_from_the_dot_appearing
+  def test_it_counts_dots_popped_and_times_each_wait_from_the_dot_appearing
     @cabinet.update(1.5)
     pop!
     @cabinet.update(0.5)
@@ -27,7 +27,7 @@ class GameStatsTest < Minitest::Test
     assert_in_delta 1.0, stats.mean_time_to_pop
   end
 
-  def test_it_counts_slips_and_those_the_floor_softened
+  def test_it_counts_mistakes_and_those_the_floor_softened
     pop!
     popped = @cabinet.game.dots.first
     clear_around!(@cabinet.game, popped)
@@ -61,18 +61,18 @@ class GameStatsTest < Minitest::Test
     assert_in_delta 0.0, GameStats.start.mean_time_to_pop
   end
 
-  def test_it_keeps_the_score_and_the_most_dots_in_a_row_of_pops_without_a_wrong_tap
+  def test_it_keeps_the_score_and_the_most_dots_in_a_row_without_a_mistake
     3.times { pop! }
-    slip!
+    mistake!
     pop!
 
     stats = @recorder.stats
-    assert_equal 2, stats.score # 4 pops, and a wrong tap at 3 that cost 2
+    assert_equal 2, stats.score # 4 dots popped, and a mistake at 3 that cost 2
     assert_equal 1, stats.dots_in_a_row
     assert_equal 3, stats.most_dots_in_a_row
   end
 
-  def test_it_knows_the_shortest_time_to_pop_and_the_pops_in_the_first_seconds
+  def test_it_knows_the_shortest_time_to_pop_and_the_dots_popped_in_the_first_seconds
     @cabinet.update(2.0)
     pop!
     @cabinet.update(0.5)
@@ -89,7 +89,7 @@ class GameStatsTest < Minitest::Test
 
   private
 
-  def slip!
+  def mistake!
     popped = @cabinet.game.dots.find(&:popped?)
     clear_around!(@cabinet.game, popped)
     @cabinet.press(popped.x, popped.y)
@@ -100,9 +100,9 @@ class GameStatsTest < Minitest::Test
     clear_around!(@cabinet.game, bright)
     @cabinet.press(bright.x, bright.y)
   end
-  # The tutorial's game: two pops and the guide's mistake while it is
+  # The tutorial's game: two dots popped and the guide's mistake while it is
   # paused, heard by the rules but announced to no one, then play.
-  def test_a_game_the_tutorial_played_over_counts_its_pops_without_a_wait_and_no_mistake
+  def test_a_game_the_tutorial_played_over_counts_its_dots_popped_without_a_wait_and_no_mistake
     cabinet = Cabinet.new(field, random: Random.new(9))
     recorder = GameStats::Recorder.new
     cabinet.subscribe(recorder)

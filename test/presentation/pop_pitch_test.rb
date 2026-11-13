@@ -4,7 +4,7 @@ require_relative "presentation_helper"
 require_relative "spectrum"
 
 # Every theme's pop, at every pitch the climb reaches (Show#pop_pitch),
-# stays in the band the ordinary pop and the four Halloween pops stay in
+# stays in the band the ordinary pop and the four Halloween pop sounds stay in
 # (doc/design/look-and-sound.md, "How high a pop goes"). Measured on what
 # the synthesizer makes, the tone without its noise: noise has no pitch
 # and is the sound's texture, not where it sits.
@@ -33,7 +33,7 @@ class PopPitchTest < Minitest::Test
     assert_empty out
   end
 
-  def test_the_band_is_the_one_the_reference_pops_keep
+  def test_the_band_is_the_one_the_reference_pop_sounds_keep
     spectra.slice(*REFERENCES).each do |key, spectrum|
       [1.0, Style::SOUND.pop_highest].each do |pitch|
         assert_operator spectrum.fundamental(pitch), :>=, LOWEST_FUNDAMENTAL, key

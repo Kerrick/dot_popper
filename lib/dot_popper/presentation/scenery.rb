@@ -742,7 +742,7 @@ module DotPopper
       end
 
       # A nutcracker standing guard on the shelf at +x+, +y+: boots, legs,
-      # a coat with a belt, arms at his sides, his head and tall hat.
+      # a belted coat, arms at his sides, his head and tall hat.
       def nutcracker(out, color, x, y, s)
         out << Fan.new(color:, points: [[x - (8 * s), y], [x + (8 * s), y], [x + (8 * s), y - (4 * s)], [x - (8 * s), y - (4 * s)]])
         out << Fan.new(color:, points: [[x - (5.5 * s), y - (4 * s)], [x + (5.5 * s), y - (4 * s)], [x + (5 * s), y - (20 * s)], [x - (5 * s), y - (20 * s)]])
@@ -768,7 +768,7 @@ module DotPopper
         end
       end
 
-      # A candle in a holder, its flame a dim glow.
+      # A candle in a candlestick, its flame a dim glow.
       def candle(out, color, x, y, s, tall)
         h = 40 * s * tall
         out << Fan.new(color:, points: [[x - (9 * s), y], [x + (9 * s), y], [x + (5 * s), y - (6 * s)], [x - (5 * s), y - (6 * s)]])
@@ -1161,7 +1161,7 @@ module DotPopper
         out << segment([x - (2 * s), y], [x + (1 * s), y + (6 * s)], 2.0 * s, 0.8 * s, color)
       end
 
-      # An oak late in the fall: a broad crown of crooked limbs, a few
+      # An oak late in the fall: a broad canopy of crooked limbs, a few
       # leaves still on their tips.
       def oak(out, color, x, y, angle, length, width, depth, random, forks = nil)
         steps = 3

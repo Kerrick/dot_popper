@@ -28,7 +28,7 @@ module DotPopper
     # Play again, as big as Layout's primary_size for dots of +radius+, with
     # +play_note+ under its word, and Home beside Share my score. Short of
     # room, the type shrinks first; then the record goes, the facts, the
-    # chips, the best and "Time's up!". The score and the buttons always
+    # chips, the score record and "Time's up!". The score and the buttons always
     # stay. A short window held sideways puts the result on the left and
     # the rest on the right. Nothing goes lower than the middle of the
     # pile's bottom row, a radius above the window's floor, so the pile
@@ -71,7 +71,7 @@ module DotPopper
         Rect.new(x: safe.x + margin, y: top, width: safe.width - (2 * margin), height: bottom - top)
       end
 
-      # The best line's face and size, and what it says.
+      # The score record line's face and size, and what it says.
       def score_record_line(size)
         if game_over.new_score_record? then [:bold, size, words.new_score_record]
         else [:semibold, size, words.short_of_score_record(game_over.score, game_over.score_record, first: game_over.first)]
@@ -137,7 +137,7 @@ module DotPopper
         GameOverPlan.new(placed:, sizes: sizes.merge(chip: chip_size(placed.scale)), backing: backing(placed), home:, share:)
       end
 
-      # "Time's up!", the score, and the best line.
+      # "Time's up!", the score, and the score record line.
       def result(sizes, scale)
         [line(:heading, :bold, sizes[:heading], words.time_up, scale, drop: 6),
          line(:score, :bold, sizes[:score], game_over.score.to_s, scale, depth: 1.06),

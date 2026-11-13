@@ -26,11 +26,11 @@ module DotPopper
       @cleared = !folder.call(NOTE).read.to_s.empty?
     end
 
-    # Whether this device's records have ever been cleared, so the player
-    # has played before, though their records say nothing yet.
+    # Whether this device's Stats have ever been cleared, so the player
+    # has played before, though their Stats say nothing yet.
     def cleared? = @cleared
 
-    # Backs the records up, then clears them, and returns them as Cleared,
+    # Backs Stats up, then clears them, and returns them as Cleared,
     # for #restore.
     def clear
       texts = @kept.transform_values(&:saved)
@@ -40,11 +40,11 @@ module DotPopper
       Cleared.new(texts:)
     end
 
-    # Puts back the records as they were before +cleared+ (Cleared). The
+    # Puts back Stats as they were before +cleared+ (Cleared). The
     # backup stays.
     def restore(cleared) = cleared.texts.each { |name, text| @kept.fetch(name).restore(text) }
 
-    # The records' texts as they were, by the name of their store.
+    # The stores' texts as they were, by the name of each store.
     class Cleared < Data.define(:texts); end
 
     # Stores in memory by name, for tests and for a game with no save

@@ -4,7 +4,7 @@ module DotPopper
   module Presentation
     # One of a screen's buttons, where it is drawn (+frame+) and where a
     # press reaches it (+reach+, at least the frame): Home's :play,
-    # :mute, :how_to_play and :records, and on a desktop :fullscreen and
+    # :mute, :how_to_play and :stats, and on a desktop :fullscreen and
     # :quit, a segment of its dot-size choice (named by the DotSizing it
     # chooses), Game Over's :continue and :share, the share
     # preview's :copy and :close, and the Stats screen's :back, :clear

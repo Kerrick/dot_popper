@@ -2,7 +2,7 @@
 
 module DotPopper
   module Presentation
-    # Home, shown since +at+, with the device's +best+ score:
+    # Home, shown since +at+, with the device's +score_record+:
     # how far its entrance has come, and the prompt's breath.
     class Marquee < Data.define(:style, :score_record, :at)
       def intro(now) = style.intro.at(now - at)

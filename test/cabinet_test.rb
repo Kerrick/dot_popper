@@ -111,7 +111,7 @@ class CabinetTest < Minitest::Test
     assert_equal DotPopper::SizeClass::MEDIUM, @cabinet.size_class, "the next game counts with the new size"
   end
 
-  # A class's first game sets its best, but beat nothing, so it is not
+  # A class's first game sets its record, but beat nothing, so it is not
   # announced as a new one.
   def test_the_score_record_is_kept_and_only_a_beaten_one_is_a_new_score_record
     play_to_score(2)

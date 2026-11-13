@@ -197,7 +197,7 @@ module DotPopper
         end
       end
 
-      # A group's crest and name, a crown where the player holds its
+      # A group's crest and name, the crown glyph where the player holds its
       # title, its top score, and the arrow that opens it.
       def list_row(show, plan, row)
         rect = row.rect

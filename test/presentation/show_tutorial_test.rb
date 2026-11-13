@@ -43,7 +43,7 @@ class ShowTutorialTest < Minitest::Test
     assert_same paused, game, "the one game, not a copy"
     assert_equal scene.dots.map(&:id), game.dots.map(&:id), "the same dots, in the same order"
     assert_equal [true, true, false], game.dots.map(&:popped?)
-    assert_equal 1, game.score, "two pops, less what the guide's wrong tap cost"
+    assert_equal 1, game.score, "two dots popped, less what the guide's mistake cost"
     assert_operator game.countdown.remaining, :<=, 10.0
     assert_operator game.countdown.remaining, :>, 9.9, "the clock has only just started"
     assert_equal [1, 10], [@show.hud.score, @show.hud.seconds], "the HUD shows the same numbers"
@@ -58,7 +58,7 @@ class ShowTutorialTest < Minitest::Test
     update_for(0.1) until @show.game_over?
 
     assert_equal 1, @stats_book.stats.games
-    assert_operator @show.game_stats.dots_popped, :>=, 2, "its two pops are the game's"
+    assert_operator @show.game_stats.dots_popped, :>=, 2, "its two dots popped are the game's"
     assert_equal @cabinet.game.score, @show.game_stats.score
     assert_equal @cabinet.game.score, @score_record.of(@cabinet.size_class)
   end

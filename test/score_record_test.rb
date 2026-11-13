@@ -27,7 +27,7 @@ class ScoreRecordTest < Minitest::Test
     score_record = ScoreRecord.new(store)
 
     refute score_record.record(5, SMALL)
-    assert score_record.record(6, SMALL), "a phone's best is beaten on a phone, whatever a bigger screen's is"
+    assert score_record.record(6, SMALL), "a phone's record is beaten on a phone, whatever a bigger screen's is"
     refute score_record.record(29, MEDIUM)
     assert_equal "small=6\nmedium=30\n", store.read
   end
@@ -44,7 +44,7 @@ class ScoreRecordTest < Minitest::Test
     assert_equal "small=5\nlarge=1\n", store.read
   end
 
-  # A best saved before scores were kept by class is one bare number. It
+  # A record saved before scores were kept by class is one bare number. It
   # belongs to the class of the screen the game opens on, and is saved in
   # the new form at once, so it stays there.
   def test_an_older_score_record_goes_to_this_screens_class_and_is_saved_again

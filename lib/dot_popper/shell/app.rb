@@ -52,7 +52,7 @@ module DotPopper
         report_renderer
         report_screen
         random = seed ? Random.new(seed) : Random.new
-        # Records saved before they were kept by size of screen go to this
+        # A record saved before records were kept by size of screen goes to this
         # screen's class.
         legacy = SizeClass.of(screen)
         sizing_store = SaveFile.new(name: "dot_size.txt")

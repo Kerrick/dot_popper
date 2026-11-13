@@ -184,7 +184,7 @@ module DotPopper
       # at least, and a margin more on every side.
       def primary_reach(rect, radius) = rect.reach(2.0 * radius).inset(-margin)
 
-      # Undo, once the records are cleared, at the same corner.
+      # Undo, once Stats are cleared, at the same corner.
       def undo_button
         clear = clear_stats_button
         clear.with(x: clear.right - (clear.height * 2.4), width: clear.height * 2.4)

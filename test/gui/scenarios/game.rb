@@ -2,7 +2,7 @@
 
 module DotPopperGui
   # A whole game, as a first-time player has it: the title, a game
-  # with a few pops and one tap too soon on a popped dot over the bright
+  # with a few dots popped and one tap too soon on a popped dot over the bright
   # one, its reveal and Game Over's lesson, replayed on the pile with no
   # word, the clock running out, and
   # back to the title. The score and the clock are worked out alongside,
@@ -59,7 +59,7 @@ module DotPopperGui
       before = events.size
       click(x, y)
       penalty = events.drop(before).grep(DotPopper::Events::Penalized).first
-      check(penalty, "a click on a popped dot over the bright one is a slip")
+      check(penalty, "a click on a popped dot over the bright one is a mistake")
       check(!show.effects.reveals.empty?, "the bright dot hidden under it is outlined")
     end
 
@@ -113,7 +113,7 @@ module DotPopperGui
       log = File.readlines(saved("games.csv"), chomp: true)
       check_equal(2, log.size, "games.csv has its header and the game")
       check_equal(score.to_s, log.last.split(",")[2], "games.csv logs the score")
-      check(File.read(saved("score_record.txt")).include?("=#{score}"), "score_record.txt keeps the best")
+      check(File.read(saved("score_record.txt")).include?("=#{score}"), "score_record.txt keeps the record")
       check(File.file?(saved("stats.txt")), "stats.txt is saved")
       check(File.file?(saved("taught.txt")), "taught.txt counts the lesson")
     end

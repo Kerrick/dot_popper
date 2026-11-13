@@ -94,7 +94,7 @@ class ReceiptTest < Minitest::Test
     refute Receipt.valid?(apple(marked: false), trust)
   end
 
-  def test_a_transaction_signed_outside_its_certificates_lifetime_proves_nothing
+  def test_a_transaction_signed_outside_its_certificates_validity_proves_nothing
     refute Receipt.valid?(apple(signedDate: ((Time.now + (3 * 365 * 86_400)).to_f * 1000).to_i), trust)
   end
 

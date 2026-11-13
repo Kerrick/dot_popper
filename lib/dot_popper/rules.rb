@@ -60,7 +60,7 @@ module DotPopper
     # game's last moment does not dismiss the final score unseen.
     GAME_OVER_GRACE = 0.9
 
-    # Records are kept by the field's size in square radii (SizeClass),
+    # A record is kept for each size of field in square radii (SizeClass),
     # because a smaller field crowds sooner, and crowding is the game's
     # difficulty. With R fixed, the simulation (doc/design/rules.md) has an
     # upright iPhone at 134 R², an 11-inch iPad and the 24 × 16 R desktop

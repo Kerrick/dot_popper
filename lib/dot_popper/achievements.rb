@@ -34,7 +34,7 @@ module DotPopper
       fresh
     end
 
-    # The store's whole text, as saved, for #restore (RecordKeeper).
+    # The store's whole text, as saved, for #restore (StatsKeeper).
     def saved = @store.read
 
     # Forgets every achievement, as on a new device.

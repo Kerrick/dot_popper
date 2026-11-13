@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
 //
 // One dot as a glass ornament hanging on the tree, seen a little from
-// above, fitting the dot's circle, its crimped brass cap on its crown. A
+// above, fitting the dot's circle, its crimped brass cap on its top. A
 // bright dot is mirrored gold glass: it reflects the warm room, a window's
 // panes, the tree's lights and the dark line of the horizon, round a
 // frosted band. A popped dot is the same ornament broken and in shadow: a
@@ -180,7 +180,7 @@ vec3 ornament(vec2 p, float d, float aa, float bright_look, float bonus) {
 
   vec3 c = mix(dark, bright, bright_look);
 
-  // The cap: a crimped brass collar on the crown, its top seen from above.
+  // The cap: a crimped brass collar at the top, seen from above.
   float cx = p.x / 0.2;
   float top_y = -0.95, bot_y = -0.76;
   float ang = asin(clamp(cx, -1.0, 1.0));

@@ -2,19 +2,19 @@
 
 require_relative "presentation_helper"
 
-# The Looks screen and the news of a new theme, as a Show runs them.
+# The Themes screen and the notice of a new theme, as a Show runs them.
 class ThemesTest < Minitest::Test
   include PresentationTest
 
   def setup
     @sounds = FakeSounds.new
-    @paid = false
+    @pro = false
     @day = Date.new(2026, 11, 8)
   end
 
-  def show(paid:, unlocked: [])
-    @paid = true if paid
-    entitlement = DotPopper::Entitlement.new(forced: @paid)
+  def show(pro:, unlocked: [])
+    @pro = true if pro
+    entitlement = DotPopper::Entitlement.new(forced: @pro)
     @theme_keeper = ThemeKeeper.new(DotPopper::ScoreRecord::Memory.new, themes: Style::THEMES, entitlement:)
     @theme_keeper.receive(unlocked)
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), score_record: DotPopper::ScoreRecord.new(DotPopper::ScoreRecord::Memory.new))
@@ -23,13 +23,13 @@ class ThemesTest < Minitest::Test
   end
 
   def test_nothing_of_a_theme_shows_until_the_server_unlocks_it
-    show(paid: true)
+    show(pro: true)
     assert_nil @show.arrival
     refute_predicate @theme_keeper, :offered?
   end
 
   def test_a_new_theme_is_told_with_an_immediate_switch
-    show(paid: true, unlocked: ["ghost"])
+    show(pro: true, unlocked: ["ghost"])
     assert_equal :ghost, @show.arrival.key
     use_key = @show.arrival_plan.use_button
     @show.tap(use_key.center_x, use_key.center_y)
@@ -38,7 +38,7 @@ class ThemesTest < Minitest::Test
   end
 
   def test_not_now_keeps_the_ordinary_theme_and_does_not_ask_again
-    show(paid: true, unlocked: ["ghost"])
+    show(pro: true, unlocked: ["ghost"])
     later = @show.arrival_plan.later_button
     @show.tap(later.center_x, later.center_y)
     assert_predicate @show.in_use, :ordinary?
@@ -46,31 +46,31 @@ class ThemesTest < Minitest::Test
   end
 
   def test_escape_declines
-    show(paid: true, unlocked: ["ghost"])
+    show(pro: true, unlocked: ["ghost"])
     assert @show.back
     assert_nil @show.arrival
   end
 
   def test_the_card_comes_only_on_home
-    show(paid: true, unlocked: ["ghost"])
+    show(pro: true, unlocked: ["ghost"])
     @show.open_stats rescue nil
     assert_nil @show.arrival
   end
 
   def test_a_free_player_can_be_told_and_is_led_to_pro
-    show(paid: false, unlocked: ["ghost"])
+    show(pro: false, unlocked: ["ghost"])
     assert_equal :ghost, @show.arrival.key
     assert_equal "Get Pro", @show.arrival_use_word
     assert_predicate @show.in_use, :ordinary?
   end
 
   def test_the_switch_names_the_theme_it_uses
-    show(paid: true, unlocked: ["ghost"])
+    show(pro: true, unlocked: ["ghost"])
     assert_equal "Use Ghost", @show.arrival_use_word
   end
 
   def test_the_longest_switch_and_not_now_both_fit_on_a_phone_either_way_up
-    show(paid: true)
+    show(pro: true)
     [[400, 850], [850, 400]].each do |width, height|
       ["Get Pro", format(@show.words.themes.fetch(:use), "Jack-o'-lantern")].each do |word|
         plan = ArrivalPlan.new(layout: layout(width, height), word:)

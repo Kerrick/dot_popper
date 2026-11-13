@@ -10,12 +10,12 @@ class ThemeKeeperTest < Minitest::Test
 
   def setup
     @store = Memory.new
-    @paid = false
+    @pro = false
   end
 
-  def theme_keeper(paid: true)
-    @paid = true if paid
-    ThemeKeeper.new(@store, themes: THEMES, entitlement: DotPopper::Entitlement.new(forced: @paid))
+  def theme_keeper(pro: true)
+    @pro = true if pro
+    ThemeKeeper.new(@store, themes: THEMES, entitlement: DotPopper::Entitlement.new(forced: @pro))
   end
 
   def test_until_the_server_says_so_there_is_no_trace_of_a_theme
@@ -49,7 +49,7 @@ class ThemeKeeperTest < Minitest::Test
   end
 
   def test_a_free_player_may_know_of_a_theme_but_uses_the_ordinary_one
-    w = theme_keeper(paid: false)
+    w = theme_keeper(pro: false)
     w.receive(["ghost"])
     assert_predicate w, :offered?
     assert_predicate w, :locked?
@@ -78,8 +78,8 @@ class ThemeFeedTest < Minitest::Test
     @store = Memory.new
     @dated = Memory.new
     @worker = FakeWorker.new
-    @paid = false
-    @theme_keeper = ThemeKeeper.new(@store, themes: Style::THEMES, entitlement: DotPopper::Entitlement.new(forced: @paid))
+    @pro = false
+    @theme_keeper = ThemeKeeper.new(@store, themes: Style::THEMES, entitlement: DotPopper::Entitlement.new(forced: @pro))
     @feed = ThemeFeed.new(worker: @worker, theme_keeper: @theme_keeper, store: @dated, clock: -> { Time.utc(2026, 11, 8, 12) })
   end
 

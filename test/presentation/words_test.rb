@@ -155,9 +155,9 @@ class WordsTest < Minitest::Test
   def test_how_far_short_of_the_score_record
     assert_equal "Just 3 points short of your record of 27", Style::WORDS.short_of_score_record(24, 27)
     assert_equal "Just 1 point short of your record of 27", Style::WORDS.short_of_score_record(26, 27)
-    assert_equal "Your record is 28", Style::WORDS.short_of_score_record(5, 28), "a far-off best isn't a gap to dwell on"
+    assert_equal "Your record is 28", Style::WORDS.short_of_score_record(5, 28), "a far-off record isn't a gap to dwell on"
     assert_equal "You tied your record of 27", Style::WORDS.short_of_score_record(27, 27)
-    assert_equal "", Style::WORDS.short_of_score_record(0, 0), "no best to compare with yet"
+    assert_equal "", Style::WORDS.short_of_score_record(0, 0), "no record to compare with yet"
     assert_equal "Your record: 27", Style::WORDS.short_of_score_record(27, 27, first: true), "a first game tied nothing"
   end
 

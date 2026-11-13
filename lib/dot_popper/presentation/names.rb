@@ -11,7 +11,7 @@ module DotPopper
     # assets/wordlists-LICENSE.txt): adjectives/character.txt with
     # nouns/birds.txt, and adjectives/colors.txt with nouns/fruit.txt.
     # Left out on purpose: unkind words, words with a second meaning, and
-    # colors that also name skin; test/presentation/names_test.rb tries
+    # colors that also name skin tones; test/presentation/names_test.rb tries
     # every pair against a list of bad words.
     module Names
       ADJECTIVES = %w[adventurous affable amiable bold brave calm careful cheerful clever creative curious daring eager

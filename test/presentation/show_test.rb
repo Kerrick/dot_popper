@@ -648,7 +648,7 @@ class ShowTest < Minitest::Test
     @show.update(0.1)
 
     assert @show.game_over?
-    assert_equal :game_over, @sounds.names.last, "a first game has no best to beat"
+    assert_equal :game_over, @sounds.names.last, "a first game has no record to beat"
     assert @show.game_over.first
     assert_equal 1, @show.game_over.stats.dots_popped
     assert_in_delta 0.0, @show.game_over.prompt(@show.now)
@@ -657,7 +657,7 @@ class ShowTest < Minitest::Test
     @show.update(1.0)
     assert_equal 1, @show.game_over.shown_score(@show.now)
     assert_operator @show.game_over.prompt(@show.now), :>, 0.9
-    refute @show.game_over.celebrated, "only a beaten best is celebrated"
+    refute @show.game_over.celebrated, "only a beaten record is celebrated"
   end
 
   def test_the_last_seconds_tick

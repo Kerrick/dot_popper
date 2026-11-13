@@ -298,7 +298,7 @@ class TutorialTest < Minitest::Test
     assert_equal :runs, @tutorial.beat
     assert next_dot.bright?, "it bursts still bright"
     play_for(SCRIPT.gap + SCRIPT.quick + STEP)
-    assert_equal [1, 10], shown, "two pops, less what the guide's tap cost"
+    assert_equal [1, 10], shown, "two dots popped, less what the guide's tap cost"
     assert_equal [Tutorial::BRIGHT, Tutorial::NEXT], @tutorial.dots.map(&:id), "nothing is born while time stands"
     play_for(SCRIPT.linger)
     assert_equal :ending, @tutorial.beat

@@ -27,7 +27,7 @@ class TutorTest < Minitest::Test
 
 # Game Over points at the mistake only while its bright dot is still the
   # bright one, and its popped dot is there.
-  def test_a_slip_can_be_pointed_at_only_while_its_bright_dot_is_still_bright
+  def test_a_mistake_can_be_pointed_at_only_while_its_bright_dot_is_still_bright
     popped = DotPopper::Dot.new(id: 3, x: 100, y: 100, velocity_x: 0, velocity_y: 0, radius: R, popped: true)
     bright = DotPopper::Dot.new(id: 4, x: 130, y: 100, velocity_x: 0, velocity_y: 0, radius: R)
     dots = DotPopper::Stack.new(dots: [popped, bright])

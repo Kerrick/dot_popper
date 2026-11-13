@@ -42,7 +42,7 @@ class BonusTest < Minitest::Test
     assert_equal 0, game.dots_in_a_row, "the count starts over once a bonus dot is earned"
   end
 
-  def test_popping_the_bonus_dot_pays_its_points_and_seconds_on_top_of_a_pops_own
+  def test_popping_the_bonus_dot_pays_its_points_and_seconds_on_top_of_an_ordinary_dots
     game = calm_game
     Rules::BONUS.dots_in_a_row.times { pop_next(game) }
     score = game.score

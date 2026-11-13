@@ -10,12 +10,12 @@ module DotPopper
     # itself.
     #
     # +sounds+ answers play(name, pitch:, pan:), muted?, and toggle_mute;
-    # +haptics+ answers buzz(seconds). +lifetime+ (StatsBook) adds up every
+    # +haptics+ answers buzz(seconds). +stats_book+ (StatsBook) adds up every
     # game the device has played. +sizing_store+ keeps the player's
     # DotSizing, chosen on Home. +radius+ is the usual dot's, which
     # sizes the buttons' reach; a game's effects follow its own dots.
     # +input+ (InputKind) is what the player last pressed with, and the
-    # words follow it. +keeper+ (RecordKeeper) clears the records, from
+    # words follow it. +keeper+ (StatsKeeper) clears Stats, from
     # the Stats screen, and puts them back. +measure+ sizes the screens' words (RoughMeasure's
     # methods). +sharing+ (InGameSharing's methods) offers Game
     # Over's result to share, in a preview or a phone's own sheet, and
@@ -243,12 +243,12 @@ module DotPopper
 
       # Whether Home offers "Your stats" and the choice of dot size:
       # only once a game has finished, so a first-time player's title says
-      # only how to play. A player who cleared their records has played, so
-      # it still offers them, though it shows no best or goal until their
+      # only how to play. A player who cleared their Stats has played, so
+      # it still offers them, though it shows no score record or goal until their
       # next game (#played?).
       def stats_offered? = played? || @keeper.cleared?
 
-      # Whether a game has finished since the records were last cleared:
+      # Whether a game has finished since Stats were last cleared:
       # the title shows today's goal only then.
       def played? = stats_book.stats.games.positive?
 
@@ -261,7 +261,7 @@ module DotPopper
       end
 
       # Whether the Stats screen offers "Clear my stats…": while it has
-      # records to clear, and no Undo is offered.
+      # Stats to clear, and no Undo is offered.
       def clear_offered? = stats? && !stats.empty && !undo_offer
 
       # Undo, while it is offered on the Stats screen (UndoOffer), or nil.
@@ -570,7 +570,7 @@ module DotPopper
       end
 
       # Sizes dots as +sizing+ (DotSizing) says, on Home while it
-      # offers the choice, and remembers it. Home's dots and best
+      # offers the choice, and remembers it. Home's dots and score record
       # change with it, so the choice shows at once.
       def choose_sizing(sizing)
         return unless settings? && sizing_offered?
@@ -896,7 +896,7 @@ module DotPopper
         @groups.cancel_hold
       end
 
-      # Where a press reaches "Clear my stats…" and Undo on the Records
+      # Where a press reaches "Clear my stats…" and Undo on the Stats
       # screen, as Home's buttons do.
       def clear_reach = reach_of(:clear)
       def undo_reach = reach_of(:undo)
@@ -1361,7 +1361,7 @@ module DotPopper
         [button(:arrival_later, plan.later_button), button(:arrival_use, plan.use_button)]
       end
 
-      # The player has answered the news of a new theme. A Pro player's
+      # The player has answered the notice of a new theme. A Pro player's
       # switch uses it at once; a Free player's opens the offer, the same
       # as tapping Themes.
       def answer_arrival(use:)
@@ -1505,7 +1505,7 @@ module DotPopper
         sounds.play(:tick, pitch: 0.7)
       end
 
-      # "Clear my stats…" was held long enough: the records go, and Undo
+      # "Clear my stats…" was held long enough: Stats go, and Undo
       # is offered.
       def clear_stats
         @clearing = clearing.cancel
@@ -1522,8 +1522,8 @@ module DotPopper
         sounds.play(:tick, pitch: 1.2)
       end
 
-      # The records changed under the Stats screen: it, and Home's
-      # best, show them as they are now.
+      # Stats changed under the Stats screen: it, and Home's
+      # score record, show them as they are now.
       def stats_changed
         @stats = stats_sheet if stats?
         @marquee = marquee.with(score_record: cabinet.score_record.of(cabinet.size_class))

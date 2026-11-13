@@ -27,20 +27,20 @@ vec2 hash2(vec2 q) { return vec2(hash1(q), hash1(q + 19.19)); }
 float ellipse(vec2 p, vec2 c, vec2 r) { return (length((p - c) / r) - 1.0) * min(r.x, r.y); }
 
 // Curly locks: soft lumps, each lit from the top left, darker in the
-// creases between them. Returns light from 0 (crease) to 1 (crown).
+// creases between them. Returns light from 0 (crease) to 1 (ridge).
 float curls(vec2 q) {
   vec2 i = floor(q), f = fract(q);
-  float best = 9.0;
+  float nearest = 9.0;
   vec2 to = vec2(0.0);
   for (int y = -1; y <= 1; y++) {
     for (int x = -1; x <= 1; x++) {
       vec2 g = vec2(float(x), float(y));
       vec2 o = g + 0.2 + 0.6 * hash2(i + g) - f;
       float dd = dot(o, o);
-      if (dd < best) { best = dd; to = o; }
+      if (dd < nearest) { nearest = dd; to = o; }
     }
   }
-  float r = sqrt(best);
+  float r = sqrt(nearest);
   float lit = clamp(0.6 + 0.9 * dot(-to, vec2(-0.6, -0.8)), 0.0, 1.0);
   return mix(lit, 0.15, smoothstep(0.3, 0.78, r));
 }
@@ -95,12 +95,12 @@ vec3 santa(vec2 p, float d, float aa, float bright_look, float bonus) {
   float lock_small = curls(p * 9.0 + 3.1);
   vec3 trim_fur = mix(vec3(0.84, 0.86, 0.93), vec3(1.0, 1.0, 1.0), clamp(lam * 0.8 + lock_small * 0.25, 0.0, 1.0));
 
-  vec3 skin = mix(vec3(0.9, 0.6, 0.5), vec3(1.0, 0.84, 0.73), clamp(lam * 1.1, 0.0, 1.0));
+  vec3 complexion = mix(vec3(0.9, 0.6, 0.5), vec3(1.0, 0.84, 0.73), clamp(lam * 1.1, 0.0, 1.0));
   for (int i = 0; i < 2; i++) {
     float sx = i == 0 ? -1.0 : 1.0;
-    skin = mix(skin, vec3(0.97, 0.5, 0.5), exp(-pow((p.x - sx * 0.34) / 0.12, 2.0) - pow((p.y - 0.08) / 0.08, 2.0)) * 0.75);
+    complexion = mix(complexion, vec3(0.97, 0.5, 0.5), exp(-pow((p.x - sx * 0.34) / 0.12, 2.0) - pow((p.y - 0.08) / 0.08, 2.0)) * 0.75);
   }
-  vec3 c = mix(fur, skin, cover_of(face, aa));
+  vec3 c = mix(fur, complexion, cover_of(face, aa));
   // His eyes: dark, pushed up from below by his smiling cheeks, so their
   // lower edge bows up, each with a twinkle.
   float blink = 0.85 + 0.15 * sin(time * 1.7 + seed * 3.0);
@@ -149,9 +149,9 @@ vec3 santa(vec2 p, float d, float aa, float bright_look, float bonus) {
   // (the lids, the nose, the snore) rather than by light.
   vec3 night_fur = mix(vec3(0.075, 0.075, 0.125), vec3(0.14, 0.14, 0.215), clamp(lam * 0.8 + lock * 0.2, 0.0, 1.0));
   vec3 night_trim = mix(vec3(0.09, 0.09, 0.145), vec3(0.17, 0.17, 0.25), clamp(lam * 0.8 + lock_small * 0.15, 0.0, 1.0));
-  vec3 night_skin = mix(vec3(0.075, 0.06, 0.1), vec3(0.13, 0.1, 0.15), lam);
+  vec3 night_complexion = mix(vec3(0.075, 0.06, 0.1), vec3(0.13, 0.1, 0.15), lam);
   vec3 night_cloth = mix(vec3(0.05, 0.015, 0.035), vec3(0.14, 0.04, 0.065), red_shade) * (1.0 - 0.3 * fold);
-  vec3 s = mix(night_fur, night_skin, cover_of(face, aa));
+  vec3 s = mix(night_fur, night_complexion, cover_of(face, aa));
   // Shut eyes: a lid's curve, bowed down, with three lashes, only a little
   // lighter than his face, as Ghost's hollow eyes are than its body.
   vec2 e = eye_c;

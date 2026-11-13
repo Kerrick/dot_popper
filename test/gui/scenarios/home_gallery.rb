@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
 module DotPopperGui
-  # The title in every state that matters, at every size that matters,
+  # Home in every state that matters, at every size that matters,
   # kept as screenshots to look at side by side: a first launch, a
-  # returning player's title with a best, today's goal and a streak, the
+  # returning player's Home with a score record, today's goal and a streak, the
   # goal done, and the words for the mouse, a finger and a gamepad; on a
   # desktop's windows, and on phone-shaped ones laid out as a phone lays
   # them out, without "Full screen" or Quit. It checks nothing but that
-  # the title shows; DOT_POPPER_GALLERY names the shots (as "before").
-  # Not part of rake test:gui: it is for reviewing the title's design.
-  class TitleGalleryScenario < Scenario
-    scenario :title_gallery
+  # Home shows; DOT_POPPER_GALLERY names the shots (as "before").
+  # Not part of rake test:gui: it is for reviewing Home's design.
+  class HomeGalleryScenario < Scenario
+    scenario :home_gallery
 
     DESKTOP = [[1200, 800], [1920, 1080], [800, 500], [400, 320]].freeze
     PHONE = [[400, 850], [850, 400]].freeze
@@ -18,7 +18,7 @@ module DotPopperGui
     P = DotPopper::Presentation
 
     def play
-      check(show.home?, "the game opens on the title")
+      check(show.home?, "the game opens on Home")
       @desktop = show.window
       each_size { shoot("first") }
       quick_game
@@ -71,7 +71,7 @@ module DotPopperGui
       keep_screenshot("#{tag}-#{state}-#{kind}-#{layout.width.round}x#{layout.height.round}")
     end
 
-    # A returning player's records: a best of 24, three days in a row of
+    # A returning player's Stats: a score record of 24, three days in a row of
     # today's goal, and today's met once +done+.
     def returning(done:)
       today = show.stats_book.today

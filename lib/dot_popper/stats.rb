@@ -6,8 +6,8 @@ module DotPopper
   # +last_day+), the last RECENT scores, oldest first, with the SizeClass
   # each was played in (+recent_classes+, nil where a file written before
   # they were kept does not say), and the daily goal's GoalStreak, across
-  # every screen; and for each SizeClass, the
-  # Records a game on such a screen can set. Days are ISO 8601 dates
+  # every screen; and for each SizeClass, its
+  # RecordSet, the records a game on such a screen can set. Days are ISO 8601 dates
   # ("2026-11-05"), local to the player. The score record stays with
   # ScoreRecord. It saves as lines of +key=value+, a class's records under
   # its name ("medium.most_dots_in_a_row=18"), and reads back whatever it can of
@@ -33,8 +33,8 @@ module DotPopper
     # class of the screen the game opens on (see .old?).
     def self.parse(text, legacy: SizeClass::MEDIUM)
       pairs = Pairs.parse(text)
-      records = SizeClass::ALL.to_h { [it, Records.parse(pairs.within(it.name))] }
-      records[legacy] = Records.parse(pairs) if old?(text)
+      records = SizeClass::ALL.to_h { [it, RecordSet.parse(pairs.within(it.name))] }
+      records[legacy] = RecordSet.parse(pairs) if old?(text)
       new(games: pairs.count(:games), dots_popped: pairs.count(:pops), mistakes: pairs.count(:mistakes),
           seconds: pairs.time(:seconds) || 0.0, days: pairs.count(:days), last_day: pairs.day(:last_day),
           recent: pairs.counts(:recent).last(RECENT), recent_classes: pairs.classes(:recent_classes).last(RECENT),
@@ -48,7 +48,7 @@ module DotPopper
     def self.old?(text) = Pairs.parse(text).values.key?("longest_game")
 
     # The records on screens of +size_class+, or none yet.
-    def records_in(size_class) = records.fetch(size_class) { Records.new }
+    def records_in(size_class) = records.fetch(size_class) { RecordSet.new }
 
     # The stats after one more game, played on +day+ on a screen of
     # +size_class+.
@@ -60,7 +60,7 @@ module DotPopper
     end
 
     # The records a game with +stats+ on a screen of +size_class+ would
-    # set, most impressive first (Record::ORDER); see Records#records_set_by.
+    # set, most impressive first (Record::ORDER); see RecordSet#records_set_by.
     def records_set_by(stats, size_class) = records_in(size_class).records_set_by(stats)
 
     # The total of dots popped saves as "pops", the key every build before
@@ -79,7 +79,7 @@ module DotPopper
     # most dots in a row without a mistake, the fastest pop, and the
     # Longest Time to Pop, with how many +games+ have
     # been played on such screens.
-    class Records < Data.define(:games, :longest_game, :most_dots_in_a_row, :shortest_time_to_pop, :longest_time_to_pop)
+    class RecordSet < Data.define(:games, :longest_game, :most_dots_in_a_row, :shortest_time_to_pop, :longest_time_to_pop)
       def initialize(games: 0, longest_game: 0.0, most_dots_in_a_row: 0, shortest_time_to_pop: nil, longest_time_to_pop: 0.0)
         super(games:, longest_game: longest_game.to_f, most_dots_in_a_row:, shortest_time_to_pop: shortest_time_to_pop&.to_f,
               longest_time_to_pop: longest_time_to_pop.to_f)

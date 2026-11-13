@@ -194,7 +194,7 @@ module DotPopper
       # wheel's notch and a stick at full tilt move it.
       CREDITS = CreditsStyle.new(text: 20, line: 1.5, column: 680, wheel: 3, stick: 14)
 
-      # Clearing the records, from the Stats screen: "Clear my stats…"
+      # Clearing Stats, from the Stats screen: "Clear my stats…"
       # is held for two seconds, never only tapped, and Undo is offered
       # for ten after. A press let go too soon leaves its hint, to hold
       # it, for a moment.
@@ -458,7 +458,7 @@ module DotPopper
       GRAB = GrabStyle.new(slop: 0.25, hold: 0.15, follow: 0.05, fastest: 60.0, fling: 40.0, window: 0.1)
       CALM_GRAB = GRAB.with(follow: 0.12, fastest: 20.0, fling: 6.0)
 
-      # A worn mouse's double click (Presentation::Chatter): a press of a
+      # A failing mouse's double click (Presentation::Chatter): a press of a
       # button within 0.06 s of its last press, and within 8 units of it,
       # is dropped. A switch's bounce is under 0.02 s, and a failing one
       # chatters at 0.05 to 0.08; a hand clicking twice as fast as it can

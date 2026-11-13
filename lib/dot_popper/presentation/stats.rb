@@ -13,9 +13,9 @@ module DotPopper
     class StatsSection < Data.define(:heading, :rows); end
 
     # What the Stats screen says, worked out from Stats and the
-    # best score: the player's records, their totals, the daily goal's
+    # score record: the player's records, their totals, the daily goal's
     # streaks (+streak+ is the current one, as it stands today), and the
-    # last few scores for the chart. The records, and +best+, are those of
+    # last few scores for the chart. The records, and +score_record+, are those of
     # screens of +size_class+, the screen's now, and +notes+ say how big
     # +field+, the screen, is, and what +sizing+ (DotSizing) does. With no game played yet, +empty+ is true
     # and there is nothing to list. +mine+ says, for each of the last
@@ -67,7 +67,7 @@ module DotPopper
       end
     end
 
-    # One bar of the score chart, on whole device pixels; +best+ marks the
+    # One bar of the score chart, on whole device pixels; +score_record+ marks the
     # highest score shown of those that count toward the records shown, and
     # +dim+ a bar that does not.
     class ScoreBar < Data.define(:x, :y, :width, :height, :score, :score_record, :dim)
@@ -79,7 +79,7 @@ module DotPopper
     # on the bottom of their rect, as tall as their score against the
     # highest; a game of 0 still shows a stub one device pixel high.
     # +mine+ says which scores count toward the records shown (by default,
-    # all); the others are dim, and never the best, though they keep
+    # all); the others are dim, and never marked as the record, though they keep
     # their true height, so every bar is drawn to one scale.
     class ScoreBars < Data.define(:scores, :slots, :mine)
       def initialize(scores:, slots: Stats::RECENT, mine: [true] * scores.size) = super

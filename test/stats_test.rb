@@ -90,7 +90,7 @@ class StatsTest < Minitest::Test
                  "a class's first game has nothing to beat"
   end
 
-  def test_a_game_with_no_pops_has_no_shortest_time_to_pop
+  def test_a_game_with_no_dots_popped_has_no_shortest_time_to_pop
     assert_nil add(Stats.new, game(dots_popped: 0, times_to_pop: [])).records_in(MEDIUM).shortest_time_to_pop
   end
 

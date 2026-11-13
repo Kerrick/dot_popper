@@ -125,7 +125,7 @@ vec3 dot_body(vec2 p, float d, float aa, float bright_look, float bonus) {
   pastry *= 0.5 + 0.5 * smoothstep(0.0, 0.3, h);
 
   // The custard, set a little below the crust: a soft dome, a glossy
-  // skin, the crust's shadow on its far side, darker at its edge.
+  // surface, the crust's shadow on its far side, darker at its edge.
   vec3 cn = normalize(vec3(p * 0.45, 1.0));
   float clam = dot(cn, L);
   vec3 custard = mix(vec3(0.66, 0.31, 0.08), vec3(0.98, 0.63, 0.29), clamp(0.1 + clam * 1.0, 0.0, 1.0));

@@ -149,7 +149,7 @@ vec4 pumpkin(vec2 p, float d, float aa, float bright_look, float bonus) {
   float dimple = exp(-pow(p.x / 0.22, 2.0) - pow((p.y + ca) / 0.13, 2.0));
   c = mix(c, mix(vec3(0.039, 0.024, 0.031), CREASE, bright_look), dimple * 0.55);
 
-  // The stem, on the crown, and inside the circle.
+  // The stem, on the top, and inside the circle.
   float py = -ca, top_y = -0.965;
   float ss = clamp((py + 0.03 - p.y) / (py + 0.03 - top_y), 0.0, 1.0);
   float lean = -0.03 * ss;

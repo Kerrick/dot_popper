@@ -93,7 +93,7 @@ module DotPopper
     # and never charges it to them. What a full row brings is left for the
     # game to surprise the player with: nothing here shows it or says so.
     #
-    # It plays its pops, cost, and chimes through the Show's +effects+,
+    # It plays the sounds of its popping, cost, and chimes through the Show's +effects+,
     # +sounds+, and +haptics+, on the +cabinet+'s game, made now with its
     # first dot (Cabinet#start_paused), from +center+, the screen's
     # middle, as +style+ (Style) says, on the Show's clock from +now+.
@@ -302,7 +302,7 @@ module DotPopper
         cue(ends + @script.hold) { resume }
       end
 
-      # What the pop paid (Events::Popped), in turn: its points, its
+      # What the pop earned (Events::Popped), in turn: its points, its
       # seconds, and a dot in the row.
       def gains(popped)
         points = popped.points
@@ -391,7 +391,7 @@ module DotPopper
 
       # ...and as it peeks out, the guide taps the popped dot over it, once,
       # and the cost plays as its press lands. As the last of it flies
-      # (#guide_slips), the guide goes to wait to one side and wags its
+      # (#guide_makes_a_mistake), the guide goes to wait to one side and wags its
       # finger, "no", and only once it has, and settled, may it go on to
       # the bright dot.
       def show_the_cost
@@ -399,7 +399,7 @@ module DotPopper
         stop_time
         @spotlight = spotlight.toward(Anchor.dot(BRIGHT), now)
         @ghost = ghost.tapping(Anchor.dot(BRIGHT), now)
-        cue(now + (GhostHand::PRESSED * @guide.loop)) { guide_slips }
+        cue(now + (GhostHand::PRESSED * @guide.loop)) { guide_makes_a_mistake }
       end
 
       # Where the guide waits: well above the popped dot, the hand's middle
@@ -422,7 +422,7 @@ module DotPopper
       # hand. The screen never shakes, and no buzz says the player did
       # this; and since it is the guide's, not the player's, nothing but the
       # tutorial hears of it.
-      def guide_slips
+      def guide_makes_a_mistake
         dot = dot(BRIGHT)
         x = dot.x
         y = dot.y

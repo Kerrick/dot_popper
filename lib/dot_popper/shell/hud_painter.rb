@@ -56,7 +56,7 @@ module DotPopper
       private
 
       # The row toward a bonus dot, as a row of the game's own small
-      # dots hung under the pill: bright ones are the pops so far, dark
+      # dots hung under the pill: bright ones are the dots popped so far, dark
       # ones are still to come, and all of them mint when the bonus dot is
       # out there to pop.
       def dots_in_a_row(readout, pill)

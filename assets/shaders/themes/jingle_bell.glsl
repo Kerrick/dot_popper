@@ -3,7 +3,7 @@
 // One dot as a jingle bell, a hollow sphere of polished silver that fills
 // the dot's circle, seen from the front: its two halves joined by a
 // ridged seam around its middle, a slot cut up from its foot to a round
-// sound hole, and a red ribbon bow tied at its crown. A bright dot is a
+// sound hole, and a red ribbon bow tied at its top. A bright dot is a
 // whole bell in the light, mirror-bright. A popped dot is the same bell
 // in shadow, burst open along its slot: the slot gapes into a wide dark
 // mouth, its torn edges curled out, and the little ball that rang it

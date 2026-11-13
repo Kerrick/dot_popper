@@ -35,7 +35,7 @@ module DotPopper
 
     def today = @today.call
 
-    # The store's whole text, as saved, for #restore (RecordKeeper).
+    # The store's whole text, as saved, for #restore (StatsKeeper).
     def saved = @store.read
 
     # Forgets every game, as on a new device: the totals, the chart, each

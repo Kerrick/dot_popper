@@ -4,8 +4,8 @@ module DotPopper
   module Shell
     # Game Over, over the finished game, each part where the Show's
     # GameOverPlan puts it: "Time's up!", the score counting up, a new
-    # record or how far short of the best it fell, a quiet line of the
-    # game's facts, a lifetime record it set, its lines in pills (today's
+    # record or how far short of the score record it fell, a quiet line of the
+    # game's facts, a record it set, its lines in pills (today's
     # goal met, a new achievement, a friend group's title), those that open
     # something with an arrow, then Play again, faint until a press will
     # be heard, and Home beside Share my score, all over the dimmed pile,
@@ -124,7 +124,7 @@ module DotPopper
       end
 
       # A new record, glowing, once the score has counted up, or how far
-      # short of the best the game fell.
+      # short of the score record the game fell.
       def score_record_line(show, plan, now, alpha)
         rect = plan[:score_record] or return
         game_over = show.game_over

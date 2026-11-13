@@ -2,7 +2,7 @@
 
 module DotPopper
   module Presentation
-    # Clearing the records: how long "Clear my stats…" must be held,
+    # Clearing Stats: how long "Clear my stats…" must be held,
     # how long Undo is offered once they are cleared, and how long the
     # hint to hold stays after a press let go too soon.
     class ClearStyle < Data.define(:hold, :undo, :hint); end
@@ -44,8 +44,8 @@ module DotPopper
       def let_go_ago(now) = let_go && (now - let_go)
     end
 
-    # Undo, offered from +at+ for +seconds+ after the records were
-    # cleared; +cleared+ is what RecordKeeper#restore puts back.
+    # Undo, offered from +at+ for +seconds+ after Stats were
+    # cleared; +cleared+ is what StatsKeeper#restore puts back.
     class UndoOffer < Data.define(:cleared, :at, :seconds)
       def open?(now) = now < at + seconds
 

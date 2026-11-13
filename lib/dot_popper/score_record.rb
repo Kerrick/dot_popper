@@ -26,7 +26,7 @@ module DotPopper
     # Whether no game has been recorded on screens of +size_class+ yet.
     def first?(size_class) = !@values.key?(size_class)
 
-    # Records +score+ as one played on +size_class+, and says whether it
+    # Keeps +score+ as one played on +size_class+, and says whether it
     # beat that class's record. A class's first game sets its record but
     # beats nothing, so it is never a new record: there was nothing to beat.
     def record(score, size_class)
@@ -38,7 +38,7 @@ module DotPopper
       !first
     end
 
-    # The store's whole text, as saved, for #restore (RecordKeeper).
+    # The store's whole text, as saved, for #restore (StatsKeeper).
     def saved = @store.read
 
     # Forgets every class's score record, as on a new device.

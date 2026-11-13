@@ -7,7 +7,7 @@ module DotPopper
     # its switch chattering (Chatter).
     class ChatterStyle < Data.define(:seconds, :reach); end
 
-    # A worn mouse's switch chatters: one click reaches the game as two,
+    # A failing mouse's switch chatters: one click reaches the game as two,
     # a few hundredths of a second apart, and the second lands on the
     # popped dot the first left behind. That loss is the mouse's, not the
     # player's, so a press of the same button too soon after its last

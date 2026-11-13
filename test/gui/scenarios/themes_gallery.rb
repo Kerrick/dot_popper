@@ -2,7 +2,7 @@
 
 module DotPopperGui
   # Each theme's screens kept as screenshots to look at: the title, a
-  # crowded round, Game Over, the news of a new theme, and the Themes
+  # crowded round, Game Over, the notice of a new theme, and the Themes
   # screen. DOT_POPPER_THEME names the theme; DOT_POPPER_THEME_UNLOCKS
   # unlocks them; DOT_POPPER_GALLERY names the shots. Not part of rake
   # test:gui: it is for reviewing the themes.

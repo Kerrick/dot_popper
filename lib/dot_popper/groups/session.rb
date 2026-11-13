@@ -157,7 +157,7 @@ module DotPopper
         send_pending
       end
 
-      # A game began, so the last game's result is old news.
+      # A game began, so the last game's result no longer stands.
       def game_started
         @game_result = nil
         @result_due = false

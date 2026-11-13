@@ -3,7 +3,7 @@
 module DotPopper
   module Presentation
     # How the gamepad cursor moves and looks. A push inside +dead_zone+
-    # (of a full tilt, 1) is a stick at rest, so a worn stick does not
+    # (of a full tilt, 1) is a stick at rest, so an old stick does not
     # drift; past it, the push rises along a curve of power +curve+, so a
     # small tilt aims finely and a full one crosses the screen. At full
     # tilt the cursor crosses the window's diagonal in +crossing+

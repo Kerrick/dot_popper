@@ -5,7 +5,7 @@ module DotPopper
     # Whether the first Play opens the Tutorial. It does once, on a fresh
     # install, and never again: the store, which answers +read+ and
     # +write(text)+ as ScoreRecord's does, keeps that it was seen, apart from
-    # the records, so clearing them leaves it. A player who has played
+    # Stats, so clearing them leaves it. A player who has played
     # before, as everyone on 0.9 has, has seen enough of the game already,
     # so the tutorial is never due for them either (#due?).
     #

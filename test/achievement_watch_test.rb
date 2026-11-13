@@ -90,7 +90,7 @@ class AchievementWatchTest < Minitest::Test
     refute_includes @watch.earned, :sharpshooter
   end
 
-  def test_three_pops_with_under_a_quarter_showing_in_a_game_earn_a_sharp_trio
+  def test_three_dots_popped_with_under_a_quarter_showing_in_a_game_earn_a_sharp_trio
     stack = [dot(400, 300, popped: true), dot(400, 100, popped: true), dot(400, 500, popped: true),
              dot(390, 300, id: 7), dot(390, 100, id: 8), dot(390, 500, id: 9)]
     watch(game_with(*stack))
@@ -159,7 +159,7 @@ class AchievementWatchTest < Minitest::Test
     assert_empty @watch.earned
   end
 
-  def test_twenty_pops_in_a_row_earn_steady_and_forty_unshaken
+  def test_twenty_dots_in_a_row_earn_steady_and_forty_unshaken
     open_game
     19.times { pop_bright(after: 0.7) }
     assert_empty @watch.earned
@@ -197,7 +197,7 @@ class AchievementWatchTest < Minitest::Test
     refute_includes @watch.earned, :steady, "ten and ten are not twenty in a row"
   end
 
-  def test_ten_pops_without_a_mistake_are_not_shaking_one_off
+  def test_ten_dots_popped_without_a_mistake_are_not_shaking_one_off
     open_game
     10.times { pop_bright(after: 0.5) }
 
@@ -222,7 +222,7 @@ class AchievementWatchTest < Minitest::Test
     refute_includes @watch.earned, :comeback
   end
 
-  def test_fifteen_pops_in_the_first_ten_seconds_earn_a_fast_start
+  def test_fifteen_dots_popped_in_the_first_ten_seconds_earn_a_fast_start
     open_game
     14.times { pop_bright(after: 0.4) }
     refute_includes @watch.earned, :fast_start
@@ -231,7 +231,7 @@ class AchievementWatchTest < Minitest::Test
     assert_includes @watch.earned, :fast_start
   end
 
-  def test_slower_pops_are_not_a_fast_start
+  def test_popping_slower_is_not_a_fast_start
     open_game
     16.times { pop_bright(after: 0.8) }
 

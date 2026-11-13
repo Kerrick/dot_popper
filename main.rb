@@ -10,7 +10,7 @@
 # Escape quits. On a gamepad (Lota 0.1.3 and newer), the left stick or
 # d-pad aims, A or the right trigger presses, Start starts and continues,
 # Y copies the result on Game Over (and, held on the Stats screen,
-# clears the records, which a press of Y then undoes), X opens the
+# clears Stats, which a press of Y then undoes), X opens the
 # Stats screen from Home, B (or Start) leaves it, either
 # shoulder button switches the dot size on Home, and Back toggles
 # sound. On Game Over the right
