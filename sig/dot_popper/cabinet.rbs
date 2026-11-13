@@ -77,10 +77,6 @@ module DotPopper
 
     private
 
-    def start_game: (Integer seed) -> self
-
-    def start_paused: (Stack dots, Integer seed) -> self
-
     def draw_seed: () -> Integer
 
     def begin_game: (Game game, Integer seed, ?SizeClass size_class, ?tutorial: bool) -> Playing

@@ -74,17 +74,15 @@ class StartGameTest < Minitest::Test
     assert_raises(Cabinet::StartsTaken) { DotPopper::UseCases::StartGame.new(cabinet: @cabinet, free_games: @games) }
   end
 
-  # A Cabinet's Starts taken (".starts"), or a call of its private
-  # #start_game or #start_paused by name or as a Symbol (send(:start_game),
-  # method(:start_paused)), the second line behind the Starts handed out
-  # once.
-  STARTS = /[.:]start_(?:game|paused)\b|\.starts\b/
+  # A Cabinet's Starts taken (".starts"), or StartGame's read by
+  # reflection (instance_variable_get(:@starts)): the second line behind
+  # the Starts handed out once.
+  STARTS = /\.starts\b|@starts\b/
 
   # Nothing but this use case, and the composition root that hands it
-  # the cabinet's Starts, takes them or calls the start methods: no
-  # screen, no shell, no script, and no file outside lib/ that the phones
-  # load. It reads the source, so it cannot see a name
-  # built at run time.
+  # the cabinet's Starts, takes them or reads them: no screen, no shell,
+  # no script, and no file outside lib/ that the phones load. It reads
+  # the source, so it cannot see a name built at run time.
   def test_nothing_else_starts_a_game
     root = File.expand_path("../..", __dir__)
     files = Dir["#{root}/{lib,script}/**/*.rb"] + Dir["#{root}/bin/*"] + ["#{root}/main.rb", "#{root}/conf.rb", "#{root}/android/android_kit"]

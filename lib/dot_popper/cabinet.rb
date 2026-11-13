@@ -38,13 +38,29 @@ module DotPopper
 
     # The one way to start a game on this cabinet (Starts), handed out
     # once, to the one thing that starts every game (UseCases::StartGame,
-    # which the composition root makes): asked again, it raises, so
-    # nothing else can start a game.
+    # which the composition root makes): asked again, it raises. The
+    # cabinet has no method of its own that starts a game, so nothing
+    # else is handed the means to.
+    #
+    # From Home only, and elsewhere it does nothing, a game drawn from
+    # +seed+: in play at once, or with +opening+ (a Stack) as its first
+    # dots, paused before its clock first runs, for the tutorial to play
+    # over (Paused), with nothing announced, since its events are the
+    # tutorial's until play begins (#unpause). The game gets a Random of
+    # its own from its seed, and draws from it only when a dot spawns, so
+    # the same seed and the same taps give the same dots, whatever else
+    # uses randomness meanwhile.
     def starts
       raise StartsTaken, "a Cabinet hands out its Starts once" if @starts_taken
 
       @starts_taken = true
-      Starts.new(->(opening, seed) { opening ? start_paused(opening, seed || draw_seed) : start_game(seed || draw_seed) })
+      Starts.new(lambda do |opening, seed|
+        seed ||= draw_seed
+        next self unless state.is_a?(Home)
+
+        game = @game = Game.new(field, random: Random.new(seed), dots: opening)
+        advance(opening ? Paused.new(game: game.view, seed:, size_class:) : begin_game(game, seed))
+      end)
     end
 
     # Starting a game on a Cabinet, from Home, which only what holds its
@@ -53,11 +69,11 @@ module DotPopper
       def initialize(start) = @start = start
 
       # A game in play at once, drawn from +seed+, by default one of the
-      # cabinet's own (#start_game). Answers the cabinet.
+      # cabinet's own (Cabinet#starts). Answers the cabinet.
       def game(seed = nil) = @start.call(nil, seed)
 
       # A game with +dots+ (a Stack) as its first, paused before its
-      # clock first runs, for the tutorial to play over (#start_paused).
+      # clock first runs, for the tutorial to play over (Cabinet#starts).
       # Answers the cabinet.
       def paused(dots, seed = nil) = @start.call(dots, seed)
     end
@@ -146,7 +162,7 @@ module DotPopper
 
     # The game's score counts among the records of +size_class+, the class
     # it started in, even if the window changed size meanwhile. +tutorial+
-    # says the tutorial played over its opening (#start_paused).
+    # says the tutorial played over its opening (Starts#paused).
     def finish(game, seed, size_class, tutorial)
       first = score_record.first?(size_class)
       new_score_record = score_record.record(game.score, size_class)
@@ -156,28 +172,6 @@ module DotPopper
     end
 
     private
-
-    # From Home, a game drawn from +seed+, in play at once (Starts#game).
-    # The game gets a Random of its
-    # own from its seed, and draws from it only when a dot spawns, so the
-    # same seed and the same taps give the same dots, whatever else uses
-    # randomness meanwhile. Elsewhere it does nothing.
-    def start_game(seed)
-      return self unless state.is_a?(Home)
-
-      advance(begin_game(@game = Game.new(field, random: Random.new(seed)), seed))
-    end
-
-    # From Home, a game made as #start_game makes one, with +dots+ (a
-    # Stack) as its first, paused before its clock first runs, for the
-    # tutorial to play over (Paused; Starts#paused). Nothing is announced: its events
-    # are the tutorial's until play begins (#unpause).
-    def start_paused(dots, seed)
-      return self unless state.is_a?(Home)
-
-      game = @game = Game.new(field, random: Random.new(seed), dots:)
-      advance(Paused.new(game: game.view, seed:, size_class:))
-    end
 
     # A seed of the game's own randomness, for a game started with none.
     def draw_seed = @random.rand(LARGEST_SEED)

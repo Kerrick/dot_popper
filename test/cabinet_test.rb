@@ -309,11 +309,12 @@ class CabinetTest < Minitest::Test
   end
 
   # A game starts only through the cabinet's Starts, which it hands out
-  # once: asked to start one itself, by what holds only the cabinet, it
-  # refuses, and starts nothing.
+  # once: the cabinet has no method of its own that starts one, so what
+  # holds only the cabinet cannot, even by sending a private method's name.
   def test_only_the_cabinets_starts_start_a_game_and_it_hands_them_out_once
     assert_raises(NoMethodError) { @cabinet.start_game(1) }
-    assert_raises(NoMethodError) { @cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]), 1) }
+    assert_raises(NoMethodError) { @cabinet.send(:start_game, 1) }
+    assert_raises(NoMethodError) { @cabinet.send(:start_paused, DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]), 1) }
     starts = @cabinet.starts
     assert_raises(Cabinet::StartsTaken) { @cabinet.starts }
 
