@@ -116,7 +116,7 @@ module DotPopper
         # player has Pro, and otherwise a word only when there is something
         # to say of the store.
         def status
-          return "#{words.offer[:typing]} #{typed_tail}" if !@buy_pro.typed.empty? && @buy_pro.status == :ready
+          return "#{words.offer[:typing]} #{typed_tail}" if @buy_pro.status == :ready && !@buy_pro.typed.empty?
 
           words.offer.fetch(@buy_pro.status, "")
         end
