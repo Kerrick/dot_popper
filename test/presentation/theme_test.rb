@@ -18,6 +18,13 @@ class ThemeTest < Minitest::Test
     THEMES.each { assert_predicate it, :frozen? }
   end
 
+  # Every theme the rules know (DotPopper::Theme::ALL) has its art here,
+  # in the same order, and nothing else does.
+  def test_every_theme_the_rules_know_has_its_art_in_the_same_order
+    assert_equal DotPopper::Theme::ALL.map(&:key), THEMES.map(&:key)
+    assert_equal DotPopper::Theme::ALL.map(&:opens_on), THEMES.map(&:opens_on)
+  end
+
   def test_every_style_is_named_in_words
     THEMES.each { assert Style::WORDS.themes.key?(it.key), "#{it.key} has no name" }
   end

@@ -1,4 +1,19 @@
 module DotPopper
   module Continuity
+    # A check left setdef gone (Gone#heard).
+    class SetdefGone < ::Data
+      attr_reader since: Date
+
+      attr_reader today: Date
+
+      def self.new: (since: Date, today: Date) -> instance
+
+      def days: () -> Integer
+    end
+
+    # setdef's server answered (Gone#heard).
+    class SetdefHere < ::Data
+      def self.new: () -> instance
+    end
   end
 end

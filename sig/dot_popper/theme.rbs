@@ -1,0 +1,19 @@
+module DotPopper
+  type theme_key = Symbol
+
+  class Theme < ::Data
+    ORDINARY: theme_key
+
+    ALL: Array[Theme]
+
+    attr_reader key: theme_key
+
+    attr_reader opens_on: Date?
+
+    def self.new: (key: theme_key, ?opens_on: Date?) -> instance
+
+    def initialize: (key: theme_key, ?opens_on: Date?) -> void
+
+    def ordinary?: () -> bool
+  end
+end

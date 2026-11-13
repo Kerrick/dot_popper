@@ -1,0 +1,55 @@
+module DotPopper
+  class Themes
+    GONE_DAYS: Integer
+
+    RELEASED: String
+
+    TOLD: String
+
+    CHOSEN: String
+
+    @store: ScoreRecord::_Store
+
+    @themes: Array[Theme]
+
+    @released: Array[theme_key]
+
+    @told: Array[theme_key]
+
+    @chosen: theme_key?
+
+    def initialize: (ScoreRecord::_Store store, ?themes: Array[Theme]) -> void
+
+    def ordinary: () -> theme_key
+
+    def chosen: () -> theme_key
+
+    def choices: () -> Array[theme_key]
+
+    def open?: (theme_key key) -> bool
+
+    def offered?: () -> bool
+
+    def release: (Array[String | Symbol] keys) -> bool
+
+    def call: (Continuity::SetdefGone | Continuity::SetdefHere event) -> void
+
+    def open_by_date: (Date today, Integer gone_days) -> bool
+
+    def new_theme: () -> theme_key?
+
+    def told: (theme_key key) -> void
+
+    def use: (theme_key key) -> void
+
+    private
+
+    def known?: (theme_key key) -> bool
+
+    def read: () -> [Array[theme_key], Array[theme_key], theme_key?]
+
+    def keys: (String line) -> Array[theme_key]
+
+    def save: () -> void
+  end
+end
