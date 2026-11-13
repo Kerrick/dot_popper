@@ -37,6 +37,9 @@ module DotPopper
           end
         end
 
+        # A tap on one of Home's bright dots pops it, for fun.
+        def empty(x, y, _by) = show.toy_tap(x, y)
+
         def pressed(name, by)
           case name
           in :play then show.play

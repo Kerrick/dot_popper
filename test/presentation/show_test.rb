@@ -24,6 +24,23 @@ class ShowTest < Minitest::Test
     assert_equal 1, @show.effects.rings.size
   end
 
+  # Home's dots are a toy on Home alone: on a screen over it, which veils
+  # them, and under the offer of Pro, a tap where one shows through pops
+  # nothing and makes no sound.
+  def test_home_dots_pop_only_on_home
+    { themes: -> { @show.open_themes }, privacy: -> { @show.open_settings && @show.open_privacy },
+      server: -> { @show.open_settings && @show.open_page(:server) }, offer: -> { @show.open_offer_for(:themes) } }.each do |name, open|
+      open.call
+      dots = @show.attract.dots
+      bright = dots.find { it.bright? && dots.top_at(it.x, it.y) == it && @show.control_at(it.x, it.y).nil? }
+      @sounds.played.clear
+      @show.tap(bright.x, bright.y, by: :mouse)
+
+      refute_includes @sounds.names, :pop, name
+      @show.back while @show.back
+    end
+  end
+
   # Play starts a game; empty space beside it does nothing.
   # A game on a field so wide that the dots, which hold still here, never
   # cover one another, so each bright dot can be tapped on the spot.

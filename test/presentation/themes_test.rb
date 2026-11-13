@@ -102,6 +102,17 @@ class ThemesTest < Minitest::Test
     assert_equal :ghost, @show.arrival&.key
   end
 
+  # Home's dots under the card are not Home's toy while it waits.
+  def test_under_the_card_a_tap_pops_none_of_homes_dots
+    show(pro: true, unlocked: ["ghost"])
+    dots = @show.attract.dots
+    bright = dots.find { it.bright? && dots.top_at(it.x, it.y) == it && @show.control_at(it.x, it.y).nil? }
+    @show.tap(bright.x, bright.y, by: :mouse)
+
+    refute_includes @sounds.names, :pop
+    assert_equal :ghost, @show.arrival&.key
+  end
+
   def test_the_card_comes_only_on_home
     show(pro: true, unlocked: ["ghost"])
     @show.open_stats rescue nil

@@ -1180,8 +1180,6 @@ module DotPopper
       # A tap on Home away from its buttons: a bright dot there pops
       # for fun, with no score; anywhere else, nothing happens.
       def toy_tap(x, y)
-        return unless home? && !stats? && !group_open?
-
         dot = attract.dots.top_at(x, y)
         toy_pop(dot, x, y) if dot&.bright?
       end

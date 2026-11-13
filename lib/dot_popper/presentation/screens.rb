@@ -53,8 +53,9 @@ module DotPopper
         # The control +name+ this screen offers was pressed, by +by+.
         def pressed(name, by) = nil
 
-        # A press at +x+, +y+ that reached no button.
-        def empty(x, y, by) = show.toy_tap(x, y)
+        # A press at +x+, +y+ that reached no button: nothing, unless the
+        # screen says otherwise.
+        def empty(x, y, by) = nil
 
         # Whether the control +name+ is a row of a list that scrolls.
         def list_row?(name) = false
