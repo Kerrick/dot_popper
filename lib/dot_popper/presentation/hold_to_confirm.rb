@@ -44,13 +44,16 @@ module DotPopper
       def let_go_ago(now) = let_go && (now - let_go)
     end
 
-    # Undo, offered from +at+ for +seconds+ after Stats were
-    # cleared; +cleared+ is what StatsKeeper#restore puts back.
-    class UndoOffer < Data.define(:cleared, :at, :seconds)
+    # Stats just cleared, which Undo can put back from +at+ for +seconds+;
+    # +cleared+ is what StatsKeeper#restore puts back.
+    class UndoableClear < Data.define(:cleared, :at, :seconds)
       def open?(now) = now < at + seconds
 
-      # How much of the offer is left at +now+, from 1 down to 0.
+      # How much of the time to undo is left at +now+, from 1 down to 0.
       def left(now) = (1.0 - ((now - at) / seconds)).clamp(0.0, 1.0)
     end
+
+    # Its old name, until no caller says it.
+    UndoOffer = UndoableClear
   end
 end
