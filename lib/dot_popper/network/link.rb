@@ -32,15 +32,16 @@ module DotPopper
         @raw = raw
       end
 
-      def call(verb, path, body, token)
+      # Makes +job+ (Job, made from its declaration) with +token+, or none.
+      def call(job, token)
         require "net/http"
         require "json"
-        uri = URI.join(@url, path)
+        uri = URI.join(@url, job.path)
         http = Net::HTTP.new(uri.host, uri.port)
         http.use_ssl = uri.scheme == "https"
         http.open_timeout = OPEN_SECONDS
         http.read_timeout = READ_SECONDS
-        parse(http.start { it.request(request(verb, uri, body, token)) })
+        parse(http.start { it.request(request(job.verb, uri, job.body, token)) })
       rescue StandardError, ScriptError => e
         warn "Dot Popper: could not reach #{@url}: #{e.class}"
         Reply.offline

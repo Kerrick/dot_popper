@@ -22,7 +22,8 @@ class AutomationTest < Minitest::Test
 
   def test_the_link_cannot_reach_the_real_server_from_a_test
     link = DotPopper::Network::Link.new(DotPopper::Network::Settings::SERVER_URL)
-    assert_raises(Automation::OutsideConnection) { link.call(:get, "/themes", nil, nil) }
+    job = DotPopper::Network::Job.of(DotPopper::Continuity::SetdefServer::REQUESTS.fetch(:proof), query: { nonce: "00" })
+    assert_raises(Automation::OutsideConnection) { link.call(job, nil) }
   end
 
   def test_a_local_fake_is_allowed

@@ -5,12 +5,14 @@ require "socket"
 require "json"
 require "prism"
 require "uri"
+require "dot_popper/privacy/requests"
 
 # Plays every request the game can make, through a real Session and a real
 # Link, against a local server, and reads what actually arrived.
 class PrivacyRequestsTest < Minitest::Test
   Groups = DotPopper::Groups
   Network = DotPopper::Network
+  Privacy = DotPopper::Privacy
   ROOT = File.expand_path("../..", __dir__)
 
   GROUP = { "id" => 1, "join_code" => "2345678", "you" => 1, "champion_number" => 1, "top_score" => 0,
@@ -19,7 +21,7 @@ class PrivacyRequestsTest < Minitest::Test
   # Runs a job as soon as it starts, on this thread.
   class Instant
     def initialize(link) = (@link = link) && (@done = [])
-    def start(job, token) = @done << [job, @link.call(job.verb, job.path, job.body, token)]
+    def start(job, token) = @done << [job, @link.call(job, token)]
 
     def finished = @done.shift(@done.size)
   end
@@ -88,7 +90,7 @@ class PrivacyRequestsTest < Minitest::Test
     play_continuity
 
     sent = @heard.map { |head, body| [head, body] }
-    built = Groups::REQUESTS.reject { |kind, _| Groups::UNBUILT_REQUESTS.include?(kind) }.values
+    built = Privacy::REQUESTS.reject { |kind, _| Privacy::UNBUILT_REQUESTS.key?(kind) }.values
 
     built.each do |request|
       found = sent.select { |head, _| head.start_with?("#{request.verb.upcase} ") && path_of(head).match?(pattern(request)) }
@@ -115,18 +117,35 @@ class PrivacyRequestsTest < Minitest::Test
   end
 
   def test_a_job_can_only_be_made_from_a_declaration
+    themes = DotPopper::Presentation::ThemeFeed::REQUESTS.fetch(:themes)
+
     assert_raises(KeyError) { Groups::Session::Job.of(:brand_new) }
     assert_raises(ArgumentError) { Groups::Session::Job.of(:join, body: { other: 1 }) }
     assert_raises(NoMethodError) { Groups::Session::Job.new(kind: :join, verb: :get, path: "/x") }
+    assert_raises(ArgumentError) { Network::Job.of(themes) }
+    assert_raises(ArgumentError) { Network::Job.of(themes, query: { started_on: "2026-11-08", other: 1 }) }
+    assert_raises(ArgumentError) { Network::Job.of(themes, query: { started_on: "2026-11-08" }, body: { other: 1 }) }
+    assert_raises(NoMethodError) { Network::Job.new(kind: :themes, verb: :get, path: "/x", body: nil) }
+    assert_raises(NoMethodError) { Network::Job[:themes, :get, "/x", nil] }
   end
 
   def test_unbuilt_requests_are_only_those_not_yet_in_the_code
-    Groups::UNBUILT_REQUESTS.each do |kind|
-      request = Groups::REQUESTS.fetch(kind)
+    Privacy::UNBUILT_REQUESTS.each_value do |request|
+      kind = request.kind
       fields = request.query.keys.join("|")
 
       refute game_source.match?(/#{fields}/), "#{kind} has been built: remove it from UNBUILT_REQUESTS and play it in this test"
     end
+  end
+
+  # A request is declared only in a part's REQUESTS, and every part's are
+  # in the document.
+  def test_every_declaration_is_in_privacy_requests
+    parts = Privacy::PARTS.map { it.const_source_location(:REQUESTS).first }
+    game = ruby_files.reject { it.include?("dot_popper/privacy/") }
+
+    assert_equal parts.tally, game.to_h { [it, uncommented(it).scan(/\bREQUESTS\s*=/).size] }.reject { _2.zero? }
+    assert_empty game.reject { parts.include?(it) }.select { uncommented(it).match?(/\bRequest\.new\b/) }
   end
 
   def test_only_the_link_touches_the_network
@@ -160,9 +179,8 @@ class PrivacyRequestsTest < Minitest::Test
     server.ask(license.due(c::SignedAnswers.fresh))
     license.instance_variable_get(:@lines)["registered"] = "yes"
     server.ask(license.due(c::SignedAnswers.fresh))
-    checks = c::Connectivity::CHECKS.map { it.with(url: "#{local}#{URI(it.url).path}") }
 
-    refute c::Connectivity.new(checks:).online?
+    refute c::Connectivity.new(link: ->(_host) { Network::Link.new(local, raw: true) }).online?
   end
 
   def path_of(head) = head[%r{\A\S+ (\S+)}, 1]
@@ -177,7 +195,7 @@ class PrivacyRequestsTest < Minitest::Test
 
   def ruby_files = Dir[File.join(ROOT, "{lib/**/*.rb,main.rb,bin/*}")].select { File.file?(it) }
   def native_files = Dir[File.join(ROOT, "android/host/src/**/*.java"), File.join(ROOT, "ios/host/Host/*.{swift,m}")]
-  def game_source = ruby_files.reject { it.end_with?("groups/requests.rb") }.map { uncommented(it) }.join("\n")
+  def game_source = ruby_files.reject { it.end_with?("privacy/requests.rb") }.map { uncommented(it) }.join("\n")
 
   def uncommented(path)
     source = File.read(path)

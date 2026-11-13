@@ -3,6 +3,7 @@
 require "json"
 require_relative "../presentation"
 require_relative "save_files"
+require_relative "requests"
 require_relative "declared"
 
 module DotPopper
@@ -52,12 +53,12 @@ module DotPopper
 
       def network
         { server: Network::Settings::SERVER_URL, every_request: "Sent over HTTPS to this server, except the connectivity checks, which go to the address each names, as plain HTTP that carries nothing about the player.",
-          outside_services: NO_OUTSIDE_SERVICES, requests: Groups::REQUESTS.values.map { request(it) } }
+          outside_services: NO_OUTSIDE_SERVICES, requests: REQUESTS.values.map { request(it) } }
       end
 
       def request(req)
         { kind: req.kind, to: req.to || Network::Settings::SERVER_URL, method: req.verb.to_s.upcase, path: req.path, query: fields(req.query), body: fields(req.body),
-          sends_token: req.token, when: req.happens, in_this_build: !Groups::UNBUILT_REQUESTS.include?(req.kind) }
+          sends_token: req.token, when: req.happens, in_this_build: !UNBUILT_REQUESTS.key?(req.kind) }
       end
 
       def fields(hash) = hash.transform_values(&:what)
@@ -89,7 +90,7 @@ module DotPopper
         control = words.button(:privacy_delete)
         { screen:, control:, gesture: "press and hold for #{Presentation::GroupPanel::HOLD.to_i} seconds", prompt: words.button(:privacy_hold),
           sentence: "In the game's #{words.button(:settings_heading)}, open \"#{screen}\", then press and hold \"#{control}\".", shown: "once this device has a private code",
-          request: Groups::REQUESTS.fetch(:deleted).then { "#{it.verb.to_s.upcase} #{it.path}" } }
+          request: REQUESTS.fetch(:deleted).then { "#{it.verb.to_s.upcase} #{it.path}" } }
       end
 
       def store_labels
@@ -109,7 +110,7 @@ module DotPopper
         { category: data[:google], optional: data[:google_optional], purpose: "App functionality", shared: false, sent_by: kinds_with(label) }
       end
 
-      def kinds_with(label) = Groups::REQUESTS.values.select { it.labels.include?(label) }.map(&:kind)
+      def kinds_with(label) = REQUESTS.values.select { it.labels.include?(label) }.map(&:kind)
     end
   end
 end

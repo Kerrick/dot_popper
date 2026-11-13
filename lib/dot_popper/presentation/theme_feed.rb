@@ -9,7 +9,12 @@ module DotPopper
     # with no account and no group, so one date is kept for every player,
     # set once, the first time the game runs.
     class ThemeFeed
-      Job = Data.define(:verb, :path, :body)
+      # The one request themes make; #ask makes it only from here.
+      REQUESTS = [
+        Network::Request.new(kind: :themes, verb: :get, path: "/themes", feature: "themes",
+                             query: { started_on: Network::Field.new(what: "the date this device first played", label: :other_usage) },
+                             happens: "When the game is online, to learn which themes are available; for every player, Free too, with no private code.")
+      ].to_h { [it.kind, it] }.freeze
 
       # Keys in the server's answer: [{"key": "ghost"}, ...].
       def self.keys(body)
@@ -34,7 +39,7 @@ module DotPopper
       end
 
       # Starts one read.
-      def ask = @worker.start(Job.new(verb: :get, path: "/themes?started_on=#{started_on}", body: nil), nil)
+      def ask = @worker.start(Network::Job.of(REQUESTS.fetch(:themes), query: { started_on: }), nil)
 
       # Takes up finished reads. Says whether anything new arrived.
       def update

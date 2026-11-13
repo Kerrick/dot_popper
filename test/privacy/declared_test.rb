@@ -46,7 +46,7 @@ class PrivacyDeclaredTest < Minitest::Test
     manifest = read("ios/host/Host/PrivacyInfo.xcprivacy")
     types = manifest.scan(%r{<key>NSPrivacyCollectedDataType</key>\s*<string>(\w+)</string>\s*<key>NSPrivacyCollectedDataTypeLinked</key>\s*<(true|false)/>\s*<key>NSPrivacyCollectedDataTypeTracking</key>\s*<(true|false)/>\s*<key>NSPrivacyCollectedDataTypePurposes</key>\s*<array>\s*<string>(\w+)</string>\s*</array>})
     apis = manifest.scan(%r{<key>NSPrivacyAccessedAPIType</key>\s*<string>(\w+)</string>\s*<key>NSPrivacyAccessedAPITypeReasons</key>\s*<array>(.*?)</array>}m).to_h { |type, reasons| [type, reasons.scan(%r{<string>([^<]+)</string>}).flatten] }
-    sent = DotPopper::Groups::REQUESTS.values.flat_map(&:labels).uniq
+    sent = Privacy::REQUESTS.values.flat_map(&:labels).uniq
 
     assert_equal Privacy::STORE_LABELS.keys.sort, sent.sort, "every label is used by some request"
     assert_equal Privacy.store_labels.values.map { [it[:apple], it[:apple_linked].to_s, "false", Privacy::APPLE_PURPOSE] }.sort, types.sort
@@ -130,7 +130,7 @@ class PrivacyDeclaredTest < Minitest::Test
 
   def test_what_a_file_also_sends_is_really_sent
     sent = Privacy::SAVE_FILES.flat_map { it.sent.keys }
-    requests = DotPopper::Groups::REQUESTS.values
+    requests = Privacy::REQUESTS.values
 
     assert_equal %i[key score secret token], sent.sort
     assert(requests.any?(&:token))
@@ -169,22 +169,21 @@ class PrivacyDeclaredTest < Minitest::Test
     shown.each { refute_match(/\btokens?\b|\bbest\b|\bstatistics\b/i, it) }
     assert_includes document.dig(:on_device, :for_players), "Your record"
     assert_includes document.dig(:on_device, :for_players), "Your Stats"
-    assert_equal "/games", DotPopper::Groups::REQUESTS.fetch(:game).path
+    assert_equal "/games", Privacy::REQUESTS.fetch(:game).path
   end
 
   # Only a license key, from a website purchase, concerns one; a store's
   # copy never sends it (STORE_LABELS' license_key).
   def test_nothing_else_sent_concerns_a_purchase
-    words = DotPopper::Groups::REQUESTS.values.reject { it.labels.include?(:license_key) }.flat_map { [it.path, *it.body.keys, *it.query.keys] }.join(" ")
+    words = Privacy::REQUESTS.values.reject { it.labels.include?(:license_key) }.flat_map { [it.path, *it.body.keys, *it.query.keys] }.join(" ")
 
     refute_match(/purchase|receipt|entitlement|\bpro\b/i, words)
   end
 
   def test_the_network_permission_says_what_this_build_reaches
     purpose = Privacy::ANDROID_PERMISSIONS.fetch("android.permission.INTERNET")
-    groups = DotPopper::Groups
 
-    groups::REQUESTS.each_value { |request| assert_equal groups.features_built.include?(request.feature), purpose.include?(request.feature), request.kind }
+    Privacy::REQUESTS.each_value { |request| assert_equal Privacy.features_built.include?(request.feature), purpose.include?(request.feature), request.kind }
   end
 
   def test_the_document_is_current

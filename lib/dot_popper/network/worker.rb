@@ -15,7 +15,8 @@ module DotPopper
         @done = Queue.new
       end
 
-      # Starts +job+ with +token+.
+      # Starts +job+ (a Job, or what answers its verb, path and body) with
+      # +token+.
       def start(job, token)
         @thread ||= Thread.new { work }
         @jobs << [job, token]
@@ -34,7 +35,7 @@ module DotPopper
         Thread.current.priority = PRIORITY
         loop do
           job, token = @jobs.pop
-          @done << [job, @link.call(job.verb, job.path, job.body, token)]
+          @done << [job, @link.call(job, token)]
         end
       end
     end

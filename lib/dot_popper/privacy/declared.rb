@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
+require_relative "requests"
+
 module DotPopper
   # What the game declares about the player's data, in one place, each list
   # compared exactly with what it declares by test/privacy: Gemfile.lock,
   # the Android build and manifest, the iOS plists. A new SDK, permission,
   # save file or network call fails `bundle exec rake` until it is declared
-  # here, and doc/privacy.json is generated from these (Privacy::Document).
+  # here, or for a request where it is made (Privacy::REQUESTS), and
+  # doc/privacy.json is generated from these (Privacy::Document).
   module Privacy
     # A library or fact a player is told in +plain+ words, or one kept
     # +record_only+, with why it is not for them. One of the two is required.
@@ -35,7 +38,7 @@ module DotPopper
     # android/host's manifest, exactly. What INTERNET is for follows what
     # this build really reaches the server for.
     ANDROID_PERMISSIONS = {
-      "android.permission.INTERNET" => "to reach the game's server for #{Groups.features_built.join(" and ")}",
+      "android.permission.INTERNET" => "to reach the game's server for #{Privacy.features_built.join(" and ")}",
       "android.permission.VIBRATE" => "for haptic feedback"
     }.freeze
 

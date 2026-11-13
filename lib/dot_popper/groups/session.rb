@@ -21,15 +21,14 @@ module DotPopper
       # A request to make, and +then+ one to make after it succeeds.
       # +group_id+ is the group it is about, and +loud+ that the player is
       # waiting to hear how it went. Made only by Job.of, from what
-      # REQUESTS declares, so nothing goes out that isn't declared.
+      # REQUESTS declares, by Network::Job.of, so nothing goes out that
+      # isn't declared.
       class Job < Data.define(:kind, :verb, :path, :body, :then, :group_id, :loud)
         def initialize(kind:, verb:, path:, body: nil, then: nil, group_id: nil, loud: false) = super
 
         def self.of(kind, body: nil, group_id: nil, **rest)
-          request = REQUESTS.fetch(kind)
-          raise ArgumentError, "#{kind} sends #{body.to_h.keys}, but declares #{request.body.keys}" unless body.to_h.keys == request.body.keys
-
-          new(kind:, verb: request.verb, path: request.path_for(group_id), body:, group_id:, **rest)
+          sent = Network::Job.of(REQUESTS.fetch(kind), body:, id: group_id)
+          new(kind:, verb: sent.verb, path: sent.path, body: sent.body, group_id:, **rest)
         end
 
         private_class_method :new, :[]
