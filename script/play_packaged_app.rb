@@ -211,7 +211,9 @@ module PlayPackagedApp
 
       FileUtils.rm_rf(game)
       FileUtils.mkdir_p(game)
-      File.rename(app, into.tap { Dir.rmdir(it) })
+      # Into the cache's own folder, which may be on another file system.
+      Dir.rmdir(into)
+      FileUtils.mv(app, into)
     end
   end
 
