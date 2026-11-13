@@ -324,13 +324,13 @@ class RootTest < Minitest::Test
     stats_book = DotPopper::StatsBook.new(DotPopper::ScoreRecord::Memory.new)
     achievements = DotPopper::Achievements.new(DotPopper::ScoreRecord::Memory.new)
     groups = DotPopper::Groups::Session.off
-    theme_keeper = ThemeKeeper.plain(Style::THEMES)
+    themes = DotPopper::Themes.new(DotPopper::ScoreRecord::Memory.new)
     use_cases = DotPopper::Composition.use_cases(cabinet:, free_games: DotPopper::FreeGames.unlimited, entitlement:, store: NoStorefront.new,
                                                  achievements:, stats_book:, friend_groups: groups,
-                                                 use_theme: DotPopper::UseCases::UseTheme.new(themes: theme_keeper.rules, entitlement:))
+                                                 use_theme: DotPopper::UseCases::UseTheme.new(themes:, entitlement:))
     heard = -> { [cabinet, entitlement].map { it.instance_variable_get(:@listeners).size } }
     before = heard.call
-    Show.new(cabinet:, layout:, sounds: FakeSounds.new, radius: R, stats_book:, achievements:, theme_keeper:, groups:, **use_cases)
+    Show.new(cabinet:, layout:, sounds: FakeSounds.new, radius: R, stats_book:, achievements:, themes:, groups:, **use_cases)
 
     assert_equal before, heard.call
   end
@@ -359,7 +359,7 @@ class RootTest < Minitest::Test
       assert_instance_of DotPopper::Cabinet::Home, game.cabinet.state, saved
       assert_equal in_use, game.pen.theme.key, saved
       assert_equal in_use, game.speaker.theme.key, saved
-      assert_equal %i[classic ghost], ThemeKeeper.new(engine.file("themes.txt"), themes: Style::THEMES).choices.map(&:key), saved
+      assert_equal %i[classic ghost], DotPopper::Themes.new(engine.file("themes.txt")).choices, saved
     end
   end
 

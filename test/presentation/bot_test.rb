@@ -94,9 +94,9 @@ class BotTest < Minitest::Test
   # there.
   def test_it_answers_a_new_themes_card_before_playing
     cabinet = DotPopper::Cabinet.new(field, random: Random.new(4))
-    keeper = ThemeKeeper.new(DotPopper::ScoreRecord::Memory.new, themes: Style::THEMES)
-    keeper.receive(%w[ghost])
-    show = new_show(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R, theme_keeper: keeper)
+    themes = DotPopper::Themes.new(DotPopper::ScoreRecord::Memory.new)
+    themes.release(%w[ghost])
+    show = new_show(cabinet:, layout: layout, sounds: FakeSounds.new, radius: R, themes:)
     bot = Bot.new(Style::BOT, random: Random.new(5))
     assert show.arrival?
     600.times do

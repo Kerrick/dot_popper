@@ -88,16 +88,16 @@ module Inputs
                                           website: ->(fake:) { website(fake:) }, channel:)
       @games = DotPopper::FreeGames.new(Memory.new, today: -> { @day }, entitlement:, metered: storefront.offered?, bank: [games_left - 3, 0].max)
       (3 - games_left.clamp(0, 3)).times { games.spend! }
-      themes = P::ThemeKeeper.new(Memory.new, themes: Style::THEMES)
-      themes.receive(THEMES.map(&:to_s))
-      (arrival ? themes.shown[0...-1] : themes.shown).each { themes.told(it) }
+      themes = DotPopper::Themes.new(Memory.new)
+      themes.release(THEMES.map(&:to_s))
+      (arrival ? themes.choices[0...-1] : themes.choices).each { themes.told(it) }
       book = DotPopper::StatsBook.new(Memory.new, today: -> { @day })
       book.record(DotPopper::GameStats.start, @cabinet.size_class) if played
       session = DotPopper::Groups::Session.new(store: Memory.new, worker: Server.new)
       @server_choice = P::ServerChoice.new(Memory.new, gone: @gone, clipboard:)
       @show = new_show(cabinet:, layout: layout(width, height), sounds:, radius: R, random: Random.new(5), clipboard:, window:, stats_book: book,
                        sharing: P::SheetSharing.for(platform, opener:), links: opener, entitlement:, storefront:, games:,
-                       theme_keeper: themes, groups: session, group_notice: P::GroupNotice.new(Memory.new),
+                       themes:, groups: session, group_notice: P::GroupNotice.new(Memory.new),
                        tutorial_flag: P::TutorialFlag.new(Memory.new((P::TutorialFlag::SEEN if played))), input: P::InputKind.starting(touch: phone?),
                        server_choice: @server_choice)
       storefront.connect

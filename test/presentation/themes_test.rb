@@ -15,10 +15,10 @@ class ThemesTest < Minitest::Test
   def show(pro:, unlocked: [])
     @pro = true if pro
     entitlement = DotPopper::Entitlement.new(forced: @pro)
-    @theme_keeper = ThemeKeeper.new(DotPopper::ScoreRecord::Memory.new, themes: Style::THEMES)
-    @theme_keeper.receive(unlocked)
+    @themes = DotPopper::Themes.new(DotPopper::ScoreRecord::Memory.new)
+    @themes.release(unlocked)
     @cabinet = DotPopper::Cabinet.new(field, random: Random.new(2), score_record: DotPopper::ScoreRecord.new(DotPopper::ScoreRecord::Memory.new))
-    @show = new_show(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, entitlement:, theme_keeper: @theme_keeper,
+    @show = new_show(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, entitlement:, themes: @themes,
                      stats_book: DotPopper::StatsBook.new(DotPopper::ScoreRecord::Memory.new, today: -> { @day }))
     settle
   end
@@ -36,7 +36,7 @@ class ThemesTest < Minitest::Test
   # miss what we did not expect).
   def test_a_card_that_appears_under_a_finger_waits_a_moment_before_it_takes_a_press
     show(pro: true)
-    @theme_keeper.receive(["ghost"])
+    @themes.release(["ghost"])
     @show.update(0.016)
     use_key = @show.arrival_plan.use_button
     @show.tap(use_key.center_x, use_key.center_y)
@@ -55,7 +55,7 @@ class ThemesTest < Minitest::Test
   def test_nothing_of_a_theme_shows_until_the_server_unlocks_it
     show(pro: true)
     assert_nil @show.arrival
-    refute_predicate @theme_keeper, :offered?
+    refute_predicate @themes, :offered?
   end
 
   def test_a_new_theme_is_told_with_an_immediate_switch
