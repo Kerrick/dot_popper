@@ -592,7 +592,7 @@ jobs:
           # One spelling of the folder that both Git's bash and Ruby read.
           if [ "$RUNNER_OS" = Windows ]; then temp=$(cygpath -m "$RUNNER_TEMP"); fi
           fuse="$temp/fuse"
-          check() { ruby script/check_build.rb website "$VERSION" "$1"; }
+          check() { ruby script/check_build.rb website "$VERSION" "$1" && ruby script/channel_contents.rb check website "$1"; }
           case "$RUNNER_OS" in
             Windows)
               7z x -y -bd -o"$temp/zip" "$fuse"/*.zip > /dev/null

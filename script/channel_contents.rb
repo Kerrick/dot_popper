@@ -36,9 +36,12 @@ module ChannelContents
 
   # +needed_by+ the channels that use it; +files+ its own files, relative
   # to the game's folder; +marks+ the text that names it, wherever it is;
-  # +everywhere+ whether to look in the whole package, not only the game.
-  Piece = Data.define(:name, :needed_by, :files, :marks, :everywhere) do
-    def initialize(name:, needed_by:, marks:, files: [], everywhere: false) = super
+  # +everywhere+ whether to look in the whole package, not only the game;
+  # +separate+ whether the game's code keeps it apart already, so a build
+  # for sale that doesn't need it leaves its files out and holds none of
+  # its marks (LEFT_OUT).
+  Piece = Data.define(:name, :needed_by, :files, :marks, :everywhere, :separate) do
+    def initialize(name:, needed_by:, marks:, files: [], everywhere: false, separate: false) = super
   end
 
   PIECES = [
@@ -76,22 +79,23 @@ module ChannelContents
     # them; the game loads only privacy/save_files.rb (Shell::SaveFile).
     Piece.new(name: "privacy declarations the game never loads", needed_by: [],
               files: %w[lib/dot_popper/privacy/declared.rb lib/dot_popper/privacy/document.rb lib/dot_popper/privacy/requests.rb],
-              marks: [])
+              marks: [], separate: true)
   ].freeze
 
-  # What each channel's build leaves out of its package, which the fuse
-  # action passes to `lota fuse --exclude`. Only what no file the game
-  # loads names: every other piece is required by the game's loaders
-  # (lib/dot_popper.rb, continuity.rb, receipt.rb, presentation.rb,
-  # shell.rb), so leaving it out would stop the app starting. The app
-  # stores' builds leave these out; the website's and a test build's keep
-  # everything, as the playtest kits do.
-  STORE_LEFT_OUT = PIECES.select { it.needed_by.empty? }.flat_map(&:files).freeze
-  LEFT_OUT = Build::STORES.to_h { [it, STORE_LEFT_OUT] }.freeze
+  # A build for sale carries only what its channel needs: each separate
+  # piece its channel doesn't need is left out of its package (the fuse
+  # action passes these to `lota fuse --exclude`), and `check` fails if the
+  # package holds any of its files or marks. A piece the game's loaders
+  # still require is not separate yet: leaving it out would stop the app
+  # starting. A test build (every playtest kit) keeps everything.
+  LEFT_OUT = Build::CHANNEL_NAMES.to_h do |channel|
+    [channel, PIECES.select { it.separate && !it.needed_by.include?(channel) }.freeze]
+  end.freeze
 
   module_function
 
-  def left_out(channel) = LEFT_OUT.fetch(channel, [])
+  def left_out_pieces(channel) = LEFT_OUT.fetch(channel, [])
+  def left_out(channel) = left_out_pieces(channel).flat_map(&:files)
 
   def unneeded(channel) = PIECES.reject { it.needed_by.include?(channel) }
 
@@ -139,10 +143,14 @@ module ChannelContents
     held
   end
 
-  # The files +channel+'s build leaves out that +folder+ holds anyway.
+  # What +channel+'s build leaves out that +folder+ holds anyway, each as a
+  # line to print: a file, or a file that names a left-out piece.
   def returned(channel, folder)
-    game = game_in(folder) or abort("#{folder} holds no game to check")
-    left_out(channel).select { File.exist?(File.join(game, it)) }
+    game_in(folder) or abort("#{folder} holds no game to check")
+    pieces = left_out_pieces(channel)
+    found(channel, folder).select { |piece, _, _| pieces.include?(piece) }.flat_map do |piece, present, named|
+      present.map { "#{it} (#{piece.name})" } + named.map { |path, counts| "#{path}, which names #{piece.name} (#{counts.keys.join(", ")})" }
+    end
   end
 
   def main(argv)

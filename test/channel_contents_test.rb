@@ -54,14 +54,12 @@ class ChannelContentsTest < Minitest::Test
     assert_match(/^Apple's receipts \(needed by app-store, mac-app-store\)/, out)
   end
 
-  def test_a_store_build_leaves_out_the_privacy_declarations_the_game_never_loads
+  def test_a_build_for_sale_leaves_out_the_privacy_declarations_the_game_never_loads
     expected = %w[lib/dot_popper/privacy/declared.rb lib/dot_popper/privacy/document.rb lib/dot_popper/privacy/requests.rb]
 
-    assert_equal expected, ChannelContents.left_out("mac-app-store")
-    assert_equal expected, ChannelContents.left_out("microsoft-store")
+    DotPopper::Build::CHANNEL_NAMES.each { assert_empty expected - ChannelContents.left_out(it), it }
     assert_empty ChannelContents.left_out("test")
-    assert_empty ChannelContents.left_out("website")
-    assert_equal "#{expected.join("\n")}\n", run_script("excludes", "microsoft-store").last
+    assert_includes run_script("excludes", "microsoft-store").last, "#{expected.join("\n")}\n"
     assert_equal "", run_script("excludes", "test").last
   end
 
@@ -74,28 +72,34 @@ class ChannelContentsTest < Minitest::Test
     assert_equal "", out
   end
 
-  # The game's code, loaded as the app loads it (main.rb loads the shell),
-  # loads none of what a store build leaves out.
-  def test_the_game_loads_none_of_the_left_out_files
-    load = 'require "lota"; require "dot_popper"; require "dot_popper/shell"; puts $LOADED_FEATURES'
-    out, status = Open3.capture2e(RbConfig.ruby, "-I", File.join(ROOT, "lib"), "-e", load)
-    skip "Lota isn't installed here (#{out.lines.first})" if !status.success? && out.include?("lota (LoadError)")
+  # Each channel's build, stamped as script/set_build_channel.rb stamps it
+  # and loaded as the app loads it (main.rb loads the shell), loads none
+  # of what that channel leaves out.
+  def test_no_build_for_sale_loads_what_it_leaves_out
+    DotPopper::Build::CHANNEL_NAMES.each do |channel|
+      FileUtils.rm_rf(File.join(@game, "lib"))
+      FileUtils.cp_r(File.join(ROOT, "lib"), @game)
+      build = File.join(@game, "lib/dot_popper/build.rb")
+      File.write(build, File.read(build).sub("    CHANNEL = nil\n", "    CHANNEL = #{channel.inspect}\n"))
+      ChannelContents.left_out(channel).each { FileUtils.rm(File.join(@game, it)) }
+      load = 'require "lota"; require "dot_popper"; require "dot_popper/shell"; puts DotPopper::Build::CHANNEL'
+      out, status = Open3.capture2e(RbConfig.ruby, "-I", File.join(@game, "lib"), "-e", load)
+      skip "Lota isn't installed here (#{out.lines.first})" if !status.success? && out.include?("lota (LoadError)")
 
-    assert status.success?, out
-    loaded = out.lines.map(&:chomp)
-
-    assert_includes loaded, File.join(ROOT, "lib/dot_popper/privacy/save_files.rb")
-    ChannelContents::STORE_LEFT_OUT.each do |path|
-      assert_path_exists File.join(ROOT, path)
-      refute_includes loaded, File.join(ROOT, path)
+      assert status.success?, "#{channel}: #{out}"
+      assert_equal channel, out.lines.last.chomp
     end
+  end
+
+  def test_every_left_out_file_is_in_the_repository
+    ChannelContents::PIECES.select(&:separate).flat_map(&:files).each { assert_path_exists File.join(ROOT, it) }
   end
 
   def test_check_fails_when_a_left_out_file_comes_back
     ok, out = run_script("check", "mac-app-store", @app)
 
     refute ok, out
-    assert_match %r{FAIL .* holds lib/dot_popper/privacy/declared\.rb, which a mac-app-store build leaves out}, out
+    assert_match %r{FAIL .* holds lib/dot_popper/privacy/declared\.rb \(privacy declarations the game never loads\), which a mac-app-store build leaves out}, out
 
     ChannelContents.left_out("mac-app-store").each { FileUtils.rm(File.join(@game, it)) }
     ok, out = run_script("check", "mac-app-store", @app)
