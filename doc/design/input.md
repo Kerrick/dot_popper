@@ -38,7 +38,7 @@ A press during setdef's splash only skips the splash (`App#skip_splash`), and th
 ## Touch
 
 - Each finger is a press of its own, with its touch id as its key.
-- A finger dragged on a scrolling list scrolls it (`Show#drag_scroll`). A press on a list's row waits for its release, so a drag that starts on a row scrolls instead of opening it (`Show#press_list`).
+- A finger dragged on a scrolling list scrolls it (`Show#drag_scroll`). A press on a list's row waits for its release, so a drag that starts on a row scrolls instead of opening it (`Screens::Scrolling`).
 - A finger press hides the gamepad cursor and starts the mouse's travel afresh, so only a new, deliberate mouse move takes the words back to the mouse.
 
 ## Gamepad
