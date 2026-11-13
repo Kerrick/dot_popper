@@ -3,8 +3,8 @@
 module DotPopper
   module Presentation
     module Themes
-      # Pumpkin pies, and the dish after dinner when popped, on a farm at
-      # dusk on Thanksgiving.
+      # Pumpkin pies, and the dish after dinner when popped, on a harvest
+      # plaid, the Thanksgiving table's flannel.
       module PumpkinPie
         def self.theme(base, hex)
           Theme.new(
@@ -21,9 +21,9 @@ module DotPopper
               confetti: [hex["#f5ab5e"], hex["#ffe2a8"], hex["#b8452a"], hex["#fff1dc"], hex["#8a9a44"]].freeze
             ),
             art: ThemeArt.new(
-              dot: "pumpkin_pie", scenery: :farm,
-              sky: ThemeSky.new(top: hex["#17112a"], mid: hex["#33203a"], bottom: hex["#6e3530"], glow: hex["#ff9a4a"], glow_at: [0.45, 1.02],
-                                glow_amount: 0.45, edge: hex["#0a0610"], stars: 0.6),
+              dot: "pumpkin_pie", scenery: :plaid,
+              sky: ThemeSky.new(top: hex["#1a0f1a"], mid: hex["#2a1620"], bottom: hex["#42201a"], glow: hex["#ff9a4a"], glow_at: [0.5, 1.05],
+                                glow_amount: 0.22, edge: hex["#0a0610"], stars: 0.0),
               wordmark: "assets/fonts/Fredoka-Bold.ttf", dotted_name: true,
               sounds: {
                 # A soft plop, a forkful taken: one attack, its octave on
