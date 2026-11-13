@@ -36,9 +36,6 @@ module DotPopper
     # Asked for a cabinet's Starter a second time.
     class StarterTaken < StandardError; end
 
-    # Its old name, until no caller says it.
-    StartsTaken = StarterTaken
-
     # The one way to start a game on this cabinet (Starter), handed out
     # once, to the one thing that starts every game (UseCases::StartGame,
     # which the composition root makes): asked again, it raises. The
@@ -66,9 +63,6 @@ module DotPopper
       end)
     end
 
-    # Its old name, until no caller says it.
-    def starts = starter
-
     # Starting a game on a Cabinet, from Home, which only what holds its
     # Starter can do (Cabinet#starter). Elsewhere it does nothing.
     class Starter
@@ -83,9 +77,6 @@ module DotPopper
       # Answers the cabinet.
       def paused(dots, seed = nil) = @start.call(dots, seed)
     end
-
-    # Its old name, until no caller says it.
-    Starts = Starter
 
     # Adds a listener: anything that answers +call(event)+.
     def subscribe(listener = nil, &block)

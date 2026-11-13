@@ -27,13 +27,7 @@ module DotPopper
     class StarterTaken < StandardError
     end
 
-    class StartsTaken = StarterTaken
-
     def starter: () -> Starter
-
-    def starts: () -> Starter
-
-    class Starts = Starter
 
     class Starter
       @start: ^(Stack?, Integer?) -> Cabinet

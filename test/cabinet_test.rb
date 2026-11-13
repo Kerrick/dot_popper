@@ -343,7 +343,7 @@ class CabinetTest < Minitest::Test
   # What the cabinet answers without an argument, but what moves it on
   # (to Home, from a pause, or taking its Starter): every reader there is,
   # or will be.
-  def readers = Cabinet.public_instance_methods(false).select { Cabinet.instance_method(it).arity.zero? } - %i[show_home unpause starter starts]
+  def readers = Cabinet.public_instance_methods(false).select { Cabinet.instance_method(it).arity.zero? } - %i[show_home unpause starter]
 
   # Only the cabinet holds its game. Nothing it answers, in any state,
   # and nothing its state holds, is the game or can change it: what the
