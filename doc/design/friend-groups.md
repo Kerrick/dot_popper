@@ -14,9 +14,9 @@ Only a game that counts is sent: one played by a member of a group, not the tuto
 
 ## The server's address
 
-`Network::Settings` (`lib/dot_popper/network/settings.rb`) is the one place it is set, for friend groups, themes and setdef's own checks alike:
+`Network::Server` (`lib/dot_popper/network/server.rb`) is the one place it is set, for friend groups, themes and setdef's own checks alike:
 
-- `Settings::SERVER_URL` is `https://server.dot-popper.setdef.com`, for every build.
+- `Server::SERVER_URL` is `https://server.dot-popper.setdef.com`, for every build.
 - `DOT_POPPER_SERVER` names another server, to try one out; empty means none, and then the game offers no friend groups and makes no connection for them. A store build ignores it (`Build.settings`, [store-and-pro.md](store-and-pro.md)).
 - An automated run (`Automation`) has no server unless `DOT_POPPER_SERVER` names a local one.
 - While setdef is gone, a player may choose another server with Change Server ([store-and-pro.md](store-and-pro.md#when-setdef-is-gone)). `Composition::Root#server_url` gives friend groups and the themes check that server from the next start, and `Composition::Root#groups_session` keeps its token in `group-<host>.txt` so setdef's token, in `group.txt`, is never sent elsewhere.

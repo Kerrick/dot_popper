@@ -223,7 +223,7 @@ class RootTest < Minitest::Test
     assert_nil store.theme_feed
     plain = root(channel: B::WEBSITE, env: { "DOT_POPPER_SERVER" => "http://localhost:1" })
 
-    assert_equal DotPopper::Network::Settings::SERVER_URL, plain.server_url
+    assert_equal DotPopper::Network::Server::SERVER_URL, plain.server_url
     test_build = root(env: SETTINGS)
 
     assert_equal Date.new(2031, 1, 1), test_build.settings.today.call

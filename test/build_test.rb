@@ -59,7 +59,7 @@ class BuildTest < Minitest::Test
     env = DotPopper::Build.settings(SETTINGS, channel: STORE)
 
     refute DotPopper::Entitlement.forced?(env)
-    assert_equal DotPopper::Network::Settings::SERVER_URL, DotPopper::Network::Settings.server_url(env)
+    assert_equal DotPopper::Network::Server::SERVER_URL, DotPopper::Network::Server.server_url(env)
     refute DotPopper::Automation.on?(env), "a store build is not made automated by the environment"
   end
 
@@ -67,6 +67,6 @@ class BuildTest < Minitest::Test
     env = DotPopper::Build.settings(SETTINGS, channel: nil)
 
     assert DotPopper::Entitlement.forced?(env)
-    assert_equal "http://localhost:9292", DotPopper::Network::Settings.server_url(env)
+    assert_equal "http://localhost:9292", DotPopper::Network::Server.server_url(env)
   end
 end

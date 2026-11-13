@@ -29,7 +29,7 @@
 #   DOT_POPPER_PRO=1           plays as if Pro were bought
 #   DOT_POPPER_SERVER=http://localhost:9292
 #                               asks this server for friend groups and themes
-#                               instead of Network::Settings::SERVER_URL
+#                               instead of Network::Server::SERVER_URL
 #                               (empty: none).
 #   DOT_POPPER_GROUP_SCREEN=1   opens the Friend group screen at launch,
 #                               to check how it looks.
