@@ -94,7 +94,6 @@ module DotPopper
         @game_over = nil
         @tutor = tutor
         @clipboard = clipboard
-        @sharing = sharing
         @mistake = nil
         @penalized_at = -Float::INFINITY
         @beckoned_at = nil
@@ -107,7 +106,7 @@ module DotPopper
         @undo = nil
         @pointer = nil
         @hover = Hover.none
-        @screens = Screens.made_for(self, clipboard:, buy_pro: @buy_pro, storefront:, entitlement:)
+        @screens = Screens.made_for(self, clipboard:, buy_pro: @buy_pro, storefront:, entitlement:, start_game: @start_game, sharing:)
         cabinet.subscribe(@recorder)
         cabinet.subscribe(self)
       end
@@ -121,6 +120,9 @@ module DotPopper
       # The screens open over the screen for the game's state, the top
       # one last, for the renderer to draw.
       attr_reader :layers
+
+      # One of each screen, open or not, by its name in Screens.made_for.
+      attr_reader :screens
 
       # The screen for Cabinet's state, under any opened over it: Home,
       # or the card telling of a new theme over it; the Tutorial over the
@@ -393,51 +395,18 @@ module DotPopper
       # Where a tap reaches the Tutorial's skip button, where it is drawn.
       def skip_reach = reach_of(:skip)
 
-      # Game Over's Home: back Home, once the game will hear a press
-      # (Rules::GAME_OVER_GRACE).
-      def continue_on
-        cabinet.press(layout.center_x, layout.center_y) if game_over?
-      end
+      # Game Over's Home (Screens::GameOver#continue_on).
+      def continue_on = @screens[:game_over].continue_on
 
-      # Game Over's Play again: Home, and at once Play, so another game is
-      # one press. With no game left it says Get Pro, and opens the offer
-      # over Game Over, which Back closes to Game Over as it was.
-      def play_again
-        return unless game_over? && cabinet.state.ready?
-        return offer_over_game_over if @start_game.none_left? && offer_offered?
+      # Game Over's Play again (Screens::GameOver#play_again).
+      def play_again = @screens[:game_over].play_again
 
-        continue_on
-        play
-      end
+      # One of Game Over's lines that opens something
+      # (Screens::GameOver#open_from).
+      def open_from_game_over(what) = @screens[:game_over].open_from(what)
 
-      def offer_over_game_over = offer.open_for_play
-
-      # One of Game Over's lines that opens something: a new achievement
-      # in its dialog, or the friend group whose title the game took.
-      def open_from_game_over(what)
-        return unless game_over? && cabinet.state.ready?
-
-        achievement = game_over.achievements.first
-        group = @groups.game_title_taken
-        continue_on
-        case what
-        when :achievement
-          open_achievements
-          open_achievement(achievement) if achievement
-        when :group then group ? @groups.open_at(group) : @groups.open
-        end
-      end
-
-      # Game Over's lines in pills of their own (GameOverChip): today's
-      # goal met, a new achievement, which opens it, and what the game did
-      # in the friend groups, which opens the group whose title it took.
-      def game_over_chips
-        over = game_over or return []
-        group = @groups.game_line.to_s.strip
-        [(GameOverChip.new(name: :over_goal, text: words.goal_met, glyph: :check, opens: false) if over.goal_met),
-         (GameOverChip.new(name: :over_achievement, text: AchievementWords.earned(over.achievements), glyph: :achievement, opens: true) if over.achievements.any?),
-         (GameOverChip.new(name: :over_group, text: group, glyph: :crown, opens: !@groups.game_title_taken.nil?) unless group.empty?)].compact
-      end
+      # Game Over's lines in pills of their own (Screens::GameOver#chips).
+      def game_over_chips = @screens[:game_over].chips
 
       # The mouse moved to +x+, +y+, without a button held or with one.
       def pointer_at(x, y) = @pointer = [x, y]
@@ -764,19 +733,10 @@ module DotPopper
       # The gamepad button that holds "Clear my stats…", for its words.
       def holding_button = clearing.by == :y ? "Y" : "A"
 
-      # A gamepad's Y, or a tap on "Share my score": on Game Over, offers
-      # the game's result to share (+sharing+), which in the game opens
-      # the share preview, and copies nothing yet; on a phone it opens the
-      # system's share sheet, and no preview. In the preview, Y
-      # copies, as Copy does. Anywhere else it does nothing.
-      def share
-        return copy_result if sharing?
-        return unless game_over? && game_over && !offer?
-
-        preview = @sharing.offer(share_text, now) or return sounds.play(:tick)
-        @screens[:share_preview].open_with(preview)
-        sounds.play(:tick)
-      end
+      # A gamepad's Y, or a tap on "Share my score": on Game Over, the
+      # game's result to share (Screens::GameOver#share); in the preview,
+      # Copy.
+      def share = sharing? ? copy_result : @screens[:game_over].share
 
       # Whether the share preview is open over Game Over. It is the
       # presentation's alone: the game stays on Game Over meanwhile, its
@@ -999,12 +959,11 @@ module DotPopper
 
       PRIVACY_URL = "https://dot-popper.setdef.com/privacy"
 
-      # What the title says of the games left, or nil where none are counted.
-      # Where Game Over's words and "Share my score" go (FinalePlan), or
-      # nil away from Game Over.
-      def game_over_plan = game_over_screen&.then { planned(it) }
+      # Where Game Over's words and buttons go (GameOverPlan), or nil
+      # before a game has finished.
+      def game_over_plan = @screens[:game_over].plan
 
-      # The plan of +screen+ (a HomeScreen or a FinaleScreen), laid out
+      # The plan of +screen+ (a HomeScreen), laid out
       # again only when the screen differs from the last of its kind, since
       # laying one out measures every line, a millisecond a frame on a
       # phone, and each frame asks for it more than once.
@@ -1015,14 +974,9 @@ module DotPopper
         (@plans[screen.class] = [screen, screen.plan]).last
       end
 
-      # Game Over's words to lay out (FinaleScreen), or nil away from it.
-      def game_over_screen
-        return unless game_over
-
-        GameOverScreen.new(layout:, type: style::TYPE, words:, measure: @measure, scrim: style::GAME_OVER_BACKING, game_over:,
-                           below: layout.safe.y, radius: cabinet.game&.field&.radius || @radius, chips: game_over_chips,
-                           play_word: @start_game.none_left? ? words.button(:get_pro) : words.play_again, play_note:)
-      end
+      # Game Over's words to lay out (GameOverScreen), or nil before a game
+      # has finished.
+      def game_over_screen = @screens[:game_over].layout_screen
 
       # The window changed size. Home's dots are respawned if their
       # size changes with it, as dots sized to the screen do.
@@ -1316,11 +1270,6 @@ module DotPopper
         @haptics.buzz(style::HAPTICS.penalty)
       end
 
-      # The finished game's result, as Words#share_text says it.
-      def share_text
-        words.share_text(game_over.score, game_over.stats, score_record: game_over.score_record, new_score_record: game_over.new_score_record?,
-                         record: game_over.record, screen: game_over.screen, first: game_over.first)
-      end
 
       # The game is finished (UseCases::FinishGame), and Game Over shows
       # what it did.

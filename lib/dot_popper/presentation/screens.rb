@@ -10,10 +10,11 @@ module DotPopper
       # One of each screen for +show+, by name: a screen over Home by the
       # name Show#page gives it, the rest by their own. +clipboard+ takes
       # what the share preview copies; the offer of Pro sells through
-      # +buy_pro+, as +storefront+ and +entitlement+ say.
-      def self.made_for(show, clipboard:, buy_pro:, storefront:, entitlement:)
+      # +buy_pro+, as +storefront+ and +entitlement+ say; Game Over starts
+      # the next game through +start_game+ and shares through +sharing+.
+      def self.made_for(show, clipboard:, buy_pro:, storefront:, entitlement:, start_game:, sharing:)
         { home: Home.new(show), new_theme: NewTheme.new(show), tutorial: Tutorial.new(show), game: Game.new(show),
-          game_over: GameOver.new(show), share_preview: SharePreview.new(show, clipboard:),
+          game_over: GameOver.new(show, start_game:, sharing:), share_preview: SharePreview.new(show, clipboard:),
           offer: Offer.new(show, buy_pro:, storefront:, entitlement:),
           stats: Stats.new(show), achievements: Achievements.new(show), achievement_dialog: AchievementDialog.new(show),
           themes: Themes.new(show), settings: Settings.new(show), credits: Credits.new(show), privacy: Privacy.new(show),
