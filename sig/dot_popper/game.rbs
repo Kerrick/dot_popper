@@ -37,8 +37,6 @@ module DotPopper
 
       def elapsed: () -> Float
 
-      def spawns: () -> Array[Spawn]
-
       def dots_in_a_row: () -> Integer
 
       def bonus: () -> Rules::Bonus?

@@ -350,8 +350,12 @@ class CabinetTest < Minitest::Test
     assert_equal %w[Home Paused Playing GameOver], seen.map { it[0].class.name.split("::").last }
     held = seen.flatten.compact
     view = DotPopper::Game::View
-    held += held.grep(view).flat_map { |game| view.public_instance_methods(false).map { game.public_send(it) } }
+    read = held.grep(view).flat_map { |game| view.public_instance_methods(false).map { game.public_send(it) } }
+    held += read
     assert_empty held.grep(DotPopper::Game)
+    # What a view answers is a value, frozen all the way down, so nothing
+    # reached through it can change the game it reads.
+    assert_empty read.reject { Ractor.shareable?(it) }.map(&:class)
     # A state's own #update takes the game as the cabinet hands it over.
     values = held.reject { it.class.name.start_with?("DotPopper::Cabinet::") }
     assert_empty values.select { |answer| CHANGES.any? { answer.respond_to?(it) } }.map(&:class)

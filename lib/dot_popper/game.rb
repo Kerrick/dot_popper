@@ -14,8 +14,9 @@ module DotPopper
     attr_reader :view
 
     # A game as it stands, which answers what the game is now and nothing
-    # that changes it. What the screens, the renderer, the bot and the
-    # tutorial read each frame (Cabinet#game).
+    # that changes it, each answer a value frozen all the way down. What
+    # the screens, the renderer, the bot and the tutorial read each frame
+    # (Cabinet#game).
     class View
       def initialize(game) = @game = game
 
@@ -24,7 +25,6 @@ module DotPopper
       def score = @game.score
       def countdown = @game.countdown
       def elapsed = @game.elapsed
-      def spawns = @game.spawns
       def dots_in_a_row = @game.dots_in_a_row
       def bonus = @game.bonus
       def over? = @game.over?
