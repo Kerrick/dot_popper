@@ -734,7 +734,7 @@ module DotPopper
       def game_over_screen = @screens[:game_over].layout_screen
 
       # The window changed size. Home's dots are respawned if their
-      # size changes with it, as dots sized to the screen do.
+      # size changes with it, as standard dots do.
       def resize(layout, field)
         @layout = layout
         @screens[:credits].lay_out if credits?
@@ -939,7 +939,7 @@ module DotPopper
         lesson = @tutor.lesson(@mistake) if @mistake&.among(event.dots)
         @game_over = GameOver.new(style: style::GAME_OVER, score: event.score, score_record: event.score_record, new_score_record: event.new_score_record, at: now,
                              stats: game_stats, record: result.record, goal_met: result.goal_met, lesson:, achievements: result.achievements,
-                             first: event.first, screen: words.played_on(event.field, sized: event.size_class == SizeClass::FITTED))
+                             first: event.first, screen: words.played_on(event.field, standard: event.size_class == SizeClass::STANDARD))
         sounds.play(event.new_score_record ? :new_score_record : :game_over)
       end
 

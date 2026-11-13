@@ -63,7 +63,7 @@ module DotPopper
       end
 
       # Measures every effect from now on in dots of +radius+, as a game
-      # whose dots are sized to the screen needs. Effects already playing
+      # whose dots are standard for the screen needs. Effects already playing
       # keep the size they began with.
       def scale_to(radius)
         @radius = radius

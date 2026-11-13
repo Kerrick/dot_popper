@@ -152,7 +152,7 @@ module DotPopper
         sizing_store = file("dot_size.txt")
         @cabinet = Cabinet.new(screen, score_record: ScoreRecord.new(file("score_record.txt"), legacy:), random:,
                                        sizing: DotSizing.parse(sizing_store.read))
-        @engine.say("dots are sized to the screen as each game starts") if @cabinet.sizing.sized_to_screen?
+        @engine.say("dots are standard, worked out from the screen as each game starts") if @cabinet.sizing.standard?
         stats_book = StatsBook.new(file("stats.txt"), today:, legacy:)
         achievements = Achievements.new(file("achievements.txt"))
         keeper = StatsKeeper.new(score_record: @cabinet.score_record, stats_book:, achievements:, folder: ->(name) { file(name) })

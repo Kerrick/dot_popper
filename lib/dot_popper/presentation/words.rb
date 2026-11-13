@@ -172,10 +172,10 @@ module DotPopper
       def screen_here(field) = format(screen_size.fetch(:here), *Words.dots_across(field))
 
       # The shared result's last line: "Played on a screen about 12 dots
-      # wide and 8 dots tall.", or, with the dots +sized+ to the screen,
-      # that they were.
-      def played_on(field, sized: false)
-        sized ? screen_size.fetch(:fitted_played) : format(screen_size.fetch(:played), *Words.dots_across(field))
+      # wide and 8 dots tall.", or, with +standard+ dots, "Played with
+      # standard dots."
+      def played_on(field, standard: false)
+        standard ? screen_size.fetch(:standard_played) : format(screen_size.fetch(:played), *Words.dots_across(field))
       end
 
       # The name of one choice of dot size, on its segment of Settings'
@@ -184,7 +184,7 @@ module DotPopper
       # +preview+ (SizingPreview) sees it: "Bigger" on a phone, "Smaller"
       # on a big monitor. A player sees only their own two sizes, so the
       # words say what happens on this screen, not how a size is worked out.
-      def sizing(sizing, preview) = screen_size.fetch(sizing.sized_to_screen? ? :fitted : effect_of(sizing, preview))
+      def sizing(sizing, preview) = screen_size.fetch(sizing.standard? ? :standard : effect_of(sizing, preview))
 
       # What else that choice does, under its name: "More room" for the
       # smaller dots, "Less room" for the bigger.
@@ -296,7 +296,7 @@ module DotPopper
       # are kept by screen size, one with its name here, or one with none
       # where the two look alike.
       def sized(key, sizing, preview)
-        return format(labels.fetch(key), sizing(sizing, preview).downcase) if sizing.sized_to_screen?
+        return format(labels.fetch(key), sizing(sizing, preview).downcase) if sizing.standard?
 
         effect = preview && effect_of(sizing, preview)
         return labels.fetch(:"#{key}_unnamed") unless %i[smaller bigger].include?(effect)
@@ -308,7 +308,7 @@ module DotPopper
       # the other choice; :alike where the two hardly differ.
       def effect_of(sizing, preview)
         effect = preview.effect
-        sizing.sized_to_screen? ? effect : { smaller: :bigger, bigger: :smaller }.fetch(effect, effect)
+        sizing.standard? ? effect : { smaller: :bigger, bigger: :smaller }.fetch(effect, effect)
       end
     end
   end

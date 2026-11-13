@@ -8,8 +8,8 @@ module DotPopper
       # Back. Only the buttons in view take presses.
       class Settings < Page
         # The dot-size choices in the order its row draws them: the
-        # default, dots sized to the screen, first.
-        SIZINGS = [DotSizing::SIZED_TO_SCREEN, DotSizing::FIXED].freeze
+        # default, Standard, first.
+        SIZINGS = [DotSizing::STANDARD, DotSizing::FIXED].freeze
 
         # +sizing_store+ keeps the player's DotSizing.
         def initialize(show, sizing_store:)
@@ -44,7 +44,7 @@ module DotPopper
           cabinet.sizing = sizing
           @sizing_store.write(cabinet.sizing.to_text)
           show.sizing_changed
-          sounds.play(:tick, pitch: cabinet.sizing.sized_to_screen? ? 1.2 : 0.9)
+          sounds.play(:tick, pitch: cabinet.sizing.standard? ? 1.2 : 0.9)
         end
 
         # Sound on or off, as +on+ says.

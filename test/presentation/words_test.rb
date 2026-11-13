@@ -57,7 +57,7 @@ class WordsTest < Minitest::Test
     screen = Style::WORDS.played_on(DotPopper::Field.new(1200, 800, 50))
 
     assert_equal "Played on a screen about 12 dots wide and 8 dots tall.", screen
-    assert_equal "Played with standard dots.", Style::WORDS.played_on(DotPopper::Field.new(1200, 800, 50), sized: true)
+    assert_equal "Played with standard dots.", Style::WORDS.played_on(DotPopper::Field.new(1200, 800, 50), standard: true)
     assert_equal "Dot Popper: 25 points\n🟡 27 dots · ⚫ 1 mistake · ⏱ 38 seconds\n#{screen}",
                  Style::WORDS.share_text(25, stats, score_record: 30, new_score_record: false, screen:)
     assert_equal "This screen is about 4 dots wide and 9 dots tall.",

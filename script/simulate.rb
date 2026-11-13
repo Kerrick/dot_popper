@@ -68,7 +68,7 @@ module Simulation
     def count(&) = spawns.count(&)
   end
 
-  SIZINGS = [DotPopper::DotSizing::FIXED, DotPopper::DotSizing::SIZED_TO_SCREEN].freeze
+  SIZINGS = [DotPopper::DotSizing::FIXED, DotPopper::DotSizing::STANDARD].freeze
 
   # One device with one choice of dot size, and the spawn rule's tries
   # (0 turns it off).
@@ -195,7 +195,7 @@ module Simulation
   # "old score" the mean score without it.
   def self.report(games, all_results)
     JOBS.zip(all_results).group_by { |job, _| job.sizing }.each do |sizing, rows|
-      puts sizing.sized_to_screen? ? "\nStandard dots, worked out from the screen" : "\nThe fixed dot size"
+      puts sizing.standard? ? "\nStandard dots, worked out from the screen" : "\nThe fixed dot size"
       puts format("%-26s %6s %6s %6s %6s %6s %7s %6s %8s %7s %9s %9s", "device", "R", "area", "score", "p90", "secs",
                   "endless", "pen", "redrawn", "moved", "no target", "old score")
       rows.each_slice(TRIES.size) { |(job, results), (_, unruled)| report_row(job, results, unruled, games) }
@@ -232,7 +232,7 @@ module Simulation
     list = candidates(numbers(dots_in_a_rows, [6, 8, 10, 12], :to_i.to_proc), numbers(points, [2, 4], :to_i.to_proc),
                       numbers(seconds, [2.0, 4.0, 6.0], :to_f.to_proc))
     jobs = BONUS_DEVICES.flat_map do |device|
-      list.map { Job.new(device:, sizing: DotPopper::DotSizing::SIZED_TO_SCREEN, spawn_tries: DotPopper::Rules::SPAWN_TRIES, bonus: it) }
+      list.map { Job.new(device:, sizing: DotPopper::DotSizing::STANDARD, spawn_tries: DotPopper::Rules::SPAWN_TRIES, bonus: it) }
     end
     results = jobs.map { |job| Ractor.new(job, games) { |each, count| Simulation.play(each, count) } }.map(&:value)
     jobs.zip(results).group_by { |job, _| job.device }.each do |device, rows|
