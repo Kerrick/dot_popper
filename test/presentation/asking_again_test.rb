@@ -12,7 +12,7 @@ class AskingAgainTest < Minitest::Test
   Refresh = DotPopper::Refresh
 
   # A worker answered by hand: what was started, and the replies given.
-  class HandWorker
+  class ManualWorker
     attr_reader :started
 
     def initialize = (@started = []) && (@answers = [])
@@ -21,6 +21,9 @@ class AskingAgainTest < Minitest::Test
     def answer(reply) = @answers << [@started.shift.first, reply]
   end
 
+  # The old name, until no commit uses it.
+  HandWorker = ManualWorker
+
   def group(top:, champion:)
     { "id" => 1, "join_code" => "2345678", "you" => 2, "champion_number" => champion, "top_score" => top,
       "reign_started_at" => "2026-11-01", "members" => [1, 2].map { { "number" => it, "top_score" => it } } }
@@ -28,8 +31,8 @@ class AskingAgainTest < Minitest::Test
 
   def setup
     @now = 0.0
-    @themes_worker = HandWorker.new
-    @groups_worker = HandWorker.new
+    @themes_worker = ManualWorker.new
+    @groups_worker = ManualWorker.new
     store = DotPopper::ScoreRecord::Memory.new
     store.write("t\n")
     @session = DotPopper::Groups::Session.new(store:, worker: @groups_worker)

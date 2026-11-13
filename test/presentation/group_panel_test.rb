@@ -10,7 +10,7 @@ class GroupPanelTest < Minitest::Test
   Screen = DotPopper::Presentation::GroupScreen
   Words = DotPopper::Presentation::GroupWords
 
-  class HandWorker
+  class ManualWorker
     attr_reader :started
 
     def initialize = (@started = []) && (@answers = [])
@@ -19,6 +19,9 @@ class GroupPanelTest < Minitest::Test
     def answer(reply) = @answers << [@started.shift.first, reply]
   end
 
+  # The old name, until no commit uses it.
+  HandWorker = ManualWorker
+
   def group(id: 1, numbers: [1, 2], you: 2, champion: 1, top: 18)
     { "id" => id, "join_code" => "2345678", "you" => you, "champion_number" => champion, "top_score" => top,
       "reign_started_at" => "2026-11-01", "members" => numbers.map { { "number" => it, "top_score" => it } } }
@@ -26,7 +29,7 @@ class GroupPanelTest < Minitest::Test
 
   def setup
     @sounds = FakeSounds.new
-    @worker = HandWorker.new
+    @worker = ManualWorker.new
     @session = Groups::Session.new(store: DotPopper::ScoreRecord::Memory.new, worker: @worker)
     @pro = DotPopper::Entitlement.new(forced: true)
     @cabinet = DotPopper::Cabinet.new(field)

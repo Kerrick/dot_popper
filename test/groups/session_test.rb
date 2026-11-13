@@ -7,7 +7,7 @@ class SessionTest < Minitest::Test
   Reply = DotPopper::Network::Reply
 
   # A worker that holds each job until the test answers it.
-  class HandWorker
+  class ManualWorker
     attr_reader :started
 
     def initialize = (@started = []) && (@answers = [])
@@ -16,9 +16,12 @@ class SessionTest < Minitest::Test
     def answer(reply) = @answers << [@started.shift.first, reply]
   end
 
+  # The old name, until no commit uses it.
+  HandWorker = ManualWorker
+
   def setup
     @store = DotPopper::ScoreRecord::Memory.new
-    @worker = HandWorker.new
+    @worker = ManualWorker.new
     @time = Time.at(1_000_000)
     @session = new_session
   end
