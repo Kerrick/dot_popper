@@ -24,6 +24,7 @@ Dot Popper's architecturally significant decisions, one per record, in the MADR 
 | [0014](0014-privacy-facts-come-from-the-code.md) | The privacy facts are generated from declarations the tests enforce | accepted |
 | [0015](0015-all-rights-reserved-after-v0-9-9.md) | Dot Popper is all rights reserved after v0.9.9 | accepted |
 | [0016](0016-the-tutorial-is-a-layer-over-a-paused-game.md) | The tutorial is a layer over the first game, paused, and Skip takes the layer away | accepted |
+| [0017](0017-use-cases-hold-the-rules-that-need-two-areas.md) | Use cases hold the rules that need two of the game's areas | accepted |
 
 ## Keeping the log
 
