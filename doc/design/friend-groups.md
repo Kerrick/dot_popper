@@ -31,7 +31,7 @@ The composition root (`Composition::Root`) builds the session with `Groups::Sess
 
 - **Nothing is sent until a Pro player creates or joins a group.** A session with no saved token makes no connection. The first Create or Join first sends `POST /player`, which answers an anonymous token, and then the Create or Join. A player is only a token: no name, nothing they supply.
 - **Every job comes from a declaration.** `Session::Job.of(kind, body:)` is the only way to make one; it takes the verb and path from `Groups::REQUESTS`, friend groups' own declarations, by `Network::Job.of`, which refuses a body whose fields differ from the declared ones ([privacy.md](privacy.md)).
-- **What it asks for, and when**: the player's groups (`GET /groups`) at launch and when the screen opens, once there is a token (`#refresh`); a group (`GET /groups/:id`) and its history (`GET /groups/:id/history`) when the player opens one (`#look_at`); `POST /groups` to create, `POST /memberships` with `join_code` to join, `DELETE /groups/:id/membership` to leave, `DELETE /player` to delete everything; `POST /games` with a score that counts; and `POST /achievements` with each achievement key a Pro player earns, once each, and those already earned on buying Pro (`UseCases::BuyPro`, told by `Entitlement::ProGranted`).
+- **What it asks for, and when**: the player's groups (`GET /groups`) at launch, when the screen opens, and again as [Asking again](#asking-again) says, once there is a token (`#refresh`); a group (`GET /groups/:id`) and its history (`GET /groups/:id/history`) when the player opens one (`#look_at`); `POST /groups` to create, `POST /memberships` with `join_code` to join, `DELETE /groups/:id/membership` to leave, `DELETE /player` to delete everything; `POST /games` with a score that counts; and `POST /achievements` with each achievement key a Pro player earns, once each, and those already earned on buying Pro (`UseCases::BuyPro`, told by `Entitlement::ProGranted`).
 - **Scores are clamped** to 0 to 100,000 (`Session::HIGHEST_SCORE`).
 
 ### The low-priority thread
@@ -39,6 +39,14 @@ The composition root (`Composition::Root`) builds the session with `Groups::Sess
 `Network::Worker` (`lib/dot_popper/network/worker.rb`) runs a `Link`'s requests in order on a thread of its own at priority -2 (`Worker::PRIORITY`), so a frame never waits on the network. The thread starts with its first job, so a player with no group has no thread. `Network::Link` (`lib/dot_popper/network/link.rb`) makes one HTTPS request at a time with `Net::HTTP`, OpenSSL's default certificate store, a 5-second open and 8-second read timeout, and a bearer token when the job sends one. It requires `net/http` and `json` on first use, on the worker's thread, so the game starts as fast as ever. `Network` is the game's HTTP client, which the theme feed and setdef's checks use too ([privacy.md](privacy.md#requests)).
 
 **Nothing is handed to the worker during a game.** `Session#update(quiet:)` takes up finished replies every frame but starts waiting jobs only when `quiet` is true; `Show#update` passes `quiet: !playing?`.
+
+### Asking again
+
+A phone keeps a game's process for days, so what is asked only at launch goes stale: a theme the server releases, or a title change in a group. `DotPopper::Refresh` (`lib/dot_popper/refresh.rb`, Lota-free) asks for the player's groups (`Session#refresh`) and the themes available (`ThemeFeed#ask`) again when the game comes back to the foreground and when Home is shown after a game (it hears `Cabinet`'s `HomeShown`). It never asks while a game is in play or the tutorial plays over one; coming back during a game waits for Home after it. It asks no sooner than `Refresh::FLOOR` (five minutes) after the last ask, launch included, by the wall clock, since the frames' time stands still while the game is away; a clock set back asks at once. The server limits neither request. The same requests go out, with the same fields; only these two are repeated, and the proof, the license key's check, the connectivity checks and the store's first question stay once each start ([store-and-pro.md](store-and-pro.md)).
+
+What comes back takes the road it takes at launch: a title change is announced from the history at Home or Game Over, and a new theme's card shows on Home ([look-and-sound.md](look-and-sound.md)).
+
+The shell reports coming back as the window getting focus back (`Shell::App#focus`). On iOS, SDL takes focus from the window as the scene resigns active and gives it back as the scene becomes active (SDL 3.4.10's `SDLUIKitSceneDelegate` and `SDL_OnApplicationDidEnterForeground`); on Android, SDL's activity sends focus with `onWindowFocusChanged`; on a computer, it is the window's own focus. LÖVE's engine passes each as `Lota.focus`. The composition root makes the `Refresh` and subscribes it to `Cabinet`.
 
 ### Quiet failures
 
@@ -140,4 +148,4 @@ The Privacy screen, opened from Settings, says "In a friend group, Dot Popper ke
 
 ## Tests
 
-`test/groups/session_test.rb`, `test/network/link_test.rb`, `test/presentation/group_panel_test.rb`, `test/presentation/member_icon_test.rb`, `test/presentation/names_test.rb`, and `test/privacy/requests_test.rb`, which plays every request through a real `Session` and `Link` against a local server.
+`test/groups/session_test.rb`, `test/refresh_test.rb`, `test/network/link_test.rb`, `test/presentation/group_panel_test.rb`, `test/presentation/member_icon_test.rb`, `test/presentation/names_test.rb`, and `test/privacy/requests_test.rb`, which plays every request through a real `Session` and `Link` against a local server.

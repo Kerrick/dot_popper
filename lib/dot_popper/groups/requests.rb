@@ -15,7 +15,7 @@ module DotPopper
       request(kind: :player, verb: :post, path: "/player", token: false,
               happens: "The first time this device creates or joins a group: the game asks the server for a private code."),
       request(kind: :groups, verb: :get, path: "/groups",
-              happens: "At launch and when the groups' screen opens, once this device has a private code."),
+              happens: "At launch and when the groups' screen opens, once this device has a private code. #{Refresh::HAPPENS}"),
       request(kind: :create, verb: :post, path: "/groups",
               happens: "When the player creates a group."),
       request(kind: :join, verb: :post, path: "/memberships",

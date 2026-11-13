@@ -3,17 +3,18 @@
 module DotPopper
   module Presentation
     # Asks the game's server which themes are unlocked, and tells the
-    # ThemeKeeper. One read, on its own thread (Network::Worker), so a frame
-    # never waits; offline, it simply does nothing, and what was saved
-    # stays. The server asks only for the date the player first played,
-    # with no account and no group, so one date is kept for every player,
-    # set once, the first time the game runs.
+    # ThemeKeeper: at launch, and again when Refresh says, each read on
+    # its own thread (Network::Worker), so a frame never waits; offline,
+    # it simply does nothing, and what was saved stays. The server asks
+    # only for the date the player first played, with no account and no
+    # group, so one date is kept for every player, set once, the first
+    # time the game runs.
     class ThemeFeed
       # The one request themes make; #ask makes it only from here.
       REQUESTS = [
         Network::Request.new(kind: :themes, verb: :get, path: "/themes", feature: "themes",
                              query: { started_on: Network::Field.new(what: "the date this device first played", label: :other_usage) },
-                             happens: "When the game is online, to learn which themes are available; for every player, Free too, with no private code.")
+                             happens: "When the game starts, to learn which themes are available; for every player, Free too, with no private code. #{Refresh::HAPPENS}")
       ].to_h { [it.kind, it] }.freeze
 
       # Keys in the server's answer: [{"key": "ghost"}, ...].

@@ -307,6 +307,30 @@ class RootTest < Minitest::Test
     assert_equal ["dotpopper-store://open"], engine.opener.urls.map { it[/\A[^?]*/] }
   end
 
+  # Coming back asks for the themes and the friend groups again, as at
+  # launch, and nothing that is asked once each time the game starts: not
+  # the store, nor the watch for setdef.
+  def test_coming_back_asks_again_for_themes_and_groups_and_nothing_asked_once_a_start
+    now = 0.0
+    engine = FakeEngine.new("iOS")
+    game = Root.new(engine:, settings: DotPopper::Composition::Settings.new(SETTINGS, channel: nil), clock: -> { now })
+    asked = []
+    game.theme_feed.define_singleton_method(:ask) { asked << :themes }
+    game.show.group_panel.groups.define_singleton_method(:refresh) { asked << :groups }
+    game.watch.define_singleton_method(:start) { asked << :watch }
+    game.storefront.define_singleton_method(:connect) { asked << :store }
+    game.start
+    asked.clear
+    now += DotPopper::Refresh::FLOOR
+    game.refresh.came_back
+
+    assert_equal %i[themes groups], asked
+    now += DotPopper::Refresh::FLOOR
+    game.cabinet.announce(DotPopper::Events::HomeShown.new(score_record: 0))
+
+    assert_equal %i[themes groups themes groups], asked
+  end
+
   # FakeEngine#file declares each name, as Shell::SaveFile does, so a
   # file the privacy document doesn't list fails every test here.
   def test_the_game_keeps_its_files_in_declared_save_files

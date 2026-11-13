@@ -267,7 +267,7 @@
         "query": {},
         "body": {},
         "sends_token": true,
-        "when": "At launch and when the groups' screen opens, once this device has a private code.",
+        "when": "At launch and when the groups' screen opens, once this device has a private code. Again when the player returns to the game or to Home after a game, at most every 5 minutes.",
         "in_this_build": true
       },
       {
@@ -374,7 +374,7 @@
         },
         "body": {},
         "sends_token": false,
-        "when": "When the game is online, to learn which themes are available; for every player, Free too, with no private code.",
+        "when": "When the game starts, to learn which themes are available; for every player, Free too, with no private code. Again when the player returns to the game or to Home after a game, at most every 5 minutes.",
         "in_this_build": true
       },
       {

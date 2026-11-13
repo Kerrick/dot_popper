@@ -170,8 +170,12 @@ module DotPopper
       # The window lost focus or got it back. A finger or button let go
       # meanwhile is never heard, so the pile's dots are let go now, and
       # so is "Clear my stats…", and no release is waited for to drop.
+      # Getting it back is also how a phone's game hears it came back to
+      # the foreground (SDL gives the window focus as iOS's scene becomes
+      # active and as Android's window gains focus), and Refresh decides
+      # whether that asks the server again.
       def focus(focused)
-        return if focused
+        return @game.refresh.came_back if focused
 
         @dragging.drop
         @chatter = @chatter.let_go

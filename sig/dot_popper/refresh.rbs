@@ -1,0 +1,25 @@
+module DotPopper
+  class Refresh
+    FLOOR: Float
+
+    HAPPENS: String
+
+    @askers: Array[^() -> void]
+
+    @cabinet: Cabinet
+
+    @clock: ^() -> Float
+
+    @asked_at: Float
+
+    def initialize: (Array[^() -> void] askers, cabinet: Cabinet, ?clock: ^() -> Float) -> void
+
+    def came_back: () -> void
+
+    def call: (event event) -> void
+
+    private
+
+    def ask_if_due: () -> void
+  end
+end

@@ -29,20 +29,22 @@ module DotPopper
     # [say(line)] prints a line about the run
     # [path(name)] where the save file +name+ is, to print
     #
-    # +settings+ (Settings) are the developer settings this build obeys.
-    # Nothing here starts a thread or asks anything of the network until
-    # #start.
+    # +settings+ (Settings) are the developer settings this build obeys,
+    # and +clock+ the wall clock in seconds, which Refresh keeps its floor
+    # by. Nothing here starts a thread or asks anything of the network
+    # until #start.
     class Root
       Style = Presentation::Style
       PLAYTEST_LOG = "games.csv"
       SMALLEST_WINDOW = [400, 320].freeze
 
       attr_reader :settings, :platform, :dot_size, :window, :cabinet, :show, :pen, :speaker, :splash, :storefront,
-                  :entitlement, :theme_feed, :watch, :cursor, :autopilot, :haptics, :sharing
+                  :entitlement, :theme_feed, :watch, :cursor, :autopilot, :haptics, :sharing, :refresh
 
-      def initialize(engine:, settings: Settings.new)
+      def initialize(engine:, settings: Settings.new, clock: -> { Time.now.to_f })
         @engine = engine
         @settings = settings
+        @clock = clock
         @platform = engine.platform
         @dot_size = DotSize.for(platform)
         engine.say("a dot's radius is #{dot_size.reason}")
@@ -56,6 +58,8 @@ module DotPopper
 
       # Starts what reaches past this process: the theme feed's first
       # request, the store's first question, and the watch for setdef.
+      # Only the first and the friend groups' are asked again (Refresh);
+      # the rest are once each time the game starts.
       def start
         theme_feed&.ask
         storefront.connect
@@ -197,8 +201,9 @@ module DotPopper
         games = free_games(entitlement, metered: storefront.offered? && player?)
         @haptics = platform.buzzes? ? @engine.buzzer : Presentation::NoHaptics.new
         @sharing = Presentation::SheetSharing.for(platform, opener: @engine.opener)
+        groups = groups_session
         @show = Presentation::Show.new(
-          groups: groups_session, cabinet: @cabinet, layout: @engine.layout, sounds: @speaker, radius: dot_size.radius,
+          groups:, cabinet: @cabinet, layout: @engine.layout, sounds: @speaker, radius: dot_size.radius,
           random:, calm: settings.calm?, tutor: Presentation::Tutor.new(file("taught.txt"), times: Style::LESSON.times),
           haptics:, clipboard:, notices: @engine.notices, sharing:,
           stats_book:, achievements:, keeper:, sizing_store:, input: starting_input, measure: @engine.measure(@pen),
@@ -208,6 +213,8 @@ module DotPopper
           entitlement:, theme_keeper:, storefront:, games:, links: @engine.opener,
           server_choice: @server_choice, use_theme:
         )
+        @refresh = Refresh.new([-> { @theme_feed&.ask }, -> { groups.refresh }], cabinet: @cabinet, clock: @clock)
+        @cabinet.subscribe(@refresh)
         @cabinet.subscribe(PlaytestLog.new(file(PLAYTEST_LOG), today:, archive: ->(name) { file(name) }))
         @engine.say("each game is logged in #{@engine.path(PLAYTEST_LOG)}")
         @show.group_panel.open if flag?("DOT_POPPER_GROUP_SCREEN")
