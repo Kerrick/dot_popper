@@ -12,6 +12,7 @@ module DotPopper
     # the game, a fake in the tests):
     #
     # [platform] the Platform the game runs on
+    # [unit] what a graphics unit is called there, to print
     # [file(name)] the store for a save file (read, write, remove)
     # [dimensions] the window's width and height in graphics units
     # [layout] the window's Presentation::Layout, with its safe area
@@ -46,7 +47,7 @@ module DotPopper
         @settings = settings
         @clock = clock
         @platform = engine.platform
-        @dot_size = DotSize.for(platform)
+        @dot_size = DotSize.for(platform, unit: engine.unit)
         engine.say("a dot's radius is #{dot_size.reason}")
         # With DOT_POPPER_PERF=1: whether this build's Ruby verifies
         # Ed25519, which the packaged-app playthroughs check. Where it

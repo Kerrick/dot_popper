@@ -8,7 +8,7 @@ module DotPopper
 
     def initialize: (radius: number, reason: String) -> void
 
-    def self.for: (Platform platform) -> DotSize
+    def self.for: (Platform platform, unit: String) -> DotSize
 
     def self.fitted: (number width, number height) -> DotSize
 

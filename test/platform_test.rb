@@ -48,8 +48,8 @@ class PlatformTest < Minitest::Test
 
   def test_a_unit_is_named_as_each_system_names_it
     assert_equal({ "iOS" => "points", "Android" => "dp", "OS X" => "logical pixels", "Windows" => "logical pixels",
-                   "Linux" => "logical pixels" },
-                 %w[iOS Android OS\ X Windows Linux].to_h { [it, on(it).unit] })
+                   "Linux" => "logical pixels", "Haiku" => "logical pixels" },
+                 %w[iOS Android OS\ X Windows Linux Haiku].to_h { [it, DotPopper::Shell::Platforms.unit(it)] })
   end
 
   def test_a_system_the_shell_does_not_know_plays_as_a_computer

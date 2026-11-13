@@ -18,16 +18,14 @@ module DotPopper
   #   build sells through the store helper shipped beside the game, or nil
   # [website_sales] whether a copy may sell through setdef's website
   #   (never an iOS copy: Apple 3.1.1)
-  # [unit] what one of the engine's graphics units is called here, for the
-  #   line the game prints about a dot's size
-  class Platform < Data.define(:touch, :quits_itself, :buzzes, :command_key, :phone_host, :own_store, :website_sales, :unit)
+  class Platform < Data.define(:touch, :quits_itself, :buzzes, :command_key, :phone_host, :own_store, :website_sales)
     # A computer, played with a mouse, a keyboard or a gamepad.
     COMPUTER = new(touch: false, quits_itself: true, buzzes: false, command_key: false, phone_host: false, own_store: nil,
-                   website_sales: true, unit: "logical pixels")
+                   website_sales: true)
 
     # A phone or tablet, in the phone host.
     PHONE = new(touch: true, quits_itself: true, buzzes: false, command_key: false, phone_host: true, own_store: nil,
-                website_sales: true, unit: "dp")
+                website_sales: true)
 
     def touch? = touch
     def quits_itself? = quits_itself

@@ -19,8 +19,9 @@ module DotPopper
     def initialize(radius:, reason:) = super(radius:, reason: -reason)
 
     # The usual size on +platform+ (Platform): under a finger, about 8 mm.
-    def self.for(platform)
-      reason = "#{Rules::RADIUS} #{platform.unit}"
+    # +unit+ is what the engine calls a graphics unit there, for the reason.
+    def self.for(platform, unit:)
+      reason = "#{Rules::RADIUS} #{unit}"
       new(radius: Rules::RADIUS, reason: platform.touch? ? "#{reason}, about 8 mm" : reason)
     end
 

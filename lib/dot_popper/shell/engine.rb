@@ -4,14 +4,16 @@ module DotPopper
   module Shell
     # What only Lota can make or do, as the composition root asks for it
     # (Composition::Root, which lists each). Shell::App makes one as the
-    # game loads, on the +platform+ Lota names, and hands it over.
+    # game loads, on the system Lota names (Platforms), and hands it over.
     class Engine
       Style = Presentation::Style
 
-      attr_reader :platform
+      attr_reader :platform, :unit
 
-      def initialize(platform)
-        @platform = platform
+      # The engine on the system Lota::System.os calls +system+.
+      def initialize(system)
+        @platform = Platforms.for(system)
+        @unit = Platforms.unit(system)
       end
 
       def file(name) = SaveFile.new(name:)

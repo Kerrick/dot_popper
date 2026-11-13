@@ -12,7 +12,7 @@ class RactorTest < Minitest::Test
     stack = DotPopper::Stack.new(dots: [dot(100, 100), dot(200, 200, popped: true)])
     stands = { dots: stack, score: 1, countdown: DotPopper::Countdown.new(remaining: 3), elapsed: 1.0 }
     values = [field, stack, stack.dots.first, DotPopper::Countdown.new(remaining: 3),
-              DotPopper::DotSize.for(DotPopperTest.platform("iOS")), DotPopper::DotSize.fitted(395, 850), DotPopper::DotSizing::SIZED_TO_SCREEN,
+              DotPopper::DotSize.for(DotPopper::Platform::PHONE, unit: "points"), DotPopper::DotSize.fitted(395, 850), DotPopper::DotSizing::SIZED_TO_SCREEN,
               DotPopper::SizeClass::FITTED, DotPopper::Events::Missed.new(x: 1, y: 2),
               DotPopper::Events::Popped.new(dot: stack.dots.first.pop, x: 1, y: 2, points: 1, seconds: 1.0,
                                             spawned: stack.dots.last, **stands),

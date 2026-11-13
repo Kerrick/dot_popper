@@ -19,9 +19,8 @@ What differs between Windows, macOS, Linux, iOS and iPadOS, and Android: the win
 | `command_key?` | Shortcuts are held with Command, not Ctrl | macOS |
 | `own_store` | The channel of the computer's own store, sold through the store helper | macOS (`mac-app-store`), Windows (`microsoft-store`) |
 | `website_sales?` | A copy may sell through setdef's website | every system but iOS |
-| `unit` | What a graphics unit is called, for the printed dot size | "points" on iOS, "dp" on Android, "logical pixels" on a computer |
 
-A system Lota names that `Shell::Platforms` doesn't know plays as a computer.
+A system Lota names that `Shell::Platforms` doesn't know plays as a computer. What a graphics unit is called, for the printed dot size, is the engine's word, so it stays in the shell (`Shell::Platforms.unit`, which `Shell::Engine#unit` hands the composition root): "points" on iOS, "dp" on Android, "logical pixels" on a computer.
 
 | | Windows | macOS | Linux | iOS and iPadOS | Android |
 | --- | --- | --- | --- | --- | --- |
@@ -48,7 +47,7 @@ On a computer, the composition root has the engine size the window (`Shell::Engi
 
 Three lines, on standard output, let a run on a device be compared with another:
 
-- `Dot Popper: a dot's radius is ...` (`DotSize#reason`), as in the table above.
+- `Dot Popper: a dot's radius is ...` (`DotSize#reason`, with the engine's name for a unit), as in the table above.
 - `Dot Popper: renderer NAME VERSION / VENDOR / DEVICE` (`Shell::Engine#report_renderer`, from `Lota::Graphics.renderer_info`).
 - `Dot Popper: screen ...` (`Shell::Engine#report_screen`, `Presentation::ScreenReport`), as it starts and again on every resize or turn. It gives the window's size in graphics units and in pixels, the dpi scale Lota reports and the display's native one, the safe area, and the window's mode with its `highdpi` and `usedpiscale` flags where Lota has them, for example `screen 812x375 units, 2436x1125 pixels, dpi scale 3.0 (native 3.0), safe area 47,0,718,354, mode 812x375 fullscreen desktop`. It lets a run on a real phone be set beside the Fledge SDL test program's on the same phone.
 

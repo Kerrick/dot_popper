@@ -3,21 +3,22 @@
 require "test_helper"
 
 class DotSizeTest < Minitest::Test
-  def test_a_desktop_dot_is_fifty_logical_pixels
-    size = DotPopper::DotSize.for(DotPopperTest.platform("Windows"))
+  def test_a_desktop_dot_is_fifty_units
+    size = DotPopper::DotSize.for(DotPopper::Platform::COMPUTER, unit: "logical pixels")
 
     assert_equal 50, size.radius
-    assert_match(/logical pixels/, size.reason)
+    assert_equal "50 logical pixels", size.reason
   end
 
-  def test_a_touch_dot_falls_back_to_fifty_points_for_about_eight_millimeters
-    assert_equal 50, DotPopper::DotSize.for(DotPopperTest.platform("iOS")).radius
-    assert_match(/points, about 8 mm/, DotPopper::DotSize.for(DotPopperTest.platform("iOS")).reason)
-    assert_match(/dp/, DotPopper::DotSize.for(DotPopperTest.platform("Android")).reason)
+  def test_a_touch_dot_falls_back_to_fifty_units_for_about_eight_millimeters
+    size = DotPopper::DotSize.for(DotPopper::Platform::PHONE, unit: "points")
+
+    assert_equal 50, size.radius
+    assert_equal "50 points, about 8 mm", size.reason
   end
 
   def test_it_makes_a_field_with_its_radius
-    assert_equal DotPopper::Field.new(800, 600, 50), DotPopper::DotSize.for(DotPopperTest.platform("OS X")).field(800, 600)
+    assert_equal DotPopper::Field.new(800, 600, 50), DotPopper::DotSize.for(DotPopper::Platform::COMPUTER, unit: "units").field(800, 600)
   end
 end
 

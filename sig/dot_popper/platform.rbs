@@ -14,13 +14,11 @@ module DotPopper
 
     attr_reader website_sales: bool
 
-    attr_reader unit: String
-
     def self.new: (touch: bool, quits_itself: bool, buzzes: bool, command_key: bool, phone_host: bool, own_store: String?,
-                   website_sales: bool, unit: String) -> instance
+                   website_sales: bool) -> instance
 
     def initialize: (touch: bool, quits_itself: bool, buzzes: bool, command_key: bool, phone_host: bool, own_store: String?,
-                     website_sales: bool, unit: String) -> void
+                     website_sales: bool) -> void
 
     COMPUTER: Platform
 

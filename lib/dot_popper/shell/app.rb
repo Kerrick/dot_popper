@@ -30,7 +30,7 @@ module DotPopper
       # what carries the game out with Lota: the pile, gamepads, tilting,
       # dragging, particles and the renderer.
       def load
-        @engine = Engine.new(Platforms.for(::Lota::System.os))
+        @engine = Engine.new(::Lota::System.os)
         @game = Composition::Root.new(engine: @engine, settings: @settings)
         @platform = @game.platform
         @touch = @platform.touch?

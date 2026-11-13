@@ -68,12 +68,13 @@ class FakeEngine
     def remove = nil
   end
 
-  attr_reader :platform, :files, :said, :opened, :opener, :buzzer, :clipboard
+  attr_reader :platform, :unit, :files, :said, :opened, :opener, :buzzer, :clipboard
 
   # On the system Lota::System.os calls +system+, in a window of +width+
   # by +height+ units.
   def initialize(system, width: 1200, height: 800)
     @platform = DotPopperTest.platform(system)
+    @unit = DotPopper::Shell::Platforms.unit(system)
     @width = width
     @height = height
     @files = {}
