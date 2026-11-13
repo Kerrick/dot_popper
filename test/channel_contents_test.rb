@@ -38,10 +38,10 @@ class ChannelContentsTest < Minitest::Test
     ok, out = run_script("list", "mac-app-store", @app)
 
     assert ok, out
-    assert_match %r{^the fake store .*\n  file lib/dot_popper/presentation/fake_store\.rb$}, out
+    assert_match %r{^the fake store .*\n  file lib/dot_popper/fake_store\.rb$}, out
     assert_match %r{^the test keys .*\n  file lib/dot_popper/test_build$}, out
     assert_match %r{  text lib/dot_popper/receipt/pins\.rb: BEGIN PRIVATE KEY x1}, out
-    assert_match %r{^the website checkout .*\n  file lib/dot_popper/presentation/website_store\.rb$}, out
+    assert_match %r{^the website checkout .*\n  file lib/dot_popper/website_store\.rb$}, out
     assert_match(/^the Microsoft Store's license /, out)
     refute_match(/^Apple's receipts/, out)
     refute_match(/openssl_doc/, out)

@@ -46,7 +46,7 @@ module ChannelContents
 
   PIECES = [
     Piece.new(name: "the fake store", needed_by: [TEST],
-              files: %w[lib/dot_popper/presentation/fake_store.rb],
+              files: %w[lib/dot_popper/fake_store.rb],
               marks: [/FakeStore/, /DOT_POPPER_FAKE_STORE_FAILS/, /fake_store\.txt/]),
     Piece.new(name: "the fake website checkout", needed_by: [TEST], marks: [/FakeCheckout/]),
     Piece.new(name: "the fake setdef server", needed_by: [TEST], marks: [/FakeSetdef/, /DOT_POPPER_FAKE_SETDEF/, /fake_setdef\.txt/]),
@@ -56,7 +56,7 @@ module ChannelContents
     Piece.new(name: "the test build's settings that grant Pro or skip the free-game limit", needed_by: [TEST],
               marks: [/DOT_POPPER_PRO\b/, /DOT_POPPER_FREE_GAMES/, /DOT_POPPER_TODAY/, /DOT_POPPER_THEME_UNLOCKS/]),
     Piece.new(name: "the website checkout", needed_by: [TEST, Build::WEBSITE],
-              files: %w[lib/dot_popper/presentation/website_store.rb],
+              files: %w[lib/dot_popper/website_store.rb],
               marks: [/WebsiteStore/, /BrowserCheckout/, %r{dot-popper\.setdef\.com/buy}]),
     Piece.new(name: "license keys", needed_by: [TEST, Build::WEBSITE],
               files: %w[lib/dot_popper/continuity/license_key.rb lib/dot_popper/continuity/license.rb],
