@@ -182,7 +182,7 @@ The Stats screen has **Clear my stats…**, offered while there is something to 
 - Let go sooner, and nothing happens; "Press and hold to clear…" stays for 2.5 s.
 - A gamepad holds Y, or A with the cursor on it, and the words name the button held.
 - Going back, or the window losing focus, stops the hold (`Show#let_go_of_everything`), since a release may never be heard. Another finger letting go does not.
-- Once cleared, "Stats cleared." and **Undo** take the corner for 10 s (`UndoOffer`). Gamepad Y presses Undo. Starting a game ends the offer, because undoing after it would lose that game.
+- Once cleared, "Stats cleared." and **Undo** take the corner for 10 s (`UndoableClear`). Gamepad Y presses Undo. Starting a game ends the offer, because undoing after it would lose that game.
 
 Forgiveness, from Lidwell's *Universal Principles of Design*: an Undo serves the player better than a confirmation they learn to dismiss, and a held press is hard to make by accident yet the same with a finger, a mouse or a gamepad. The control is quiet because records aren't the point of the game (Ferrara).
 

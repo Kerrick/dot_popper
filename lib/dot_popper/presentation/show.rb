@@ -266,7 +266,7 @@ module DotPopper
       # Stats to clear, and no Undo is offered.
       def clear_offered? = @screens[:stats].clear_offered?
 
-      # Undo, while it is offered on the Stats screen (UndoOffer), or nil.
+      # Undo, while it is offered on the Stats screen (UndoableClear), or nil.
       def undo_offer = @screens[:stats].undo_offer
 
       # What the choice of dot size would do on this screen, worked out

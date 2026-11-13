@@ -42,7 +42,7 @@ module DotPopper
         # Where its parts go (StatsLayout).
         def plan = StatsLayout.measured(layout:, sheet:, style: style::STATS, measure:)
 
-        # Undo, while it is offered here (UndoOffer), or nil.
+        # Undo, while it is offered here (UndoableClear), or nil.
         def undo_offer = (@undo if show.stats?)
 
         # Whether it offers "Clear my stats…": while it has Stats to clear,
@@ -90,7 +90,7 @@ module DotPopper
         # offered.
         def clear
           @clearing = clearing.cancel
-          @undo = UndoOffer.new(cleared: @keeper.clear, at: show.now, seconds: style::STATS_CLEAR.undo)
+          @undo = UndoableClear.new(cleared: @keeper.clear, at: show.now, seconds: style::STATS_CLEAR.undo)
           changed
           sounds.play(:bonk, pitch: 0.7)
           @haptics.buzz(style::HAPTICS.penalty)

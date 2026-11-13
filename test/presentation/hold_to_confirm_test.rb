@@ -41,7 +41,7 @@ class HoldToConfirmTest < Minitest::Test
   end
 
   def test_undo_is_offered_for_its_time
-    offer = UndoOffer.new(cleared: nil, at: 5.0, seconds: 10.0)
+    offer = UndoableClear.new(cleared: nil, at: 5.0, seconds: 10.0)
 
     assert offer.open?(14.9)
     refute offer.open?(15.0)
