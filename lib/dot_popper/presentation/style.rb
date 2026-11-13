@@ -406,10 +406,10 @@ module DotPopper
         sparkle_life: 1.4,
         # "Share my score" rises into place as the score lands, rings
         # once, and rises further and rings brighter on a new record.
-        share: ShareCueStyle.new(arrive: Tween.new(from: 0.0, to: 1.0, duration: 0.5, ease: :out_back), lift: 12,
-                                score_record_lift: 28, score_record_delay: 0.15,
-                                ring: Tween.new(from: 0.0, to: 1.0, duration: 0.8, ease: :out_cubic),
-                                ring_reach: 10, ring_alpha: 0.45, score_record_ring_reach: 18, score_record_ring_alpha: 0.9)
+        share: ShareButtonEntranceStyle.new(arrive: Tween.new(from: 0.0, to: 1.0, duration: 0.5, ease: :out_back), lift: 12,
+                                           score_record_lift: 28, score_record_delay: 0.15,
+                                           ring: Tween.new(from: 0.0, to: 1.0, duration: 0.8, ease: :out_cubic),
+                                           ring_reach: 10, ring_alpha: 0.45, score_record_ring_reach: 18, score_record_ring_alpha: 0.9)
       )
 
       # The share preview, over Game Over: it comes in quickly, lifting

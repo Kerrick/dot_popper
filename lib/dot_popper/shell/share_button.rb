@@ -6,7 +6,7 @@ module DotPopper
     # like the other quiet buttons, but outlined in a bright dot's gold and
     # led by a share glyph, three dots joined by two lines, so it is seen
     # without competing with Play again's filled gold. It comes in as its
-    # +cue+ (Presentation::ShareCue) says, rising into place with a ring
+    # +cue+ (Presentation::ShareButtonEntrance) says, rising into place with a ring
     # spreading from its edge. +hover+, from 0 to 1, is how lit the mouse
     # over it has made it (Presentation::Hover).
     class ShareButton < Data.define(:pen)

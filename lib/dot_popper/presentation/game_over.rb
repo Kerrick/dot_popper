@@ -36,8 +36,8 @@ module DotPopper
       # faded in.
       def afterword(now) = counted?(now) ? style.prompt.at(now - at - style.tally.duration) : 0.0
 
-      # How "Share my score" comes in (ShareCue), once the score lands.
-      def share_cue(now) = ShareCue.at(now - at - style.tally.duration, style.share, score_record: new_score_record?)
+      # How "Share my score" comes in (ShareButtonEntrance), once the score lands.
+      def share_cue(now) = ShareButtonEntrance.at(now - at - style.tally.duration, style.share, score_record: new_score_record?)
 
       def new_score_record? = new_score_record
 

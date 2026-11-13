@@ -95,28 +95,28 @@ class ShareTest < Minitest::Test
   end
 
   def test_share_my_score_rises_into_place_once_the_score_has_landed
-    before = ShareCue.at(-0.1, CUE)
+    before = ShareButtonEntrance.at(-0.1, CUE)
     assert_in_delta 0.0, before.alpha
     assert_in_delta 0.0, before.ring_alpha
 
-    rising = ShareCue.at(0.05, CUE)
+    rising = ShareButtonEntrance.at(0.05, CUE)
     assert_operator rising.alpha, :>, 0.0
     assert_operator rising.drop, :>, 0.0, "it starts below its place"
 
-    settled = ShareCue.at(5.0, CUE)
+    settled = ShareButtonEntrance.at(5.0, CUE)
     assert_in_delta 1.0, settled.alpha
     assert_in_delta 0.0, settled.drop, 1e-9
     assert_in_delta 0.0, settled.ring_alpha, 1e-9, "the ring has faded"
   end
 
   def test_on_a_new_score_record_it_comes_a_little_later_and_more_strongly
-    plain = ShareCue.at(0.05, CUE)
-    score_record = ShareCue.at(0.05 + CUE.score_record_delay, CUE, score_record: true)
+    plain = ShareButtonEntrance.at(0.05, CUE)
+    score_record = ShareButtonEntrance.at(0.05 + CUE.score_record_delay, CUE, score_record: true)
     assert_operator score_record.drop, :>, plain.drop
 
     ringing = CUE.arrive.duration * 0.6
-    plain_ring = ShareCue.at(ringing, CUE)
-    score_record_ring = ShareCue.at(ringing + CUE.score_record_delay, CUE, score_record: true)
+    plain_ring = ShareButtonEntrance.at(ringing, CUE)
+    score_record_ring = ShareButtonEntrance.at(ringing + CUE.score_record_delay, CUE, score_record: true)
     assert_operator score_record_ring.ring_alpha, :>, plain_ring.ring_alpha
     assert_operator score_record_ring.ring, :>, plain_ring.ring
   end
