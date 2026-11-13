@@ -3,15 +3,15 @@
 module DotPopperGui
   # The dot sizes' names, kept as screenshots to look at: Settings' "Dot
   # size", Stats with games of both sizes, the shared result, and a friend
-  # group's note to a player with the other size, on the narrowest window, a
-  # phone held each way, the desktop window and a big monitor. The groups
-  # need Pro (DOT_POPPER_PRO=1) and a server named by DOT_POPPER_SERVER,
-  # such as script/group_stub.rb. Not part of rake test:gui: it is for
-  # reviewing the screens.
+  # group's page with each size, on the narrowest window, a phone held each
+  # way, the desktop window, a tall narrow window where the two sizes look
+  # alike, and a big monitor. The groups need Pro (DOT_POPPER_PRO=1) and a
+  # server named by DOT_POPPER_SERVER, such as script/group_stub.rb. Not
+  # part of rake test:gui: it is for reviewing the screens.
   class DotSizeGalleryScenario < Scenario
     scenario :dot_size_gallery
 
-    SIZES = [[400, 568, true], [400, 850, true], [844, 390, true], [1200, 800, false], [2560, 1440, false]].freeze
+    SIZES = [[400, 568, true], [400, 850, true], [844, 390, true], [1200, 800, false], [560, 1600, true], [2560, 1440, false]].freeze
     P = DotPopper::Presentation
     DEFAULT = DotPopper::DotSizing::DEFAULT
 
