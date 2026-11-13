@@ -41,15 +41,14 @@ class LicenseTest < Minitest::Test
   # An app store's build never reads license.txt, so a key left on disk
   # grants nothing and is never sent; the website's and a test build keep it.
   def test_only_a_build_that_takes_license_keys_keeps_one_in_license_txt
-    files = Hash.new { |all, name| all[name] = Memory.new }
-    file = ->(name) { files[name] }
+    file = Memory.new
     DotPopper::Build::STORES.each do |channel|
-      kept = C::License.kept_in(channel, file)
+      kept = C::License.kept_in(channel) { file }
 
       assert_instance_of Memory, kept, channel
-      refute_same files["license.txt"], kept, channel
+      refute_same file, kept, channel
     end
-    [DotPopper::Build::WEBSITE, nil].each { assert_same files["license.txt"], C::License.kept_in(it, file), it.inspect }
+    [DotPopper::Build::WEBSITE, nil].each { assert_same file, C::License.kept_in(it) { file }, it.inspect }
   end
 
   def test_a_valid_key_is_pro_at_once_offline_and_a_bad_one_is_refused

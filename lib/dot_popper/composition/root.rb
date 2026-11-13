@@ -95,7 +95,7 @@ module DotPopper
       def trusted_receipts = self.class.trusted_receipts(settings.channel)
 
       # Where the license key is kept (Continuity::License.kept_in).
-      def license_store = Continuity::License.kept_in(settings.channel, ->(name) { file(name) })
+      def license_store = Continuity::License.kept_in(settings.channel) { file("license.txt") }
 
       # The games a free player has left, counted as +metered+ says
       # (FreeGames.metered?), starting as a developer may ask

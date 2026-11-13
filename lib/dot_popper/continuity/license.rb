@@ -22,15 +22,14 @@ module DotPopper
       # :license_check, as SetdefServer::REQUESTS names them) and the +body+ to send.
       Due = Data.define(:kind, :body)
 
-      # The save file a license key is kept in.
-      FILE = "license.txt"
-
-      # Where a build for +channel+ keeps its license key: the save file
-      # FILE, made by +file+ (a callable taking its name), except in an app
-      # store's build (Build.license_keys?), which never reads that file,
-      # so a key left on disk grants nothing and is never sent, and keeps
-      # nothing in its place.
-      def self.kept_in(channel, file) = Build.license_keys?(channel) ? file.call(FILE) : ScoreRecord::Memory.new
+      # Where a build for +channel+ keeps its license key: the save file the
+      # block makes (license.txt), except in an app store's build
+      # (Build.license_keys?), which never reads that file, so a key left
+      # on disk grants nothing and is never sent, and keeps nothing in its
+      # place.
+      def self.kept_in(channel)
+        Build.license_keys?(channel) ? yield : ScoreRecord::Memory.new
+      end
 
       def initialize(store, pins: PINNED, fresh: -> { SignedAnswers.fresh })
         @store = store
