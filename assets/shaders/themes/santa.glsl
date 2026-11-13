@@ -53,7 +53,7 @@ float segment_lash(vec2 r, float lx) {
   return max(across - 0.014 * (1.0 - clamp(along / 0.06, 0.0, 1.0)) - 0.003, max(-along, along - 0.06));
 }
 
-vec3 santa(vec2 p, float d, float aa, float fresh, float bonus) {
+vec3 santa(vec2 p, float d, float aa, float bright_look, float bonus) {
   float z = sqrt(max(1.0 - min(d, 1.0) * min(d, 1.0), 0.0));
   vec3 n = vec3(p, z);
   float lam = clamp(0.35 + 0.75 * dot(n, L), 0.0, 1.0);
@@ -175,15 +175,15 @@ vec3 santa(vec2 p, float d, float aa, float fresh, float bonus) {
   s = mix(s, night_trim, cover_of(trim, aa));
   s = mix(s, mix(vec3(0.08, 0.08, 0.13), vec3(0.18, 0.18, 0.27), pom_lit * 0.7 + lock_small * 0.3), cover_of(pom, aa));
 
-  vec3 col = mix(s, awake, fresh);
-  float w = mix(max(0.038, 1.5 * aa), max(0.022, 1.5 * aa), fresh);
+  vec3 col = mix(s, awake, bright_look);
+  float w = mix(max(0.038, 1.5 * aa), max(0.022, 1.5 * aa), bright_look);
   float ring = clamp((d - (1.0 - w)) / aa + 0.5, 0.0, 1.0);
   vec3 rim_color = mix(mix(vec3(0.2, 0.19, 0.3), vec3(0.34, 0.33, 0.48), clamp(0.5 + 0.6 * dot(p, vec2(-0.53, -0.848)), 0.0, 1.0)),
-                       vec3(1.0, 0.97, 0.92), fresh);
+                       vec3(1.0, 0.97, 0.92), bright_look);
   return mix(col, rim_color, ring);
 }
 vec4 effect(vec4 params, Image tex, vec2 uv, vec2 screen) {
-  float fresh = params.r;
+  float bright_look = params.r;
   float alarmed = params.g;
   float bonus = params.b;
   vec2 p = (uv * 2.0 - 1.0) * extent;
@@ -192,12 +192,12 @@ vec4 effect(vec4 params, Image tex, vec2 uv, vec2 screen) {
   float fade_out = 1.0 - smoothstep(extent - 0.1, extent, d);
   float s = (1.0 - smoothstep(shadow_reach - 0.2, shadow_reach, length(p - vec2(0.0, shadow_offset)))) * shadow_alpha;
   vec4 color = vec4(vec3(0.008, 0.008, 0.03) * s, s);
-  float h = exp(-pow(max(d - 1.0, 0.0) / halo_width, 2.0)) * halo_alpha * fresh * fade_out;
+  float h = exp(-pow(max(d - 1.0, 0.0) / halo_width, 2.0)) * halo_alpha * bright_look * fade_out;
   color = over(vec4(vec3(1.0, 0.9, 0.8) * h, h), color);
   float a = exp(-pow((d - 1.05) / 0.1, 2.0)) * alarmed * fade_out;
   color = over(vec4(alarm * a, a), color);
   float cover = clamp((1.0 - d) / aa + 0.5, 0.0, 1.0);
-  vec3 body = santa(p, d, aa, fresh, bonus);
+  vec3 body = santa(p, d, aa, bright_look, bonus);
   body = mix(body, alarm, alarmed * smoothstep(0.78, 0.96, d));
   color = over(vec4(body * cover, cover), color) * params.a;
   return vec4(color.rgb / max(color.a, 1e-5), color.a);

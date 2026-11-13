@@ -2,7 +2,7 @@
 //
 // One dot as a little ghost: a domed sheet that fills the dot's circle,
 // nub arms at the waist and a scalloped hem cut from its lower edge. A
-// fresh dot is white and glows; a popped dot is the same ghost gone near
+// bright dot is white and glows; a popped dot is the same ghost gone near
 // black, its face a dim negative of the bright one. The vertex color
 // says what kind of dot it is, as in dot.glsl.
 
@@ -58,7 +58,7 @@ float star_eye(vec2 p, float sx, float aa) {
   vec2 q = abs(p - vec2(sx * 0.29, -0.14));
   return clamp(0.5 - (sqrt(q.x) + sqrt(q.y) - 0.6) / max(aa * 4.0, 1e-4), 0.0, 1.0);
 }
-vec3 fresh_sheet(vec2 p, float d, float sdf, float aa, float bonus) {
+vec3 bright_sheet(vec2 p, float d, float sdf, float aa, float bonus) {
   float z = sqrt(max(1.0 - min(d, 1.0) * min(d, 1.0), 0.0));
   float lit = clamp(0.5 + 0.3 * dot(p, vec2(-0.53, -0.848)) + 0.35 * (z - 0.5), 0.0, 1.0);
   vec3 c = mix(SHADE, WHITE, smoothstep(0.25, 0.8, lit));
@@ -94,7 +94,7 @@ vec3 popped_sheet(vec2 p, float d, float sdf, float aa) {
   return mix(c, mix(vec3(0.227, 0.2, 0.376), vec3(0.365, 0.333, 0.529), clamp(0.55 + 0.6 * dot(p, vec2(-0.53, -0.848)), 0.0, 1.0)), rim);
 }
 vec4 effect(vec4 params, Image tex, vec2 uv, vec2 screen) {
-  float fresh = params.r;
+  float bright_look = params.r;
   float alarmed = params.g;
   float bonus = params.b;
   vec2 p = (uv * 2.0 - 1.0) * extent;
@@ -106,12 +106,12 @@ vec4 effect(vec4 params, Image tex, vec2 uv, vec2 screen) {
   float sd = length(ps) - edge_at(ps);
   float s = (1.0 - smoothstep(-0.14, 0.06, sd)) * shadow_alpha;
   vec4 color = vec4(vec3(0.008, 0.008, 0.039) * s, s);
-  float h = exp(-pow(max(sdf, 0.0) / halo_width, 2.0)) * halo_alpha * fresh * fade_out;
+  float h = exp(-pow(max(sdf, 0.0) / halo_width, 2.0)) * halo_alpha * bright_look * fade_out;
   color = over(vec4(vec3(0.784, 0.902, 1.0) * h, h), color);
   float a = exp(-pow((sdf - 0.05) / 0.1, 2.0)) * alarmed * fade_out;
   color = over(vec4(alarm * a, a), color);
   float cover = clamp(-sdf / aa + 0.5, 0.0, 1.0);
-  vec3 body = mix(popped_sheet(p, d, sdf, aa), fresh_sheet(p, d, sdf, aa, bonus), fresh);
+  vec3 body = mix(popped_sheet(p, d, sdf, aa), bright_sheet(p, d, sdf, aa, bonus), bright_look);
   body = mix(body, alarm, alarmed * smoothstep(-0.2, -0.02, sdf));
   color = over(vec4(body * cover, cover), color) * params.a;
   return vec4(color.rgb / max(color.a, 1e-5), color.a);

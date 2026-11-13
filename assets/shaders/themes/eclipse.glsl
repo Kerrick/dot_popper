@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
 //
-// One dot as a moon. A fresh dot is a harvest moon: warm cream, soft seas
+// One dot as a moon. A bright dot is a harvest moon: warm cream, soft seas
 // and craters. A popped dot is the same moon in eclipse, near black with a
 // thin ember rim. A bright dot sliding out from under a popped one is
 // then, literally, a crescent. The vertex color says what kind of dot it
@@ -66,7 +66,7 @@ vec3 eclipsed(vec2 p, float d, float aa) {
   return mix(c, mix(vec3(0.416, 0.157, 0.094), vec3(0.878, 0.388, 0.184), clamp(0.45 + 0.55 * lit, 0.0, 1.0)), ring);
 }
 vec4 effect(vec4 params, Image tex, vec2 uv, vec2 screen) {
-  float fresh = params.r;
+  float bright_look = params.r;
   float alarmed = params.g;
   float bonus = params.b;
   vec2 p = (uv * 2.0 - 1.0) * extent;
@@ -75,12 +75,12 @@ vec4 effect(vec4 params, Image tex, vec2 uv, vec2 screen) {
   float fade_out = 1.0 - smoothstep(extent - 0.1, extent, d);
   float s = (1.0 - smoothstep(shadow_reach - 0.2, shadow_reach, length(p - vec2(0.0, shadow_offset)))) * shadow_alpha;
   vec4 color = vec4(vec3(0.008, 0.008, 0.039) * s, s);
-  float h = exp(-pow(max(d - 1.0, 0.0) / halo_width, 2.0)) * halo_alpha * fresh * fade_out;
+  float h = exp(-pow(max(d - 1.0, 0.0) / halo_width, 2.0)) * halo_alpha * bright_look * fade_out;
   color = over(vec4(vec3(1.0, 0.851, 0.549) * h, h), color);
   float a = exp(-pow((d - 1.05) / 0.1, 2.0)) * alarmed * fade_out;
   color = over(vec4(alarm * a, a), color);
   float cover = clamp((1.0 - d) / aa + 0.5, 0.0, 1.0);
-  vec3 body = fresh > 0.001 ? mix(eclipsed(p, d, aa), moon(p, d, aa, bonus), fresh) : eclipsed(p, d, aa);
+  vec3 body = bright_look > 0.001 ? mix(eclipsed(p, d, aa), moon(p, d, aa, bonus), bright_look) : eclipsed(p, d, aa);
   body = mix(body, alarm, alarmed * smoothstep(0.78, 0.96, d));
   color = over(vec4(body * cover, cover), color) * params.a;
   return vec4(color.rgb / max(color.a, 1e-5), color.a);

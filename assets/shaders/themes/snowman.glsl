@@ -167,7 +167,7 @@ vec3 puddle(vec2 p, float d, float aa) {
 }
 
 vec4 effect(vec4 params, Image tex, vec2 uv, vec2 screen) {
-  float fresh = params.r;
+  float bright_look = params.r;
   float alarmed = params.g;
   float bonus = params.b;
   vec2 p = (uv * 2.0 - 1.0) * extent;
@@ -176,15 +176,15 @@ vec4 effect(vec4 params, Image tex, vec2 uv, vec2 screen) {
   float fade_out = 1.0 - smoothstep(extent - 0.1, extent, d);
   float s = (1.0 - smoothstep(shadow_reach - 0.2, shadow_reach, length(p - vec2(0.0, shadow_offset)))) * shadow_alpha;
   vec4 color = vec4(vec3(0.008, 0.012, 0.03) * s, s);
-  float h = exp(-pow(max(d - 1.0, 0.0) / halo_width, 2.0)) * halo_alpha * fresh * fade_out;
+  float h = exp(-pow(max(d - 1.0, 0.0) / halo_width, 2.0)) * halo_alpha * bright_look * fade_out;
   color = over(vec4(vec3(0.85, 0.92, 1.0) * h, h), color);
   float a = exp(-pow((d - 1.05) / 0.1, 2.0)) * alarmed * fade_out;
   color = over(vec4(alarm * a, a), color);
   float cover = clamp((1.0 - d) / aa + 0.5, 0.0, 1.0);
-  vec3 body = fresh > 0.001 ? mix(puddle(p, d, aa), snowman(p, d, aa, bonus), fresh) : puddle(p, d, aa);
-  float w = mix(max(0.038, 1.5 * aa), max(0.022, 1.5 * aa), fresh);
+  vec3 body = bright_look > 0.001 ? mix(puddle(p, d, aa), snowman(p, d, aa, bonus), bright_look) : puddle(p, d, aa);
+  float w = mix(max(0.038, 1.5 * aa), max(0.022, 1.5 * aa), bright_look);
   float ring = clamp((d - (1.0 - w)) / aa + 0.5, 0.0, 1.0);
-  vec3 rim = mix(mix(vec3(0.19, 0.21, 0.3), vec3(0.32, 0.35, 0.46), clamp(0.5 + 0.6 * dot(p, LIGHT), 0.0, 1.0)), vec3(1.0), fresh);
+  vec3 rim = mix(mix(vec3(0.19, 0.21, 0.3), vec3(0.32, 0.35, 0.46), clamp(0.5 + 0.6 * dot(p, LIGHT), 0.0, 1.0)), vec3(1.0), bright_look);
   body = mix(body, rim, ring);
   body = mix(body, alarm, alarmed * smoothstep(0.78, 0.96, d));
   color = over(vec4(body * cover, cover), color) * params.a;

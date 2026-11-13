@@ -50,7 +50,7 @@ float man(vec2 p) {
   return smin(smin(smin(head, body, 0.06), arms, 0.07), legs, 0.07);
 }
 
-vec3 cookie(vec2 p, float d, float aa, float fresh, float bonus) {
+vec3 cookie(vec2 p, float d, float aa, float bright_look, float bonus) {
   // A flat cookie whose edge rounds down: the normal tilts only near it.
   float edge = smoothstep(0.72, 1.0, d);
   float bump = noise(p * 9.0) * 0.6 + noise(p * 23.0) * 0.4;
@@ -132,15 +132,15 @@ vec3 cookie(vec2 p, float d, float aa, float fresh, float bonus) {
   // The icing in the dark, a step above the dough and no more.
   s = mix(s, mix(vec3(0.16, 0.14, 0.15), vec3(0.24, 0.21, 0.22), sq_lit), cover_of(sq, aa));
 
-  vec3 col = mix(s, whole, fresh);
-  float w = mix(max(0.038, 1.5 * aa), max(0.022, 1.5 * aa), fresh);
+  vec3 col = mix(s, whole, bright_look);
+  float w = mix(max(0.038, 1.5 * aa), max(0.022, 1.5 * aa), bright_look);
   float ring = clamp((d - (1.0 - w)) / aa + 0.5, 0.0, 1.0);
   vec3 rim_color = mix(mix(vec3(0.19, 0.13, 0.1), vec3(0.32, 0.23, 0.17), clamp(0.5 + 0.6 * dot(p, vec2(-0.53, -0.848)), 0.0, 1.0)),
-                       vec3(1.0, 0.92, 0.8), fresh);
+                       vec3(1.0, 0.92, 0.8), bright_look);
   return mix(col, rim_color, ring);
 }
 vec4 effect(vec4 params, Image tex, vec2 uv, vec2 screen) {
-  float fresh = params.r;
+  float bright_look = params.r;
   float alarmed = params.g;
   float bonus = params.b;
   vec2 p = (uv * 2.0 - 1.0) * extent;
@@ -149,12 +149,12 @@ vec4 effect(vec4 params, Image tex, vec2 uv, vec2 screen) {
   float fade_out = 1.0 - smoothstep(extent - 0.1, extent, d);
   float s = (1.0 - smoothstep(shadow_reach - 0.2, shadow_reach, length(p - vec2(0.0, shadow_offset)))) * shadow_alpha;
   vec4 color = vec4(vec3(0.012, 0.008, 0.006) * s, s);
-  float h = exp(-pow(max(d - 1.0, 0.0) / halo_width, 2.0)) * halo_alpha * fresh * fade_out;
+  float h = exp(-pow(max(d - 1.0, 0.0) / halo_width, 2.0)) * halo_alpha * bright_look * fade_out;
   color = over(vec4(vec3(1.0, 0.85, 0.6) * h, h), color);
   float a = exp(-pow((d - 1.05) / 0.1, 2.0)) * alarmed * fade_out;
   color = over(vec4(alarm * a, a), color);
   float cover = clamp((1.0 - d) / aa + 0.5, 0.0, 1.0);
-  vec3 body = cookie(p, d, aa, fresh, bonus);
+  vec3 body = cookie(p, d, aa, bright_look, bonus);
   body = mix(body, alarm, alarmed * smoothstep(0.78, 0.96, d));
   color = over(vec4(body * cover, cover), color) * params.a;
   return vec4(color.rgb / max(color.a, 1e-5), color.a);

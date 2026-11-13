@@ -79,7 +79,7 @@ float carved(vec2 p, float variant, float bonus) {
   mouth = max(mouth, -teeth);
   return min(min(eyes, nose), mouth);
 }
-vec4 pumpkin(vec2 p, float d, float aa, float fresh, float bonus) {
+vec4 pumpkin(vec2 p, float d, float aa, float bright_look, float bonus) {
   float z = sqrt(max(1.0 - min(d, 0.9999) * min(d, 0.9999), 0.0));
   float ca = cos(TILT), sa = sin(TILT);
   float pu = -p.y * ca + z * sa;
@@ -145,9 +145,9 @@ vec4 pumpkin(vec2 p, float d, float aa, float fresh, float bonus) {
   cold = mix(cold, vec3(0.11, 0.075, 0.063), inside * step(0.0, back_cold));
   cold = mix(cold, vec3(0.016, 0.008, 0.012), inside * step(back_cold, 0.0));
 
-  vec3 c = mix(cold, fire, fresh);
+  vec3 c = mix(cold, fire, bright_look);
   float dimple = exp(-pow(p.x / 0.22, 2.0) - pow((p.y + ca) / 0.13, 2.0));
-  c = mix(c, mix(vec3(0.039, 0.024, 0.031), CREASE, fresh), dimple * 0.55);
+  c = mix(c, mix(vec3(0.039, 0.024, 0.031), CREASE, bright_look), dimple * 0.55);
 
   // The stem, on the crown, and inside the circle.
   float py = -ca, top_y = -0.965;
@@ -161,21 +161,21 @@ vec4 pumpkin(vec2 p, float d, float aa, float fresh, float bonus) {
   float su = clamp((p.x - lean) / max(hw, 0.03), -1.0, 1.0);
   float ridge = 0.5 + 0.5 * cos(su * 8.5 + ss * 1.3);
   vec3 stem = mix(mix(vec3(0.11, 0.141, 0.086), vec3(0.18, 0.227, 0.133), ridge),
-                  mix(vec3(0.247, 0.353, 0.141), vec3(0.494, 0.604, 0.267), ridge), fresh);
+                  mix(vec3(0.247, 0.353, 0.141), vec3(0.494, 0.604, 0.267), ridge), bright_look);
   c = mix(c, stem, in_stem);
   float cap = (length(vec2((p.x - lean) / max(hw * 0.85, 0.03), (p.y + 0.958) / 0.03)) - 1.0) * 0.03;
-  c = mix(c, mix(vec3(0.333, 0.4, 0.235), vec3(0.812, 0.863, 0.573), fresh),
+  c = mix(c, mix(vec3(0.333, 0.4, 0.235), vec3(0.812, 0.863, 0.573), bright_look),
           clamp(-cap / aa + 0.5, 0.0, 1.0) * in_stem * 0.85);
 
-  float w = mix(max(0.038, 1.5 * aa), max(0.022, 1.5 * aa), fresh);
+  float w = mix(max(0.038, 1.5 * aa), max(0.022, 1.5 * aa), bright_look);
   float ring = clamp((d - (1.0 - w)) / aa + 0.5, 0.0, 1.0);
   vec3 rim_color = mix(mix(vec3(0.239, 0.184, 0.176), vec3(0.416, 0.329, 0.314), clamp(0.5 + 0.6 * dot(p, vec2(-0.53, -0.848)), 0.0, 1.0)),
-                       vec3(1.0, 0.839, 0.565), fresh);
+                       vec3(1.0, 0.839, 0.565), bright_look);
   c = mix(c, rim_color, ring);
   return vec4(c, 1.0);
 }
 vec4 effect(vec4 params, Image tex, vec2 uv, vec2 screen) {
-  float fresh = params.r;
+  float bright_look = params.r;
   float alarmed = params.g;
   float bonus = params.b;
   vec2 p = (uv * 2.0 - 1.0) * extent;
@@ -184,12 +184,12 @@ vec4 effect(vec4 params, Image tex, vec2 uv, vec2 screen) {
   float fade_out = 1.0 - smoothstep(extent - 0.1, extent, d);
   float s = (1.0 - smoothstep(shadow_reach - 0.2, shadow_reach, length(p - vec2(0.0, shadow_offset)))) * shadow_alpha;
   vec4 color = vec4(vec3(0.016, 0.008, 0.031) * s, s);
-  float h = exp(-pow(max(d - 1.0, 0.0) / halo_width, 2.0)) * halo_alpha * fresh * fade_out;
+  float h = exp(-pow(max(d - 1.0, 0.0) / halo_width, 2.0)) * halo_alpha * bright_look * fade_out;
   color = over(vec4(vec3(1.0, 0.698, 0.29) * h, h), color);
   float a = exp(-pow((d - 1.05) / 0.1, 2.0)) * alarmed * fade_out;
   color = over(vec4(alarm * a, a), color);
   float cover = clamp((1.0 - d) / aa + 0.5, 0.0, 1.0);
-  vec3 body = pumpkin(p, d, aa, fresh, bonus).rgb;
+  vec3 body = pumpkin(p, d, aa, bright_look, bonus).rgb;
   body = mix(body, alarm, alarmed * smoothstep(0.78, 0.96, d));
   color = over(vec4(body * cover, cover), color) * params.a;
   return vec4(color.rgb / max(color.a, 1e-5), color.a);

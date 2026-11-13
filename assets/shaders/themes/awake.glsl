@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-setdef-all-rights-reserved
 //
-// One dot as an eye, in the wood. A fresh dot is an open cat's eye that
+// One dot as an eye, in the wood. A bright dot is an open cat's eye that
 // fills the circle and looks toward the player; a popped dot is a shut lid
 // with a bone lash line, a flat two-tone shape. Open or shut is a shape,
 // so it reads without color. The vertex color says what kind of dot it
@@ -70,7 +70,7 @@ vec3 shut_lid(vec2 p, float d, float aa) {
   return mix(c, mix(vec3(0.522, 0.561, 0.49), vec3(0.78, 0.8, 0.706), clamp(0.4 + 0.4 * dot(p, vec2(-0.53, -0.848)), 0.0, 1.0)), ring);
 }
 vec4 effect(vec4 params, Image tex, vec2 uv, vec2 screen) {
-  float fresh = params.r;
+  float bright_look = params.r;
   float alarmed = params.g;
   float bonus = params.b;
   vec2 p = (uv * 2.0 - 1.0) * extent;
@@ -79,12 +79,12 @@ vec4 effect(vec4 params, Image tex, vec2 uv, vec2 screen) {
   float fade_out = 1.0 - smoothstep(extent - 0.1, extent, d);
   float s = (1.0 - smoothstep(shadow_reach - 0.2, shadow_reach, length(p - vec2(0.0, shadow_offset)))) * shadow_alpha;
   vec4 color = vec4(vec3(0.012, 0.02, 0.012) * s, s);
-  float h = exp(-pow(max(d - 1.0, 0.0) / halo_width, 2.0)) * halo_alpha * fresh * fade_out;
+  float h = exp(-pow(max(d - 1.0, 0.0) / halo_width, 2.0)) * halo_alpha * bright_look * fade_out;
   color = over(vec4(vec3(0.965, 0.847, 0.29) * h, h), color);
   float a = exp(-pow((d - 1.05) / 0.1, 2.0)) * alarmed * fade_out;
   color = over(vec4(alarm * a, a), color);
   float cover = clamp((1.0 - d) / aa + 0.5, 0.0, 1.0);
-  vec3 body = fresh > 0.001 ? mix(shut_lid(p, d, aa), open_eye(p, d, aa, bonus), fresh) : shut_lid(p, d, aa);
+  vec3 body = bright_look > 0.001 ? mix(shut_lid(p, d, aa), open_eye(p, d, aa, bonus), bright_look) : shut_lid(p, d, aa);
   body = mix(body, alarm, alarmed * smoothstep(0.78, 0.96, d));
   color = over(vec4(body * cover, cover), color) * params.a;
   return vec4(color.rgb / max(color.a, 1e-5), color.a);
