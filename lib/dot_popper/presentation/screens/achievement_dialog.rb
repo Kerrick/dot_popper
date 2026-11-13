@@ -51,13 +51,15 @@ module DotPopper
                                               progress: @view.progress(achievement), buttons:).plan
         end
 
-        # What it says of +id+'s state: the earned day or "Not earned yet",
-        # or nothing for a Free player.
+        # What it says of +id+'s state, as ViewAchievements#status answers:
+        # the day it was earned, "Not earned yet", or nothing where the
+        # dialog offers Pro instead.
         def status(id)
-          return if @view.locked?
-
-          day = @view.day(id)
-          day ? AchievementWords.earned_on(day) : words.button(:not_earned)
+          case @view.status(id)
+          in :earned then AchievementWords.earned_on(@view.day(id))
+          in :not_earned then words.button(:not_earned)
+          in :offer then nil
+          end
         end
 
         def controls = plan.buttons.map { |name, rect| button(name, rect) }
@@ -95,9 +97,8 @@ module DotPopper
 
         def buttons
           steps = show.input == InputKind::GAMEPAD ? [[:achievement_prev, :prev], [:achievement_next, :next]] : []
-          return [[:achievement_close, :close], *steps] unless @view.locked?
-
-          [[:achievement_pro, :get_pro], [:achievement_close, :close], *steps]
+          get_pro = [[:achievement_pro, :get_pro]] if @view.status(achievement) == :offer
+          [*get_pro, [:achievement_close, :close], *steps]
         end
       end
     end
