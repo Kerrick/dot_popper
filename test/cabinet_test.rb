@@ -308,6 +308,21 @@ class CabinetTest < Minitest::Test
     assert_equal 1, @heard.grep(Events::GameStarted).size
   end
 
+  # A game starts only through the cabinet's Starts, which it hands out
+  # once: asked to start one itself, by what holds only the cabinet, it
+  # refuses, and starts nothing.
+  def test_only_the_cabinets_starts_start_a_game_and_it_hands_them_out_once
+    assert_raises(NoMethodError) { @cabinet.start_game(1) }
+    assert_raises(NoMethodError) { @cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]), 1) }
+    starts = @cabinet.starts
+    assert_raises(Cabinet::StartsTaken) { @cabinet.starts }
+
+    assert_instance_of Cabinet::Home, @cabinet.state
+    assert_empty @heard.grep(Events::GameStarted)
+    starts.game(1)
+    assert_instance_of Cabinet::Playing, @cabinet.state
+  end
+
   def test_only_home_makes_a_paused_game_and_only_a_paused_game_unpauses
     @cabinet.unpause
     assert_instance_of Cabinet::Home, @cabinet.state
