@@ -109,10 +109,10 @@ It catches a missing method, not a wrong argument to Lota or a callback never wi
 ### How a run works
 
 - `test/gui/scenarios_test.rb` (`GuiScenariosTest`) starts the game once a test, as a developer does: `bundle exec lota run .`, with `DOT_POPPER_SCENARIO` naming a scenario. It passes when the game quits with status 0 after printing `gui: scenario NAME passed` and each line the test names.
-- `main.rb`'s last line loads the director (`test/gui/director.rb`) only when `DOT_POPPER_SCENARIO` is set, read through `Build.settings`, which drops it in a store build. A normal launch never loads it.
-- `DotPopperGui::Director` prepends `Hooks` to Lota's callbacks. Each frame's `update` goes straight to the `App` (past its `FrameClock`) with the step the scenario asks for, `Scenario::STEP` (a sixtieth of a second) unless it asks for more, not the real time that passed. `vsync` is off, so a run goes as fast as the window draws.
+- `main.rb`'s last line loads the scenario runner (`test/gui/scenario_runner.rb`) only when `DOT_POPPER_SCENARIO` is set, read through `Build.settings`, which drops it in a store build. A normal launch never loads it.
+- `DotPopperGui::ScenarioRunner` prepends `Hooks` to Lota's callbacks. Each frame's `update` goes straight to the `App` (past its `FrameClock`) with the step the scenario asks for, `Scenario::STEP` (a sixtieth of a second) unless it asks for more, not the real time that passed. `vsync` is off, so a run goes as fast as the window draws.
 - A scenario runs in a `Fiber` and yields its next step. It prints `gui: ok - …` for each check, and raises `DotPopperGui::Failure` on the first that fails.
-- The director stands in for Lota's error screen, which would wait for a player: any error, the game's own included, prints `FAILED scenario …` with a backtrace and exits with 1. A quit the game asks for while the scenario plays is counted (`quits`) and held back, so a scenario can press Quit, check it asked, and play on.
+- The scenario runner stands in for Lota's error screen, which would wait for a player: any error, the game's own included, prints `FAILED scenario …` with a backtrace and exits with 1. A quit the game asks for while the scenario plays is counted (`quits`) and held back, so a scenario can press Quit, check it asked, and play on.
 
 ### Input, windows and pixels
 
@@ -121,7 +121,7 @@ It catches a missing method, not a wrong argument to Lota or a callback never wi
 - Resizes go through `Lota::Window.update_mode`, fullscreen through F11 or `Lota::Window.set_fullscreen(on, :desktop)`. While the system changes the window (`settled_window`, up to `WINDOW_FRAMES`, 5,000), frames pass no game time, so the game plays the same however long the system takes.
 - Pixel checks read the drawn frame back with `Lota::Graphics.capture_screenshot` into a `DotPopperGui::Shot`, read in graphics units.
 - Every wait counts frames, never seconds on the clock (`wait_for(what, within:)`), so a slow machine only makes a run take longer.
-- Nothing the game draws may move with the time on the wall, or two screenshots of the same moment of the game differ with the machine's speed. A theme's dot shader moves with the game's own seconds (`Shell::DotPainter`'s `clock`, `Show#now`), which the director drives.
+- Nothing the game draws may move with the time on the wall, or two screenshots of the same moment of the game differ with the machine's speed. A theme's dot shader moves with the game's own seconds (`Shell::DotPainter`'s `clock`, `Show#now`), which the scenario runner drives.
 
 ### What every run fixes
 
@@ -168,7 +168,7 @@ $ timeout 300 env DOT_POPPER_SCENARIO=home_gallery DOT_POPPER_GALLERY=before DOT
     xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" bash script/with-openbox.sh bundle exec lota run .
 ```
 
-It prints `gui: screenshot PATH` for each file it saves in the save folder. `DOT_POPPER_QUIT_AFTER` won't end a scenario, since the director holds back the game's own quits while one plays; use `timeout`. Look at every screenshot at the size it will be seen.
+It prints `gui: screenshot PATH` for each file it saves in the save folder. `DOT_POPPER_QUIT_AFTER` won't end a scenario, since the scenario runner holds back the game's own quits while one plays; use `timeout`. Look at every screenshot at the size it will be seen.
 
 ## Automated runs stay off the internet
 

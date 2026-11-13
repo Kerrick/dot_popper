@@ -105,7 +105,7 @@ These numbers are the maintainer's decision, kept in the font's own unit so they
 
 **The blink.** With sound on, each note flips the block, like an amber terminal's cursor: lit from the first note to the second, dark to the third, and so on, so the sixth leaves it dark. It lights in 0.03 s (`LIGHTS`) and fades in 0.1 s (`FADES`), like a phosphor. The shortest dark span, 0.25 s between the fourth and fifth notes, outlasts the fade. Muted, the block stays lit: there is no music to flash to. With `DOT_POPPER_CALM=1` it also stays lit, as the brand says a blinking mark stops under reduced motion; the jingle still plays if sound is on.
 
-**Skipping.** A tap, click, key, gamepad button, or either trigger pulled to where it would press, ends it (`App#skip_splash`), and that press goes no further, so it can never touch the game. `DOT_POPPER_AUTOPLAY` (the bot), `DOT_POPPER_SCENARIO` (the GUI director) and `DOT_POPPER_NO_SPLASH` leave it out (`Splash::SKIPPED_BY`). Tests: `test/presentation/splash_test.rb`.
+**Skipping.** A tap, click, key, gamepad button, or either trigger pulled to where it would press, ends it (`App#skip_splash`), and that press goes no further, so it can never touch the game. `DOT_POPPER_AUTOPLAY` (the bot), `DOT_POPPER_SCENARIO` (the GUI scenario runner) and `DOT_POPPER_NO_SPLASH` leave it out (`Splash::SKIPPED_BY`). Tests: `test/presentation/splash_test.rb`.
 
 ## Home
 

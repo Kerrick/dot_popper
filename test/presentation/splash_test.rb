@@ -24,7 +24,7 @@ class SplashTest < Minitest::Test
     assert_equal 0.0, Splash.start.skip.mark
   end
 
-  def test_the_bot_the_director_and_a_request_leave_it_out
+  def test_the_bot_the_scenario_runner_and_a_request_leave_it_out
     refute Splash.skipped?({})
     refute Splash.skipped?("DOT_POPPER_NO_SPLASH" => "")
     %w[DOT_POPPER_AUTOPLAY DOT_POPPER_SCENARIO DOT_POPPER_NO_SPLASH].each { assert Splash.skipped?({ it => "1" }) }

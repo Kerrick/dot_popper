@@ -156,7 +156,7 @@ Lota calls `Lota.update(dt)` in `main.rb`, which calls `Shell::App#tick`. The ga
 
 The reason is Android: there a frame waits for a free buffer when it starts to draw, after Lota has read its timer, so Lota's `dt` swings about the refresh (7.5 ms, then 25 ms, at 60 Hz on a OnePlus Nord), while every frame reaches the screen evenly. The time between frames starting to draw is even.
 
-The GUI suite's director steps `App#update` by its scenario's fixed step, bypassing `tick` (`test/gui/director.rb`). Tests: `test/presentation/frame_clock_test.rb`.
+The GUI suite's scenario runner steps `App#update` by its scenario's fixed step, bypassing `tick` (`test/gui/scenario_runner.rb`). Tests: `test/presentation/frame_clock_test.rb`.
 
 ### The longest frame
 

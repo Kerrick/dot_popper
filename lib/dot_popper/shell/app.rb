@@ -11,7 +11,7 @@ module DotPopper
     class App
       Style = Presentation::Style
 
-      # What the GUI suite's director (test/gui/director.rb) watches as it
+      # What the GUI suite's scenario runner (test/gui/scenario_runner.rb) watches as it
       # plays: the rules, the Show, and the game-over pile.
       attr_reader :cabinet, :show, :pile
 

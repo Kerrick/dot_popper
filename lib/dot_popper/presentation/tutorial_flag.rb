@@ -21,7 +21,7 @@ module DotPopper
       def self.never = new(ScoreRecord::Memory.new, mode: :skipped)
 
       # The mode +env+ asks for: DOT_POPPER_TUTORIAL=1 forces it, and the
-      # bot, the GUI director and DOT_POPPER_NO_TUTORIAL leave it out.
+      # bot, the GUI scenario runner and DOT_POPPER_NO_TUTORIAL leave it out.
       def self.mode(env)
         return :forced if env.fetch(FORCED_BY, "") == "1"
         return :skipped if SKIPPED_BY.any? { !env.fetch(it, "").empty? }

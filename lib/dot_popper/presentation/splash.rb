@@ -110,7 +110,7 @@ module DotPopper
       def self.start(sounding: false, calm: false) = new(at: 0.0, sounding:, calm:)
 
       # Whether the environment (+env+) asks for no splash: the bot, the GUI
-      # director, and a plain request leave it out.
+      # scenario runner, and a plain request leave it out.
       def self.skipped?(env) = SKIPPED_BY.any? { !env.fetch(it, "").empty? }
 
       def advance(seconds) = with(at: at + seconds)
