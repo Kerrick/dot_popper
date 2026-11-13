@@ -35,17 +35,21 @@ module DotPopper
     # How the Tutorial's last beat goes on into the real game: its
     # spotlight on the clock fades out in +dim+ seconds, and a halo stays
     # around the clock for +halo+, then fades in +fade+.
-    class LeadStyle < Data.define(:dim, :halo, :fade); end
+    class ClockHighlightStyle < Data.define(:dim, :halo, :fade); end
 
     # The Tutorial's last beat, in the real game's first moments, since
     # +at+: the spotlight on the clock as it starts to run, fading, and a
     # halo around it a little longer. Only the clock is lit; the game's
     # own dots are never covered for more than a moment.
-    class LeadIn < Data.define(:at, :style)
+    class ClockHighlight < Data.define(:at, :style)
       def strength(now) = (1 - ((now - at) / style.dim)).clamp(0.0, 1.0)
       def halo(now) = (1 - ((now - at - style.halo) / style.fade)).clamp(0.0, 1.0)
       def over?(now) = now - at >= style.halo + style.fade
     end
+
+    # Their old names, until no caller says them.
+    LeadStyle = ClockHighlightStyle
+    LeadIn = ClockHighlight
 
     # The tutorial a player sees on their first Play: a layer over the
     # first game, which is paused before its clock first runs

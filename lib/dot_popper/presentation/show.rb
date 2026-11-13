@@ -37,10 +37,11 @@ module DotPopper
       SIZINGS = Screens::Settings::SIZINGS
 
       attr_reader :cabinet, :effects, :animations, :hud, :attract, :layout, :home_entrance, :game_over, :sounds, :now, :style,
-                  :stats_book, :input, :words, :tutorial, :lead_in, :window
+                  :stats_book, :input, :words, :tutorial, :clock_highlight, :window
 
-      # Its old name, until no caller says it.
+      # Their old names, until no caller says them.
       alias marquee home_entrance
+      alias lead_in clock_highlight
 
       def initialize(cabinet:, layout:, sounds:, radius:, start_game:, finish_game:, buy_pro:, use_theme:, join_or_create_friend_group:,
                      view_achievements:, stats_book:, achievements:, groups:, theme_keeper: nil,
@@ -67,7 +68,7 @@ module DotPopper
         @layers = [] # the screens open over the game's state, the top one last
         @tutorial = nil
         @handing_over = nil
-        @lead_in = nil
+        @clock_highlight = nil
         @measure = measure
         @stats_book = stats_book
         @layout = layout
@@ -826,13 +827,13 @@ module DotPopper
 
 
       # The Tutorial moves on, and once it is over, the game plays on, and
-      # only its clock starts, lit as it starts to run (LeadIn).
+      # only its clock starts, lit as it starts to run (ClockHighlight).
       def follow_tutorial(seconds)
         @tutorial.update(seconds)
         return unless @tutorial.over?
 
         play_on
-        @lead_in = LeadIn.new(at: now, style: style::TUTORIAL.lead)
+        @clock_highlight = ClockHighlight.new(at: now, style: style::TUTORIAL.lead)
       end
 
       # The Tutorial goes, and its game plays on as it is (Cabinet#unpause),
@@ -848,8 +849,8 @@ module DotPopper
         before = hud.seconds
         @hud = hud.read(cabinet.game, now) { tick(it) if playing? }
         beckon
-        @lead_in = nil if @lead_in&.over?(now)
-        return unless @lead_in && playing? && before && hud.seconds < before && now - @penalized_at >= 0.1
+        @clock_highlight = nil if @clock_highlight&.over?(now)
+        return unless @clock_highlight && playing? && before && hud.seconds < before && now - @penalized_at >= 0.1
 
         sounds.play(:tick)
       end
@@ -876,7 +877,7 @@ module DotPopper
         close_layer(:share_preview)
         @mistake = nil
         @screens[:stats].forget_undo # the game's records would be lost to an undo
-        @lead_in = nil
+        @clock_highlight = nil
         @beckoned_at = nil
         sounds.play(:start)
       end
