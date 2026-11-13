@@ -4,11 +4,11 @@ require_relative "presentation_helper"
 require "platforms_helper"
 
 # The three inputs that must each be enough on their own: touch, a
-# controller, and a mouse with its keyboard. Each is a hand that works a
-# World's Show the way Shell::App hands that input's presses to it, and
-# nothing else, so what a hand cannot reach here, that input cannot reach
-# in the game. Used by inputs_test.rb.
-module Hands
+# controller, and a mouse with its keyboard. Each (Input) works a
+# Fixture's Show the way Shell::App hands that input's presses to it, and
+# nothing else, so what an input cannot reach here, it cannot reach in
+# the game. Used by inputs_test.rb.
+module Inputs
   include PresentationTest
 
   Memory = DotPopper::ScoreRecord::Memory
@@ -57,15 +57,15 @@ module Hands
   # keeps for a player: Pro or not, games left, a friend group, a new theme
   # to tell, setdef gone. It moves on as frames do: the Cabinet, then the
   # Show.
-  class World
+  class Fixture
     include PresentationTest
 
     THEMES = %i[ghost jack_o_lantern].freeze
 
     attr_reader :os, :show, :cabinet, :sounds, :window, :clipboard, :opener, :entitlement, :games, :storefront, :server_choice, :to_pop
 
-    # +to_pop+ is how many bright dots a game is played for (Hand#play)
-    # before it is left to its clock: 20 in a row earn Steady hand, so
+    # +to_pop+ is how many bright dots a game is played for (Input#play)
+    # before it is left to its clock: 20 in a row earn Steady input, so
     # Game Over has an achievement's line to open. +copied+ is on the
     # clipboard, as text the player copied elsewhere.
     # +channel+ is the build's (Build::CHANNEL), nil for a test build.
@@ -136,46 +136,46 @@ module Hands
     end
   end
 
-  # A hand: the one input a player has. It points at a place on the
+  # One input, the only one a player has. It points at a place on the
   # screen and presses there, as Shell::App#press hands a press to the
   # Show (InputRouter's Tap, then Show#tap, or the pile on Game Over away
   # from its buttons), lets go (Show#let_go), and scrolls a list its own
   # way. Every press first says what made it (Show#input=), as
   # App#heard does.
-  class Hand
+  class Input
     CLICK = 0.05 # seconds a press is held, unless it is a hold
     LOOK = 0.5 # seconds a player takes to see a screen before pressing
     REACT = 0.5 # seconds a player takes to see a new bright dot and reach for it
 
-    attr_reader :world
+    attr_reader :fixture
 
-    def initialize(world)
-      @world = world
+    def initialize(fixture)
+      @fixture = fixture
       show.input = kind
     end
 
-    def show = world.show
+    def show = fixture.show
 
     # Presses the control named +name+ (Control#name) on the open
     # screen, scrolling it into view first: says :pressed, or why not.
     # A press that starts a hold (Clear my stats…, Leave, Delete my data)
     # is held until it is done.
     def press(name)
-      world.tick(LOOK)
+      fixture.tick(LOOK)
       control = reveal(name) or return :not_shown
       point = aim(control) or return :out_of_reach
       x, y = point
       return :out_of_reach unless show.control_at(x, y)&.name == name
 
       down(x, y)
-      world.tick(holding ? holding.seconds + 0.2 : CLICK)
+      fixture.tick(holding ? holding.seconds + 0.2 : CLICK)
       up
-      world.tick(CLICK)
+      fixture.tick(CLICK)
       :pressed
     end
 
     # Plays the game in view, or the Tutorial over it: pops the dot the
-    # Tutorial waits for, or the game's bright dots, World#to_pop of them,
+    # Tutorial waits for, or the game's bright dots, Fixture#to_pop of them,
     # then lets the clock run out. Says :pressed once it is over, and
     # Game Over will take a press.
     def play
@@ -186,13 +186,13 @@ module Hands
         if dot && pop(dot.id)
           popped += 1
         else
-          world.tick(0.1)
+          fixture.tick(0.1)
           spent += 0.1
         end
       end
       return :still_playing if show.playing? || show.tutorial?
 
-      world.tick(DotPopper::Rules::GAME_OVER_GRACE) if show.game_over? # Game Over takes no press before it
+      fixture.tick(DotPopper::Rules::GAME_OVER_GRACE) if show.game_over? # Game Over takes no press before it
       :pressed
     end
 
@@ -203,7 +203,7 @@ module Hands
         id = P::Tutorial::TURNS[show.tutorial.beat]
         return id && show.tutorial.dots.find { it.id == id && !it.popped? }
       end
-      return if popped >= world.to_pop
+      return if popped >= fixture.to_pop
 
       dots = show.cabinet.game.dots
       dots.find { it.bright? && dots.top_at(it.x, it.y)&.id == it.id }
@@ -225,7 +225,7 @@ module Hands
     # Taps the dot +id+ where it is when the player has seen it, unless
     # another dot has come over it.
     def pop(id)
-      world.tick(REACT)
+      fixture.tick(REACT)
       spot = dot(id) or return
       return unless clear?(id, spot.x, spot.y)
 
@@ -242,7 +242,7 @@ module Hands
       !before.nil? && show.scroll&.offset != before
     end
 
-    # Every control the open screen offers this hand, top to bottom of
+    # Every control the open screen offers this input, top to bottom of
     # its list.
     def sweep
       seen = show.controls.map(&:name)
@@ -277,7 +277,7 @@ module Hands
 
     def aim(control) = aim_at(control.reach.center_x, control.reach.center_y)
 
-    # Where this hand can press, aiming for +x+, +y+, or nil.
+    # Where this input can press, aiming for +x+, +y+, or nil.
     def aim_at(x, y) = [x, y]
 
     def down(x, y)
@@ -302,7 +302,7 @@ module Hands
 
   # A finger on a touchscreen: a tap where it lands, and a list dragged
   # by a finger that starts away from its buttons.
-  class Finger < Hand
+  class Finger < Input
     def kind = P::InputKind::TOUCH
     def key = 7 # a touch id
 
@@ -337,12 +337,12 @@ module Hands
   # A controller: the left stick steers the cursor (GamepadCursor), A
   # presses where it points, and the right stick scrolls a list. The
   # cursor is steered, frame by frame, as a player would steer it, and the
-  # time it takes passes in the World.
-  class Pad < Hand
+  # time it takes passes in the Fixture.
+  class Pad < Input
     FRAME = 1 / 60.0
     LONGEST = 6.0 # seconds to reach anything, the window's diagonal taking 1
 
-    def initialize(world)
+    def initialize(fixture)
       super
       @cursor = P::GamepadCursor.centered(show.layout.whole, style: P::Style::GAMEPAD, radius: DotPopperTest::R)
     end
@@ -359,7 +359,7 @@ module Hands
     # Steers the cursor onto the dot +id+ as it moves, a frame at a time,
     # and presses A once the cursor is well inside it.
     def pop(id)
-      world.tick(REACT)
+      fixture.tick(REACT)
       spent = 0.0
       loop do
         spot = dot(id) or return
@@ -367,7 +367,7 @@ module Hands
         return if spent > LONGEST
 
         @cursor = @cursor.update(FRAME, push(spot.x, spot.y, spot.velocity_x, spot.velocity_y))
-        world.tick(FRAME)
+        fixture.tick(FRAME)
         spent += FRAME
       end
       @cursor = @cursor.update(FRAME, P::Stick.rest)
@@ -389,7 +389,7 @@ module Hands
         spent += FRAME
       end
       @cursor = @cursor.update(FRAME, P::Stick.rest)
-      world.tick(spent)
+      fixture.tick(spent)
       [@cursor.x, @cursor.y]
     end
 
@@ -436,14 +436,14 @@ module Hands
     end
   end
 
-  # Everything one hand can find from the World +build+ makes, starting
+  # Everything one input can find from the Fixture +build+ makes, starting
   # at Home and pressing every control of every screen it comes to, each
-  # from a fresh World: the screens (with the controls each offers this
-  # hand, its list scrolled from top to bottom), and what each press did.
-  # A screen is told apart by Hands.screen and by the kinds of control it
+  # from a fresh Fixture: the screens (with the controls each offers this
+  # input, its list scrolled from top to bottom), and what each press did.
+  # A screen is told apart by Inputs.screen and by the kinds of control it
   # offers, so a new screen, or a new layer over one, is a new place to
   # explore without anyone listing it.
-  class Map
+  class Exploration
     # The step that is no control's: playing the game, or the Tutorial,
     # in view.
     PLAY = :"(play)"
@@ -454,30 +454,30 @@ module Hands
 
     attr_reader :nodes
 
-    def initialize(build, hand)
+    def initialize(build, input)
       @build = build
-      @hand = hand
+      @input = input
       @nodes = {}
       explore
     end
 
     def screens = nodes.values.map(&:screen).uniq
 
-    # A fresh World with the steps of +path+ taken by this hand, and the
-    # hand, or nil if a step could not be taken; and the last step's
+    # A fresh Fixture with the steps of +path+ taken by this input, and the
+    # input, or nil if a step could not be taken; and the last step's
     # outcome.
     def replay(path)
-      world = @build.call
-      hand = @hand.new(world)
+      fixture = @build.call
+      input = @input.new(fixture)
       outcome = nil
       path.each_with_index do |step, i|
-        before = trace(world) if i == path.size - 1
-        outcome = take(step, world, hand)
+        before = trace(fixture) if i == path.size - 1
+        outcome = take(step, fixture, input)
         return [nil, nil, outcome] unless outcome == :pressed
 
-        outcome = :no_effect if before && before == trace(world)
+        outcome = :no_effect if before && before == trace(fixture)
       end
-      [world, hand, outcome]
+      [fixture, input, outcome]
     end
 
     private
@@ -486,8 +486,8 @@ module Hands
       queue = [[[], nil]]
       until queue.empty?
         path, from = queue.shift
-        world, hand, outcome = replay(path)
-        node = world && visit(world, hand, path, queue)
+        fixture, input, outcome = replay(path)
+        node = fixture && visit(fixture, input, path, queue)
         next unless from
 
         from.pressed[path.last] = outcome
@@ -495,32 +495,32 @@ module Hands
       end
     end
 
-    def visit(world, hand, path, queue)
-      screen = Hands.screen(world.show)
-      names = world.show.controls.map(&:name)
-      swept = hand.sweep
-      # A hand that cannot scroll a list without leaving its screen (a
+    def visit(fixture, input, path, queue)
+      screen = Inputs.screen(fixture.show)
+      names = fixture.show.controls.map(&:name)
+      swept = input.sweep
+      # An input that cannot scroll a list without leaving its screen (a
       # finger's drag beside an achievement's dialog closes it) sees only
       # what is in view.
-      names = swept if Hands.screen(world.show) == screen
-      key = [screen, names.map { Hands.kind(it) }.uniq.sort_by(&:to_s)]
+      names = swept if Inputs.screen(fixture.show) == screen
+      key = [screen, names.map { Inputs.kind(it) }.uniq.sort_by(&:to_s)]
       return @nodes[key] if @nodes[key]
 
       node = @nodes[key] = Node.new(screen:, names:, path:, pressed: {}, leads: [])
       names.each { queue << [path + [it], node] }
-      queue << [path + [PLAY], node] if world.show.playing? || world.show.tutorial?
+      queue << [path + [PLAY], node] if fixture.show.playing? || fixture.show.tutorial?
       node
     end
 
-    def take(step, world, hand)
-      step == PLAY ? hand.play : hand.press(step)
+    def take(step, fixture, input)
+      step == PLAY ? input.play : input.press(step)
     end
 
     # What a press can be seen to do.
-    def trace(world)
-      show = world.show
-      [Hands.screen(show), world.sounds.played.size, world.window.display, (world.window.quits if world.window.respond_to?(:quits)),
-       world.opener.urls.size, world.clipboard.paste, world.storefront.status, show.offer_status, show.scroll&.offset]
+    def trace(fixture)
+      show = fixture.show
+      [Inputs.screen(show), fixture.sounds.played.size, fixture.window.display, (fixture.window.quits if fixture.window.respond_to?(:quits)),
+       fixture.opener.urls.size, fixture.clipboard.paste, fixture.storefront.status, show.offer_status, show.scroll&.offset]
     end
   end
 end
