@@ -123,7 +123,7 @@ Each screen's own buttons (`Show#pad` asks the screen on top, `Show#screen`: `Sc
 | Friend groups | See [friend-groups.md](friend-groups.md). B is Back on every one of them |
 | A game | Only A and the right trigger, at the cursor |
 
-Where a gamepad was used last, each button's label names its button, as "Play (A)", "Settings (Select)" or "Hold Y to clear my stats…" (`ByInput`, below), and Home's large buttons carry badges: X, LB, RB and LT (`buttons.badge_*` in `Style::WORDS`). Home shows "Play (A)" only, though Start plays too. In the Themes screen and the achievement dialog, the LB and RB steps are drawn only for a gamepad.
+Where a gamepad was used last, each button's label names its button, as "Play (A)", "Settings (Select)" or "Hold Y to clear my stats…" (`ByInput`, below), and Home's large buttons carry badges: X, LB, RB and LT (`buttons.badge_*` in `Style::WORDS`). Home shows "Play (A)" only, though Start plays too. A label names A only on the screen's main button, the one A aimed at no button presses ("Play (A)", "Play again (A)", "Copy (A)", "Join (A)"); a button that A presses only when the cursor is on it names no button, as Get Pro in an achievement's dialog, whose main button is Close. A dialog's reflex A never opens the offer of Pro, as no reflex buys on the offer itself. Podmajersky's *Strategic Writing for UX*: a button's words say what it does, so a hint must name an input that does it. In the Themes screen and the achievement dialog, the LB and RB steps are drawn only for a gamepad.
 
 ## Dragging the Game Over pile
 

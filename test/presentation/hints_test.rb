@@ -31,7 +31,9 @@ class HintsTest < Minitest::Test
   # Each word that names an input, by where it is in Style::WORDS (or
   # GroupWords' method), the screen it is shown on, the button it names,
   # and what that button does there. A is a press at the cursor: aimed
-  # at no button, it presses the screen's main button.
+  # at no button, it presses the screen's main button, so only the main
+  # button's label names A, and a button A presses only when aimed at it
+  # (Get Pro in an achievement's dialog) names no button.
   HINTS = {
     [:play] => [:home, :a, ->(t) { t.show.playing? }],
     # On Game Over A away from the buttons waits on the pile, so it is
@@ -65,17 +67,10 @@ class HintsTest < Minitest::Test
     %i[groups notice_go] => [:notice, :a, ->(t) { t.show.group_panel.page == :join }]
   }.freeze
 
-  # Words that name an input that, on the screen that shows them, does
-  # not do what the label says. Each is reported, not changed.
-  MISLEADING = {
-    %i[buttons achievement_pro] => "Get Pro (A): in an achievement's dialog, A aimed at no button closes it " \
-                                   "(AchievementDialog#primary); only A aimed at Get Pro gets Pro"
-  }.freeze
-
   def test_every_word_that_names_an_input_is_listed
     named = words_naming_an_input
 
-    assert_empty named - HINTS.keys - MISLEADING.keys, "a hint with no proof that its input works"
+    assert_empty named - HINTS.keys, "a hint with no proof that its input works"
     assert_empty HINTS.keys - named, "a listed hint no word has"
   end
 

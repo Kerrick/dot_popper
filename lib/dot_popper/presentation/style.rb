@@ -166,7 +166,7 @@ module DotPopper
           not_earned: "Not earned yet", your_record: "Your record", settings_heading: "Settings", privacy_heading: "Privacy",
           achievements_heading: "Achievements", credits_heading: "Credits and licenses",
           achievement_close: ByInput.new(touch: "Close", mouse: "Close", gamepad: "Close (B)"),
-          achievement_pro: ByInput.new(touch: "Get Pro", mouse: "Get Pro", gamepad: "Get Pro (A)"),
+          achievement_pro: "Get Pro",
           how_to_earn: ByInput.new(touch: "How to earn", mouse: "How to earn", gamepad: "How to earn (X)")
         }.freeze
       )
