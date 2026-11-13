@@ -1,0 +1,825 @@
+{
+  "about": "Every exchange a client makes with the server, made by the server's tests against its real app (test/integration/exchanges_test.rb). Tokens, join codes and ids are named in the order they first appear. The keys are throwaway, made only for this document.",
+  "keys": {
+    "roots": [
+      "72793bb60c1bd25d10cc777deeed1e5da16e9724193d5c1f9c4e1a67c7623b65"
+    ],
+    "license_keys": [
+      "876ecd46b41e9e6e5328e28b0b4bb04e37e6b83c6bcdd389044c27dd4966de93"
+    ],
+    "online": "d74594a1a7b47779410ee7e154e38d938c05937e1892320d567915263975f6d3"
+  },
+  "values": {
+    "labels": {
+      "proof": "dot-popper/server-proof/v1",
+      "certificate": "dot-popper/certificate/v1",
+      "license_key": "dot-popper/license-key/v1",
+      "license_check": "dot-popper/license-check/v1"
+    },
+    "certificate": {
+      "size": 141,
+      "magic": "DPCT",
+      "version": 1
+    },
+    "license_key": {
+      "size": 81,
+      "signed_size": 17,
+      "version": 1,
+      "prefix": "DP",
+      "alphabet": "0123456789ABCDEFGHJKMNPQRSTVWXYZ",
+      "letters": 130
+    },
+    "verdicts": {
+      "current": 1,
+      "moved": 0
+    },
+    "highest_score": 100000,
+    "join_code_digits": 7,
+    "max_members": 8,
+    "max_groups": 20,
+    "history_limit": 20,
+    "retry_after": 3600
+  },
+  "exchanges": [
+    {
+      "name": "setdef's server proves itself",
+      "request": {
+        "method": "GET",
+        "path": "/proof?nonce=0101010101010101010101010101010101010101010101010101010101010101",
+        "token": null,
+        "body": null
+      },
+      "reply": {
+        "status": 200,
+        "retry_after": null,
+        "body": {
+          "nonce": "0101010101010101010101010101010101010101010101010101010101010101",
+          "signature": "be4a6d0d561d1131c946a1209626b5541b96e0ac312508174095ee5a5d291ad403963200ff53055f7e7b14e13f0fb4d1f8e5fe7d1ec6d20374aa5d25fed52d0e",
+          "certificate": "44504354014fb27f499e8d739d646f742d706f707065722f7365727665722d70726f6f662f7631000000000000d74594a1a7b47779410ee7e154e38d938c05937e1892320d567915263975f6d3359af45bff2e0ae1f03d092ed1e74c3c47c08e1c30df6bd81f112c3858eb7848bfcd4d4a09cd174f9460a4233c6da971fb296bb2a4ffdd0bd6ab634010865005"
+        }
+      },
+      "signed": "646f742d706f707065722f7365727665722d70726f6f662f76310000000000000101010101010101010101010101010101010101010101010101010101010101"
+    },
+    {
+      "name": "a device enters a license key",
+      "request": {
+        "method": "POST",
+        "path": "/licenses",
+        "token": null,
+        "body": {
+          "key": "DP-07RE3-MP3PJ-JSD1V-RD5D4-PF1D3-R7S15-98H39-T58S1-B7Z5B-HFPPS-91ZSY-7BFQV-BB030-HGN1Q-KBY46-X5FV5-JT55N-2NVHA-NA5WT-EV46D-C868J-CCHJR-9XMG4-YA5CJ-R46DP-TCF1M",
+          "secret": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+          "nonce": "0202020202020202020202020202020202020202020202020202020202020202"
+        }
+      },
+      "reply": {
+        "status": 200,
+        "retry_after": null,
+        "body": {
+          "key_id": "f0e1d2c3b4a5968778695a4b3c2d1e0f",
+          "verdict": "current",
+          "nonce": "0202020202020202020202020202020202020202020202020202020202020202",
+          "signature": "83e49ff7fc5b1814b21bdb18b5db72fb2e64892ca6a8d271839c3e2352a1c79a4ccb9b204af097a8582a09c1ce0407adf6549f6d0c4fab0cc08efee616251a0a",
+          "certificate": "44504354014fb27f499e8d739d646f742d706f707065722f7365727665722d70726f6f662f7631000000000000d74594a1a7b47779410ee7e154e38d938c05937e1892320d567915263975f6d3359af45bff2e0ae1f03d092ed1e74c3c47c08e1c30df6bd81f112c3858eb7848bfcd4d4a09cd174f9460a4233c6da971fb296bb2a4ffdd0bd6ab634010865005"
+        }
+      },
+      "signed": "646f742d706f707065722f6c6963656e73652d636865636b2f763100000000000202020202020202020202020202020202020202020202020202020202020202f0e1d2c3b4a5968778695a4b3c2d1e0f01"
+    },
+    {
+      "name": "the device checks it still holds the key",
+      "request": {
+        "method": "POST",
+        "path": "/license_checks",
+        "token": null,
+        "body": {
+          "key_id": "f0e1d2c3b4a5968778695a4b3c2d1e0f",
+          "secret": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+          "next": "a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2",
+          "nonce": "0303030303030303030303030303030303030303030303030303030303030303"
+        }
+      },
+      "reply": {
+        "status": 200,
+        "retry_after": null,
+        "body": {
+          "key_id": "f0e1d2c3b4a5968778695a4b3c2d1e0f",
+          "verdict": "current",
+          "nonce": "0303030303030303030303030303030303030303030303030303030303030303",
+          "signature": "8a39225c4b0704e9c4e6d4584d417c507648804d6f0d163e2f327dffdf7292fa8990f760eced5b9d9e81885ccc8047efc19f229be51f7dd0e5a87b3a9777900b",
+          "certificate": "44504354014fb27f499e8d739d646f742d706f707065722f7365727665722d70726f6f662f7631000000000000d74594a1a7b47779410ee7e154e38d938c05937e1892320d567915263975f6d3359af45bff2e0ae1f03d092ed1e74c3c47c08e1c30df6bd81f112c3858eb7848bfcd4d4a09cd174f9460a4233c6da971fb296bb2a4ffdd0bd6ab634010865005"
+        }
+      },
+      "signed": "646f742d706f707065722f6c6963656e73652d636865636b2f763100000000000303030303030303030303030303030303030303030303030303030303030303f0e1d2c3b4a5968778695a4b3c2d1e0f01"
+    },
+    {
+      "name": "the device asks again after losing the answer",
+      "request": {
+        "method": "POST",
+        "path": "/license_checks",
+        "token": null,
+        "body": {
+          "key_id": "f0e1d2c3b4a5968778695a4b3c2d1e0f",
+          "secret": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+          "next": "a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2",
+          "nonce": "0404040404040404040404040404040404040404040404040404040404040404"
+        }
+      },
+      "reply": {
+        "status": 200,
+        "retry_after": null,
+        "body": {
+          "key_id": "f0e1d2c3b4a5968778695a4b3c2d1e0f",
+          "verdict": "current",
+          "nonce": "0404040404040404040404040404040404040404040404040404040404040404",
+          "signature": "e252d1761aa0114f8b83e669f052f8d2f2a6c16dbcdb83fdba61b514b2f2f88a45eca0add3b46a7d1e28f592358e2838df32ac5b7de2bdfdf85ccaa56c388101",
+          "certificate": "44504354014fb27f499e8d739d646f742d706f707065722f7365727665722d70726f6f662f7631000000000000d74594a1a7b47779410ee7e154e38d938c05937e1892320d567915263975f6d3359af45bff2e0ae1f03d092ed1e74c3c47c08e1c30df6bd81f112c3858eb7848bfcd4d4a09cd174f9460a4233c6da971fb296bb2a4ffdd0bd6ab634010865005"
+        }
+      },
+      "signed": "646f742d706f707065722f6c6963656e73652d636865636b2f763100000000000404040404040404040404040404040404040404040404040404040404040404f0e1d2c3b4a5968778695a4b3c2d1e0f01"
+    },
+    {
+      "name": "another device enters the same key",
+      "request": {
+        "method": "POST",
+        "path": "/licenses",
+        "token": null,
+        "body": {
+          "key": "DP-07RE3-MP3PJ-JSD1V-RD5D4-PF1D3-R7S15-98H39-T58S1-B7Z5B-HFPPS-91ZSY-7BFQV-BB030-HGN1Q-KBY46-X5FV5-JT55N-2NVHA-NA5WT-EV46D-C868J-CCHJR-9XMG4-YA5CJ-R46DP-TCF1M",
+          "secret": "a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3",
+          "nonce": "0505050505050505050505050505050505050505050505050505050505050505"
+        }
+      },
+      "reply": {
+        "status": 200,
+        "retry_after": null,
+        "body": {
+          "key_id": "f0e1d2c3b4a5968778695a4b3c2d1e0f",
+          "verdict": "current",
+          "nonce": "0505050505050505050505050505050505050505050505050505050505050505",
+          "signature": "52044016effab71efa8fa492881963a87ae1418c017a5d1f0536e19cb9a3dd60f306cfd05c171bfc6874db523300f066df8314a0addff21273a6513dfca3e307",
+          "certificate": "44504354014fb27f499e8d739d646f742d706f707065722f7365727665722d70726f6f662f7631000000000000d74594a1a7b47779410ee7e154e38d938c05937e1892320d567915263975f6d3359af45bff2e0ae1f03d092ed1e74c3c47c08e1c30df6bd81f112c3858eb7848bfcd4d4a09cd174f9460a4233c6da971fb296bb2a4ffdd0bd6ab634010865005"
+        }
+      },
+      "signed": "646f742d706f707065722f6c6963656e73652d636865636b2f763100000000000505050505050505050505050505050505050505050505050505050505050505f0e1d2c3b4a5968778695a4b3c2d1e0f01"
+    },
+    {
+      "name": "the first device learns the key has moved",
+      "request": {
+        "method": "POST",
+        "path": "/license_checks",
+        "token": null,
+        "body": {
+          "key_id": "f0e1d2c3b4a5968778695a4b3c2d1e0f",
+          "secret": "a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2",
+          "next": "a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4",
+          "nonce": "0606060606060606060606060606060606060606060606060606060606060606"
+        }
+      },
+      "reply": {
+        "status": 200,
+        "retry_after": null,
+        "body": {
+          "key_id": "f0e1d2c3b4a5968778695a4b3c2d1e0f",
+          "verdict": "moved",
+          "nonce": "0606060606060606060606060606060606060606060606060606060606060606",
+          "signature": "dfa91d05719ca16e7622337f3cd1ae4692de0a78292b8c25681b2b1f6b38a04392902fa507ee2f992a165aebe913a7d9d161d6ef84f139b2a75106be16b34609",
+          "certificate": "44504354014fb27f499e8d739d646f742d706f707065722f7365727665722d70726f6f662f7631000000000000d74594a1a7b47779410ee7e154e38d938c05937e1892320d567915263975f6d3359af45bff2e0ae1f03d092ed1e74c3c47c08e1c30df6bd81f112c3858eb7848bfcd4d4a09cd174f9460a4233c6da971fb296bb2a4ffdd0bd6ab634010865005"
+        }
+      },
+      "signed": "646f742d706f707065722f6c6963656e73652d636865636b2f763100000000000606060606060606060606060606060606060606060606060606060606060606f0e1d2c3b4a5968778695a4b3c2d1e0f00"
+    },
+    {
+      "name": "a player is made",
+      "request": {
+        "method": "POST",
+        "path": "/player",
+        "token": null,
+        "body": null
+      },
+      "reply": {
+        "status": 201,
+        "retry_after": null,
+        "body": {
+          "token": "token-1"
+        }
+      }
+    },
+    {
+      "name": "the player founds a group",
+      "request": {
+        "method": "POST",
+        "path": "/groups",
+        "token": "token-1",
+        "body": null
+      },
+      "reply": {
+        "status": 201,
+        "retry_after": null,
+        "body": {
+          "id": 1,
+          "join_code": "1000001",
+          "you": 1,
+          "members": [
+            {
+              "number": 1,
+              "top_score": 0
+            }
+          ],
+          "champion_number": null,
+          "top_score": 0,
+          "reign_started_at": null
+        }
+      }
+    },
+    {
+      "name": "the founder reads the group's history",
+      "request": {
+        "method": "GET",
+        "path": "/groups/1/history",
+        "token": "token-1",
+        "body": null
+      },
+      "reply": {
+        "status": 200,
+        "retry_after": null,
+        "body": []
+      }
+    },
+    {
+      "name": "the founder's first game wins the vacant title",
+      "request": {
+        "method": "POST",
+        "path": "/games",
+        "token": "token-1",
+        "body": {
+          "score": 7
+        }
+      },
+      "reply": {
+        "status": 200,
+        "retry_after": null,
+        "body": {
+          "groups": [
+            {
+              "group": {
+                "id": 1,
+                "join_code": "1000001",
+                "you": 1,
+                "members": [
+                  {
+                    "number": 1,
+                    "top_score": 7
+                  }
+                ],
+                "champion_number": 1,
+                "top_score": 7,
+                "reign_started_at": "2026-11-01T12:09:00.000Z"
+              },
+              "won_title": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "the founder reads the title change",
+      "request": {
+        "method": "GET",
+        "path": "/groups/1/history",
+        "token": "token-1",
+        "body": null
+      },
+      "reply": {
+        "status": 200,
+        "retry_after": null,
+        "body": [
+          {
+            "id": 101,
+            "kind": "title_change",
+            "champion_number": 1,
+            "previous_champion_number": null,
+            "score": 7,
+            "passed_on": false,
+            "at": "2026-11-01T12:09:00.000Z"
+          }
+        ]
+      }
+    },
+    {
+      "name": "the founder earns an achievement",
+      "request": {
+        "method": "POST",
+        "path": "/achievements",
+        "token": "token-1",
+        "body": {
+          "key": "steady"
+        }
+      },
+      "reply": {
+        "status": 200,
+        "retry_after": null,
+        "body": {
+          "groups": [
+            {
+              "id": 1,
+              "join_code": "1000001",
+              "you": 1,
+              "members": [
+                {
+                  "number": 1,
+                  "top_score": 7
+                }
+              ],
+              "champion_number": 1,
+              "top_score": 7,
+              "reign_started_at": "2026-11-01T12:09:00.000Z"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "the founder opens the group",
+      "request": {
+        "method": "GET",
+        "path": "/groups/1",
+        "token": "token-1",
+        "body": null
+      },
+      "reply": {
+        "status": 200,
+        "retry_after": null,
+        "body": {
+          "id": 1,
+          "join_code": "1000001",
+          "you": 1,
+          "members": [
+            {
+              "number": 1,
+              "top_score": 7
+            }
+          ],
+          "champion_number": 1,
+          "top_score": 7,
+          "reign_started_at": "2026-11-01T12:09:00.000Z"
+        }
+      }
+    },
+    {
+      "name": "and its history",
+      "request": {
+        "method": "GET",
+        "path": "/groups/1/history",
+        "token": "token-1",
+        "body": null
+      },
+      "reply": {
+        "status": 200,
+        "retry_after": null,
+        "body": [
+          {
+            "id": 102,
+            "kind": "achievement",
+            "member_number": 1,
+            "key": "steady",
+            "at": "2026-11-01T12:11:00.000Z"
+          },
+          {
+            "id": 101,
+            "kind": "title_change",
+            "champion_number": 1,
+            "previous_champion_number": null,
+            "score": 7,
+            "passed_on": false,
+            "at": "2026-11-01T12:09:00.000Z"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a second player is made",
+      "request": {
+        "method": "POST",
+        "path": "/player",
+        "token": null,
+        "body": null
+      },
+      "reply": {
+        "status": 201,
+        "retry_after": null,
+        "body": {
+          "token": "token-2"
+        }
+      }
+    },
+    {
+      "name": "the second player joins with the code",
+      "request": {
+        "method": "POST",
+        "path": "/memberships",
+        "token": "token-2",
+        "body": {
+          "join_code": "1000001"
+        }
+      },
+      "reply": {
+        "status": 201,
+        "retry_after": null,
+        "body": {
+          "id": 1,
+          "join_code": "1000001",
+          "you": 2,
+          "members": [
+            {
+              "number": 1,
+              "top_score": 7
+            },
+            {
+              "number": 2,
+              "top_score": 0
+            }
+          ],
+          "champion_number": 1,
+          "top_score": 7,
+          "reign_started_at": "2026-11-01T12:09:00.000Z"
+        }
+      }
+    },
+    {
+      "name": "the newcomer reads the group's history",
+      "request": {
+        "method": "GET",
+        "path": "/groups/1/history",
+        "token": "token-2",
+        "body": null
+      },
+      "reply": {
+        "status": 200,
+        "retry_after": null,
+        "body": [
+          {
+            "id": 102,
+            "kind": "achievement",
+            "member_number": 1,
+            "key": "steady",
+            "at": "2026-11-01T12:11:00.000Z"
+          },
+          {
+            "id": 101,
+            "kind": "title_change",
+            "champion_number": 1,
+            "previous_champion_number": null,
+            "score": 7,
+            "passed_on": false,
+            "at": "2026-11-01T12:09:00.000Z"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a game short of the title",
+      "request": {
+        "method": "POST",
+        "path": "/games",
+        "token": "token-2",
+        "body": {
+          "score": 5
+        }
+      },
+      "reply": {
+        "status": 200,
+        "retry_after": null,
+        "body": {
+          "groups": [
+            {
+              "group": {
+                "id": 1,
+                "join_code": "1000001",
+                "you": 2,
+                "members": [
+                  {
+                    "number": 1,
+                    "top_score": 7
+                  },
+                  {
+                    "number": 2,
+                    "top_score": 5
+                  }
+                ],
+                "champion_number": 1,
+                "top_score": 7,
+                "reign_started_at": "2026-11-01T12:09:00.000Z"
+              },
+              "won_title": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "a game that takes the title",
+      "request": {
+        "method": "POST",
+        "path": "/games",
+        "token": "token-2",
+        "body": {
+          "score": 12
+        }
+      },
+      "reply": {
+        "status": 200,
+        "retry_after": null,
+        "body": {
+          "groups": [
+            {
+              "group": {
+                "id": 1,
+                "join_code": "1000001",
+                "you": 2,
+                "members": [
+                  {
+                    "number": 1,
+                    "top_score": 7
+                  },
+                  {
+                    "number": 2,
+                    "top_score": 12
+                  }
+                ],
+                "champion_number": 2,
+                "top_score": 12,
+                "reign_started_at": "2026-11-01T12:18:00.000Z"
+              },
+              "won_title": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "the new champion reads the title change",
+      "request": {
+        "method": "GET",
+        "path": "/groups/1/history",
+        "token": "token-2",
+        "body": null
+      },
+      "reply": {
+        "status": 200,
+        "retry_after": null,
+        "body": [
+          {
+            "id": 103,
+            "kind": "title_change",
+            "champion_number": 2,
+            "previous_champion_number": 1,
+            "score": 12,
+            "passed_on": false,
+            "at": "2026-11-01T12:18:00.000Z"
+          },
+          {
+            "id": 102,
+            "kind": "achievement",
+            "member_number": 1,
+            "key": "steady",
+            "at": "2026-11-01T12:11:00.000Z"
+          },
+          {
+            "id": 101,
+            "kind": "title_change",
+            "champion_number": 1,
+            "previous_champion_number": null,
+            "score": 7,
+            "passed_on": false,
+            "at": "2026-11-01T12:09:00.000Z"
+          }
+        ]
+      }
+    },
+    {
+      "name": "the founder's groups at the next launch",
+      "request": {
+        "method": "GET",
+        "path": "/groups",
+        "token": "token-1",
+        "body": null
+      },
+      "reply": {
+        "status": 200,
+        "retry_after": null,
+        "body": [
+          {
+            "id": 1,
+            "join_code": "1000001",
+            "you": 1,
+            "members": [
+              {
+                "number": 1,
+                "top_score": 7
+              },
+              {
+                "number": 2,
+                "top_score": 12
+              }
+            ],
+            "champion_number": 2,
+            "top_score": 12,
+            "reign_started_at": "2026-11-01T12:18:00.000Z"
+          }
+        ]
+      }
+    },
+    {
+      "name": "the founder reads the title's loss",
+      "request": {
+        "method": "GET",
+        "path": "/groups/1/history",
+        "token": "token-1",
+        "body": null
+      },
+      "reply": {
+        "status": 200,
+        "retry_after": null,
+        "body": [
+          {
+            "id": 103,
+            "kind": "title_change",
+            "champion_number": 2,
+            "previous_champion_number": 1,
+            "score": 12,
+            "passed_on": false,
+            "at": "2026-11-01T12:18:00.000Z"
+          },
+          {
+            "id": 102,
+            "kind": "achievement",
+            "member_number": 1,
+            "key": "steady",
+            "at": "2026-11-01T12:11:00.000Z"
+          },
+          {
+            "id": 101,
+            "kind": "title_change",
+            "champion_number": 1,
+            "previous_champion_number": null,
+            "score": 7,
+            "passed_on": false,
+            "at": "2026-11-01T12:09:00.000Z"
+          }
+        ]
+      }
+    },
+    {
+      "name": "joining a group again",
+      "request": {
+        "method": "POST",
+        "path": "/memberships",
+        "token": "token-2",
+        "body": {
+          "join_code": "1000001"
+        }
+      },
+      "reply": {
+        "status": 409,
+        "retry_after": null,
+        "body": {
+          "error": "already_member"
+        }
+      }
+    },
+    {
+      "name": "a code that matches no group",
+      "request": {
+        "method": "POST",
+        "path": "/memberships",
+        "token": "token-2",
+        "body": {
+          "join_code": "2000002"
+        }
+      },
+      "reply": {
+        "status": 404,
+        "retry_after": null,
+        "body": {
+          "status": 404,
+          "error": "Not Found"
+        }
+      }
+    },
+    {
+      "name": "the second player leaves",
+      "request": {
+        "method": "DELETE",
+        "path": "/groups/1/membership",
+        "token": "token-2",
+        "body": null
+      },
+      "reply": {
+        "status": 204,
+        "retry_after": null,
+        "body": null
+      }
+    },
+    {
+      "name": "and deletes everything",
+      "request": {
+        "method": "DELETE",
+        "path": "/player",
+        "token": "token-2",
+        "body": null
+      },
+      "reply": {
+        "status": 204,
+        "retry_after": null,
+        "body": null
+      }
+    },
+    {
+      "name": "a third player is made",
+      "request": {
+        "method": "POST",
+        "path": "/player",
+        "token": null,
+        "body": null
+      },
+      "reply": {
+        "status": 201,
+        "retry_after": null,
+        "body": {
+          "token": "token-3"
+        }
+      }
+    },
+    {
+      "name": "a full group refuses",
+      "request": {
+        "method": "POST",
+        "path": "/memberships",
+        "token": "token-3",
+        "body": {
+          "join_code": "3000003"
+        }
+      },
+      "reply": {
+        "status": 409,
+        "retry_after": null,
+        "body": {
+          "error": "group_full"
+        }
+      }
+    },
+    {
+      "name": "a player in as many groups as allowed can't found another",
+      "request": {
+        "method": "POST",
+        "path": "/groups",
+        "token": "token-3",
+        "body": null
+      },
+      "reply": {
+        "status": 409,
+        "retry_after": null,
+        "body": {
+          "error": "group_limit"
+        }
+      }
+    },
+    {
+      "name": "one new player too many from one address",
+      "request": {
+        "method": "POST",
+        "path": "/player",
+        "token": null,
+        "body": null
+      },
+      "reply": {
+        "status": 429,
+        "retry_after": 3600,
+        "body": {
+          "error": "rate_limited"
+        }
+      }
+    },
+    {
+      "name": "the themes a player who started on a date has",
+      "request": {
+        "method": "GET",
+        "path": "/themes?started_on=2026-10-20",
+        "token": null,
+        "body": null
+      },
+      "reply": {
+        "status": 200,
+        "retry_after": null,
+        "body": [
+          {
+            "key": "ghost"
+          },
+          {
+            "key": "jack_o_lantern"
+          }
+        ]
+      }
+    }
+  ]
+}
