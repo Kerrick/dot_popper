@@ -28,7 +28,7 @@ module DotPopper
         # are on, leading with it, and Back closes it to that same screen,
         # open as it was, so no one loses their place.
         def open_led_by(feature)
-          return if @buy_pro.owned? || opened?
+          return if thanking? || opened?
 
           show.open_layer(self)
           @focus = feature
@@ -88,7 +88,7 @@ module DotPopper
 
         # The words and parts to lay out (OfferScreen), and where they go.
         def layout_screen
-          OfferScreen.new(layout:, type: style::TYPE, words:, measure:, offering: !@buy_pro.owned?,
+          OfferScreen.new(layout:, type: style::TYPE, words:, measure:, offering: !thanking?,
                           note: (words.offer[:no_games] if for_play), focus:, art:,
                           sold: @buy_pro.sold?, second: keys? ? :paste : :restore)
         end
@@ -112,11 +112,10 @@ module DotPopper
         # The price the store gave, or nil before it has.
         def price = @buy_pro.price
 
-        # What it says of how the store is getting on: thanks once the
-        # player owns Pro, and otherwise a word only when there is something
-        # to say.
+        # What it says of buying, as BuyPro#status answers: thanks once the
+        # player has Pro, and otherwise a word only when there is something
+        # to say of the store.
         def status
-          return words.offer[:thanks] if @buy_pro.owned?
           return "#{words.offer[:typing]} #{typed_tail}" if !@buy_pro.typed.empty? && @buy_pro.status == :ready
 
           words.offer.fetch(@buy_pro.status, "")
@@ -208,6 +207,10 @@ module DotPopper
         def covers? = true
 
         private
+
+        # Whether it thanks the player (BuyPro#status), in place of selling:
+        # no buttons but Back, and not opened over what was tapped.
+        def thanking? = @buy_pro.status == :thanks
 
         # The last of the key being typed, for the line to show.
         def typed_tail
