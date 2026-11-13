@@ -125,6 +125,7 @@ module DotPopper
       def keys? = false
       def sold? = true
       def paste = nil
+      def type(_key) = false
 
       # Asks the store for the price and what this player owns: at launch,
       # so a purchase on another device or after a reinstall simply
@@ -189,6 +190,7 @@ module DotPopper
       def keys? = false
       def sold? = false
       def paste = nil
+      def type(_key) = false
       def status = :unavailable
       def price = nil
       def connect = nil

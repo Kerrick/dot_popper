@@ -93,11 +93,11 @@ Tests: `test/build_test.rb`, `test/shell/store_build_test.rb`, `test/set_build_c
 **When it is asked and read.**
 
 - `#connect` asks `open` at launch (`Shell::App#load`) and each time the offer opens, so a purchase on another device or after a reinstall simply appears and an unanswered request is cleared. It removes any old answer first, and asks nothing once the player has Pro.
-- `#buy` asks only once a price has come and nothing is under way. The offer's Buy without a price is "Try again", which connects again (`Show#buy`).
+- `#buy` asks only once a price has come and nothing is under way. The offer's Buy without a price is "Try again", which connects again (`UseCases::BuyPro#buy`).
 - `#restore` asks unless something is under way.
-- `#update` reads the answer every `Storefront::EVERY` (0.25 s). `Show#update` calls it (`#follow_store`) only while no game is in play, so a purchase never lands mid-game (`test_a_store_is_not_read_during_a_game`).
+- `#update` reads the answer every `Storefront::EVERY` (0.25 s). `UseCases::BuyPro#update`, which the `Show` calls each frame, calls it only while no game is in play, so a purchase never lands mid-game (`test_a_store_is_not_read_during_a_game`).
 
-When a purchase lands, `Show#follow_store` reports the achievements already earned to the player's friend groups and, with the offer open, plays a tick.
+**When Pro arrives.** `Entitlement` announces `Entitlement::ProGranted` to its listeners the moment Pro first arrives in a run: `by: :receipt` when a store's receipt verifies (`#prove`), `by: :license_key` when a key is entered (`#enter`, which the website store enters keys through). Pro the game starts with, from a key already entered or `DOT_POPPER_PRO`, is not an arrival. `UseCases::BuyPro` hears it and reports the achievements already earned to the player's friend groups, whichever way Pro came; the `Show` hears it and, for a store's purchase with the offer open, plays a tick (a key entered has its own tick as it is pressed).
 
 ### The adapters
 
@@ -207,7 +207,7 @@ A website copy's Pro is a license key, sent by email, which "Paste license key" 
 
 **The format** (`Continuity::LicenseKey`, `lib/dot_popper/continuity/license_key.rb`, agreed with the server): version 1 is 81 bytes, the version, a random 16-byte id, and an Ed25519 signature by a license-signing key over the label `dot-popper/license-key/v1` and those first 17 bytes. As text it is `DP-` and 130 letters of Crockford base32 in groups of five. Reading it ignores case, spaces, line breaks and hyphens, reads O as 0 and I or L as 1, and takes it with or without `DP-`. The game verifies it offline against the license-signing keys its pins trust.
 
-**Entering one.** Paste license key enters the clipboard's text (`WebsiteStore#paste`); on a computer, Ctrl+V or Cmd+V does the same on the offer (`Show#paste_shortcut`). A key can also be typed on a computer's keyboard there (`WebsiteStore#type`, `Show#typed_license_key`): letters, digits and hyphens add to it, Backspace takes one away, and Enter enters it. The status line shows "Key:" and the last 24 characters. Letters typed there do not trigger H, M or C. Nothing typed is stored unless it is a valid key, and nothing is shown to anyone else. The answers: "That isn't a license key.", "Copy your license key first.", "That key is already here.", or Pro at once.
+**Entering one.** Paste license key enters the clipboard's text (`WebsiteStore#paste`, through `Entitlement#enter` into `Continuity::License`); on a computer, Ctrl+V or Cmd+V does the same on the offer (`Show#paste_shortcut`). A key can also be typed on a computer's keyboard there (`WebsiteStore#type`, `UseCases::BuyPro#type`): letters, digits and hyphens add to it, Backspace takes one away, and Enter enters it. The status line shows "Key:" and the last 24 characters. Letters typed there do not trigger H, M or C. Nothing typed is stored unless it is a valid key, and nothing is shown to anyone else. The answers: "That isn't a license key.", "Copy your license key first.", "That key is already here.", or Pro at once.
 
 **One key, one device at a time** (`Continuity::License`, `license.txt`, as agreed with the server). The file holds `key: DP-…`, `secret: <hex>`, `next: <hex>` while a check waits, and `registered: yes` once the server has answered the entry.
 

@@ -39,5 +39,53 @@ module DotPopper
         def self.new: (record: Stats::Record?, goal_met: bool, achievements: Array[Achievement::id]) -> instance
       end
     end
+
+    # The store behind Pro (Presentation::Storefront and its kin, the
+    # store port's adapters).
+    interface _Store
+      def offered?: () -> bool
+
+      def sold?: () -> bool
+
+      def price: () -> String?
+
+      def connect: () -> void
+
+      def buy: () -> void
+
+      def restore: () -> void
+
+      def paste: () -> void
+
+      def type: (untyped key) -> bool
+
+      def update: (Float seconds) -> void
+    end
+
+    class BuyPro
+      @store: _Store
+      @entitlement: Entitlement
+      @cabinet: Cabinet
+      @achievements: Achievements
+      @friend_groups: _FriendGroups
+
+      def initialize: (store: _Store, entitlement: Entitlement, cabinet: Cabinet, achievements: Achievements, friend_groups: _FriendGroups) -> void
+
+      def offered?: () -> bool
+
+      def open: () -> void
+
+      def buy: () -> bool
+
+      def restore: () -> void
+
+      def paste: () -> void
+
+      def type: (untyped key) -> bool
+
+      def update: (Float seconds) -> void
+
+      def call: (Entitlement::ProGranted granted) -> void
+    end
   end
 end

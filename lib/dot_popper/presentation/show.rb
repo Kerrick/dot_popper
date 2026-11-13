@@ -64,6 +64,8 @@ module DotPopper
         @games = games
         @start_game = UseCases::StartGame.new(cabinet:, free_games: games)
         @finish_game = UseCases::FinishGame.new(stats_book:, achievements:, entitlement:, friend_groups: groups)
+        @buy_pro = UseCases::BuyPro.new(store: storefront, entitlement:, cabinet:, achievements:, friend_groups: groups)
+        entitlement.subscribe(->(granted) { pro_arrived(granted) })
         @offer = false
         @offer_for_play = false
         @tutorial = nil
@@ -313,11 +315,7 @@ module DotPopper
 
       # A key typed into the offer of a copy that takes a license key, on a
       # computer: Paste license key's other way in (WebsiteStore#type).
-      def typed_license_key(key)
-        return false unless @storefront.respond_to?(:type) && !@entitlement.pro?
-
-        @storefront.type(key)
-      end
+      def typed_license_key(key) = @buy_pro.type(key)
 
       # What a control does when pressed.
       def press(name, x, y, by)
@@ -353,7 +351,7 @@ module DotPopper
         in :arrival_later then answer_arrival(use: false)
         in :offer then open_offer
         in :buy then buy
-        in :restore then @storefront.restore
+        in :restore then @buy_pro.restore
         in :paste then paste_key
         in :server then open_server
         in :server_paste then paste_server
@@ -648,7 +646,7 @@ module DotPopper
 
         @offer = true
         @offer_focus = feature
-        @storefront.connect
+        @buy_pro.open
         sounds.play(:tick)
       end
 
@@ -657,7 +655,7 @@ module DotPopper
       # offer opens from what Pro brings (an achievement, a theme, a friend
       # group) and from Play with no game left
       # (doc/design/store-and-pro.md).
-      def offer_offered? = @storefront.offered? && !@entitlement.pro?
+      def offer_offered? = @buy_pro.offered?
 
       # Whether the player has Pro.
       def pro? = @entitlement.pro?
@@ -672,7 +670,7 @@ module DotPopper
 
         @offer = true
         @offer_focus = nil
-        @storefront.connect
+        @buy_pro.open
         sounds.play(:tick)
       end
 
@@ -733,17 +731,13 @@ module DotPopper
       def paste_key
         return unless offer? && @storefront.keys?
 
-        @storefront.paste
+        @buy_pro.paste
         sounds.play(:tick)
       end
 
       # Buy where the store gave a price, and otherwise the same button's
-      # "Try again".
-      def buy
-        return @storefront.connect unless offer_price
-
-        @storefront.buy
-      end
+      # "Try again" (UseCases::BuyPro).
+      def buy = @buy_pro.buy
 
       # Buy's words, with the controller's button that presses it (Y) while
       # a controller is in use. Buy's other ways are its own button, tapped
@@ -765,12 +759,7 @@ module DotPopper
 
       # Ctrl+B or Cmd+B, or a controller's Y, on the offer: Buy, where Pro
       # is sold and not yet bought. Says whether it took the press.
-      def buy_shortcut
-        return false unless offer? && @storefront.sold? && !@entitlement.pro?
-
-        buy
-        true
-      end
+      def buy_shortcut = offer? && @buy_pro.buy
 
       def credits? = @page == :credits
 
@@ -1229,7 +1218,7 @@ module DotPopper
       def update(seconds)
         @now += seconds
         @groups.update(now, quiet: !playing?, showing: (home? && !stats?) || game_over?)
-        follow_store(seconds) unless playing?
+        @buy_pro.update(seconds)
         clear_stats if clearing.done?(now)
         @undo = nil unless @undo&.open?(now)
         @hover = hover.at(hovered).update(seconds, style::HOVER)
@@ -1386,15 +1375,11 @@ module DotPopper
          button(:back, layout.back_button)].compact
       end
 
-      # Hears the store, outside a game; a tick marks the purchase landing
-      # while the offer is open.
-      def follow_store(seconds)
-        free = !@entitlement.pro?
-        @storefront.update(seconds)
-        return unless free && @entitlement.pro?
-
-        @groups.report_achievements(@achievements.earned) # what was earned while Free counts on buying
-        sounds.play(:tick, pitch: 1.3) if offer?
+      # Pro arrived (Entitlement::ProGranted): a tick marks a store's
+      # purchase landing while the offer is open. A license key entered has
+      # had its own tick as it was pressed.
+      def pro_arrived(granted)
+        sounds.play(:tick, pitch: 1.3) if offer? && granted.by == :receipt
       end
 
       def stats_controls
@@ -1462,7 +1447,7 @@ module DotPopper
 
       def pad_offer(name)
         case name
-        when :x then @storefront.keys? ? paste_key : @storefront.restore
+        when :x then @storefront.keys? ? paste_key : @buy_pro.restore
         when :y then buy_shortcut
         end
       end

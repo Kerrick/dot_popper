@@ -249,6 +249,15 @@ class StorefrontTest < Minitest::Test
     refute_predicate @entitlement, :pro?
   end
 
+  def test_a_purchase_landing_while_the_offer_is_open_ticks
+    show, = offer_show
+    show.open_offer
+    answer("answer=1\nowned=1\nstate=ready\nreceipt=#{RECEIPT}\n", show)
+
+    assert_predicate @entitlement, :pro?
+    assert_equal [:tick, 1.3], show.sounds.played.last
+  end
+
   def test_a_build_with_no_store_offers_nothing
     show = build_show(storefront: NoStorefront.new)
     show.open_stats
