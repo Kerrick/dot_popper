@@ -148,6 +148,18 @@ class InputsTest < Minitest::Test
     end
   end
 
+  # Every screen is an object (Screens), and every one of them is on top
+  # somewhere an input reaches, so a screen added later fails here until a
+  # World shows it.
+  def test_every_screen_object_is_reached
+    screens = P::Screens.constants.map { P::Screens.const_get(it) }.select { it.is_a?(Class) && it < P::Screens::Screen }
+    abstract = [P::Screens::Page]
+    seen = WORLDS.each_key.flat_map { |world| InputsTest.maps(world).values.flat_map(&:screens) }.map(&:last).uniq
+
+    assert_operator screens.size, :>=, 16
+    assert_empty screens - abstract - seen, "screens no input reaches"
+  end
+
   # The journey, by each input alone, on each system: a Free player with
   # no games left starts at Home, whose Play says Get Pro; it opens the
   # offer; Buy, in a test build's store, makes them Pro (on a computer,

@@ -413,12 +413,13 @@ module Hands
   # it, and which screen the Show has open over it.
   def self.screen(show)
     [show.cabinet.state.class.name.split("::").last, show.page, (show.group_panel.page if show.group_open?),
-     (show.group_panel.asking if show.group_open?), show.offer?, !show.dialog.nil?, show.sharing?, show.tutorial?, show.arrival?]
+     (show.group_panel.asking if show.group_open?), show.offer?, !show.dialog.nil?, show.sharing?, show.tutorial?, show.arrival?,
+     show.screen.class]
   end
 
   # A screen as words, for a failure's message: "Home, settings".
   def self.say(screen)
-    state, page, group, asking, offer, dialog, sharing, tutorial, arrival = screen
+    state, page, group, asking, offer, dialog, sharing, tutorial, arrival, = screen
     [state, page, (:"groups #{group}" if group), (:"#{asking} notice" if asking), (:offer if offer), (:dialog if dialog),
      (:share_preview if sharing), (:tutorial if tutorial), (:new_theme if arrival)].compact.join(", ")
   end
