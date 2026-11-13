@@ -5,11 +5,12 @@
 // orange and gold, each with a dark band and a cream tip; his wings
 // dropped and barred at his sides; his round bronze breast; and his pale
 // blue head with its red wattle. A popped dot is the same tom asleep on
-// his roost at night, all in dark tones: his fan folded shut like a
-// closed hand fan and hanging behind the limb, his wings folded, his head
-// sunk into his shoulders with his eyes shut, every part of him far
-// darker than the bright tom's mid tones. Every sleeping turkey is alike. The
-// vertex color says what kind of dot it is, as in dot.glsl.
+// his roost at night, by moonlight: his fan folded shut like a closed
+// hand fan and hanging behind the limb, his wings folded, his head sunk
+// into his shoulders with his eyes shut, all of him in one deep violet,
+// as pictures draw night, far from every warm color of the bright tom and
+// from his pale blue head. Every sleeping turkey is alike. The vertex
+// color says what kind of dot it is, as in dot.glsl.
 
 uniform float extent;
 uniform float shadow_offset;
@@ -26,6 +27,9 @@ const vec3 SHADOW = vec3(0.016, 0.008, 0.02);
 const vec3 HALO = vec3(1.0, 0.78, 0.5);
 const vec3 RIM = vec3(1.0, 0.93, 0.78);
 const vec3 POP_RIM = vec3(0.47, 0.38, 0.36);
+// Moonlight's two ends: the night's darkest violet and its lightest.
+const vec3 MOON_DARK = vec3(0.03, 0.0, 0.07);
+const vec3 MOON_LIGHT = vec3(0.42, 0.14, 0.74);
 const vec2 PIVOT = vec2(0.0, 0.2);
 const float FAN = 2.05;
 const float PI = 3.14159;
@@ -167,7 +171,7 @@ vec3 turkey(vec2 p, float d, float aa, float bright_look, float bonus) {
 
   // --- Asleep on his roost ---
   // The night behind him, and the limb he sits on.
-  vec3 s = mix(vec3(0.04, 0.03, 0.045), vec3(0.07, 0.05, 0.065), clamp(0.5 - 0.5 * p.y, 0.0, 1.0));
+  vec3 s = mix(vec3(0.02, 0.015, 0.025), vec3(0.04, 0.03, 0.04), clamp(0.5 - 0.5 * p.y, 0.0, 1.0));
   float limb_y = 0.72 + 0.05 * p.x;
   float limb = abs(p.y - limb_y) - 0.07;
   // His fan, folded shut like a closed hand fan and hanging down behind
@@ -238,6 +242,11 @@ vec3 turkey(vec2 p, float d, float aa, float bright_look, float bonus) {
   s = mix(s, night_flesh, cover_of(rwattle, aa));
   float rbeak = max(abs(p.x) - 0.06 * (1.0 - (p.y + 0.1) / 0.11), max(-0.1 - p.y, p.y - 0.01));
   s = mix(s, vec3(0.11, 0.085, 0.055), cover_of(rbeak, aa));
+  // By moonlight: night takes a scene's colors and keeps its lightness,
+  // so each part keeps its lightness, drawn in one deep violet. Warm
+  // browns as light as these would come near the bright tom's mid tones;
+  // this violet keeps far from them and from his pale blue head.
+  s = mix(MOON_DARK, MOON_LIGHT, pow(clamp(dot(s, vec3(0.299, 0.587, 0.114)) / 0.13, 0.0, 1.0), 1.3));
 
   vec3 col = mix(s, display, bright_look);
   float wr = mix(max(0.036, 1.5 * aa), max(0.022, 1.5 * aa), bright_look);
