@@ -10,8 +10,8 @@ module DotPopper
             key: :santa, opens_on: Date.new(2026, 12, 1),
             palette: base.with(
               ink_top: hex["#0a1230"], ink_bottom: hex["#0b1026"], ink_glow: hex["#1c2a52"], ink_edge: hex["#050818"],
-              fresh_light: hex["#ffffff"], fresh_body: hex["#fbf6f0"], fresh_deep: hex["#d9dbe6"],
-              fresh_bounce: hex["#ffe9de"], fresh_rim: hex["#fff8f0"], halo: hex["#ffe8d6"],
+              bright_light: hex["#ffffff"], bright_body: hex["#fbf6f0"], bright_deep: hex["#d9dbe6"],
+              bright_bounce: hex["#ffe9de"], bright_rim: hex["#fff8f0"], halo: hex["#ffe8d6"],
               popped_top: hex["#1d1d2c"], popped_bottom: hex["#11111c"], popped_rim: hex["#6e6f8c"],
               popped_crater: hex["#06060c"], popped_lip: hex["#4c4d66"],
               shadow: hex["#02030a"], alarm: hex["#ff6a6a"],

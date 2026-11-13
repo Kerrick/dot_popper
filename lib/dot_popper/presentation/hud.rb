@@ -14,7 +14,7 @@ module DotPopper
     class Readout < Data.define(:label, :text, :scale, :urgency); end
 
     # The row toward a bonus dot, as small dots under the pill: +size+
-    # of them, the first +lit+ bright like fresh dots, the rest dark like
+    # of them, the first +lit+ light like bright dots, the rest dark like
     # popped ones, the newest +scale+ big as it bumps. While a bonus dot is
     # on the field (+ready+) all are lit in its mint, the row cashed in
     # as the dot to pop.
@@ -58,7 +58,7 @@ module DotPopper
         return with(dots_in_a_row: nil, size: nil, ready: false) unless game.bonus && !game.over?
 
         dots_in_a_row = game.dots_in_a_row
-        ready = game.dots.any? { it.fresh? && it.bonus? }
+        ready = game.dots.any? { it.bright? && it.bonus? }
         grew = self.dots_in_a_row && dots_in_a_row > self.dots_in_a_row
         with(dots_in_a_row:, size: game.bonus.dots_in_a_row, ready:, dots_in_a_row_changed: grew ? now : dots_in_a_row_changed)
       end

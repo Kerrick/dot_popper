@@ -13,9 +13,9 @@ class SpawnerTest < Minitest::Test
   # What the spec's rule alone would draw from a Random seeded with SEED.
   def plain_draw(on = field) = DotPopper::Dot.spawn(on, Random.new(SEED), id: 9)
 
-  def popped_on(fresh, **changes) = fresh.with(id: 1, popped: true, **changes)
+  def popped_on(bright, **changes) = bright.with(id: 1, popped: true, **changes)
 
-  def test_a_fresh_dot_with_room_for_a_target_now_is_kept_and_draws_nothing_more
+  def test_a_bright_dot_with_room_for_a_target_now_is_kept_and_draws_nothing_more
     random = Random.new(SEED)
     reference = Random.new(SEED)
     expected = DotPopper::Dot.spawn(field, reference, id: 9)
@@ -28,7 +28,7 @@ class SpawnerTest < Minitest::Test
     assert_equal reference.rand, random.rand, "the same randomness is left over"
   end
 
-  def test_a_fresh_dot_hidden_under_a_popped_dot_moving_with_it_gets_a_new_velocity
+  def test_a_bright_dot_hidden_under_a_popped_dot_moving_with_it_gets_a_new_velocity
     hidden = plain_draw
     above = [popped_on(hidden)]
     refute check.exposed_soon?(hidden, above), "the two would move as one"
@@ -41,7 +41,7 @@ class SpawnerTest < Minitest::Test
     assert check.exposed_soon?(spawn.dot, above)
   end
 
-  def test_a_fresh_dot_covered_now_but_drifting_out_within_the_second_is_kept
+  def test_a_bright_dot_covered_now_but_drifting_out_within_the_second_is_kept
     covered = plain_draw
     above = [popped_on(covered, velocity_x: -covered.velocity_x, velocity_y: -covered.velocity_y)]
     refute DotPopper::TouchTarget.on(R).clear_on?(covered.x, covered.y, above), "covered at first"
@@ -72,7 +72,7 @@ class SpawnerTest < Minitest::Test
 
     assert spawn.exhausted?
     assert_equal [DotPopper::Rules::SPAWN_TRIES] * 2, [spawn.velocity_redraws, spawn.position_redraws]
-    assert spawn.dot.fresh?
+    assert spawn.dot.bright?
     assert_equal 9, spawn.dot.id
   end
 

@@ -47,7 +47,7 @@ module DotPopper
         label = pen.fonts.semibold(14)
         left(sheet.records.rows.first.label, label, rect.x + pad, rect.y + 22, palette.soft)
         big = pen.fonts.bold(rect.height > 200 ? 56 : 44)
-        Lettering.new(pen:).candy(sheet.records.rows.first.value, big, rect.x + pad + (big.width(sheet.records.rows.first.value) / 2.0), rect.y + 22 + (big.height * 0.72), 1.0, face: palette.fresh_body, side: palette.fresh_deep)
+        Lettering.new(pen:).candy(sheet.records.rows.first.value, big, rect.x + pad + (big.width(sheet.records.rows.first.value) / 2.0), rect.y + 22 + (big.height * 0.72), 1.0, face: palette.bright_body, side: palette.bright_deep)
         caption = Presentation::Words.last_games(sheet.scores.size)
         right(caption, label, rect.right - pad, rect.y + 22 + (big.height * 1.05), palette.soft)
         top = rect.y + 22 + (big.height * 1.35)
@@ -59,7 +59,7 @@ module DotPopper
       def bars(sheet, box)
         palette = pen.palette
         Presentation::ScoreBars.new(scores: sheet.scores, mine: sheet.mine).bars(box, pen.pixels).each do |bar|
-          pen.color(bar.score_record ? palette.fresh_light : palette.fresh_body.mix(palette.fresh_deep, 0.45), bar.dim ? DIM : 1.0)
+          pen.color(bar.score_record ? palette.bright_light : palette.bright_body.mix(palette.bright_deep, 0.45), bar.dim ? DIM : 1.0)
           corner = [bar.width / 3.0, 2.0].min
           G.rectangle(:fill, bar.x, bar.y, bar.width, bar.height, corner, corner, 8)
         end

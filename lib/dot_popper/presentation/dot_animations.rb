@@ -9,9 +9,9 @@ module DotPopper
     # +spawn+ scales a new dot in from a seed; +pop_stretch+ is the width
     # of a just-popped dot as it squashes and springs back (its height is
     # the inverse, so it keeps its volume); +pop_cover+ is how much of the
-    # fresh look still shows over the popped one; +wobble+ is the
+    # bright look still shows over the popped one; +wobble+ is the
     # "wrong!" shudder. A dot at rest is still, at exactly its size: a
-    # fresh dot that swelled and shrank would move the edge a player aims
+    # bright dot that swelled and shrank would move the edge a player aims
     # at.
     class DotMotion < Data.define(:spawn, :pop_stretch, :pop_cover, :wobble); end
 
@@ -28,12 +28,12 @@ module DotPopper
     end
 
     # How to draw one dot at one moment: its scale across and down, how
-    # much of its fresh look still shows (1 for a fresh dot, 0 once a
+    # much of its bright look still shows (1 for a bright dot, 0 once a
     # popped dot has finished changing), and how strongly its rim glows
     # from a wrong tap.
-    class Pose < Data.define(:scale_x, :scale_y, :freshness, :alarm)
-      STILL = new(scale_x: 1.0, scale_y: 1.0, freshness: 0.0, alarm: 0.0)
-      FRESH = STILL.with(freshness: 1.0)
+    class Pose < Data.define(:scale_x, :scale_y, :bright_look, :alarm)
+      STILL = new(scale_x: 1.0, scale_y: 1.0, bright_look: 0.0, alarm: 0.0)
+      BRIGHT = STILL.with(bright_look: 1.0)
     end
 
     # When each dot was born, popped, and tapped by mistake, kept by dot
@@ -60,7 +60,7 @@ module DotPopper
 
       def pose(dot, now)
         found = @records[dot.id]
-        return dot.fresh? ? Pose::FRESH : Pose::STILL unless found
+        return dot.bright? ? Pose::BRIGHT : Pose::STILL unless found
 
         scale = found.born ? @motion.spawn.at(now - found.born) : 1.0
         stretch_x, stretch_y = stretch(found, now)
@@ -68,7 +68,7 @@ module DotPopper
         scale_x = scale * stretch_x * (1 + wobble)
         scale_y = scale * stretch_y * (1 - wobble)
         scale_x, scale_y = [scale_x, 1.0].max, [scale_y, 1.0].max if dot.popped?
-        Pose.new(scale_x:, scale_y:, freshness: freshness(dot, found, now),
+        Pose.new(scale_x:, scale_y:, bright_look: bright_look(dot, found, now),
                  alarm: found.wobbled ? @motion.wobble.glow(now - found.wobbled) : 0.0)
       end
 
@@ -86,8 +86,8 @@ module DotPopper
         across >= 1 ? [across, 1.0] : [1.0, 1 / across]
       end
 
-      def freshness(dot, found, now)
-        return 1.0 if dot.fresh?
+      def bright_look(dot, found, now)
+        return 1.0 if dot.bright?
         return 0.0 unless found.popped
 
         @motion.pop_cover.at(now - found.popped).clamp(0.0, 1.0)

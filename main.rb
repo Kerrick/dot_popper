@@ -23,7 +23,7 @@
 # Development settings, read from the environment:
 #
 #   DOT_POPPER_AUTOPLAY=1       a bot plays: title, a game, game over, and
-#                               game again. It mostly taps fresh dots and
+#                               game again. It mostly taps bright dots and
 #                               sometimes a popped one, so penalties show.
 #   DOT_POPPER_NO_SPLASH=1      leaves out setdef's splash before the title
 #   DOT_POPPER_PRO=1           plays as if Pro were bought

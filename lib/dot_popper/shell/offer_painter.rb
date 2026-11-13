@@ -47,7 +47,7 @@ module DotPopper
         when :themes then themes(show, rect)
         when :achievements then achievement(show, rect)
         else Glyphs.new(pen:).draw(show.offer_focus == :groups ? :crown : :infinity, rect.center_x, rect.center_y, rect.height,
-                                   color: pen.palette.fresh_body, weight: 2.0)
+                                   color: pen.palette.bright_body, weight: 2.0)
         end
       end
 
@@ -66,8 +66,8 @@ module DotPopper
           G.rectangle(:fill, box.x, box.y, box.width, box.height, 12, 12, 24)
           radius = [box.height * 0.24, box.width * 0.17].min
           pen.using(theme) do
-            dots.icon(box.center_x - (radius * 0.6), box.y + (box.height * 0.4), radius, fresh: true)
-            dots.icon(box.center_x + (radius * 0.6), box.y + (box.height * 0.4), radius, fresh: false)
+            dots.icon(box.center_x - (radius * 0.6), box.y + (box.height * 0.4), radius, bright: true)
+            dots.icon(box.center_x + (radius * 0.6), box.y + (box.height * 0.4), radius, bright: false)
           end
           name = show.words.themes.fetch(theme.key)
           art = theme.art
@@ -75,7 +75,7 @@ module DotPopper
           size = [(box.height * 0.16).round, 18].min
           size -= 1 while size > 9 && pen.fonts.face(art&.wordmark || pen.style::TYPE.bold, size).width(name) > box.width * 0.9
           pen.text(name, pen.fonts.face(art&.wordmark || pen.style::TYPE.bold, size), box.center_x, box.bottom - (box.height * 0.18),
-                   theme.palette.fresh_body)
+                   theme.palette.bright_body)
         end
       end
 
@@ -109,9 +109,9 @@ module DotPopper
           y = pen.pixels.snap(rect.y + (font.height / 2.0) + (i * line))
           sign = font.height * 1.1
           if SIGNS.key?(item)
-            Glyphs.new(pen:).draw(SIGNS[item], rect.x + (sign / 2.0), y, sign, color: pen.palette.fresh_body)
+            Glyphs.new(pen:).draw(SIGNS[item], rect.x + (sign / 2.0), y, sign, color: pen.palette.bright_body)
           else
-            dots.icon(rect.x + (sign / 2.0), y, sign * 0.45, fresh: true)
+            dots.icon(rect.x + (sign / 2.0), y, sign * 0.45, bright: true)
           end
           pen.text(item, font, rect.x + (font.height * 1.6) + (font.width(item) / 2.0), y, pen.palette.cream)
         end

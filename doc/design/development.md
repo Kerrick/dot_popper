@@ -39,7 +39,7 @@ A new file in `lib/dot_popper/` needs its signature in `sig/dot_popper/`, or `bu
 
 Steep 2.1 does not check `case`/`in`. It reports it as unsupported syntax, a diagnostic that is silent by default, and treats everything inside as untyped, so a type error inside such a branch passes. So the `Steepfile` raises `Steep::Diagnostic::Ruby::UnsupportedSyntax` to `:error`, and the rules branch only in forms Steep can narrow:
 
-- `if`/`elsif` on a predicate or `nil?`, as `Game#tap_at` does with `dots.top_at(x, y)`: `nil` is `Events::Missed`, `fresh?` pops, and anything else is a mistake.
+- `if`/`elsif` on a predicate or `nil?`, as `Game#tap_at` does with `dots.top_at(x, y)`: `nil` is `Events::Missed`, `bright?` pops, and anything else is a mistake.
 - `is_a?` on a state, after which Steep knows its members: after `state.is_a?(Playing)` in `Cabinet`, `state.game` exists.
 
 Pattern matching is fine wherever Steep does not look: the tests (the fuzz test matches each tap's event), `script/simulate.rb`, `script/playtest_kit.rb` and `playtest/kit.rb`. When Steep checks pattern matching, the branches can be rewritten and the `UnsupportedSyntax` line removed.

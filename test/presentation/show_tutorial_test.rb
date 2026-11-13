@@ -146,7 +146,7 @@ class ShowTutorialTest < Minitest::Test
     @show.back
 
     popped, born = @cabinet.game.dots.map { @show.animations.pose(it, @show.now) }
-    assert_in_delta 1.0, popped.freshness, 1e-9, "the popped dot turns from bright to popped from now"
+    assert_in_delta 1.0, popped.bright_look, 1e-9, "the popped dot turns from bright to popped from now"
     assert_operator popped.scale_x * popped.scale_y, :>, 1.2, "with its squash"
     assert_in_delta 0.15, born.scale_x, 1e-9, "and the new one grows in from now"
   end

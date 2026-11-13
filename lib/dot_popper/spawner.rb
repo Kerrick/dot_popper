@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # Draws each fresh dot: a uniformly random place and velocity, as the
+  # Draws each bright dot: a uniformly random place and velocity, as the
   # spec has it, unless SpawnCheck finds the draw would leave the dot
   # without a touch target for the next second. Then it draws the
   # velocity again, keeping the place, up to +tries+ times, and then the

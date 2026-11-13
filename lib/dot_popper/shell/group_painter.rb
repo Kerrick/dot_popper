@@ -172,13 +172,13 @@ module DotPopper
                                   icon: ->(x, y, size) { Glyphs.new(pen:).draw(back ? :chevron_left : :chevron_right, x, y, size * 0.36) })
       end
 
-      # "Read the privacy policy", underlined in the fresh dot's gold, with
+      # "Read the privacy policy", underlined in the bright dot's gold, with
       # the external-link sign after it, brighter under the mouse.
       def link(show, plan)
         rect = plan.policy
         font = pen.fonts.semibold(plan.link_size)
         text = plan.policy_text
-        color = pen.palette.fresh_body.mix(pen.palette.fresh_light, 0.6 * show.hover.level(:policy))
+        color = pen.palette.bright_body.mix(pen.palette.bright_light, 0.6 * show.hover.level(:policy))
         left = rect.center_x - ((font.width(text) + 26) / 2.0)
         pen.text(text, font, left + (font.width(text) / 2.0), rect.center_y, color)
         Glyphs.new(pen:).draw(:external, left + font.width(text) + 14, rect.center_y - 1, font.height * 0.8, color:)
@@ -211,18 +211,18 @@ module DotPopper
         score = group.top_score.to_s
         big = pen.fonts.bold(plan.size + 8)
         right = rect.right - 46
-        pen.text(score, big, right - (big.width(score) / 2.0), rect.center_y, pen.palette.fresh_body)
+        pen.text(score, big, right - (big.width(score) / 2.0), rect.center_y, pen.palette.bright_body)
         Glyphs.new(pen:).draw(:chevron_right, rect.right - 22, rect.center_y, 16, color: pen.palette.soft)
         return unless group.champion?
 
-        Glyphs.new(pen:).draw(:crown, right - big.width(score) - 26, rect.center_y, 24, color: pen.palette.fresh_body)
+        Glyphs.new(pen:).draw(:crown, right - big.width(score) - 26, rect.center_y, 24, color: pen.palette.bright_body)
       end
 
       # A member's rank, icon and name, Champion or You under it, and their
       # score; the player's own row outlined.
       def standing_row(plan, row)
         rect = row.rect
-        Card.new(pen:).draw(rect, edge: (pen.palette.fresh_body if row.me))
+        Card.new(pen:).draw(rect, edge: (pen.palette.bright_body if row.me))
         small = pen.fonts.semibold(13)
         font = pen.fonts.bold(plan.size)
         rank = row.rank.to_s
@@ -237,10 +237,10 @@ module DotPopper
         if tag
           tag_x = x
           if row.champion
-            Glyphs.new(pen:).draw(:crown, x + 8, rect.center_y + (font.height * 0.45), 14, color: pen.palette.fresh_body)
+            Glyphs.new(pen:).draw(:crown, x + 8, rect.center_y + (font.height * 0.45), 14, color: pen.palette.bright_body)
             tag_x += 20
           end
-          pen.text(tag, small, tag_x + (small.width(tag) / 2.0), rect.center_y + (font.height * 0.45), pen.palette.fresh_body)
+          pen.text(tag, small, tag_x + (small.width(tag) / 2.0), rect.center_y + (font.height * 0.45), pen.palette.bright_body)
         end
         score = row.score.to_s
         big = pen.fonts.bold(plan.size + 6)

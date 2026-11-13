@@ -45,8 +45,8 @@ module DotPopper
         x = plan.card.center_x
         y = plan.preview_y
         pen.using(theme) do
-          dots.icon(x - (r * 1.15), y, r, fresh: true)
-          dots.icon(x + (r * 1.15), y, r, fresh: false)
+          dots.icon(x - (r * 1.15), y, r, bright: true)
+          dots.icon(x + (r * 1.15), y, r, bright: false)
         end
       end
     end

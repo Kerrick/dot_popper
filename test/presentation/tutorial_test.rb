@@ -89,7 +89,7 @@ class TutorialTest < Minitest::Test
     assert_equal %i[pop], @sounds.names
     assert_equal [Style::HAPTICS.pop], @haptics.buzzes
     assert_equal 1, @effects.take_sprays.size, "it bursts at once"
-    assert bright.fresh?, "still bright as its numbers fly out of it"
+    assert bright.bright?, "still bright as its numbers fly out of it"
     assert_nil next_dot, "and nothing is born under it yet"
     assert_equal [0, 10], shown
 
@@ -111,12 +111,12 @@ class TutorialTest < Minitest::Test
     play_for(SCRIPT.flight)
     assert_equal 1, @tutorial.hud.dots_in_a_row
 
-    assert bright.fresh?, "the stopped clock holds it at its pop's instant"
+    assert bright.bright?, "the stopped clock holds it at its pop's instant"
     play_for(SCRIPT.hold)
     assert_equal :peek, @tutorial.beat
     assert bright.popped?, "as time flows, it shows it is popped"
     following = next_dot
-    assert following.fresh?
+    assert following.bright?
     assert_equal bright.id, @tutorial.dots.top_at(following.x, following.y).id, "and one is born under it"
     play_for(SCRIPT.resume / 2)
     assert_operator @tutorial.rate, :>, 0.0, "then it runs on by itself"
@@ -296,7 +296,7 @@ class TutorialTest < Minitest::Test
     tap_on(next_dot)
 
     assert_equal :runs, @tutorial.beat
-    assert next_dot.fresh?, "it bursts still bright"
+    assert next_dot.bright?, "it bursts still bright"
     play_for(SCRIPT.gap + SCRIPT.quick + STEP)
     assert_equal [1, 10], shown, "two pops, less what the guide's tap cost"
     assert_equal [Tutorial::BRIGHT, Tutorial::NEXT], @tutorial.dots.map(&:id), "nothing is born while time stands"
@@ -391,7 +391,7 @@ class TutorialTest < Minitest::Test
     @tutorial.tap(x, following.y)
 
     assert_equal :peek, @tutorial.beat
-    assert next_dot.fresh?
+    assert next_dot.bright?
   end
 
   def test_the_bursting_dot_takes_no_second_tap_while_its_numbers_fly

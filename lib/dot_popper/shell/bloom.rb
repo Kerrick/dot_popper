@@ -2,7 +2,7 @@
 
 module DotPopper
   module Shell
-    # The soft light that fresh dots and droplets cast on the night
+    # The soft light that bright dots and droplets cast on the night
     # around them. What glows is drawn into a canvas at the screen's full
     # resolution, then blurred each way with the blur shader into two
     # smaller canvases, which is cheap and costs nothing in sharpness,

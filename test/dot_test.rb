@@ -97,7 +97,7 @@ class DotTest < Minitest::Test
     popped = original.pop
 
     assert popped.popped?
-    assert original.fresh?, "a dot is a value; popping gives a new one"
+    assert original.bright?, "a dot is a value; popping gives a new one"
     assert_equal original.id, popped.id
     assert_in_delta 460, popped.move(1, field).x
   end
@@ -107,7 +107,7 @@ class DotTest < Minitest::Test
     dots = Array.new(300) { DotPopper::Dot.spawn(field, random, id: 0) }
 
     assert dots.any? { it.velocity_x.abs != it.velocity_y.abs }
-    assert dots.all?(&:fresh?)
+    assert dots.all?(&:bright?)
   end
 
   def test_confining_puts_a_dot_back_on_a_smaller_field

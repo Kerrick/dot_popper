@@ -3,7 +3,7 @@
 require "test_helper"
 
 # The row's bonus dot (Rules::BONUS): earned by dots in a row, never by
-# chance, in place of the next fresh dot, pro on top of a pop.
+# chance, in place of the next bright dot, pro on top of a pop.
 class BonusTest < Minitest::Test
   include DotPopperTest
   Events = DotPopper::Events
@@ -14,12 +14,12 @@ class BonusTest < Minitest::Test
   end
 
   # A game on a field so wide that its dots, which never move here,
-  # rarely cover one another, so each fresh dot can be popped on the spot.
+  # rarely cover one another, so each bright dot can be popped on the spot.
   def calm_game(**) = DotPopper::Game.new(field(4000, 3000), random: Random.new(3), **)
 
   def pop_next(game)
-    fresh = game.dots.find(&:fresh?)
-    game.tap_at(fresh.x, fresh.y)
+    bright = game.dots.find(&:bright?)
+    game.tap_at(bright.x, bright.y)
   end
 
   def test_a_game_has_no_bonus_dot_before_a_dots_in_a_row
@@ -35,9 +35,9 @@ class BonusTest < Minitest::Test
     events = Array.new(Rules::BONUS.dots_in_a_row) { pop_next(game) }
 
     assert events.last.spawned.bonus?
-    assert events.last.spawned.fresh?
+    assert events.last.spawned.bright?
     assert_equal events.size + 1, game.dots.size, "one new dot, not two"
-    assert_equal 1, game.dots.count(&:fresh?), "still one bright dot to pop"
+    assert_equal 1, game.dots.count(&:bright?), "still one bright dot to pop"
     assert_equal [events.last.spawned], game.dots.select(&:bonus?)
     assert_equal 0, game.dots_in_a_row, "the count starts over once a bonus dot is earned"
   end

@@ -114,7 +114,7 @@ class ScreenPlansTest < Minitest::Test
   # The title's legend says the scoring with no word, in the Tutorial's
   # numbers and stopwatch, in two columns that line up.
   def test_the_legend_shows_what_each_dot_does_in_the_tutorials_signs
-    rows = Legend.rows.map { |fresh, points, seconds| [fresh, points.text, points.stopwatch, seconds.text, seconds.stopwatch] }
+    rows = Legend.rows.map { |bright, points, seconds| [bright, points.text, points.stopwatch, seconds.text, seconds.stopwatch] }
     assert_equal [[true, "+1", false, "+1", true], [false, "−2", false, "−2", true]], rows
 
     legend = Legend.measure(30.0) { it.size * 15.0 }

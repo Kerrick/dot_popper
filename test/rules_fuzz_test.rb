@@ -61,7 +61,7 @@ class RulesFuzzTest < Minitest::Test
   # From a sliver narrower than a dot to a large monitor.
   def random_field(random) = DotPopper::Field.new(random.rand(40.0..3000.0), random.rand(40.0..1800.0), R)
 
-  # Most taps aim at a dot, popped or fresh, so they often land where dots
+  # Most taps aim at a dot, popped or bright, so they often land where dots
   # overlap; the rest land anywhere.
   def tap(game, random, where)
     x, y = aim(game, random)
@@ -129,7 +129,7 @@ class RulesFuzzTest < Minitest::Test
     end
     assert_operator game.score, :>=, DotPopper::Rules::LOWEST_SCORE, "#{where}: score below zero"
     assert_operator game.countdown.remaining, :>=, 0, "#{where}: negative clock"
-    assert_equal 1, game.dots.count(&:fresh?), "#{where}: not exactly one fresh dot" unless game.over?
+    assert_equal 1, game.dots.count(&:bright?), "#{where}: not exactly one bright dot" unless game.over?
     ids = game.dots.map(&:id)
     assert_equal ids.sort, ids, "#{where}: a newer dot is above an older one"
   end
@@ -144,12 +144,12 @@ class RulesFuzzTest < Minitest::Test
       assert_equal before, after, "#{where}: a miss changed the dots"
     in DotPopper::Events::Popped(dot:, spawned:)
       assert_equal top&.id, dot.id, "#{where}: a pop reached past the top dot"
-      assert top.fresh?, "#{where}: a popped dot was popped again"
+      assert top.bright?, "#{where}: a popped dot was popped again"
       assert_equal before.map { it.id == dot.id ? it.pop : it } + [spawned], after, "#{where}: a pop changed more"
       check_spawn(game, after[0...-1], where)
     in DotPopper::Events::Penalized(dot:)
       assert_equal top&.id, dot.id, "#{where}: a penalty reached past the top dot"
-      assert top.popped?, "#{where}: a fresh dot cost a penalty"
+      assert top.popped?, "#{where}: a bright dot cost a penalty"
       assert_equal before, after, "#{where}: a penalty changed the dots"
     end
   end

@@ -41,7 +41,7 @@ module DotPopper
       def emblem(id, x, y, radius, earned, lit: 0.0)
         palette = pen.palette
         if earned
-          pen.color(palette.fresh_body.mix(palette.fresh_light, 0.2))
+          pen.color(palette.bright_body.mix(palette.bright_light, 0.2))
           G.circle(:fill, x, y, radius, 64)
           pen.color(palette.cream)
           G.line_width = pen.pixels.line_width(1)
@@ -104,7 +104,7 @@ module DotPopper
         pen.color(pen.palette.ink_bottom, 0.8)
         G.rectangle(:fill, rect.x, rect.y, rect.width, rect.height, rect.height / 2.0, rect.height / 2.0, 12)
         share = [have.to_f / goal, 1.0].min
-        pen.color(pen.palette.fresh_body)
+        pen.color(pen.palette.bright_body)
         G.rectangle(:fill, rect.x, rect.y, [rect.width * share, rect.height].max, rect.height, rect.height / 2.0, rect.height / 2.0, 12) if share.positive?
       end
 

@@ -9,7 +9,7 @@ class TutorialFlagTest < Minitest::Test
     @store = DotPopper::ScoreRecord::Memory.new
   end
 
-  def test_it_is_due_once_on_a_fresh_install_and_remembered_across_sessions
+  def test_it_is_due_once_on_a_bright_install_and_remembered_across_sessions
     flag = TutorialFlag.new(@store)
     assert flag.due?(played: false)
 

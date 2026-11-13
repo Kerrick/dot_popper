@@ -15,7 +15,7 @@ module DotPopper
     # the three targets that count those were raised to match.
     LIST = [
       new(kind: :clean_run, target: 15),   # dots in a row without a mistake
-      new(kind: :patient_pop, target: 3),  # seconds a fresh dot was on screen before its pop
+      new(kind: :patient_pop, target: 3),  # seconds a bright dot was on screen before its pop
       new(kind: :quick_start, target: 10), # dots popped in the game's first 10 seconds
       new(kind: :long_game, target: 50),  # seconds the game lasts
       new(kind: :comeback, target: 30),    # points, in a game with a mistake

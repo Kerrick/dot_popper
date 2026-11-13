@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # Where on a fresh dot a fingertip could land: the centers a touch
+  # Where on a bright dot a fingertip could land: the centers a touch
   # target, a circle Rules::TOUCH_TARGET units across, may have while lying
   # wholly on a dot of a given radius. The target is the same size
   # whatever the dot's radius, because a fingertip is.

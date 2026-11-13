@@ -3,7 +3,7 @@
 module DotPopper
   module Shell
     # Game Over's "Share my score", on whole device pixels: a dark pill
-    # like the other quiet buttons, but outlined in a fresh dot's gold and
+    # like the other quiet buttons, but outlined in a bright dot's gold and
     # led by a share glyph, three dots joined by two lines, so it is seen
     # without competing with Continue's filled gold. It comes in as its
     # +cue+ (Presentation::ShareCue) says, rising into place with a ring
@@ -35,7 +35,7 @@ module DotPopper
         fill = palette.pill.mix(lit.fill, hover)
         pen.color(fill, fill.a * alpha)
         G.rectangle(:fill, x, y, width, height, corner, corner, 48)
-        pen.color(palette.fresh_body.mix(lit.edge, hover), (0.8 + (0.2 * hover)) * alpha)
+        pen.color(palette.bright_body.mix(lit.edge, hover), (0.8 + (0.2 * hover)) * alpha)
         G.line_width = pixels.line_width(2)
         inset = pixels.line_at(x, 2) - x
         G.rectangle(:line, x + inset, y + inset, width - (2 * inset), height - (2 * inset), corner, corner, 48)
@@ -64,7 +64,7 @@ module DotPopper
         ends.each { G.line(*left, *it) }
         pen.color(palette.cream, alpha)
         ends.each { G.circle(:fill, *it, dot, 24) }
-        pen.color(palette.fresh_body, alpha)
+        pen.color(palette.bright_body, alpha)
         G.circle(:fill, *left, dot * 1.15, 24)
       end
 
@@ -74,7 +74,7 @@ module DotPopper
         box = rect.inset(-reach)
         x, y, width, height = [box.x, box.y, box.width, box.height].map { pixels.snap(it) }
         corner = height / 2.0
-        pen.color(pen.palette.fresh_body, alpha)
+        pen.color(pen.palette.bright_body, alpha)
         G.line_width = pixels.line_width(2)
         G.rectangle(:line, x, y, width, height, corner, corner, 48)
       end

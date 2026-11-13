@@ -3,7 +3,7 @@
 module DotPopper
   # The dots in drawing order. The oldest dot is on top, and each new dot
   # goes in underneath every dot already here. That ordering is the game:
-  # popped dots crowd the top, and a fresh one has to come out from under
+  # popped dots crowd the top, and a bright one has to come out from under
   # them before it can be tapped.
   class Stack < Data.define(:dots)
     include Enumerable
@@ -17,13 +17,13 @@ module DotPopper
     # never one beneath it.
     def top_at(x, y) = dots.find { |dot| dot.covers?(x, y) }
 
-    # The topmost fresh dot beneath +dot+ that lies under the point
+    # The topmost bright dot beneath +dot+ that lies under the point
     # (+x+, +y+) or overlaps +dot+ itself, or nil: the dot a tap on +dot+
     # was too soon for. It only answers a question; a tap still reaches
     # only the top dot.
-    def fresh_beneath(dot, x, y)
+    def bright_beneath(dot, x, y)
       below = dots.drop_while { it.id != dot.id }.drop(1)
-      below.find { it.fresh? && (it.covers?(x, y) || it.overlaps?(dot)) }
+      below.find { it.bright? && (it.covers?(x, y) || it.overlaps?(dot)) }
     end
 
     # The stack with +dot+ in place of the dot that has its id.

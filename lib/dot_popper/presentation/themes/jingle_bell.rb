@@ -11,8 +11,8 @@ module DotPopper
             key: :jingle_bell, opens_on: Date.new(2026, 12, 1),
             palette: base.with(
               ink_top: hex["#120d2e"], ink_bottom: hex["#0c0a1e"], ink_glow: hex["#2a1c4c"], ink_edge: hex["#070514"],
-              fresh_light: hex["#ffffff"], fresh_body: hex["#eef0f6"], fresh_deep: hex["#c4c8d6"],
-              fresh_bounce: hex["#f4f6ff"], fresh_rim: hex["#fafbff"], halo: hex["#dde6ff"],
+              bright_light: hex["#ffffff"], bright_body: hex["#eef0f6"], bright_deep: hex["#c4c8d6"],
+              bright_bounce: hex["#f4f6ff"], bright_rim: hex["#fafbff"], halo: hex["#dde6ff"],
               popped_top: hex["#22232e"], popped_bottom: hex["#13131c"], popped_rim: hex["#6e7088"],
               popped_crater: hex["#050508"], popped_lip: hex["#4e5064"],
               shadow: hex["#020208"], alarm: hex["#ff6a7a"],

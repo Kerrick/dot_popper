@@ -11,8 +11,8 @@ module DotPopper
             key: :turkey, opens_on: Date.new(2026, 11, 1),
             palette: base.with(
               ink_top: hex["#12101f"], ink_bottom: hex["#1e1420"], ink_glow: hex["#3a2422"], ink_edge: hex["#08060e"],
-              fresh_light: hex["#fff4dc"], fresh_body: hex["#f8b45a"], fresh_deep: hex["#d9772a"],
-              fresh_bounce: hex["#ffd79a"], fresh_rim: hex["#ffeec8"], halo: hex["#ffc77f"],
+              bright_light: hex["#fff4dc"], bright_body: hex["#f8b45a"], bright_deep: hex["#d9772a"],
+              bright_bounce: hex["#ffd79a"], bright_rim: hex["#ffeec8"], halo: hex["#ffc77f"],
               popped_top: hex["#2a1c1e"], popped_bottom: hex["#150e10"], popped_rim: hex["#786260"],
               popped_crater: hex["#0a0608"], popped_lip: hex["#5a464c"],
               shadow: hex["#040205"], alarm: hex["#ff5a5a"],

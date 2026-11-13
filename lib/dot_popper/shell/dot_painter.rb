@@ -4,13 +4,13 @@ module DotPopper
   module Shell
     # Draws dots bottom of the stack first, so the oldest dot is drawn
     # last, on top, each with its own shadow and halo in that same order:
-    # a popped dot covers the halo of a fresh dot beneath it. Each dot is
+    # a popped dot covers the halo of a bright dot beneath it. Each dot is
     # drawn at its rule position; its pose only scales it about that
     # center, and at rest it ends at its hit circle (Presentation::DotStyle).
     #
     # With the dot shader, a dot is drawn from its geometry in one square.
     # Without it, plain circles keep the same distinction: a light disc
-    # with a bright rim and a highlight for a fresh dot, a dark disc with a
+    # with a bright rim and a highlight for a bright dot, a dark disc with a
     # rim and a crater for a popped one.
     class DotPainter < Data.define(:pen)
       G = ::Lota::Graphics
@@ -20,31 +20,31 @@ module DotPopper
         paint { |shader| stack.bottom_up.each { |dot| one(dot.x, dot.y, radius, animations.pose(dot, now), 1.0, dot.bonus?, shader, seed(dot)) } }
       end
 
-      # What of the dots glows, for Bloom: the fresh dots alone. The glow
-      # is drawn under every dot, so the dots above a fresh one hide its
+      # What of the dots glows, for Bloom: the bright dots alone. The glow
+      # is drawn under every dot, so the dots above a bright one hide its
       # light as they hide it.
       def glow(stack, animations, now, radius)
         paint do |shader|
           stack.bottom_up.each do |dot|
             pose = animations.pose(dot, now)
-            one(dot.x, dot.y, radius, pose, pose.freshness, dot.bonus?, shader, seed(dot)) if pose.freshness.positive?
+            one(dot.x, dot.y, radius, pose, pose.bright_look, dot.bonus?, shader, seed(dot)) if pose.bright_look.positive?
           end
         end
       end
 
       # One dot that is not in play, such as the title's examples.
-      def icon(x, y, radius, fresh:, opacity: 1.0, bonus: false)
-        paint { |shader| one(x, y, radius, fresh ? Presentation::Pose::FRESH : Presentation::Pose::STILL, opacity, bonus, shader, pen.style::DOT.seed(9, fresh:)) }
+      def icon(x, y, radius, bright:, opacity: 1.0, bonus: false)
+        paint { |shader| one(x, y, radius, bright ? Presentation::Pose::BRIGHT : Presentation::Pose::STILL, opacity, bonus, shader, pen.style::DOT.seed(9, bright:)) }
       end
 
       # One plain dot in the colors of +palette+, whichever theme is in use,
       # as the Themes screen shows each theme's pair.
-      def swatch(x, y, radius, palette, fresh:)
+      def swatch(x, y, radius, palette, bright:)
         G.push do
           G.translate(x, y)
           pen.color(palette.shadow, pen.style::DOT.shadow_alpha)
           G.circle(:fill, 0, radius * pen.style::DOT.shadow_offset, radius, SEGMENTS)
-          fresh ? flat_fresh(radius, 1.0, palette) : flat_popped(radius, 1.0, palette)
+          bright ? flat_bright(radius, 1.0, palette) : flat_popped(radius, 1.0, palette)
         end
       end
 
@@ -60,7 +60,7 @@ module DotPopper
         end
       end
 
-      def seed(dot) = pen.style::DOT.seed(dot.id, fresh: dot.fresh?)
+      def seed(dot) = pen.style::DOT.seed(dot.id, bright: dot.bright?)
 
       def one(x, y, radius, pose, opacity, bonus, shader, seed)
         return flat(x, y, radius, pose, opacity, bonus) unless shader
@@ -70,7 +70,7 @@ module DotPopper
       end
 
       def shaded(x, y, radius, pose, opacity, bonus)
-        G.color = [pose.freshness, pose.alarm, bonus ? pose.freshness : 0.0, opacity]
+        G.color = [pose.bright_look, pose.alarm, bonus ? pose.bright_look : 0.0, opacity]
         half = radius * pen.style::DOT.extent
         pen.square(x, y, half * pose.scale_x, half * pose.scale_y)
       end
@@ -84,15 +84,15 @@ module DotPopper
           # only dropped: a crescent below, never a dark band all game.
           pen.color(pen.palette.shadow, sizes.shadow_alpha * opacity)
           G.circle(:fill, 0, radius * sizes.shadow_offset, radius, SEGMENTS)
-          pose.freshness >= 0.5 ? flat_fresh(radius, opacity, bonus:) : flat_popped(radius, opacity)
+          pose.bright_look >= 0.5 ? flat_bright(radius, opacity, bonus:) : flat_popped(radius, opacity)
           flat_alarm(radius, pose.alarm * opacity) if pose.alarm.positive?
         end
       end
 
       # The bright rim is the whole disc, and the body is drawn inside it,
       # so the dot's edge is its hit circle.
-      def flat_fresh(radius, opacity, palette = pen.palette, bonus: false)
-        rim, deep, body = (bonus ? palette.to_h.values_at(:bonus_rim, :bonus_deep, :bonus_body) : palette.to_h.values_at(:fresh_rim, :fresh_deep, :fresh_body))
+      def flat_bright(radius, opacity, palette = pen.palette, bonus: false)
+        rim, deep, body = (bonus ? palette.to_h.values_at(:bonus_rim, :bonus_deep, :bonus_body) : palette.to_h.values_at(:bright_rim, :bright_deep, :bright_body))
         inner = radius - [radius * pen.style::DOT.rim, pen.pixels.line_width(2)].max
         pen.color(rim, opacity)
         G.circle(:fill, 0, 0, radius, SEGMENTS)

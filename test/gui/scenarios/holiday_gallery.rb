@@ -75,18 +75,18 @@ module DotPopperGui
       @size_tag = tag
       start_game
       game.instance_variable_set(:@countdown, D::Countdown.new(remaining: 999))
-      pop_fresh while game.dots.size < count
+      pop_bright while game.dots.size < count
       shown = nil
       2400.times do
-        fresh = fresh_dot
-        share = showing(fresh)
-        if inside_window?(fresh) && share.between?(0.12, 0.3)
+        bright = bright_dot
+        share = showing(bright)
+        if inside_window?(bright) && share.between?(0.12, 0.3)
           shown = share
           break
         end
         frames
       end
-      say "#{@theme} #{tag}: #{game.dots.size} dots, the bright dot #{((shown || showing(fresh_dot)) * 100).round}% showing"
+      say "#{@theme} #{tag}: #{game.dots.size} dots, the bright dot #{((shown || showing(bright_dot)) * 100).round}% showing"
       keep_screenshot("#{@theme}-crowd-#{tag}")
       finish
     end

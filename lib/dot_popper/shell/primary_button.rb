@@ -4,9 +4,9 @@ module DotPopper
   module Shell
     # A screen's main button, on whole device pixels: the title's Play and
     # Game Over's Continue. It is the one warm, filled pill on its screen,
-    # a fresh dot's gold with its word in the night's ink, so it reads at
+    # a bright dot's gold with its word in the night's ink, so it reads at
     # once as the thing to press (Tidwell's prominent "done" button). The
-    # mouse over it (+hover+, from 0 to 1) lightens it toward the fresh
+    # mouse over it (+hover+, from 0 to 1) lightens it toward the bright
     # dot's light, and outlines it in cream.
     class PrimaryButton < Data.define(:pen)
       G = ::Lota::Graphics
@@ -21,7 +21,7 @@ module DotPopper
         corner = height / 2.0
         pen.color(palette.shadow, 0.35 * alpha)
         G.rectangle(:fill, x, y + pixels.snap(height * 0.06), width, height, corner, corner, 48)
-        pen.color(palette.fresh_body.mix(palette.fresh_light, 0.15 + (0.45 * hover)), alpha)
+        pen.color(palette.bright_body.mix(palette.bright_light, 0.15 + (0.45 * hover)), alpha)
         G.rectangle(:fill, x, y, width, height, corner, corner, 48)
         edge(x, y, width, height, corner, alpha, hover)
         font = fit(text, width - height, height, ratio)
@@ -35,10 +35,10 @@ module DotPopper
 
       private
 
-      # A thin rim, cream as a fresh dot's, brighter under the mouse.
+      # A thin rim, cream as a bright dot's, brighter under the mouse.
       def edge(x, y, width, height, corner, alpha, hover)
         pixels = pen.pixels
-        pen.color(pen.palette.fresh_rim, (0.5 + (0.5 * hover)) * alpha)
+        pen.color(pen.palette.bright_rim, (0.5 + (0.5 * hover)) * alpha)
         G.line_width = pixels.line_width(hover.positive? ? 2 : 1)
         inset = pixels.line_at(x) - x
         G.rectangle(:line, x + inset, y + inset, width - (2 * inset), height - (2 * inset), corner, corner, 48)

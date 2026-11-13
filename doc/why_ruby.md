@@ -144,7 +144,7 @@ tests are plain minitest, and CI runs them on an Ubuntu machine with no
 screen:
 
 ```ruby
-def test_popping_a_fresh_dot_scores_a_point_adds_a_second_and_spawns_a_dot_underneath
+def test_popping_a_bright_dot_scores_a_point_adds_a_second_and_spawns_a_dot_underneath
   target = dot(400, 300)
   game = round_with(target)
 

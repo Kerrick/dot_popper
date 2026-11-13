@@ -67,7 +67,7 @@ module DotPopper
         top = dots_in_a_row_top(pill)
         readout.size.times do |i|
           grown = readout.bumping?(i) ? radius * readout.scale : radius
-          dots.icon(pixels.snap(left + (step * i)), pixels.snap(top), grown, fresh: readout.lit?(i),
+          dots.icon(pixels.snap(left + (step * i)), pixels.snap(top), grown, bright: readout.lit?(i),
                                                                        bonus: readout.ready, opacity: 0.95)
         end
       end

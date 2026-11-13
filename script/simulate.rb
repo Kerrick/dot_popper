@@ -6,9 +6,9 @@
 #
 #   bundle exec ruby script/simulate.rb [games]
 #
-# The model player waits a reaction time, finds the one fresh dot, and
+# The model player waits a reaction time, finds the one bright dot, and
 # taps it when it is exposed (no popped dot covers the point it aims at),
-# taking Fitts's law time to get there. While the fresh dot is covered it
+# taking Fitts's law time to get there. While the bright dot is covered it
 # waits, and with a small chance per attempt it taps anyway and hits a
 # popped dot on top. Simulated at 30 updates a second.
 #
@@ -44,7 +44,7 @@ Warning[:experimental] = false # Ractors still warn that their API may change.
 
 module Simulation
   STEP = 1.0 / 30
-  REACTION = 0.25          # seconds to notice a new fresh dot
+  REACTION = 0.25          # seconds to notice a new bright dot
   FITTS_A = 0.10           # seconds
   FITTS_B = { mouse: 0.15, touch: 0.12 }.freeze # seconds per bit
   IMPATIENCE = 0.04        # chance per 0.1 s of waiting to tap a covered dot
@@ -61,7 +61,7 @@ module Simulation
     Device.new("32\" 6K fullscreen", 60.2, 33.8, :mouse)
   ].freeze
 
-  # How one game went. +covered+ counts the fresh dots that spawned
+  # How one game went. +covered+ counts the bright dots that spawned
   # under a popped one; +spawns+, how each was drawn (DotPopper::Spawn).
   Result = Data.define(:score, :seconds, :penalties, :dots, :covered, :spawns, :stats) do
     def endless? = seconds > GIVE_UP
@@ -107,24 +107,24 @@ module Simulation
       penalties = 0
       covered_spawns = 0
       until game.over? || t > GIVE_UP
-        fresh = game.dots.find(&:fresh?)
-        covered_spawns += 1 if covered?(game, fresh)
+        bright = game.dots.find(&:bright?)
+        covered_spawns += 1 if covered?(game, bright)
         t = wait(game, REACTION, t)
         loop do
           break if game.over?
 
-          fresh = game.dots.find(&:fresh?)
-          if covered?(game, fresh) && @random.rand > IMPATIENCE
+          bright = game.dots.find(&:bright?)
+          if covered?(game, bright) && @random.rand > IMPATIENCE
             game.update(0.1)
             t += 0.1
             next
           end
-          travel = fitts(fresh)
+          travel = fitts(bright)
           t = wait(game, travel, t)
           break if game.over?
 
-          fresh = game.dots.find(&:fresh?)
-          aim = [fresh.x, fresh.y]
+          bright = game.dots.find(&:bright?)
+          aim = [bright.x, bright.y]
           event = game.tap_at(*aim)
           stats = stats.record(event, at: game.elapsed) if event
           @hand = aim
@@ -147,7 +147,7 @@ module Simulation
       t + (steps * STEP)
     end
 
-    def covered?(game, fresh) = !game.dots.top_at(fresh.x, fresh.y).fresh?
+    def covered?(game, bright) = !game.dots.top_at(bright.x, bright.y).bright?
 
     def fitts(target)
       distance = Math.hypot(target.x - @hand[0], target.y - @hand[1])

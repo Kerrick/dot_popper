@@ -10,7 +10,7 @@ module DotPopperGui
 
     def play
       start_game
-      3.times { pop_fresh }
+      3.times { pop_bright }
       run_out_the_clock
       wait(1.0)
       drag_and_throw

@@ -24,7 +24,7 @@ module DotPopper
 
     def popped?: () -> bool
 
-    def fresh?: () -> bool
+    def bright?: () -> bool
 
     def bonus?: () -> bool
 

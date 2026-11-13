@@ -47,7 +47,7 @@ module DotPopper
 
       dot = dots.top_at(x, y)
       if dot.nil? then Events::Missed.new(x:, y:)
-      elsif dot.fresh? then pop(dot, x, y)
+      elsif dot.bright? then pop(dot, x, y)
       else penalize(dot, x, y)
       end
     end
@@ -79,7 +79,7 @@ module DotPopper
 
     private
 
-    # A fresh dot to go in beneath every dot of +above+, recorded in
+    # A bright dot to go in beneath every dot of +above+, recorded in
     # +spawns+.
     def spawn(above, bonus: false)
       spawn = @spawner.spawn(@random, id: @next_id, above: above.to_a)
@@ -110,7 +110,7 @@ module DotPopper
     end
 
     # Counts the pop of +dot+ in the row, and says whether the row
-    # is now long enough that the next fresh dot is a bonus dot. Earning
+    # is now long enough that the next bright dot is a bonus dot. Earning
     # one, or popping one, starts the count over.
     def count_toward_bonus(dot)
       rule = bonus or return false

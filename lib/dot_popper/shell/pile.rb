@@ -10,7 +10,7 @@ module DotPopper
     #
     # It hears the rules' events (Cabinet#subscribe). While a pile is falling,
     # +stack+ is the game's stack with each dot where its ball is, in the
-    # same order, so popped dots still cover fresh ones.
+    # same order, so popped dots still cover bright ones.
     #
     # Tilting (Shell::Tilting) may turn its gravity, wake its sleeping
     # balls, and throw them, and Dragging (Shell::Dragging) may steer a

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # A fresh dot as Spawner drew it, and how many draws it took: how many
+  # A bright dot as Spawner drew it, and how many draws it took: how many
   # times its velocity was drawn again, and then its place and velocity
   # together. +exposed+ is false only when every try failed and the last
   # draw was kept anyway.

@@ -10,8 +10,8 @@ module DotPopper
             key: :jack_o_lantern, opens_on: Date.new(2026, 10, 1),
             palette: base.with(
               ink_top: hex["#1c1442"], ink_bottom: hex["#2a1a3a"], ink_glow: hex["#3a1f5e"], ink_edge: hex["#0b0820"],
-              fresh_light: hex["#fff6c2"], fresh_body: hex["#ffa11f"], fresh_deep: hex["#b6480b"],
-              fresh_bounce: hex["#ffd64d"], fresh_rim: hex["#ffd690"], halo: hex["#ffb24a"],
+              bright_light: hex["#fff6c2"], bright_body: hex["#ffa11f"], bright_deep: hex["#b6480b"],
+              bright_bounce: hex["#ffd64d"], bright_rim: hex["#ffd690"], halo: hex["#ffb24a"],
               popped_top: hex["#301e25"], popped_bottom: hex["#1a1016"], popped_rim: hex["#7d6b66"],
               popped_crater: hex["#040203"], popped_lip: hex["#6a4a3e"],
               shadow: hex["#040208"], alarm: hex["#ff5a5a"],

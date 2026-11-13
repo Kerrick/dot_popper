@@ -16,9 +16,9 @@ module DotPopperGui
       check(!File.exist?(saved("dot_size.txt")), "nothing is saved before the player chooses")
       start_game
       check_close(fitted_radius, game.field.radius, "the first game's dots are sized to the window")
-      check_close(fitted_radius, fresh_dot.radius, "its fresh dot has that radius")
+      check_close(fitted_radius, bright_dot.radius, "its bright dot has that radius")
       wait(0.5)
-      check_fresh_pixel(fresh_dot)
+      check_bright_pixel(bright_dot)
       run_out_the_clock
       continue_to_home
       check(show.sizing_offered?, "Settings offers the dot size on a narrow window")

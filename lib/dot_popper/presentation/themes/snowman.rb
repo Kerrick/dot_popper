@@ -10,8 +10,8 @@ module DotPopper
             key: :snowman, opens_on: Date.new(2026, 12, 1),
             palette: base.with(
               ink_top: hex["#0b1530"], ink_bottom: hex["#0e1a36"], ink_glow: hex["#22355e"], ink_edge: hex["#060b1c"],
-              fresh_light: hex["#ffffff"], fresh_body: hex["#f4f8ff"], fresh_deep: hex["#c3d0ea"],
-              fresh_bounce: hex["#e6eeff"], fresh_rim: hex["#ffffff"], halo: hex["#d8e8ff"],
+              bright_light: hex["#ffffff"], bright_body: hex["#f4f8ff"], bright_deep: hex["#c3d0ea"],
+              bright_bounce: hex["#e6eeff"], bright_rim: hex["#ffffff"], halo: hex["#d8e8ff"],
               popped_top: hex["#16203a"], popped_bottom: hex["#0c1222"], popped_rim: hex["#6c7898"],
               popped_crater: hex["#05070d"], popped_lip: hex["#4c5674"],
               shadow: hex["#02040a"], alarm: hex["#ff6a7a"],

@@ -25,7 +25,7 @@ module DotPopper
     LOWEST_SCORE = 0
 
     # The one rule that rewards dots in a row. +row+ dots in a row without a
-    # mistake earn a bonus dot: the next fresh dot the game spawns is a
+    # mistake earn a bonus dot: the next bright dot the game spawns is a
     # bonus dot, in place of the ordinary one, never an extra target.
     # Popping it pays +points+ and +seconds+ on top of a pop's own. A
     # mistake starts the count over; a bonus dot already earned stays,
@@ -36,7 +36,7 @@ module DotPopper
 
     BONUS = Bonus.new(dots_in_a_row: 8, points: 3, seconds: 3.0)
 
-    # A fresh dot spawns at a uniformly random place with a random
+    # A bright dot spawns at a uniformly random place with a random
     # velocity, but must offer a touch target within SPAWN_LOOKAHEAD
     # seconds: a circle TOUCH_TARGET units across, wholly on the dot and
     # clear of every dot above it. TOUCH_TARGET is Apple's smallest

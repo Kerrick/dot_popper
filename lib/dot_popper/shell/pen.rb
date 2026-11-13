@@ -182,7 +182,7 @@ module DotPopper
       # Gives the shaders the colors of the palette in use.
       def paint_shaders
         if (dot = @shaders[:dot])
-          %i[fresh_light fresh_body fresh_deep fresh_bounce fresh_rim gloss halo popped_top popped_bottom popped_rim
+          %i[bright_light bright_body bright_deep bright_bounce bright_rim gloss halo popped_top popped_bottom popped_rim
              popped_crater popped_lip shadow alarm bonus_light bonus_body bonus_deep bonus_bounce bonus_rim bonus_mark].each { uniform(dot, it.to_s, rgb(palette.public_send(it))) }
         end
         uniform(@shaders[@dot_shader], "alarm", rgb(palette.alarm)) if @dot_shader

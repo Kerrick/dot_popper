@@ -102,7 +102,7 @@ module DotPopper
 
     def clock(game) = (@low ||= game.countdown.remaining <= Achievement::BRINK)
 
-    # A fresh dot has slid under the others: whether it spawned with no
+    # A bright dot has slid under the others: whether it spawned with no
     # room for a fingertip yet, so the wait to pop it is waiting for it to
     # slide out, not for the player.
     def appeared(dot, above, game)

@@ -12,7 +12,7 @@ module DotPopperGui
 
     def play
       start_game
-      pop_fresh
+      pop_bright
       run_out_the_clock
       wait(DotPopper::Presentation::Style::GAME_OVER.tally.duration + 1.0)
       check(screenshot.lit_in(show.share_reach) > 50, "Share my score is drawn")

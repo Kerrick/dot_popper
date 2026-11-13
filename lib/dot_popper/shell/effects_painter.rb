@@ -9,7 +9,7 @@ module DotPopper
       G = ::Lota::Graphics
       EDGE_BANDS = 8 # strips of the edge glow, without its shader
 
-      # The rings, the reveals of a hidden fresh dot, and the droplets.
+      # The rings, the reveals of a hidden bright dot, and the droplets.
       def scene(effects, dots)
         rings(effects.rings, effects.now, dots)
         reveals(effects.reveals, effects.now, dots)

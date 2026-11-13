@@ -11,8 +11,8 @@ module DotPopper
             key: :gingerbread, opens_on: Date.new(2026, 12, 1),
             palette: base.with(
               ink_top: hex["#0e1422"], ink_bottom: hex["#0a0e18"], ink_glow: hex["#24304a"], ink_edge: hex["#05070e"],
-              fresh_light: hex["#fff4e0"], fresh_body: hex["#e8b070"], fresh_deep: hex["#c88848"],
-              fresh_bounce: hex["#f4c890"], fresh_rim: hex["#fff2dc"], halo: hex["#ffd9a0"],
+              bright_light: hex["#fff4e0"], bright_body: hex["#e8b070"], bright_deep: hex["#c88848"],
+              bright_bounce: hex["#f4c890"], bright_rim: hex["#fff2dc"], halo: hex["#ffd9a0"],
               popped_top: hex["#3a2418"], popped_bottom: hex["#24140c"], popped_rim: hex["#8a6e5e"],
               popped_crater: hex["#0a0604"], popped_lip: hex["#6a5040"],
               shadow: hex["#030406"], alarm: hex["#ff6a7a"],

@@ -10,8 +10,8 @@ module DotPopper
             key: :ghost, opens_on: Date.new(2026, 10, 1),
             palette: base.with(
               ink_top: hex["#0c1933"], ink_bottom: hex["#07101f"], ink_glow: hex["#1b3a52"], ink_edge: hex["#070d20"],
-              fresh_light: hex["#fbfdff"], fresh_body: hex["#eef2ff"], fresh_deep: hex["#c3cdeb"],
-              fresh_bounce: hex["#dfe7ff"], fresh_rim: hex["#ffffff"], halo: hex["#c8e6ff"],
+              bright_light: hex["#fbfdff"], bright_body: hex["#eef2ff"], bright_deep: hex["#c3cdeb"],
+              bright_bounce: hex["#dfe7ff"], bright_rim: hex["#ffffff"], halo: hex["#c8e6ff"],
               popped_top: hex["#1f1a38"], popped_bottom: hex["#0e0c20"], popped_rim: hex["#6c6596"],
               popped_crater: hex["#0e0c20"], popped_lip: hex["#6a6090"],
               shadow: hex["#02020a"], alarm: hex["#ff7a9c"],

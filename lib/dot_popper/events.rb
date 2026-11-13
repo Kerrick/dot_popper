@@ -6,7 +6,7 @@ module DotPopper
   # a listener runs, the score, the clock, and the dots have already
   # changed.
   module Events
-    # A fresh dot was tapped and popped; +spawned+ is the dot that took
+    # A bright dot was tapped and popped; +spawned+ is the dot that took
     # its place underneath.
     class Popped < Data.define(:dot, :x, :y, :points, :seconds, :spawned); end
 

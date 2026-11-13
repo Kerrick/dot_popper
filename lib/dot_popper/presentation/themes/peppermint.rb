@@ -11,8 +11,8 @@ module DotPopper
             key: :peppermint, opens_on: Date.new(2026, 12, 1),
             palette: base.with(
               ink_top: hex["#0c1f1a"], ink_bottom: hex["#0a1612"], ink_glow: hex["#1c3a2c"], ink_edge: hex["#040c09"],
-              fresh_light: hex["#ffffff"], fresh_body: hex["#fbf6f4"], fresh_deep: hex["#e3d6da"],
-              fresh_bounce: hex["#ffe8e8"], fresh_rim: hex["#fffaf8"], halo: hex["#ffd6d6"],
+              bright_light: hex["#ffffff"], bright_body: hex["#fbf6f4"], bright_deep: hex["#e3d6da"],
+              bright_bounce: hex["#ffe8e8"], bright_rim: hex["#fffaf8"], halo: hex["#ffd6d6"],
               popped_top: hex["#3a1a22"], popped_bottom: hex["#1e0c12"], popped_rim: hex["#7e6a74"],
               popped_crater: hex["#070306"], popped_lip: hex["#6a4a56"],
               shadow: hex["#020504"], alarm: hex["#ff6a7a"],

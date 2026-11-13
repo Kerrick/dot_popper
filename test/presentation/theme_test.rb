@@ -22,32 +22,32 @@ class ThemeTest < Minitest::Test
     THEMES.each { assert Style::WORDS.themes.key?(it.key), "#{it.key} has no name" }
   end
 
-  def test_every_fresh_color_is_far_lighter_than_every_popped_color
+  def test_every_bright_color_is_far_lighter_than_every_popped_color
     each_style do |name, palette|
-      fresh = [palette.fresh_light, palette.fresh_body, palette.fresh_deep, palette.fresh_bounce]
+      bright = [palette.bright_light, palette.bright_body, palette.bright_deep, palette.bright_bounce]
       popped = [palette.popped_top, palette.popped_bottom, palette.popped_crater]
 
-      fresh.product(popped).each { |light, dark| assert_operator light.contrast(dark), :>=, 2.5, name }
-      assert_operator palette.fresh_body.contrast(palette.popped_lip), :>=, 3.0, name
-      assert_operator palette.fresh_body.contrast(palette.popped_top), :>=, 4.5, name
-      assert_operator palette.fresh_body.luminance - palette.popped_rim.luminance, :>=, 0.15, name
+      bright.product(popped).each { |light, dark| assert_operator light.contrast(dark), :>=, 2.5, name }
+      assert_operator palette.bright_body.contrast(palette.popped_lip), :>=, 3.0, name
+      assert_operator palette.bright_body.contrast(palette.popped_top), :>=, 4.5, name
+      assert_operator palette.bright_body.luminance - palette.popped_rim.luminance, :>=, 0.15, name
     end
   end
 
-  def test_a_fresh_dot_stands_out_from_the_night_and_a_popped_one_still_shows
+  def test_a_bright_dot_stands_out_from_the_night_and_a_popped_one_still_shows
     each_style do |name, palette|
-      assert_operator palette.fresh_body.contrast(palette.ink_top), :>=, 7.0, name
+      assert_operator palette.bright_body.contrast(palette.ink_top), :>=, 7.0, name
       assert_operator palette.popped_rim.contrast(palette.ink_top), :>=, 3.0, name
       assert_operator palette.popped_top.luminance, :>, palette.ink_top.luminance, name
     end
   end
 
-  # A popped dot lies over the fresh ones, and its rim must show against
-  # a fresh dot's bright edge, or a fresh dot's place in the stack is lost.
-  def test_a_popped_dot_over_a_fresh_one_shows_its_edge
+  # A popped dot lies over the bright ones, and its rim must show against
+  # a bright dot's light edge, or a bright dot's place in the stack is lost.
+  def test_a_popped_dot_over_a_bright_one_shows_its_edge
     each_style do |name, palette|
-      assert_operator palette.popped_rim.contrast(palette.fresh_rim), :>=, 2.5, name
-      assert_operator palette.fresh_rim.contrast(palette.popped_top), :>=, 4.5, name
+      assert_operator palette.popped_rim.contrast(palette.bright_rim), :>=, 2.5, name
+      assert_operator palette.bright_rim.contrast(palette.popped_top), :>=, 4.5, name
       assert_operator palette.popped_lip.contrast(palette.popped_crater), :>=, 2.2, name
       assert_operator palette.alarm.contrast(palette.popped_top), :>=, 2.8, name
     end
@@ -74,10 +74,10 @@ class ThemeTest < Minitest::Test
   # dot it draws only through its seed, so a popped dot's seed is the same
   # for all of them, while each bright dot keeps its own.
   def test_every_popped_dot_looks_like_every_other
-    seeds = (0..40).map { Style::DOT.seed(it, fresh: false) }
+    seeds = (0..40).map { Style::DOT.seed(it, bright: false) }
 
     assert_equal 1, seeds.uniq.size, "popped dots are told apart by their seeds"
-    assert_equal 41, (0..40).map { Style::DOT.seed(it, fresh: true) }.uniq.size
+    assert_equal 41, (0..40).map { Style::DOT.seed(it, bright: true) }.uniq.size
   end
 
   # Nor can a theme's dot shader tell one dot from another by where it

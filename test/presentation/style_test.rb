@@ -42,7 +42,7 @@ class StyleTest < Minitest::Test
     assert_in_delta 1.0, motion.pop_stretch.to
   end
 
-  # What is seen of a dot at rest ends at its hit circle: the fresh dot's
+  # What is seen of a dot at rest ends at its hit circle: the bright dot's
   # rim is inside it, and only a faint halo and a small shadow fall
   # outside, so a moving target's edge is where a tap reaches it.
   def test_a_dot_at_rest_ends_at_its_hit_circle
@@ -58,8 +58,8 @@ class StyleTest < Minitest::Test
     assert_operator dot.extent, :<=, 1.3
   end
 
-  # The glow is off: bright enough to see, it blurs the fresh dot's edge.
-  def test_nothing_blooms_around_the_fresh_dot
+  # The glow is off: bright enough to see, it blurs the bright dot's edge.
+  def test_nothing_blooms_around_the_bright_dot
     assert_predicate Style::BLOOM.strength, :zero?
   end
 

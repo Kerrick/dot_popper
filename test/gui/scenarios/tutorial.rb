@@ -82,12 +82,12 @@ module DotPopperGui
       # more than half a radius; the dot's pale ring starts past 0.65.
       x = bright.x - (bright.radius * 0.55)
       y = bright.y
-      check(shot.fresh?(x, y), "the bright dot shows under the spotlight (#{shot.describe(x, y)})")
+      check(shot.bright?(x, y), "the bright dot shows under the spotlight (#{shot.describe(x, y)})")
       corner = shot.lightness(layout.width * 0.1, layout.height * 0.9)
       check(corner < shot.lightness(x, y) * 0.3, "everything but the bright dot dims")
       how.call(bright.x, bright.y)
       check_equal(:points, tutorial.beat, "a tap on the bright dot pops it")
-      check(dot(T::BRIGHT).fresh? && dot(T::NEXT).nil?, "it bursts still bright, with nothing under it yet")
+      check(dot(T::BRIGHT).bright? && dot(T::NEXT).nil?, "it bursts still bright, with nothing under it yet")
     end
 
     def points_and_time
@@ -110,7 +110,7 @@ module DotPopperGui
       check_equal([1, 11], shown, "the stopwatch lands in the time")
       check(cabinet.paused? && game.score == 1 && story.none?(:Popped), "the paused game has scored the pop, and told no one")
       wait_for("time to flow again", within: 120) { tutorial.beat == :peek }
-      check(dot(T::BRIGHT).popped? && dot(T::NEXT)&.fresh?, "as it does, the dot is popped, and one born under it")
+      check(dot(T::BRIGHT).popped? && dot(T::NEXT)&.bright?, "as it does, the dot is popped, and one born under it")
       wait(0.3)
       keep_screenshot(name("2-popped"))
     end
@@ -180,7 +180,7 @@ module DotPopperGui
       wait_for("the game", within: 300) { show.playing? }
       check(game.equal?(paused), "the same game plays on")
       check_equal([T::BRIGHT, T::NEXT, T::LAST], game.dots.map(&:id), "the game goes on with the tutorial's dots")
-      check_equal([true, true, false], game.dots.map(&:popped?), "popped and fresh as they were")
+      check_equal([true, true, false], game.dots.map(&:popped?), "popped and bright as they were")
       check_equal(1, game.score, "and its point")
       check_equal(1, game.dots_in_a_row, "and its row")
       check(game.countdown.remaining <= 10.0 && game.countdown.remaining > 9.8,

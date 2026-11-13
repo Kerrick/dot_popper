@@ -288,7 +288,7 @@ module DotPopper
       # and on the
       # Stats screen, Back, Undo, or "Clear my stats…", which a press
       # starts holding. Empty space does nothing, but a tap on one of the
-      # title's fresh dots pops it, for fun, and a tap away from the share
+      # title's bright dots pops it, for fun, and a tap away from the share
       # preview's card closes it. A gamepad's A, which aims at no button,
       # presses the screen's main one (#primary).
       def tap(x, y, by: :tap)
@@ -1602,7 +1602,7 @@ module DotPopper
       def beckon
         return unless @beckoned_at && playing? && now - @beckoned_at >= style::BONUS_BEACON_EVERY
 
-        dot = cabinet.game.dots.find { it.fresh? && it.bonus? } or return @beckoned_at = nil
+        dot = cabinet.game.dots.find { it.bright? && it.bonus? } or return @beckoned_at = nil
         @beckoned_at = now
         effects.ring(dot.x, dot.y, style::BONUS_BEACON, follow: dot.id)
       end
@@ -1611,7 +1611,7 @@ module DotPopper
         @penalized_at = now
         animations.wobble(event.dot.id, now)
         effects.ring(event.dot.x, event.dot.y, style::ALARM_RING, follow: event.dot.id)
-        hidden = cabinet.game.dots.fresh_beneath(event.dot, event.x, event.y)
+        hidden = cabinet.game.dots.bright_beneath(event.dot, event.x, event.y)
         effects.reveal(hidden, style::REVEAL) if hidden
         @mistake = Mistake.new(popped: event.dot.id, bright: hidden.id) if hidden
         effects.kick(style::PENALTY_SHAKE)
@@ -1659,13 +1659,13 @@ module DotPopper
         @marquee = Marquee.new(style: style::HOME, score_record: event.score_record, at: now)
       end
 
-      # A tap on the title away from its buttons: a fresh dot there pops
+      # A tap on the title away from its buttons: a bright dot there pops
       # for fun, with no score; anywhere else, nothing happens.
       def toy_tap(x, y)
         return unless home? && !stats? && !group_open?
 
         dot = attract.dots.top_at(x, y)
-        toy_pop(dot, x, y) if dot&.fresh?
+        toy_pop(dot, x, y) if dot&.bright?
       end
 
       # One of the title's dots, popped by a tap: its droplets, its ring,

@@ -11,8 +11,8 @@ module DotPopper
             key: :pumpkin_pie, opens_on: Date.new(2026, 11, 1),
             palette: base.with(
               ink_top: hex["#160f1e"], ink_bottom: hex["#22141e"], ink_glow: hex["#3a2026"], ink_edge: hex["#0a0610"],
-              fresh_light: hex["#fff3d6"], fresh_body: hex["#f5ab5e"], fresh_deep: hex["#d9843a"],
-              fresh_bounce: hex["#ffd49a"], fresh_rim: hex["#ffe2a8"], halo: hex["#ffc070"],
+              bright_light: hex["#fff3d6"], bright_body: hex["#f5ab5e"], bright_deep: hex["#d9843a"],
+              bright_bounce: hex["#ffd49a"], bright_rim: hex["#ffe2a8"], halo: hex["#ffc070"],
               popped_top: hex["#2e1714"], popped_bottom: hex["#1a0c0a"], popped_rim: hex["#7d5e54"],
               popped_crater: hex["#0a0608"], popped_lip: hex["#5a464c"],
               shadow: hex["#040205"], alarm: hex["#ff5a5a"],

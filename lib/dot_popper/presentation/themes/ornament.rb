@@ -11,8 +11,8 @@ module DotPopper
             key: :ornament, opens_on: Date.new(2026, 12, 1),
             palette: base.with(
               ink_top: hex["#0b1a17"], ink_bottom: hex["#0c1420"], ink_glow: hex["#1c2c26"], ink_edge: hex["#040a08"],
-              fresh_light: hex["#fffbea"], fresh_body: hex["#ffe6a8"], fresh_deep: hex["#d9a443"],
-              fresh_bounce: hex["#fff0c4"], fresh_rim: hex["#fff8e0"], halo: hex["#ffd98a"],
+              bright_light: hex["#fffbea"], bright_body: hex["#ffe6a8"], bright_deep: hex["#d9a443"],
+              bright_bounce: hex["#fff0c4"], bright_rim: hex["#fff8e0"], halo: hex["#ffd98a"],
               popped_top: hex["#3a1018"], popped_bottom: hex["#1c070c"], popped_rim: hex["#8a6670"],
               popped_crater: hex["#0a0305"], popped_lip: hex["#6e3e48"],
               shadow: hex["#020605"], alarm: hex["#ff6a5a"],

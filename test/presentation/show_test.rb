@@ -16,8 +16,8 @@ class ShowTest < Minitest::Test
 
   def test_a_tap_on_a_title_dot_pops_it_for_fun_and_starts_nothing
     dots = @show.attract.dots
-    fresh = dots.find { it.fresh? && dots.top_at(it.x, it.y) == it && @show.control_at(it.x, it.y).nil? }
-    @show.tap(fresh.x, fresh.y)
+    bright = dots.find { it.bright? && dots.top_at(it.x, it.y) == it && @show.control_at(it.x, it.y).nil? }
+    @show.tap(bright.x, bright.y)
 
     assert @show.home?
     assert_equal %i[pop], @sounds.names
@@ -26,7 +26,7 @@ class ShowTest < Minitest::Test
 
   # Play starts a game; empty space beside it does nothing.
   # A game on a field so wide that the dots, which hold still here, never
-  # cover one another, so each fresh dot can be tapped on the spot.
+  # cover one another, so each bright dot can be tapped on the spot.
   def calm_show
     @cabinet = DotPopper::Cabinet.new(field(4000, 3000), random: Random.new(2))
     show = Show.new(cabinet: @cabinet, layout: layout, sounds: @sounds, radius: R, random: Random.new(3))
@@ -34,33 +34,33 @@ class ShowTest < Minitest::Test
     show
   end
 
-  def pop_fresh(show)
-    fresh = @cabinet.game.dots.find(&:fresh?)
-    show.tap(fresh.x, fresh.y)
+  def pop_bright(show)
+    bright = @cabinet.game.dots.find(&:bright?)
+    show.tap(bright.x, bright.y)
   end
 
   def test_a_streak_earns_a_bonus_dot_that_arrives_with_a_chime_and_pays_with_a_chord
     show = calm_show
-    DotPopper::Rules::BONUS.dots_in_a_row.times { pop_fresh(show) }
+    DotPopper::Rules::BONUS.dots_in_a_row.times { pop_bright(show) }
 
     assert_equal 1, @sounds.names.count(:bonus), "the bonus dot arrives with a chime"
     refute_includes @sounds.names, :bonus_pop
     bonus = @cabinet.game.dots.find(&:bonus?)
-    assert bonus.fresh?
+    assert bonus.bright?
     assert(show.effects.rings.any? { it.style == Style::BONUS_RIPPLE })
 
     show.update(Style::BONUS_BEACON_EVERY + 0.1)
     assert(show.effects.rings.any? { it.style == Style::BONUS_BEACON }, "a ring pulses about it while it waits")
 
-    pop_fresh(show)
+    pop_bright(show)
     assert_equal 1, @sounds.names.count(:bonus_pop)
     assert(show.effects.rings.any? { it.style == Style::BONUS_SHOCKWAVE })
-    refute(@cabinet.game.dots.any? { it.fresh? && it.bonus? })
+    refute(@cabinet.game.dots.any? { it.bright? && it.bonus? })
   end
 
   def test_an_ordinary_pop_makes_no_bonus_sound
     show = calm_show
-    3.times { pop_fresh(show) }
+    3.times { pop_bright(show) }
 
     assert_equal [:start, :pop, :pop, :pop], @sounds.names
   end
@@ -244,9 +244,9 @@ class ShowTest < Minitest::Test
     show = Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3), stats_book:)
     press_main(show)
     10.times do
-      fresh = @cabinet.game.dots.find(&:fresh?)
-      clear_around!(@cabinet.game, fresh)
-      show.tap(fresh.x, fresh.y)
+      bright = @cabinet.game.dots.find(&:bright?)
+      clear_around!(@cabinet.game, bright)
+      show.tap(bright.x, bright.y)
     end
     @cabinet.update(30)
 
@@ -545,22 +545,22 @@ class ShowTest < Minitest::Test
     assert_equal "−2s", @show.effects.floaters.last.text
   end
 
-  def test_a_wrong_tap_over_the_fresh_dot_outlines_it
+  def test_a_wrong_tap_over_the_bright_dot_outlines_it
     start_and_pop
     popped = @cabinet.game.dots.first
-    fresh = @cabinet.game.dots.find(&:fresh?)
+    bright = @cabinet.game.dots.find(&:bright?)
     clear_around!(@cabinet.game, popped)
-    put!(fresh.id, popped.x + 30, popped.y)
+    put!(bright.id, popped.x + 30, popped.y)
     @show.tap(popped.x - 20, popped.y)
 
-    assert_equal [fresh.id], @show.effects.reveals.map(&:follow)
+    assert_equal [bright.id], @show.effects.reveals.map(&:follow)
     @show.update(Style::REVEAL.duration)
     assert_empty @show.effects.reveals
   end
 
   # The stacking rule is taught on Game Over, never in play, and only
   # after a game whose wrong tap had the bright dot hidden beneath.
-  def test_game_over_teaches_the_stack_after_a_wrong_tap_over_the_fresh_dot
+  def test_game_over_teaches_the_stack_after_a_wrong_tap_over_the_bright_dot
     store = DotPopper::ScoreRecord::Memory.new
     @show = Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3),
                      tutor: Tutor.new(store, times: 1))
@@ -573,18 +573,18 @@ class ShowTest < Minitest::Test
 
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
-    hide_fresh_under_a_popped_dot_and_tap_it
+    hide_bright_under_a_popped_dot_and_tap_it
     popped = @cabinet.game.dots.first
-    fresh = @cabinet.game.dots.find(&:fresh?)
+    bright = @cabinet.game.dots.find(&:bright?)
     @cabinet.update(20)
-    assert_equal Mistake.new(popped: popped.id, bright: fresh.id), @show.game_over.lesson, "the wrong tap is the lesson"
+    assert_equal Mistake.new(popped: popped.id, bright: bright.id), @show.game_over.lesson, "the wrong tap is the lesson"
     assert_equal "1", store.read
     refute @show.game_over_plan.placed.key?(:lesson), "with no word"
 
     @cabinet.update(DotPopper::Rules::GAME_OVER_GRACE)
     press_main
     press_main
-    hide_fresh_under_a_popped_dot_and_tap_it(started: true)
+    hide_bright_under_a_popped_dot_and_tap_it(started: true)
     @cabinet.update(20)
     assert_nil @show.game_over.lesson, "it has been taught as often as it is"
   end
@@ -594,18 +594,18 @@ class ShowTest < Minitest::Test
   # ring, and the dashed outline of the bright dot under it, which
   # pulses. The screen never shakes, and Continue works as ever.
   def test_game_overs_lesson_replays_the_wrong_tap_on_the_pile
-    hide_fresh_under_a_popped_dot_and_tap_it
+    hide_bright_under_a_popped_dot_and_tap_it
     popped = @cabinet.game.dots.first
-    fresh = @cabinet.game.dots.find(&:fresh?)
+    bright = @cabinet.game.dots.find(&:bright?)
     @cabinet.update(20)
     @show.update(Style::LESSON.every)
     @show.effects.update(Style::REVEAL.duration)
     @sounds.played.clear
 
     @show.update(Style::GAME_OVER.tally.duration)
-    assert_equal [fresh.id], @show.effects.reveals.map(&:follow), "the bright dot is outlined"
+    assert_equal [bright.id], @show.effects.reveals.map(&:follow), "the bright dot is outlined"
     assert_includes @show.effects.rings.map { [it.style, it.follow] }, [Style::ALARM_RING, popped.id]
-    assert_includes @show.effects.rings.map { [it.style, it.follow] }, [Style::SPAWN_RIPPLE, fresh.id], "and pulses"
+    assert_includes @show.effects.rings.map { [it.style, it.follow] }, [Style::SPAWN_RIPPLE, bright.id], "and pulses"
     assert_operator @show.animations.pose(popped, @show.now + 0.05).alarm, :>, 0.0, "the popped dot shudders"
     assert_in_delta 0.0, @show.effects.shake_x
     assert_empty @sounds.played, "quietly"
@@ -623,17 +623,17 @@ class ShowTest < Minitest::Test
     store = DotPopper::ScoreRecord::Memory.new
     @show = Show.new(cabinet: @cabinet, layout:, sounds: @sounds, radius: R, random: Random.new(3),
                      tutor: Tutor.new(store, times: 2))
-    hide_fresh_under_a_popped_dot_and_tap_it
-    fresh = @cabinet.game.dots.find(&:fresh?)
-    clear_around!(@cabinet.game, fresh)
-    @show.tap(fresh.x, fresh.y)
+    hide_bright_under_a_popped_dot_and_tap_it
+    bright = @cabinet.game.dots.find(&:bright?)
+    clear_around!(@cabinet.game, bright)
+    @show.tap(bright.x, bright.y)
     @cabinet.update(20)
 
     assert_nil @show.game_over.lesson
     assert_nil store.read
   end
 
-  def test_a_wrong_tap_with_the_fresh_dot_elsewhere_reveals_nothing
+  def test_a_wrong_tap_with_the_bright_dot_elsewhere_reveals_nothing
     start_and_pop
     popped = @cabinet.game.dots.first
     clear_around!(@cabinet.game, popped)
@@ -692,12 +692,12 @@ class ShowTest < Minitest::Test
 
   def reach(sizing) = @show.sizing_reaches.to_h.fetch(sizing)
 
-  def hide_fresh_under_a_popped_dot_and_tap_it(started: false)
+  def hide_bright_under_a_popped_dot_and_tap_it(started: false)
     start_and_pop(started:)
     popped = @cabinet.game.dots.first
-    fresh = @cabinet.game.dots.find(&:fresh?)
+    bright = @cabinet.game.dots.find(&:bright?)
     clear_around!(@cabinet.game, popped)
-    put!(fresh.id, popped.x + 30, popped.y)
+    put!(bright.id, popped.x + 30, popped.y)
     @show.tap(popped.x - 20, popped.y)
     assert_equal 1, @show.effects.reveals.size
   end
@@ -713,8 +713,8 @@ class ShowTest < Minitest::Test
 
   def start_and_pop(started: false)
     press_main unless started
-    fresh = @cabinet.game.dots.find(&:fresh?)
-    clear_around!(@cabinet.game, fresh)
-    @show.tap(fresh.x, fresh.y)
+    bright = @cabinet.game.dots.find(&:bright?)
+    clear_around!(@cabinet.game, bright)
+    @show.tap(bright.x, bright.y)
   end
 end

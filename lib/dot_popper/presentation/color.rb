@@ -31,7 +31,7 @@ module DotPopper
       def bytes = [r, g, b, a].map { (it.clamp(0.0, 1.0) * 255).round }
 
       # Relative luminance, as WCAG defines it: how light the color looks,
-      # from 0 for black to 1 for white, whatever its hue. Fresh and popped
+      # from 0 for black to 1 for white, whatever its hue. Bright and popped
       # dots are told apart by this, not only by hue.
       def luminance
         red, green, blue = [r, g, b].map { linear(it) }

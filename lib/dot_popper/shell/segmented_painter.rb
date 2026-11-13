@@ -3,7 +3,7 @@
 module DotPopper
   module Shell
     # A labeled segmented control, on whole device pixels: the title's
-    # "Dot size". Its segments share one pill, each with a fresh dot drawn
+    # "Dot size". Its segments share one pill, each with a bright dot drawn
     # at the size its option gives, then its option's name with what it
     # does here in smaller type under it, and the chosen one is filled, so
     # the choices, what each does, and which is chosen all show at a glance. The label sits to the left on the segments'
@@ -72,7 +72,7 @@ module DotPopper
         gap = gap(rect.height)
         words = [font.width(name), small.width(note)].max
         left = rect.center_x - (((radius * 2) + gap + words) / 2.0)
-        dots.icon(pixels.snap(left + radius), pixels.snap(rect.center_y), radius, fresh: true, opacity: alpha)
+        dots.icon(pixels.snap(left + radius), pixels.snap(rect.center_y), radius, bright: true, opacity: alpha)
         x = left + (radius * 2) + gap + (words / 2.0)
         top = rect.center_y - ((font.height + small.height) / 2.0)
         pen.text(name, font, x, top + (font.height / 2.0), chosen ? palette.ink_bottom : palette.cream, alpha)

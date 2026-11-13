@@ -17,7 +17,7 @@ module DotPopperGui
     def play
       show.input = P::InputKind::TOUCH
       start_game
-      8.times { pop_fresh }
+      8.times { pop_bright }
       run_out_the_clock
       @size = "first"
       shoot("over", settle: 2.5)
@@ -101,7 +101,7 @@ module DotPopperGui
 
     def game_over(state = "over")
       start_game
-      6.times { pop_fresh }
+      6.times { pop_bright }
       run_out_the_clock
       shoot(state, settle: 2.5)
       continue_to_home

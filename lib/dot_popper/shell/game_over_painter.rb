@@ -75,8 +75,8 @@ module DotPopper
       def glyph(chip, x, y, size, alpha)
         case chip.glyph
         when :check then Glyphs.new(pen:).draw(:check, x, y, size, color: pen.palette.gain, alpha:, weight: 2.2)
-        when :achievement then Glyphs.new(pen:).draw(:ribbon, x, y, size, color: pen.palette.fresh_body, alpha:)
-        else Glyphs.new(pen:).draw(:crown, x, y, size, color: pen.palette.fresh_body, alpha:)
+        when :achievement then Glyphs.new(pen:).draw(:ribbon, x, y, size, color: pen.palette.bright_body, alpha:)
+        else Glyphs.new(pen:).draw(:crown, x, y, size, color: pen.palette.bright_body, alpha:)
         end
       end
 
@@ -109,7 +109,7 @@ module DotPopper
         middle = x + (size / 2.0)
         case sign
         when :stopwatch then TallyPainter.new(pen:).stopwatch(middle, y, size, pen.palette.cream, alpha)
-        else dots.icon(middle, y, size * 0.5, fresh: sign == :bright, opacity: alpha)
+        else dots.icon(middle, y, size * 0.5, bright: sign == :bright, opacity: alpha)
         end
         left = x + (font.height * (screen::FACT_SIGN + screen::FACT_GAP))
         pen.text(text, font, left + (font.width(text) / 2.0), y, pen.palette.cream, alpha)

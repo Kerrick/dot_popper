@@ -39,13 +39,13 @@ module DotPopper
     # popped dot, and a stopwatch. A line breaks into runs of words and
     # those shapes' names.
     module ShareGlyphs
-      EMOJI = { "🟡" => :fresh, "⚫" => :popped, "⏱" => :clock }.freeze
+      EMOJI = { "🟡" => :bright, "⚫" => :popped, "⏱" => :clock }.freeze
       SPLIT = Regexp.union(EMOJI.keys)
       WIDTH = 1.15 # a shape's room in a line, in the line's height
 
       module_function
 
-      # "🟡 27 dots" as [:fresh, " 27 dots"].
+      # "🟡 27 dots" as [:bright, " 27 dots"].
       def runs(line) = line.split(/(#{SPLIT})/o).reject(&:empty?).map { EMOJI.fetch(it, it) }
 
       # How wide +line+ is drawn, with each shape +height+ * WIDTH across

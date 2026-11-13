@@ -10,7 +10,7 @@ How Dot Popper draws its dots, its night and its effects, how the Game Over pile
 
 The ordinary theme's picture is "gumdrops at night" (`Presentation::Palette`, `Style::PALETTE`): bright dots are light, warm and glossy on a deep indigo night; popped dots are dark, matte, opaque discs with a light rim and a sunken crater. The game's icon shows that picture.
 
-The two kinds differ in lightness and in shape, not only in hue, so every player can tell them apart, in grayscale and with color blindness too. In the ordinary palette a bright dot's body (`fresh_body`) is 5.4:1 against a popped dot's top (`popped_top`) and 9.9:1 against the night (`ink_top`).
+The two kinds differ in lightness and in shape, not only in hue, so every player can tell them apart, in grayscale and with color blindness too. In the ordinary palette a bright dot's body (`bright_body`) is 5.4:1 against a popped dot's top (`popped_top`) and 9.9:1 against the night (`ink_top`).
 
 A bonus dot is a bright dot in mint, as light as any bright dot and marked by a dark four-pointed star, a shape, so it reads without color too. Mint is the color of gain. When it appears and how it pays are in [rules.md](rules.md).
 
@@ -20,7 +20,7 @@ What is seen of a dot at rest ends exactly at radius R, where its hit circle end
 
 | Setting | Value | What it is |
 | --- | --- | --- |
-| `rim` | 0.055 R | A bright dot's cream rim (`fresh_rim`), its outer edge the hit circle, smoothed over one device pixel; never under a pixel and a half wide (`assets/shaders/dot.glsl`). |
+| `rim` | 0.055 R | A bright dot's cream rim (`bright_rim`), its outer edge the hit circle, smoothed over one device pixel; never under a pixel and a half wide (`assets/shaders/dot.glsl`). |
 | `halo_width`, `halo_alpha` | 0.035 R, 16% | A faint lip just outside a bright dot. It has faded to nothing by 1.15 R (`DotStyle#halo`). |
 | `shadow_reach`, `shadow_offset`, `shadow_alpha` | 1.08 R, dropped 0.07 R, 40% | Every dot's shadow, so the dot on top shows. Its lowest edge is within 1.16 R (`DotStyle#shadow_edge`). |
 | `extent` | 1.25 R | The half side of the square a shader draws a dot in, room for the halo, the shadow and a mistake's glow. |
@@ -35,9 +35,9 @@ A player aims at a moving target by its edge and tracks it by what they perceive
 
 ### The tests that hold them
 
-- `test/presentation/color_test.rb` (the ordinary palette): every bright color at least 2.5:1 against every popped color, `fresh_body` at least 4.5:1 against `popped_top` and 3:1 against `popped_lip`, a bright dot at least 7:1 against the night, a popped dot's rim at least 3:1 against it, every color words use at least 4.5:1 on the night, and the bonus dot as light as a bright one, with its star at least 7:1 on its body.
+- `test/presentation/color_test.rb` (the ordinary palette): every bright color at least 2.5:1 against every popped color, `bright_body` at least 4.5:1 against `popped_top` and 3:1 against `popped_lip`, a bright dot at least 7:1 against the night, a popped dot's rim at least 3:1 against it, every color words use at least 4.5:1 on the night, and the bonus dot as light as a bright one, with its star at least 7:1 on its body.
 - `test/presentation/theme_test.rb` holds every theme to the same, and more (see "Themes").
-- `test/presentation/style_test.rb`: `test_a_dot_at_rest_ends_at_its_hit_circle` (the rim, halo, shadow and extent limits above) and `test_nothing_blooms_around_the_fresh_dot`.
+- `test/presentation/style_test.rb`: `test_a_dot_at_rest_ends_at_its_hit_circle` (the rim, halo, shadow and extent limits above) and `test_nothing_blooms_around_the_bright_dot`.
 - `test/presentation/dot_animations_test.rb`: a bright dot at rest is drawn at exactly its size.
 
 ## Shaders are optional
@@ -186,12 +186,12 @@ Every theme keeps a bright dot told from a popped one by shape and lightness, no
 | Rule | At least |
 | --- | --- |
 | Every bright color against every popped color | 2.5:1 |
-| `fresh_body` against `popped_top`; against `popped_lip` | 4.5:1; 3:1 |
-| `fresh_body` lighter than `popped_rim`, in luminance | 0.15 |
-| `fresh_body` against the night (`ink_top`) | 7:1 |
+| `bright_body` against `popped_top`; against `popped_lip` | 4.5:1; 3:1 |
+| `bright_body` lighter than `popped_rim`, in luminance | 0.15 |
+| `bright_body` against the night (`ink_top`) | 7:1 |
 | `popped_rim` against the night, and `popped_top` lighter than it | 3:1 |
-| `popped_rim` against `fresh_rim`, so a bright dot under a popped one keeps its edge and the stack's order shows | 2.5:1 |
-| `fresh_rim` against `popped_top`; `popped_lip` against `popped_crater` | 4.5:1; 2.2:1 |
+| `popped_rim` against `bright_rim`, so a bright dot under a popped one keeps its edge and the stack's order shows | 2.5:1 |
+| `bright_rim` against `popped_top`; `popped_lip` against `popped_crater` | 4.5:1; 2.2:1 |
 | The alarm against `popped_top` | 2.8:1 |
 | Every color words use against `ink_bottom` | 4.5:1 |
 | Colors that differ between any two themes | 10 |

@@ -158,8 +158,8 @@ module DotPopper
         @dots.draw(dots, @show.animations, @show.now, game.field.radius)
       end
 
-      # The fresh dots' and droplets' light, on the night under every dot,
-      # so it never washes out a dot or hints at a fresh dot that is
+      # The bright dots' and droplets' light, on the night under every dot,
+      # so it never washes out a dot or hints at a bright dot that is
       # covered.
       def glow
         game = @show.cabinet.game or return

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DotPopper
-  # Whether a fresh dot, spawned beneath the others, will offer a touch
+  # Whether a bright dot, spawned beneath the others, will offer a touch
   # target (TouchTarget) at some moment within Rules::SPAWN_LOOKAHEAD
   # seconds. It plays the next second forward with the real Dot#move,
   # bounces and all, a STEP at a time, and asks at each step.
@@ -24,7 +24,7 @@ module DotPopper
     # which Dot#move gives exactly, however many edges it bounces off. A
     # dot far away is not moved at all until it could have come near:
     # on each axis, two dots close no faster than their two speeds on it
-    # added, bounces or not, and a dot covers none of the fresh one until
+    # added, bounces or not, and a dot covers none of the bright one until
     # it is near on both. +soonest+ holds that time for each dot above.
     #
     # On a full screen a step usually fails because one dot above covers
@@ -37,17 +37,17 @@ module DotPopper
       order = (0...above.size).to_a
       (0..STEPS).any? do |step|
         seconds = step * STEP
-        fresh = at(dot, seconds)
+        bright = at(dot, seconds)
         near = [] #: Array[Dot]
         cover = order.index do |index|
           next false if soonest.fetch(index) > seconds
 
           moved = at(above.fetch(index), seconds)
-          wait = time_to_reach(fresh, moved)
+          wait = time_to_reach(bright, moved)
           if wait.positive?
             soonest[index] = seconds + wait
             false
-          elsif target.covered_by?(fresh.x, fresh.y, moved)
+          elsif target.covered_by?(bright.x, bright.y, moved)
             true
           else
             near << moved
@@ -55,7 +55,7 @@ module DotPopper
           end
         end
         order.unshift(order.delete_at(cover)) if cover
-        cover.nil? && target.clear_on?(fresh.x, fresh.y, near)
+        cover.nil? && target.clear_on?(bright.x, bright.y, near)
       end
     end
 

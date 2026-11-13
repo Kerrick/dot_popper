@@ -20,15 +20,15 @@ module DotPopperGui
 
     def lightness(x, y) = lightness_of(color(x, y))
 
-    # A fresh dot's body is light and warm, red over blue (Look::PALETTE's
-    # fresh colors); the night behind the dots and a popped dot are dark
+    # A bright dot's body is light and warm, red over blue (Look::PALETTE's
+    # bright colors); the night behind the dots and a popped dot are dark
     # and cool.
-    def fresh?(x, y)
+    def bright?(x, y)
       red, green, blue = color(x, y)
       red > 0.75 && green > 0.45 && red - blue > 0.2
     end
 
-    # Whether +x+, +y+ is warm, red over blue, as a fresh dot is even when
+    # Whether +x+, +y+ is warm, red over blue, as a bright dot is even when
     # dimmed.
     def warm?(x, y)
       red, _, blue = color(x, y)

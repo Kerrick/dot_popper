@@ -96,9 +96,9 @@ class GameStatsTest < Minitest::Test
   end
 
   def pop!
-    fresh = @cabinet.game.dots.find(&:fresh?)
-    clear_around!(@cabinet.game, fresh)
-    @cabinet.press(fresh.x, fresh.y)
+    bright = @cabinet.game.dots.find(&:bright?)
+    clear_around!(@cabinet.game, bright)
+    @cabinet.press(bright.x, bright.y)
   end
   # The tutorial's game: two pops and the guide's mistake while it is
   # paused, heard by the rules but announced to no one, then play.
@@ -120,9 +120,9 @@ class GameStatsTest < Minitest::Test
     assert_nil stats.shortest_time_to_pop
 
     cabinet.update(1.5)
-    fresh = cabinet.game.dots.to_a.last
-    clear_around!(cabinet.game, fresh)
-    cabinet.press(fresh.x, fresh.y)
+    bright = cabinet.game.dots.to_a.last
+    clear_around!(cabinet.game, bright)
+    cabinet.press(bright.x, bright.y)
     assert_equal [3, 2, 2], [recorder.stats.dots_popped, recorder.stats.score, recorder.stats.most_dots_in_a_row], "the row is the game's own"
     assert_equal [1.5], recorder.stats.times_to_pop.map { it.round(6) }, "the first wait runs from the clock starting"
   end

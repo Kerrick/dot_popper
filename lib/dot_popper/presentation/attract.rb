@@ -2,7 +2,7 @@
 
 module DotPopper
   module Presentation
-    # The few dots that drift behind the title, popped ones over fresh, as
+    # The few dots that drift behind the title, popped ones over bright, as
     # in play, but slower. They are the rules' own dots, moved by the
     # rules' own bounce, and nothing taps them.
     class Attract < Data.define(:field, :dots)

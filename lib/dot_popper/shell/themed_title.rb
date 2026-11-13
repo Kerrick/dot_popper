@@ -29,9 +29,9 @@ module DotPopper
         word.each_char.with_index do |char, i|
           mid = x + (spans[i] / 2.0)
           if %w[O o].include?(char)
-            dots.icon(mid, center_y, radius, fresh: true, opacity: alpha)
+            dots.icon(mid, center_y, radius, bright: true, opacity: alpha)
           else
-            pen.text(char, font, mid, center_y, pen.palette.fresh_body, alpha)
+            pen.text(char, font, mid, center_y, pen.palette.bright_body, alpha)
           end
           x += spans[i]
         end
@@ -52,8 +52,8 @@ module DotPopper
         gap = r * 0.45
         total = span(word, font)
         left = center_x - (total / 2.0)
-        dots.icon(left + r, center_y, r, fresh: true, opacity: alpha)
-        dots.icon(left + r + (r * 0.3), center_y - (r * 0.22), r * 0.92, fresh: false, opacity: alpha)
+        dots.icon(left + r, center_y, r, bright: true, opacity: alpha)
+        dots.icon(left + r + (r * 0.3), center_y - (r * 0.22), r * 0.92, bright: false, opacity: alpha)
         pen.text(word, font, left + (r * 2) + gap + (font.width(word) / 2.0), center_y, pen.palette.cream, alpha)
       end
     end

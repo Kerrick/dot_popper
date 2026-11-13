@@ -127,7 +127,7 @@ module DotPopperGui
     # Game Over with its lines, a met goal and, for Pro, a new achievement.
     def game_over
       start_game
-      3.times { pop_fresh }
+      3.times { pop_bright }
       run_out_the_clock
       lines = { goal_met: true }
       lines[:achievements] = [:sharpshooter] if show.pro?

@@ -65,9 +65,9 @@ class PlaytestLogTest < Minitest::Test
     @cabinet.press(0, 0)
     dots_popped.times do |i|
       @cabinet.update(1.0) if i.zero?
-      fresh = @cabinet.game.dots.find(&:fresh?)
-      clear_around!(@cabinet.game, fresh)
-      @cabinet.press(fresh.x, fresh.y)
+      bright = @cabinet.game.dots.find(&:bright?)
+      clear_around!(@cabinet.game, bright)
+      @cabinet.press(bright.x, bright.y)
     end
     @cabinet.update(20)
     @cabinet.update(1)

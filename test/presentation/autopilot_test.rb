@@ -107,15 +107,15 @@ class AutopilotTest < Minitest::Test
     assert show.playing?, "it played after answering the card"
   end
 
-  def test_it_taps_only_a_fresh_dot_it_can_see
+  def test_it_taps_only_a_bright_dot_it_can_see
     covered = dot(400, 300)
     game = game_with(dot(400, 300, popped: true), covered)
     pilot = Autopilot.new(Style::AUTOPILOT.with(mistakes: 0.0))
 
-    assert_nil pilot.send(:exposed_fresh, game)
+    assert_nil pilot.send(:exposed_bright, game)
   end
 
-  def test_its_mistake_is_impatience_with_the_covered_fresh_dot
+  def test_its_mistake_is_impatience_with_the_covered_bright_dot
     cover = dot(400, 300, popped: true)
     game = game_with(cover, dot(900, 900, popped: true), dot(430, 300))
     pilot = Autopilot.new(Style::AUTOPILOT.with(mistakes: 1.0))

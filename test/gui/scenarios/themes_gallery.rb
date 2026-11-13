@@ -17,7 +17,7 @@ module DotPopperGui
       wait(1.0)
       keep_screenshot("#{tag}-#{theme}-title")
       start_game
-      14.times { pop_fresh }
+      14.times { pop_bright }
       wait(0.5)
       keep_screenshot("#{tag}-#{theme}-round")
       run_out_the_clock

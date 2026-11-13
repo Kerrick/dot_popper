@@ -20,7 +20,7 @@ module DotPopper
       # which one it was.
       def among(dots)
         bright = dots.find { it.id == self.bright }
-        self if bright&.fresh? && dots.any? { it.id == popped }
+        self if bright&.bright? && dots.any? { it.id == popped }
       end
     end
 

@@ -202,7 +202,7 @@ module DotPopper
 
         dot = game.dots.top_at(x, y)
         if dot.nil? then @effects.ring(x, y, @style::TOUCH_RIPPLE)
-        elsif dot.fresh? && dot.id == target then pop_turn(dot, x, y)
+        elsif dot.bright? && dot.id == target then pop_turn(dot, x, y)
         end
       end
 
@@ -429,7 +429,7 @@ module DotPopper
         penalty = @cabinet.press_paused(x, y)
         animations.wobble(dot.id, now)
         @effects.ring(x, y, @style::ALARM_RING, follow: dot.id)
-        hidden = game.dots.fresh_beneath(dot, x, y)
+        hidden = game.dots.bright_beneath(dot, x, y)
         @effects.reveal(hidden, @style::REVEAL) if hidden
         @effects.light(@style::PENALTY_FLASH)
         @sounds.play(:bonk, pan: pan(x))

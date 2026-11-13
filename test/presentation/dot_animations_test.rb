@@ -13,23 +13,23 @@ class DotAnimationsTest < Minitest::Test
     assert_equal Pose::STILL, pose
   end
 
-  # A player aims at a fresh dot's edge, so at rest it never swells or
+  # A player aims at a bright dot's edge, so at rest it never swells or
   # shrinks: it is drawn exactly at its hit circle.
-  def test_a_fresh_dot_at_rest_is_still_at_its_size
+  def test_a_bright_dot_at_rest_is_still_at_its_size
     poses = (0..40).map { @animations.pose(dot(0, 0), it * 0.05) }
 
-    assert(poses.all?(Pose::FRESH))
-    assert_equal [1.0, 1.0], [Pose::FRESH.scale_x, Pose::FRESH.scale_y]
+    assert(poses.all?(Pose::BRIGHT))
+    assert_equal [1.0, 1.0], [Pose::BRIGHT.scale_x, Pose::BRIGHT.scale_y]
   end
 
   def test_a_new_dot_grows_from_a_seed_past_its_size_and_settles
     @animations.spawn(1, 0.0)
-    fresh = dot(0, 0, id: 1)
-    sizes = (0..50).map { @animations.pose(fresh, it * 0.01).scale_x }
+    bright = dot(0, 0, id: 1)
+    sizes = (0..50).map { @animations.pose(bright, it * 0.01).scale_x }
 
     assert_operator sizes.first, :<, 0.3
     assert_operator sizes.max, :>, 1.03
-    assert_equal Pose::FRESH, @animations.pose(fresh, 2.0)
+    assert_equal Pose::BRIGHT, @animations.pose(bright, 2.0)
   end
 
   def test_a_popped_dot_stretches_and_springs_back
@@ -59,8 +59,8 @@ class DotAnimationsTest < Minitest::Test
     @animations.pop(2, 1.0)
     popped = dot(0, 0, id: 2, popped: true)
 
-    assert_in_delta 1.0, @animations.pose(popped, 1.0).freshness
-    assert_in_delta 0.0, @animations.pose(popped, 1.2).freshness
+    assert_in_delta 1.0, @animations.pose(popped, 1.0).bright_look
+    assert_in_delta 0.0, @animations.pose(popped, 1.2).bright_look
   end
 
   def test_a_wrong_tap_shudders_the_dot_then_stops

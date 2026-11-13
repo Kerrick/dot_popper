@@ -2,7 +2,7 @@
 
 module DotPopperGui
   # A whole game, as a first-time player has it: the title, a game
-  # with a few pops and one tap too soon on a popped dot over the fresh
+  # with a few pops and one tap too soon on a popped dot over the bright
   # one, its reveal and Game Over's lesson, replayed on the pile with no
   # word, the clock running out, and
   # back to the title. The score and the clock are worked out alongside,
@@ -19,9 +19,9 @@ module DotPopperGui
       start_game
       wait(0.5)
       shot = screenshot
-      check_fresh_pixel(fresh_dot, shot)
+      check_bright_pixel(bright_dot, shot)
       check_hud_drawn(shot)
-      DOTS_POPPED.times { pop_fresh }
+      DOTS_POPPED.times { pop_bright }
       expect(dots_popped: DOTS_POPPED, mistakes: 0)
       tap_too_soon
       expect(dots_popped: DOTS_POPPED, mistakes: 1)
@@ -51,29 +51,29 @@ module DotPopperGui
       [(dots_popped * R::POP_POINTS) - (mistakes * R::PENALTY_POINTS), R::LOWEST_SCORE].max
     end
 
-    # Waits for a popped dot to lie over the fresh one, and taps between
-    # their middles, where the popped dot is on top and the fresh one is
+    # Waits for a popped dot to lie over the bright one, and taps between
+    # their middles, where the popped dot is on top and the bright one is
     # under it.
     def tap_too_soon
-      x, y = wait_for("a popped dot over the fresh one", within: 1200) { covering_point }
+      x, y = wait_for("a popped dot over the bright one", within: 1200) { covering_point }
       before = events.size
       click(x, y)
       penalty = events.drop(before).grep(DotPopper::Events::Penalized).first
-      check(penalty, "a click on a popped dot over the fresh one is a slip")
-      check(!show.effects.reveals.empty?, "the fresh dot hidden under it is outlined")
+      check(penalty, "a click on a popped dot over the bright one is a slip")
+      check(!show.effects.reveals.empty?, "the bright dot hidden under it is outlined")
     end
 
     def covering_point
-      fresh = fresh_dot
-      return unless inside_window?(fresh)
+      bright = bright_dot
+      return unless inside_window?(bright)
 
       game.dots.each do |dot|
-        next unless dot.popped? && dot.overlaps?(fresh)
+        next unless dot.popped? && dot.overlaps?(bright)
 
-        x = (dot.x + fresh.x) / 2.0
-        y = (dot.y + fresh.y) / 2.0
+        x = (dot.x + bright.x) / 2.0
+        y = (dot.y + bright.y) / 2.0
         top = game.dots.top_at(x, y)
-        return [x, y] if top&.popped? && game.dots.fresh_beneath(top, x, y)
+        return [x, y] if top&.popped? && game.dots.bright_beneath(top, x, y)
       end
       nil
     end
@@ -85,10 +85,10 @@ module DotPopperGui
       check_close(R::STARTING_SECONDS + DOTS_POPPED - (R::PENALTY_SECONDS * 1), ended.game.elapsed,
                   "the game lasted the time it was given")
       lesson = show.game_over.lesson
-      fresh = ended.game.dots.find(&:fresh?)
-      check(lesson && lesson.bright == fresh.id, "Game Over teaches the stacking rule from the wrong tap")
+      bright = ended.game.dots.find(&:bright?)
+      check(lesson && lesson.bright == bright.id, "Game Over teaches the stacking rule from the wrong tap")
       wait_for("the wrong tap replayed on the pile", within: 300) { show.game_over.replayed.positive? }
-      check_equal([fresh.id], show.effects.reveals.map(&:follow), "the bright dot it hid is outlined on the pile")
+      check_equal([bright.id], show.effects.reveals.map(&:follow), "the bright dot it hid is outlined on the pile")
       wait(0.15)
       keep_screenshot("game-over-lesson")
       wait(1.2)

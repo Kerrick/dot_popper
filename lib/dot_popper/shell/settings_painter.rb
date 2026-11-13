@@ -33,7 +33,7 @@ module DotPopper
         x, y = row.label_at
         font = pen.fonts.semibold(18)
         if row.glyph == :dot
-          dots.icon(x + 11, y, 11, fresh: true)
+          dots.icon(x + 11, y, 11, bright: true)
         else
           Glyphs.new(pen:).draw(row.glyph, x + 11, y, 22, color: pen.palette.cream, weight: 1.6)
         end
@@ -44,7 +44,7 @@ module DotPopper
       def icon(show, row, name)
         return unless row.key == :dot_size
 
-        ->(x, y, height, _chosen) { dots.icon(x, y, show.sizing_preview.icon(name, height), fresh: true) }
+        ->(x, y, height, _chosen) { dots.icon(x, y, show.sizing_preview.icon(name, height), bright: true) }
       end
 
       def pill(show, name, rect, glyph, text)

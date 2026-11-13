@@ -11,7 +11,7 @@ class ShareTest < Minitest::Test
   CUE = Style::GAME_OVER.share
 
   def test_a_line_of_the_result_breaks_into_words_and_shapes
-    assert_equal [:fresh, " 27 dots · ", :popped, " 1 mistake · ", :clock, " 38 seconds"],
+    assert_equal [:bright, " 27 dots · ", :popped, " 1 mistake · ", :clock, " 38 seconds"],
                  ShareGlyphs.runs("🟡 27 dots · ⚫ 1 mistake · ⏱ 38 seconds")
     assert_equal ["Dot Popper: 25 points"], ShareGlyphs.runs("Dot Popper: 25 points")
     assert_in_delta 8 + (2 * ShareGlyphs::WIDTH * 20), ShareGlyphs.width("🟡 ab ⚫", 20) { it.length * 2.0 }

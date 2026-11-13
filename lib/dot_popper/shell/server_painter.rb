@@ -23,7 +23,7 @@ module DotPopper
       def lines(plan)
         font = pen.fonts.semibold(plan.line_size)
         plan.lines.each do |glyph, rows, top|
-          Glyphs.new(pen:).draw(glyph, plan.left + 13, top + (font.height / 2.0), 24, color: pen.palette.fresh_body)
+          Glyphs.new(pen:).draw(glyph, plan.left + 13, top + (font.height / 2.0), 24, color: pen.palette.bright_body)
           rows.each_with_index do |row, i|
             pen.text(row, font, plan.left + 42 + (font.width(row) / 2.0), top + (font.height * (i + 0.5)) + (i * plan.line_size * 0.15), pen.palette.cream)
           end

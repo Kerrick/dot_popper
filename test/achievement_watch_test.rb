@@ -25,12 +25,12 @@ class AchievementWatchTest < Minitest::Test
     event
   end
 
-  # Pops the game's fresh dot, with the others cleared out of the way.
-  def pop_fresh(after: 0.0)
+  # Pops the game's bright dot, with the others cleared out of the way.
+  def pop_bright(after: 0.0)
     @game.update(after) if after.positive?
-    fresh = @game.dots.find(&:fresh?)
-    clear_around!(@game, fresh)
-    tap_at(fresh.x, fresh.y)
+    bright = @game.dots.find(&:bright?)
+    clear_around!(@game, bright)
+    tap_at(bright.x, bright.y)
   end
 
   def mistake
@@ -43,13 +43,13 @@ class AchievementWatchTest < Minitest::Test
                                        size_class: DotPopper::SizeClass::MEDIUM))
   end
 
-  # A game with a popped dot to mistake on and a fresh one to pop.
+  # A game with a popped dot to mistake on and a bright one to pop.
   def open_game
     watch(game_with(dot(100, 100, popped: true), dot(600, 400)))
   end
 
   # A game whose dot has just been popped, as the rules reported, with
-  # the fresh dot that replaced it under a popped one (or, with covered:
+  # the bright dot that replaced it under a popped one (or, with covered:
   # false, clear of it).
   def covered_spawn(covered: true)
     spawned = dot(covered ? 400 : 700, 300, id: 7)
@@ -68,7 +68,7 @@ class AchievementWatchTest < Minitest::Test
     covered = dot(400, 300, popped: true)
     watch(game_with(covered, dot(395, 300, id: 7)))
 
-    assert_operator DotPopper::Visibility.of(@game.dots.find(&:fresh?), [covered]), :<, DotPopper::Achievement::SHARP
+    assert_operator DotPopper::Visibility.of(@game.dots.find(&:bright?), [covered]), :<, DotPopper::Achievement::SHARP
     assert_instance_of Events::Popped, tap_at(346, 300)
     assert_equal %i[sharpshooter], @watch.earned
   end
@@ -82,11 +82,11 @@ class AchievementWatchTest < Minitest::Test
 
   def test_a_dot_just_over_a_tenth_showing_is_not_sharp
     covered = dot(400, 300, popped: true)
-    fresh = dot(400 - 9, 300, id: 7)
-    watch(game_with(covered, fresh))
+    bright = dot(400 - 9, 300, id: 7)
+    watch(game_with(covered, bright))
 
-    assert_operator DotPopper::Visibility.of(fresh, [covered]), :>=, DotPopper::Achievement::SHARP
-    tap_at(fresh.x - 45, 300)
+    assert_operator DotPopper::Visibility.of(bright, [covered]), :>=, DotPopper::Achievement::SHARP
+    tap_at(bright.x - 45, 300)
     refute_includes @watch.earned, :sharpshooter
   end
 
@@ -105,7 +105,7 @@ class AchievementWatchTest < Minitest::Test
   def test_a_dot_waited_for_three_seconds_while_it_was_covered_earns_patience
     covered_spawn
     @game.update(3.5)
-    pop_fresh
+    pop_bright
 
     assert_equal %i[patience], @watch.earned
   end
@@ -113,7 +113,7 @@ class AchievementWatchTest < Minitest::Test
   def test_two_seconds_is_not_patience
     covered_spawn
     @game.update(2.5)
-    pop_fresh
+    pop_bright
 
     assert_empty @watch.earned
   end
@@ -123,7 +123,7 @@ class AchievementWatchTest < Minitest::Test
     @game.update(1.0)
     @watch.call(Events::Missed.new(x: 5, y: 5))
     @game.update(2.5)
-    pop_fresh
+    pop_bright
 
     assert_empty @watch.earned
   end
@@ -131,43 +131,43 @@ class AchievementWatchTest < Minitest::Test
   def test_a_dot_that_was_never_covered_is_not_patience
     covered_spawn(covered: false)
     @game.update(3.5)
-    pop_fresh
+    pop_bright
 
     assert_empty @watch.earned
   end
 
   def test_a_dot_popped_within_four_tenths_of_the_last_earns_blink
     open_game
-    pop_fresh
-    pop_fresh(after: 0.3)
+    pop_bright
+    pop_bright(after: 0.3)
 
     assert_equal %i[blink], @watch.earned
   end
 
   def test_the_first_pop_of_a_game_is_never_a_blink
     open_game
-    pop_fresh
+    pop_bright
 
     assert_empty @watch.earned
   end
 
   def test_a_slower_pop_is_not_a_blink
     open_game
-    pop_fresh
-    pop_fresh(after: 0.5)
+    pop_bright
+    pop_bright(after: 0.5)
 
     assert_empty @watch.earned
   end
 
   def test_twenty_pops_in_a_row_earn_steady_and_forty_unshaken
     open_game
-    19.times { pop_fresh(after: 0.7) }
+    19.times { pop_bright(after: 0.7) }
     assert_empty @watch.earned
-    pop_fresh(after: 0.7)
+    pop_bright(after: 0.7)
     assert_equal %i[steady], @watch.earned
-    19.times { pop_fresh(after: 0.7) }
+    19.times { pop_bright(after: 0.7) }
     assert_equal %i[steady], @watch.earned
-    pop_fresh(after: 0.7)
+    pop_bright(after: 0.7)
 
     assert_equal %i[steady unshaken], @watch.earned
   end
@@ -180,26 +180,26 @@ class AchievementWatchTest < Minitest::Test
     begun.tap_at(600, 400)
     assert_equal 1, begun.dots_in_a_row
     watch(begun)
-    18.times { pop_fresh(after: 0.7) }
+    18.times { pop_bright(after: 0.7) }
     assert_empty @watch.earned
-    pop_fresh(after: 0.7)
+    pop_bright(after: 0.7)
 
     assert_equal %i[steady], @watch.earned
   end
 
   def test_a_mistake_starts_the_run_again
     open_game
-    10.times { pop_fresh(after: 0.5) }
+    10.times { pop_bright(after: 0.5) }
     mistake
     refute_includes @watch.earned, :shake_off
-    10.times { pop_fresh(after: 0.5) }
+    10.times { pop_bright(after: 0.5) }
     assert_includes @watch.earned, :shake_off
     refute_includes @watch.earned, :steady, "ten and ten are not twenty in a row"
   end
 
   def test_ten_pops_without_a_mistake_are_not_shaking_one_off
     open_game
-    10.times { pop_fresh(after: 0.5) }
+    10.times { pop_bright(after: 0.5) }
 
     refute_includes @watch.earned, :shake_off
   end
@@ -207,33 +207,33 @@ class AchievementWatchTest < Minitest::Test
   def test_getting_the_clock_from_two_seconds_back_to_ten_earns_comeback
     open_game
     @game.update(9.2)
-    pop_fresh
-    3.times { pop_fresh }
+    pop_bright
+    3.times { pop_bright }
     refute_includes @watch.earned, :comeback
-    8.times { pop_fresh }
+    8.times { pop_bright }
 
     assert_includes @watch.earned, :comeback
   end
 
   def test_a_long_clock_that_was_never_short_is_not_a_comeback
     open_game
-    12.times { pop_fresh }
+    12.times { pop_bright }
 
     refute_includes @watch.earned, :comeback
   end
 
   def test_fifteen_pops_in_the_first_ten_seconds_earn_a_fast_start
     open_game
-    14.times { pop_fresh(after: 0.4) }
+    14.times { pop_bright(after: 0.4) }
     refute_includes @watch.earned, :fast_start
-    pop_fresh(after: 0.4)
+    pop_bright(after: 0.4)
 
     assert_includes @watch.earned, :fast_start
   end
 
   def test_slower_pops_are_not_a_fast_start
     open_game
-    16.times { pop_fresh(after: 0.8) }
+    16.times { pop_bright(after: 0.8) }
 
     refute_includes @watch.earned, :fast_start
   end

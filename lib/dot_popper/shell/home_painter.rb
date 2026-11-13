@@ -42,11 +42,11 @@ module DotPopper
         x = plan.legend.center_x - (legend.width / 2.0)
         y = plan.legend.center_y
         tallies = TallyPainter.new(pen:)
-        Presentation::Legend.rows.each_with_index do |(fresh, points, seconds), i|
+        Presentation::Legend.rows.each_with_index do |(bright, points, seconds), i|
           row = y + ((i - 0.5) * radius * Presentation::Legend::ROW)
-          dots.icon(x + radius, row, radius, fresh:, opacity: alpha)
-          tallies.left(points, font, x + legend.points, row, fresh ? pen.palette.cream : pen.palette.alarm, alpha)
-          tallies.left(seconds, font, x + legend.seconds, row, fresh ? pen.palette.gain : pen.palette.alarm, alpha)
+          dots.icon(x + radius, row, radius, bright:, opacity: alpha)
+          tallies.left(points, font, x + legend.points, row, bright ? pen.palette.cream : pen.palette.alarm, alpha)
+          tallies.left(seconds, font, x + legend.seconds, row, bright ? pen.palette.gain : pen.palette.alarm, alpha)
         end
       end
 
@@ -78,7 +78,7 @@ module DotPopper
         digits = pen.fonts.bold([(rect.height * 0.32).round, 16].max)
         days = show.stats_book.streak
         top = rect.y + (rect.height * 0.3)
-        Lettering.new(pen:).candy(days.to_s, digits, x, top, alpha, face: palette.fresh_body, side: palette.fresh_deep)
+        Lettering.new(pen:).candy(days.to_s, digits, x, top, alpha, face: palette.bright_body, side: palette.bright_deep)
         pen.text(show.words.streak_days(days), label, x, top + (digits.height * 0.72), palette.soft, alpha)
         pen.text(show.words.streak_in_a_row, label, x, top + (digits.height * 0.72) + label.height, palette.soft, alpha)
       end
@@ -102,8 +102,8 @@ module DotPopper
 
       def icon(show, tile, x, y, size, alpha)
         case tile
-        when :themes then dots.icon(x, y, size * 0.6, fresh: true, opacity: alpha)
-        else Glyphs.new(pen:).draw({ stats: :bars, achievements: :ribbon, groups: :crown }.fetch(tile), x, y, size, color: pen.palette.fresh_body, alpha:, weight: 1.8)
+        when :themes then dots.icon(x, y, size * 0.6, bright: true, opacity: alpha)
+        else Glyphs.new(pen:).draw({ stats: :bars, achievements: :ribbon, groups: :crown }.fetch(tile), x, y, size, color: pen.palette.bright_body, alpha:, weight: 1.8)
         end
       end
 

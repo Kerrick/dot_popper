@@ -6,17 +6,17 @@ class GameTest < Minitest::Test
   include DotPopperTest
   Events = DotPopper::Events
 
-  def test_a_game_starts_with_one_fresh_dot_no_score_and_ten_seconds
+  def test_a_game_starts_with_one_bright_dot_no_score_and_ten_seconds
     game = DotPopper::Game.new(field, random: Random.new(1))
 
     assert_equal 1, game.dots.size
-    assert game.dots.first.fresh?
+    assert game.dots.first.bright?
     assert_equal 0, game.score
     assert_equal 10.0, game.countdown.remaining
     refute game.over?
   end
 
-  def test_popping_a_fresh_dot_scores_a_point_adds_a_second_and_spawns_a_dot_underneath
+  def test_popping_a_bright_dot_scores_a_point_adds_a_second_and_spawns_a_dot_underneath
     target = dot(400, 300)
     game = game_with(target)
 
@@ -30,7 +30,7 @@ class GameTest < Minitest::Test
     assert_equal target.id, top.id, "the popped dot stays on top"
     assert top.popped?
     assert_equal event.spawned, bottom, "the new dot goes underneath"
-    assert bottom.fresh?
+    assert bottom.bright?
     assert_equal top, event.dot
     assert_equal [1, 1.0], [event.points, event.seconds]
   end
@@ -70,7 +70,7 @@ class GameTest < Minitest::Test
     assert_instance_of Events::Missed, event
     assert_equal 0, game.score
     assert_equal 10.0, game.countdown.remaining
-    assert game.dots.first.fresh?
+    assert game.dots.first.bright?
   end
 
   def test_a_tap_on_overlapping_dots_reaches_only_the_topmost
@@ -79,17 +79,17 @@ class GameTest < Minitest::Test
     event = game.tap_at(405, 300)
 
     assert_instance_of Events::Penalized, event
-    assert game.dots.to_a.last.fresh?, "the tap does not pass through"
+    assert game.dots.to_a.last.bright?, "the tap does not pass through"
   end
 
-  def test_a_fresh_dot_out_from_under_the_popped_ones_can_be_popped
+  def test_a_bright_dot_out_from_under_the_popped_ones_can_be_popped
     game = game_with(dot(400, 300, popped: true), dot(480, 300))
 
     assert_instance_of Events::Popped, game.tap_at(520, 300)
     assert game.dots.to_a[1].popped?
   end
 
-  def test_a_fresh_dot_on_top_of_a_popped_one_is_the_one_tapped
+  def test_a_bright_dot_on_top_of_a_popped_one_is_the_one_tapped
     game = game_with(dot(400, 300), dot(400, 300, popped: true))
 
     assert_instance_of Events::Popped, game.tap_at(400, 300)

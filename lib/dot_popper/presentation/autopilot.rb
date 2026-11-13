@@ -3,7 +3,7 @@
 module DotPopper
   module Presentation
     # A player for development runs (DOT_POPPER_AUTOPLAY): it goes from
-    # the title to a game, taps fresh dots where they show, sometimes taps
+    # the title to a game, taps bright dots where they show, sometimes taps
     # a popped one by mistake, slows as its score grows so the game ends,
     # and goes from Game Over back to the title. Given the Show, it presses
     # the buttons a player would: Play to start a game, Home to go
@@ -15,7 +15,7 @@ module DotPopper
     # title's dots change. It sees only what a player sees: the dots and
     # the screen.
     class Autopilot
-      # Where it looks for an uncovered part of the fresh dot: its center,
+      # Where it looks for an uncovered part of the bright dot: its center,
       # then points around it, in radii.
       PROBES = [[0, 0]] + (0...8).map { [0.6 * Math.cos(it * Math::PI / 4), 0.6 * Math.sin(it * Math::PI / 4)] }
 
@@ -150,32 +150,32 @@ module DotPopper
         @cooldown -= seconds
         return if @cooldown.positive?
 
-        target = (mistake(game) if @random.rand < @style.mistakes) || exposed_fresh(game)
+        target = (mistake(game) if @random.rand < @style.mistakes) || exposed_bright(game)
         @cooldown = target ? @random.rand(@style.think) + (@style.tiring * game.score) : 0.05
         target
       end
 
-      # A point on the fresh dot where a popped one lies over it, or nil.
-      def covered_fresh(game)
-        fresh = game.dots.find(&:fresh?)
-        return unless fresh
+      # A point on the bright dot where a popped one lies over it, or nil.
+      def covered_bright(game)
+        bright = game.dots.find(&:bright?)
+        return unless bright
 
-        probes(fresh).find { |x, y| game.dots.top_at(x, y)&.popped? }
+        probes(bright).find { |x, y| game.dots.top_at(x, y)&.popped? }
       end
 
       def probes(dot) = PROBES.lazy.map { |dx, dy| [dot.x + (dx * dot.radius), dot.y + (dy * dot.radius)] }
 
-      def exposed_fresh(game)
-        fresh = game.dots.find(&:fresh?)
-        return unless fresh
+      def exposed_bright(game)
+        bright = game.dots.find(&:bright?)
+        return unless bright
 
-        probes(fresh).find { |x, y| game.dots.top_at(x, y)&.id == fresh.id }
+        probes(bright).find { |x, y| game.dots.top_at(x, y)&.id == bright.id }
       end
 
-      # A player's usual mistake is impatience: tapping the fresh dot
+      # A player's usual mistake is impatience: tapping the bright dot
       # before it has come out. Failing that, any popped dot in view.
       def mistake(game)
-        hidden = covered_fresh(game)
+        hidden = covered_bright(game)
         return hidden if hidden
 
         popped = game.dots.select { |dot| dot.popped? && game.dots.top_at(dot.x, dot.y)&.id == dot.id }

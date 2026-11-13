@@ -202,13 +202,13 @@ class CabinetTest < Minitest::Test
   def test_the_tutorials_presses_reach_a_paused_game_by_the_usual_rules_and_tell_no_one
     @cabinet.start_paused(DotPopper::Stack.new(dots: [dot(300, 300, id: 0)]))
     popped = @cabinet.press_paused(300, 300)
-    fresh = @cabinet.game.dots.find(&:fresh?)
+    bright = @cabinet.game.dots.find(&:bright?)
     clear_around!(@cabinet.game, @cabinet.game.dots.first)
     penalized = @cabinet.press_paused(300, 300)
 
     assert_instance_of Events::Popped, popped
     assert_equal 1, popped.spawned.id
-    assert_equal fresh.id, popped.spawned.id
+    assert_equal bright.id, popped.spawned.id
     assert_instance_of Events::Penalized, penalized
     assert_equal [0, 9.0, 0], [@cabinet.game.score, @cabinet.game.countdown.remaining, @cabinet.game.dots_in_a_row]
     assert_empty @heard.grep(Events::Popped)
@@ -292,9 +292,9 @@ class CabinetTest < Minitest::Test
   def play_to_score(points)
     @cabinet.press(0, 0)
     points.times do
-      fresh = @cabinet.game.dots.find(&:fresh?)
-      clear_around!(@cabinet.game, fresh)
-      @cabinet.press(fresh.x, fresh.y)
+      bright = @cabinet.game.dots.find(&:bright?)
+      clear_around!(@cabinet.game, bright)
+      @cabinet.press(bright.x, bright.y)
     end
   end
 end

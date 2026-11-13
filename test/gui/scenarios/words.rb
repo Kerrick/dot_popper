@@ -24,7 +24,7 @@ module DotPopperGui
       check_equal("Play (A)", words.play, "a gamepad's button makes it Press A, on Play's button")
       title_drawn
       start_game(method(:touch))
-      pop_fresh(method(:touch))
+      pop_bright(method(:touch))
       run_out_the_clock
       check_equal(TOUCH, show.input, "Game Over follows a game played by touch")
       check_equal("Play again", words.play_again, "and says Play again")

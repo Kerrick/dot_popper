@@ -9,7 +9,7 @@
 #
 # Design: the game's central picture in its own palette (the
 # presentation's palette.rb): on a deep ink rounded square (#1D1A4A), a
-# fresh golden dot (#FFBF52, with its highlight #FFF0BF) half covered by a
+# bright golden dot (#FFBF52, with its highlight #FFF0BF) half covered by a
 # popped one on top (#4A4570, rim #8F88BD, crater #29263F). Each pixel's coverage comes from its distance
 # to each shape's edge, so every size is drawn sharp, not scaled down.
 
@@ -18,8 +18,8 @@ require "fileutils"
 require "tmpdir"
 
 INK = [0x1D, 0x1A, 0x4A].freeze
-FRESH = [0xFF, 0xBF, 0x52].freeze
-FRESH_LIGHT = [0xFF, 0xF0, 0xBF].freeze
+BRIGHT = [0xFF, 0xBF, 0x52].freeze
+BRIGHT_LIGHT = [0xFF, 0xF0, 0xBF].freeze
 POPPED = [0x4A, 0x45, 0x70].freeze
 POPPED_RIM = [0x8F, 0x88, 0xBD].freeze
 CRATER = [0x29, 0x26, 0x3F].freeze
@@ -39,8 +39,8 @@ def ring(x, y, cx, cy, r, width) = (Math.hypot(x - cx, y - cy) - r).abs - width 
 # Layers, bottom to top: [color, distance function].
 LAYERS = [
   [INK, ->(x, y) { rounded_square(x, y, 0.04, 0.2) }],
-  [FRESH, ->(x, y) { circle(x, y, 0.62, 0.62, 0.25) }],
-  [FRESH_LIGHT, ->(x, y) { circle(x, y, 0.69, 0.53, 0.06) }],
+  [BRIGHT, ->(x, y) { circle(x, y, 0.62, 0.62, 0.25) }],
+  [BRIGHT_LIGHT, ->(x, y) { circle(x, y, 0.69, 0.53, 0.06) }],
   [POPPED_RIM, ->(x, y) { circle(x, y, 0.38, 0.38, 0.25) }],
   [POPPED, ->(x, y) { circle(x, y, 0.38, 0.38, 0.225) }],
   [CRATER, ->(x, y) { circle(x, y, 0.38, 0.38, 0.1) }],

@@ -63,8 +63,8 @@ module DotPopper
         y = pen.pixels.snap(rect.y + (rect.height * 0.42))
         left = rect.center_x - (radius * 0.55)
         pen.using(theme) do
-          dots.icon(pen.pixels.snap(left - radius * 0.55), y, radius, fresh: true)
-          dots.icon(pen.pixels.snap(left + radius * 1.1), y, radius, fresh: false)
+          dots.icon(pen.pixels.snap(left - radius * 0.55), y, radius, bright: true)
+          dots.icon(pen.pixels.snap(left + radius * 1.1), y, radius, bright: false)
         end
       end
 
@@ -76,7 +76,7 @@ module DotPopper
         text = text.upcase if art&.wordmark && art.title_dots
         size = [(rect.height * 0.13).round, 24].min
         size -= 1 while size > 10 && pen.fonts.face(face, size).width(text) > rect.width * 0.9
-        pen.text(text, pen.fonts.face(face, size), rect.center_x, rect.bottom - (rect.height * 0.2), theme.palette.fresh_body)
+        pen.text(text, pen.fonts.face(face, size), rect.center_x, rect.bottom - (rect.height * 0.2), theme.palette.bright_body)
       end
 
       def outline(rect, corner, chosen, hover)

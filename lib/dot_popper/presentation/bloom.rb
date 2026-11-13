@@ -2,7 +2,7 @@
 
 module DotPopper
   module Presentation
-    # The glow that fresh dots and droplets cast (Shell::Bloom): what
+    # The glow that bright dots and droplets cast (Shell::Bloom): what
     # glows is drawn at the screen's full resolution, blurred at
     # +resolution+ of it (only the blur, which is soft anyway), and added
     # over the scene at +strength+. +sigma+ is the blur's spread in the

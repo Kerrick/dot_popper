@@ -89,8 +89,8 @@ module DotPopper
 
       def glyph(name, x, y, radius, alpha)
         case name
-        in :fresh then dots.icon(x, y, radius, fresh: true, opacity: alpha)
-        in :popped then dots.icon(x, y, radius, fresh: false, opacity: alpha)
+        in :bright then dots.icon(x, y, radius, bright: true, opacity: alpha)
+        in :popped then dots.icon(x, y, radius, bright: false, opacity: alpha)
         in :clock then stopwatch(x, y, radius, alpha)
         end
       end

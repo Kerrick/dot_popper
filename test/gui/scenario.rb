@@ -187,7 +187,7 @@ module DotPopperGui
     # last names, in order: [:GameStarted, :Popped, ...].
     def story = events.map { it.class.name.split("::").last.to_sym }
 
-    def fresh_dot = game.dots.find(&:fresh?)
+    def bright_dot = game.dots.find(&:bright?)
     def uncovered?(dot) = game.dots.top_at(dot.x, dot.y)&.id == dot.id
 
     # Starts a game with a click in the middle of the title, away from
@@ -199,17 +199,17 @@ module DotPopperGui
       check(show.playing?, "a press on Play starts a game")
     end
 
-    # Waits for the fresh dot to come out from under the popped ones, and
+    # Waits for the bright dot to come out from under the popped ones, and
     # clicks its middle. Returns the Popped event.
-    def pop_fresh(how = method(:click))
-      dot = wait_for("the fresh dot uncovered", within: 900) do
-        fresh = fresh_dot
-        fresh if uncovered?(fresh) && inside_window?(fresh)
+    def pop_bright(how = method(:click))
+      dot = wait_for("the bright dot uncovered", within: 900) do
+        bright = bright_dot
+        bright if uncovered?(bright) && inside_window?(bright)
       end
       before = events.size
       how.call(dot.x, dot.y)
       popped = events.drop(before).find { it.is_a?(DotPopper::Events::Popped) }
-      fail!("a press on the uncovered fresh dot popped nothing") unless popped
+      fail!("a press on the uncovered bright dot popped nothing") unless popped
       popped
     end
 
@@ -242,7 +242,7 @@ module DotPopperGui
     # A whole game, played quickly: one pop, then the clock runs out.
     def quick_game
       start_game
-      pop_fresh
+      pop_bright
       run_out_the_clock
       continue_to_home
     end
@@ -268,18 +268,18 @@ module DotPopperGui
 
     # Pixel checks, in graphics units
 
-    # Checks the fresh dot's middle shows a fresh dot's warm, light body.
-    def check_fresh_pixel(dot, shot = screenshot)
-      check(shot.fresh?(dot.x, dot.y), "the fresh dot's middle looks fresh (#{shot.describe(dot.x, dot.y)})")
+    # Checks the bright dot's middle shows a bright dot's warm, light body.
+    def check_bright_pixel(dot, shot = screenshot)
+      check(shot.bright?(dot.x, dot.y), "the bright dot's middle looks bright (#{shot.describe(dot.x, dot.y)})")
     end
 
     # Checks a dot of the game-over pile, dimmed behind the score, still
-    # shows the fresh dot's warmth, where the night and popped dots are
+    # shows the bright dot's warmth, where the night and popped dots are
     # cool.
     def check_warm_pixel(shot = screenshot)
       stack = pile.stack
-      x, y = visible_point(stack, stack.find(&:fresh?)) || fail!("the pile's fresh dot is hidden")
-      check(shot.warm?(x, y), "the pile's fresh dot looks fresh behind Game Over (#{shot.describe(x, y)})")
+      x, y = visible_point(stack, stack.find(&:bright?)) || fail!("the pile's bright dot is hidden")
+      check(shot.warm?(x, y), "the pile's bright dot looks bright behind Game Over (#{shot.describe(x, y)})")
     end
 
     # A point well inside +dot+ where it is the top dot of +stack+, its

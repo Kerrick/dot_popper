@@ -5,7 +5,7 @@ require_relative "presentation_helper"
 class AttractTest < Minitest::Test
   include PresentationTest
 
-  def test_popped_dots_drift_over_fresh_ones
+  def test_popped_dots_drift_over_bright_ones
     attract = Attract.spawn(field, Style::HOME)
     tops = attract.dots.map(&:popped?)
 

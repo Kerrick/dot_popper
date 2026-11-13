@@ -12,7 +12,7 @@ module DotPopperGui
 
     def play
       start_game
-      pop_fresh
+      pop_bright
       SIZES.each do |width, height|
         resize(width, height)
         check_game_fits

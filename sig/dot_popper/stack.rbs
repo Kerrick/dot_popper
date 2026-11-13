@@ -12,7 +12,7 @@ module DotPopper
 
     def top_at: (number x, number y) -> Dot?
 
-    def fresh_beneath: (Dot dot, number x, number y) -> Dot?
+    def bright_beneath: (Dot dot, number x, number y) -> Dot?
 
     def replace: (Dot dot) -> Stack
 

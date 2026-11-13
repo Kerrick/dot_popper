@@ -11,8 +11,8 @@ module DotPopper
 
       PALETTE = Palette.new(
         ink_top: hex["#1d1a4a"], ink_bottom: hex["#0c0b22"], ink_glow: hex["#2b2766"], ink_edge: hex["#05040f"],
-        fresh_light: hex["#fff0bf"], fresh_body: hex["#ffbf52"], fresh_deep: hex["#f07c34"],
-        fresh_bounce: hex["#ffd98c"], fresh_rim: hex["#fff6d6"], gloss: hex["#ffffff"], halo: hex["#ffb347"],
+        bright_light: hex["#fff0bf"], bright_body: hex["#ffbf52"], bright_deep: hex["#f07c34"],
+        bright_bounce: hex["#ffd98c"], bright_rim: hex["#fff6d6"], gloss: hex["#ffffff"], halo: hex["#ffb347"],
         bonus_light: hex["#e6fff6"], bonus_body: hex["#6fe9c5"], bonus_deep: hex["#1fae96"],
         bonus_bounce: hex["#b4fbe6"], bonus_rim: hex["#f2fffa"], bonus_mark: hex["#1d1a4a"],
         popped_top: hex["#4a4570"], popped_bottom: hex["#37335a"], popped_rim: hex["#8f88bd"],
@@ -26,7 +26,7 @@ module DotPopper
       # The themes the game can use, the ordinary one first (ThemeKeeper).
       # The others exist for a player only once the server has said so;
       # each is its own file in presentation/themes/. Every one keeps a
-      # fresh dot bright against a dark popped one, by shape and lightness,
+      # bright dot light against a dark popped one, by shape and lightness,
       # not hue alone.
       THEMES = [
         Theme.new(key: :classic, palette: PALETTE),
@@ -336,12 +336,12 @@ module DotPopper
         width: Tween.new(from: 0.14, to: 0.0, duration: 0.3, ease: :out_quad),
         alpha: Tween.new(from: 0.85, to: 0.0, duration: 0.3, ease: :out_quad), color: PALETTE.alarm
       )
-      # ...and if the fresh dot was underneath, its outline shows through,
+      # ...and if the bright dot was underneath, its outline shows through,
       # so the player sees why: it was under there.
       REVEAL = RevealStyle.new(
         radius: Tween.new(from: 1.35, to: 1.04, duration: 0.22, ease: :out_cubic),
         alpha: Tween.new(from: 1.0, to: 0.0, duration: 0.6, ease: :in_quad),
-        width: 0.075, dashes: 12, color: PALETTE.fresh_light
+        width: 0.075, dashes: 12, color: PALETTE.bright_light
       )
       PENALTY_SHAKE = ShakeStyle.new(amplitude: 0.12, duration: 0.22, frequency: 24.0)
       # The glow is narrow and quick, so a dot near an edge is tinted only
@@ -380,10 +380,10 @@ module DotPopper
       # faint backing, so a dot drifting behind them dims further.
       HOME_BACKING = ScrimStyle.new(alpha: 0.4, feather: 48, layers: 10, pad: 12)
 
-      # The glow fresh dots and droplets cast on the night under the dots
+      # The glow bright dots and droplets cast on the night under the dots
       # (Shell::Bloom), blurred at half the screen's resolution. A
       # strength of 0 turns it off, as it is: a glow wide enough to see
-      # blurs the fresh dot's edge, where the player aims
+      # blurs the bright dot's edge, where the player aims
       # (doc/design/look-and-sound.md). 0.7 brings it back.
       BLOOM = BloomStyle.new(strength: 0.0, sigma: 3.0, passes: 2, resolution: 0.5)
 

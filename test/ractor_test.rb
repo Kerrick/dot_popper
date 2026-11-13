@@ -42,14 +42,14 @@ class RactorTest < Minitest::Test
     assert_operator here.first, :>, 0
   end
 
-  # Taps the center of the fresh dot every half second, from a seeded
+  # Taps the center of the bright dot every half second, from a seeded
   # Random, and answers the score and the dots' final places.
   def self.play_a_game(field)
     game = DotPopper::Game.new(field, random: Random.new(7))
     until game.over?
       game.update(0.5)
-      fresh = game.dots.find(&:fresh?)
-      game.tap_at(fresh.x, fresh.y) unless game.over?
+      bright = game.dots.find(&:bright?)
+      game.tap_at(bright.x, bright.y) unless game.over?
     end
     [game.score, game.dots.map { [it.x, it.y, it.popped?] }]
   end
