@@ -21,8 +21,6 @@ module DotPopper
     # is read too (EARLIER_NAMES).
     FIXED = new(name: "standard")
     SIZED_TO_SCREEN = new(name: "fitted")
-    # The fixed size's old name, until no commit uses it.
-    STANDARD = FIXED
     # Names a save file once held, and the choice each is.
     EARLIER_NAMES = { "same" => FIXED }.freeze
 

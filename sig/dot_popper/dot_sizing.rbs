@@ -8,8 +8,6 @@ module DotPopper
 
     FIXED: DotSizing
 
-    STANDARD: DotSizing
-
     SIZED_TO_SCREEN: DotSizing
 
     EARLIER_NAMES: Hash[String, DotSizing]
