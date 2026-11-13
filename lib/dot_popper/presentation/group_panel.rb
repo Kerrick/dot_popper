@@ -117,14 +117,18 @@ module DotPopper
       end
     end
 
-    # How long an announcement stays on screen, and how it fades. +number+
-    # and +group_id+ say whose icon and crest it shows.
-    class GroupBanner < Data.define(:text, :at, :seconds, :group_id, :number)
+    # A title change's announcement as it is on screen: how long it stays,
+    # and how it fades. +number+ and +group_id+ say whose icon and crest it
+    # shows.
+    class ShownAnnouncement < Data.define(:text, :at, :seconds, :group_id, :number)
       FADE = 0.4
 
       def over?(now) = now - at >= seconds
       def alpha(now) = (((seconds - (now - at)) / FADE)).clamp(0.0, 1.0) * ((now - at) / FADE).clamp(0.0, 1.0)
     end
+
+    # Its old name, until no caller says it.
+    GroupBanner = ShownAnnouncement
 
     # The friend groups' screens' state, over Home, and the
     # announcements a title change makes: which screen is showing, the code
