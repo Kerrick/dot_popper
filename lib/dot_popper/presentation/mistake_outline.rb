@@ -6,7 +6,7 @@ module DotPopper
     # outline, the drawing convention for an edge out of sight, that
     # settles onto the dot's rim (+radius+, in radii) and fades (+alpha+).
     # +width+ is its line, in radii, and +dashes+ how many it has.
-    class RevealStyle < Data.define(:radius, :alpha, :width, :dashes, :color)
+    class MistakeOutlineStyle < Data.define(:radius, :alpha, :width, :dashes, :color)
       def duration = [radius.duration, alpha.duration].max
     end
 
@@ -14,7 +14,7 @@ module DotPopper
     # was too soon for, drawn over every dot since +born+. It follows its
     # dot's id, so it moves with the dot. +scale+ is the radius in
     # graphics units.
-    class Reveal < Data.define(:follow, :x, :y, :style, :scale, :born)
+    class MistakeOutline < Data.define(:follow, :x, :y, :style, :scale, :born)
       def center(dots)
         dot = dots&.find { it.id == follow }
         dot ? [dot.x, dot.y] : [x, y]
@@ -34,5 +34,9 @@ module DotPopper
         Array.new(style.dashes) { [(it * step) + turn, (it * step) + turn + (step * 0.58)] }
       end
     end
+
+    # Their old names, until no caller says them.
+    RevealStyle = MistakeOutlineStyle
+    Reveal = MistakeOutline
   end
 end
