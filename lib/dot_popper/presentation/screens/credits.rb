@@ -29,8 +29,8 @@ module DotPopper
         # As Home shows: nothing of it is open.
         def forget = @scroll = nil
 
-        # What it says (CreditsBook), composed once.
-        def book = (@book ||= CreditsBook.compose(words, @notices))
+        # What it says (CreditsText), composed once.
+        def book = (@book ||= CreditsText.compose(words, @notices))
 
         # Where its heading and its window of text go.
         def plan

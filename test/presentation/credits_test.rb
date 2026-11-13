@@ -11,12 +11,12 @@ class CreditsTest < Minitest::Test
 
   def test_the_book_is_in_order_and_skips_what_the_build_lacks
     full = Notices.new(ofl: "OFL", iosevka: "IOS", emoji: "NOTO", wordlists: "WORDS", lota: "LOTA", fledge: %w[ONE TWO])
-    texts = CreditsBook.compose(WORDS, full).blocks.reject { it.kind == :note }.map(&:text)
+    texts = CreditsText.compose(WORDS, full).blocks.reject { it.kind == :note }.map(&:text)
 
     assert_equal ["Made by setdef", "Dot Popper © 2026 setdef", "Open-source licenses", "Fredoka", "OFL",
                   "Iosevka", "IOS", "Noto Emoji", "NOTO", "imsky/wordlists", "WORDS", "Lota", "LOTA", "Fledge", "ONE", "TWO"], texts
 
-    bare = CreditsBook.compose(WORDS, Notices.none).blocks
+    bare = CreditsText.compose(WORDS, Notices.none).blocks
     assert_equal ["Dot Popper © 2026 setdef", "Fredoka", "Iosevka", "Noto Emoji", "imsky/wordlists"], bare.select { it.kind == :subheading }.map(&:text),
                  "a heading with nothing under it goes"
     assert_includes bare.map(&:text).join(" "), "All rights reserved.", "the game keeps its rights"
@@ -27,7 +27,7 @@ class CreditsTest < Minitest::Test
   def test_the_book_reserves_all_rights_and_keeps_the_open_source_notices
     full = Notices.new(ofl: "OFL TEXT", iosevka: "IOSEVKA TEXT", emoji: "NOTO TEXT", lota: "LOTA TEXT",
                        fledge: ["RUBY"])
-    texts = CreditsBook.compose(WORDS, full).blocks.map(&:text).join(" ")
+    texts = CreditsText.compose(WORDS, full).blocks.map(&:text).join(" ")
 
     assert_includes texts, "Dot Popper © 2026 setdef All rights reserved."
     %w[AGPL CC-BY-SA-4.0 Affero].each { refute_includes texts, it.delete("\\") }
@@ -36,10 +36,10 @@ class CreditsTest < Minitest::Test
 
   def test_a_line_of_thanks_comes_after_who_made_it_once_the_words_have_one
     assert_equal ["Made by setdef", "Dot Popper © 2026 setdef"],
-                 CreditsBook.compose(WORDS, Notices.none).blocks.first(2).map(&:text).values_at(0, 1)
+                 CreditsText.compose(WORDS, Notices.none).blocks.first(2).map(&:text).values_at(0, 1)
     thanks = WORDS.with(notice: WORDS.notice.merge(thanks: "Thanks to Ada."))
 
-    assert_equal ["Made by setdef", "Thanks to Ada."], CreditsBook.compose(thanks, Notices.none).blocks.first(2).map(&:text)
+    assert_equal ["Made by setdef", "Thanks to Ada."], CreditsText.compose(thanks, Notices.none).blocks.first(2).map(&:text)
   end
 
   def test_hard_wrapped_text_is_reflowed_and_lists_keep_their_lines
@@ -49,7 +49,7 @@ class CreditsTest < Minitest::Test
   end
 
   def test_no_line_is_wider_than_the_room_and_a_long_word_is_broken
-    book = CreditsBook.new(blocks: [CreditsBlock.new(:legal, "a #{"w" * 200} b")])
+    book = CreditsText.new(blocks: [CreditsBlock.new(:legal, "a #{"w" * 200} b")])
     lines = CreditsLines.set(book, size: 20, room: 300, line: 1.5, measure: RoughMeasure.new)
 
     assert_operator lines.rows.size, :>, 3
@@ -58,7 +58,7 @@ class CreditsTest < Minitest::Test
   end
 
   def test_a_wrapped_line_keeps_its_indentation_on_every_piece
-    book = CreditsBook.new(blocks: [CreditsBlock.new(:legal, "    12. #{"word " * 20}")])
+    book = CreditsText.new(blocks: [CreditsBlock.new(:legal, "    12. #{"word " * 20}")])
     lines = CreditsLines.set(book, size: 20, room: 300, line: 1.5, measure: RoughMeasure.new)
 
     assert_operator lines.rows.size, :>, 1
@@ -72,7 +72,7 @@ class CreditsTest < Minitest::Test
          "1. Neither the Font Software nor any of its components,\n   in Original or Modified Versions, may be sold.\n"
 
   def test_a_hard_wrapped_license_that_fits_is_shown_just_as_written
-    book = CreditsBook.new(blocks: [CreditsBlock.new(:legal, HARD)])
+    book = CreditsText.new(blocks: [CreditsBlock.new(:legal, HARD)])
     widest = CreditsLines.widest_as_written(book, size: 20, measure: RoughMeasure.new)
     lines = CreditsLines.set(book, size: 20, room: widest, line: 1.5, measure: RoughMeasure.new)
 
@@ -80,7 +80,7 @@ class CreditsTest < Minitest::Test
   end
 
   def test_a_hard_wrapped_license_too_wide_for_the_column_is_reflowed
-    book = CreditsBook.new(blocks: [CreditsBlock.new(:legal, HARD)])
+    book = CreditsText.new(blocks: [CreditsBlock.new(:legal, HARD)])
     widest = CreditsLines.widest_as_written(book, size: 20, measure: RoughMeasure.new)
     lines = CreditsLines.set(book, size: 20, room: widest - 1, line: 1.5, measure: RoughMeasure.new)
 
@@ -89,7 +89,7 @@ class CreditsTest < Minitest::Test
   end
 
   def test_a_license_written_to_be_reflowed_does_not_widen_the_page
-    long = CreditsBook.new(blocks: [CreditsBlock.new(:legal, "word " * 60)])
+    long = CreditsText.new(blocks: [CreditsBlock.new(:legal, "word " * 60)])
 
     assert_in_delta 0.0, CreditsLines.widest_as_written(long, size: 20, measure: RoughMeasure.new)
   end
