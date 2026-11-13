@@ -10,16 +10,16 @@ How a press reaches Dot Popper, from a mouse, a finger, a gamepad or a keyboard:
 
 Every press goes through one path, so every rule about presses holds for every kind of input without extra code.
 
-1. `main.rb` hands each of Lota's callbacks to `Shell::App` (`mouse_pressed`, `touch_pressed`, `gamepad_pressed`, `gamepad_axis`, and their moves and releases).
-2. `Shell::LotaInput` leaves out what Lota reports that is no press of the player's own, and a mouse's side buttons, and `Presentation::InputRouter` turns each of the rest into a `Tap` (`x`, `y`, and the `InputKind` that made it).
-3. `App#press` hands the `Tap` to `Show#tap` on the frame it happens, unless the Show waits for its release (Game Over, below).
+1. `main.rb` hands each of Lota's callbacks to `Shell::App` (`mouse_pressed`, `touch_pressed`, `gamepad_pressed`, `gamepad_axis`, `key_pressed`, `wheel_moved`, and their moves and releases).
+2. `Shell::LotaInput` turns each into the game's own event (`Presentation::MousePress`, `TouchPress`, `ButtonPress`, `TriggerPull`, `KeyPress`, `WheelTurn` and the rest, in `input_events.rb`), by the game's names and as it happened, and `App` hands it to `Presentation::InputHandler#call`. The shell decides nothing about what an input means.
+3. The `InputHandler` decides. For a mouse or finger, `InputRouter#tap` leaves out what is no press of the player's own, and a mouse's side buttons, and turns each of the rest into a `Tap` (`x`, `y`, and the `InputKind` that made it), which goes to `Show#tap` on the frame it happens, unless the Show waits for its release (Game Over, below).
 4. `Show#tap` hands it to the screen on top (`Show#screen`; [screens.md](screens.md#screens-as-objects)): a game's sends it to the game (`Cabinet#press`), the Tutorial's to the Tutorial, and every other screen's to the button under it (`Show#controls`, `Show#control_at`), or to its empty space.
 
 The rules:
 
-- A mouse press counts for the left, right and middle buttons (LÖVE's 1, 2 and 3, `Shell::LotaInput::MOUSE_BUTTONS`), when the button goes down.
-- A finger counts when it goes down, and each finger is a press of its own. Only a `touchscreen` device counts: a trackpad's touches (0 to 1 coordinates) do not (`LotaInput`).
-- SDL makes up a mouse press, marked `istouch`, for each finger. It is ignored, so one finger is one press (`LotaInput`).
+- A mouse press counts for the left, right and middle buttons (LÖVE's 1, 2 and 3, which `Shell::LotaInput::MOUSE_BUTTONS` names `:left`, `:right` and `:middle`; `InputRouter::MOUSE_BUTTONS`), when the button goes down.
+- A finger counts when it goes down, and each finger is a press of its own. Only a `touchscreen` device counts: a trackpad's touches (0 to 1 coordinates) do not (`InputRouter#tap`).
+- SDL makes up a mouse press, marked `istouch`, for each finger. It is ignored, so one finger is one press (`InputRouter#tap`). It still takes the hidden gamepad cursor to where it landed.
 - A gamepad's press is a click at the gamepad cursor (`InputRouter#gamepad_pressed`). Its release is at the cursor too, wherever it has moved.
 - Moves and releases are sorted the same way, for dragging the pile and scrolling lists.
 
@@ -30,7 +30,7 @@ A press during setdef's splash only skips the splash (`App#skip_splash`), and th
 ## Mouse
 
 - Any of the three buttons presses.
-- A motion counts as using the mouse only once the pointer has really traveled 8 units (`Presentation::MouseTravel::ENOUGH`), so a window opening or resizing under a still pointer does not take the words or hide the gamepad cursor. For 0.5 seconds after the window opens or changes size (`App::SETTLE`), motions do not count at all.
+- A motion counts as using the mouse only once the pointer has really traveled 8 units (`Presentation::MouseTravel::ENOUGH`), so a window opening or resizing under a still pointer does not take the words or hide the gamepad cursor. For 0.5 seconds after the window opens or changes size (`InputHandler::SETTLE`), motions do not count at all.
 - Only the mouse hovers. A button under it brightens (`Show#hovered`, `Style::HOVER`), and the system pointer becomes the pointing hand (`App#point_the_mouse`). After a finger or gamepad press, nothing hovers. [screens.md](screens.md) has the hover's look.
 - The wheel scrolls a list (`Show#wheel_scroll`, `Style::CREDITS.wheel` lines a notch).
 - When the window loses focus, every held press is let go (`App#focus`): dragged dots, "Clear my stats…", and the hold to leave a friend group.
@@ -67,7 +67,7 @@ A gamepad aims a free cursor (`Presentation::GamepadCursor`) and A presses where
 - **The ramp.** The cursor's pace may rise by at most 1/`ramp` of the top speed each second, and only up to what the push asks for. So a gentle push is at its speed almost at once, a full tilt takes 0.08 seconds to reach full speed, and letting go stops the cursor dead. Swink's *Game Feel* puts "feels direct" below about 100 ms, which is why the ramp is that short.
 - **The d-pad** pushes the cursor as the left stick does (`Stick.dpad`), through the same shaping, with no other smoothing. A diagonal moves no faster than a straight direction, since the push is capped at a full tilt.
 - **Read every frame.** The left stick and d-pad are read each frame (`Gamepads#stick`, from `App#update`), not from axis-change events, so a change of window focus cannot leave the cursor stuck moving.
-- **On the Credits screen** the left stick and d-pad scroll the text instead, and the cursor stays where it is (`App#read_with_stick`).
+- **On the Credits screen** the left stick and d-pad scroll the text instead, and the cursor stays where it is (`InputHandler#read_with_stick`).
 - **It stays in the window** (`GamepadCursor#at`), and refits when the window changes size (`#refit`).
 
 ### There is no aim assist
@@ -76,7 +76,7 @@ The cursor goes only where the stick sends it, and never drifts toward a dot. A 
 
 ### When the cursor shows
 
-- Any gamepad button, the right or left trigger, or a push past the dead zone shows the cursor (`App#gamepad_used`, `GamepadCursor#update`).
+- Any gamepad button, the right or left trigger, or a push past the dead zone shows the cursor (`InputHandler#gamepad_used`, `GamepadCursor#update`).
 - A mouse press, a deliberate mouse move, or a finger hides it. While hidden it waits where the mouse is, so a player who picks up the controller starts from there.
 - A press of A while the cursor is hidden still presses where it waits. Making the first press only reveal the cursor would mean the game ignored a press.
 
@@ -86,7 +86,7 @@ The cursor goes only where the stick sends it, and never drifts toward a dot. A 
 
 ### The triggers
 
-The right trigger is a second A (`Presentation::Trigger`). It presses once when pulled to 0.5 (`trigger_press`) and can press again only after it is let back below 0.3 (`trigger_release`), so a trigger resting near the line cannot press twice. Holding A and the right trigger together is one press (`App#gamepad_down`, `@pad_held`), which ends when both are let go.
+The right trigger is a second A (`Presentation::Trigger`). It presses once when pulled to 0.5 (`trigger_press`) and can press again only after it is let back below 0.3 (`trigger_release`), so a trigger resting near the line cannot press twice. Holding A and the right trigger together is one press (`InputHandler#gamepad_down`), which ends when both are let go.
 
 The left trigger, with the same thresholds, opens Friend groups from Home (LT).
 
@@ -154,7 +154,7 @@ On Game Over, the pile of the game's dots can be picked up, dragged and thrown. 
 
 ### A gamepad's A drags as a mouse button does
 
-A, or the right trigger, is a pointer at the cursor, under the key `:gamepad`. Each frame while it is held, `App#update` moves that pointer to the cursor (`Dragging#move(:gamepad, ...)`). Holding A on a dot for 0.15 seconds, or moving the cursor past the slop, picks the dot up. It follows the cursor at the same pace as a mouse, and letting go throws it at the cursor's speed. Start still goes on at once. `Lota.gamepadreleased` in `main.rb` reports the release (`App#gamepad_released`, `#gamepad_up`).
+A, or the right trigger, is a pointer at the cursor, under the key `:gamepad`. Each frame while it is held, `InputHandler#follow_cursor` moves that pointer to the cursor (`Dragging#move(:gamepad, ...)`). Holding A on a dot for 0.15 seconds, or moving the cursor past the slop, picks the dot up. It follows the cursor at the same pace as a mouse, and letting go throws it at the cursor's speed. Start still goes on at once. `Lota.gamepadreleased` in `main.rb` reports the release (`InputHandler#gamepad_up`).
 
 ## A failing mouse's double click is dropped
 
@@ -163,14 +163,14 @@ A failing mouse's switch can send one click as two, a few hundredths of a second
 - A switch's bounce is under 0.02 seconds, and a failing switch chatters at 0.05 to 0.08. A hand clicking twice as fast as it can takes 0.1 seconds or more. 8 units is `MouseTravel`'s line between a jitter and a nudge.
 - Each press is timed from its button's last press, dropped or not, so a run of chatter is dropped whole.
 - A press is never held back. It is heard on its frame, or dropped. It is dropped whatever it would hit, on every screen, the splash included, so the rule never depends on whether the press would have been a mistake. The maintainer approved this as a narrow exception.
-- Only the mouse is filtered (`App#chattered?`, `#released_chatter?`). Several fingers can land together on purpose, and a gamepad's buttons do not chatter this way.
-- Its clock is the frames' unclamped time (`App`'s `@uptime`), so the GUI scenarios, whose frames are a sixtieth of a second of game time, play as they would.
+- Only the mouse is filtered (`InputHandler#chattered?`, `#released_chatter?`). Several fingers can land together on purpose, and a gamepad's buttons do not chatter this way.
+- Its clock is the frames' unclamped time (the `InputHandler`'s, from `App#update`), so the GUI scenarios, whose frames are a sixtieth of a second of game time, play as they would.
 - When the window loses focus, no release is waited for (`Chatter#let_go`).
 - The bot (`DOT_POPPER_AUTOPLAY`) and the fake drag never come through the mouse, so they are untouched.
 
 ## The words follow the last input
 
-The words that say what to do follow the input the player used last. `Show#input=` takes an `InputKind` (`TOUCH`, `MOUSE` or `GAMEPAD`) from each `Tap` that `InputRouter` makes (`App#heard`), from each gamepad button or trigger, and from each stick push past the dead zone. A phone or tablet starts with touch and a computer with the mouse (`InputKind.starting`). An instruction names what the player is doing with their hands.
+The words that say what to do follow the input the player used last. `Show#input=` takes an `InputKind` (`TOUCH`, `MOUSE` or `GAMEPAD`) from each `Tap` that `InputRouter` makes (`InputHandler#heard`), from each gamepad button or trigger, and from each stick push past the dead zone. A phone or tablet starts with touch and a computer with the mouse (`InputKind.starting`). An instruction names what the player is doing with their hands.
 
 - Each phrase that varies is a `Presentation::ByInput`, with a `touch`, `mouse` and `gamepad` text. `Words#for(kind)` gives the words for one input, so painters read `words.play` and get the right one. A button's label inside `Style::WORDS.buttons` is read with `Words#button`.
 - Touch and mouse read alike. A gamepad's text names the button in parentheses: "Play (A)", "Back (B)", "Share my score (Y)", "Settings (Select)", "Dot size (LB)", "Display (RB)". Held buttons say so: "Hold Y to clear my stats…", "Hold Y to leave every friend group and delete your scores online."
@@ -201,7 +201,8 @@ Android's Back arrives as Escape ([platforms.md](platforms.md)). A phone's or ta
 
 | Test | What it checks |
 | --- | --- |
-| `test/presentation/input_router_test.rb`, `test/shell/lota_input_test.rb` | Which callbacks are presses, and their `InputKind`; that SDL's made-up mouse and a trackpad's touches are not |
+| `test/shell/lota_input_test.rb` | Lota's callbacks as the game's events, by the game's names |
+| `test/presentation/input_router_test.rb` | Which events are presses, and their `InputKind`; that SDL's made-up mouse, a side button, a trackpad's touches and a touch made up from the mouse are not |
 | `test/presentation/gamepad_cursor_test.rb` | The dead zone, curve, speed, ramp, d-pad and showing |
 | `test/presentation/gamepad_buttons_test.rb`, `test/shell/lota_input_test.rb` | LÖVE's names as the game's, the button map, Select on Home and in Settings, Start and B on Home, the trigger's thresholds |
 | `test/shell/gamepads_test.rb` | Which joysticks are kept, and their pushes added |
@@ -209,6 +210,8 @@ Android's Back arrives as Escape ([platforms.md](platforms.md)). A phone's or ta
 | `test/presentation/chatter_test.rb` | Which presses and releases are dropped |
 | `test/presentation/mouse_travel_test.rb` | A deliberate move against a jitter |
 | `test/presentation/words_test.rb`, `show_test.rb` | The words for each input, and presses on each screen |
+| `test/presentation/controller_test.rb` | Each controller button, both triggers and both sticks on the screens that answer them, A and the right trigger as one press, unplugging |
+| `test/presentation/pointer_test.rb` | The mouse's buttons, a finger, the wheel, drags on a list and on the pile, the chatter filter, the settling window, the hover, losing focus |
 | `test/presentation/keyboard_test.rb` | Each key on the screens that answer it, the modifier keys, the order when a screen answers a key more than one way, and each system's rules for Escape and fullscreen |
 | `test/presentation/inputs_test.rb` (with `inputs.rb`) | Touch, a controller, and a mouse with its keyboard, each alone: every screen entered and left, every control pressed to some effect, found by exploring the Show from Home rather than from a list; a Free player with no games left buying Pro in a test build and playing to Game Over; How to play played to its end; and what a controller alone cannot do today (a license key from the website, Change Server's address) |
 | GUI scenarios `pile`, `pile_gamepad`, `words`, `hover` (`test/gui/scenarios/`) | The real game: a mouse drag and throw, a gamepad drag and A's click, the words and the hand following the input, the hover |

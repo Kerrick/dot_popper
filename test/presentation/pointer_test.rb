@@ -1,37 +1,36 @@
 # frozen_string_literal: true
 
-require_relative "../presentation/inputs"
-require "minitest/mock"
+require_relative "inputs"
 
-# The mouse, a finger, and the wheel, as Lota hands them to Shell::App,
-# and what each does: a press counts where it lands, the moment it goes
-# down, unless Game Over's pile waits for it; what the engine makes up is
-# no press; a failing mouse's double click is dropped; and the words
-# follow the hand. The App is given a Fixture's Show, and no window.
+# The mouse, a finger, and the wheel, as the shell hands them over
+# (Presentation::MousePress and the rest), and what each does
+# (Presentation::InputHandler): a press counts where it lands, the moment
+# it goes down, unless Game Over's pile waits for it; what the engine
+# makes up is no press; a failing mouse's double click is dropped; and the
+# words follow the hand. Written against Shell::App's callbacks before
+# they moved here; only how a press reaches the game changed.
 class PointerTest < Minitest::Test
   include Inputs
 
   P = DotPopper::Presentation
 
-  # What only the engine can do, remembered: setdef's splash (as the
-  # App's splash, which a press skips) and Game Over's pile
-  # (Shell::Dragging).
+  # What only the engine can do, remembered: setdef's splash and Game
+  # Over's pile (Shell::Dragging).
   class FakeShell
     attr_reader :skips, :told
 
-    def initialize = (@skips = 0) && (@told = [])
-    def skip = (@skips += 1) && nil
+    def initialize(splash:)
+      @splash = splash
+      @skips = 0
+      @told = []
+    end
+
+    def splash? = @splash
+    def skip_splash = (@skips += 1) && (@splash = false)
     def press(key, x, y) = @told << [:press, key, x.round, y.round]
     def move(key, x, y) = @told << [:move, key, x.round, y.round]
     def release(key, x, y) = @told << [:release, key, x.round, y.round]
     def drop = @told << [:drop]
-  end
-
-  def setup
-    require "lota"
-    require "dot_popper/shell"
-  rescue LoadError => e
-    skip "Lota isn't installed here (#{e.message})"
   end
 
   def test_a_click_with_a_main_button_presses_where_it_lands
@@ -192,31 +191,35 @@ class PointerTest < Minitest::Test
 
   def given(os: "Linux", at: :home, splash: false, width: 1200, height: 800, **options)
     @fixture = Fixture.new(os:, width:, height:, **options)
-    @shell = FakeShell.new
-    @app = DotPopper::Shell::App.allocate
+    @shell = FakeShell.new(splash:)
     start = P::GamepadCursor.centered(show.layout.whole, style: P::Style::GAMEPAD, radius: DotPopperTest::R)
-    { show:, platform: fixture.platform, touch: fixture.platform.touch?, speaker: show.sounds, window: fixture.window,
-      splash: (@shell if splash), input: DotPopper::Shell::LotaInput.new, hooks: nil, dragging: @shell, cursor: start,
-      uptime: 5.0, chatter: P::Chatter.quiet(P::Style::CHATTER), game: nil }.each { @app.instance_variable_set(:"@#{_1}", _2) }
+    @handler = P::InputHandler.new(show:, platform: fixture.platform, shell: @shell, pile: @shell, cursor: start)
+    at_time(5.0)
     reach(at)
   end
 
-  def cursor = @app.instance_variable_get(:@cursor) || @app.instance_variable_get(:@inputs).cursor
+  def cursor = @handler.cursor
 
-  # How Lota calls the App: the mouse by LÖVE's button numbers, and
-  # +made_up+ as its istouch; a finger, id 1, with its device's type.
-  def mouse_down(x, y, button: 1, made_up: false) = @app.mouse_pressed(x, y, button, made_up)
-  def mouse_up(x, y, button: 1, made_up: false) = @app.mouse_released(x, y, button, made_up)
-  def mouse_move(x, y) = @app.mouse_moved(x, y, false)
-  def touch_down(x, y, device: "touchscreen", made_up: false) = @app.touch_pressed(1, x, y, device, made_up)
-  def touch_move(x, y) = @app.touch_moved(1, x, y, "touchscreen", false)
-  def touch_up(x, y, device: "touchscreen", made_up: false) = @app.touch_released(1, x, y, device, made_up)
-  def wheel(notches) = @app.wheel_moved(notches)
-  def focus_lost = @app.focus(false)
-  def mouse_left = @app.mouse_focus(false)
+  # The mouse's buttons by LÖVE's numbers, by the game's names (as
+  # Shell::LotaInput turns them).
+  MOUSE_BUTTONS = { 1 => :left, 2 => :right, 3 => :middle }.freeze
+
+  # How the shell hands them over: the mouse by its buttons, and
+  # +made_up+ where SDL made it up for a finger; a finger, id 1, with
+  # whether a touchscreen's.
+  def mouse_down(x, y, button: 1, made_up: false) = @handler.call(P::MousePress.new(x:, y:, button: mouse(button), made_up:))
+  def mouse_up(x, y, button: 1, made_up: false) = @handler.call(P::MouseRelease.new(x:, y:, button: mouse(button), made_up:))
+  def mouse_move(x, y) = @handler.call(P::MouseMove.new(x:, y:, made_up: false))
+  def touch_down(x, y, device: "touchscreen", made_up: false) = @handler.call(P::TouchPress.new(id: 1, x:, y:, screen: device == "touchscreen", made_up:))
+  def touch_move(x, y) = @handler.call(P::TouchMove.new(id: 1, x:, y:, screen: true, made_up: false))
+  def touch_up(x, y, device: "touchscreen", made_up: false) = @handler.call(P::TouchRelease.new(id: 1, x:, y:, screen: device == "touchscreen", made_up:))
+  def wheel(notches) = @handler.call(P::WheelTurn.new(notches:))
+  def focus_lost = @handler.call(P::FocusLost.new)
+  def mouse_left = @handler.call(P::MouseLeft.new)
+  def mouse(number) = MOUSE_BUTTONS.fetch(number) { :"side#{number}" }
 
   # The frames' clock, unclamped, has reached +seconds+.
-  def at_time(seconds) = @app.instance_variable_set(:@uptime, seconds)
+  def at_time(seconds) = @handler.instance_variable_set(:@uptime, seconds)
 
   def click(x, y, button: 1, made_up: false)
     mouse_down(x, y, button:, made_up:)

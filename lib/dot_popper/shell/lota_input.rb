@@ -2,24 +2,23 @@
 
 module DotPopper
   module Shell
-    # Lota's input callbacks, in the game's own terms, for
-    # Presentation::InputRouter (+router+). A finger on a touchscreen fires
-    # touchpressed, and SDL then also makes up a mousepressed for it with
-    # +istouch+ true; only the touch counts, so one finger is one tap. A
-    # touch whose +devicetype+ isn't a touchscreen (a trackpad's, with 0 to
-    # 1 coordinates), or that came from the mouse (+mouse+), is no finger.
-    # A gamepad's buttons and triggers come by LÖVE's names for an Xbox
-    # pad's (SDL maps every other gamepad to them), and leave here by the
-    # game's (Presentation::GamepadButtons); so do the keys.
-    class LotaInput < Data.define(:router)
+    # Lota's input callbacks as the game's own events
+    # (Presentation::KeyPress, MousePress and the rest), for the
+    # Presentation::InputHandler, which decides what each means. A gamepad's
+    # buttons and triggers, the keys and the mouse's buttons come by LÖVE's
+    # names (an Xbox pad's for every gamepad, as SDL maps them), and leave
+    # here by the game's; nothing else is decided here.
+    class LotaInput
+      E = Presentation
+
       # LÖVE's names for the buttons the game names. The rest (the d-pad,
       # the sticks' clicks, the guide button) name nothing.
       BUTTONS = { a: :a, b: :b, x: :x, y: :y, start: :start, back: :select, leftshoulder: :lb, rightshoulder: :rb }.freeze
       # LÖVE's names for the trigger axes.
       TRIGGERS = { "triggerleft" => :left, "triggerright" => :right }.freeze
-      # LÖVE's numbers for the mouse buttons that count as a press: the
-      # left, the right and the middle. A mouse's side buttons do not.
-      MOUSE_BUTTONS = [1, 2, 3].freeze
+      # LÖVE's numbers for the mouse's main buttons. A side button is
+      # :side4 and up.
+      MOUSE_BUTTONS = { 1 => :left, 2 => :right, 3 => :middle }.freeze
 
       # LÖVE's names for the keys the game names, the keypad's as the
       # main keys': the letters and digits, and the keys that edit, move,
@@ -36,15 +35,33 @@ module DotPopper
       # Cmd on a Mac (the Windows or Super key elsewhere), either side.
       MODIFIERS = { ctrl: %i[lctrl rctrl], alt: %i[lalt ralt], command: %i[lgui rgui] }.freeze
 
-      def initialize(router: Presentation::InputRouter.new) = super
+      # A mouse button, by LÖVE's number, went down or came up, or the
+      # mouse moved; +istouch+ is true where SDL made it up for a finger.
+      def mouse_press(x, y, button, istouch) = E::MousePress.new(x:, y:, button: mouse_button(button), made_up: istouch ? true : false)
+      def mouse_release(x, y, button, istouch) = E::MouseRelease.new(x:, y:, button: mouse_button(button), made_up: istouch ? true : false)
+      def mouse_move(x, y, istouch) = E::MouseMove.new(x:, y:, made_up: istouch ? true : false)
 
-      def mouse_pressed(x, y, button, istouch) = (router.mouse_pressed(x, y) if mouse?(button, istouch))
-      def mouse_moved(x, y, istouch) = (router.mouse_moved(x, y) unless istouch)
-      def mouse_released(x, y, button, istouch) = (router.mouse_released(x, y) if mouse?(button, istouch))
+      # A touch +id+ went down, moved, or lifted, on a device of
+      # +devicetype+ (a touchscreen's, or a trackpad's); +mouse+ is true
+      # where SDL made it up from the mouse.
+      def touch_press(id, x, y, devicetype, mouse) = E::TouchPress.new(id:, x:, y:, **finger(devicetype, mouse))
+      def touch_move(id, x, y, devicetype, mouse) = E::TouchMove.new(id:, x:, y:, **finger(devicetype, mouse))
+      def touch_release(id, x, y, devicetype, mouse) = E::TouchRelease.new(id:, x:, y:, **finger(devicetype, mouse))
 
-      def touch_pressed(id, x, y, devicetype, mouse) = (router.touch_pressed(id, x, y) if finger?(devicetype, mouse))
-      def touch_moved(id, x, y, devicetype, mouse) = (router.touch_moved(id, x, y) if finger?(devicetype, mouse))
-      def touch_released(id, x, y, devicetype, mouse) = (router.touch_released(id, x, y) if finger?(devicetype, mouse))
+      # The gamepad button LÖVE calls +name+ went down or came up.
+      def button_press(name) = E::ButtonPress.new(button: button(name))
+      def button_release(name) = E::ButtonRelease.new(button: button(name))
+
+      # The axis LÖVE calls +axis+ read +value+: a trigger's pull, or nil
+      # for a stick's axis, which is read each frame instead (Gamepads).
+      def trigger_pull(axis, value) = trigger(axis)&.then { E::TriggerPull.new(trigger: it, value: value.to_f) }
+
+      # The mouse wheel turned +y+ notches, up when positive.
+      def wheel_turn(y) = E::WheelTurn.new(notches: y)
+
+      # The key LÖVE calls +name+ pressed, with the modifier keys that
+      # +down+ (Lota::Keyboard.down?, given LÖVE's names) says are held.
+      def key_press(name, down) = E::KeyPress.new(key: key(name), held: MODIFIERS.filter_map { |modifier, keys| modifier if down.call(*keys) })
 
       # The game's name for the gamepad button LÖVE calls +name+, or nil.
       def button(name) = BUTTONS[name.to_s.to_sym]
@@ -56,17 +73,12 @@ module DotPopper
       # The game's name for the key LÖVE calls +name+, or nil.
       def key(name) = KEYS[name.to_s]
 
-      # The key LÖVE calls +name+ pressed, with the modifier keys that
-      # +down+ (Lota::Keyboard.down?, given LÖVE's names) says are held.
-      def key_press(name, down) = Presentation::KeyPress.new(key: key(name), held: MODIFIERS.filter_map { |modifier, keys| modifier if down.call(*keys) })
-
-      def gamepad_pressed(cursor) = router.gamepad_pressed(cursor)
-      def gamepad_released(cursor) = router.gamepad_released(cursor)
+      # The game's name for the mouse button LÖVE numbers +number+.
+      def mouse_button(number) = MOUSE_BUTTONS.fetch(number) { :"side#{number}" }
 
       private
 
-      def finger?(devicetype, mouse) = devicetype.to_s == "touchscreen" && mouse != true
-      def mouse?(button, istouch) = !istouch && MOUSE_BUTTONS.include?(button)
+      def finger(devicetype, mouse) = { screen: devicetype.to_s == "touchscreen", made_up: mouse == true }
     end
   end
 end

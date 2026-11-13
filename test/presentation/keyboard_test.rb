@@ -323,7 +323,8 @@ class KeyboardTest < Minitest::Test
   def given(os: "Linux", at: :home, splash: false, **options)
     @fixture = Fixture.new(os:, width: 1200, height: 800, **options)
     @shell = FakeShell.new(splash:)
-    @handler = P::InputHandler.new(show:, platform: fixture.platform, shell: @shell)
+    start = P::GamepadCursor.centered(show.layout.whole, style: P::Style::GAMEPAD, radius: DotPopperTest::R)
+    @handler = P::InputHandler.new(show:, platform: fixture.platform, shell: @shell, pile: nil, cursor: start)
     reach(at)
   end
 

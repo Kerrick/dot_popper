@@ -3,44 +3,34 @@
 require_relative "../presentation/presentation_helper"
 require "dot_popper/shell/lota_input"
 
-# Lota's input callbacks as the game's taps (Shell::LotaInput): only a
-# player's own finger or mouse is heard, so one finger is one tap.
+# Lota's input callbacks as the game's own events (Shell::LotaInput): by
+# the game's names, as they happened. Which of them are a player's own
+# presses is the presentation's to decide (InputRouter#tap).
 class LotaInputTest < Minitest::Test
   include PresentationTest
 
   def setup = @input = DotPopper::Shell::LotaInput.new
 
-  def test_a_click_with_any_main_button_is_a_tap
-    [1, 2, 3].each { assert_equal Tap.new(x: 10.0, y: 20.0, kind: InputKind::MOUSE), @input.mouse_pressed(10, 20, it, false) }
-    assert_nil @input.mouse_pressed(10, 20, 4, false), "a side button"
-    assert_nil @input.mouse_released(3, 4, 5, false)
+  def test_the_mouse_is_named_by_its_buttons_and_whether_sdl_made_it_up
+    assert_equal MousePress.new(x: 10, y: 20, button: :left, made_up: false), @input.mouse_press(10, 20, 1, false)
+    assert_equal %i[left right middle side4 side5], [1, 2, 3, 4, 5].map { @input.mouse_press(0, 0, it, false).button }
+    assert_equal MouseRelease.new(x: 3, y: 4, button: :right, made_up: true), @input.mouse_release(3, 4, 2, true)
+    assert_equal MouseMove.new(x: 3, y: 4, made_up: false), @input.mouse_move(3, 4, false)
   end
 
-  def test_the_mouse_press_sdl_makes_up_for_a_touch_is_ignored
-    assert_nil @input.mouse_pressed(10, 20, 1, true)
-    assert_nil @input.mouse_moved(3, 4, true)
-    assert_nil @input.mouse_released(3, 4, 1, true)
+  def test_a_touch_says_whether_a_touchscreens_and_whether_made_up_from_the_mouse
+    assert_equal TouchPress.new(id: 1, x: 5, y: 6, screen: true, made_up: false), @input.touch_press(1, 5, 6, :touchscreen, false)
+    assert_equal TouchMove.new(id: 1, x: 5, y: 6, screen: true, made_up: false), @input.touch_move(1, 5, 6, "touchscreen", nil)
+    assert_equal TouchRelease.new(id: 1, x: 0.5, y: 0.5, screen: false, made_up: false), @input.touch_release(1, 0.5, 0.5, :touchpad, false)
+    assert @input.touch_press(1, 5, 6, :touchscreen, true).made_up
   end
 
-  def test_a_finger_on_a_touchscreen_is_a_tap
-    assert_equal Tap.new(x: 5.0, y: 6.0, kind: InputKind::TOUCH), @input.touch_pressed(:finger, 5, 6, :touchscreen, false)
-    assert @input.touch_pressed(Object.new, 5, 6, "touchscreen", nil)
-  end
-
-  def test_a_trackpad_touch_is_not_a_tap
-    assert_nil @input.touch_pressed(1, 0.5, 0.5, :touchpad, false)
-    assert_nil @input.touch_released(1, 0.5, 0.5, :touchpad, false)
-  end
-
-  def test_a_touch_that_came_from_the_mouse_is_not_a_tap
-    assert_nil @input.touch_pressed(1, 5, 6, :touchscreen, true)
-  end
-
-  def test_moves_and_releases_are_sorted_as_presses_are
-    assert_equal Tap.new(x: 3.0, y: 4.0, kind: InputKind::MOUSE), @input.mouse_moved(3, 4, false)
-    assert_equal Tap.new(x: 3.0, y: 4.0, kind: InputKind::MOUSE), @input.mouse_released(3, 4, 1, false)
-    assert_equal Tap.new(x: 5.0, y: 6.0, kind: InputKind::TOUCH), @input.touch_moved(1, 5, 6, :touchscreen, false)
-    assert_equal Tap.new(x: 5.0, y: 6.0, kind: InputKind::TOUCH), @input.touch_released(1, 5, 6, :touchscreen, false)
+  def test_a_gamepads_buttons_triggers_and_the_wheel
+    assert_equal ButtonPress.new(button: :select), @input.button_press(:back)
+    assert_equal ButtonRelease.new(button: nil), @input.button_release(:guide)
+    assert_equal TriggerPull.new(trigger: :right, value: 0.75), @input.trigger_pull("triggerright", 0.75)
+    assert_nil @input.trigger_pull(:leftx, 1.0), "a stick's axis is read each frame instead"
+    assert_equal WheelTurn.new(notches: -2), @input.wheel_turn(-2)
   end
 
   def test_lotas_gamepad_buttons_are_named_as_the_game_names_them

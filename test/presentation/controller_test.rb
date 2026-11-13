@@ -1,31 +1,36 @@
 # frozen_string_literal: true
 
-require_relative "../presentation/inputs"
-require "minitest/mock"
+require_relative "inputs"
 
 # A controller, on every screen: each button, both triggers and both
-# sticks, as Lota hands them to Shell::App (by LÖVE's names for an Xbox
-# pad's), and what each does there. A press at a place is A's, at the
+# sticks, as the shell hands them over (Presentation::ButtonPress and the
+# rest, by the game's names), and what each does there
+# (Presentation::InputHandler). A press at a place is A's, at the
 # gamepad's cursor; every other button is the screen's own, labeled on it.
-# The App is given a Fixture's Show, and no window.
+# Written against Shell::App's controller callbacks before they moved
+# here; only how a button reaches the game changed (the tests still name
+# each button as LÖVE does).
 class ControllerTest < Minitest::Test
   include Inputs
 
   P = DotPopper::Presentation
   SERVER = "https://groups.example.org"
 
-  # What only the engine can do, remembered: setdef's splash (as the
-  # App's splash, which a button skips), quitting, and Game Over's pile
-  # (Shell::Dragging), which presses away from its buttons go to.
+  # What only the engine can do, remembered: setdef's splash, quitting,
+  # and Game Over's pile (Shell::Dragging), which presses away from its
+  # buttons go to.
   class FakeShell
     attr_reader :quits, :skips, :told
 
-    def initialize
+    def initialize(splash:)
+      @splash = splash
       @quits = @skips = 0
       @told = []
     end
 
-    def skip = (@skips += 1) && nil
+    def splash? = @splash
+    def skip_splash = (@skips += 1) && (@splash = false)
+    def toggle_fullscreen = nil
     def quit = @quits += 1
     def press(key, x, y) = @told << [:press, key, x.round, y.round]
     def move(key, x, y) = @told << [:move, key, x.round, y.round]
@@ -41,13 +46,6 @@ class ControllerTest < Minitest::Test
     def gamepad? = true
     def gamepad_axis(name) = axes[name]
     def gamepad_down?(name) = dpad.include?(name)
-  end
-
-  def setup
-    require "lota"
-    require "dot_popper/shell"
-  rescue LoadError => e
-    skip "Lota isn't installed here (#{e.message})"
   end
 
   def test_any_button_during_the_splash_only_skips_it
@@ -365,29 +363,29 @@ class ControllerTest < Minitest::Test
 
   def show = fixture.show
 
-  # A Show at +at+, on +os+, with a Fixture's other choices, in an App
-  # that Lota hands its controller to.
+  # LÖVE's names for an Xbox pad's buttons and triggers, by the game's
+  # (as Shell::LotaInput turns them).
+  BUTTONS = { "a" => :a, "b" => :b, "x" => :x, "y" => :y, "start" => :start, "back" => :select,
+              "leftshoulder" => :lb, "rightshoulder" => :rb }.freeze
+  TRIGGERS = { "triggerleft" => :left, "triggerright" => :right }.freeze
+
+  # A Show at +at+, on +os+, with a Fixture's other choices, and the
+  # handler the shell hands its controller to.
   def given(os: "Linux", at: :home, splash: false, **options)
     @fixture = Fixture.new(os:, width: 1200, height: 800, **options)
-    @shell = FakeShell.new
+    @shell = FakeShell.new(splash:)
     @pad = FakePad.new
-    gamepads = DotPopper::Shell::Gamepads.new
-    gamepads.added(@pad)
-    @app = DotPopper::Shell::App.allocate
     start = P::GamepadCursor.centered(show.layout.whole, style: P::Style::GAMEPAD, radius: DotPopperTest::R)
-    { show:, platform: fixture.platform, touch: fixture.platform.touch?, speaker: show.sounds, window: fixture.window,
-      splash: (@shell if splash), input: DotPopper::Shell::LotaInput.new, hooks: nil, dragging: @shell, gamepads:,
-      buttons: P::GamepadButtons.new, trigger: P::Trigger.released, pad_held: [], cursor: start }.each { @app.instance_variable_set(:"@#{_1}", _2) }
+    @handler = P::InputHandler.new(show:, platform: fixture.platform, shell: @shell, pile: @shell, cursor: start)
     reach(at)
   end
 
-  def cursor = @app.instance_variable_get(:@cursor) || @app.instance_variable_get(:@inputs).cursor
+  def cursor = @handler.cursor
 
-  def lota(&) = Lota::Event.stub(:quit, -> { @shell.quit }, &)
-  def button(name) = lota { @app.gamepad_pressed(name) }
-  def release(name) = lota { @app.gamepad_released(name) }
-  def trigger(axis, value) = lota { @app.gamepad_axis(axis, value) }
-  def unplug = @app.gamepad_removed(@pad)
+  def button(name) = @handler.call(P::ButtonPress.new(button: BUTTONS[name]))
+  def release(name) = @handler.call(P::ButtonRelease.new(button: BUTTONS[name]))
+  def trigger(axis, value) = @handler.call(TRIGGERS[axis]&.then { P::TriggerPull.new(trigger: it, value:) })
+  def unplug = @handler.call(P::GamepadRemoved.new)
 
   def tap_button(name)
     button(name)
@@ -396,17 +394,20 @@ class ControllerTest < Minitest::Test
   end
 
   # The cursor moved to +x+, +y+, as the fake drag moves it.
-  def aim(x, y) = @app.send(:fake_pad, :move, x, y)
+  def aim(x, y) = @handler.fake_pad(:move, x, y)
 
   # Frames of +seconds+ with the sticks and d-pad as the block sets them,
-  # read as App#update reads them.
+  # read as Shell::Gamepads reads them, and handed over as Shell::App#update
+  # does.
   def frames(seconds)
     yield
     step = 1 / 60.0
+    stick = P::Stick.new(x: @pad.axes[:leftx], y: @pad.axes[:lefty]) +
+            P::Stick.dpad(left: @pad.dpad.include?(:dpleft), right: @pad.dpad.include?(:dpright),
+                          up: @pad.dpad.include?(:dpup), down: @pad.dpad.include?(:dpdown))
+    right_stick = P::Stick.new(x: @pad.axes[:rightx], y: @pad.axes[:righty])
     (seconds / step).round.times do
-      moved = cursor.update(step, @app.send(:read_with_stick, step))
-      show.input = P::InputKind::GAMEPAD unless moved == cursor
-      @app.instance_variable_set(:@cursor, moved)
+      @handler.update(step, step, stick:, right_stick:)
       fixture.tick(step)
     end
   end

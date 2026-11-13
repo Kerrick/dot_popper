@@ -21,8 +21,6 @@ module DotPopper
       def initialize(env = ENV, channel: Build::CHANNEL)
         @settings = Composition::DeveloperSettings.new(env, channel:)
         Automation.guard!(exit_on_attempt: true) if @settings.automated?
-        @uptime = 0.0
-        @chatter = Presentation::Chatter.quiet(Style::CHATTER)
         @clock = Presentation::FrameClock.start
       end
 
@@ -59,14 +57,10 @@ module DotPopper
                                              diagnostic: flag?("DOT_POPPER_DIAGNOSTIC_COLORS"))
         @renderer.prepare
         @input = LotaInput.new
-        @inputs = Presentation::InputHandler.new(show: @show, platform: @platform, shell: self)
-        @buttons = Presentation::GamepadButtons.new
-        @trigger = Presentation::Trigger.released
-        @cursor = @game.cursor
-        @pad_held = []
+        @inputs = Presentation::InputHandler.new(show: @show, platform: @platform, shell: self, pile: @dragging, cursor: @game.cursor)
         @bot = @game.bot
         @hooks = DevelopmentHooks.for(@settings, cabinet: @cabinet, show: @show, pile: @pile, dragging: @dragging,
-                                                 pad: ->(action, x, y) { fake_pad(action, x, y) })
+                                                 pad: ->(action, x, y) { @inputs.fake_pad(action, x, y) })
       end
 
       # Lota's frame, which Lota measured as +measured+ seconds: the game
@@ -78,16 +72,14 @@ module DotPopper
 
       def update(seconds)
         @hooks&.frame_started(seconds)
-        @uptime += seconds
+        elapsed = seconds
         seconds = seconds.clamp(0.0, Rules::LONGEST_FRAME)
         if @splash
           @splash.notes(seconds).each { @speaker.play(:tick, pitch: it.pitch) }
           @splash = @splash.advance(seconds)
         end
         @splash = nil if @splash&.over?
-        moved = @cursor.update(seconds, read_with_stick(seconds))
-        @show.input = Presentation::InputKind::GAMEPAD unless moved == @cursor
-        @cursor = moved
+        @inputs.update(elapsed, seconds, stick: @gamepads.stick, right_stick: @gamepads.right_stick)
         if @bot
           x, y = @bot.update(seconds, @cabinet, @show)
           tap(x, y) if x
@@ -101,7 +93,7 @@ module DotPopper
         repeat_keys
         @tilting.update(seconds)
         @hooks&.drag
-        @dragging.move(:gamepad, @cursor.x, @cursor.y) if @pad_held.any?
+        @inputs.follow_cursor
         @dragging.update(seconds)
         @pile.update(seconds)
         @sparks.update(seconds, @show.effects)
@@ -110,63 +102,22 @@ module DotPopper
 
       def draw
         @clock = @clock.drawing(::Lota::Timer.time)
-        @renderer.draw(@cursor, @splash)
+        @renderer.draw(@inputs.cursor, @splash)
       end
 
-      def mouse_pressed(x, y, button, istouch)
-        return if chattered?(x, y, button, istouch)
-        return skip_splash if @splash
-
-        @cursor = @cursor.hide(x, y)
-        tap = heard(@input.mouse_pressed(x, y, button, istouch))
-        @show.pointer_at(tap.x, tap.y) if tap
-        press(:mouse, tap)
-      end
-
-      # A motion counts as using the mouse only once it has gone far
-      # enough (MouseTravel); a drag follows it either way, and so does
-      # what the mouse is over, for its hover.
-      def mouse_moved(x, y, istouch)
-        point = @input.mouse_moved(x, y, istouch) or return
-        @show.pointer_at(point.x, point.y)
-        @travel = nil if window_settling?
-        @travel = (@travel || Presentation::MouseTravel.start).moved(x, y)
-        if @travel.deliberate?
-          @cursor = @cursor.hide(x, y)
-          heard(point)
-        end
-        @show.drag_scroll(:mouse, point.y)
-        @dragging.move(:mouse, point.x, point.y)
-      end
-
-      def mouse_released(x, y, button, istouch)
-        return if released_chatter?(button, istouch)
-
-        point = @input.mouse_released(x, y, button, istouch) or return
-        @show.let_go(:mouse)
-        @dragging.release(:mouse, point.x, point.y)
-      end
-
-      def touch_pressed(id, x, y, devicetype, mouse)
-        return skip_splash if @splash
-
-        @cursor = @cursor.hide
-        press(id, heard(@input.touch_pressed(id, x, y, devicetype, mouse)))
-      end
-
-      def touch_moved(id, x, y, devicetype, mouse)
-        point = heard(@input.touch_moved(id, x, y, devicetype, mouse))
-        return unless point
-
-        @show.drag_scroll(id, point.y)
-        @dragging.move(id, point.x, point.y)
-      end
-
-      def touch_released(id, x, y, devicetype, mouse)
-        point = @input.touch_released(id, x, y, devicetype, mouse) or return
-        @show.let_go(id)
-        @dragging.release(id, point.x, point.y)
-      end
+      # Each of Lota's input callbacks, as the game's own event
+      # (LotaInput), for the Presentation::InputHandler, which decides
+      # what it means.
+      def mouse_pressed(x, y, button, istouch) = @inputs.call(@input.mouse_press(x, y, button, istouch))
+      def mouse_moved(x, y, istouch) = @inputs.call(@input.mouse_move(x, y, istouch))
+      def mouse_released(x, y, button, istouch) = @inputs.call(@input.mouse_release(x, y, button, istouch))
+      def touch_pressed(id, x, y, devicetype, mouse) = @inputs.call(@input.touch_press(id, x, y, devicetype, mouse))
+      def touch_moved(id, x, y, devicetype, mouse) = @inputs.call(@input.touch_move(id, x, y, devicetype, mouse))
+      def touch_released(id, x, y, devicetype, mouse) = @inputs.call(@input.touch_release(id, x, y, devicetype, mouse))
+      def gamepad_pressed(button) = @inputs.call(@input.button_press(button))
+      def gamepad_released(button) = @inputs.call(@input.button_release(button))
+      def gamepad_axis(axis, value) = @inputs.call(@input.trigger_pull(axis, value))
+      def wheel_moved(y) = @inputs.call(@input.wheel_turn(y))
 
       # The window lost focus or got it back. A finger or button let go
       # meanwhile is never heard, so the pile's dots are let go now, and
@@ -178,16 +129,13 @@ module DotPopper
       def focus(focused)
         return @game.refresh.came_back if focused
 
-        @dragging.drop
-        @chatter = @chatter.let_go
-        @show.let_go_of_everything
-        @show.pointer_gone
+        @inputs.call(Presentation::FocusLost.new)
       end
 
       # The mouse left the window, or came back into it. Once it has
       # left, it is over no button; back in, its next motion says where.
       def mouse_focus(focused)
-        @show.pointer_gone unless focused
+        @inputs.call(Presentation::MouseLeft.new) unless focused
       end
 
       # What the Presentation::InputHandler asks of the engine: whether
@@ -207,87 +155,21 @@ module DotPopper
       # while the mouse is over a button.
       def pointing_hand? = @hand == true
 
-      # A gamepad button went down (Lota 0.1.3 and newer). Any button shows
-      # the cursor; GamepadButtons says what each one asks for.
-      def gamepad_pressed(button)
-        return skip_splash if @splash
-
-        gamepad_used
-        case @buttons.intent(@input.button(button))
-        in :press then gamepad_down(:a)
-        in :start then @show.start
-        in :leave then @show.back || leave_home
-        in :x | :y | :lb | :rb | :select => name then @show.pad(name)
-        in nil then nil
-        end
-      end
-
-      # A gamepad button came up. Letting go of A ends its press, which on
-      # Game Over throws a dragged dot, or goes on, as a click does; letting
-      # go of Y ends a hold of "Clear my stats…".
-      def gamepad_released(button)
-        case @buttons.intent(@input.button(button))
-        in :press then gamepad_up(:a)
-        in :y then @show.let_go(:y)
-        in :start then @show.let_go(:start)
-        else nil
-        end
-      end
-
-      # A gamepad's axis moved. The right trigger presses and lets go as A
-      # does; the sticks are read each frame instead (Gamepads).
-      def gamepad_axis(axis, value)
-        trigger = @input.trigger(axis)
-        return left_trigger(value) if trigger == :left
-        return unless trigger == :right
-        return skip_splash if @splash && value.to_f > 0.5
-
-        was_held = @trigger.held
-        @trigger = @trigger.pull(value.to_f, Style::GAMEPAD)
-        return gamepad_up(:trigger) if was_held && !@trigger.held
-        return unless @trigger.pressed
-
-        gamepad_used
-        gamepad_down(:trigger)
-      end
-
-      # The left trigger, as a button, opens Friend groups on Home (LT).
-      def left_trigger(value)
-        @left_trigger = (@left_trigger || Presentation::Trigger.released).pull(value.to_f, Style::GAMEPAD)
-        return unless @left_trigger.pressed
-
-        gamepad_used
-        @show.pad(:lt)
-      end
-
       # A controller was plugged in, or was there when the game started.
       def gamepad_added(joystick) = @gamepads.added(joystick)
 
       # A controller was unplugged: forget it, and let its trigger go.
       def gamepad_removed(joystick)
         @gamepads.removed(joystick)
-        @trigger = Presentation::Trigger.released
-        @pad_held.dup.each { gamepad_up(it) }
+        @inputs.call(Presentation::GamepadRemoved.new)
       end
-
-      # The mouse wheel turned +y+ notches, up when positive.
-      def wheel_moved(y) = @show.wheel_scroll(y)
 
       # A key went down, which Lota calls +name+: the game's name for it
       # and the modifier keys held, for the Presentation::InputHandler.
       def key_pressed(name) = @inputs.call(@input.key_press(name, ::Lota::Keyboard.method(:down?)))
 
       # The window changed size, or moved to a screen of another density.
-      # For a moment after the window opens or changes size, the pointer
-      # seems to move under a still mouse, as the window moves under it
-      # (Windows sends several such motions as it grows a window to the
-      # display's scale), so no motion then takes the words to the mouse.
-      SETTLE = 0.5
-
-      def window_settling? = @uptime < (@settled_at || SETTLE)
-
       def resize
-        @settled_at = @uptime.to_f + SETTLE
         return unless @show
 
         @hooks&.happened("a resize")
@@ -301,22 +183,10 @@ module DotPopper
         game = @cabinet.game
         @pile.refit(game ? Field.new(screen.width, screen.height, game.field.radius) : @cabinet.field)
         @renderer.prepare
-        @cursor = @cursor.refit(@show.layout.whole)
+        @inputs.resized(@show.layout.whole)
       end
 
       private
-
-      # The gamepad's left stick and d-pad for the cursor, which on the
-      # Credits screen scroll it instead and leave the cursor at rest
-      # (Show#stick_scrolls?).
-      def read_with_stick(seconds)
-        stick = @gamepads.stick
-        @show.stick_scroll(@gamepads.right_stick, seconds)
-        return stick unless @show.stick_scrolls?
-
-        @show.stick_scroll(stick, seconds)
-        Presentation::Stick.rest
-      end
 
       # Held arrow and Page keys go on scrolling the lists, and the only
       # places the keyboard asks for repeats.
@@ -337,45 +207,8 @@ module DotPopper
         @speaker.use(@show.in_use)
       end
 
-      # A press at +x+, +y+, by +by+ (a finger's id, :mouse, :gamepad, or
-      # the bot), which its release names too.
-      def tap(x, y, by = :bot) = @show.tap(x, y, by:)
-
-      # Whether a mouse press is its switch chattering (Presentation::
-      # Chatter), to be dropped, wherever it lands, as its release will
-      # be. Its clock is the frames' time, unclamped: the real time in
-      # play, and the scenario's in the GUI suite.
-      def chattered?(x, y, button, istouch)
-        return false if istouch
-
-        @chatter, chatter = @chatter.press(button, x.to_f, y.to_f, at: @uptime)
-        chatter
-      end
-
-      def released_chatter?(button, istouch)
-        return false if istouch
-
-        @chatter, chatter = @chatter.release(button)
-        chatter
-      end
-
-      # Tells the Show what made +tap+, if anything did, so its words name
-      # that press. Returns +tap+.
-      # A finger starts the mouse's travel afresh, as the gamepad does, so
-      # only a new, deliberate move takes the words back to the mouse.
-      def heard(tap)
-        @travel = nil if tap && tap.kind != Presentation::InputKind::MOUSE
-        @show.input = tap.kind if tap
-        tap
-      end
-
-      # The gamepad was used: its cursor shows, and the words name its
-      # buttons.
-      def gamepad_used
-        @travel = Presentation::MouseTravel.start
-        @cursor = @cursor.show
-        @show.input = Presentation::InputKind::GAMEPAD
-      end
+      # The bot's press at +x+, +y+.
+      def tap(x, y) = @show.tap(x, y, by: :bot)
 
       # The system's pointing hand while the mouse is over a button, and
       # its arrow otherwise; only the mouse hovers (Show#hovered). The
@@ -396,53 +229,7 @@ module DotPopper
         @hand_cursor ||= ::Lota::Mouse.system_cursor(:hand)
       end
 
-      # A mouse button or finger went down, as +tap+ (or nil for none). It
-      # counts at once, unless the Show waits for its release, on Game
-      # Over, where it may become a drag.
-      def press(key, tap)
-        return unless tap
-        return tap(tap.x, tap.y, key) unless @show.waits_for_release?(tap.x, tap.y)
-
-        @dragging.press(key, tap.x, tap.y)
-      end
-
-      # The fake drag's press, move or release, made with the gamepad
-      # (DevelopmentHooks#drag): the cursor goes there, and A holds the dot.
-      def fake_pad(action, x, y)
-        @cursor = @cursor.at(x, y).show
-        case action
-        in :press then gamepad_down(:a)
-        in :release then gamepad_up(:a)
-        in :move then nil
-        end
-      end
-
       def fake_gamepad? = @settings.fake_gamepad?
-
-      # A or the right trigger, +source+, went down: a press at the cursor,
-      # as a mouse button's. On Game Over it waits to be let go, as a
-      # click does, and held on a dot it drags it; elsewhere it counts at
-      # once. A second source held with the first adds nothing.
-      def gamepad_down(source)
-        @pad_held << source
-        press(:gamepad, @input.gamepad_pressed(@cursor)) if @pad_held.size == 1
-      end
-
-      # A or the right trigger let go: once neither is held, the press ends
-      # where the cursor is.
-      def gamepad_up(source)
-        return unless @pad_held.delete(source) && @pad_held.empty?
-
-        point = @input.gamepad_released(@cursor)
-        @show.let_go(:gamepad)
-        @dragging.release(:gamepad, point.x, point.y)
-      end
-
-      # B on Home: asks, then quits on a second press, as Escape quits
-      # from the keyboard. iOS apps are left by the system, never by the app.
-      def leave_home
-        ::Lota::Event.quit if @platform.quits_itself? && @show.ask_to_quit == :quit
-      end
 
       def screen = @game.screen
 
