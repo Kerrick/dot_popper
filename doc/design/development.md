@@ -14,6 +14,7 @@ How Dot Popper is tested and worked on: what each test tier checks and how to ru
 | Steep | The rules in `lib/dot_popper/*.rb` against `sig/` | `bundle exec rake steep` | The `steep` gem (development group) | No workflow runs it |
 | Both | `test`, then `steep` (`task default: %i[test steep]`) | `bundle exec rake` | Both of the above | |
 | GUI scenarios | The real game in real windows, `test/gui/**/*_test.rb` | `bundle exec rake test:gui` | A display, and Lota | The GUI workflow, on every push to `trunk` and every pull request |
+| Packaged app, Linux | The Linux app this working copy would ship, played by the bot with no Ruby on its `PATH` (see [The packaged app before a push](#the-packaged-app-before-a-push)) | `ruby script/play_packaged_app.rb` | Linux x86_64, Xvfb, Git; the network for its first fuse | The Package workflow's Linux job plays its own build the same way |
 | Packaged apps | Each built app, played by the bot with no Ruby on its `PATH` | See [PACKAGING.md](../../PACKAGING.md#what-ci-checks) | Each platform's runner | The Package and Kits workflows |
 | Playtest kits | Hand checks on real devices | See [Playtest kits](#playtest-kits) | A person | The Kits workflow builds and plays them |
 
@@ -22,6 +23,13 @@ Every test task runs with Ruby's warnings on (`t.warning = true`), and `test/no_
 To run one file: `bundle exec ruby -Ilib -Itest test/rules_fuzz_test.rb`.
 
 [AGENTS.md](../../AGENTS.md) says what to run before each push and where heavy work runs. Tests are fast and reliable, and none reaches the real internet (see [Automated runs stay off the internet](#automated-runs-stay-off-the-internet)).
+
+## The packaged app before a push
+
+What could stop the packaged app starting is checked in two places.
+
+- **In `rake test`, in about two seconds:** `test/packaged_app_test.rb` lays the game's folder out as `lota fuse` copies it into the app (`PackagedApp.lay_out`, which is Lota's own copy, with the fuse action's excludes and each channel's) and starts it short of a window, in a Ruby with no Bundler and no gem but those the app ships, and a home of its own: conf.rb as `lota fuse` reads it, main.rb as Lota loads it, and every library the game's code names in a `require`, which it may load only when it first needs it. It fails for a file the app leaves out but the game loads, a gem only the bundle has (Ruby's bundled gems too: the game must lock what it uses), a file required by its path or an asset named in the code that the app doesn't hold, a name the phones' program (`bin/dot_popper`) uses that is gone, and a fuse action that leaves out other files than `PackagedApp::REPOSITORY_ONLY`.
+- **What only a built app shows,** its own Ruby and OpenSSL with no Ruby on the `PATH`, Lota's engine opening a window and drawing, the bot playing, is `ruby script/play_packaged_app.rb`, on Linux x86_64 with Xvfb. It plays the app the working copy's tracked files would make, as CI's Linux job plays its own, and passes only if the app exits with 0, reports its frame rate and verifies Ed25519. `lota fuse` takes minutes, nearly all of it around the game rather than the game itself, so the command keeps the app without the game in `$XDG_CACHE_HOME/dot_popper/packaged-app`, under a key made of every other input of the fuse (Lota's gem, the Gemfile and lockfile, the icon, the fuse's options, the game's name and identity, the command itself). When only the game's files changed, it copies that app, lays the game in with Lota's own copy, and plays. Every fuse checks that its own game folder is the one `lay_out` makes, file by file, so a cached app is never the wrong one. `--channel CHANNEL` plays a channel's build, `--seconds N` plays longer or shorter than CI's 20 seconds, and `--archive FILE` plays an app already built. A first run needs the network, as any `lota fuse` does; later runs don't.
 
 ## Steep, in strict mode
 
