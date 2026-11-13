@@ -51,7 +51,7 @@ On an upright phone the floor applies: the exact fit would be about 29.6, so the
 
 **When the choice is offered.** Settings shows a "Dot size" row only where the two radii differ by more than a tenth (`SizingPreview#offered?`, `SizingStyle#alike` of 0.1 in `Style::SIZING`). In a 1200 × 800 window the two are alike, so the row is hidden there; resizing the window brings it back. The first segment is "Standard", the default, and the second is named for what it does on this screen next to it ("Bigger" or "Smaller", `Words#sizing`), never easy or hard (`Show::SIZINGS`). Where the row is hidden, the saved choice stands and games follow it. The screen itself is described in [screens.md](screens.md).
 
-**What Standard does not do.** Working the size out from the screen narrows the difference that screen size makes to how crowded the field gets. It does not make scores comparable across devices: the same player still scores differently on different screens, and differently again with a mouse, a finger or a controller. Friend groups count only games with standard dots, so every member plays the same kind of game ([friend-groups.md](friend-groups.md)).
+**What Standard does not do.** Working the size out from the screen narrows the difference that screen size makes to how crowded the field gets. It does not make scores comparable across devices: the same player still scores differently on different screens, and differently again with a mouse, a finger or a controller. Friend groups count every game, whatever its dot size ([friend-groups.md](friend-groups.md)).
 
 Each choice keeps records of its own ([progress.md](progress.md#size-classes)).
 
