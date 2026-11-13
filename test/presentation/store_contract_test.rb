@@ -52,7 +52,7 @@ class FakeStoreContractTest < Minitest::Test
   end
 end
 
-# The NativeStore adapter, with a real answer file and a stand-in for the
+# The NativeStore adapter, with a real answer file and a fake of the
 # app's host, written from Store.swift and ProStore.java. It runs the
 # contract over the game's half of the native path. It cannot show that
 # the host's real half behaves like this (ADR-0009).
@@ -61,7 +61,7 @@ class NativeStoreContractTest < Minitest::Test
 
   # Takes a dotpopper-store: URL and writes the answer as the hosts do:
   # "loading" or "working" at once, the outcome on the next read.
-  class HostStandIn
+  class FakeHost
     attr_accessor :owned
 
     def initialize(fails, path)
@@ -122,6 +122,9 @@ class NativeStoreContractTest < Minitest::Test
     end
   end
 
+  # The old name, until no commit uses it.
+  HostStandIn = FakeHost
+
   # The file, with the host catching up as the game reads it.
   class Polled < Data.define(:file, :host)
     def read = file.read.tap { host.advance }
@@ -140,7 +143,7 @@ class NativeStoreContractTest < Minitest::Test
   def new_store(fails: nil)
     @count += 1
     path = File.join(@folder, "#{@count}.txt")
-    host = HostStandIn.new(fails, path)
+    host = FakeHost.new(fails, path)
     (@hosts ||= {})[path] = host
     DotPopper::Presentation::NativeStore.new(opener: host, answers: Polled.new(file: DotPopper::Shell::StoreAnswers.new(path:), host:))
   end
