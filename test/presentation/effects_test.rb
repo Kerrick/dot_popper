@@ -73,13 +73,13 @@ class EffectsTest < Minitest::Test
     assert_in_delta 0.0, @effects.flash_alpha
   end
 
-  def test_rings_and_floaters_go_away_when_done
+  def test_rings_and_floating_texts_go_away_when_done
     @effects.ring(0, 0, Style::SHOCKWAVE)
     @effects.float("+1", 0, 0, Style::PALETTE.cream, Style::GAIN_FLOAT)
     @effects.update(1.0)
 
     assert_empty @effects.rings
-    assert_empty @effects.floaters
+    assert_empty @effects.floating_texts
   end
 
   def test_a_ring_around_a_dot_moves_with_it
@@ -97,9 +97,9 @@ class EffectsTest < Minitest::Test
     assert_operator floater.alpha(later), :<, floater.alpha(@effects.now)
   end
 
-  def test_floaters_and_rings_are_capped
+  def test_floating_texts_and_rings_are_capped
     50.times { @effects.float("+1", 0, 0, Style::PALETTE.cream, Style::GAIN_FLOAT) }
 
-    assert_equal Effects::MOST_FLOATERS, @effects.floaters.size
+    assert_equal Effects::MOST_FLOATING_TEXTS, @effects.floating_texts.size
   end
 end

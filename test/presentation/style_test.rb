@@ -31,7 +31,7 @@ class StyleTest < Minitest::Test
     assert_operator Style::HUD.backing, :<=, 0.5
   end
 
-  def test_floaters_fade_fast
+  def test_floating_texts_fade_fast
     [Style::GAIN_FLOAT, Style::LOSS_FLOAT].each { assert_operator it.life, :<=, 0.8 }
   end
 

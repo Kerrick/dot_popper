@@ -353,8 +353,8 @@ module DotPopper
       TICK_FLASH = FlashStyle.new(color: PALETTE.urgent, alpha: 0.16, duration: 0.3, band: 0.12)
 
       # Floating numbers; +spread+ sets the two of a tap apart, across.
-      GAIN_FLOAT = FloaterStyle.new(rise: 1.0, life: 0.65)
-      LOSS_FLOAT = FloaterStyle.new(rise: 0.7, life: 0.75)
+      GAIN_FLOAT = FloatingTextStyle.new(rise: 1.0, life: 0.65)
+      LOSS_FLOAT = FloatingTextStyle.new(rise: 0.7, life: 0.75)
       FLOAT_SPREAD = 0.62
 
       # The HUD's pill is mostly see-through, so a dot under it still

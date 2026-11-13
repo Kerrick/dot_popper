@@ -17,7 +17,7 @@ module DotPopper
       end
 
       # The floating numbers, over everything, glow included.
-      def words(effects, layout) = floaters(effects.floaters, effects.now, layout)
+      def words(effects, layout) = floating_texts(effects.floating_texts, effects.now, layout)
 
       # Additive, so droplets only ever brighten.
       def droplets = pen.adding { sparks.draw }
@@ -68,11 +68,11 @@ module DotPopper
         end
       end
 
-      def floaters(floaters, now, layout)
-        return if floaters.empty?
+      def floating_texts(texts, now, layout)
+        return if texts.empty?
 
         font = pen.fonts.bold(layout.scaled(pen.style::TYPE.floater))
-        floaters.each { pen.outlined(it.text, font, it.x, it.y_at(now), it.color, it.alpha(now)) }
+        texts.each { pen.outlined(it.text, font, it.x, it.y_at(now), it.color, it.alpha(now)) }
       end
 
       # Strips along each edge, fainter toward the middle.

@@ -519,7 +519,7 @@ class ShowTest < Minitest::Test
   def test_a_pop_shows_what_it_earned_and_bloops
     start_and_pop
 
-    assert_equal ["+1", "+1s"], @show.effects.floaters.map(&:text)
+    assert_equal ["+1", "+1s"], @show.effects.floating_texts.map(&:text)
     assert_equal :pop, @sounds.names.last
     assert_equal [Style::POP_BURST], @show.effects.take_sprays.map(&:style)
     assert_equal 2, @show.effects.rings.size
@@ -558,7 +558,7 @@ class ShowTest < Minitest::Test
     clear_around!(live(@cabinet), popped)
     @show.tap(popped.x, popped.y) # the score falls from 1 to 0: only 1 lost
 
-    assert_equal ["−1", "−2s"], @show.effects.floaters.last(2).map(&:text)
+    assert_equal ["−1", "−2s"], @show.effects.floating_texts.last(2).map(&:text)
     assert_equal :bonk, @sounds.names.last
     assert_operator @show.effects.flash_alpha, :>, 0
   end
@@ -570,7 +570,7 @@ class ShowTest < Minitest::Test
     clear_around!(live(@cabinet), popped)
     @show.tap(popped.x, popped.y)
 
-    assert_equal "−2s", @show.effects.floaters.last.text
+    assert_equal "−2s", @show.effects.floating_texts.last.text
   end
 
   def test_a_wrong_tap_over_the_bright_dot_outlines_it
@@ -706,7 +706,7 @@ class ShowTest < Minitest::Test
     press_main
 
     assert @show.home?
-    assert_empty @show.effects.floaters
+    assert_empty @show.effects.floating_texts
   end
 
   private
