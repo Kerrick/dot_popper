@@ -5,3 +5,4 @@
 # (script/channel_contents.rb), so it holds none of it.
 require_relative "test_keys"
 require_relative "fake_setdef"
+require_relative "switches"

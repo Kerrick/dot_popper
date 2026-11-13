@@ -7,21 +7,19 @@ module DotPopper
   # receipt, which the store hands over at each launch and #prove verifies
   # (Receipt), or a website copy's license key (+license+,
   # Continuity::License), whose signature is checked against the pinned
-  # keys. Pro features ask +pro?+ and nothing else. DOT_POPPER_PRO=1
-  # stands in for a purchase in a test build, to try them out, and
-  # DOT_POPPER_PRO=0 is a free player; a store build never reads it
-  # (Build.settings).
+  # keys. Pro features ask +pro?+ and nothing else. A test build has a
+  # developer setting of its own that stands in for a purchase
+  # (lib/dot_popper/test_build).
   #
   # Pro arriving during a run, by a receipt that verifies or a license key
   # entered through #enter, is announced to every listener (#subscribe)
   # as a ProGranted, once. Pro the game starts with, from a key already
-  # entered or DOT_POPPER_PRO, is not an arrival.
+  # entered or forced (.forced?), is not an arrival.
   class Entitlement
     # Pro arrived +by+ a store's receipt (:receipt) or a license key
     # (:license_key).
     class ProGranted < Data.define(:by); end
 
-    FORCED_BY = "DOT_POPPER_PRO"
     # Whether a computer's copy has everything for nothing. It does not: a
     # desktop copy is free until a store, a channel's or a test build's fake,
     # sells it (Store; ADR-0009). Set it true to ship a desktop copy
@@ -32,18 +30,11 @@ module DotPopper
     # An entitlement with no proof, as a store build's starts.
     def self.free = new
 
-    # A test build's, which takes the fake store's receipts (Receipt::TEST).
-    def self.test = new(trust: Receipt::TEST)
-
-    # Whether this copy is pro without a purchase: by DOT_POPPER_PRO when
-    # it is set, and otherwise on a computer (+platform+, a Platform), by
-    # DESKTOP_PRO.
-    def self.forced?(env, platform: nil)
-      value = env.fetch(FORCED_BY, "")
-      return value == "1" unless value.empty?
-
-      DESKTOP_PRO && !platform.nil? && !platform.phone_host?
-    end
+    # Whether this copy is pro without a purchase: on a computer
+    # (+platform+, a Platform), by DESKTOP_PRO. +env+ is the developer
+    # settings this build obeys (Build.settings), which a build for sale
+    # never lets decide it.
+    def self.forced?(_env, platform: nil) = DESKTOP_PRO && !platform.nil? && !platform.phone_host?
 
     # +license+ (Continuity::License, or anything that answers pro?) is a
     # website copy's. +trust+ (Receipt::Trust) is whose receipts this build
