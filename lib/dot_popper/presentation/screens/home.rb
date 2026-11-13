@@ -95,7 +95,7 @@ module DotPopper
         # anywhere else, nothing happens.
         def empty(x, y, _by)
           dot = show.attract.dots.top_at(x, y)
-          show.toy_pop(dot, x, y) if dot&.bright?
+          show.pop_home_dot(dot, x, y) if dot&.bright?
         end
 
         def controls
