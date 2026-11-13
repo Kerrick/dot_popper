@@ -118,7 +118,7 @@ module DotPopper
         # them is drawn; a dialog or card over a screen shows it.
         def covers? = false
 
-        # Whether a title change's announcement shows over it (GroupBanner).
+        # Whether a title change's announcement shows over it (ShownAnnouncement).
         def announces? = false
 
         # Whether this screen is open over the screen for the game's state

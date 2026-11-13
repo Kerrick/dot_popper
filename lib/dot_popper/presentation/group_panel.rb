@@ -226,7 +226,7 @@ module DotPopper
         return if @banner || !showing || open?
 
         item = groups.next_announcement or return
-        @banner = GroupBanner.new(text: GroupWords.announcement(item), at: now, seconds: BANNER_SECONDS,
+        @banner = ShownAnnouncement.new(text: GroupWords.announcement(item), at: now, seconds: BANNER_SECONDS,
                                   group_id: item.group_id, number: item.champion_number)
       end
 
