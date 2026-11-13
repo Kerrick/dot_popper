@@ -10,5 +10,34 @@ module DotPopper
 
       def call: (?Stack? opening) -> result
     end
+
+    # A player's friend groups, as Groups::Session tells them of games
+    # and achievements.
+    interface _FriendGroups
+      def game_finished: (score: Integer, sized_to_screen: bool) -> void
+
+      def report_achievements: (Array[Achievement::id] ids) -> void
+    end
+
+    class FinishGame
+      @stats_book: StatsBook
+      @achievements: Achievements
+      @entitlement: Entitlement
+      @friend_groups: _FriendGroups
+
+      def initialize: (stats_book: StatsBook, achievements: Achievements, entitlement: Entitlement, friend_groups: _FriendGroups) -> void
+
+      def call: (Events::GameEnded ended, stats: GameStats, ?earned: Array[Achievement::id], ?tutorial: bool) -> Result
+
+      class Result < ::Data
+        attr_reader record: Stats::Record?
+
+        attr_reader goal_met: bool
+
+        attr_reader achievements: Array[Achievement::id]
+
+        def self.new: (record: Stats::Record?, goal_met: bool, achievements: Array[Achievement::id]) -> instance
+      end
+    end
   end
 end

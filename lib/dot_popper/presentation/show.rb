@@ -63,6 +63,7 @@ module DotPopper
         @storefront = storefront
         @games = games
         @start_game = UseCases::StartGame.new(cabinet:, free_games: games)
+        @finish_game = UseCases::FinishGame.new(stats_book:, achievements:, entitlement:, friend_groups: groups)
         @offer = false
         @offer_for_play = false
         @tutorial = nil
@@ -1624,15 +1625,13 @@ module DotPopper
                          record: game_over.record, screen: game_over.screen, first: game_over.first)
       end
 
+      # The game is finished (UseCases::FinishGame), and Game Over shows
+      # what it did.
       def game_ended(event)
-        result = stats_book.record(game_stats, event.size_class)
-        @groups.game_finished(score: event.score, sized_to_screen: event.size_class == SizeClass::FITTED && !@tutorial_game)
-        achievements = @achievements.award(@achievement_watch.earned, day: stats_book.today.iso8601)
-        @groups.report_achievements(achievements) if @entitlement.pro?
-        achievements = [] unless @entitlement.pro? # kept, and shown once Pro is bought
+        result = @finish_game.call(event, stats: game_stats, earned: @achievement_watch.earned, tutorial: @tutorial_game)
         lesson = @tutor.lesson(@mistake) if @mistake&.among(event.dots)
         @game_over = GameOver.new(style: style::GAME_OVER, score: event.score, score_record: event.score_record, new_score_record: event.new_score_record, at: now,
-                             stats: game_stats, record: result.records.first, goal_met: result.goal_met, lesson:, achievements:,
+                             stats: game_stats, record: result.record, goal_met: result.goal_met, lesson:, achievements: result.achievements,
                              first: event.first, screen: words.played_on(event.field, sized: event.size_class == SizeClass::FITTED))
         sounds.play(event.new_score_record ? :new_score_record : :game_over)
       end

@@ -42,7 +42,7 @@ A game the tutorial played over (`GameStats.opening`) begins play with a pop for
 
 ## Stats
 
-`Stats` (`lib/dot_popper/stats.rb`) is every game this device has played, added up. `StatsBook` (`lib/dot_popper/stats_book.rb`) keeps it in `stats.txt` and adds each finished game (`StatsBook#record`, called from `Show#game_ended`).
+`Stats` (`lib/dot_popper/stats.rb`) is every game this device has played, added up. `StatsBook` (`lib/dot_popper/stats_book.rb`) keeps it in `stats.txt` and adds each finished game (`StatsBook#record`, called as the game is finished, `UseCases::FinishGame`).
 
 Across every screen:
 
@@ -168,7 +168,7 @@ Names, figures and sentences are in `Presentation::AchievementWords`. Each has a
 
 **Detection** is Lota-free. `AchievementWatch` (`lib/dot_popper/achievement_watch.rb`) listens to the `Cabinet`'s events and reads the dots, the clock and the time played from each event, which carries them as they stood when it was told; it keeps no game, and decides nothing. A "covered" spawn for Patience is one where `TouchTarget#clear_on?` finds no room among the dots above, and any tap, a miss included, spoils the wait.
 
-**Saving.** At each Game Over, `Show#game_ended` gives the watch's finds to `Achievements#award`, which keeps the ones not earned before with today's date and writes `achievements.txt`. Achievements are earned and saved whether or not the player has Pro. An id a newer version saved and this one doesn't know is dropped on reading.
+**Saving.** At each Game Over, `UseCases::FinishGame` gives the watch's finds to `Achievements#award`, which keeps the ones not earned before with today's date and writes `achievements.txt`. Achievements are earned and saved whether or not the player has Pro. An id a newer version saved and this one doesn't know is dropped on reading.
 
 **Showing.** Nothing shows during a game. For a Pro player, Game Over adds "New achievement: Sharpshooter" (or "New achievements: …") for the ones first earned that game, and friend groups hear of them. A Free player sees how each is earned on the Achievements screen but no earned marks or dates; what they earned is kept, shown once Pro is bought, and then reported to their friend groups. See [store-and-pro.md](store-and-pro.md) and [screens.md](screens.md).
 
