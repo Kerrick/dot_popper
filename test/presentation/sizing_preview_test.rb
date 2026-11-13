@@ -8,7 +8,7 @@ class SizingPreviewTest < Minitest::Test
   BIGGER_OR_SMALLER = DotPopper::DotSizing::BIGGER_OR_SMALLER
   STANDARD = DotPopper::DotSizing::STANDARD
 
-  def preview(standard, fixed: 50) = SizingPreview.new(fixed:, standard:, style: Style::SIZING)
+  def preview(standard, bigger_or_smaller: 50) = SizingPreview.new(bigger_or_smaller:, standard:, style: Style::SIZING)
   def named(sizing, standard) = Style::WORDS.sizing(sizing, preview(standard))
 
   # The default is "Standard" everywhere, and the other is named for
