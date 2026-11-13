@@ -57,10 +57,37 @@ class ControllerTest < Minitest::Test
       assert show.on_home?, name
       refute cursor.visible, "#{name}: the splash hears it, not the game"
     end
-    given(splash: true)
-    trigger("triggerright", 0.6)
+  end
 
-    assert_equal 1, @shell.skips, "the right trigger past half"
+  # A trigger pulled to where it would press skips the splash and does
+  # nothing else: not A under the splash (the right), not Friend groups
+  # behind it (the left). Held on, it presses nothing once the splash is
+  # gone, until it is let back and pulled again.
+  def test_either_trigger_during_the_splash_only_skips_it
+    %w[triggerright triggerleft].product([0.5, 1.0]).each do |axis, value|
+      given(splash: true)
+      trigger(axis, value)
+
+      assert_equal 1, @shell.skips, "#{axis} at #{value}"
+      assert show.on_home?, "#{axis} at #{value}"
+      refute show.group_open?, "#{axis} at #{value}"
+      refute cursor.visible, "#{axis} at #{value}: the splash hears it, not the game"
+      assert_empty @shell.told, "#{axis} at #{value}"
+      trigger(axis, 0.9)
+
+      refute show.group_open?, "#{axis} still held"
+      assert_empty @shell.told, "#{axis} still held"
+    end
+    given(splash: true)
+    trigger("triggerright", 0.4)
+
+    assert_equal 0, @shell.skips, "a trigger short of pressing is no press"
+    given(splash: true)
+    trigger("triggerleft", 1.0)
+    trigger("triggerleft", 0.0)
+    trigger("triggerleft", 1.0)
+
+    assert show.group_open?, "let back and pulled again, once the splash is gone: Friend groups"
   end
 
   def test_any_button_shows_the_cursor_and_names_the_gamepad

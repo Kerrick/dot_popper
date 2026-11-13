@@ -201,8 +201,8 @@ module DotPopper
       # The right trigger presses and lets go as A does; the left, as a
       # button, opens Friend groups on Home (LT).
       def trigger_pulled(pull)
+        return splash_trigger(pull) if @shell.splash?
         return left_trigger(pull.value) if pull.trigger == :left
-        return @shell.skip_splash if @shell.splash? && pull.value > 0.5
 
         was_held = @trigger.held
         @trigger = @trigger.pull(pull.value, @style::GAMEPAD)
@@ -211,6 +211,18 @@ module DotPopper
 
         gamepad_used
         gamepad_down(:trigger)
+      end
+
+      # During setdef's splash, either trigger pulled to where it would
+      # press only skips the splash, as every other input does. It is
+      # still held, so it presses nothing more until it is let back.
+      def splash_trigger(pull)
+        if pull.trigger == :left
+          @left_trigger = pulled = @left_trigger.pull(pull.value, @style::GAMEPAD)
+        else
+          @trigger = pulled = @trigger.pull(pull.value, @style::GAMEPAD)
+        end
+        @shell.skip_splash if pulled.pressed
       end
 
       def left_trigger(value)

@@ -25,7 +25,7 @@ The rules:
 
 **Only a press at a place touches the score.** During a game, `Show#primary` does nothing, and Start, B, X, Y, the shoulders and Select do nothing. A button that scored without aiming would bypass the game. The one exception to "every press is heard on its frame" is the failing-mouse filter, which drops a press rather than delaying it.
 
-A press during setdef's splash only skips the splash (`App#skip_splash`), and the game never hears it.
+A press during setdef's splash only skips the splash (`App#skip_splash`), and the game never hears it: every key, button, click and finger, and either trigger pulled to where it would press (`InputHandler#splash_trigger`). A trigger held on past the splash presses nothing until it is let back. Salen and Zimmerman's *Rules of Play*: play is meaningful when the player sees what an action did, and nothing behind the splash can be seen.
 
 ## Mouse
 
@@ -88,7 +88,7 @@ The cursor goes only where the stick sends it, and never drifts toward a dot. A 
 
 The right trigger is a second A (`Presentation::Trigger`). It presses once when pulled to 0.5 (`trigger_press`) and can press again only after it is let back below 0.3 (`trigger_release`), so a trigger resting near the line cannot press twice. Holding A and the right trigger together is one press (`InputHandler#gamepad_down`), which ends when both are let go.
 
-The left trigger, with the same thresholds, opens Friend groups from Home (LT).
+The left trigger, with the same thresholds, opens Friend groups from Home (LT). During the splash, either trigger only skips it.
 
 ### The buttons on each screen
 
