@@ -19,19 +19,22 @@ class PrivacyRequestsTest < Minitest::Test
             "reign_started_at" => "2026-11-01T00:00:00Z", "members" => [{ "number" => 1, "top_score" => 0 }] }.freeze
 
   # Runs a job as soon as it starts, on this thread.
-  class Instant
+  class InlineWorker
     def initialize(link) = (@link = link) && (@done = [])
     def start(job, token) = @done << [job, @link.call(job, token)]
 
     def finished = @done.shift(@done.size)
   end
 
+  # The old name, until no commit uses it.
+  Instant = InlineWorker
+
   def setup
     @heard = []
     @server = TCPServer.new("127.0.0.1", 0)
     @thread = Thread.new { serve }
     store = DotPopper::ScoreRecord::Memory.new
-    @session = Groups::Session.new(store:, worker: Instant.new(Network::Link.new("http://127.0.0.1:#{@server.addr[1]}")))
+    @session = Groups::Session.new(store:, worker: InlineWorker.new(Network::Link.new("http://127.0.0.1:#{@server.addr[1]}")))
   end
 
   def teardown
@@ -82,7 +85,7 @@ class PrivacyRequestsTest < Minitest::Test
     pump
     @session.leave(1)
     pump
-    DotPopper::Presentation::ThemeFeed.new(worker: Instant.new(Network::Link.new("http://127.0.0.1:#{@server.addr[1]}")),
+    DotPopper::Presentation::ThemeFeed.new(worker: InlineWorker.new(Network::Link.new("http://127.0.0.1:#{@server.addr[1]}")),
                                            theme_keeper: DotPopper::Presentation::ThemeKeeper.plain([]), store: DotPopper::ScoreRecord::Memory.new,
                                            clock: -> { Time.utc(2026, 11, 8, 12) }).ask
     @session.delete_everything
@@ -106,7 +109,7 @@ class PrivacyRequestsTest < Minitest::Test
   # group.txt's +sent+: its token and unsent score really go out.
   def test_the_saved_token_and_unsent_score_leave_the_device
     store = DotPopper::ScoreRecord::Memory.new("tok\n7\n1\n")
-    @session = Groups::Session.new(store:, worker: Instant.new(Network::Link.new("http://127.0.0.1:#{@server.addr[1]}")))
+    @session = Groups::Session.new(store:, worker: InlineWorker.new(Network::Link.new("http://127.0.0.1:#{@server.addr[1]}")))
     @session.refresh
     pump
 
