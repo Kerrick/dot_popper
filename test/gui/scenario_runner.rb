@@ -102,9 +102,6 @@ module DotPopperGui
       def quit(*) = ScenarioRunner.current.quit_asked
     end
   end
-
-  # The old name, until no commit uses it.
-  Director = ScenarioRunner
 end
 
 $stdout.sync = true
