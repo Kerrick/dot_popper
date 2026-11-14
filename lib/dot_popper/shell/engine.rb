@@ -58,7 +58,7 @@ module DotPopper
       def desktop_window(exclusive:) = DesktopWindow.new(exclusive:)
       def pen(shaders:) = Pen.new(Style, shaders:)
       def measure(pen) = FontMeasure.new(pen.fonts)
-      def speaker(store:) = SoundPlayer.new(Style::PATCHES, store:, volume: Style::SOUND.volume)
+      def sound_player(store:) = SoundPlayer.new(Style::PATCHES, store:, volume: Style::SOUND.volume)
       def clipboard = Clipboard.new
       def opener = UrlOpener.new
       def buzzer = Haptics.new

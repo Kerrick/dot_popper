@@ -36,7 +36,7 @@ module DotPopper
         @cabinet = @game.cabinet
         @show = @game.show
         @pen = @game.pen
-        @speaker = @game.speaker
+        @sound_player = @game.sound_player
         @splash = @game.splash
         @theme_feed = @game.theme_feed
         @watch = @game.watch
@@ -75,7 +75,7 @@ module DotPopper
         elapsed = seconds
         seconds = seconds.clamp(0.0, Rules::LONGEST_FRAME)
         if @splash
-          @splash.notes(seconds).each { @speaker.play(:tick, pitch: it.pitch) }
+          @splash.notes(seconds).each { @sound_player.play(:tick, pitch: it.pitch) }
           @splash = @splash.advance(seconds)
         end
         @splash = nil if @splash&.over?
@@ -204,7 +204,7 @@ module DotPopper
         return unless @pen.use(@show.in_use)
 
         @renderer.prepare
-        @speaker.use(@show.in_use)
+        @sound_player.use(@show.in_use)
       end
 
       # The bot's press at +x+, +y+.

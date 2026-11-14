@@ -22,7 +22,7 @@ module DotPopper
     # [desktop_window(exclusive:)] a computer's window control
     # [pen(shaders:)], [measure(pen)] what draws, and how wide text is in
     #   its fonts
-    # [speaker(store:)] what plays the sounds
+    # [sound_player(store:)] what plays the sounds
     # [clipboard], [opener], [buzzer] the system's clipboard, its URL
     #   opener, and its vibration motor
     # [notices] the notices Credits shows
@@ -42,7 +42,7 @@ module DotPopper
       PLAYTEST_LOG = GAMES_LOG
       SMALLEST_WINDOW = [400, 320].freeze
 
-      attr_reader :settings, :platform, :dot_size, :window, :cabinet, :show, :pen, :speaker, :splash, :storefront,
+      attr_reader :settings, :platform, :dot_size, :window, :cabinet, :show, :pen, :sound_player, :splash, :storefront,
                   :entitlement, :theme_feed, :watch, :cursor, :bot, :haptics, :sharing, :refresh
 
       # Its old name, until no caller says it.
@@ -165,10 +165,10 @@ module DotPopper
         @pen = @engine.pen(shaders: !flag?("DOT_POPPER_NO_SHADERS"))
         current = Style::THEMES.find { it.key == use_theme.current }
         @pen.use(current)
-        @speaker = @engine.speaker(store: file("sound.txt"))
-        @speaker.use(current)
+        @sound_player = @engine.sound_player(store: file("sound.txt"))
+        @sound_player.use(current)
         unless Presentation::Splash.skipped?(settings.env)
-          @splash = Presentation::Splash.start(calm: settings.calm?, sounding: !@speaker.muted?)
+          @splash = Presentation::Splash.start(calm: settings.calm?, sounding: !@sound_player.muted?)
         end
         @storefront = Store.for(
           platform, entitlement:, channel: settings.channel, native: native_store,
@@ -182,7 +182,7 @@ module DotPopper
         use_cases = Composition.use_cases(cabinet: @cabinet, free_games: games, entitlement:, store: storefront, achievements:,
                                           stats_book:, friend_groups: groups, use_theme:)
         @show = Presentation::Show.new(
-          groups:, cabinet: @cabinet, layout: @engine.layout, sounds: @speaker, radius: dot_size.radius,
+          groups:, cabinet: @cabinet, layout: @engine.layout, sounds: @sound_player, radius: dot_size.radius,
           random:, calm: settings.calm?, tutor: Presentation::Tutor.new(file("taught.txt"), times: Style::LESSON.times),
           haptics:, clipboard:, notices: @engine.notices, sharing:,
           stats_book:, achievements:, keeper:, sizing_store:, input: starting_input, measure: @engine.measure(@pen),

@@ -300,7 +300,7 @@ class RootTest < Minitest::Test
     game.show.offer.open_led_by(:themes)
     game.entitlement.prove(DotPopper::Receipt.issue)
 
-    assert_equal [:tick, 1.3], game.speaker.played.last
+    assert_equal [:tick, 1.3], game.sound_player.played.last
   end
 
   # The root subscribes the Show it builds to the rules' events: a game
@@ -345,7 +345,7 @@ class RootTest < Minitest::Test
     env = { "DOT_POPPER_PRO" => "1", "DOT_POPPER_THEME" => "ghost", "DOT_POPPER_THEME_UNLOCKS" => "ghost" }
 
     assert_equal :ghost, root(env:).pen.theme.key
-    assert_equal :ghost, root(env:).speaker.theme.key
+    assert_equal :ghost, root(env:).sound_player.theme.key
     refute_equal :ghost, root(channel: B::WEBSITE, env:).pen.theme.key
   end
 
@@ -364,7 +364,7 @@ class RootTest < Minitest::Test
 
       assert_instance_of DotPopper::Cabinet::Home, game.cabinet.state, saved
       assert_equal in_use, game.pen.theme.key, saved
-      assert_equal in_use, game.speaker.theme.key, saved
+      assert_equal in_use, game.sound_player.theme.key, saved
       assert_equal %i[classic ghost], DotPopper::Themes.new(engine.file("themes.txt")).choices, saved
     end
   end

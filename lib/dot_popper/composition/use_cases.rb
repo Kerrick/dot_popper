@@ -9,7 +9,7 @@ module DotPopper
     # else: FinishGame hears the rules' events, before anything made after
     # it, and BuyPro hears Pro arrive (Entitlement::ProGranted). Answers
     # them by the names Presentation::Show takes. +use_theme+ is made
-    # before the rest, since the pen and the speaker take the current
+    # before the rest, since the pen and the sound player take the current
     # theme from it before anything is drawn. +starts+ are the cabinet's
     # one Starts, which StartGame holds.
     def self.use_cases(cabinet:, free_games:, entitlement:, store:, achievements:, stats_book:, friend_groups:, use_theme:,

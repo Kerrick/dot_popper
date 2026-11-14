@@ -80,8 +80,5 @@ module DotPopper
         sound
       end
     end
-
-    # Its old name, until no caller says it.
-    Speaker = SoundPlayer
   end
 end
