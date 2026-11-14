@@ -92,11 +92,11 @@ class TiltTest < Minitest::Test
   end
 
   def test_a_pull_of_one_is_the_piles_own_gravity
-    assert_equal [0.0, Style::PILE.gravity_for(R)], Gravity.down.gravity(Style::PILE.gravity_for(R))
+    assert_equal [0.0, Style::PILE.gravity_for(R)], Gravity.down.scaled(Style::PILE.gravity_for(R))
   end
 
   def test_a_reading_in_meters_a_second_squared_is_turned_to_g
-    reading = Reading.si(0.0, Gravity::STANDARD_GRAVITY, 0.0)
+    reading = Reading.si(0.0, Gravity::STANDARD, 0.0)
 
     assert_in_delta 1.0, reading.y
   end

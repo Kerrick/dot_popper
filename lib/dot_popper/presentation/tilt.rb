@@ -34,7 +34,7 @@ module DotPopper
     # +y+ down. A pull of 1 is the pile's own gravity (PileStyle), so a
     # tablet held upright, or a stick at rest, drops the dots as before.
     class Gravity < Data.define(:x, :y)
-      STANDARD_GRAVITY = 9.80665 # m/s², a reading of 1 g
+      STANDARD = 9.80665 # standard gravity, m/s², a reading of 1 g
 
       def self.down = new(x: 0.0, y: 1.0)
 
@@ -87,13 +87,10 @@ module DotPopper
 
       def length = Math.hypot(x, y)
 
-      # The pull as a gravity of +strength+, in graphics units a second
-      # squared, for World#gravity=.
-      def gravity(strength) = [x * strength, y * strength]
+      # This gravity at +strength+, in graphics units a second squared,
+      # for World#gravity=.
+      def scaled(strength) = [x * strength, y * strength]
     end
-
-    # Its old name, until no caller says it.
-    Pull = Gravity
 
     # A low-pass filter: a value that eases toward each new reading,
     # covering 63% of the way in +time_constant+ seconds, however long
@@ -123,7 +120,7 @@ module DotPopper
       end
 
       # A reading from Lota::Sensor, in meters a second squared.
-      def self.si(x, y, z) = new(x:, y:, z:) * (1.0 / Gravity::STANDARD_GRAVITY)
+      def self.si(x, y, z) = new(x:, y:, z:) * (1.0 / Gravity::STANDARD)
 
       def +(other) = Reading.new(x: x + other.x, y: y + other.y, z: z + other.z)
       def -(other) = Reading.new(x: x - other.x, y: y - other.y, z: z - other.z)

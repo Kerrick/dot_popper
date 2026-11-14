@@ -50,7 +50,7 @@ module DotPopper
         return unless @world
 
         close_lid
-        @world.gravity = pull.gravity(@style.gravity_for(@radius))
+        @world.gravity = pull.scaled(@style.gravity_for(@radius))
         @balls.each_value { wake(it) } if wake
       end
 
