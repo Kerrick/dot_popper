@@ -69,8 +69,5 @@ module DotPopper
         [[width, smallest[0]].max, [height, smallest[1]].max] if width && height
       end
     end
-
-    # The old name, until no commit uses it.
-    Settings = DeveloperSettings
   end
 end
