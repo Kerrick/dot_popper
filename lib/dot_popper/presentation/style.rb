@@ -107,8 +107,6 @@ module DotPopper
         }.freeze,
         cleared: "Stats cleared.", undo: ByInput.new(touch: "Undo", mouse: "Undo", gamepad: "Undo (Y)"),
         labels: {
-          records: "Your stats with %s dots", records_by_screen: "Your stats with %s dots on screens this size",
-          records_unnamed: "Your stats on screens this size",
           chart_note: "Brighter bars are games that count here.",
           score_record: "Highest score", longest_game: "Longest game",
           most_dots_in_a_row: "Most dots in a row without a mistake", shortest_time_to_pop: "Shortest Time to Pop",
@@ -128,7 +126,6 @@ module DotPopper
         }.freeze,
         goal_done: "Done today:", goal_met: "You met today's goal!",
         screen_size: {
-          here: "This screen is about %d dots wide and %d dots tall.",
           played: "Played on a screen about %d dots wide and %d dots tall.",
           standard_played: "Played with standard dots.",
           choice: "Dot size", standard: "Standard", smaller: "Smaller", bigger: "Bigger",

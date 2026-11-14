@@ -185,7 +185,6 @@ class AchievementsOnStatsTest < Minitest::Test
   end
 
   def build_sheet
-    StatsSheet.build(stats, score_record: 9, words: Style::WORDS, size_class: MEDIUM, field: DotPopper::Field.new(1200, 800, R),
-                              achievements: @achievements)
+    StatsSheet.build(stats, score_record: 9, words: Style::WORDS, size_class: MEDIUM, achievements: @achievements)
   end
 end

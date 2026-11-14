@@ -60,8 +60,6 @@ class WordsTest < Minitest::Test
     assert_equal "Played with standard dots.", Style::WORDS.played_on(DotPopper::Field.new(1200, 800, 50), standard: true)
     assert_equal "Dot Popper: 25 points\n🟡 27 dots · ⚫ 1 mistake · ⏱ 38 seconds\n#{screen}",
                  Style::WORDS.share_text(25, stats, score_record: 30, new_score_record: false, screen:)
-    assert_equal "This screen is about 4 dots wide and 9 dots tall.",
-                 Style::WORDS.screen_here(DotPopper::Field.new(395, 850, 50))
     assert_equal [1, 1], Words.dots_across(DotPopper::Field.new(40, 20, 50)), "never no dots at all"
   end
 

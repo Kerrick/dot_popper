@@ -17,8 +17,7 @@ class StatsSheetTest < Minitest::Test
 
   MEDIUM = DotPopper::SizeClass::MEDIUM
 
-  def sheet = StatsSheet.build(stats, score_record: 27, words: Style::WORDS, streak: 3, size_class: MEDIUM,
-                                        field: DotPopper::Field.new(1200, 800, R))
+  def sheet = StatsSheet.build(stats, score_record: 27, words: Style::WORDS, streak: 3, size_class: MEDIUM)
 
   def test_the_sheet_shows_the_daily_goals_streaks
     assert_equal [["Days in a row", "3 days"], ["Most days in a row", "7 days"]],
@@ -28,7 +27,6 @@ class StatsSheetTest < Minitest::Test
   def test_the_sheet_lists_the_records_and_the_totals_in_plain_words
     rows = sheet.records.rows.to_h { [it.label, it.value] }
 
-    assert_equal "Your stats on screens this size", sheet.records.heading, "on the 24 × 16 R window the sizes look alike, and neither is named"
     assert_equal({ "Highest score" => "27", "Longest game" => "48 seconds",
                    "Most dots in a row without a mistake" => "18", "Shortest Time to Pop" => "0.3 seconds",
                    "Longest Time to Pop" => "6.2 seconds" }, rows)
@@ -39,40 +37,27 @@ class StatsSheetTest < Minitest::Test
   end
 
   def test_the_records_are_this_screens_and_the_totals_every_screens
-    phone = StatsSheet.build(stats, score_record: 6, words: Style::WORDS, size_class: DotPopper::SizeClass::SMALL,
-                                      field: DotPopper::Field.new(395, 850, R))
+    phone = StatsSheet.build(stats, score_record: 6, words: Style::WORDS, size_class: DotPopper::SizeClass::SMALL)
 
     assert_equal ["6", "12 seconds", "3", "None yet"], phone.records.rows.first(4).map(&:value)
     assert_equal "42", phone.totals.rows.first.value
-    assert_equal "This screen is about 4 dots wide and 9 dots tall.", phone.notes.first
-    assert_equal "This screen is about 12 dots wide and 8 dots tall.", sheet.notes.first
-    assert_equal 1, sheet.notes.size, "one short line, with the usual dot size"
   end
 
-  def test_with_standard_dots_the_sheet_says_so
-    phone = DotPopper::Field.new(395, 850, R)
-    standard = StatsSheet.build(stats, score_record: 0, words: Style::WORDS, size_class: DotPopper::SizeClass::STANDARD,
-                                       field: DotPopper::Field.new(395, 850, 30),
-                                       sizing: DotPopper::DotSizing::STANDARD, preview: SizingPreview.of(phone, Style::SIZING))
+  # Standard games keep records of their own, apart from every screen
+  # class of the other size.
+  def test_standard_games_keep_records_of_their_own
+    standard = StatsSheet.build(stats, score_record: 0, words: Style::WORDS, size_class: DotPopper::SizeClass::STANDARD)
 
-    assert_equal "Your stats with standard dots", standard.records.heading
     assert_equal ["None yet"], standard.records.rows.map(&:value).values_at(3)
-    assert_equal ["This screen is about 7 dots wide and 14 dots tall."], standard.notes
   end
 
-  # The other size is named as Settings names it here: "Bigger" on a
-  # phone, "Smaller" on a big monitor.
-  def test_with_the_other_size_the_sheet_names_it_as_settings_does
-    phone = DotPopper::Field.new(395, 850, R)
-    monitor = DotPopper::Field.new(3008, 1692, R)
-    bigger = StatsSheet.build(stats, score_record: 6, words: Style::WORDS, size_class: DotPopper::SizeClass::SMALL, field: phone,
-                                       preview: SizingPreview.of(phone, Style::SIZING))
-    smaller = StatsSheet.build(stats, score_record: 6, words: Style::WORDS, size_class: DotPopper::SizeClass::LARGE, field: monitor,
-                                        preview: SizingPreview.of(monitor, Style::SIZING))
+  # Where some bars are of games that count elsewhere, a line under the
+  # chart says which do.
+  def test_the_chart_says_which_bars_count_where_some_do_not
+    phone = StatsSheet.build(stats, score_record: 6, words: Style::WORDS, size_class: DotPopper::SizeClass::SMALL)
 
-    assert_equal "Your stats with bigger dots on screens this size", bigger.records.heading
-    assert_equal "Brighter bars are games that count here.", bigger.chart_note
-    assert_equal "Your stats with smaller dots on screens this size", smaller.records.heading
+    assert_equal "Brighter bars are games that count here.", phone.chart_note
+    assert_nil sheet.chart_note, "every bar counts, so nothing needs saying"
   end
 
   def test_with_no_games_the_sheet_is_empty_and_says_none_yet

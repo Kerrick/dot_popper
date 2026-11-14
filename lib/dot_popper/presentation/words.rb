@@ -171,9 +171,6 @@ module DotPopper
          screen].compact.join("\n")
       end
 
-      # "This screen is about 12 dots wide and 8 dots tall."
-      def screen_here(field) = format(screen_size.fetch(:here), *Words.dots_across(field))
-
       # The shared result's last line: "Played on a screen about 12 dots
       # wide and 8 dots tall.", or, with +standard+ dots, "Played with
       # standard dots."
@@ -191,12 +188,6 @@ module DotPopper
 
       # The control's label: "Dot size".
       def sizing_label = screen_size.fetch(:choice)
-
-      # The Stats screen's heading for the records it shows: "Your stats
-      # with standard dots", or for the other size "Your stats with bigger
-      # dots on screens this size", by its name here (#sizing). Where the
-      # two sizes look alike, Settings names neither, and nor does this.
-      def records_heading(sizing, preview = nil) = sized(:records, sizing, preview)
 
       # The line under the Stats screen's chart, when some of its bars
       # are of games that do not count toward the records shown: "Brighter
@@ -288,19 +279,6 @@ module DotPopper
         elsif score == score_record && score_record.positive? then ", tying my record!"
         else ""
         end
-      end
-
-      # The label +key+ for the dots +sizing+ gives, with their name in
-      # it: one for the standard size, and for the other, whose records
-      # are kept by screen size, one with its name here, or one with none
-      # where the two look alike.
-      def sized(key, sizing, preview)
-        return format(labels.fetch(key), sizing(sizing, preview).downcase) if sizing.standard?
-
-        effect = preview && effect_of(sizing, preview)
-        return labels.fetch(:"#{key}_unnamed") unless %i[smaller bigger].include?(effect)
-
-        format(labels.fetch(:"#{key}_by_screen"), sizing(sizing, preview).downcase)
       end
 
       # :smaller or :bigger: what +sizing+ does to the dots here, next to

@@ -16,15 +16,14 @@ module DotPopper
     # score record: the player's records, their totals, the daily goal's
     # streaks (+streak+ is the current one, as it stands today), and the
     # last few scores for the chart. The records, and +score_record+, are those of
-    # screens of +size_class+, the screen's now, and +notes+ say how big
-    # +field+, the screen, is, and what +sizing+ (DotSizing) does, named as
-    # +preview+ (SizingPreview) names it in Settings. With no game played yet, +empty+ is true
+    # screens of +size_class+, the screen's now; their section has no
+    # heading of its own (Shell::StatsPainter heads its card). With no game played yet, +empty+ is true
     # and there is nothing to list. +mine+ says, for each of the last
     # +scores+, whether it was played in +size_class+, and so counts
     # toward the records shown; the chart dims the others, and +chart_note+
     # says so whenever there are any. +achievements+ lists the achievements, or is nil
     # when the sheet is built with no Achievements to list.
-    class StatsSheet < Data.define(:records, :totals, :goal, :scores, :empty, :notes, :mine, :chart_note, :achievements)
+    class StatsSheet < Data.define(:records, :totals, :goal, :scores, :empty, :mine, :chart_note, :achievements)
       # The achievements as a section, each with its mark filled if earned
       # and a ring if not, the same for a Free player and a Pro one (what is
       # earned while Free is kept, Achievements). It takes no tap: a Free
@@ -40,11 +39,10 @@ module DotPopper
         StatsSection.new(heading: AchievementWords.heading(achievements.count), rows:)
       end
 
-      def self.build(stats, score_record:, words:, streak: 0, size_class: SizeClass::MEDIUM, field: nil,
-                     sizing: DotSizing::BIGGER_OR_SMALLER, preview: nil, achievements: nil)
+      def self.build(stats, score_record:, words:, streak: 0, size_class: SizeClass::MEDIUM, achievements: nil)
         labels = words.labels
         mine = stats.records_in(size_class)
-        records = StatsSection.new(heading: words.records_heading(sizing, preview), rows: [
+        records = StatsSection.new(heading: nil, rows: [
           StatsRow.new(label: labels[:score_record], value: score_record.to_s),
           StatsRow.new(label: labels[:longest_game], value: Words.count(mine.longest_game.round, "second")),
           StatsRow.new(label: labels[:most_dots_in_a_row], value: mine.most_dots_in_a_row.to_s),
@@ -64,7 +62,7 @@ module DotPopper
         ])
         mine = stats.recent_classes.map { it == size_class }
         new(records:, totals:, goal:, scores: stats.recent, empty: stats.games.zero?,
-            notes: field ? [words.screen_here(field)] : [], mine:,
+            mine:,
             chart_note: (words.chart_note unless mine.all?), achievements: achievements_section(achievements))
       end
     end
