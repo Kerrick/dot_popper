@@ -61,7 +61,4 @@ module DotPopper
       @archive.call("games-#{@clock.call.strftime("%Y%m%d-%H%M%S")}.csv").write(old)
     end
   end
-
-  # The old name, until no commit uses it.
-  PlaytestLog = GamesLog
 end

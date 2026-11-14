@@ -38,8 +38,6 @@ module DotPopper
     class Root
       Style = Presentation::Style
       GAMES_LOG = "games.csv"
-      # The old name, until no commit uses it.
-      PLAYTEST_LOG = GAMES_LOG
       SMALLEST_WINDOW = [400, 320].freeze
 
       attr_reader :settings, :platform, :dot_size, :window, :cabinet, :show, :pen, :sound_player, :splash, :storefront,
