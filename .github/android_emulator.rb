@@ -109,6 +109,14 @@ adb("shell", "settings", "put", "secure", "immersive_mode_confirmations", "confi
 adb("logcat", "-G", "16M", allow_failure: true)
 say adb("install", "-r", "-g", apk).lines.last.to_s.strip
 adb("logcat", "-b", "main,system,crash,events", "-c")
+# The app's lines as it prints them: a dump of the log each turn of the
+# loop lagged by seconds on a busy machine, and a key timed from a line
+# then missed the state it was meant for (Back at Game Over arrived on
+# Home).
+streamed = []
+stream_in, stream_out, stream = Open3.popen2("adb", "logcat", "-v", "raw", "-s", "#{package}:V")
+stream_in.close
+reader = Thread.new { stream_out.each_line { streamed << it.chomp unless it.start_with?("--------- ") } }
 extras = envs.flat_map { |name, value| ["--es", "lota.env.#{name}", value] }
 say adb("shell", "am", "start", "-W", "-n", "#{package}/org.setdef.fledge.host.MainActivity", *extras).strip
 
@@ -145,7 +153,7 @@ pending_taps = taps.sort_by(&:first)
 commands.sort_by!(&:first)
 shot_number = 0
 loop do
-  lines = app_lines(package)
+  lines = streamed.dup
   lines.drop(seen).each { |line| say "app: #{line}" }
   seen = lines.size
   origin ||= Time.now if lines.any? { ready.match?(it) }
@@ -217,9 +225,11 @@ loop do
     say "timed out after #{timeout} s"
     break
   end
-  sleep 0.25
+  sleep 0.1
 end
 
+Process.kill("TERM", stream.pid) rescue nil # rubocop:disable Style/RescueModifier
+reader.join(2)
 File.write(File.join(out, "logcat.txt"), adb("logcat", "-d", "-b", "main,system,crash,events", "-v", "threadtime"))
 adb("shell", "am", "force-stop", package, allow_failure: true)
 lines = app_lines(package)
