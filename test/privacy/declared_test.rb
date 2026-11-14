@@ -205,8 +205,9 @@ class PrivacyDeclaredTest < Minitest::Test
   end
 
   # Where save files are opened: the shell (Shell::SaveFile.new), and the
-  # composition root, which asks the engine for each by name (#file).
-  def shell_sources = Dir[File.join(ROOT, "lib/dot_popper/{shell,composition}/*.rb")]
+  # composition root, which asks the engine for each by name (#file), with
+  # the test build's part of it.
+  def shell_sources = Dir[File.join(ROOT, "lib/dot_popper/{shell,composition,test_build}/*.rb")]
 
   # Each name a save file is opened by, leaving out the engine's and the
   # root's own #file, which only pass a name on.
