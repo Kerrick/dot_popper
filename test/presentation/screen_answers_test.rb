@@ -65,9 +65,8 @@ class ScreenAnswersTest < Minitest::Test
     # heard on Game Over's pile as a click.
     def a_at_nothing
       x, y = nothing || (return :no_place)
-      fixture.handler.fake_pad(:press, x, y)
-      fixture.tick(0.05)
-      fixture.handler.fake_pad(:release, x, y)
+      fixture.handler.fake_pad(:move, x, y)
+      pad(:a)
     end
 
     # B: the screen's Back, or on Home, where the system lets the game quit

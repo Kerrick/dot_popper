@@ -451,8 +451,12 @@ module Inputs
     end
 
     # A, with the InputHandler's cursor where this one is.
-    def pressed(x, y) = fixture.handler.fake_pad(:press, x, y).then { nil }
-    def released(x, y) = fixture.handler.fake_pad(:release, x, y).then { nil }
+    def pressed(x, y)
+      fixture.handler.fake_pad(:move, x, y)
+      P::ButtonPress.new(button: :a)
+    end
+
+    def released(_x, _y) = P::ButtonRelease.new(button: :a)
 
     # The right stick, held down or up for long enough to move the list
     # about a page, a frame at a time.
@@ -588,7 +592,12 @@ module Inputs
       input = @input.new(fixture)
       outcome = nil
       path.each_with_index do |step, i|
-        before = trace(fixture) if i == path.size - 1
+        if i == path.size - 1
+          # What the time a press takes would change anyway (a store's
+          # answer arriving) is not the press's doing: let it pass first.
+          fixture.tick(Input::LOOK)
+          before = trace(fixture)
+        end
         outcome = take(step, fixture, input)
         return [nil, nil, outcome] unless outcome == :pressed
 
