@@ -46,7 +46,7 @@ class TutorialBeatsTest < Minitest::Test
         [256, [[:bonk, 1.0]]], [434, [[:pop, 1.0]]],
         [468, [[:tick, 1.5], [:tick, 1.0]]],
       ],
-      flights: [
+      traveling_numbers: [
         [0, []], [77, [["+1", nil, :score]]],
         [102, []], [109, [["+1", :stopwatch, :time]]],
         [134, []], [142, [["+1", :dot, :dots_in_a_row]]],
@@ -95,7 +95,7 @@ class TutorialBeatsTest < Minitest::Test
         [251, [[:bonk, 1.0]]], [429, [[:pop, 1.0]]],
         [463, [[:tick, 1.5], [:tick, 1.0]]],
       ],
-      flights: [
+      traveling_numbers: [
         [0, []], [77, [["+1", nil, :score]]],
         [102, []], [109, [["+1", :stopwatch, :time]]],
         [134, []], [142, [["+1", :dot, :dots_in_a_row]]],
@@ -144,7 +144,7 @@ class TutorialBeatsTest < Minitest::Test
         [256, [[:bonk, 1.0]]], [434, [[:pop, 1.0]]],
         [468, [[:tick, 1.5], [:tick, 1.0]]],
       ],
-      flights: [
+      traveling_numbers: [
         [0, []], [77, [["+1", nil, :score]]],
         [102, []], [109, [["+1", :stopwatch, :time]]],
         [134, []], [142, [["+1", :dot, :dots_in_a_row]]],
@@ -234,7 +234,7 @@ class TutorialBeatsTest < Minitest::Test
       played = show.sounds.played
       seen[:sounds] << [frame, played.drop(heard).map { |name, pitch| [name, pitch.round(3)] }] if played.size > heard
       heard = played.size
-      noted(seen[:flights], frame, tutorial.flights.map { [it.text, it.icon, it.to.name] })
+      noted(seen[:traveling_numbers], frame, tutorial.traveling_numbers.map { [it.text, it.icon, it.to.name] })
       noted(seen[:spotlight], frame, tutorial.spotlight.to&.name)
       pose = tutorial.guide_pose
       seen[:guide] << [frame, pose.x.round(1), pose.y.round(1), pose.press.round(2)] if pose && (frame % 20).zero?

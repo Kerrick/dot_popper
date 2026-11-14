@@ -128,7 +128,7 @@ class ShowTutorialTest < Minitest::Test
     press_main
     update_for(0.1) until @show.tutorial.beat == :aim
     tap_dot(@show.tutorial.dots.find { it.id == TutorialScene::BRIGHT })
-    update_for(0.05) until @show.tutorial.flights.any? { it.to.name == :score && it.text.start_with?("−") }
+    update_for(0.05) until @show.tutorial.traveling_numbers.any? { it.to.name == :score && it.text.start_with?("−") }
     @show.back
 
     assert_equal [0, 9.0, 0], [@cabinet.game.score, @cabinet.game.countdown.remaining, @cabinet.game.dots_in_a_row]

@@ -94,7 +94,7 @@ class TutorialTest < Minitest::Test
     assert_equal [0, 10], shown
 
     play_for(SCRIPT.gap + (SCRIPT.flight / 2))
-    flight = @tutorial.flights.first
+    flight = @tutorial.traveling_numbers.first
     assert_equal ["+1", Anchor.hud(:score)], [flight.text, flight.to]
     assert_equal Anchor.hud(:score), @tutorial.spotlight.to
     play_for(SCRIPT.flight)
@@ -104,7 +104,7 @@ class TutorialTest < Minitest::Test
     assert_equal [1, 11], shown, "and the time its second"
     assert_in_delta 0.0, @tutorial.rate, 1e-9, "time holds still meanwhile"
 
-    flight = @tutorial.flights.first
+    flight = @tutorial.traveling_numbers.first
     assert_equal ["+1", :dot, Anchor.hud(:dots_in_a_row)], [flight.text, flight.icon, flight.to], "a dot flies to the row"
     assert_equal Anchor.hud(:dots_in_a_row), @tutorial.spotlight.to
     assert_equal 0, @tutorial.hud.dots_in_a_row, "which counts it only as it lands"
@@ -129,17 +129,17 @@ class TutorialTest < Minitest::Test
     play_for(SCRIPT.stop)
     assert_in_delta 0.0, @tutorial.rate
     assert_operator Math.hypot(bright.x - next_dot.x, bright.y - next_dot.y), :<, 2 * R, "it has only peeked out"
-    assert_empty @tutorial.flights
+    assert_empty @tutorial.traveling_numbers
 
     pressed = nil
     play_until do
       pose = @tutorial.guide_pose
       pressed ||= pose if pose&.press == 1.0
-      @tutorial.flights.any?
+      @tutorial.traveling_numbers.any?
     end
     assert pressed && near?(pressed, bright), "the guide presses the popped dot"
     assert_equal ["−1", Anchor.at(bright.x, bright.y), Anchor.hud(:score)],
-                 @tutorial.flights.first.then { [it.text, it.from, it.to] }, "its cost flies out of the dot, the score's first"
+                 @tutorial.traveling_numbers.first.then { [it.text, it.from, it.to] }, "its cost flies out of the dot, the score's first"
     assert_equal [1, 11], shown, "and counts only as it lands"
     assert_equal :bonk, @sounds.names.last
     assert_equal 1, @effects.mistake_outlines.size, "the bright dot under it is outlined"
@@ -150,13 +150,13 @@ class TutorialTest < Minitest::Test
 
     play_for(SCRIPT.flight + STEP)
     assert_equal [0, 11], shown, "the score drops as it lands"
-    assert_empty @tutorial.flights, "and the next waits"
+    assert_empty @tutorial.traveling_numbers, "and the next waits"
     play_for(SCRIPT.gap + (SCRIPT.flight / 2))
-    assert_equal [["−2", :stopwatch, Anchor.hud(:time)]], @tutorial.flights.map { [it.text, it.icon, it.to] }
+    assert_equal [["−2", :stopwatch, Anchor.hud(:time)]], @tutorial.traveling_numbers.map { [it.text, it.icon, it.to] }
     play_for(SCRIPT.flight)
     assert_equal [0, 9], shown, "the time, in its turn"
     assert_equal 1, @tutorial.hud.dots_in_a_row
-    assert_equal [["−1", :dot, Anchor.hud(:dots_in_a_row)]], @tutorial.flights.map { [it.text, it.icon, it.to] }
+    assert_equal [["−1", :dot, Anchor.hud(:dots_in_a_row)]], @tutorial.traveling_numbers.map { [it.text, it.icon, it.to] }
     play_for(SCRIPT.flight)
     assert_equal 0, @tutorial.hud.dots_in_a_row, "and the row, last"
     assert_equal :slide, @tutorial.beat
@@ -261,7 +261,7 @@ class TutorialTest < Minitest::Test
     play_until { @tutorial.beat == :warn }
     assert_unheard(:warn) { [bright, next_dot] }
 
-    play_until { @tutorial.flights.any? }
+    play_until { @tutorial.traveling_numbers.any? }
     assert_unheard(:warn, "while the guide's own cost plays") { [bright, next_dot] }
     play_until { @tutorial.hud.dots_in_a_row.zero? }
 
@@ -340,7 +340,7 @@ class TutorialTest < Minitest::Test
 
     play_until { @tutorial.beat == :peek }
     assert_in_delta SCRIPT.gap + (3 * SCRIPT.flight) + (2 * SCRIPT.gap) + SCRIPT.hold,
-                    @tutorial.now - @popped_at, 2 * STEP, "and the beat takes three flights and its hold"
+                    @tutorial.now - @popped_at, 2 * STEP, "and the beat takes three traveling numbers and its hold"
   end
 
   def test_the_guides_mistake_empties_the_row_and_rings_it_red
@@ -433,7 +433,7 @@ class TutorialTest < Minitest::Test
     heard = []
     @cabinet.subscribe { heard << it }
     to_the_peek
-    play_until { @tutorial.flights.any? }
+    play_until { @tutorial.traveling_numbers.any? }
 
     assert_equal [0, 9.0, 0], [@cabinet.game.score, @cabinet.game.countdown.remaining, @cabinet.game.dots_in_a_row]
     assert_empty heard
@@ -474,7 +474,7 @@ class TutorialTest < Minitest::Test
   def assert_unheard(beat, note = nil)
     assert_equal beat, @tutorial.beat, note
     before = [@sounds.names.dup, @haptics.buzzes.dup, shown, @tutorial.dots.map(&:popped?), @tutorial.hud.dots_in_a_row,
-              @tutorial.flights.size, @effects.mistake_outlines.size]
+              @tutorial.traveling_numbers.size, @effects.mistake_outlines.size]
     rings = @effects.rings.size
     yield.each do |dot|
       tap_on(dot)
@@ -484,7 +484,7 @@ class TutorialTest < Minitest::Test
 
     assert_equal beat, @tutorial.beat, note
     assert_equal before, [@sounds.names, @haptics.buzzes, shown, @tutorial.dots.map(&:popped?), @tutorial.hud.dots_in_a_row,
-                          @tutorial.flights.size, @effects.mistake_outlines.size], note
+                          @tutorial.traveling_numbers.size, @effects.mistake_outlines.size], note
     assert_equal rings, @effects.rings.size, "#{note}: no ripple"
   end
 

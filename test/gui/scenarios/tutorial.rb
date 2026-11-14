@@ -99,7 +99,7 @@ module DotPopperGui
       check_equal([1, 10], shown, "the point lands in the score")
       wait_for("the second to land", within: 120) { shown == [1, 11] }
       keep_screenshot(name("2-time"))
-      wait_for("the dot to fly to the row", within: 120) { tutorial.flights.any? { it.icon == :dot } }
+      wait_for("the dot to fly to the row", within: 120) { tutorial.traveling_numbers.any? { it.icon == :dot } }
       wait(0.2)
       keep_screenshot(name("2-row-flight"))
       wait_for("the dot to land in the row", within: 120) { tutorial.hud.dots_in_a_row == 1 }
@@ -117,14 +117,14 @@ module DotPopperGui
 
     def wait_for_the_bright_dot
       freeze_on(:warn)
-      wait_for("the guide's tap on the popped dot", within: 200) { tutorial.flights.any? }
+      wait_for("the guide's tap on the popped dot", within: 200) { tutorial.traveling_numbers.any? }
       unheard_while_the_guide_shows
       wait(0.2)
       keep_screenshot(name("3-cost-score"))
-      wait_for("the cost's second object", within: 200) { tutorial.flights.any? { it.icon == :stopwatch } }
+      wait_for("the cost's second object", within: 200) { tutorial.traveling_numbers.any? { it.icon == :stopwatch } }
       wait(0.2)
       keep_screenshot(name("3-cost-time"))
-      wait_for("the cost's row object", within: 200) { tutorial.flights.any? { it.icon == :dot } }
+      wait_for("the cost's row object", within: 200) { tutorial.traveling_numbers.any? { it.icon == :dot } }
       wait(0.2)
       keep_screenshot(name("3-cost-row"))
       wait_for("the row to empty", within: 200) { tutorial.hud.dots_in_a_row.zero? }

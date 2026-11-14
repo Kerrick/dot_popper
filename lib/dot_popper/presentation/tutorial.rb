@@ -136,7 +136,7 @@ module DotPopper
         @beat = :drift
         @time = EasedValue.steady(1.0)
         @cues = []
-        @flights = []
+        @traveling_numbers = []
         @spotlight = Spotlight.off(@script.spotlight)
         @guide = GuideHand.none(@guide_style)
         @animations = DotAnimations.new(style::MOTION)
@@ -182,7 +182,7 @@ module DotPopper
       def guide_pose = guide.pose(now, dots, radius)
 
       # The numbers in the air (TravelingNumber).
-      def flights = @flights.select { it.flying?(now) }
+      def traveling_numbers = @traveling_numbers.select { it.flying?(now) }
 
       # How fast its time flows now: 1 as in the game, 0 when it stands
       # still.
@@ -194,7 +194,7 @@ module DotPopper
         flow = (@time.value(before) + rate) / 2.0
         @cabinet.move_paused(seconds * flow) if flow.positive?
         @hud = hud.showing(hud.score, hud.seconds, now)
-        @flights = @flights.reject { now - it.born >= it.duration }
+        @traveling_numbers = @traveling_numbers.reject { now - it.born >= it.duration }
         play_cues
         follow
       end
@@ -515,7 +515,7 @@ module DotPopper
       # A number flying from where the dot was tapped into the HUD's score,
       # time or row (+to+), as +amount+, with what it counts drawn after it.
       def fly_in(x, y, to, amount, color, born, duration)
-        @flights << TravelingNumber.new(text: Words.points(amount), icon: { time: :stopwatch, dots_in_a_row: :dot }[to], color:,
+        @traveling_numbers << TravelingNumber.new(text: Words.points(amount), icon: { time: :stopwatch, dots_in_a_row: :dot }[to], color:,
                                from: Anchor.at(x, y), to: Anchor.hud(to), born:, duration:)
       end
 

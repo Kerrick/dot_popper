@@ -178,8 +178,8 @@ Failure is the moment a player is ready to learn (Juul), and showing the consequ
 
 ## Tests
 
-- `test/presentation/tutorial_test.rb`: every beat, the first dot's start on every screen size, the flights and their order, the cost and its floors, the wag and its timing, the parting near a wall, the row, the player's turn, taps on popped dots, which never reach the game, the game hearing each pop at its tap, its clock standing still, catching up, and resizing.
-- `test/presentation/tutorial_beats_test.rb`: frame by frame on three screens, each beat, the HUD's numbers as they land, the sounds, the flights, the spotlight, the guide and the first two dots' places, and the game that follows.
+- `test/presentation/tutorial_test.rb`: every beat, the first dot's start on every screen size, the traveling numbers and their order, the cost and its floors, the wag and its timing, the parting near a wall, the row, the player's turn, taps on popped dots, which never reach the game, the game hearing each pop at its tap, its clock standing still, catching up, and resizing.
+- `test/presentation/tutorial_beats_test.rb`: frame by frame on three screens, each beat, the HUD's numbers as they land, the sounds, the traveling numbers, the spotlight, the guide and the first two dots' places, and the game that follows.
 - `test/presentation/show_tutorial_test.rb`: opening on a first Play and by How to play, never again after Stats are cleared, never for a player who has played, play beginning on the same game, the game counting as any game, Skip by button, Escape and B at several beats, every input on the guide's demonstration, and resizing.
 - `test/presentation/games_test.rb`: the free game spent as the tutorial opens, and nothing more at its end or at Skip.
 - `test/cabinet_test.rb`: the paused game.

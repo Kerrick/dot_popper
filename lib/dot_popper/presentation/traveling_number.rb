@@ -30,8 +30,5 @@ module DotPopper
 
       def into_hud? = to.hud? && !from.hud?
     end
-
-    # Its old name, until no caller says it.
-    Flight = TravelingNumber
   end
 end

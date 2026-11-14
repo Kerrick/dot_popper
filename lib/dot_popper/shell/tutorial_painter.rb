@@ -35,7 +35,7 @@ module DotPopper
         halo(light.to.name, pill, light.strength(now), now - light.at) if light.to&.hud? && light.to.name != :dots_in_a_row
         row_ring(scene.row_notice, now, spots.fetch(:dots_in_a_row), pill, scene.hud.size) if scene.row_notice
         font = pen.fonts.bold(layout.scaled(pen.style::TYPE.floating_text))
-        scene.flights.each { flight(it, now, scene.dots, spots, scene.radius, font) }
+        scene.traveling_numbers.each { traveling_number(it, now, scene.dots, spots, scene.radius, font) }
         GuidePainter.new(pen:).draw(scene.guide_pose, show.input, scene.radius)
         return unless show.skip_reach
 
@@ -149,14 +149,14 @@ module DotPopper
       end
 
       # A number in the air, and its stopwatch for a second.
-      def flight(flight, now, dots, spots, radius, font)
-        from = flight.from.point(dots, spots, radius)
-        to = flight.to.point(dots, spots, radius)
-        share = flight.progress(now)
+      def traveling_number(number, now, dots, spots, radius, font)
+        from = number.from.point(dots, spots, radius)
+        to = number.to.point(dots, spots, radius)
+        share = number.progress(now)
         x = from[0] + ((to[0] - from[0]) * share)
         y = from[1] + ((to[1] - from[1]) * share)
-        tally = Presentation::Tally.new(text: flight.text, stopwatch: flight.icon == :stopwatch, dot: flight.icon == :dot)
-        TallyPainter.new(pen:).centered(tally, font, x, y, flight.color, flight.alpha(now))
+        tally = Presentation::Tally.new(text: number.text, stopwatch: number.icon == :stopwatch, dot: number.icon == :dot)
+        TallyPainter.new(pen:).centered(tally, font, x, y, number.color, number.alpha(now))
       end
     end
   end
