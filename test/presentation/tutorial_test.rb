@@ -142,7 +142,7 @@ class TutorialTest < Minitest::Test
                  @tutorial.flights.first.then { [it.text, it.from, it.to] }, "its cost flies out of the dot, the score's first"
     assert_equal [1, 11], shown, "and counts only as it lands"
     assert_equal :bonk, @sounds.names.last
-    assert_equal 1, @effects.reveals.size, "the bright dot under it is outlined"
+    assert_equal 1, @effects.mistake_outlines.size, "the bright dot under it is outlined"
     assert_equal 1, @effects.rings.count { it.style == Style::ALARM_RING }
     assert_operator @tutorial.animations.pose(bright, @tutorial.now + 0.05).alarm, :>, 0.0, "it shudders"
     assert_equal [Style::HAPTICS.pop], @haptics.buzzes, "only the player's own taps buzz"
@@ -169,7 +169,7 @@ class TutorialTest < Minitest::Test
     end
     assert(poses.last(10).all? { it.press.zero? }, "then it lifts, and taps no more")
     assert(poses.last.then { !near?(it, bright) && !near?(it, next_dot) }, "and waits to one side")
-    assert_equal 1, @effects.reveals.size, "once"
+    assert_equal 1, @effects.mistake_outlines.size, "once"
 
     play_until { @tutorial.beat == :aim_next }
     assert_operator Math.hypot(bright.x - next_dot.x, bright.y - next_dot.y), :>=, SCRIPT.clear * R
@@ -474,7 +474,7 @@ class TutorialTest < Minitest::Test
   def assert_unheard(beat, note = nil)
     assert_equal beat, @tutorial.beat, note
     before = [@sounds.names.dup, @haptics.buzzes.dup, shown, @tutorial.dots.map(&:popped?), @tutorial.hud.dots_in_a_row,
-              @tutorial.flights.size, @effects.reveals.size]
+              @tutorial.flights.size, @effects.mistake_outlines.size]
     rings = @effects.rings.size
     yield.each do |dot|
       tap_on(dot)
@@ -484,7 +484,7 @@ class TutorialTest < Minitest::Test
 
     assert_equal beat, @tutorial.beat, note
     assert_equal before, [@sounds.names, @haptics.buzzes, shown, @tutorial.dots.map(&:popped?), @tutorial.hud.dots_in_a_row,
-                          @tutorial.flights.size, @effects.reveals.size], note
+                          @tutorial.flights.size, @effects.mistake_outlines.size], note
     assert_equal rings, @effects.rings.size, "#{note}: no ripple"
   end
 

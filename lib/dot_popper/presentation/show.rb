@@ -857,7 +857,7 @@ module DotPopper
         animations.wobble(event.dot.id, now)
         effects.ring(event.dot.x, event.dot.y, style::ALARM_RING, follow: event.dot.id)
         hidden = event.dots.bright_beneath(event.dot, event.x, event.y)
-        effects.reveal(hidden, style::REVEAL) if hidden
+        effects.outline(hidden, style::MISTAKE_OUTLINE) if hidden
         @mistake = Mistake.new(popped: event.dot.id, bright: hidden.id) if hidden
         effects.kick(style::PENALTY_SHAKE)
         effects.light(style::PENALTY_FLASH)
@@ -944,7 +944,7 @@ module DotPopper
         popped, bright = [mistake.popped, mistake.bright].map { |id| dots.find { it.id == id } }
         animations.wobble(popped.id, now)
         effects.ring(popped.x, popped.y, style::ALARM_RING, follow: popped.id)
-        effects.reveal(bright, style::REVEAL)
+        effects.outline(bright, style::MISTAKE_OUTLINE)
         effects.ring(bright.x, bright.y, style::SPAWN_RIPPLE, follow: bright.id)
       end
 

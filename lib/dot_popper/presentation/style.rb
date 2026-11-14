@@ -336,7 +336,7 @@ module DotPopper
       )
       # ...and if the bright dot was underneath, its outline shows through,
       # so the player sees why: it was under there.
-      REVEAL = MistakeOutlineStyle.new(
+      MISTAKE_OUTLINE = MistakeOutlineStyle.new(
         radius: Tween.new(from: 1.35, to: 1.04, duration: 0.22, ease: :out_cubic),
         alpha: Tween.new(from: 1.0, to: 0.0, duration: 0.6, ease: :in_quad),
         width: 0.075, dashes: 12, color: PALETTE.bright_light

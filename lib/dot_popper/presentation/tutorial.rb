@@ -434,7 +434,7 @@ module DotPopper
         animations.wobble(dot.id, now)
         @effects.ring(x, y, @style::ALARM_RING, follow: dot.id)
         hidden = game.dots.bright_beneath(dot, x, y)
-        @effects.reveal(hidden, @style::REVEAL) if hidden
+        @effects.outline(hidden, @style::MISTAKE_OUTLINE) if hidden
         @effects.light(@style::PENALTY_FLASH)
         @sounds.play(:bonk, pan: pan(x))
         ends = one_by_one(x, y, losses(penalty))

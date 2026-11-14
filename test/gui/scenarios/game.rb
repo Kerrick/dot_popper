@@ -3,7 +3,7 @@
 module DotPopperGui
   # A whole game, as a first-time player has it: Home, a game
   # with a few dots popped and one tap too soon on a popped dot over the bright
-  # one, its reveal and Game Over's lesson, replayed on the pile with no
+  # one, its outline and Game Over's lesson, replayed on the pile with no
   # word, the clock running out, and
   # back to Home. The score and the clock are worked out alongside,
   # from the rules' numbers, and the save files checked once it is over.
@@ -60,7 +60,7 @@ module DotPopperGui
       click(x, y)
       penalty = events.drop(before).grep(DotPopper::Events::Penalized).first
       check(penalty, "a click on a popped dot over the bright one is a mistake")
-      check(!show.effects.reveals.empty?, "the bright dot hidden under it is outlined")
+      check(!show.effects.mistake_outlines.empty?, "the bright dot hidden under it is outlined")
     end
 
     def covering_point
@@ -88,7 +88,7 @@ module DotPopperGui
       bright = ended.dots.find(&:bright?)
       check(lesson && lesson.bright == bright.id, "Game Over teaches the stacking rule from the mistake")
       wait_for("the mistake replayed on the pile", within: 300) { show.game_over.replayed.positive? }
-      check_equal([bright.id], show.effects.reveals.map(&:follow), "the bright dot it hid is outlined on the pile")
+      check_equal([bright.id], show.effects.mistake_outlines.map(&:follow), "the bright dot it hid is outlined on the pile")
       wait(0.15)
       keep_screenshot("game-over-lesson")
       wait(1.2)

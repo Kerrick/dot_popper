@@ -9,10 +9,10 @@ module DotPopper
       G = ::Lota::Graphics
       EDGE_BANDS = 8 # strips of the edge glow, without its shader
 
-      # The rings, the reveals of a hidden bright dot, and the droplets.
+      # The rings, the outlines of a hidden bright dot, and the droplets.
       def scene(effects, dots)
         rings(effects.rings, effects.now, dots)
-        reveals(effects.reveals, effects.now, dots)
+        mistake_outlines(effects.mistake_outlines, effects.now, dots)
         droplets
       end
 
@@ -54,16 +54,16 @@ module DotPopper
 
       # Each hidden dot's outline, in dashes, over a darker one so it reads
       # over a light dot as well as a dark one.
-      def reveals(reveals, now, dots)
-        reveals.each do |reveal|
-          x, y = reveal.center(dots)
-          radius = reveal.radius(now)
-          alpha = reveal.alpha(now)
-          [[pen.palette.shadow, reveal.width * 2.2, alpha * 0.5], [pen.themed(reveal.style.color), reveal.width, alpha]]
+      def mistake_outlines(outlines, now, dots)
+        outlines.each do |outline|
+          x, y = outline.center(dots)
+          radius = outline.radius(now)
+          alpha = outline.alpha(now)
+          [[pen.palette.shadow, outline.width * 2.2, alpha * 0.5], [pen.themed(outline.style.color), outline.width, alpha]]
             .each do |color, width, strength|
             pen.color(color, strength)
             G.line_width = width
-            reveal.dashes(now).each { |from, to| G.arc(:line, :open, x, y, radius, from, to, 10) }
+            outline.dashes(now).each { |from, to| G.arc(:line, :open, x, y, radius, from, to, 10) }
           end
         end
       end

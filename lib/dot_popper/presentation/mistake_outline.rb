@@ -34,9 +34,5 @@ module DotPopper
         Array.new(style.dashes) { [(it * step) + turn, (it * step) + turn + (step * 0.58)] }
       end
     end
-
-    # Their old names, until no caller says them.
-    RevealStyle = MistakeOutlineStyle
-    Reveal = MistakeOutline
   end
 end

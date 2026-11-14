@@ -3,7 +3,7 @@
 module DotPopper
   module Presentation
     # Everything that plays out after a tap and then goes away: droplets,
-    # rings, reveals, floating numbers, the shake, and the edge flash. It
+    # rings, mistake outlines, floating numbers, the shake, and the edge flash. It
     # keeps its own clock, +now+; rings, floating texts, the shake, and the flash are
     # values that say how they look at a moment. Droplets are LÖVE's
     # particles, so a burst waits here as a PendingBurst until the shell takes
@@ -16,7 +16,7 @@ module DotPopper
 
       MOST_PENDING_BURSTS = 16
 
-      attr_reader :rings, :reveals, :floating_texts, :shake, :flash, :now, :cleared
+      attr_reader :rings, :mistake_outlines, :floating_texts, :shake, :flash, :now, :cleared
 
       def initialize(radius:, random: Random.new, calm: false)
         @radius = radius
@@ -25,7 +25,7 @@ module DotPopper
         @cleared = 0
         @bursts = []
         @rings = []
-        @reveals = []
+        @mistake_outlines = []
         @floating_texts = []
         @shake = Shake.none(radius, calm:)
         @flash = EdgeFlash::NONE
@@ -54,8 +54,8 @@ module DotPopper
       end
 
       # Outlines +dot+, wherever it goes, over every other dot.
-      def reveal(dot, style)
-        keep(@reveals, MistakeOutline.new(follow: dot.id, x: dot.x, y: dot.y, style:, scale: @radius, born: now), MOST_RINGS)
+      def outline(dot, style)
+        keep(@mistake_outlines, MistakeOutline.new(follow: dot.id, x: dot.x, y: dot.y, style:, scale: @radius, born: now), MOST_RINGS)
       end
 
       def float(text, x, y, color, style)
@@ -80,7 +80,7 @@ module DotPopper
       def update(seconds)
         @now += seconds
         @rings.select! { it.alive?(now) }
-        @reveals.select! { it.alive?(now) }
+        @mistake_outlines.select! { it.alive?(now) }
         @floating_texts.select! { it.alive?(now) }
       end
 
@@ -88,7 +88,7 @@ module DotPopper
         @cleared += 1
         @bursts.clear
         @rings.clear
-        @reveals.clear
+        @mistake_outlines.clear
         @floating_texts.clear
       end
 

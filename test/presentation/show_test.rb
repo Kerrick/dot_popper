@@ -612,9 +612,9 @@ class ShowTest < Minitest::Test
     put!(bright.id, popped.x + 30, popped.y)
     @show.tap(popped.x - 20, popped.y)
 
-    assert_equal [bright.id], @show.effects.reveals.map(&:follow)
-    @show.update(Style::REVEAL.duration)
-    assert_empty @show.effects.reveals
+    assert_equal [bright.id], @show.effects.mistake_outlines.map(&:follow)
+    @show.update(Style::MISTAKE_OUTLINE.duration)
+    assert_empty @show.effects.mistake_outlines
   end
 
   # The stacking rule is taught on Game Over, never in play, and only
@@ -658,11 +658,11 @@ class ShowTest < Minitest::Test
     bright = @cabinet.game.dots.find(&:bright?)
     @cabinet.update(20)
     @show.update(Style::LESSON.every)
-    @show.effects.update(Style::REVEAL.duration)
+    @show.effects.update(Style::MISTAKE_OUTLINE.duration)
     @sounds.played.clear
 
     @show.update(Style::GAME_OVER.tally.duration)
-    assert_equal [bright.id], @show.effects.reveals.map(&:follow), "the bright dot is outlined"
+    assert_equal [bright.id], @show.effects.mistake_outlines.map(&:follow), "the bright dot is outlined"
     assert_includes @show.effects.rings.map { [it.style, it.follow] }, [Style::ALARM_RING, popped.id]
     assert_includes @show.effects.rings.map { [it.style, it.follow] }, [Style::SPAWN_RIPPLE, bright.id], "and pulses"
     assert_operator @show.animations.pose(popped, @show.now + 0.05).alarm, :>, 0.0, "the popped dot shudders"
@@ -698,7 +698,7 @@ class ShowTest < Minitest::Test
     clear_around!(live(@cabinet), popped)
     @show.tap(popped.x, popped.y)
 
-    assert_empty @show.effects.reveals
+    assert_empty @show.effects.mistake_outlines
   end
 
   def test_game_over_counts_up_then_asks_to_continue_once_ready
@@ -799,7 +799,7 @@ class ShowTest < Minitest::Test
     clear_around!(live(@cabinet), popped)
     put!(bright.id, popped.x + 30, popped.y)
     @show.tap(popped.x - 20, popped.y)
-    assert_equal 1, @show.effects.reveals.size
+    assert_equal 1, @show.effects.mistake_outlines.size
   end
 
   def finish_game(back_home: true)
