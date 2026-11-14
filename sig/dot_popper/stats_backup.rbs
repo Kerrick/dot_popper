@@ -48,6 +48,4 @@ module DotPopper
 
     def back_up: (Hash[String, String?] texts) -> void
   end
-
-  class StatsKeeper = StatsBackup
 end

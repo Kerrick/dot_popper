@@ -71,7 +71,4 @@ module DotPopper
       note.write("cleared=#{time.iso8601}\n#{saved.join}")
     end
   end
-
-  # The old name, until no commit uses it.
-  StatsKeeper = StatsBackup
 end
