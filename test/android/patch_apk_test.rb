@@ -14,9 +14,9 @@ class PatchApkTest < Minitest::Test
   def setup
     @project = Dir.mktmpdir("dot-popper-phone")
     FileUtils.mkdir_p(File.join(@project, "game/dot_popper/lib"))
-    File.write(File.join(@project, "game/dot_popper/main.rb"), "new main\n")
-    File.write(File.join(@project, "game/dot_popper/lib/rules.rb"), "new rules\n")
-    File.write(File.join(@project, "main.rb"), "new kit\n")
+    File.binwrite(File.join(@project, "game/dot_popper/main.rb"), "new main\n")
+    File.binwrite(File.join(@project, "game/dot_popper/lib/rules.rb"), "new rules\n")
+    File.binwrite(File.join(@project, "main.rb"), "new kit\n")
   end
 
   def teardown = FileUtils.rm_rf(@project)
@@ -56,7 +56,7 @@ class PatchApkTest < Minitest::Test
     patched = P.patch(base, @project)
     assert_empty P.differences(patched, P.patch(base, @project))
 
-    File.write(File.join(@project, "game/dot_popper/lib/rules.rb"), "other rules\n")
+    File.binwrite(File.join(@project, "game/dot_popper/lib/rules.rb"), "other rules\n")
     assert_equal ["assets/fledge.zip!app/game/dot_popper/lib/rules.rb"], P.differences(patched, P.patch(base, @project))
   end
 
