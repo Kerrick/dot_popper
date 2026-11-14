@@ -55,7 +55,7 @@ module DotPopperGui
       @shells = []
       @folders = []
       @lock = Mutex.new
-      @lifeline, @holder = IO.pipe
+      @lifeline, @lifeline_writer = IO.pipe
     end
 
     # Lends the block a display no other game is playing on, starting one
@@ -77,7 +77,7 @@ module DotPopperGui
 
     # Stops the displays this started, and waits until they have.
     def close
-      @holder.close unless @holder.closed?
+      @lifeline_writer.close unless @lifeline_writer.closed?
       @shells.each do |pid|
         Process.wait(pid)
       rescue Errno::ECHILD
