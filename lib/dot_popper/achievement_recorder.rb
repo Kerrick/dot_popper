@@ -114,7 +114,4 @@ module DotPopper
 
     def find(id) = (@found << id unless @found.include?(id))
   end
-
-  # The old name, until no commit uses it.
-  AchievementWatch = AchievementRecorder
 end
