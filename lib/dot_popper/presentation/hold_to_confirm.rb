@@ -52,8 +52,5 @@ module DotPopper
       # How much of the time to undo is left at +now+, from 1 down to 0.
       def left(now) = (1.0 - ((now - at) / seconds)).clamp(0.0, 1.0)
     end
-
-    # Its old name, until no caller says it.
-    UndoOffer = UndoableClear
   end
 end
