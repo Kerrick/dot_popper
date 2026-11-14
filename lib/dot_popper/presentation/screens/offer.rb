@@ -194,17 +194,22 @@ module DotPopper
         # Ctrl+V or Cmd+V pastes a license key, and Ctrl+B or Cmd+B buys:
         # chords, so no press that means continue or back, and no letter
         # of a typed license key, buys. Then, on a copy that takes license
-        # keys, a letter, digit or hyphen is typed into one, and Backspace,
-        # Delete or Enter edits or enters it, with Ctrl or Cmd held or not,
-        # so a key's letters are never shortcuts. While a key is being
-        # typed, Space does nothing: a key's text ignores spaces, so one
-        # typed as it is printed, in groups, never closes the offer.
+        # keys, a letter, digit or hyphen, alone or with Alt (Option types
+        # characters on a Mac), is typed into one, whatever the key does
+        # on other screens, so a key's letters are never shortcuts; with
+        # Ctrl or Cmd it is the system's shortcut (select all, copy, quit),
+        # and types nothing. Backspace, Delete or Enter edits or enters it,
+        # with any modifier keys held or none. While a key is being typed,
+        # Space does nothing: a key's text ignores spaces, so one typed as
+        # it is printed, in groups, never closes the offer.
         def key_bindings = KEY_BINDINGS
+        CHARACTERS = [*("a".."z"), *("0".."9"), "minus"].map(&:to_sym).freeze
         KEY_BINDINGS = [
           KeyBinding.new(keys: :v, with: KeyBinding::COMMAND, does: :paste),
           KeyBinding.new(keys: :b, with: KeyBinding::COMMAND, does: :buy),
-          KeyBinding.new(keys: [*("a".."z"), *("0".."9"), :minus, :backspace, :delete, :enter].map(&:to_sym),
-                         held_or_not: true, does: :type),
+          KeyBinding.new(keys: CHARACTERS, does: :type),
+          KeyBinding.new(keys: CHARACTERS, with: %i[alt], does: :type),
+          KeyBinding.new(keys: %i[backspace delete enter], held_or_not: true, does: :type),
           KeyBinding.new(keys: :space, does: :typing?)
         ].freeze
 

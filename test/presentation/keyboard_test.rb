@@ -107,8 +107,7 @@ class KeyboardTest < Minitest::Test
   # those keys do on another screen, and Backspace takes one away.
   def test_a_license_keys_characters_are_typed_and_never_shortcuts
     given(at: :offer)
-    %i[m h c 7 minus x].each { press(it) }
-    press(:m, :ctrl)
+    %i[m h c 7 minus x y].each { press(it) }
     press(:backspace)
 
     assert_equal "MHC7-X", fixture.storefront.typed
@@ -287,11 +286,26 @@ class KeyboardTest < Minitest::Test
     press(:v, :ctrl, :alt)
 
     assert_nil fixture.server_choice.address, "Ctrl+Alt+V is no Ctrl+V"
-    given(at: :offer)
-    press(:m, :alt)
-    press(:k, :command)
+  end
 
-    assert_equal "MK", fixture.storefront.typed
+  # While a license key is typed, a letter or digit held with Ctrl or Cmd
+  # is the system's shortcut, not a character of the key (select all,
+  # copy, undo; on a Mac hide, minimize, quit), and does nothing; Alt
+  # with a letter still types it, as Option types characters on a Mac.
+  def test_ctrl_or_cmd_with_a_letter_types_nothing_into_a_license_key
+    given(at: :offer)
+    press(:a)
+    { ctrl: %i[a c z x 7], command: %i[w m h q] }.each do |held, keys|
+      keys.each { press(it, held) }
+    end
+
+    assert_equal "A", fixture.storefront.typed
+    assert show.offer?
+    refute show.sounds.muted?
+    assert_equal 0, @shell.quits
+    press(:m, :alt)
+
+    assert_equal "AM", fixture.storefront.typed, "Alt+M types M"
   end
 
   def test_f11_switches_fullscreen_on_a_computer_only
