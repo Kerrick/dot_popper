@@ -151,8 +151,5 @@ module DotPopper
         G.circle(:line, x, y, from + ((to - from) * Presentation::Ease.out_cubic(since / RING)), 48)
       end
     end
-
-    # Its old name, until no caller says it.
-    GhostPainter = GuidePainter
   end
 end

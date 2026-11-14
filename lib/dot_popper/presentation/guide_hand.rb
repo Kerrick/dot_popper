@@ -123,10 +123,5 @@ module DotPopper
         GuidePose.new(x:, y:, press: 0.0, since_press: nil, alpha: 1.0, turn: style.wag.turn(elapsed))
       end
     end
-
-    # Their old names, until no caller says them.
-    GhostStyle = GuideStyle
-    GhostPose = GuidePose
-    GhostHand = GuideHand
   end
 end

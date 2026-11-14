@@ -18,15 +18,11 @@ module DotPopper
     # +handover+, and the game goes on from there. A beat that waits for
     # the dots to move never waits more than +longest+, should they
     # bounce. +spotlight+, +guide+ and +clock_highlight+ are the spotlight's
-    # look, the guide's, and the clock highlight's. +notice+ is how long the row of dots
-    # in a row rings when it changes.
+    # look, the guide's, and the clock highlight's. +notice+ is how long
+    # the row of dots in a row rings when it changes.
     class TutorialStyle < Data.define(:drift, :stop, :resume, :slow, :start, :born, :peek, :clear, :flight,
                                      :quick, :gap, :hold, :linger, :handover, :longest, :spotlight, :guide, :clock_highlight,
-                                     :notice)
-      # Its old keyword and reader, +ghost+, until no caller says them.
-      def initialize(guide: nil, ghost: nil, **rest) = super(guide: guide || ghost, **rest)
-      def ghost = guide
-    end
+                                     :notice); end
 
     # The row of dots in a row just changed, since +at+: a ring around it,
     # fading over +duration+, in +tone+, :gain as it counts a pop and
@@ -184,10 +180,6 @@ module DotPopper
 
       # Where the guide is, and how it presses (GuidePose), or nil.
       def guide_pose = guide.pose(now, dots, radius)
-
-      # Their old names, until no caller says them.
-      alias ghost guide
-      alias ghost_pose guide_pose
 
       # The numbers in the air (TravelingNumber).
       def flights = @flights.select { it.flying?(now) }
