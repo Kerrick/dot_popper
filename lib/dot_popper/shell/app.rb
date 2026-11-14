@@ -38,7 +38,7 @@ module DotPopper
         @pen = @game.pen
         @sound_player = @game.sound_player
         @splash = @game.splash
-        @theme_feed = @game.theme_feed
+        @theme_releases = @game.theme_releases
         @watch = @game.watch
         @game.start
         @pile = Pile.new(@game.pile_style)
@@ -86,7 +86,7 @@ module DotPopper
         end
         @cabinet.update(seconds)
         @show.update(seconds)
-        @theme_feed&.update
+        @theme_releases&.update
         @watch.update # what it found, Continuity::Gone announces
         use_theme
         point_the_mouse

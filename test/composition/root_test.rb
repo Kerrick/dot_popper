@@ -227,7 +227,7 @@ class RootTest < Minitest::Test
 
     assert_equal Date.today, store.settings.today.call
     assert_nil store.server_url, "the bot's run is offline, not on DOT_POPPER_SERVER"
-    assert_nil store.theme_feed
+    assert_nil store.theme_releases
     plain = root(channel: B::WEBSITE, env: { "DOT_POPPER_SERVER" => "http://localhost:1" })
 
     assert_equal DotPopper::Network::Server::SERVER_URL, plain.server_url
@@ -235,7 +235,7 @@ class RootTest < Minitest::Test
 
     assert_equal Date.new(2031, 1, 1), test_build.settings.today.call
     assert_equal "http://localhost:1", test_build.server_url
-    refute_nil test_build.theme_feed
+    refute_nil test_build.theme_releases
   end
 
   # A license file on disk is never read in an app store's build, so it
@@ -434,7 +434,7 @@ class RootTest < Minitest::Test
     engine = FakeEngine.new("iOS")
     game = Root.new(engine:, settings: DotPopper::Composition::DeveloperSettings.new(SETTINGS, channel: nil), clock: -> { now })
     asked = []
-    game.theme_feed.define_singleton_method(:ask) { asked << :themes }
+    game.theme_releases.define_singleton_method(:ask) { asked << :themes }
     game.show.group_panel.groups.define_singleton_method(:refresh) { asked << :groups }
     game.watch.define_singleton_method(:start) { asked << :watch }
     game.storefront.define_singleton_method(:connect) { asked << :store }
