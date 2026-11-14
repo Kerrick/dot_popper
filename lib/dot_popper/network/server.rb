@@ -21,8 +21,5 @@ module DotPopper
         env.fetch(OVERRIDE, fallback).then { it.empty? ? nil : it }
       end
     end
-
-    # The old name, until no commit uses it.
-    Settings = Server
   end
 end
