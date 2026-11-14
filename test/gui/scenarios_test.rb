@@ -169,10 +169,18 @@ class GuiScenariosTest < Minitest::Test
          DOT_POPPER_GUI_INPUT: "gamepad", DOT_POPPER_FAKE_GAMEPAD: "1")
   end
 
-  def test_popped_dots_are_alike_their_own_and_far_from_the_bright_one
-    play("popped_dots", "popped dots differ in no color, lightness or size",
-         "each dot is the same dot before and after its pop",
-         "no popped dot comes near the bright one", "no dot moves with the time on the wall", DOT_POPPER_PRO: "1")
+  # Every theme's dots, a quarter of the themes to a game, so the four
+  # play at once: together they check every theme, as one game would.
+  POPPED_DOTS_PARTS = 4
+
+  POPPED_DOTS_PARTS.times do |index|
+    part = "#{index + 1}/#{POPPED_DOTS_PARTS}"
+    define_method("test_popped_dots_are_alike_their_own_and_far_from_the_bright_one_part_#{index + 1}") do
+      play("popped_dots", "part #{index + 1} of #{POPPED_DOTS_PARTS} of the themes",
+           "popped dots differ in no color, lightness or size", "each dot is the same dot before and after its pop",
+           "no popped dot comes near the bright one", "no dot moves with the time on the wall",
+           DOT_POPPER_PRO: "1", DOT_POPPER_GUI_PART: part)
+    end
   end
 
   def test_a_game_without_shaders

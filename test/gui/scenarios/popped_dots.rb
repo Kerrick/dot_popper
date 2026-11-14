@@ -17,7 +17,9 @@ module DotPopperGui
   #   between, looks the same, so no screenshot here depends on how fast
   #   the machine draws.
   #
-  # Needs DOT_POPPER_PRO=1.
+  # Needs DOT_POPPER_PRO=1. DOT_POPPER_GUI_PART=N/M checks only part N
+  # of M of the themes, every Mth from the Nth, so the suite can check
+  # them in M games at once; without it, one game checks them all.
   class PoppedDotsScenario < Scenario
     scenario :popped_dots
 
@@ -66,7 +68,7 @@ module DotPopperGui
       wait(0.5)
       keeper.receive(P::Style::THEMES.map(&:key))
       keeper.told(keeper.arrival) until keeper.arrival.nil?
-      drawn = P::Style::THEMES.map { draw(keeper, it) }
+      drawn = themes.map { draw(keeper, it) }
       drawn.each { alike(it) }
       say "ok - popped dots differ in no color, lightness or size"
       drawn.each { follows(it) }
@@ -78,6 +80,16 @@ module DotPopperGui
     end
 
     private
+
+    # The themes this game checks: part N of M (DOT_POPPER_GUI_PART=N/M),
+    # or all of them.
+    def themes
+      part, parts = ENV.fetch("DOT_POPPER_GUI_PART", "1/1").split("/").map { Integer(it) }
+      mine = P::Style::THEMES.select.with_index { |_, index| index % parts == part - 1 }
+      fail!("part #{part} of #{parts} holds no theme") if mine.empty?
+      say "ok - part #{part} of #{parts} of the themes: #{mine.map(&:key).join(", ")}"
+      mine
+    end
 
     # One theme's night, then each dot bright and popped, one at a time,
     # in the middle of a game, as Patches.
