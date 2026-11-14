@@ -25,16 +25,5 @@ module DotPopper
         false
       end
     end
-
-    # A receipt for Pro in Play's form, as the test build's fake store
-    # hands one over, signed by +key+ (PEM): the test key unless a test
-    # says otherwise.
-    def self.issue(key: TestKey::PRIVATE, app_id: APP_ID, product_id: PRODUCT_ID, state: 0, at: Time.now)
-      load_openssl
-      json = JSON.generate(orderId: "TEST.#{Random.bytes(8).unpack1("H*")}", packageName: app_id, productId: product_id,
-                           purchaseTime: (at.to_f * 1000).to_i, purchaseState: state, quantity: 1, acknowledged: true)
-      signature = OpenSSL::PKey.read(key).sign("SHA1", json)
-      "play:#{[json].pack("m0")}:#{[signature].pack("m0")}"
-    end
   end
 end

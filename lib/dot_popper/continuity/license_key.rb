@@ -35,8 +35,8 @@ module DotPopper
         new(id: bytes[1, 16].to_s, signature: bytes[17, 64].to_s)
       end
 
-      # A key for a fresh random id, signed by +seed+: the test build's
-      # fake seller's (TestKeys::LICENSE).
+      # A key for a fresh random id, signed by +seed+, as a test build
+      # issues one.
       def self.issue(seed, id: Random.bytes(16))
         new(id:, signature: Ed25519.sign(seed, LABEL + [VERSION].pack("C") + id))
       end

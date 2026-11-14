@@ -21,9 +21,8 @@ module DotPopper
   #                               signature (Microsoft), taken only by the
   #                               Microsoft Store build
   #
-  # The test build's fake store signs "play:" receipts with a test key
-  # (TestKey), which only TEST trusts. Anything that goes wrong is a receipt
-  # that does not verify, never an error.
+  # Anything that goes wrong is a receipt that does not verify, never an
+  # error.
   module Receipt
     # What a build accepts a receipt from: the +apple_roots+ (DER
     # certificates) a StoreKit transaction must chain to, the +play_keys+
@@ -42,11 +41,7 @@ module DotPopper
     # build Windows' word (MICROSOFT_STORE), which comes only down the
     # store helper's pipe; in any other store build the signed receipts of
     # Apple and Google (STORES).
-    def self.trusted(channel)
-      return TEST unless Build.store?(channel)
-
-      channel == Build::MICROSOFT_STORE ? MICROSOFT_STORE : STORES
-    end
+    def self.trusted(channel) = channel == Build::MICROSOFT_STORE ? MICROSOFT_STORE : STORES
 
     # Whether +text+ is a receipt for Pro that +trust+ accepts.
     def self.valid?(text, trust)

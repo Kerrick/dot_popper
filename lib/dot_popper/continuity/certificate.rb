@@ -29,8 +29,8 @@ module DotPopper
         new(root_id: bytes[5, 8], purpose:, public_key: bytes[45, 32])
       end
 
-      # A certificate for +public_key+ signed by +root_seed+, for the test
-      # build's fakes (TestKeys).
+      # A certificate for +public_key+ signed by +root_seed+, as a test
+      # build makes one.
       def self.issue(root_seed, purpose, public_key)
         body = MAGIC + [VERSION].pack("C") + id_of(Ed25519.public_key(root_seed)) + purpose + public_key
         body + Ed25519.sign(root_seed, SIGNING_LABEL + body)

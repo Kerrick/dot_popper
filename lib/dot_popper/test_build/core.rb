@@ -4,5 +4,8 @@
 # every check runs one. A build for sale leaves this folder out
 # (script/channel_contents.rb), so it holds none of it.
 require_relative "test_keys"
+require_relative "receipt_test_key"
 require_relative "fake_setdef"
 require_relative "switches"
+require_relative "fake_store"
+require_relative "fake_checkout"

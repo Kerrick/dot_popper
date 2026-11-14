@@ -45,13 +45,15 @@ module ChannelContents
   end
 
   PIECES = [
+    # Everything only a test build loads (Build::PARTS): the pieces below
+    # it holds, each named by its marks.
+    Piece.new(name: "the test build's part", needed_by: [TEST], apart: :files,
+              files: %w[lib/dot_popper/test_build], marks: []),
     Piece.new(name: "the fake store", needed_by: [TEST],
-              files: %w[lib/dot_popper/fake_store.rb],
               marks: [/FakeStore/, /DOT_POPPER_FAKE_STORE_FAILS/, /fake_store\.txt/]),
-    Piece.new(name: "the fake website checkout", needed_by: [TEST], marks: [/FakeCheckout/]),
+    Piece.new(name: "the fake website checkout", needed_by: [TEST], marks: [/FakeCheckout/], apart: :all),
     Piece.new(name: "the fake setdef server", needed_by: [TEST], marks: [/FakeSetdef/, /DOT_POPPER_FAKE_SETDEF/, /fake_setdef\.txt/]),
-    Piece.new(name: "the test keys", needed_by: [TEST], apart: :files,
-              files: %w[lib/dot_popper/test_build],
+    Piece.new(name: "the test keys", needed_by: [TEST], apart: :all,
               marks: [/BEGIN PRIVATE KEY/, /\bTestKeys?\b/, /TEST_PINS/, /Receipt::TEST\b/]),
     Piece.new(name: "the test build's settings that grant Pro or skip the free-game limit", needed_by: [TEST],
               marks: [/DOT_POPPER_PRO\b/, /DOT_POPPER_FREE_GAMES/, /DOT_POPPER_TODAY/, /DOT_POPPER_THEME_UNLOCKS/]),

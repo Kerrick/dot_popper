@@ -14,8 +14,8 @@ module DotPopper
   # That URL and that file are the port: +port+ answers open(url) with
   # whether it was taken, and read, remove and path for the answer.
   # NativeStore is the adapter for the app's host, which catches the URL
-  # before it leaves the app and asks StoreKit or Play Billing; FakeStore
-  # is the adapter for a build with no channel, a test build. Which one
+  # before it leaves the app and asks StoreKit or Play Billing; a test
+  # build has its own (lib/dot_popper/test_build). Which one
   # is chosen once, by Store.for, at the composition root
   # (Composition::Root), from the build; nothing above the port differs
   # between them (the store contract, test/store_contract.rb).

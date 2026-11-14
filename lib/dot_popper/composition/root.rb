@@ -170,7 +170,7 @@ module DotPopper
         end
         @storefront = Store.for(
           platform, entitlement:, channel: settings.channel, native: native_store,
-                    fake: FakeStore.new(file("fake_store.txt"), fails: FakeStore.failure(settings.env)),
+                    fake: test_store,
                     website: ->(fake:) { website_store(clipboard, fake:) }
         )
         games = free_games(entitlement, metered: FreeGames.metered?(settings.env, channel:, offered: storefront.offered?))
@@ -206,14 +206,13 @@ module DotPopper
         @bot = Presentation::Bot.new(Style::BOT) if flag?("DOT_POPPER_AUTOPLAY")
       end
 
-      # A scenario's unlocks and theme, in place of the server's.
-      def use_fixture(themes, use_theme)
-        keys = settings["DOT_POPPER_THEME_UNLOCKS"]
-        themes.release(keys.split(",")) if keys
-        key = settings["DOT_POPPER_THEME"]&.to_sym or return
-
-        use_theme.call(key)
-      end
+      # Where a test build's part (Build::PARTS) answers with its own: its
+      # store, its scenarios' themes, its stand-in for setdef, and its
+      # website checkout. A build for sale has none of them.
+      def test_store = nil
+      def use_fixture(_themes, _use_theme) = nil
+      def test_watch(_license, _pins) = nil
+      def test_checkout(_clipboard) = nil
 
       # What the player is assumed to hold before they press anything.
       def starting_input
@@ -230,16 +229,13 @@ module DotPopper
         Groups::Session.at(url, store: own ? file("group.txt") : file("group-#{URI(url).host.to_s.downcase}.txt"))
       end
 
-      # What asks whether setdef is gone, and where a license key is: the
-      # test build's fake, in this process, sending nothing anywhere; the
-      # real server and connectivity checks once setdef's real keys are
+      # What asks whether setdef is gone, and where a license key is: a test
+      # build's own, in this process, sending nothing anywhere (#test_watch);
+      # the real server and connectivity checks once setdef's real keys are
       # pinned (Continuity.live?), never in an automated run; and else
       # nothing.
       def watch_for(license, pins)
-        unless settings.store_build?
-          fake = Continuity::FakeSetdef.new(file("fake_setdef.txt"), mode: Continuity::FakeSetdef.mode(settings.env))
-          return Continuity::Watch.new(server: fake, connectivity: fake, gone: @gone, license:, today: settings.today, pins:)
-        end
+        watch = test_watch(license, pins) and return watch
         if Continuity.live? && !settings.automated?
           return Continuity::Watch.new(server: Continuity::SetdefServer.new(Network::Link.new(Network::Server::SERVER_URL)),
                                        connectivity: Continuity::Connectivity.new, gone: @gone, license:, today: settings.today, pins:)
@@ -248,10 +244,10 @@ module DotPopper
         Continuity::NoWatch.new(gone: @gone, license:)
       end
 
-      # The website's store: its real checkout in the browser, or the test
-      # build's, which puts a signed test key on the clipboard.
+      # The website's store: its real checkout in the browser, or a test
+      # build's (#test_checkout).
       def website_store(clipboard, fake:)
-        checkout = fake ? FakeCheckout.new(clipboard:) : BrowserCheckout.new(opener: @engine.opener)
+        checkout = fake ? test_checkout(clipboard) : BrowserCheckout.new(opener: @engine.opener)
         WebsiteStore.new(checkout:, entitlement:, gone: @gone, clipboard:, entered: -> { @watch.start })
       end
 
@@ -265,3 +261,5 @@ module DotPopper
     end
   end
 end
+
+DotPopper::Build::PARTS.each { require_relative "../#{it}/root" }

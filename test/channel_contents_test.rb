@@ -38,9 +38,8 @@ class ChannelContentsTest < Minitest::Test
     ok, out = run_script("list", "mac-app-store", @app)
 
     assert ok, out
-    assert_match %r{^the fake store .*\n  file lib/dot_popper/fake_store\.rb$}, out
-    assert_match %r{^the test keys .*\n  file lib/dot_popper/test_build$}, out
-    assert_match %r{  text lib/dot_popper/receipt/pins\.rb: BEGIN PRIVATE KEY x1}, out
+    assert_match %r{^the test build's part .*\n  file lib/dot_popper/test_build$}, out
+    assert_match %r{  text lib/dot_popper/test_build/receipt_test_key\.rb: BEGIN PRIVATE KEY x1}, out
     assert_match %r{^the website checkout .*\n  file lib/dot_popper/website_store\.rb$}, out
     assert_match(/^the Microsoft Store's license /, out)
     refute_match(/^Apple's receipts/, out)
@@ -51,7 +50,7 @@ class ChannelContentsTest < Minitest::Test
     ok, out = run_script("list", "test", @app)
 
     assert ok, out
-    refute_match(/^the fake store|^the test keys|^the website checkout|^license keys/, out)
+    refute_match(/^the test build's part|^the fake store|^the test keys|^the website checkout|^license keys/, out)
     assert_match(/^Apple's receipts \(needed by app-store, mac-app-store\)/, out)
   end
 
@@ -106,6 +105,20 @@ class ChannelContentsTest < Minitest::Test
     ok, out = run_script("check", "mac-app-store", @app)
 
     assert ok, out
+  end
+
+  # A build for sale holds no word of what it leaves out whole: a test
+  # key's name in a file it carries fails the check.
+  def test_check_fails_when_a_build_for_sale_names_a_test_key
+    ChannelContents.left_out("website").each { FileUtils.rm_rf(File.join(@game, it)) }
+    ok, out = run_script("check", "website", @app)
+
+    assert ok, out
+    File.write(File.join(@game, "lib/dot_popper/stray.rb"), "# Continuity::TestKeys::LICENSE\n")
+    ok, out = run_script("check", "website", @app)
+
+    refute ok, out
+    assert_match %r{FAIL .* holds lib/dot_popper/stray\.rb, which names the test keys \(TestKeys\?\)}, out
   end
 
   def test_an_unknown_channel_or_a_missing_folder_is_refused

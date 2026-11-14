@@ -13,11 +13,10 @@ module DotPopper
   # so, but a key bought earlier still enters.
   #
   # +checkout+ is the port to the seller: #buy answers the state to show
-  # (:browser once a browser took the checkout, :copied for the test
-  # build's fake, which puts a real signed test key on the clipboard, or
-  # :unavailable). BrowserCheckout is the real adapter; FakeCheckout the
-  # test build's. A payment company has not been chosen, and none needs
-  # to be for either.
+  # (:browser once a browser took the checkout, :copied when a test build's
+  # checkout puts a key on the clipboard, or :unavailable). BrowserCheckout
+  # is the real adapter; a test build has its own (lib/dot_popper/test_build).
+  # A payment company has not been chosen, and none needs to be for either.
   class WebsiteStore
     # The price as the checkout page sets it. Change both together.
     PRICE = "$1.99"
@@ -92,16 +91,5 @@ module DotPopper
     URL = "https://dot-popper.setdef.com/buy"
 
     def buy = opener.open(URL) ? :browser : :unavailable
-  end
-
-  # The test build's checkout: no browser and no payment, and at once a
-  # real license key, signed by the test key the test build trusts, on
-  # the clipboard, where an email's copy would put it. Paste license key
-  # then takes the same road a bought key does.
-  class FakeCheckout < Data.define(:clipboard)
-    def buy
-      clipboard.copy(Continuity::LicenseKey.issue(Continuity::TestKeys::LICENSE).text)
-      :copied
-    end
   end
 end

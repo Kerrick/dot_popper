@@ -27,8 +27,8 @@ module DotPopper
         false
       end
 
-      # +seed+'s (32 bytes) signature over +message+. Only the test build's
-      # fakes sign (TestKeys); the game itself never holds a real private key.
+      # +seed+'s (32 bytes) signature over +message+. Only a test build
+      # signs; a build for sale never holds a private key.
       def sign(seed, message)
         require "openssl"
         OpenSSL::PKey.read(PRIVATE_DER + seed.b).sign(nil, message.b)
