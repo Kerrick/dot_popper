@@ -39,9 +39,6 @@ module DotPopper
       attr_reader :cabinet, :effects, :animations, :hud, :attract, :layout, :home_entrance, :game_over, :sounds, :now, :style,
                   :stats_book, :input, :words, :clock_highlight, :window
 
-      # Its old name, until no caller says it.
-      alias lead_in clock_highlight
-
       def initialize(cabinet:, layout:, sounds:, radius:, start_game:, finish_game:, buy_pro:, use_theme:, join_or_create_friend_group:,
                      view_achievements:, stats_book:, achievements:, themes:, groups:, style: Style, random: Random.new, calm: false,
                      tutor: Tutor.new(ScoreRecord::Memory.new, times: style::LESSON.times), haptics: NoHaptics.new, clipboard: MemoryClipboard.new,
@@ -778,10 +775,10 @@ module DotPopper
       def follow_tutorial(seconds)
         return unless @screens[:tutorial].follow(seconds)
 
-        @clock_highlight = ClockHighlight.new(at: now, style: style::TUTORIAL.lead)
+        @clock_highlight = ClockHighlight.new(at: now, style: style::TUTORIAL.clock_highlight)
       end
 
-      # The HUD reads the game. While the Tutorial's lead-in lights the
+      # The HUD reads the game. While the clock highlight lights the
       # clock, its first second down ticks, as the urgent ones do.
       def follow_game
         before = hud.seconds

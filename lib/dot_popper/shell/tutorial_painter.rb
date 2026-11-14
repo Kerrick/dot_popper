@@ -46,15 +46,15 @@ module DotPopper
 
       # The clock lit as the game's first second runs (Presentation::
       # ClockHighlight): the dim, under the HUD at +pill+...
-      def lead_in_under(lead_in, now, pill, spots, radius)
+      def clock_highlight_under(highlight, now, pill, spots, radius)
         x, y = spots.fetch(:time)
-        strength = lead_in.strength(now)
+        strength = highlight.strength(now)
         style = pen.style::TUTORIAL.spotlight
         dim_around(x, y, pill.height * HUD_LIGHT, style.feather * radius, style.dim * strength) if strength.positive?
       end
 
       # ...and the halo on the clock, over it.
-      def lead_in_over(lead_in, now, pill) = halo(:time, pill, lead_in.halo(now), now - lead_in.at)
+      def clock_highlight_over(highlight, now, pill) = halo(:time, pill, highlight.halo(now), now - highlight.at)
 
       private
 

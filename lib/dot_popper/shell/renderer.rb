@@ -112,7 +112,7 @@ module DotPopper
       end
 
       # A game, and after it, Game Over over its pile: the dots over their
-      # glow, the effects, the veil and words of Game Over, the lead-in
+      # glow, the effects, the veil and words of Game Over, the clock highlight
       # after the Tutorial, and the HUD until Game Over has arrived.
       def game(width, height, layout)
         @effects.flash(@show.effects, width, height)
@@ -122,14 +122,14 @@ module DotPopper
         veil(width, height, @show.game_over&.dim(@show.now).to_f) unless @show.playing?
         @effects.words(@show.effects, layout)
         @game_over.draw(@show, layout) unless @show.playing?
-        lead_in = @show.clock_highlight
-        if lead_in
+        highlight = @show.clock_highlight
+        if highlight
           pill = @hud.bounds(@show.hud, layout)
-          @tutorial.lead_in_under(lead_in, @show.now, pill, @hud.spots(@show.hud, layout),
-                                   @show.cabinet.game.field.radius)
+          @tutorial.clock_highlight_under(highlight, @show.now, pill, @hud.spots(@show.hud, layout),
+                                           @show.cabinet.game.field.radius)
         end
         hud(layout) unless @show.game_over&.then { it.arrival(@show.now) >= 1.0 }
-        @tutorial.lead_in_over(lead_in, @show.now, pill) if lead_in
+        @tutorial.clock_highlight_over(highlight, @show.now, pill) if highlight
       end
 
       # A title change's announcement, for the few seconds it shows.

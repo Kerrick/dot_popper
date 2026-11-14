@@ -17,11 +17,11 @@ module DotPopper
     # then the spotlight moves to the clock as time flows again, in
     # +handover+, and the game goes on from there. A beat that waits for
     # the dots to move never waits more than +longest+, should they
-    # bounce. +spotlight+, +guide+ and +lead+ are the spotlight's look,
-    # the guide's, and the lead-in's. +notice+ is how long the row of dots
+    # bounce. +spotlight+, +guide+ and +clock_highlight+ are the spotlight's
+    # look, the guide's, and the clock highlight's. +notice+ is how long the row of dots
     # in a row rings when it changes.
     class TutorialStyle < Data.define(:drift, :stop, :resume, :slow, :start, :born, :peek, :clear, :flight,
-                                     :quick, :gap, :hold, :linger, :handover, :longest, :spotlight, :guide, :lead,
+                                     :quick, :gap, :hold, :linger, :handover, :longest, :spotlight, :guide, :clock_highlight,
                                      :notice)
       # Its old keyword and reader, +ghost+, until no caller says them.
       def initialize(guide: nil, ghost: nil, **rest) = super(guide: guide || ghost, **rest)
@@ -50,10 +50,6 @@ module DotPopper
       def halo(now) = (1 - ((now - at - style.halo) / style.fade)).clamp(0.0, 1.0)
       def over?(now) = now - at >= style.halo + style.fade
     end
-
-    # Their old names, until no caller says them.
-    LeadStyle = ClockHighlightStyle
-    LeadIn = ClockHighlight
 
     # The tutorial a player sees on their first Play: a layer over the
     # first game, which is paused before its clock first runs

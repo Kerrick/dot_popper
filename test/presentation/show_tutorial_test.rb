@@ -65,10 +65,10 @@ class ShowTutorialTest < Minitest::Test
 
   def test_its_end_starts_the_game_with_the_clock_lit_and_its_first_second_ticking
     play_through
-    lead_in = @show.clock_highlight
+    highlight = @show.clock_highlight
 
-    assert lead_in
-    assert_operator lead_in.strength(@show.now), :>, 0.9
+    assert highlight
+    assert_operator highlight.strength(@show.now), :>, 0.9
     @sounds.played.clear
     update_for(1.05)
     assert_includes @sounds.names, :tick, "the clock's first second down ticks"
