@@ -26,9 +26,6 @@ class PrivacyRequestsTest < Minitest::Test
     def finished = @done.shift(@done.size)
   end
 
-  # The old name, until no commit uses it.
-  Instant = InlineWorker
-
   def setup
     @heard = []
     @server = TCPServer.new("127.0.0.1", 0)
