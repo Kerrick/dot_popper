@@ -12,8 +12,8 @@ module DotPopper
     # what has been +seen+ of each group's title ("id|last|fingerprint",
     # separated by spaces), and the +unsent_achievements+' keys (separated
     # by commas). Read leniently: a line missing or unreadable keeps its
-    # starting value, so a file from a build that wrote four lines, before
-    # achievements were sent, is read too.
+    # starting value, so a file from a development build that wrote four
+    # lines, before achievements were sent, is read too.
     class GroupFile < Data.define(:token, :unsent_score, :member, :seen, :unsent_achievements)
       def self.parse(text)
         token, score, member, seen, unsent = text.to_s.split("\n", -1)

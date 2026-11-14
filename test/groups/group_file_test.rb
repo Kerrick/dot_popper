@@ -26,7 +26,7 @@ class GroupFileTest < Minitest::Test
     end
   end
 
-  def test_a_new_player_writes_four_empty_lines
+  def test_a_new_player_writes_five_empty_lines
     assert_equal "\n\n\n\n", GroupFile.new(token: nil, unsent_score: nil, member: false, seen: {}, unsent_achievements: []).to_s
   end
 

@@ -7,10 +7,11 @@ module DotPopper
     def self.request(token: true, **) = Network::Request.new(feature: "friend groups", token:, **)
     private_class_method :request
 
-    # Every request friend groups make; Session's jobs are made only from
-    # these (Session::Job.of). Add one here and doc/privacy.json says so
-    # (Privacy::REQUESTS); test/privacy/requests_test.rb sends each and
-    # reads the wire.
+    # Every request friend groups make; each kind's class in Jobs is made
+    # only from these (Job, by Network::Job.of), so a new kind needs its
+    # declaration here and its class there. Add one here and
+    # doc/privacy.json says so (Privacy::REQUESTS);
+    # test/privacy/requests_test.rb sends each and reads the wire.
     REQUESTS = [
       request(kind: :player, verb: :post, path: "/player", token: false,
               happens: "The first time this device creates or joins a group: the game asks the server for a private code."),

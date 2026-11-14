@@ -6,7 +6,8 @@ module DotPopper
     # groups: the groups, each group's title changes and history, and
     # whether the player was last known to be in a group. The groups
     # themselves are the server's; what the server answers replaces what
-    # is here, and nothing here is decided by the game.
+    # is here, and the game decides only what to announce from it and when
+    # a group's history is worth reading again.
     #
     # It also keeps, for each group, the newest title change already
     # shown and how the group looked when its history was read (Seen), so

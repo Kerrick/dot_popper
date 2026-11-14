@@ -592,7 +592,7 @@ class SessionTest < Minitest::Test
     assert_equal "t\n60\n1\n1|4|1~50 a-b|0|~7\nsteady,blink", @store.read
   end
 
-  def test_group_txt_once_forgotten_is_four_empty_lines
+  def test_group_txt_once_forgotten_is_five_empty_lines
     joined
     @session.refresh
     pump
