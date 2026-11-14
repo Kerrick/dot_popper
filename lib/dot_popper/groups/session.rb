@@ -117,7 +117,8 @@ module DotPopper
       def game_finished(score:, counts:)
         @game_result = nil
         @result_due = false
-        score = @outbox.owe_game(score:, counts:, member: member?)
+        # Without a token nothing owed is sent, so nothing is owed.
+        score = @outbox.owe_game(score:, counts:, member: member? && known?)
         return unless score
 
         @last_score = score

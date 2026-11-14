@@ -642,8 +642,22 @@ class SessionTest < Minitest::Test
     end
   end
 
-  # A file that says "in a group" but has no token (the game never writes
-  # one) sends nothing: nothing owed goes out without a token.
+  # A file that says "in a group" but has no token (which the game writes
+  # only in a rare race) sends nothing: nothing owed goes out without a
+  # token.
+  # Nor does such a device owe a game or wait for its result, so Game
+  # Over's groups line is not left blank for good.
+  def test_a_member_with_no_token_owes_no_game_and_awaits_no_result
+    @store.write("\n\n1\n\nwin_one")
+    @session = new_session
+    @session.game_finished(score: 120, counts: true)
+    pump
+
+    refute_predicate @session, :result_due?
+    assert_empty @worker.started
+    assert_equal "\n\n1\n\nwin_one", @store.read
+  end
+
   def test_nothing_owed_is_sent_without_a_token
     @store.write("\n7\n1\n\n")
     @session = new_session
