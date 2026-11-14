@@ -277,7 +277,4 @@ module DotPopperGui
       nearest
     end
   end
-
-  # The old name, until no commit uses it.
-  Glance = ColorDifference
 end
