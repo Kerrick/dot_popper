@@ -7,9 +7,10 @@
 # conf.rb and main.rb as Lota's does, and then, instead of a window,
 # plays the game frame by frame on a clock of its own and does to it what
 # the Android emulator checks do (.github/android_emulator_checks.sh),
-# as SDL would hand it over: Back is the key :escape, the Home button is
-# the window's focus lost, and starting the activity again is the focus
-# gained. FAKE_ANDROID_DRIVE (JSON) says what to do and when:
+# as SDL would hand it over: the window gains focus as the game starts,
+# Back is the key :escape, the Home button is the window's focus lost,
+# and starting the activity again is the focus gained.
+# FAKE_ANDROID_DRIVE (JSON) says what to do and when:
 #
 #   {"keys": [[SECONDS, "KEYCODE_BACK", "REGEX"], ...],
 #    "shells": [[SECONDS, "am start ..."], ...], "ready": "REGEX", "timeout": SECONDS}
@@ -187,6 +188,8 @@ module Lota
       now = 0.0
       Timer.now = 100.0
       Lota.load
+      # SDL gives the window focus as the activity first shows it.
+      Lota.focus(true) if Lota.respond_to?(:focus)
       seen = 0
       ready_at = nil
       until Event.quit_asked || now > @timeout
@@ -194,18 +197,33 @@ module Lota
         Timer.now += FRAME
         Lota.update(FRAME)
         Lota.draw
-        @lines.drop(seen).each do |line|
-          ready_at ||= now if @ready.match?(line)
-          @keys.each { |key| key[3] ||= now + key[0] if key[2].match?(line) }
-        end
+        ready_at ||= now if @lines.drop(seen).any? { @ready.match?(it) }
         seen = @lines.size
-        @keys.each { |key| (key[4] = true) && press(key[1]) if key[3] && !key[4] && now >= key[3] }
+        press_keys(now)
         @shells.shift.then { shell(it[1]) } while ready_at && @shells.first && now - ready_at >= @shells.first[0]
       end
       Event.quit_asked ? 0 : 1
     rescue Exception => e # rubocop:disable Lint/RescueException
       warn "#{e.class}: #{e.message}\n\t#{e.backtrace&.first(8)&.join("\n\t")}"
       1
+    end
+
+    # Each key once, its seconds after a line matches its pattern, as
+    # android_emulator.rb sends them: each after the one before it was
+    # sent, and on a line printed after that.
+    def press_keys(now)
+      @keys.each_with_index do |key, index|
+        next if key[4]
+        break unless index.zero? || @keys[index - 1][4]
+
+        from = index.zero? ? 0 : @keys[index - 1][5]
+        key[3] ||= now + key[0] if @lines.drop(from).any? { key[2].match?(it) }
+        break unless key[3] && now >= key[3]
+
+        key[4] = true
+        key[5] = @lines.size
+        press(key[1])
+      end
     end
 
     # What SDL hands the game for each key the checks send.

@@ -16,7 +16,7 @@
 #   ruby emulator.rb APK PACKAGE OUT [--env NAME=VALUE]... [--shot SECONDS]...
 #     [--tap SECONDS:XFRACTION:YFRACTION]... [--pop] [--ready REGEX] [--timeout SECONDS]
 #     [--expect REGEX]... [--pull REGEX] [--key-after SECONDS:KEYCODE:REGEX]...
-#     [--expect-order REGEX]...
+#     [--expect-order REGEX]... [--until-met]
 #
 # --pop taps where the app last printed "kit probe: dot at X, Y in WxH"
 # (graphics units in a window W by H), until it prints "kit probe: event
@@ -24,7 +24,14 @@
 # app names in a line the REGEX's first group captures. It exits 1 unless
 # every --expect matches a line of the app's, and the --expect-order
 # patterns match lines in the order given. --key-after sends the key
-# event KEYCODE once, SECONDS after the first line that matches REGEX.
+# event KEYCODE once, SECONDS after the first line that matches REGEX;
+# each waits for the one before it to be sent, and looks only at the
+# lines that came after, so a line the app prints more than once (the
+# game hearing it came back, at launch and after the Home screen) is
+# matched where the check means it.
+# --until-met stops the run as soon as every --expect and --expect-order
+# has matched and every key was sent, rather than when the app exits.
+# Each run ends by stopping the app, so the next starts it afresh.
 
 require "fileutils"
 require "open3"
@@ -42,6 +49,7 @@ timeout = 240.0
 pull = nil
 keys = []
 ordered = []
+until_met = false
 until rest.empty?
   option = rest.shift
   case option
@@ -60,6 +68,7 @@ until rest.empty?
     seconds, code, pattern = rest.shift.split(":", 3)
     keys << { seconds: Float(seconds), code:, pattern: Regexp.new(pattern), at: nil }
   when "--expect-order" then ordered << Regexp.new(rest.shift)
+  when "--until-met" then until_met = true
   else abort "emulator.rb: unknown option #{option}"
   end
 end
@@ -102,6 +111,14 @@ adb("logcat", "-b", "main,system,crash,events", "-c")
 extras = envs.flat_map { |name, value| ["--es", "lota.env.#{name}", value] }
 say adb("shell", "am", "start", "-W", "-n", "#{package}/org.setdef.fledge.host.MainActivity", *extras).strip
 
+# Whether +patterns+ match lines of +lines+ in their order.
+def in_order?(lines, patterns)
+  patterns.all? do |pattern|
+    index = lines.index { pattern.match?(it) }
+    index && (lines = lines.drop(index + 1))
+  end
+end
+
 def app_lines(package)
   adb("logcat", "-d", "-v", "raw", "-s", "#{package}:V").lines.map(&:chomp).reject { it.start_with?("--------- ") }
 end
@@ -140,13 +157,16 @@ loop do
     _, command = commands.shift
     say "adb shell #{command.join(' ')} at #{elapsed.round(1)} s: #{adb('shell', *command, allow_failure: true).strip}"
   end
-  keys.each do |key|
+  keys.each_with_index do |key, index|
     next if key[:sent]
+    break unless index.zero? || keys[index - 1][:sent]
 
-    key[:at] ||= (Time.now + key[:seconds] if lines.any? { key[:pattern].match?(it) })
-    next unless key[:at] && Time.now >= key[:at]
+    from = index.zero? ? 0 : keys[index - 1][:after]
+    key[:at] ||= (Time.now + key[:seconds] if lines.drop(from).any? { key[:pattern].match?(it) })
+    break unless key[:at] && Time.now >= key[:at]
 
     key[:sent] = true
+    key[:after] = lines.size
     adb("shell", "input", "keyevent", key[:code])
     say "sent #{key[:code]}, #{key[:seconds]} s after a line matched #{key[:pattern].source}"
   end
@@ -170,6 +190,10 @@ loop do
     break
   end
   break if lines.any? { it.include?("exited with status") }
+  if until_met && keys.all? { it[:sent] } && expects.all? { |pattern| lines.any? { pattern.match?(it) } } && in_order?(lines, ordered)
+    say "every expectation met"
+    break
+  end
 
   if Time.now - started > 20 && adb("shell", "pidof", package, allow_failure: true).strip.empty?
     say "the app's process is gone"
@@ -183,6 +207,7 @@ loop do
 end
 
 File.write(File.join(out, "logcat.txt"), adb("logcat", "-d", "-b", "main,system,crash,events", "-v", "threadtime"))
+adb("shell", "am", "force-stop", package, allow_failure: true)
 lines = app_lines(package)
 File.write(File.join(out, "app.txt"), lines.join("\n") + "\n")
 if pull
@@ -209,4 +234,10 @@ end
 say "missing, in order: #{out_of_order.source}" if out_of_order
 unsent = keys.reject { it[:sent] }
 unsent.each { say "never sent #{it[:code]}: no line matched #{it[:pattern].source}" }
-exit(!probe_failed && missing.empty?&& out_of_order.nil? && unsent.empty? ? 0 : 1)
+passed = !probe_failed && missing.empty? && out_of_order.nil? && unsent.empty?
+unless passed
+  life = File.read(File.join(out, "logcat.txt")).lines.grep(/#{Regexp.escape(package)}/)
+              .grep(/am_proc_start|am_proc_died|am_kill|am_crash|am_anr|am_wtf|wm_on_\w+_called|wm_finish_activity|wm_relaunch|ActivityTaskManager|ActivityManager/)
+  say "the app's life, from the log:\n#{life.last(40).join}"
+end
+exit(passed ? 0 : 1)

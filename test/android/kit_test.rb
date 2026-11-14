@@ -23,14 +23,24 @@ class KitTest < Minitest::Test
   CHECKS = File.join(ROOT, ".github/android_emulator_checks.sh")
   FAKE = File.join(__dir__, "fake_android")
 
+  # Options of android_emulator.rb that take no value.
+  FLAGS = %w[--pop --until-met].freeze
+
   # One run of android_emulator.rb in the checks script: its name (its
-  # folder under OUT) and its options.
+  # folder under OUT) and its options, each with its value, or nil.
   Run = Data.define(:name, :options)
 
+  def self.pairs(words)
+    words = words.dup
+    pairs = []
+    pairs << [words.first, FLAGS.include?(words.shift) ? nil : words.shift] until words.empty?
+    pairs
+  end
+
   def self.runs(script = File.read(CHECKS))
-    script.gsub("\\\n", " ").lines.grep(%r{\A\s*ruby "\$here/android_emulator\.rb"}).map do |line|
+    script.gsub("\\\n", " ").lines.filter_map { it[%r{ruby "\$here/android_emulator\.rb".*}] }.map do |line|
       words = Shellwords.split(line.split(/\s\|\|\s/).first)
-      Run.new(name: File.basename(words.fetch(4)), options: words.drop(5))
+      Run.new(name: File.basename(words.fetch(4)), options: pairs(words.drop(5)))
     end
   end
 
@@ -68,7 +78,7 @@ class KitTest < Minitest::Test
       @expects = []
       @ordered = []
       @keys = []
-      options.each_slice(2) do |option, value|
+      options.each do |option, value|
         case option
         when "--expect" then @expects << Regexp.new(value)
         when "--expect-order" then @ordered << Regexp.new(value)
@@ -103,14 +113,14 @@ class KitTest < Minitest::Test
     # process's, and no Bundler, which the app has none of.
     env = ENV.keys.grep(/\A(DOT_POPPER_|BUNDLE_|RUBY)/).to_h { [it, nil] }
     env["FAKE_ANDROID_DRIVE"] = JSON.generate(drive(run.options))
-    run.options.each_slice(2) { |option, value| env.store(*value.split("=", 2)) if option == "--env" }
+    run.options.each { |option, value| env.store(*value.split("=", 2)) if option == "--env" }
     out, status = Open3.capture2e(env, RbConfig.ruby, "-I", FAKE, "main.rb", chdir: self.class.project)
     [out.lines.map(&:chomp), status.exitstatus]
   end
 
   def drive(options)
     drive = { "keys" => [], "shells" => [] }
-    options.each_slice(2) do |option, value|
+    options.each do |option, value|
       case option
       when "--key-after" then drive["keys"] << value.split(":", 3).then { |seconds, code, pattern| [Float(seconds), code, pattern] }
       when "--shell" then drive["shells"] << value.split(":", 2).then { |seconds, command| [Float(seconds), command] }
