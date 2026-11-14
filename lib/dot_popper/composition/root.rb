@@ -41,10 +41,12 @@ module DotPopper
       SMALLEST_WINDOW = [400, 320].freeze
 
       attr_reader :settings, :platform, :dot_size, :window, :cabinet, :show, :pen, :sound_player, :splash, :storefront,
-                  :entitlement, :theme_feed, :watch, :cursor, :bot, :haptics, :sharing, :refresh
+                  :entitlement, :theme_releases, :watch, :cursor, :bot, :haptics, :sharing, :refresh
 
       # Its old name, until no caller says it.
       alias autopilot bot
+      # Its old name, until no caller says it.
+      alias theme_feed theme_releases
 
       def initialize(engine:, settings: DeveloperSettings.new, clock: -> { Time.now.to_f })
         @engine = engine
@@ -66,7 +68,7 @@ module DotPopper
       # Only the first and the friend groups' are asked again (Refresh);
       # the rest are once each time the game starts.
       def start
-        theme_feed&.ask
+        theme_releases&.ask
         storefront.connect
         watch.start
       end
@@ -159,7 +161,7 @@ module DotPopper
         use_fixture(themes, use_theme)
         themes.open_by_date(today.call, @gone.days(today.call))
         @gone.subscribe(@server_choice).subscribe(themes)
-        @theme_feed = theme_feed_for(themes)
+        @theme_releases = theme_releases_for(themes)
         @pen = @engine.pen(shaders: !flag?("DOT_POPPER_NO_SHADERS"))
         current = Style::THEMES.find { it.key == use_theme.current }
         @pen.use(current)
@@ -196,7 +198,7 @@ module DotPopper
         @cabinet.subscribe(@show)
         use_cases[:finish_game].subscribe(@show)
         entitlement.subscribe(@show.offer)
-        @refresh = Refresh.new([-> { @theme_feed&.ask }, -> { groups.refresh }], cabinet: @cabinet, clock: @clock)
+        @refresh = Refresh.new([-> { @theme_releases&.ask }, -> { groups.refresh }], cabinet: @cabinet, clock: @clock)
         @cabinet.subscribe(@refresh)
         @cabinet.subscribe(GamesLog.new(file(GAMES_LOG), today:, archive: ->(name) { file(name) }))
         @engine.say("each game is logged in #{@engine.path(GAMES_LOG)}")
@@ -253,7 +255,7 @@ module DotPopper
 
       # What asks the server which themes are released, if the game has a
       # server.
-      def theme_feed_for(themes)
+      def theme_releases_for(themes)
         url = server_url or return
         ThemeReleases.new(worker: Network::Worker.new(Network::Link.new(url)), themes:,
                           store: file("started_on.txt"), clock: settings.utc_clock)
