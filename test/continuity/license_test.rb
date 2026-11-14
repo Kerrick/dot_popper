@@ -47,6 +47,7 @@ class LicenseTest < Minitest::Test
 
       assert_instance_of Memory, kept, channel
       refute_same file, kept, channel
+      refute(C::License.kept_in(channel) { flunk("#{channel} opened license.txt") }.nil?, channel)
     end
     [DotPopper::Build::WEBSITE, nil].each { assert_same file, C::License.kept_in(it) { file }, it.inspect }
   end

@@ -256,6 +256,19 @@ class RootTest < Minitest::Test
     end
   end
 
+  # The setdef watch checks setdef's answers with the same pins the
+  # license key is checked with: the test keys in a test build, setdef's
+  # in a build for sale that asks the real server.
+  def test_the_setdef_watch_trusts_the_same_pins_as_the_license
+    { nil => C::TEST_PINS, B::WEBSITE => C::PINNED }.each do |channel, pins|
+      watch = root(channel:, env: {}).watch
+
+      assert_instance_of C::Watch, watch, channel.inspect
+      assert_same pins, watch.instance_variable_get(:@pins), channel.inspect
+      assert_same pins, watch.license.instance_variable_get(:@pins), channel.inspect
+    end
+  end
+
   def test_a_test_build_watches_for_setdef_through_its_fake_and_a_store_build_through_nothing_yet
     assert_instance_of C::Watch, root(env: SETTINGS).watch
     BUILDS.compact.each { assert_instance_of C::NoWatch, root(channel: it, env: SETTINGS).watch, it }
