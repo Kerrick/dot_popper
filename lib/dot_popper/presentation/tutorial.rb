@@ -529,8 +529,5 @@ module DotPopper
 
       def pan(x) = @style::SOUND.stereo.pan(x, field.width)
     end
-
-    # Its old name, until no caller says it.
-    Tutorial = TutorialScene
   end
 end
