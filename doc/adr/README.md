@@ -27,6 +27,7 @@ Dot Popper's architecturally significant decisions, one per record, in the MADR 
 | [0018](0018-screens-are-objects-on-a-stack.md) | Screens are objects on a stack, and the one on top answers every input | accepted |
 | [0019](0019-clean-architecture-and-domain-driven-design-in-three-areas.md) | The code follows Clean Architecture and Domain-Driven Design, with the domain in three areas | accepted |
 | [0020](0020-standard-dots-are-sized-to-the-screen-by-default.md) | Standard dots are sized to the screen by default, and Bigger or Smaller is the player's choice (restates the former 0001) | accepted |
+| [0021](0021-a-build-for-sale-carries-only-its-own-parts.md) | A build for sale carries only its own parts, and the test build's code is a part it leaves out | accepted |
 
 ## Keeping the log
 

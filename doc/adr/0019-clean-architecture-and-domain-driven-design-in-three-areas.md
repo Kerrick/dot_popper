@@ -46,7 +46,7 @@ The record holds no comparison in his words of option 1 with options 2 and 3, an
 
 ### Confirmation
 
-`test/use_cases/pro_knowledge_test.rb` fails if code outside Monetization, the use cases and the composition root knows of Pro. `test/shell/platforms_test.rb` fails if anything but the shell names a system, and `test/composition/root_test.rb` if the composition root names Lota or the shell; the tests of the rules, the use cases and the presentation run where Lota is not loaded, so a call to it that a test reaches fails. `test/glossary_test.rb` fails on a word the glossary says not to use. Steep checks the rules and the use cases ([ADR-0004](0004-steep-checks-the-rules-strictly.md)). A change to the architecture is reviewed against `doc/architecture.md`.
+`test/use_cases/pro_knowledge_test.rb` fails if code outside Monetization, the use cases and the composition root knows of Pro. `test/shell/platforms_test.rb` fails if anything but the shell names a system, and `test/composition/root_test.rb` if the composition root names Lota or the shell; the tests of the rules, the use cases and the presentation run where Lota is not loaded, so a call to it that a test reaches fails. `test/glossary_test.rb` fails on a word the glossary says not to use. Steep checks the rules, the use cases and friend groups' client ([ADR-0004](0004-steep-checks-the-rules-strictly.md)). A change to the architecture is reviewed against `doc/architecture.md`.
 
 ## More Information
 

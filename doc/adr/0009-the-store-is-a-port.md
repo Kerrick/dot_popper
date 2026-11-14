@@ -36,7 +36,7 @@ Chosen: option 1, because a test build then sells and limits free games through 
 
 ### Confirmation
 
-`test/presentation/store_contract.rb` is one suite of what any adapter must do, run against `FakeStore`, `NativeStore` over a real answer file and a stand-in for the host, and `Shell::StoreHelper`; `test/presentation/storefront_test.rb` checks which adapter each channel and system get. The Package workflow runs `script/check_build.rb` on every build for sale it makes.
+`test/store_contract.rb` is one suite of what any adapter must do, run against `FakeStore`, `NativeStore` over a real answer file and a stand-in for the host, and `Shell::StoreHelper`; `test/presentation/store_test.rb` and `test/composition/root_test.rb` check which adapter each channel and system get. The Package workflow runs `script/check_build.rb` and `script/channel_contents.rb check` on every build for sale it makes ([ADR-0021](0021-a-build-for-sale-carries-only-its-own-parts.md)).
 
 ## More Information
 

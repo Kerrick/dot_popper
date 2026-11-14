@@ -46,7 +46,7 @@ Chosen: option 1, because it alone makes adding a screen one object: the screen 
 
 ### Confirmation
 
-`test/presentation/inputs_test.rb` fails if a control a screen answers (each screen's `#pressed`) or a screen object is reached by no input. `test/presentation/screen_plans_test.rb` walks every screen at every size. `themes_test.rb`, `games_test.rb`, `show_test.rb`, `achievements_test.rb` and `group_panel_test.rb` pin each corner where the chains disagreed. The GUI scenarios play the real game in a window.
+`test/presentation/inputs_test.rb` fails if a control a screen declares (each screen's `#answers`) or a screen object is reached by no input, pressing each through `Presentation::InputHandler` as the game does. `test/presentation/screen_answers_test.rb` holds, in a table for each screen, what every press does there. `test/presentation/screen_plans_test.rb` walks every screen at every size. `themes_test.rb`, `games_test.rb`, `show_test.rb`, `achievements_test.rb` and `group_panel_test.rb` pin each corner where the chains disagreed. The GUI scenarios play the real game in a window.
 
 ## More Information
 

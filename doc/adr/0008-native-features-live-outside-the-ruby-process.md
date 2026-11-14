@@ -37,7 +37,7 @@ Chosen: option 1. Against option 2, catching the URL in the host means no other 
 
 ### Confirmation
 
-The store contract (`test/presentation/store_contract.rb`) runs against the hosts' answer files through `NativeStore` and against real helper processes through `Shell::StoreHelper` (`test/shell/store_helper_test.rb`). `ios/store_check` drives `Store.swift` against StoreKit's local test store; `test/windows_store_helper_test.rb` runs the Windows helper's self-test on Windows.
+The store contract (`test/store_contract.rb`) runs against the hosts' answer files through `NativeStore` and against real helper processes through `Shell::StoreHelper` (`test/shell/store_helper_test.rb`). `ios/store_check` drives `Store.swift` against StoreKit's local test store; `test/windows_store_helper_test.rb` runs the Windows helper's self-test on Windows.
 
 ## More Information
 
