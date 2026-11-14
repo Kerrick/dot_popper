@@ -6,20 +6,20 @@ module DotPopper
     # like the other quiet buttons, but outlined in a bright dot's gold and
     # led by a share glyph, three dots joined by two lines, so it is seen
     # without competing with Play again's filled gold. It comes in as its
-    # +cue+ (Presentation::ShareButtonEntrance) says, rising into place with a ring
-    # spreading from its edge. +hover+, from 0 to 1, is how lit the mouse
+    # +entrance+ (Presentation::ShareButtonEntrance) says, rising into place
+    # with a ring spreading from its edge. +hover+, from 0 to 1, is how lit the mouse
     # over it has made it (Presentation::Hover).
     class ShareButton < Data.define(:pen)
       G = ::Lota::Graphics
       Plan = Presentation::GameOverScreen
 
-      def draw(rect, text, cue:, ui:, alpha: 1.0, hover: 0.0)
-        shown = cue.alpha * alpha
+      def draw(rect, text, entrance:, ui:, alpha: 1.0, hover: 0.0)
+        shown = entrance.alpha * alpha
         return if shown <= 0.0
 
         pixels = pen.pixels
-        rect = rect.with(y: rect.y + pixels.snap(cue.drop * ui))
-        ring(rect, cue.ring * ui, cue.ring_alpha * alpha) if cue.ring_alpha.positive?
+        rect = rect.with(y: rect.y + pixels.snap(entrance.drop * ui))
+        ring(rect, entrance.ring * ui, entrance.ring_alpha * alpha) if entrance.ring_alpha.positive?
         x, y, width, height = [rect.x, rect.y, rect.width, rect.height].map { pixels.snap(it) }
         pill(x, y, width, height, shown, hover)
         label(text, x, y, width, height, shown)

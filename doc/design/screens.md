@@ -248,7 +248,7 @@ Everywhere else (`InGameSharing`), Share my score opens a card over Game Over th
 - **Drawing.** Fredoka has no emoji, so the bubble draws 🟡 as the game's bright dot, ⚫ as a popped dot and ⏱ as a small stopwatch, each 1.15 of a line's height across (`ShareGlyphs`); the copied text keeps the real emoji. A line of facts breaks only after a "·", so "1 mistake" stays whole, and lines are balanced so no word is left alone (`ShareScreen#wrapped`, `Words.balance`).
 - **Size.** The card is as wide as its widest line needs, never narrower than Close and Copy at their widest (3.4 heights each), and at most 680 units at a `ui` of 1 (`Style::SHARE_PREVIEW`), padded 24, the bubble padded 14 (half again at its sides). Short of room the type shrinks, then the heading goes; the message, the confirmation's room and the buttons always stay. It comes in over 0.22 s, lifting 14 units, over the screen veiled at 60%.
 
-`ScreenPlansTest#test_the_share_preview_never_overlaps_or_runs_off_screen` lays out the longest result at fifteen sizes in the mouse's and the gamepad's words; `share_test.rb` checks the sheet's URL, the fallback, and the cue.
+`ScreenPlansTest#test_the_share_preview_never_overlaps_or_runs_off_screen` lays out the longest result at fifteen sizes in the mouse's and the gamepad's words; `share_test.rb` checks the sheet's URL, the fallback, and the button's entrance.
 
 ## Credits and licenses
 

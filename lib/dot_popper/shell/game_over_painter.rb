@@ -45,7 +45,7 @@ module DotPopper
                                     icon: ->(x, y, size) { Glyphs.new(pen:).draw(:home, x, y, size * 0.42, alpha: shown) })
         end
         if (button = plan.share_button)
-          ShareButton.new(pen:).draw(button, words.share, cue: game_over.share_cue(now), ui: layout.ui, hover: show.hover.level(:share))
+          ShareButton.new(pen:).draw(button, words.share, entrance: game_over.share_button_entrance(now), ui: layout.ui, hover: show.hover.level(:share))
         end
         play = plan.play_button or return
         PrimaryButton.new(pen:).draw(play, show.game_over_screen.play_word, alpha: [shown * 0.35, game_over.prompt(now)].max,
