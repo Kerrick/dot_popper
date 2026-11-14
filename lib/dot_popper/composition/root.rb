@@ -45,8 +45,6 @@ module DotPopper
 
       # Its old name, until no caller says it.
       alias autopilot bot
-      # Its old name, until no caller says it.
-      alias theme_feed theme_releases
 
       def initialize(engine:, settings: DeveloperSettings.new, clock: -> { Time.now.to_f })
         @engine = engine
