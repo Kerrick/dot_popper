@@ -126,6 +126,15 @@ class ReadModelTest < Minitest::Test
     assert_empty [later.next_announcement].compact
   end
 
+  def test_the_newest_change_shown_never_goes_back
+    @read.upsert(group)
+    @read.read_history(1, [change(9)])
+    @read.upsert(group(top: 60))
+    @read.read_history(1, [change(4)])
+
+    assert_equal 9, @read.seen.fetch(1).last
+  end
+
   def test_an_arrival_is_taken_once
     @read.arrived(3)
 

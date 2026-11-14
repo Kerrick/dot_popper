@@ -822,6 +822,58 @@ class SessionTest < Minitest::Test
     assert_nil @session.next_announcement
   end
 
+  def test_a_429_naming_no_time_waits_a_minute
+    @session.join("2345678")
+    pump
+    answer(429)
+    @time += 59
+    @session.create
+    pump
+
+    assert_equal :too_many_tries, @session.error
+    assert_empty @worker.started
+    @time += 2
+    @session.create
+    pump
+
+    refute_empty @worker.started
+  end
+
+  def test_an_earlier_games_answer_is_not_shown_as_the_last_games
+    joined
+    played(score: 30)
+    played(score: 40)
+
+    assert_predicate @session, :result_due?
+    answer(200, { "groups" => [{ "group" => group(top: 50), "won_title" => false }] })
+
+    assert_nil @session.game_result
+  end
+
+  def test_forgetting_the_player_ends_a_429s_wait
+    joined
+    @session.refresh
+    pump
+    answer(429, {}, retry_after: 600)
+    @session.refresh
+    pump
+    answer(401)
+    @session.create
+    pump
+
+    assert_nil @session.error
+    assert_equal ["/player"], paths
+  end
+
+  def test_an_empty_token_is_a_failure
+    @session.join("2345678")
+    pump
+    answer(201, { "token" => "" })
+
+    assert_equal :failed, @session.error
+    refute_predicate @session, :known?
+  end
+
   def test_no_server_means_no_groups
     refute_predicate Groups::Session.at(nil, store: @store), :available?
   end
