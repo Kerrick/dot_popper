@@ -921,7 +921,7 @@ module DotPopper
       end
 
 
-      # One floater to the left and one to the right of the tap; with only
+      # One floating text to the left and one to the right of the tap; with only
       # one, it sits over the tap.
       def float_pair(x, y, left, right, left_color, right_color, float)
         spread = style::FLOAT_SPREAD * @scale

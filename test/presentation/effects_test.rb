@@ -90,11 +90,11 @@ class EffectsTest < Minitest::Test
   end
 
   def test_a_floater_rises_and_fades
-    floater = @effects.float("+1", 100, 200, Style::PALETTE.cream, Style::GAIN_FLOAT)
+    text = @effects.float("+1", 100, 200, Style::PALETTE.cream, Style::GAIN_FLOAT)
     later = @effects.now + Style::GAIN_FLOAT.life * 0.9
 
-    assert_operator floater.y_at(later), :<, 200
-    assert_operator floater.alpha(later), :<, floater.alpha(@effects.now)
+    assert_operator text.y_at(later), :<, 200
+    assert_operator text.alpha(later), :<, text.alpha(@effects.now)
   end
 
   def test_floating_texts_and_rings_are_capped

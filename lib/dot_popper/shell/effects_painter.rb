@@ -71,7 +71,7 @@ module DotPopper
       def floating_texts(texts, now, layout)
         return if texts.empty?
 
-        font = pen.fonts.bold(layout.scaled(pen.style::TYPE.floater))
+        font = pen.fonts.bold(layout.scaled(pen.style::TYPE.floating_text))
         texts.each { pen.outlined(it.text, font, it.x, it.y_at(now), it.color, it.alpha(now)) }
       end
 

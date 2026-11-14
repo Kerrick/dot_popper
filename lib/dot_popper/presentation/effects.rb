@@ -13,15 +13,11 @@ module DotPopper
     class Effects
       MOST_RINGS = 32
       MOST_FLOATING_TEXTS = 24
-      MOST_FLOATERS = MOST_FLOATING_TEXTS # its old name, until no caller says it
 
       MOST_PENDING_BURSTS = 16
       MOST_SPRAYS = MOST_PENDING_BURSTS # its old name, until no caller says it
 
       attr_reader :rings, :reveals, :floating_texts, :shake, :flash, :now, :cleared
-
-      # Its old name, until no caller says it.
-      alias floaters floating_texts
 
       def initialize(radius:, random: Random.new, calm: false)
         @radius = radius

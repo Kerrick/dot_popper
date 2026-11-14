@@ -242,13 +242,13 @@ module DotPopper
       # Sizes are graphics units at a layout scale of 1. A size that
       # animates steps through whole sizes rather than scaling glyphs.
       class Type < Data.define(:bold, :semibold, :game_name, :heading, :final_score, :hud_number, :hud_label,
-                               :prompt, :legend, :score_record, :floater, :new_score_record, :hint, :summary, :wordmark, :mono); end
+                               :prompt, :legend, :score_record, :floating_text, :new_score_record, :hint, :summary, :wordmark, :mono); end
 
       TYPE = Type.new(
         bold: "assets/fonts/Fredoka-Bold.ttf", semibold: "assets/fonts/Fredoka-SemiBold.ttf",
         wordmark: "assets/fonts/Iosevka-Bold-setdef.ttf", mono: "assets/fonts/Iosevka-Regular-latin.ttf",
         game_name: 108, heading: 64, final_score: 136, hud_number: 35, hud_label: 12,
-        prompt: 26, legend: 29, score_record: 26, floater: 34, new_score_record: 34, hint: 21, summary: 20
+        prompt: 26, legend: 29, score_record: 26, floating_text: 34, new_score_record: 34, hint: 21, summary: 20
       )
 
       # setdef's splash: the maker's near-black ground and setdef's amber

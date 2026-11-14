@@ -22,9 +22,5 @@ module DotPopper
         1 - Ease.in_quad(((progress - 0.35) / 0.65).clamp(0.0, 1.0))
       end
     end
-
-    # Their old names, until no caller says them.
-    FloaterStyle = FloatingTextStyle
-    Floater = FloatingText
   end
 end

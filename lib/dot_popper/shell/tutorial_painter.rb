@@ -34,7 +34,7 @@ module DotPopper
         light = scene.spotlight
         halo(light.to.name, pill, light.strength(now), now - light.at) if light.to&.hud? && light.to.name != :dots_in_a_row
         row_ring(scene.row_notice, now, spots.fetch(:dots_in_a_row), pill, scene.hud.size) if scene.row_notice
-        font = pen.fonts.bold(layout.scaled(pen.style::TYPE.floater))
+        font = pen.fonts.bold(layout.scaled(pen.style::TYPE.floating_text))
         scene.flights.each { flight(it, now, scene.dots, spots, scene.radius, font) }
         GuidePainter.new(pen:).draw(scene.guide_pose, show.input, scene.radius)
         return unless show.skip_reach
