@@ -78,6 +78,26 @@ module PresentationTest
     show.tap(reach.center_x, reach.center_y)
   end
 
+  # What the InputHandler asks of the engine, answered as a computer's
+  # would with no splash: quitting and fullscreen are not watched here.
+  class KeyShell
+    def splash? = false
+    def quit = nil
+    def toggle_fullscreen = nil
+  end
+
+  # A computer, as Linux is: keys go where a keyboard's go.
+  COMPUTER = DotPopper::Platform.new(touch: false, quits_itself: true, buzzes: false, command_key: false, phone_host: false,
+                                     own_store: false, website_sales: true)
+
+  # A key on a computer's keyboard, with the modifier keys +held+, as the
+  # shell hands it to the InputHandler: the screen on top's own keys
+  # first (Screens::Screen#key_bindings), then the keys every screen takes.
+  def press_key(key, *held, show: @show)
+    cursor = GamepadCursor.centered(show.layout.whole, style: Style::GAMEPAD, radius: R)
+    InputHandler.new(show:, platform: COMPUTER, shell: KeyShell.new, pile: nil, cursor:).call(KeyPress.new(key:, held:))
+  end
+
   def layout(width = 800, height = 600)
     Layout.new(width:, height:, safe: Rect.new(x: 0, y: 0, width:, height:), style: Style::LAYOUT)
   end

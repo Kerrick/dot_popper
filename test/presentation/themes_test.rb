@@ -97,7 +97,8 @@ class ThemesTest < Minitest::Test
   def test_under_the_card_h_does_nothing
     show(pro: true, unlocked: ["ghost"])
 
-    refute @show.type_key(:h)
+    press_key(:h)
+
     refute_predicate @show, :tutorial?
     assert_equal :ghost, @show.arrival&.key
   end

@@ -268,9 +268,11 @@ class ShowTutorialTest < Minitest::Test
     play_through
     finish_game
     @show.open_stats
-    refute @show.type_key(:h), "not Stats' key"
+    press_key(:h)
+
+    refute @show.tutorial?, "not Stats' key"
     @show.back
-    assert @show.type_key(:h)
+    press_key(:h)
 
     assert @show.tutorial?
   end

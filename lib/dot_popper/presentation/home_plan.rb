@@ -107,10 +107,15 @@ module DotPopper
       def fits?(plan)
         parts = [plan.name, plan.legend, plan.play, plan.goal, *plan.tiles.values, *plan.pills.values].compact
         x, y = plan.quit_line
-        quit = Rect.new(x: x - 100, y: y - 9, width: 200, height: 18)
+        room = quit_width
+        quit = Rect.new(x: x - (room / 2.0), y: y - 9, width: room, height: 18)
         parts.all? { it.y >= safe.y - 1e-6 && it.bottom <= safe.bottom + 1e-6 } &&
           (parts + [quit]).combination(2).none? { |one, other| one.overlaps?(other) } && (plan.goal.nil? || goal_room?(plan.goal))
       end
+
+      # The width "Press B again to quit" or "Press Escape again to quit"
+      # takes, whichever is wider, as the painter writes it (semibold, 18).
+      def quit_width = %i[b escape].map { measure.width(:semibold, 18, words.quit_again(it)) }.max
 
       # Whether a card in +rect+ shows every daily goal whole.
       def goal_room?(rect) = GoalCard.room?(rect, words, measure)

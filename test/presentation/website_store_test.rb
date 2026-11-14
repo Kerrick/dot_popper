@@ -94,10 +94,12 @@ class WebsiteStoreTest < Minitest::Test
   def test_the_keyboards_buy_shortcut_buys_only_on_the_offer
     s = show
 
-    refute s.buy_shortcut
-    s.open_offer
+    press_key(:b, :ctrl, show: s)
 
-    assert s.buy_shortcut
+    refute s.offer?, "Ctrl+B on Home opens nothing"
+    s.open_offer
+    press_key(:b, :ctrl, show: s)
+
     assert_equal s.words.offer[:copied], s.offer_status
   end
 
@@ -166,10 +168,12 @@ class WebsiteStoreTest < Minitest::Test
     s = show
     @clipboard.copy(C::LicenseKey.issue(C::TestKeys::LICENSE).text)
 
-    refute s.paste_shortcut, "nothing to paste into on Home"
-    s.open_offer
+    press_key(:v, :ctrl, show: s)
 
-    assert s.paste_shortcut
+    refute @entitlement.pro?, "nothing to paste into on Home"
+    s.open_offer
+    press_key(:v, :ctrl, show: s)
+
     assert @entitlement.pro?
   end
 
@@ -177,24 +181,30 @@ class WebsiteStoreTest < Minitest::Test
     s = show
     s.open_offer
     text = C::LicenseKey.issue(C::TestKeys::LICENSE).text
-    refute s.type_key(:enter), "Enter with nothing typed is the button's"
+    press_key(:enter, show: s)
+
+    refute s.offer?, "Enter with nothing typed is the main button's, Back"
+    s.open_offer
     text.each_char do |c|
       next if c == " "
 
-      assert s.type_key(c == "-" ? :minus : c.downcase.to_sym), c
+      press_key(c == "-" ? :minus : c.downcase.to_sym, show: s)
     end
     assert_equal "#{s.words.offer[:typing]} …#{text.upcase[-24..]}", s.offer_status
     refute @entitlement.pro?
-    s.type_key(:backspace)
-    s.type_key(text[-1].downcase.to_sym)
-    assert s.type_key(:enter)
+    press_key(:backspace, show: s)
+    press_key(text[-1].downcase.to_sym, show: s)
+    press_key(:enter, show: s)
+
     assert @entitlement.pro?
   end
 
   def test_typing_does_nothing_on_other_screens
     s = show
+    press_key(:a, show: s)
+    s.open_offer
 
-    refute s.type_key(:a)
+    refute_includes s.offer_status, s.words.offer[:typing]
   end
 
   def test_paste_says_what_was_wrong_and_changes_nothing
@@ -235,7 +245,7 @@ class WebsiteStoreTest < Minitest::Test
 
     refute_includes names(s), :paste
     assert_includes names(s), :restore
-    refute s.paste_shortcut
+    refute s.screen.paste, "Ctrl+V finds nothing to paste into"
   end
 
   def test_store_for_gives_computers_the_website_and_never_ios

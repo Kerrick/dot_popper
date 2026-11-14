@@ -311,14 +311,14 @@ class GroupPanelTest < Minitest::Test
   # Enter joins.
   def test_typed_digits_fill_the_code_and_enter_joins
     open_join
-    "2345".each_char { assert @show.type_key(it.to_sym) }
-    %i[6 7 8].each { @show.type_key(it) }
+    %i[2 3 4 5 6 7 8].each { press_key(it) }
     assert_equal "2345678", panel.code, "the eighth digit has no place"
     assert panel.code_complete?
-    assert @show.type_key(:backspace)
+    press_key(:backspace)
     assert_equal "234567", panel.code
-    refute @show.type_key(:m), "a letter is not the keypad's"
-    @show.type_key(:"8")
+    press_key(:m)
+    assert_equal "234567", panel.code, "a letter is not the keypad's"
+    press_key(:"8")
     @show.primary
     tick
     refute_empty @worker.started

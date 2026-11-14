@@ -284,12 +284,6 @@ module DotPopper
       # aims at no button, presses the screen's main one (#primary).
       def tap(x, y, by: :tap) = screen.tap(x, y, by)
 
-      # A key typed on a keyboard (+key+, as Shell::LotaInput names it)
-      # that the screen on top takes as its own: the keypad's digits that
-      # join a friend group, a license key on the offer, H on Home and C on
-      # Settings. Says whether it took it.
-      def type_key(key) = screen.type(key)
-
 
       # What a press does on the screen on top: the control +name+, or
       # with none, empty space at +x+, +y+ (Screens::Screen#press).
@@ -494,10 +488,6 @@ module DotPopper
       # "⌘B" on a Mac).
       def keyboard_used(buy_key) = offer.key_hint = buy_key
 
-      # Ctrl+B or Cmd+B, or a controller's Y, on the offer: Buy, where Pro
-      # is sold and not yet bought. Says whether it took the press.
-      def buy_shortcut = screen.buy
-
       def credits? = on_top?(:credits)
 
       # How far down the Credits screen is scrolled (CreditsScroll), while
@@ -658,10 +648,6 @@ module DotPopper
       # The words and buttons of Change Server (ServerScreen).
       def paste_server = @screens[:server].paste_address
 
-      # The system's paste shortcut (Ctrl+V, or Cmd+V on a Mac) on a
-      # computer: Paste license key on the offer, or Paste server address on
-      # Change Server. Says whether it was taken.
-      def paste_shortcut = screen.paste
       def open_policy = @links.open(PRIVACY_URL)
 
       def open_achievements = open_page(:achievements)

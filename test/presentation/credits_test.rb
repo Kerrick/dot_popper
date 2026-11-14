@@ -163,9 +163,11 @@ class CreditsTest < Minitest::Test
   # C on a keyboard opens Credits and licenses from Settings only.
   def test_c_opens_credits_from_settings_only
     show = a_show
-    refute show.type_key(:c)
+    press_key(:c, show:)
+
+    refute show.credits?
     show.open_settings
-    assert show.type_key(:c)
+    press_key(:c, show:)
 
     assert show.credits?
   end
