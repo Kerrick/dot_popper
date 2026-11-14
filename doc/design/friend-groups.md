@@ -148,4 +148,4 @@ The Privacy screen, opened from Settings, says "In a friend group, Dot Popper ke
 
 ## Tests
 
-`test/groups/session_test.rb`, `test/groups/outbox_test.rb`, `test/groups/read_model_test.rb`, `test/groups/group_file_test.rb`, `test/groups/group_stub_test.rb`, `test/refresh_test.rb`, `test/network/link_test.rb`, `test/presentation/group_panel_test.rb`, `test/presentation/member_icon_test.rb`, `test/presentation/names_test.rb`, and `test/privacy/requests_test.rb`, which plays every request through a real `Session` and `Link` against a local server.
+`test/groups/session_test.rb`, `test/groups/jobs_test.rb`, `test/groups/outbox_test.rb`, `test/groups/read_model_test.rb`, `test/groups/group_file_test.rb`, `test/groups/group_stub_test.rb`, `test/refresh_test.rb`, `test/network/link_test.rb`, `test/presentation/group_panel_test.rb`, `test/presentation/member_icon_test.rb`, `test/presentation/names_test.rb`, and `test/privacy/requests_test.rb`, which plays every request through a real `Session` and `Link` against a local server.
