@@ -58,53 +58,45 @@ class ScreenAnswersTest < Minitest::Test
 
     def show = fixture.show
 
-    # A controller's A with its cursor on no button: a press there, let go
-    # (InputHandler#gamepad_down, #gamepad_up), heard on Game Over's pile as a click.
+    # Every press below is one of the game's input events, handed to the
+    # Fixture's InputHandler as Shell::App hands it on.
+
+    # A controller's A with its cursor on no button: a press there, let go,
+    # heard on Game Over's pile as a click.
     def a_at_nothing
-      show.input = P::InputKind::GAMEPAD
       x, y = nothing || (return :no_place)
-      click(x, y, :gamepad)
+      fixture.handler.fake_pad(:press, x, y)
+      fixture.tick(0.05)
+      fixture.handler.fake_pad(:release, x, y)
     end
 
     # B: the screen's Back, or on Home, where the system lets the game quit
-    # itself, the ask to quit (InputHandler#leave_home).
-    def b
-      show.input = P::InputKind::GAMEPAD
-      show.back || (fixture.platform.quits_itself? && show.ask_to_quit)
-    end
+    # itself, the ask to quit.
+    def b = pad(:b)
 
-    # A gamepad button, let go at once, or after +held+ seconds.
+    # A gamepad button (the left trigger, :lt, pulled), let go at once, or
+    # after +held+ seconds.
     def pad(name, held: 0.05)
-      show.input = P::InputKind::GAMEPAD
-      show.pad(name)
+      fixture.event(name == :lt ? P::TriggerPull.new(trigger: :left, value: 1.0) : P::ButtonPress.new(button: name))
       fixture.tick(held)
-      show.let_go(name)
+      fixture.event(name == :lt ? P::TriggerPull.new(trigger: :left, value: 0.0) : P::ButtonRelease.new(button: name))
     end
 
-    def start(held: 0.05)
-      show.input = P::InputKind::GAMEPAD
-      show.start
-      fixture.tick(held)
-      show.let_go(:start)
-    end
+    def start(held: 0.05) = pad(:start, held:)
 
-    # A key on a computer's keyboard, with the modifier keys +held+, as
-    # Shell::App hands it on (Presentation::InputHandler).
-    def key(name, *held)
-      show.input = P::InputKind::MOUSE
-      fixture.key(name, *held)
-    end
+    # A key on a computer's keyboard, with the modifier keys +held+.
+    def key(name, *held) = fixture.key(name, *held)
 
     def paste = key(:v, :ctrl)
     def buy = key(:b, :ctrl)
 
-    def wheel = show.wheel_scroll(-3)
+    def wheel = fixture.event(P::WheelTurn.new(notches: -3))
 
-    def right_stick = show.stick_scroll(P::Stick.new(x: 0.0, y: 1.0), 0.5)
-
-    # The left stick moves the gamepad's cursor, except where the screen
-    # scrolls with it (InputHandler#read_with_stick).
-    def left_stick = (show.stick_scroll(P::Stick.new(x: 0.0, y: 1.0), 0.5) if show.stick_scrolls?)
+    # The right stick, or the left one, held down for half a second: the
+    # right scrolls a list, and the left moves the gamepad's cursor, except
+    # where the screen scrolls with it.
+    def right_stick = fixture.handler.update(0.5, 0.5, stick: P::Stick.rest, right_stick: P::Stick.new(x: 0.0, y: 1.0))
+    def left_stick = fixture.handler.update(0.5, 0.5, stick: P::Stick.new(x: 0.0, y: 1.0), right_stick: P::Stick.rest)
 
     # A finger put down on nothing in the page's window and dragged up.
     def drag
@@ -120,14 +112,12 @@ class ScreenAnswersTest < Minitest::Test
 
     # A tap on no button, by a finger.
     def tap_nothing
-      show.input = P::InputKind::TOUCH
       x, y = nothing || (return :no_place)
       click(x, y, 7)
     end
 
     # A finger's tap on one of Home's bright dots, where no button is.
     def tap_bright_dot
-      show.input = P::InputKind::TOUCH
       dots = show.attract.dots
       dot = dots.find { it.bright? && dots.top_at(it.x, it.y)&.id == it.id && show.control_at(it.x, it.y).nil? } or return :no_dot
       click(dot.x, dot.y, 7)
@@ -135,7 +125,6 @@ class ScreenAnswersTest < Minitest::Test
 
     # A finger's tap on the bright dot on top of a game in play.
     def tap_dot_in_play
-      show.input = P::InputKind::TOUCH
       dots = show.cabinet.game&.dots or return :no_game
       dot = dots.find { it.bright? && dots.top_at(it.x, it.y)&.id == it.id } or return :no_dot
       click(dot.x, dot.y, 7)
@@ -143,7 +132,6 @@ class ScreenAnswersTest < Minitest::Test
 
     # A tap away from a dialog's card, by a finger.
     def tap_beside_card
-      show.input = P::InputKind::TOUCH
       click(show.layout.safe.x + 2, show.layout.safe.y + 2, 7)
     end
 
@@ -200,21 +188,20 @@ class ScreenAnswersTest < Minitest::Test
 
     private
 
-    # A press at +x+, +y+ by +by+, let go: on Game Over's pile, where a
-    # press waits for its release, Shell::Dragging hears one that drags
-    # nothing as a click, which is the same tap.
-    def click(x, y, by)
-      show.tap(x, y, by:)
+    # A finger's press at +x+, +y+, let go there.
+    def click(x, y, _by)
+      fixture.event(touch(P::TouchPress, x, y))
       fixture.tick(0.05)
-      show.let_go(by)
+      fixture.event(touch(P::TouchRelease, x, y))
     end
 
     def drag_from(x, y)
-      show.input = P::InputKind::TOUCH
-      show.tap(x, y, by: 7)
-      6.times { |i| show.drag_scroll(7, y - (30.0 * (i + 1))) }
-      show.let_go(7)
+      fixture.event(touch(P::TouchPress, x, y))
+      6.times { |i| fixture.event(touch(P::TouchMove, x, y - (30.0 * (i + 1)))) }
+      fixture.event(touch(P::TouchRelease, x, y - 180.0))
     end
+
+    def touch(kind, x, y) = kind.new(id: 7, x:, y:, screen: true, made_up: false)
   end
 
   # The way to each screen: a Fixture, and the controls a finger presses

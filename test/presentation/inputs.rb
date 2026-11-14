@@ -66,6 +66,16 @@ module Inputs
     attr_reader :os, :show, :cabinet, :sounds, :window, :clipboard, :opener, :entitlement, :games, :storefront, :server_choice, :to_pop,
                 :shell
 
+    # Game Over's pile as Shell::Dragging takes a press on it that drags
+    # nothing: a click, heard as a tap where it lets go.
+    class Pile
+      def initialize(show) = (@show = show) && (@held = {})
+      def press(key, x, y) = @held[key] = [x, y]
+      def move(_key, _x, _y) = nil
+      def release(key, x, y) = (@show.tap(x, y, by: key) if @held.delete(key))
+      def drop = @held.clear
+    end
+
     # What the InputHandler asks of the engine, remembered: the splash is
     # long over, and the game is asked to quit or to switch fullscreen.
     class Shell
@@ -117,8 +127,8 @@ module Inputs
                        server_choice: @server_choice)
       storefront.connect
       @shell = Shell.new
-      @keys = P::InputHandler.new(show:, platform:, shell:, pile: nil,
-                                  cursor: P::GamepadCursor.centered(show.layout.whole, style: P::Style::GAMEPAD, radius: R))
+      @handler = P::InputHandler.new(show:, platform:, shell:, pile: Pile.new(show),
+                                     cursor: P::GamepadCursor.centered(show.layout.whole, style: P::Style::GAMEPAD, radius: R))
       join(session) if member
       # A new theme's card takes presses once it has been up a moment
       # (Style::ARRIVAL_GRACE); at launch that passes during the splash.
@@ -127,9 +137,16 @@ module Inputs
 
     def phone? = platform.touch?
 
+    # What the shell hands the game as the player presses (input_events.rb),
+    # handed on as Shell::App hands it (Presentation::InputHandler).
+    def event(event) = @handler.call(event)
+
     # A key on a keyboard (+key+, as Shell::LotaInput names it), with the
-    # modifier keys +held+, handed on as Shell::App hands it.
-    def key(key, *held) = @keys.call(P::KeyPress.new(key:, held:))
+    # modifier keys +held+.
+    def key(key, *held) = event(P::KeyPress.new(key:, held:))
+
+    # The InputHandler, for the gamepad's sticks and its cursor.
+    attr_reader :handler
     def platform = DotPopperTest.platform(os)
 
     # The frames of +seconds+, each at most Rules::LONGEST_FRAME, as
@@ -138,6 +155,7 @@ module Inputs
       while seconds.positive?
         step = [seconds, DotPopper::Rules::LONGEST_FRAME].min
         cabinet.update(step)
+        @handler.update(step, step, stick: P::Stick.rest, right_stick: P::Stick.rest)
         show.update(step)
         seconds -= step
       end
@@ -320,23 +338,18 @@ module Inputs
     # Where this input can press, aiming for +x+, +y+, or nil.
     def aim_at(x, y) = [x, y]
 
+    # A press at +x+, +y+, and its release there, as the game's events
+    # (#pressed, #released), which the InputHandler hands on: at once to
+    # the Show, or on Game Over's pile, where it may become a drag, to the
+    # pile, which hears one that drags nothing as a tap as it lets go.
     def down(x, y)
-      show.input = kind
-      return pile(x, y) if show.waits_for_release?(x, y)
-
-      show.tap(x, y, by: key)
+      @at = [x, y]
+      fixture.event(pressed(x, y))
     end
 
-    # A press on Game Over's pile, away from its buttons: Shell::Dragging
-    # hears it, and a press that drags nothing is heard as a press when
-    # it lets go (Dragging's click, then Show#tap).
-    def pile(x, y) = @pile = [x, y]
-
     def up
-      x, y = @pile
-      @pile = nil
-      show.tap(x, y, by: key) if x
-      show.let_go(key)
+      x, y = @at
+      fixture.event(released(x, y))
     end
   end
 
@@ -346,13 +359,17 @@ module Inputs
     def kind = P::InputKind::TOUCH
     def key = 7 # a touch id
 
+    def pressed(x, y) = P::TouchPress.new(id: key, x:, y:, screen: true, made_up: false)
+    def moved(x, y) = P::TouchMove.new(id: key, x:, y:, screen: true, made_up: false)
+    def released(x, y) = P::TouchRelease.new(id: key, x:, y:, screen: true, made_up: false)
+
     def scroll_by(by)
       point = empty or return
       x, y = point
       down(x, y)
       distance = show.layout.page.height * 0.6 * by
       steps = 6
-      steps.times { |i| show.drag_scroll(key, y - (distance * (i + 1) / steps)) }
+      steps.times { |i| @at = [x, y - (distance * (i + 1) / steps)]; fixture.event(moved(*@at)) }
       up
     end
 
@@ -389,7 +406,11 @@ module Inputs
       :pressed
     end
 
-    def scroll_by(by) = show.wheel_scroll(-3 * by)
+    def pressed(x, y) = P::MousePress.new(x:, y:, button: :left, made_up: false)
+    def moved(x, y) = P::MouseMove.new(x:, y:, made_up: false)
+    def released(x, y) = P::MouseRelease.new(x:, y:, button: :left, made_up: false)
+
+    def scroll_by(by) = fixture.event(P::WheelTurn.new(notches: -3 * by))
   end
 
   # A controller: the left stick steers the cursor (GamepadCursor), A
@@ -407,37 +428,38 @@ module Inputs
 
     # The buttons besides A at a place (GamepadButtons): A with the cursor
     # on no button, B, X, Y, the bumpers, the left trigger, View and Start.
-    BUTTONS = { "B" => :leave, "X" => :x, "Y" => :y, "LB" => :lb, "RB" => :rb, "LT" => :lt, "View" => :select, "Start" => :start }.freeze
+    BUTTONS = { "B" => :b, "X" => :x, "Y" => :y, "LB" => :lb, "RB" => :rb, "LT" => :lt, "View" => :select, "Start" => :start }.freeze
 
     def kind = P::InputKind::GAMEPAD
     def key = :gamepad
 
     def presses = BUTTONS.keys
 
-    # A button pressed as Shell::App hands it on (App#gamepad_pressed), and
-    # let go; a press that starts a hold (Y's Clear my stats…, Start's
-    # Leave) is held until it is done.
+    # A button pressed and let go, as the game's events (the left trigger
+    # pulled and let back); a press that starts a hold (Y's Clear my
+    # stats…, Start's Leave) is held until it is done.
     def act(name)
       fixture.tick(LOOK)
-      show.input = kind
       return a_at_nothing if name == "A at nothing"
 
       button = BUTTONS.fetch(name)
-      case button
-      in :leave then show.back || (fixture.platform.quits_itself? && show.ask_to_quit)
-      in :start then show.start
-      else show.pad(button)
-      end
+      fixture.event(button == :lt ? P::TriggerPull.new(trigger: :left, value: 1.0) : P::ButtonPress.new(button:))
       fixture.tick(holding ? holding.seconds + 0.2 : CLICK)
-      show.let_go(button)
+      fixture.event(button == :lt ? P::TriggerPull.new(trigger: :left, value: 0.0) : P::ButtonRelease.new(button:))
       fixture.tick(CLICK)
       :pressed
     end
 
+    # A, with the InputHandler's cursor where this one is.
+    def pressed(x, y) = fixture.handler.fake_pad(:press, x, y).then { nil }
+    def released(x, y) = fixture.handler.fake_pad(:release, x, y).then { nil }
+
+    # The right stick, held down or up for long enough to move the list
+    # about a page, a frame at a time.
     def scroll_by(by)
       stick = P::Stick.new(x: 0.0, y: by.positive? ? 1.0 : -1.0)
       seconds = show.layout.page.height * 0.6 / (P::Style::CREDITS.stick * show.scroll_line)
-      (seconds / FRAME).ceil.times { show.stick_scroll(stick, FRAME) }
+      (seconds / FRAME).ceil.times { fixture.handler.update(FRAME, FRAME, stick: P::Stick.rest, right_stick: stick) }
     end
 
     # Steers the cursor onto the dot +id+ as it moves, a frame at a time,

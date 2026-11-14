@@ -64,6 +64,10 @@ class InputsTest < Minitest::Test
     group_open_first: "a tap on the group"
   }.freeze
 
+  # Rows of choices, where pressing the choice already made does nothing:
+  # the row is worked once any of its choices is pressed to some effect.
+  CHOICES = %i[sound dot_size display].freeze
+
   # Controls the Show answers that no screen offers, and why.
   NOT_FOUND = {}.freeze
 
@@ -98,7 +102,9 @@ class InputsTest < Minitest::Test
       missed + exploration.screens.flat_map do |screen|
         here = nodes.select { it.screen == screen }
         offered = here.flat_map(&:names).uniq
-        failed = (offered - here.flat_map { |node| node.pressed.select { |_, outcome| outcome == :pressed }.keys }).map do |name|
+        worked = here.flat_map { |node| node.pressed.select { |_, outcome| outcome == :pressed }.keys }
+        worked += offered.select { CHOICES.include?(P::Control.kind(it)) && worked.map { P::Control.kind(it) }.include?(P::Control.kind(it)) }
+        failed = (offered - worked).map do |name|
           "#{label}, #{Inputs.say(screen)}: #{name.inspect} #{here.filter_map { it.pressed[name] }.first || :never_tried}"
         end
         unoffered = (others.select { it.screen == screen }.flat_map(&:names).uniq - offered - PAD_ONLY.keys).map do |name|
