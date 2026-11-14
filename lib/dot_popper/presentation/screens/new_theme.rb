@@ -8,7 +8,8 @@ module DotPopper
       # Home's under it takes a press.
       class NewTheme < Screen
         # +themes+ (DotPopper::Themes) remembers it was told; +use_theme+
-        # (UseCases::UseTheme) uses it, or for a Free player leads to Pro.
+        # (UseCases::UseTheme) says what its switch leads to (#choice) and
+        # uses it, or for a Free player leads to Pro.
         def initialize(show, themes:, use_theme:)
           super(show)
           @themes = themes
@@ -17,7 +18,10 @@ module DotPopper
 
         # The switch's word: "Use Ghost", or a Free player's "Get Pro",
         # since it opens the offer.
-        def use_word = @use_theme.locked? ? words.offer.fetch(:entry) : format(words.themes.fetch(:use), words.themes.fetch(show.arrival.key))
+        def use_word
+          key = show.arrival&.key
+          @use_theme.choice(key) == :offer ? words.offer.fetch(:entry) : format(words.themes.fetch(:use), words.themes.fetch(key))
+        end
 
         # Each frame: the moment the card for a new theme first shows.
         def update

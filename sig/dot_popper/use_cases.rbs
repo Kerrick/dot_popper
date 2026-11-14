@@ -118,11 +118,15 @@ module DotPopper
 
       def initialize: (themes: Themes, entitlement: Entitlement) -> void
 
-      def locked?: () -> bool
+      def choice: (theme_key? key) -> (:use | :offer)
 
       def call: (theme_key key) -> (:offer | :same | :used)
 
       def refresh: () -> theme_key
+
+      private
+
+      def locked?: () -> bool
     end
 
     # What a friend group's Join and Create ask of Groups::Session.

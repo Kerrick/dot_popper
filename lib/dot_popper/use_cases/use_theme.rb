@@ -20,8 +20,10 @@ module DotPopper
       # one or #refresh takes it up, between games.
       attr_reader :current
 
-      # Whether choosing a theme leads to Pro, as for a Free player.
-      def locked? = !@entitlement.pro?
+      # What choosing the theme +key+ leads to, as the new-theme card's
+      # switch says before it is pressed: :use for a Pro player, and for a
+      # Free player :offer, the offer of Pro instead.
+      def choice(_key) = locked? ? :offer : :use
 
       # The player chose the theme +key+: :offer for a Free player, who is
       # offered Pro instead; :same when it is already current or not open
@@ -40,6 +42,11 @@ module DotPopper
       def refresh
         @current = locked? ? @themes.ordinary : @themes.chosen
       end
+
+      private
+
+      # Whether choosing a theme leads to Pro, as for a Free player.
+      def locked? = !@entitlement.pro?
     end
   end
 end
