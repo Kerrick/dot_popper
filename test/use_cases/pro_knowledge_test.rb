@@ -82,6 +82,19 @@ class ProKnowledgeTest < Minitest::Test
     assert_equal KNOWS, knowing.sort
   end
 
+  # Whether the player has Pro, under a use case's other names for it
+  # (locked?, owned?), is asked nowhere in the presentation or the shell:
+  # a screen asks a use case for the answer it carries out (UseTheme#choice,
+  # ViewAchievements#status, BuyPro#status), so the decision stays there.
+  ASKED = /\.(?:locked|owned)\?/
+
+  def test_no_screen_asks_a_use_case_whether_the_player_has_pro
+    root = File.expand_path("../..", __dir__)
+    asking = Dir["#{root}/lib/dot_popper/{presentation,shell}/**/*.rb"].select { |path| File.foreach(path).any? { it.match?(ASKED) } }
+
+    assert_empty asking.map { it.delete_prefix("#{root}/") }
+  end
+
   private
 
   def game = DotPopper::Composition::Root.new(engine: FakeEngine.new("Windows"),
