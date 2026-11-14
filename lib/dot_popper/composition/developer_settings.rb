@@ -44,23 +44,12 @@ module DotPopper
       # without it.
       def seed = Integer(fetch("DOT_POPPER_SEED"), exception: false)
 
-      # The player's local date, or DOT_POPPER_TODAY's, to try another
-      # day's goal or a streak, as a callable.
-      def today
-        pretend = Date.iso8601(fetch("DOT_POPPER_TODAY"))
-        -> { pretend }
-      rescue Date::Error
-        -> { Date.today }
-      end
+      # The player's local date, as a callable; a test build may pretend
+      # another (lib/dot_popper/test_build).
+      def today = -> { Date.today }
 
-      # The moment the server's dates are told from, in UTC: now, or
-      # midnight UTC of DOT_POPPER_TODAY's day, as a callable.
-      def utc_clock
-        pretend = Date.iso8601(fetch("DOT_POPPER_TODAY"))
-        -> { Time.utc(pretend.year, pretend.month, pretend.day) }
-      rescue Date::Error
-        -> { Time.now.utc }
-      end
+      # The moment the server's dates are told from, in UTC, as a callable.
+      def utc_clock = -> { Time.now.utc }
 
       # DOT_POPPER_WINDOW=400x850: a window of that size, no smaller than
       # +smallest+, for checking a narrow screen; nil without it.
@@ -71,3 +60,5 @@ module DotPopper
     end
   end
 end
+
+DotPopper::Build::PARTS.each { require_relative "../#{it}/developer_settings" }

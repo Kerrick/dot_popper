@@ -63,11 +63,9 @@ module DotPopper
                    sent: { token: "your private code", score: "your scores from games that count" }),
       KeptFile.new(name: "cleared.txt", aside: Aside.new(kind: :diagnostics, reason: "Only the names of the backups to replace next time."), holds: "the names of the backups made by the last clearing of your Stats"),
       KeptFile.new(name: "vulkan_failed.txt", aside: Aside.new(kind: :diagnostics, reason: "A note that lets the game recover after its graphics fail to start."), holds: "that the game's graphics failed to start on this device, and when"),
-      KeptFile.new(name: "fake_setdef.txt", aside: Aside.new(kind: :test_only, reason: "Used only in test builds, as a stand-in for setdef's server."), holds: "a pretend server's record of license keys, in test builds only"),
-      KeptFile.new(name: "fake_store.txt", aside: Aside.new(kind: :test_only, reason: "Used only in test builds, never with a real purchase."), holds: "a pretend purchase's receipt, signed by a test key, in test builds only"),
       KeptFile.new(name: "shot-<number>.png", aside: Aside.new(kind: :developer_only, reason: "Made only under a developer setting that players never use."), pattern: /\Ashot-\d+\.png\z/,
                    made_by: "the game, only under the developer setting DOT_POPPER_SHOTS", holds: "a screenshot")
-    ].freeze
+    ]
 
     module SaveFiles
       # Raises unless +file+ is declared in SAVE_FILES.
@@ -79,3 +77,7 @@ module DotPopper
     end
   end
 end
+
+# A part's own save files (Build::PARTS), each declared beside its code.
+DotPopper::Build::PARTS.each { require_relative "../#{it}/save_files" }
+DotPopper::Privacy::SAVE_FILES.freeze

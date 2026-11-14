@@ -20,13 +20,13 @@
 # to Home as it is let go. The words on screen say "tap", "click",
 # or name the button, after whatever the player last pressed with.
 #
-# Development settings, read from the environment:
+# Development settings, read from the environment (a test build has more
+# of its own, listed in lib/dot_popper/test_build/core.rb):
 #
 #   DOT_POPPER_AUTOPLAY=1       a bot plays: Home, a game, Game Over, and
 #                               game again. It mostly taps bright dots and
 #                               sometimes a popped one, so penalties show.
 #   DOT_POPPER_NO_SPLASH=1      leaves out setdef's splash before Home
-#   DOT_POPPER_PRO=1           plays as if Pro were bought
 #   DOT_POPPER_SERVER=http://localhost:9292
 #                               asks this server for friend groups and themes
 #                               instead of Network::Server::SERVER_URL
@@ -50,9 +50,6 @@
 #                               narrow screen.
 #   DOT_POPPER_SAVE_AS=test     saves in a folder of this name instead, so
 #                               a run starts from nothing.
-#   DOT_POPPER_TODAY=2026-11-07 plays as if it were that date, for its
-#                               daily goal and the goal's streak, and for
-#                               which holiday look is in season.
 #   DOT_POPPER_FAKE_TILT=0.6,0  stands in for an accelerometer that reads
 #                               this x,y, in g, in the device's portrait
 #                               axes, so the game-over pile rolls as on a

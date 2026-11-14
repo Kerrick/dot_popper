@@ -72,7 +72,7 @@ module DotPopper
         press_once(@style.home_wait) { middle(show.play_reach) }
       end
 
-      # A new theme's card, as DOT_POPPER_THEME_UNLOCKS shows it: Play is out
+      # A new theme's card, as a scenario shows it: Play is out
       # of reach (Show#controls) until it is answered, so the bot says "Not now".
       def later_on_arrival(show)
         return if @waited < @style.home_wait / 2
