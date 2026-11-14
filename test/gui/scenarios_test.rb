@@ -18,6 +18,7 @@ end
 require "minitest/autorun"
 require "open3"
 require "fileutils"
+require_relative "displays"
 
 # The game played end to end in real windows: each test starts the game
 # as `lota run` does, with DOT_POPPER_SCENARIO naming a scripted session
@@ -28,8 +29,20 @@ require "fileutils"
 # Every run is silent (ALSOFT_DRIVERS=null), saves in a folder of its own
 # that it removes after, opens at 1200 by 800, and plays from the same
 # seed and date, so a run plays the same dots on any machine.
+#
+# Where it can start displays (DotPopperGui::Displays), several games play
+# at once, each on a display of its own; the tests are no less apart than
+# one after another, since each was always a game of its own.
 class GuiScenariosTest < Minitest::Test
   GAME = File.expand_path("../..", __dir__)
+  WORKERS = DotPopperGui::Displays.workers
+  DISPLAYS = DotPopperGui::Displays.new
+  Minitest.after_run { DISPLAYS.close }
+
+  if WORKERS > 1
+    Minitest.parallel_executor = Minitest::Parallel::Executor.new(WORKERS)
+    parallelize_me!
+  end
 
   def test_a_game_from_home_to_home
     play("game", "screens come in order", "hidden under it is outlined", "Game Over teaches the stacking rule",
@@ -171,8 +184,10 @@ class GuiScenariosTest < Minitest::Test
   # Plays scenario +name+ and returns what it printed, after checking it
   # passed and printed each of +lines+.
   def play(name, *lines, window: "1200x800", **env)
-    output, status = Open3.capture2e(environment(name, window, env), "bundle", "exec", "lota", "run", ".",
-                                     chdir: GAME)
+    output, status = DISPLAYS.lend do |display|
+      Open3.capture2e(environment(name, window, env).merge("DISPLAY" => display), "bundle", "exec", "lota", "run", ".",
+                      chdir: GAME)
+    end
     clean_up(output)
     assert status.success?, "Scenario #{name} exited with #{status.exitstatus}:\n#{output}"
     assert_includes output, "gui: scenario #{name} passed", output
@@ -181,7 +196,7 @@ class GuiScenariosTest < Minitest::Test
   end
 
   def environment(name, window, env)
-    { "DOT_POPPER_SCENARIO" => name, "DOT_POPPER_SAVE_AS" => "dot_popper_gui_#{name}_#{Process.pid}",
+    { "DOT_POPPER_SCENARIO" => name, "DOT_POPPER_SAVE_AS" => "dot_popper_gui_#{self.name}_#{Process.pid}",
       "DOT_POPPER_WINDOW" => window, "DOT_POPPER_SEED" => "7", "DOT_POPPER_TODAY" => "2026-11-07",
       "ALSOFT_DRIVERS" => "null", "DOT_POPPER_SERVER" => "", **env.transform_keys(&:to_s) }
   end
