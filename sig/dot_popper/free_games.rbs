@@ -1,7 +1,6 @@
 module DotPopper
   class FreeGames
     FIRST_GAMES: Integer
-    BANK: Integer
     DAILY: Integer
 
     @store: ScoreRecord::_Store
@@ -22,11 +21,10 @@ module DotPopper
     def self.player?: (untyped env, channel: String?) -> bool
     def self.starting: (untyped env) -> Integer?
     def self.unlimited: () -> FreeGames
-    def initialize: (ScoreRecord::_Store store, today: ^() -> Date, entitlement: Entitlement, ?metered: bool, ?bank: Integer?, ?first_games: Integer, ?daily: Integer) -> void
+    def initialize: (ScoreRecord::_Store store, today: ^() -> Date, entitlement: Entitlement, ?metered: bool, ?first_games: Integer, ?daily: Integer) -> void
     def metered?: () -> bool
     def daily_left: () -> Integer
     def first_games_left: () -> Integer
-    def bank_left: () -> Integer
     def left: () -> Integer
     def can_play?: () -> bool
     def spend!: () -> bool

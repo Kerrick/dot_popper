@@ -25,8 +25,6 @@ module DotPopper
     # provisional (ADR-0012).
     FIRST_GAMES = 20
     DAILY = 3
-    # The old name, until no commit uses it.
-    BANK = FIRST_GAMES
 
     # Whether the free games of a run with the developer settings +env+
     # (Build.settings) in a build for +channel+ are counted: where Pro can
@@ -47,9 +45,8 @@ module DotPopper
     def self.unlimited = new(ScoreRecord::Memory.new, today: -> { Date.today }, entitlement: Entitlement.free, metered: false)
 
     # +today+ answers the player's local Date; +first_games+ and +daily+ are
-    # what a new save starts with and each day gives. +bank+ is
-    # +first_games+'s old name, until no commit uses it.
-    def initialize(store, today:, entitlement:, metered: true, bank: nil, first_games: bank || FIRST_GAMES, daily: DAILY)
+    # what a new save starts with and each day gives.
+    def initialize(store, today:, entitlement:, metered: true, first_games: FIRST_GAMES, daily: DAILY)
       @store = store
       @today = today
       @entitlement = entitlement
@@ -74,9 +71,6 @@ module DotPopper
     def daily_left = @day == today ? [@daily - @spent, 0].max : @daily
     def first_games_left = [@first_games - @used, 0].max
     def left = daily_left + first_games_left
-
-    # The old name, until no commit uses it.
-    def bank_left = first_games_left
 
     # How many free games come each day.
     attr_reader :daily
