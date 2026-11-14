@@ -25,8 +25,9 @@
 # every --expect matches a line of the app's, and the --expect-order
 # patterns match lines in the order given. --key-after sends the key
 # event KEYCODE once, SECONDS after the first line that matches REGEX;
-# each waits for the one before it to be sent, and looks only at the
-# lines that came after, so a line the app prints more than once (the
+# each waits for the one before it to be sent, and for the probe to say
+# the game's window has the focus, and looks only at the lines that came
+# after, so a line the app prints more than once (the
 # game hearing it came back, at launch and after the Home screen) is
 # matched where the check means it.
 # --until-met stops the run as soon as every --expect and --expect-order
@@ -119,6 +120,16 @@ def in_order?(lines, patterns)
   end
 end
 
+# Whether the probe's last word on the window's focus is that it has it.
+def focused?(lines)
+  lines.reverse.find { it.start_with?("kit probe: focus ") } == "kit probe: focus true"
+end
+
+# The window Android says has the input focus.
+def focused_window
+  adb("shell", "dumpsys", "window", allow_failure: true).lines.grep(/mCurrentFocus/).first.to_s.strip
+end
+
 def app_lines(package)
   adb("logcat", "-d", "-v", "raw", "-s", "#{package}:V").lines.map(&:chomp).reject { it.start_with?("--------- ") }
 end
@@ -164,11 +175,14 @@ loop do
     from = index.zero? ? 0 : keys[index - 1][:after]
     key[:at] ||= (Time.now + key[:seconds] if lines.drop(from).any? { key[:pattern].match?(it) })
     break unless key[:at] && Time.now >= key[:at]
+    # A key goes to the window that has the input focus: wait until the
+    # probe says the game's window has it.
+    break unless focused?(lines)
 
     key[:sent] = true
     key[:after] = lines.size
     adb("shell", "input", "keyevent", key[:code])
-    say "sent #{key[:code]}, #{key[:seconds]} s after a line matched #{key[:pattern].source}"
+    say "sent #{key[:code]}, #{key[:seconds]} s after a line matched #{key[:pattern].source}; #{focused_window}"
   end
   if pop && pop_taps < 5 && lines.none? { it.include?("kit probe: event Popped") }
     probe = lines.reverse.find { it.include?("kit probe: dot at") }
@@ -236,6 +250,7 @@ unsent = keys.reject { it[:sent] }
 unsent.each { say "never sent #{it[:code]}: no line matched #{it[:pattern].source}" }
 passed = !probe_failed && missing.empty? && out_of_order.nil? && unsent.empty?
 unless passed
+  say "the focused window: #{focused_window}"
   life = File.read(File.join(out, "logcat.txt")).lines.grep(/#{Regexp.escape(package)}/)
               .grep(/am_proc_start|am_proc_died|am_kill|am_crash|am_anr|am_wtf|wm_on_\w+_called|wm_finish_activity|wm_relaunch|ActivityTaskManager|ActivityManager/)
   say "the app's life, from the log:\n#{life.last(40).join}"

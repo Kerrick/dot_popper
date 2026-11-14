@@ -210,7 +210,8 @@ module Lota
 
     # Each key once, its seconds after a line matches its pattern, as
     # android_emulator.rb sends them: each after the one before it was
-    # sent, and on a line printed after that.
+    # sent, on a line printed after that, and while the probe last said
+    # the window has the focus.
     def press_keys(now)
       @keys.each_with_index do |key, index|
         next if key[4]
@@ -219,6 +220,7 @@ module Lota
         from = index.zero? ? 0 : @keys[index - 1][5]
         key[3] ||= now + key[0] if @lines.drop(from).any? { key[2].match?(it) }
         break unless key[3] && now >= key[3]
+        break unless @lines.reverse.find { it.start_with?("kit probe: focus ") } == "kit probe: focus true"
 
         key[4] = true
         key[5] = @lines.size
