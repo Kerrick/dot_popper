@@ -260,10 +260,11 @@ module DotPopper
         @outbox.take_achievements(member: member?).each { ask(Jobs::SendAchievement.new(it)) }
       end
 
-      # Sends what is owed: achievements, then the score.
+      # Sends what is owed: achievements, then the score. Nothing goes
+      # out without a token.
       def send_owed
         send_achievements
-        return if waiting_out?
+        return unless known? && !waiting_out?
 
         score = @outbox.take_score(member: member?)
         ask(Jobs::SendGame.new(score)) if score

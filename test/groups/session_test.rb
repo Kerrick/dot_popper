@@ -645,6 +645,19 @@ class SessionTest < Minitest::Test
     end
   end
 
+  # A file that says "in a group" but has no token (the game never writes
+  # one) sends nothing: nothing owed goes out without a token.
+  def test_nothing_owed_is_sent_without_a_token
+    @store.write("\n7\n1\n\n")
+    @session = new_session
+    @session.game_finished(score: 9, counts: true)
+    @session.report_achievements(["steady"])
+    @session.refresh
+    pump
+
+    assert_empty @worker.started
+  end
+
   def test_achievements_wait_until_the_player_is_in_a_group
     @session.report_achievements(["steady"])
     pump

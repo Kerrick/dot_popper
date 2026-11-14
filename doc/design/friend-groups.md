@@ -64,7 +64,7 @@ A 429 starts a wait (`Session#wait_out`): the `Retry-After` header's seconds, 60
 
 ### Waiting games
 
-What the game owes the server is `Groups::Outbox` (`lib/dot_popper/groups/outbox.rb`), saved in `group.txt`. If a counting game cannot be sent at once, the highest such score waits and goes with the next contact. Only the highest is kept: a lower game never replaces it, and it does not expire. It is owed until the server answers that very score, so a higher one that arrives meanwhile still waits. Leaving the last group drops it. Unsent achievement keys wait the same way. Nothing owed goes to a player in no group, and each score or key is in flight once at a time. `test/groups/outbox_test.rb` holds these rules.
+What the game owes the server is `Groups::Outbox` (`lib/dot_popper/groups/outbox.rb`), saved in `group.txt`. If a counting game cannot be sent at once, the highest such score waits and goes with the next contact. Only the highest is kept: a lower game never replaces it, and it does not expire. It is owed until the server answers that very score, so a higher one that arrives meanwhile still waits. Leaving the last group drops it. Unsent achievement keys wait the same way. Nothing owed goes to a player in no group, nor without a token (a file that says the player is in a group but has none sends nothing), and each score or key is in flight once at a time. `test/groups/outbox_test.rb` holds these rules.
 
 ### What `group.txt` holds
 
