@@ -11,7 +11,7 @@ How a press reaches Dot Popper, from a mouse, a finger, a gamepad or a keyboard:
 Every press goes through one path, so every rule about presses holds for every kind of input without extra code.
 
 1. `main.rb` hands each of Lota's callbacks to `Shell::App` (`mouse_pressed`, `touch_pressed`, `gamepad_pressed`, `gamepad_axis`, `key_pressed`, `wheel_moved`, and their moves and releases).
-2. `Shell::LotaInput` turns each into the game's own event (`Presentation::MousePress`, `TouchPress`, `ButtonPress`, `TriggerPull`, `KeyPress`, `WheelTurn` and the rest, in `input_events.rb`), by the game's names and as it happened, and `App` hands it to `Presentation::InputHandler#call`. The shell decides nothing about what an input means.
+2. `Shell::LotaInput` turns each into the game's own event (`Presentation::MousePress`, `TouchPress`, `ButtonPress`, `TriggerPull`, `KeyPress`, `WheelTurn` and the rest, in `input_events.rb`), by the game's names and as it happened, and `App` hands it to `Presentation::InputHandler#call`. The shell names each input and decides almost nothing about what it means; what it still decides is below, under "What the shell still decides".
 3. The `InputHandler` decides. For a mouse or finger, `InputRouter#tap` leaves out what is no press of the player's own, and a mouse's side buttons, and turns each of the rest into a `Tap` (`x`, `y`, and the `InputKind` that made it), which goes to `Show#tap` on the frame it happens, unless the Show waits for its release (Game Over, below).
 4. `Show#tap` hands it to the screen on top (`Show#screen`; [screens.md](screens.md#screens-as-objects)): a game's sends it to the game (`Cabinet#press`), the Tutorial's to the Tutorial, and every other screen's to the button under it (`Show#controls`, `Show#control_at`), or to its empty space.
 
@@ -33,7 +33,7 @@ A press during setdef's splash only skips the splash (`App#skip_splash`), and th
 - A motion counts as using the mouse only once the pointer has really traveled 8 units (`Presentation::MouseTravel::ENOUGH`), so a window opening or resizing under a still pointer does not take the words or hide the gamepad cursor. For 0.5 seconds after the window opens or changes size (`InputHandler::SETTLE`), motions do not count at all.
 - Only the mouse hovers. A button under it brightens (`Show#hovered`, `Style::HOVER`), and the system pointer becomes the pointing hand (`App#point_the_mouse`). After a finger or gamepad press, nothing hovers. [screens.md](screens.md) has the hover's look.
 - The wheel scrolls a list (`Show#wheel_scroll`, `Style::CREDITS.wheel` lines a notch).
-- When the window loses focus, every held press is let go (`App#focus`): dragged dots, "Clear my stats…", and the hold to leave a friend group.
+- When the window loses focus, every held press is let go (`InputHandler#focus_lost`, from `App#focus`): dragged dots, "Clear my stats…", and the hold to leave a friend group.
 
 ## Touch
 
@@ -199,7 +199,7 @@ The table below is the keys' order. `test/presentation/input_doc_test.rb` fails 
 | Escape | Every screen | Back, Close or Home where there is one (`Show#back`). Otherwise what a controller's B does: on a computer's Home it asks, "Press Escape again to quit", and a second Escape or B within 2 seconds quits (`InputHandler#leave_home`); in a game, nothing. On Android's Home, where Escape is the system's Back, it leaves the app at once; on iOS it does nothing |
 | F11, Alt+Enter (Cmd+Enter on a Mac) | Every screen | Switches fullscreen (`DesktopWindow#toggle_fullscreen`), on a computer only |
 
-Android's Back arrives as Escape ([platforms.md](platforms.md)). A phone's or tablet's keyboard never quits the app or leaves fullscreen.
+Android's Back arrives as Escape ([platforms.md](platforms.md)), so on a phone or tablet Escape is the system's Back: on Android's Home it leaves the app, as Back on an app's first screen does, and on iOS it never quits. A phone's or tablet's keyboard never leaves fullscreen, and never quits but by Android's Back on Home.
 
 Escape and B do the same, so one rule holds for every input, and no single key ends a game in play: Juul's *The Art of Failure* asks that a loss feel like the player's own, and a game thrown away by a stray key does not; *Designing for People* (Lee, Wickens, Liu and Boyle) makes the wrong action hard. The Quit button on Home still quits at once, since a press on a labeled button is deliberate.
 
@@ -210,6 +210,15 @@ Touch alone, a controller alone, and a mouse with its keyboard are each enough t
 - **Buying Pro on a website copy.** Buy (Y) opens the player's browser, where Pro is sold, and the license key comes by email. Back in the game, Paste license key (X) enters the key the player copied. Typing a key of over a hundred letters with a controller is not practical, so the offer has no controller keyboard for it.
 - **Change Server.** Paste server address is a button a controller's cursor reaches; the address is copied elsewhere, as a key is.
 - **A friend group's join code** is digits, typed on the keypad with the cursor and A.
+
+## What the shell still decides
+
+The shell names each input as the game does, and carries out the pile and its tilt; the rest of what an input means is the `InputHandler`'s. A few decisions are still the shell's, described here as they are:
+
+- **The d-pad is the left stick.** `Shell::Gamepads#stick` adds each controller's d-pad into its left stick (`Gamepads#push`, `Stick.dpad`) before the handler reads either, so the presentation cannot tell them apart: on Credits both scroll, and nothing can answer the d-pad alone.
+- **The right stick tilts the pile whatever screen is on top.** `Shell::Tilting#update` reads the right stick (`Gamepads#right_stick`) and tilts Game Over's falling pile itself, without asking the screen on top, so with the share preview or the offer of Pro open over Game Over the right stick still rolls the pile behind it.
+- **Key repeat.** `App#repeat_keys` turns the engine's key repeat on while a list scrolls (`Show#scrolling?`) and off otherwise.
+- **Names.** `Shell::LotaInput#key_press` names the keypad's digits, hyphen and Enter as the main keys', and holds only Ctrl, Alt and Cmd (either side's) as modifier keys, so Shift is no modifier.
 
 ## Where it is tested
 

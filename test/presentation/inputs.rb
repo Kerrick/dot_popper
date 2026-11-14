@@ -159,7 +159,7 @@ module Inputs
   end
 
   # One input, the only one a player has. It points at a place on the
-  # screen and presses there, as Shell::App#press hands a press to the
+  # screen and presses there, as InputHandler#press hands a press to the
   # Show (InputRouter's Tap, then Show#tap, or the pile on Game Over away
   # from its buttons), lets go (Show#let_go), and scrolls a list its own
   # way. Every press first says what made it (Show#input=), as
@@ -200,7 +200,7 @@ module Inputs
     # (#act): none for a finger, but where the system has a Back of its own.
     def presses = fixture.os == "Android" ? ["Back"] : []
 
-    # Presses +name+, one of #presses, as Shell::App hands it to the Show.
+    # Presses +name+, one of #presses, as Shell::App hands it on (Presentation::InputHandler).
     def act(name)
       fixture.tick(LOOK)
       show.input = kind

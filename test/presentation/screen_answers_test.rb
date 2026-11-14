@@ -59,7 +59,7 @@ class ScreenAnswersTest < Minitest::Test
     def show = fixture.show
 
     # A controller's A with its cursor on no button: a press there, let go
-    # (App#gamepad_down, #gamepad_up), heard on Game Over's pile as a click.
+    # (InputHandler#gamepad_down, #gamepad_up), heard on Game Over's pile as a click.
     def a_at_nothing
       show.input = P::InputKind::GAMEPAD
       x, y = nothing || (return :no_place)
@@ -67,7 +67,7 @@ class ScreenAnswersTest < Minitest::Test
     end
 
     # B: the screen's Back, or on Home, where the system lets the game quit
-    # itself, the ask to quit (App#leave_home).
+    # itself, the ask to quit (InputHandler#leave_home).
     def b
       show.input = P::InputKind::GAMEPAD
       show.back || (fixture.platform.quits_itself? && show.ask_to_quit)
@@ -103,7 +103,7 @@ class ScreenAnswersTest < Minitest::Test
     def right_stick = show.stick_scroll(P::Stick.new(x: 0.0, y: 1.0), 0.5)
 
     # The left stick moves the gamepad's cursor, except where the screen
-    # scrolls with it (App#read_with_stick).
+    # scrolls with it (InputHandler#read_with_stick).
     def left_stick = (show.stick_scroll(P::Stick.new(x: 0.0, y: 1.0), 0.5) if show.stick_scrolls?)
 
     # A finger put down on nothing in the page's window and dragged up.

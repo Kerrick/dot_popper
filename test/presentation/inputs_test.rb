@@ -23,11 +23,10 @@ require_relative "inputs"
 # NOT_FOUND with the reason no screen offers it.
 #
 # Each input also presses what it has besides a place (Input#presses):
-# a controller's buttons, a keyboard's keys, Android's Back, handed to the
-# Show as App#gamepad_pressed and App#key_pressed hand them. What this
-# cannot see is the rest of Shell::App's part, which needs Lota: the
-# splash, and the system's rules (iOS leaves quitting to the system; a
-# phone's keyboard never quits; Escape on a computer's Home quits).
+# a keyboard's keys and Android's Back, handed to Presentation::InputHandler
+# as Shell::App hands them, so the system's rules for keys hold here; and a
+# controller's buttons, handed to the Show by inputs.rb's own copy of what
+# the InputHandler does with each. What this cannot see is the splash.
 class InputsTest < Minitest::Test
   include Inputs
 
