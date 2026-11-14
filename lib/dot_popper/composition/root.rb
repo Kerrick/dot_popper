@@ -43,9 +43,6 @@ module DotPopper
       attr_reader :settings, :platform, :dot_size, :window, :cabinet, :show, :pen, :sound_player, :splash, :storefront,
                   :entitlement, :theme_releases, :watch, :cursor, :bot, :haptics, :sharing, :refresh
 
-      # Its old name, until no caller says it.
-      alias autopilot bot
-
       def initialize(engine:, settings: DeveloperSettings.new, clock: -> { Time.now.to_f })
         @engine = engine
         @settings = settings

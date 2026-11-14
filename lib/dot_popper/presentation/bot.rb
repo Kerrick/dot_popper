@@ -177,8 +177,5 @@ module DotPopper
         dot && [dot.x, dot.y]
       end
     end
-
-    # Its old name, until no caller says it.
-    Autopilot = Bot
   end
 end
