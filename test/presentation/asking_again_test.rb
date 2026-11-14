@@ -21,9 +21,6 @@ class AskingAgainTest < Minitest::Test
     def answer(reply) = @answers << [@started.shift.first, reply]
   end
 
-  # The old name, until no commit uses it.
-  HandWorker = ManualWorker
-
   def group(top:, champion:)
     { "id" => 1, "join_code" => "2345678", "you" => 2, "champion_number" => champion, "top_score" => top,
       "reign_started_at" => "2026-11-01", "members" => [1, 2].map { { "number" => it, "top_score" => it } } }

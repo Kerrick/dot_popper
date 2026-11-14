@@ -19,9 +19,6 @@ class GroupPanelTest < Minitest::Test
     def answer(reply) = @answers << [@started.shift.first, reply]
   end
 
-  # The old name, until no commit uses it.
-  HandWorker = ManualWorker
-
   def group(id: 1, numbers: [1, 2], you: 2, champion: 1, top: 18)
     { "id" => id, "join_code" => "2345678", "you" => you, "champion_number" => champion, "top_score" => top,
       "reign_started_at" => "2026-11-01", "members" => numbers.map { { "number" => it, "top_score" => it } } }

@@ -16,9 +16,6 @@ class SessionTest < Minitest::Test
     def answer(reply) = @answers << [@started.shift.first, reply]
   end
 
-  # The old name, until no commit uses it.
-  HandWorker = ManualWorker
-
   def setup
     @store = DotPopper::ScoreRecord::Memory.new
     @worker = ManualWorker.new
