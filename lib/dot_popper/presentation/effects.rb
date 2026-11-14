@@ -15,7 +15,6 @@ module DotPopper
       MOST_FLOATING_TEXTS = 24
 
       MOST_PENDING_BURSTS = 16
-      MOST_SPRAYS = MOST_PENDING_BURSTS # its old name, until no caller says it
 
       attr_reader :rings, :reveals, :floating_texts, :shake, :flash, :now, :cleared
 
@@ -46,9 +45,6 @@ module DotPopper
         @bursts = []
         bursts
       end
-
-      # Its old name, until no caller says it.
-      alias take_sprays take_bursts
 
       # How many droplets of +burst+ each of its colors gets.
       def shares(burst) = burst.style.shares(burst.colors, @random)

@@ -31,9 +31,6 @@ module DotPopper
       def emission(sprite_size) = Emission.new(style:, longest:, radius:, sprite_size:)
     end
 
-    # Its old name, until no caller says it.
-    Spray = PendingBurst
-
     # A Burst as a ParticleSystem's settings, in graphics units, for dots
     # of +radius+ and a sprite +sprite_size+ units across.
     class Emission < Data.define(:style, :longest, :radius, :sprite_size)
