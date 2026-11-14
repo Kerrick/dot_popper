@@ -385,9 +385,10 @@ module Inputs
   # A mouse, and the keyboard beside it: a click where the pointer is,
   # and the wheel, three lines a notch.
   class Mouse < Finger
-    # The keyboard's keys: Enter, Escape, the letters H and C, a digit,
+    # The keyboard's keys: Enter, Space, Escape, End, the letters H and C, a digit,
     # Backspace, and the system's paste and Buy chords.
-    KEYS = { "Enter" => :enter, "Escape" => :escape, "H" => :h, "C" => :c, "7" => :"7", "Backspace" => :backspace }.freeze
+    KEYS = { "Enter" => :enter, "Space" => :space, "Escape" => :escape, "End" => :end, "H" => :h, "C" => :c, "7" => :"7",
+             "Backspace" => :backspace }.freeze
 
     def kind = P::InputKind::MOUSE
     def key = :mouse
