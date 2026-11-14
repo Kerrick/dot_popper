@@ -519,23 +519,10 @@ jobs:
         with:
           platform: x86_64-linux-gnu
 
+      # The same command that plays the app before a push
+      # (doc/design/development.md), given the app this job built.
       - name: Play the unpacked app with no Ruby on its PATH, under Xvfb
-        run: |
-          mkdir -p "$RUNNER_TEMP/play/My Games"
-          tar -xzf "$(ls "$RUNNER_TEMP"/fuse/*.tar.gz | head -1)" -C "$RUNNER_TEMP/play/My Games"
-          program=$(find "$RUNNER_TEMP/play" -maxdepth 4 -type f -name 'Dot Popper' -perm -u+x | head -1)
-          set +e
-          # DISPLAY and XAUTHORITY are Xvfb's, which only the inner shell
-          # knows.
-          # shellcheck disable=SC2016
-          xvfb-run -a -s "-screen 0 1280x800x24" sh -c \
-            'exec env -i HOME="$HOME" PATH=/usr/bin:/bin DISPLAY="$DISPLAY" XAUTHORITY="$XAUTHORITY" LIBGL_ALWAYS_SOFTWARE=1 $PLAY_ENV timeout 120 "$0"' \
-            "$program" > "$RUNNER_TEMP/play/out.txt" 2>&1
-          status=$?
-          set -e
-          echo "exit status $status"; cat "$RUNNER_TEMP/play/out.txt"
-          [ "$status" = 0 ] && grep -q "frames a second" "$RUNNER_TEMP/play/out.txt" \
-            && grep -q "Ed25519 verifies the server's test vector" "$RUNNER_TEMP/play/out.txt"
+        run: ruby script/play_packaged_app.rb --archive "$(ls "$RUNNER_TEMP"/fuse/*.tar.gz | head -1)"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
