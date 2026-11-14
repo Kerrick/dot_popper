@@ -122,9 +122,6 @@ class NativeStoreContractTest < Minitest::Test
     end
   end
 
-  # The old name, until no commit uses it.
-  HostStandIn = FakeHost
-
   # The file, with the host catching up as the game reads it.
   class Polled < Data.define(:file, :host)
     def read = file.read.tap { host.advance }
