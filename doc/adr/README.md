@@ -8,7 +8,6 @@ Dot Popper's architecturally significant decisions, one per record, in the MADR 
 
 | ADR | Decision | Status |
 | --- | --- | --- |
-| [0001](0001-dots-fit-the-screen-by-default.md) | Dots fit the screen by default, and Standard is the player's choice | accepted |
 | [0002](0002-a-new-dot-offers-a-touch-target-within-a-second.md) | A new dot offers a touch target within its first second | accepted |
 | [0003](0003-how-to-play-is-taught-without-words.md) | How to play is taught without words, as the opening of the first game | accepted; Skip and the tutorial's rules superseded by 0016 |
 | [0004](0004-steep-checks-the-rules-strictly.md) | Steep checks the rules strictly against RBS signatures | accepted |
@@ -27,6 +26,7 @@ Dot Popper's architecturally significant decisions, one per record, in the MADR 
 | [0017](0017-use-cases-hold-the-rules-that-need-two-areas.md) | Use cases hold the rules that need two of the game's areas | accepted |
 | [0018](0018-screens-are-objects-on-a-stack.md) | Screens are objects on a stack, and the one on top answers every input | accepted |
 | [0019](0019-clean-architecture-and-domain-driven-design-in-three-areas.md) | The code follows Clean Architecture and Domain-Driven Design, with the domain in three areas | accepted |
+| [0020](0020-standard-dots-are-sized-to-the-screen-by-default.md) | Standard dots are sized to the screen by default, and Bigger or Smaller is the player's choice (restates the former 0001) | accepted |
 
 ## Keeping the log
 

@@ -29,7 +29,7 @@ A dot is a value, `Dot` (`lib/dot_popper/dot.rb`): an `id`, a place, a velocity 
 
 ## Dot size: Standard, and Bigger or Smaller
 
-The default size, Standard, is worked out from the screen, so every screen is about equally crowded; the other, the bigger or smaller size, is the same on every screen, and Settings names it "Bigger" or "Smaller", by what it does on this device next to Standard. Why Standard is worked out from the screen: [ADR-0001](../adr/0001-dots-fit-the-screen-by-default.md).
+The default size, Standard, is worked out from the screen, so every screen is about equally crowded; the other, the bigger or smaller size, is the same on every screen, and Settings names it "Bigger" or "Smaller", by what it does on this device next to Standard. Why Standard is worked out from the screen: [ADR-0020](../adr/0020-standard-dots-are-sized-to-the-screen-by-default.md).
 
 `DotSizing` (`lib/dot_popper/dot_sizing.rb`) holds the player's choice:
 
