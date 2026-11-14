@@ -105,6 +105,23 @@ class HintsTest < Minitest::Test
     assert_match(/\ADP-/, fixture.clipboard.text, "Y buys")
   end
 
+  # Home's large buttons carry a badge naming the controller's button
+  # that opens each (Words#tile_badge): that button opens it.
+  def test_each_of_homes_badges_names_the_button_that_opens_it
+    { stats: -> { show.stats? }, achievements: -> { show.achievements_open? }, themes: -> { show.themes? },
+      groups: -> { show.group_open? } }.each do |tile, opened|
+      given(:home)
+      badge = show.words.tile_badge(tile)
+      if badge == "LT"
+        handler.call(P::TriggerPull.new(trigger: :left, value: 1.0))
+      else
+        press(P::GamepadButtons::LABELS.key(badge) || flunk("#{tile}: #{badge} names no button"))
+      end
+
+      assert opened.call, "#{tile}: #{badge}"
+    end
+  end
+
   attr_reader :fixture, :handler, :sizing
 
   def show = fixture.show

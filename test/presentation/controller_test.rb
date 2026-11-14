@@ -76,6 +76,8 @@ class ControllerTest < Minitest::Test
       trigger(axis, 0.9)
 
       refute show.group_open?, "#{axis} still held"
+      refute show.playing?, "#{axis} still held"
+      refute cursor.visible, "#{axis} still held"
       assert_empty @shell.told, "#{axis} still held"
     end
     given(splash: true)
@@ -88,6 +90,16 @@ class ControllerTest < Minitest::Test
     trigger("triggerleft", 1.0)
 
     assert show.group_open?, "let back and pulled again, once the splash is gone: Friend groups"
+  end
+
+  def test_either_trigger_shows_the_cursor_and_names_the_gamepad
+    %w[triggerright triggerleft].each do |axis|
+      given
+      trigger(axis, 1.0)
+
+      assert cursor.visible, axis
+      assert_equal P::InputKind::GAMEPAD, show.input, axis
+    end
   end
 
   def test_any_button_shows_the_cursor_and_names_the_gamepad
@@ -214,6 +226,25 @@ class ControllerTest < Minitest::Test
 
       assert show.settings?, "B on #{at} returns to Settings"
     end
+  end
+
+  # Letting go of Start ends the hold to leave a friend group, and of Y
+  # the hold to clear the stats, before either is done.
+  def test_letting_go_of_start_or_y_ends_its_hold
+    given(at: :group, pro: true, member: true)
+    button("start")
+
+    assert show.group_panel.hold&.held?, "Start holds to leave the group"
+    release("start")
+
+    refute show.group_panel.hold&.held?, "Start let go"
+    given(at: :stats)
+    button("y")
+
+    assert show.clearing.held?
+    release("y")
+
+    refute show.clearing.held?, "Y let go"
   end
 
   def test_stats_y_holds_to_clear
@@ -377,6 +408,18 @@ class ControllerTest < Minitest::Test
     assert_equal %i[press release], @shell.told.map(&:first)
   end
 
+  # A controller unplugged with its trigger held lets the trigger go, so
+  # the next one's pull presses.
+  def test_unplugging_lets_the_trigger_go
+    given(at: :game_over)
+    aim(*empty)
+    trigger("triggerright", 1.0)
+    unplug
+    trigger("triggerright", 1.0)
+
+    assert_equal %i[press release press], @shell.told.map(&:first)
+  end
+
   def test_an_axis_that_is_no_trigger_does_nothing
     given
     trigger("leftx", 1.0)
@@ -458,6 +501,7 @@ class ControllerTest < Minitest::Test
     when :privacy then show.open_settings.then { show.open_privacy }
     when :offer then show.open_offer
     when :groups then show.group_panel.open
+    when :group then show.group_panel.open.then { show.group_panel.pad(:rb) }
     when :keypad then open_keypad
     when :game then show.play
     when :game_over, :share then game_over(share: at == :share)

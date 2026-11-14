@@ -361,6 +361,16 @@ class KeyboardTest < Minitest::Test
     end
   end
 
+  # Either of Escape and B asks, and the other quits.
+  def test_escape_then_b_or_b_then_escape_quits
+    [%i[escape b], %i[b escape]].each do |first, second|
+      given
+      [first, second].each { it == :b ? @handler.call(P::ButtonPress.new(button: :b)) : press(:escape) }
+
+      assert_equal 1, @shell.quits, "#{first} then #{second}"
+    end
+  end
+
   def test_a_second_escape_quits_only_while_the_question_shows
     given
     press(:escape)

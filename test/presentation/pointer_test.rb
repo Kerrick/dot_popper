@@ -120,6 +120,31 @@ class PointerTest < Minitest::Test
     assert_operator show.scroll.offset, :>, 0
   end
 
+  def test_a_mouse_drags_a_list_too
+    given(at: :achievements, width: 400, height: 700)
+    x, y = place(show.controls.find { it.name in [:achievement, _] }.name)
+    mouse_down(x, y)
+    mouse_move(x, y - 40)
+    mouse_up(x, y - 40)
+
+    assert_nil show.dialog
+    assert_operator show.scroll.offset, :>, 0
+  end
+
+  # Letting go ends a hold: "Clear my stats…" stops when the mouse
+  # button or the finger comes up, before it clears anything.
+  def test_letting_go_ends_a_hold
+    { mouse: [method(:mouse_down), method(:mouse_up)], finger: [method(:touch_down), method(:touch_up)] }.each do |by, (down, up)|
+      given(at: :stats)
+      down.call(*place(:clear))
+
+      assert show.clearing.held?, by
+      up.call(*place(:clear))
+
+      refute show.clearing.held?, "#{by}: let go"
+    end
+  end
+
   def test_the_wheel_scrolls_a_list
     given(at: :credits)
     wheel(-2)
@@ -137,6 +162,15 @@ class PointerTest < Minitest::Test
 
     assert_equal [[:move, :mouse, 50, 300], [:release, :mouse, 50, 300]], @shell.told.drop(1)
     assert show.game_over?
+  end
+
+  def test_a_finger_drags_on_the_pile_too
+    given(at: :game_over)
+    touch_down(5, 400)
+    touch_move(50, 300)
+    touch_up(50, 300)
+
+    assert_equal [[:press, 1, 5, 400], [:move, 1, 50, 300], [:release, 1, 50, 300]], @shell.told
   end
 
   def test_a_deliberate_move_takes_the_words_to_the_mouse
@@ -159,6 +193,21 @@ class PointerTest < Minitest::Test
     mouse_move(400, 400)
 
     assert_equal P::InputKind::GAMEPAD, show.input
+  end
+
+  def test_a_resize_settles_the_window_again
+    given
+    show.input = P::InputKind::GAMEPAD
+    @handler.resized(show.layout.whole)
+    at_time(5.2)
+    mouse_move(300, 300)
+    mouse_move(400, 400)
+
+    assert_equal P::InputKind::GAMEPAD, show.input, "settling after the resize"
+    at_time(5.6)
+    mouse_move(500, 500)
+
+    assert_equal P::InputKind::MOUSE, show.input, "settled"
   end
 
   def test_the_mouse_hovers_and_leaving_the_window_ends_it
